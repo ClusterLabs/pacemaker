@@ -9,8 +9,8 @@ Online: [ node2 ]
 
 Transition Summary:
  * Start   stonith-1	(node2)
- * Move    rsc1	(Started node1 -> node2)
- * Move    rsc2	(Started node1 -> node2)
+ * Stop    rsc1	(Started node2)
+ * Stop    rsc2	(Started node2)
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on node2

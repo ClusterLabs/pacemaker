@@ -16,8 +16,8 @@ Online: [ c001n01 c001n02 c001n03 ]
 
 Transition Summary:
  * Stop    DcIPaddr	(Started c001n03)
- * Move    rsc_c001n08	(Started c001n02 -> c001n01)
- * Move    rsc_c001n02	(Started c001n02 -> c001n01)
+ * Stop    rsc_c001n08	(Started c001n01)
+ * Stop    rsc_c001n02	(Started c001n01)
  * Stop    rsc_c001n03	(Started c001n03)
  * Stop    rsc_c001n01	(Started c001n01)
  * Restart child_DoFencing:0	(Started c001n01)

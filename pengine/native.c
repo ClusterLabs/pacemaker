@@ -1891,16 +1891,17 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
             pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
+        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
+            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+
         } else if (moving && current) {
-            log_change("Move    %s\t(%s %s -> %s)",
-                       rsc->id, role2text(rsc->role), current->details->uname,
-                       next->details->uname);
+            log_change("%s %s\t(%s %s -> %s)",
+                       is_set(rsc->flags, pe_rsc_failed)?"Recover":"Move   ",
+                       rsc->id, role2text(rsc->role),
+                       current->details->uname, next->details->uname);
 
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
             log_change("Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
-
-        } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else {
             log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
@@ -2367,6 +2368,22 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear);
+
+    /* Check if the node needs to be unfenced first */
+    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        action_t *unfence = pe_fence_op(node, "on", data_set);
+
+        crm_notice("Unfencing %s for %s", node->details->uname, rsc->id);
+        order_actions(unfence, probe, pe_order_implies_then);
+
+        /* The lack of ordering constraints on STONITH_UP would
+         * traditionally mean unfencing is initiated /before/ the
+         * devices are started.
+         *
+         * However this is a non-issue as stonithd is now smart
+         * enough to be able to use devices directly from the cib
+         */
+    }
 
     /*
      * We need to know if it's running_on (not just known_on) this node

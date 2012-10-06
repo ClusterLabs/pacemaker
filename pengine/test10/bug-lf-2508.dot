@@ -93,7 +93,6 @@ digraph "g" {
 "stonith srv02" [ style=bold color="green" fontcolor="black" ]
 "stonith_complete" -> "Dummy01_start_0 srv01" [ style = bold]
 "stonith_complete" -> "Dummy02_start_0 srv04" [ style = bold]
-"stonith_complete" -> "Dummy02_stop_0 srv02" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 "stonith_up" -> "stonith srv02" [ style = bold]
 "stonith_up" -> "stonith_complete" [ style = bold]

@@ -285,7 +285,7 @@ crm_time_get_seconds(crm_time_t * dt)
     return in_seconds;
 }
 
-#define EPOCH_SECONDS 62135596800 /* Calculated using crm_time_get_seconds() */
+#define EPOCH_SECONDS 62135596800ULL /* Calculated using crm_time_get_seconds() */
 unsigned long long
 crm_time_get_seconds_since_epoch(crm_time_t * dt)
 {

@@ -1225,6 +1225,23 @@ any_managed_resouces(pe_working_set_t * data_set)
     return FALSE;
 }
 
+action_t *
+pe_fence_op(node_t *node, const char *op, pe_working_set_t * data_set)
+{
+    action_t *stonith_op = custom_action(
+        NULL, g_strdup_printf("%s-%s", CRM_OP_FENCE, node->details->uname),
+        CRM_OP_FENCE, node, FALSE, TRUE, data_set);
+
+    add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+
+    add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+
+    add_hash_param(stonith_op->meta, "stonith_action", op?op:data_set->stonith_action);
+
+    return stonith_op;
+}
+
+
 /*
  * Create dependancies for stonith and shutdown operations
  */
@@ -1263,14 +1280,7 @@ stage6(pe_working_set_t * data_set)
         if (node->details->unclean && need_stonith) {
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_op = custom_action(NULL, strdup(CRM_OP_FENCE),
-                                       CRM_OP_FENCE, node, FALSE, TRUE, data_set);
-
-            add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
-
-            add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
-
-            add_hash_param(stonith_op->meta, "stonith_action", data_set->stonith_action);
+            stonith_op = pe_fence_op(node, NULL, data_set);
 
             stonith_constraints(node, stonith_op, data_set);
             order_actions(ready, stonith_op, pe_order_runnable_left);

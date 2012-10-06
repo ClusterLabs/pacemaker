@@ -531,6 +531,8 @@ stonith_action_complete(lrmd_cmd_t *cmd, int rc)
     lrmd_rsc_t *rsc = NULL;
     cmd->exec_rc = get_uniform_rc("stonith", cmd->action, rc);
 
+    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
+
     if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
         recurring = 0;
         /* do nothing */
@@ -549,9 +551,11 @@ stonith_action_complete(lrmd_cmd_t *cmd, int rc)
     } else {
         /* command successful */
         cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
+        if (safe_str_eq(cmd->action, "start") && rsc) {
+            rsc->stonith_started = 1;
+        }
     }
 
-    rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
     if (recurring && rsc) {
         if (cmd->stonith_recurring_id) {
             g_source_remove(cmd->stonith_recurring_id);
@@ -630,6 +634,10 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
             }
         }
 
+        /* Stonith automatically registers devices from the CIB when changes occur,
+         * but to avoid a possible race condition between stonith receiving the CIB update
+         * and the lrmd requesting that resource, the lrmd still registers the device as well.
+         * Stonith knows how to handle duplicate device registrations correctly. */
         rc = stonith_api->cmds->register_device(stonith_api,
                                                 st_opt_sync_call,
                                                 cmd->rsc_id,
@@ -641,8 +649,13 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     } else if (safe_str_eq(cmd->action, "stop")) {
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
+        rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
-        do_monitor = 1;
+        if (cmd->interval) {
+            do_monitor = 1;
+        } else {
+            rc = rsc->stonith_started ? 0 : -ENODEV;
+        }
     }
 
     if (!do_monitor) {

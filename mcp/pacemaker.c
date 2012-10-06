@@ -575,11 +575,20 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 
     if (uname != NULL) {
         if (node->uname == NULL || safe_str_eq(node->uname, uname) == FALSE) {
+            int lpc, len = strlen(uname);
+
             crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
                      node->uname?node->uname:", was: ", node->uname?node->uname:"");
             free(node->uname);
             node->uname = strdup(uname);
             changed = TRUE;
+
+            for(lpc = 0; lpc < len; lpc++) {
+                if(uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
+                    crm_warn("Node names with capitals are discouraged, consider changing '%s' to something else", uname);
+                    break;
+                }
+            }
         }
 
     } else {

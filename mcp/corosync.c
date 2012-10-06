@@ -603,7 +603,6 @@ read_config(void)
             /* What a cluster fsck, eventually we need to mandate /one/ */ 
             set_daemon_option("debugfile", logging_logfile);
             set_daemon_option("DEBUGLOG", logging_logfile);
-            set_daemon_option("LOGFILE", logging_logfile);
             have_log = TRUE;
 
         } else {

@@ -51,6 +51,8 @@ typedef struct st_query_result_s
     int devices;
     GListPtr device_list;
     GHashTable *custom_action_timeouts;
+    /* Subset of devices that peer has verified connectivity on */
+    GHashTable *verified_devices;
 
 } st_query_result_t;
 
@@ -70,6 +72,7 @@ static void free_remote_query(gpointer data)
         crm_trace("Free'ing query result from %s", query->host);
         free(query->host);
         g_hash_table_destroy(query->custom_action_timeouts);
+        g_hash_table_destroy(query->verified_devices);
         free(query);
     }
 }
@@ -77,15 +80,15 @@ static void free_remote_query(gpointer data)
 static void
 clear_remote_op_timers(remote_fencing_op_t *op)
 {
-    if(op->query_timer > 0) {
+    if(op->query_timer) {
         g_source_remove(op->query_timer);
         op->query_timer = 0;
     }
-    if(op->op_timer_total > 0) {
+    if(op->op_timer_total) {
         g_source_remove(op->op_timer_total);
         op->op_timer_total = 0;
     }
-    if(op->op_timer_one > 0) {
+    if(op->op_timer_one) {
         g_source_remove(op->op_timer_one);
         op->op_timer_one = 0;
     }
@@ -126,7 +129,7 @@ create_op_done_notify(remote_fencing_op_t *op, int rc)
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
     crm_xml_add(notify_data, F_STONITH_ACTION,    op->action); 
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
-    crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
+    crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
     crm_xml_add(notify_data, F_STONITH_CLIENTID,  op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME,op->client_name);
@@ -179,7 +182,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, int rc)
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data, NULL);
+    do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
@@ -206,6 +209,31 @@ handle_duplicates(remote_fencing_op_t *op, xmlNode *data, int rc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Finalize a remote operation.
+ *
+ * \description This function has two code paths.
+ *
+ * Path 1. This node is the owner of the operation and needs
+ *         to notify the cpg group via a broadcast as to the operation's
+ *         results.
+ *
+ * Path 2. The cpg broadcast is received. All nodes notify their local
+ *         stonith clients the operation results.
+ *
+ * So, The owner of the operation first notifies the cluster of the result,
+ * and once that cpg notify is received back it notifies all the local clients.
+ *
+ * Nodes that are passive watchers of the operation will receive the
+ * broadcast and only need to notify their local clients the operation finished.
+ *
+ * \param op, The fencing operation to finalize
+ * \param data, The xml msg reply (if present) of the last delegated fencing
+ *              operation.
+ * \param dup, Is this operation a duplicate, if so treat it a little differently
+ *             making sure the broadcast is not sent out.
+ */
 static void
 remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
 {
@@ -223,12 +251,13 @@ remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
+    if(!op->delegate && data) {
+        op->delegate = crm_element_value_copy(data, F_ORIG);
+    }
+
     if(data == NULL) {
         data = create_xml_node(NULL, "remote-op");
         local_data = data;
-
-    } else if(op->delegate == NULL) {
-        op->delegate = crm_element_value_copy(data, F_ORIG);
     }
 
     /* Tell everyone the operation is done, we will continue
@@ -404,6 +433,16 @@ merge_duplicates(remote_fencing_op_t *op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new remote stonith op
+ * \param client, he local stonith client id that initaited the operation
+ * \param request, The request from the client that started the operation 
+ * \param peer, Is this operation owned by another stonith peer? Operations
+ *        owned by other peers are stored on all the stonith nodes, but only the
+ *        owner executes the operation.  All the nodes get the results to the operation
+ *        once the owner finishes executing it.
+ */
 void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
@@ -414,26 +453,25 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         crm_str_hash, g_str_equal, NULL, free_remote_op);
     }
 
+    /* If this operation is owned by another node, check to make
+     * sure we haven't already created this operation. */
     if(peer && dev) {
-        const char *peer_id = crm_element_value(dev, F_STONITH_REMOTE);
-        CRM_CHECK(peer_id != NULL, return NULL);
+        const char *op_id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+        CRM_CHECK(op_id != NULL, return NULL);
 
-        op = g_hash_table_lookup(remote_op_list, peer_id);
+        op = g_hash_table_lookup(remote_op_list, op_id);
         if(op) {
-            crm_debug("%s already exists", peer_id);
+            crm_debug("%s already exists", op_id);
             return op;
         }
     }
 
     op = calloc(1, sizeof(remote_fencing_op_t));
 
-    op->op_timer_total = -1;
-    op->query_timer = -1;
-
     crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer && dev) {
-        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
+        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
     } else {
         op->id = crm_generate_uuid();
     }
@@ -446,7 +484,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
 
     if(op->originator == NULL) {
-        /* Local request */
+        /* Local or relayed request */
         op->originator = strdup(stonith_our_uname);
     }
 
@@ -478,8 +516,8 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         }
     }
 
-	/* check to see if this is a duplicate operation of another in-flight operation */
-	merge_duplicates(op);
+    /* check to see if this is a duplicate operation of another in-flight operation */
+    merge_duplicates(op);
 
     return op;
 }
@@ -497,7 +535,8 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     }
 
     CRM_LOG_ASSERT(client_id != NULL);
-    op = create_remote_stonith_op(client_id, request, FALSE);    
+    op = create_remote_stonith_op(client_id, request, FALSE);
+    op->owner = TRUE;
 
     CRM_CHECK(op->action, return NULL);
 
@@ -508,6 +547,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     switch(op->state) {
         case st_failed:
             crm_warn("Initiation of remote operation %s for %s: failed (%s)", op->action, op->target, op->id);
+            remote_op_done(op, NULL, -EINVAL, FALSE);
             return op;
 
         case st_duplicate:
@@ -527,7 +567,7 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
         crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");
     }
 
-    crm_xml_add(query, F_STONITH_REMOTE, op->id);
+    crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);
     crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
@@ -546,34 +586,80 @@ static gint sort_strings(gconstpointer a, gconstpointer b)
     return strcmp(a, b);
 }
 
-static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
+enum find_best_peer_options {
+    /*! Skip checking the target peer for capable fencing devices */
+    FIND_PEER_SKIP_TARGET   = 0x0001,
+    /*! Only check the target peer for capable fencing devices */
+    FIND_PEER_TARGET_ONLY   = 0x0002,
+    /*! Skip peers and devices that are not verified */
+    FIND_PEER_VERIFIED_ONLY = 0x0004,
+};
+
+static st_query_result_t *
+find_best_peer(const char *device, remote_fencing_op_t *op, enum find_best_peer_options options)
 {
     GListPtr iter = NULL;
+    gboolean verified_devices_only = (options & FIND_PEER_VERIFIED_ONLY) ? TRUE : FALSE;
+
+    if (!device && is_set(op->call_options, st_opt_topology)) {
+        return NULL;
+    }
+
+    for(iter = op->query_results; iter != NULL; iter = iter->next) {
+        st_query_result_t *peer = iter->data;
+        if ((options & FIND_PEER_SKIP_TARGET) && safe_str_eq(peer->host, op->target)) {
+            continue;
+        }
+        if ((options & FIND_PEER_TARGET_ONLY) && safe_str_neq(peer->host, op->target)) {
+            continue;
+        }
+
+        if(is_set(op->call_options, st_opt_topology)) {
+            /* Do they have the next device of the current fencing level? */
+            GListPtr match = NULL;
+            if (verified_devices_only && !g_hash_table_lookup(peer->verified_devices, device)) {
+                continue;
+            }
+
+            match = g_list_find_custom(peer->device_list, device, sort_strings);
+            if(match) {
+                crm_trace("Removing %s from %s (%d remaining)", (char*)match->data, peer->host, g_list_length(peer->device_list));
+                peer->device_list = g_list_remove(peer->device_list, match->data);
+                return peer;
+            }
+
+        } else if(peer->devices > 0) {
+            if (verified_devices_only && !g_hash_table_size(peer->verified_devices)) {
+                continue;
+            }
+
+            /* No topology: Use the current best peer */
+            crm_trace("Simple fencing");
+            return peer;
+        }
+    }
+
+    return NULL;
+}
+
+static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
+{
+    st_query_result_t *peer = NULL;
+    const char *device = NULL;
     do {
         if(op->devices) {
+            device = op->devices->data;
             crm_trace("Checking for someone to fence %s with %s", op->target, (char*)op->devices->data);
         } else {
             crm_trace("Checking for someone to fence %s", op->target);
         }
-        for(iter = op->query_results; iter != NULL; iter = iter->next) {
-            st_query_result_t *peer = iter->data;
-            if(is_set(op->call_options, st_opt_topology)) {
-                /* Do they have the next device of the current fencing level? */
-                GListPtr match = NULL;
-                if(op->devices) {
-                    match = g_list_find_custom(peer->device_list, op->devices->data, sort_strings);
-                }
-                if(match) {
-                    crm_trace("Removing %s from %s (%d remaining)", (char*)match->data, peer->host, g_list_length(peer->device_list));
-                    peer->device_list = g_list_remove(peer->device_list, match->data);
-                    return peer;
-                }
 
-            } else if(peer && peer->devices > 0) {
-                /* No topology: Use the current best peer */
-                crm_trace("Simple fencing");
-                return peer;
-            }
+        if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET | FIND_PEER_VERIFIED_ONLY))) {
+            return peer;
+        } else if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET))) {
+            return peer;
+        } else if ((peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY))) {
+            return peer;
         }
 
         /* Try the next fencing level if there is one */
@@ -581,9 +667,9 @@ static st_query_result_t *stonith_choose_peer(remote_fencing_op_t *op)
             && stonith_topology_next(op) == pcmk_ok);
 
     if(op->devices) {
-        crm_trace("Couldn't find anyone to fence %s with %s", op->target, (char*)op->devices->data);
+        crm_debug("Couldn't find anyone to fence %s with %s", op->target, (char*)op->devices->data);
     } else {
-        crm_trace("Couldn't find anyone to fence %s", op->target);
+        crm_debug("Couldn't find anyone to fence %s", op->target);
     }
 
     return NULL;
@@ -683,7 +769,7 @@ report_timeout_period(remote_fencing_op_t *op, int op_timeout)
 
     /* The client is connected to another node, relay this update to them */
     update = stonith_create_op(0, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
-    crm_xml_add(update, F_STONITH_REMOTE, op->id);
+    crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(update, F_STONITH_CLIENTID, client_id);
     crm_xml_add(update, F_STONITH_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
@@ -709,7 +795,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         peer = stonith_choose_peer(op);
     }
 
-    if(op->op_timer_total <= 0) {
+    if(!op->op_timer_total) {
         int t = get_op_total_timeout(op, peer, op->base_timeout);
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * t;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
@@ -732,7 +818,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         int t = TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
         xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
 
-        crm_xml_add(query, F_STONITH_REMOTE, op->id);
+        crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);
         crm_xml_add(query, F_STONITH_ACTION, op->action);
         crm_xml_add(query, F_STONITH_ORIGIN,  op->originator);
@@ -753,7 +839,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         }
 
         op->state = st_exec;
-        if(op->op_timer_one > 0) {
+        if(op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
         op->op_timer_one = g_timeout_add((1000 * t), remote_op_timeout_one, op);
@@ -762,10 +848,10 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         free_xml(query);
         return;
 
-    } else if(op->query_timer < 0) {
+    } else if(!op->owner) {
         crm_err("The termination of %s for %s is not ours to control", op->target, op->client_name);
 
-    } else if(op->query_timer == 0) {
+    } else if(!op->query_timer) {
         CRM_LOG_ASSERT(op->state < st_done);
 
         /* We've exhausted all available peers */
@@ -796,6 +882,50 @@ static gint sort_peers(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Determine if all the devices in the topology are found or not
+ */
+static gboolean
+all_topology_devices_found(remote_fencing_op_t *op)
+{
+    GListPtr device = NULL;
+    GListPtr iter = NULL;
+    GListPtr match = NULL;
+    stonith_topology_t *tp = NULL;
+    gboolean skip_target = FALSE;
+    int i;
+
+    tp = g_hash_table_lookup(topology, op->target);
+
+    if (!tp) {
+        return FALSE;
+    }
+    if (safe_str_eq(op->action, "off") || safe_str_eq(op->action, "reboot")) {
+        /* Don't count the devices on the target node if we are killing
+         * the target node. */
+        skip_target = TRUE;
+    }
+
+    for (i = 0; i < ST_LEVEL_MAX; i++) {
+        for (device = tp->levels[i]; device; device = device->next) {
+            match = FALSE;
+            for(iter = op->query_results; iter != NULL; iter = iter->next) {
+                st_query_result_t *peer = iter->data;
+                if (skip_target && safe_str_eq(peer->host, op->target)) {
+                    continue;
+                }
+                match = g_list_find_custom(peer->device_list, device->data, sort_strings);
+            }
+            if (!match) {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 int process_remote_stonith_query(xmlNode *msg) 
 {
     int devices = 0;
@@ -803,12 +933,12 @@ int process_remote_stonith_query(xmlNode *msg)
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
     st_query_result_t *result = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
     xmlNode *child = NULL;
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE);
+    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return -EPROTO);
 
     dev = get_xpath_object("//@st-available-devices", msg, LOG_ERR);
@@ -843,19 +973,30 @@ int process_remote_stonith_query(xmlNode *msg)
     result->devices = devices;
     result->custom_action_timeouts = g_hash_table_new_full(
         crm_str_hash, g_str_equal, free, NULL);
+    result->verified_devices = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, free, NULL);
 
     for (child = __xml_first_child(dev); child != NULL; child = __xml_next(child)) {
         const char *device = ID(child);
         int action_timeout = 0;
+        int verified = 0;
         if(device) {
             result->device_list = g_list_prepend(result->device_list, strdup(device));
             crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
+            crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
             if (action_timeout) {
                 crm_trace("Peer %s with device %s returned action timeout %d",
                     result->host, device, action_timeout);
                 g_hash_table_insert(result->custom_action_timeouts,
                     strdup(device),
                     GINT_TO_POINTER(action_timeout));
+            }
+            if (verified) {
+                crm_trace("Peer %s has confirmed a verified device %s",
+                    result->host, device);
+                g_hash_table_insert(result->verified_devices,
+                    strdup(device),
+                    GINT_TO_POINTER(verified));
             }
         }
     }
@@ -865,7 +1006,16 @@ int process_remote_stonith_query(xmlNode *msg)
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
 
-    if(op->state == st_query && is_set(op->call_options, st_opt_all_replies) == FALSE) {
+    /* All the query results are in for the topology, start the fencing ops. */
+    if(is_set(op->call_options, st_opt_topology)) {
+        /* If we start the fencing before all the topology results are in,
+         * it is possible fencing levels will be skipped because of the missing
+         * query results. */
+        if (op->state == st_query && all_topology_devices_found(op)) {
+            call_remote_stonith(op, result);
+        }
+    /* We have a result for a non-topology fencing op, start fencing */
+    } else if(op->state == st_query) {
         call_remote_stonith(op, result);
 
     } else if(op->state == st_done) {
@@ -882,11 +1032,11 @@ int process_remote_stonith_exec(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE);
+    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return -EPROTO);
 
     dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
@@ -1027,3 +1177,36 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
     return rc;
 }
 
+gboolean
+stonith_check_fence_tolerance(int tolerance,
+                              const char *target,
+                              const char *action)
+{
+    GHashTableIter iter;
+    time_t now = time(NULL);
+    remote_fencing_op_t *rop = NULL;
+
+    crm_trace("tolerance=%d, remote_op_list=%p", tolerance, remote_op_list);
+
+    if (tolerance <= 0 || !remote_op_list || target == NULL || action == NULL) {
+        return FALSE;
+    }
+
+    g_hash_table_iter_init(&iter, remote_op_list);
+    while(g_hash_table_iter_next(&iter, NULL, (void**)&rop)) {
+        if(strcmp(rop->target, target) != 0) {
+            continue;
+        } else if(rop->state != st_done) {
+            continue;
+        } else if(strcmp(rop->action, action) != 0) {
+            continue;
+        } else if((rop->completed + tolerance) < now) {
+            continue;
+        }
+
+        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
+                target, action, tolerance, rop->delegate, rop->originator);
+        return TRUE;
+    }
+    return FALSE;
+}

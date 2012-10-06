@@ -39,7 +39,7 @@ Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
 Transition Summary:
  * Move    ocf_192.168.100.181	(Started c001n03 -> c001n02)
  * Move    heartbeat_192.168.100.182	(Started c001n03 -> c001n02)
- * Move    ocf_192.168.100.183	(Started c001n03 -> c001n02)
+ * Recover ocf_192.168.100.183	(Started c001n03 -> c001n02)
  * Move    rsc_c001n05	(Started c001n05 -> c001n07)
  * Move    rsc_c001n07	(Started c001n03 -> c001n07)
 

@@ -13,6 +13,10 @@
 %{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
 %{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
 
+# Turn off the auto compilation of python files not in the site-packages directory
+# Needed so that the -devel package is multilib compliant
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds
 %{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
@@ -81,7 +85,10 @@ Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      python >= 2.4
-Conflicts:     heartbeat < 2.99
+
+%if 0%{?rhel} > 0
+ExclusiveArch: i686 x86_64
+%endif
 
 %if %{defined _unitdir}
 # Needed for systemd unit
@@ -234,9 +241,11 @@ libraries needed for nodes that will form part of the cluster nodes.
 License:      GPLv2+ and LGPLv2+
 Summary:      Pacemaker development package
 Group:        Development/Libraries
+Requires:     %{name}-cts = %{version}-%{release}
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:     %{name}-cluster-libs = %{version}-%{release}
-Requires:     libtool-ltdl-devel libxml2-devel libxslt-devel bzip2-devel glib2-devel 
+Requires:     libtool-ltdl-devel libqb-devel libuuid-devel libuuid-devel
+Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
 Requires:     corosynclib-devel
 %endif
@@ -387,6 +396,7 @@ exit 0
 
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
+%exclude %{_libexecdir}/pacemaker/lrmd_test
 %{_libexecdir}/pacemaker/*
 
 %if %{with heartbeat}
@@ -482,6 +492,7 @@ exit 0
 %{_libdir}/libpe_status.so.*
 %{_libdir}/libpe_rules.so.*
 %{_libdir}/libpengine.so.*
+%{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
 %doc COPYING.LIB
 %doc AUTHORS
@@ -489,7 +500,6 @@ exit 0
 %files -n %{name}-cluster-libs
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
-%{_libdir}/libstonithd.so.*
 %doc COPYING.LIB
 %doc AUTHORS
 
@@ -501,6 +511,7 @@ exit 0
 %defattr(-,root,root)
 %{py_sitedir}/cts
 %{_datadir}/pacemaker/tests/cts
+%{_libexecdir}/pacemaker/lrmd_test
 %doc COPYING.LIB
 %doc AUTHORS
 
@@ -511,7 +522,7 @@ exit 0
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with gcov}
-%{_var}/lib/pacemaker/gcov
+%{_var}/lib/pacemaker
 %endif
 %{_libdir}/pkgconfig/*.pc
 %doc COPYING.LIB

@@ -58,13 +58,16 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #define F_STONITH_CALLDATA      "st_calldata"
 #define F_STONITH_OPERATION     "st_op"
 #define F_STONITH_TARGET        "st_target"
-#define F_STONITH_REMOTE        "st_remote_op"
+#define F_STONITH_REMOTE_OP_ID  "st_remote_op"
 #define F_STONITH_RC            "st_rc"
 /*! Timeout period per a device execution */
 #define F_STONITH_TIMEOUT       "st_timeout"
 #define F_STONITH_TOLERANCE     "st_tolerance"
 /*! Action specific timeout period returned in query of fencing devices. */
 #define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
+/*! Has this device been verified using a monitor type
+ *  operation (monitor, list, status) */
+#define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"
 #define F_STONITH_CALLBACK_TOKEN    "st_async_id"
 #define F_STONITH_CLIENTNAME        "st_clientname"
 #define F_STONITH_CLIENTNODE        "st_clientnode"

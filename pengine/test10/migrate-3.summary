@@ -6,7 +6,7 @@ Online: [ node2 ]
  rsc3	(heartbeat:apache):	Started node1 FAILED
 
 Transition Summary:
- * Move    rsc3	(Started node1 -> node2)
+ * Recover rsc3	(Started node1 -> node2)
 
 Executing cluster transition:
  * Resource action: rsc3            monitor on node2

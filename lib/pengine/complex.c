@@ -535,6 +535,53 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         }
     }
 
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+    if (safe_str_eq(class, "stonith")) {
+        value = "nothing (fencing device)";
+
+    } else if (safe_str_eq(value, "nothing")) {
+
+    } else if (safe_str_eq(value, "quorum")) {
+        set_bit((*rsc)->flags, pe_rsc_needs_quorum);
+
+    } else if (safe_str_eq(value, "unfencing")) {
+        set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+        set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires (un)fencing but fencing is disabled",
+                       (*rsc)->id);
+        }
+
+    } else if (safe_str_eq(value, "fencing")) {
+        set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires fencing but fencing is disabled",
+                       (*rsc)->id);
+        }
+
+    } else {
+        if (value) {
+            crm_config_err("Invalid value for %s->requires: %s%s",
+                           (*rsc)->id, value,
+                           is_set(data_set->flags,
+                                  pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
+        }
+
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+            value = "fencing (default)";
+
+        } else if (data_set->no_quorum_policy == no_quorum_ignore) {
+            value = "nothing (default)";
+
+        } else {
+            set_bit((*rsc)->flags, pe_rsc_needs_quorum);
+            value = "quorum (default)";
+        }
+    }
+
+    pe_rsc_trace((*rsc), "\tRequired to start: %s", value);
+
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
     if (value != NULL) {
         /* call crm_get_msec() and convert back to seconds */

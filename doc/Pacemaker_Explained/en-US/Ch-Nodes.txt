@@ -1,0 +1,157 @@
+= Cluster Nodes =
+
+== Defining a Cluster Node ==
+
+Each node in the cluster will have an entry in the nodes section
+containing its UUID, uname, and type.
+
+.Example cluster node entry
+[source,XML]
+-------
+<node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="pcmk-1" type="normal"/>
+-------
+
+In normal circumstances, the admin should let the cluster populate
+this information automatically from the communications and membership
+data.  However one can use the `crm_uuid` tool
+to read an existing UUID or define a value before the cluster starts.
+
+== Describing a Cluster Node ==
+
+anchor:s-node-attributes[Describing a Cluster Node]
+Beyond the basic definition of a node the administrator can also
+describe the node's attributes, such as how much RAM, disk, what OS or
+kernel version it has, perhaps even its physical location.  This
+information can then be used by the cluster when deciding where to
+place resources.  For more information on the use of node attributes,
+see the section on xref:ch-rules[].
+
+Node attributes can be specified ahead of time or populated later,
+when the cluster is running, using `crm_attribute`.
+
+Below is what the node's definition would look like if the admin ran the command:
+      
+.The result of using crm_attribute to specify which kernel pcmk-1 is running
+[source,XML]
+-------
+# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r`
+
+<node uname="pcmk-1" type="normal" id="1186dc9a-324d-425a-966e-d757e693dc86">
+   <instance_attributes id="nodes-1186dc9a-324d-425a-966e-d757e693dc86">
+     <nvpair id="kernel-1186dc9a-324d-425a-966e-d757e693dc86" name="kernel" value="2.6.16.46-0.4-default"/>
+   </instance_attributes>
+</node>
+-------
+
+A simpler way to determine the current value of an attribute is to use `crm_attribute` command again:
+
+  `  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value`
+
+By specifying <parameter>--type nodes</parameter> the admin tells the
+cluster that this attribute is persistent.  There are also transient
+attributes which are kept in the status section which are "forgotten"
+whenever the node rejoins the cluster.  The cluster uses this area to
+store a record of how many times a resource has failed on that node
+but administrators can also read and write to this section by
+specifying <parameter>--type status</parameter>.
+      
+== Adding a New Cluster Node ==
+
+=== Corosync ===
+
+Adding a new node is as simple as installing Corosync and Pacemaker,
+and copying _/etc/corosync/corosync.conf_ and _/etc/ais/authkey_ (if
+it exists) from an existing node.  You may need to modify the
++mcastaddr+ option to match the new node's IP address.
+
+If a log message containing "Invalid digest" appears from Corosync,
+the keys are not consistent between the machines.
+
+=== Heartbeat ===
+
+Provided you specified +autojoin any+ in _ha.cf_, adding a new node is
+as simple as installing heartbeat and copying _ha.cf_ and _authkeys_
+from an existing node.
+
+If you don't want to use +autojoin+, then after setting up _ha.cf_ and
+_authkeys_, you must use the `hb_addnode`
+command before starting the new node.
+
+
+== Removing a Cluster Node ==
+
+=== Corosync ===
+
+Because the messaging and membership layers are the authoritative
+source for cluster nodes, deleting them from the CIB is not a reliable
+solution.  First one must arrange for heartbeat to forget about the
+node (_pcmk-1_ in the example below).
+
+On the host to be removed:
+
+. Find and record the node's Corosync id: `crm_node -i`
+. Stop the cluster: `/etc/init.d/corosync stop`
+
+Next, from one of the remaining active cluster nodes:
+
+. Tell the cluster to forget about the removed host:
++
+[source,Bash]
+crm_node -R $COROSYNC_ID
++
+. Only now is it safe to delete the node from the CIB with:
++
+[source,Bash]
+-----
+cibadmin --delete --obj_type nodes --crm_xml '<node uname="_pcmk-1_"/>'
+cibadmin --delete --obj_type status --crm_xml '<node_state uname="_pcmk-1_"/>'
+-----
+
+
+=== Heartbeat ===
+
+Because the messaging and membership layers are the authoritative
+source for cluster nodes, deleting them from the CIB is not a reliable
+solution.
+
+First one must arrange for heartbeat to forget about the node (pcmk-1
+in the example below).  To do this, shut down heartbeat on the node
+and then, from one of the remaining active cluster nodes, run:
+
+[source,Bash]
+hb_delnode pcmk-1
+
+Only then is it safe to delete the node from the CIB with:
+
+[source,Bash]
+-----
+cibadmin --delete --obj_type nodes --crm_xml '<node uname="pcmk-1"/>'
+cibadmin --delete --obj_type status --crm_xml '<node_state uname="pcmk-1"/>'
+-----
+
+== Replacing a Cluster Node ==
+
+=== Corosync ===
+
+The five-step guide to replacing an existing cluster node:
+
+. Make sure the old node is completely stopped
+. Give the new machine the same hostname and IP address as the old one
+. Install the cluster software :-)
+. Copy _/etc/corosync/corosync.conf_ and _/etc/ais/authkey_ (if it exists) to the new node
+. Start the new cluster node
+
+If a log message containing "Invalid digest" appears from Corosync,
+the keys are not consistent between the machines.
+
+=== Heartbeat ===
+
+The seven-step guide to replacing an existing cluster node:
+
+. Make sure the old node is completely stopped
+. Give the new machine the same hostname as the old one
+. Go to an active cluster node and look up the UUID for the old node in _/var/lib/heartbeat/hostcache_
+. Install the cluster software
+. Copy _ha.cf_ and _authkeys_ to the new node
+. On the new node, populate it's UUID using `crm_uuid -w` and the UUID from step 2
+. Start the new cluster node

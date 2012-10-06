@@ -548,12 +548,16 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
                                NULL, action->meta, NULL, FALSE, data_set->now);
     g_hash_table_remove(action->meta, "id");
 
+    /* Begin compatability code */
     class = g_hash_table_lookup(action->rsc->meta, "class");
-
     value = g_hash_table_lookup(action->meta, "requires");
     if (safe_str_eq(class, "stonith")) {
         action->needs = rsc_req_nothing;
         value = "nothing (fencing op)";
+
+    } else if (safe_str_neq(action->task, RSC_START)) {
+        action->needs = rsc_req_nothing;
+        value = "nothing (not start)";
 
     } else if (safe_str_eq(value, "nothing")) {
         action->needs = rsc_req_nothing;
@@ -561,36 +565,34 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
     } else if (safe_str_eq(value, "quorum")) {
         action->needs = rsc_req_quorum;
 
+    } else if (safe_str_eq(value, "unfencing")) {
+        action->needs = rsc_req_stonith;
+        set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires (un)fencing but fencing is disabled",
+                       action->rsc->id);
+        }
+
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_notice("%s requires fencing but fencing is disabled",
+                       action->rsc->id);
+        }
+    /* End compatability code */
+
+    } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
+        action->needs = rsc_req_stonith;
+        value = "fencing (resource)";
+
+    } else if (is_set(action->rsc->flags, pe_rsc_needs_quorum)) {
+        action->needs = rsc_req_quorum;
+        value = "quorum (resource)";
 
     } else {
-        if (value) {
-            crm_config_err("Invalid value for %s->requires: %s%s",
-                           action->rsc->id, value,
-                           is_set(data_set->flags,
-                                  pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
-        }
-
-        if (safe_str_eq(action->task, CRMD_ACTION_STATUS)
-            || safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {
-            action->needs = rsc_req_nothing;
-            value = "nothing (default)";
-
-        } else if (data_set->no_quorum_policy == no_quorum_stop
-                   && safe_str_neq(action->task, CRMD_ACTION_START)) {
-            action->needs = rsc_req_nothing;
-            value = "nothing (default)";
-
-        } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            action->needs = rsc_req_stonith;
-            value = "fencing (default)";
-
-        } else {
-            action->needs = rsc_req_quorum;
-            value = "quorum (default)";
-        }
+        action->needs = rsc_req_nothing;
+        value = "nothing (resource)";
     }
 
     pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->task, value);

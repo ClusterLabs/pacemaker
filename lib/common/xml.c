@@ -590,7 +590,10 @@ string2xml(const char *input)
 		 last_error->domain, last_error->level,
 		 last_error->code, last_error->message);
 
-	if(last_error->code != XML_ERR_DOCUMENT_END) {
+        if(last_error->code == XML_ERR_DOCUMENT_EMPTY) {
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "Cannot parse an empty string", TRUE, TRUE);
+
+        } else if(last_error->code != XML_ERR_DOCUMENT_END) {
 	    crm_err("Couldn't%s parse %d chars: %s", xml?" fully":"", (int)strlen(input), input);
 	    if(xml != NULL) {
 		crm_log_xml_err(xml, "Partial");

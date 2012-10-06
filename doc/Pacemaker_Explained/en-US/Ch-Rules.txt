@@ -1,0 +1,512 @@
+= Rules =
+
+anchor:ch-rules[Rules]
+Rules can be used to make your configuration more dynamic.  One common
+example is to set one value for +resource-stickiness+ during working
+hours, to prevent resources from being moved back to their most
+preferred location, and another on weekends when no-one is around to
+notice an outage.
+
+Another use of rules might be to assign machines to different
+processing groups (using a node attribute) based on time and to then
+use that attribute when creating location constraints.
+
+Each rule can contain a number of expressions, date-expressions and
+even other rules.  The results of the expressions are combined based
+on the rule's +boolean-op+ field to determine if the rule ultimately
+evaluates to +true+ or +false+.  What happens next depends on the
+context in which the rule is being used.
+    
+.Properties of a Rule
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|role
+indexterm:[role Rule Property]
+indexterm:[Rule,Properties,role]
+|Limits the rule to apply only when the resource is in that
+ role. Allowed values: _Started_, +Slave,+ and +Master+. NOTE: A rule
+ with +role="Master"+ can not determine the initial location of a
+ clone instance. It will only affect which of the active instances
+ will be promoted.
+
+|score
+indexterm:[score,Rule Property]
+indexterm:[Rule,Properties,score]  
+|The score to apply if the rule evaluates to +true+. Limited to use in
+ rules that are part of location constraints.
+
+|score-attribute
+indexterm:[score-attribute Rule Property]
+indexterm:[Rule,Properties,score-attribute]
+|The node attribute to look up and use as a score if the rule
+ evaluates to +true+. Limited to use in rules that are part of
+ location constraints.
+
+|boolean-op 
+indexterm:[boolean-op Rule Property]
+indexterm:[Rule,Properties,boolean-op]  
+|How to combine the result of multiple expression objects. Allowed
+ values: _and_ and +or+.
+
+|=========================================================
+
+== Node Attribute Expressions ==
+
+indexterm:[Node,Attribute Expressions]
+
+Expression objects are used to control a resource based on the
+attributes defined by a node or nodes.  In addition to any attributes
+added by the administrator, each node has a built-in node attribute
+called +#uname+ that can also be used.
+
+.Properties of an Expression
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|value
+indexterm:[value Expression Property]
+indexterm:[Expression Properties,value]
+|User supplied value for comparison
+
+|attribute
+indexterm:[attribute Expression Property]
+indexterm:[Expression Properties,attribute]  
+|The node attribute to test
+
+|type
+indexterm:[type,Expression Property]
+indexterm:[Expression Properties,type]
+|Determines how the value(s) should be tested. Allowed values:
+ _string_, +integer+, +version+
+
+|operation
+indexterm:[operation Expression Property]
+indexterm:[Expression Properties,operation]  
+|The comparison to perform. Allowed values:
+
+* +lt+ - True if the node attribute's value is less than +value+
+
+* +gt+ - True if the node attribute's value is greater than +value+
+
+* +lte+ - True if the node attribute's value is less than or equal to +value+
+
+* +gte+ - True if the node attribute's value is greater than or equal to +value+
+
+* +eq+ - True if the node attribute's value is equal to +value+
+
+* +ne+ - True if the node attribute's value is not equal to +value+
+
+* +defined+ - True if the node has the named attribute
+
+* +not_defined+ - True if the node does not have the named attribute
+
+|=========================================================
+
+== Time/Date Based Expressions ==
+
+indexterm:[Time Based Expressions]
+indexterm:[Expression,Time/Date Based]
+        
+As the name suggests, +date_expressions+ are used to control a
+resource or cluster option based on the current date/time.  They can
+contain an optional +date_spec+ and/or +duration+ object depending on
+the context.
+      
+.Properties of a Date Expression
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+|Field
+|Description
+
+|start
+|A date/time conforming to the ISO8601 specification.
+
+|end
+|A date/time conforming to the ISO8601 specification. Can be inferred
+ by supplying a value for +start+ and a +duration+.
+
+|operation
+|Compares the current date/time with the start and/or end date,
+ depending on the context. Allowed values:
+
+* +gt+ - True if the current date/time is after +start+
+
+* +lt+ - True if the current date/time is before +end+
+
+* +in-range+ - True if the current date/time is after +start+ and before +end+
+
+* +date-spec+ - performs a cron-like comparison to the current date/time
+
+|=========================================================
+
+[NOTE]
+======
+Because the comparisons (except for +date_spec+) include the time, the
++eq+, +neq+, +gte+ and +lte+ operators have not been
+implemented.
+======
+
+=== Date Specifications ===
+indexterm:[Date Specifications]
+
++date_spec+ objects are used to create cron-like expressions relating
+to time.  Each field can contain a single number or a single range.
+Instead of defaulting to zero, any field not supplied is ignored.
+
+For example, +monthdays="1"+ matches the first day of every month and
++hours="09-17"+ matches the hours between 9am and 5pm (inclusive).
+However, at this time one cannot specify +weekdays="1,2"+ or
++weekdays="1-2,5-6"+ since they contain multiple ranges.  Depending on
+demand, this may be implemented in a future release.
+        
+.Properties of a Date Spec
+[width="95%",cols="1m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+indexterm:[id,Date Spec Property]
+indexterm:[Date Spec Properties,id]
+|A unique name for the date
+
+|hours
+indexterm:[hours Date Spec Property]
+indexterm:[Date Spec Properties,hours]
+|Allowed values: 0-23
+
+|monthdays
+indexterm:[monthdays Date Spec Property]
+indexterm:[Date Spec Properties,monthdays]
+|Allowed values: 0-31 (depending on month and year)
+
+|weekdays
+indexterm:[weekdays Date Spec Property]
+indexterm:[Date Spec Properties,weekdays]
+|Allowed values: 1-7 (1=Monday, 7=Sunday)
+
+|yeardays
+indexterm:[yeardays Date Spec Property]
+indexterm:[Date Spec Properties,yeardays]  
+|Allowed values: 1-366 (depending on the year)
+
+|months
+indexterm:[months Date Spec Property]
+indexterm:[Date Spec Properties,months]  
+|Allowed values: 1-12
+
+|weeks
+indexterm:[weeks Date Spec Property]
+indexterm:[Date Spec Properties,weeks]  
+|Allowed values: 1-53 (depending on weekyear)
+
+|years
+indexterm:[years Date Spec Property]
+indexterm:[Date Spec Properties,years]  
+|Year according the Gregorian calendar
+
+|weekyears
+indexterm:[weekyears Date Spec Property]
+indexterm:[Date Spec Properties,weekyears]
+|May differ from Gregorian years; Eg. +2005-001 Ordinal+ is also
+ +2005-01-01 Gregorian+ is also +2004-W53-6 Weekly+
+
+|moon
+indexterm:[moon Date Spec Property]
+indexterm:[Date Spec Properties,moon]
+|Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can
+ use this. This was implemented to demonstrate the ease with which new
+ comparisons could be added.
+
+|=========================================================
+
+=== Durations ===
+indexterm:[Durations Expressions]
+indexterm:[Expressions,Durations]
+
+Durations are used to calculate a value for +end+ when one is not
+supplied to in_range operations.  They contain the same fields as
++date_spec+ objects but without the limitations (ie. you can have a
+duration of 19 months).  Like +date_specs+, any field not supplied is
+ignored.
+
+== Sample Time Based Expressions ==
+
+A small sample of how time based expressions can be used.
+
+////
+These should have source,XML directives
+But then the title doesn't appear.
+WTF?
+////
+
+.True if now is any time in the year 2005
+----
+<rule id="rule1">
+   <date_expression id="date_expr1" start="2005-001" operation="in_range">
+    <duration years="1"/>
+   </date_expression>
+</rule>
+----
+
+.Equivalent expression
+----
+<rule id="rule2">
+   <date_expression id="date_expr2" operation="date_spec">
+    <date_spec years="2005"/>
+   </date_expression>
+</rule> 
+----
+
+.9am-5pm, Mon-Friday
+-------
+<rule id="rule3">
+   <date_expression id="date_expr3" operation="date_spec">
+    <date_spec hours="9-16" days="1-5"/>
+   </date_expression>
+</rule> 
+-------
+
+Please note that the +16+ matches up to +16:59:59+, as the numeric
+value (hour) still matches!
+
+.9am-6pm, Mon-Friday, or all day saturday
+-------
+<rule id="rule4" boolean_op="or">
+   <date_expression id="date_expr4-1" operation="date_spec">
+    <date_spec hours="9-16" days="1-5"/>
+   </date_expression>
+   <date_expression id="date_expr4-2" operation="date_spec">
+    <date_spec days="6"/>
+   </date_expression>
+</rule> 
+-------
+
+.9am-5pm or 9pm-12pm, Mon-Friday
+-------
+<rule id="rule5" boolean_op="and">
+   <rule id="rule5-nested1" boolean_op="or">
+    <date_expression id="date_expr5-1" operation="date_spec">
+     <date_spec hours="9-16"/>
+    </date_expression>
+    <date_expression id="date_expr5-2" operation="date_spec">
+     <date_spec hours="21-23"/>
+    </date_expression>
+   </rule>
+   <date_expression id="date_expr5-3" operation="date_spec">
+    <date_spec days="1-5"/>
+   </date_expression>
+  </rule> 
+-------
+
+.Mondays in March 2005
+-------
+<rule id="rule6" boolean_op="and">
+   <date_expression id="date_expr6-1" operation="date_spec">
+    <date_spec weekdays="1"/>
+   </date_expression>
+   <date_expression id="date_expr6-2" operation="in_range"
+     start="2005-03-01" end="2005-04-01"/>
+  </rule> 
+-------
+
+[NOTE]
+======
+Because no time is specified, 00:00:00 is implied.
+
+This means that the range includes all of 2005-03-01 but none of 2005-04-01.
+You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
+======
+
+.A full moon on Friday the 13th
+-------
+<rule id="rule7" boolean_op="and">
+   <date_expression id="date_expr7" operation="date_spec">
+    <date_spec weekdays="5" monthdays="13" moon="4"/>
+   </date_expression>
+</rule> 
+-------
+
+== Using Rules to Determine Resource Location ==
+indexterm:[Rule,Determine Resource Location]
+indexterm:[Resource,Location, Determine by Rules]
+
+If the constraint's outer-most rule evaluates to +false+, the cluster
+treats the constraint as if it was not there.  When the rule evaluates
+to +true+, the node's preference for running the resource is updated
+with the score associated with the rule.
+
+If this sounds familiar, its because you have been using a simplified
+syntax for location constraint rules already.  Consider the following
+location constraint:
+      
+.Prevent myApacheRsc from running on c001n03
+-------
+<rsc_location id="dont-run-apache-on-c001n03" rsc="myApacheRsc" 
+              score="-INFINITY" node="c001n03"/> 
+-------
+
+This constraint can be more verbosely written as:
+
+.Prevent myApacheRsc from running on c001n03 - expanded version
+-------
+<rsc_location id="dont-run-apache-on-c001n03" rsc="myApacheRsc">
+    <rule id="dont-run-apache-rule" score="-INFINITY">
+      <expression id="dont-run-apache-expr" attribute="#uname"
+        operation="eq" value="c00n03"/>
+    </rule>
+</rsc_location>
+-------
+
+The advantage of using the expanded form is that one can then add
+extra clauses to the rule, such as limiting the rule such that it only
+applies during certain times of the day or days of the week (this is
+discussed in subsequent sections).
+
+
+It also allows us to match on node properties other than its name.  If
+we rated each machine's CPU power such that the cluster had the
+following nodes section:
+
+.A sample nodes section for use with score-attribute 
+-------
+<nodes>
+   <node id="uuid1" uname="c001n01" type="normal">
+      <instance_attributes id="uuid1-custom_attrs">
+        <nvpair id="uuid1-cpu_mips" name="cpu_mips" value="1234"/>
+      </instance_attributes>
+   </node>
+   <node id="uuid2" uname="c001n02" type="normal">
+      <instance_attributes id="uuid2-custom_attrs">
+        <nvpair id="uuid2-cpu_mips" name="cpu_mips" value="5678"/>
+      </instance_attributes>
+   </node>
+</nodes>
+-------
+
+then we could prevent resources from running on underpowered machines with the rule
+
+[source,XML]
+-------
+<rule id="need-more-power-rule" score="-INFINITY">
+   <expression id=" need-more-power-expr" attribute="cpu_mips"
+               operation="lt" value="3000"/>
+</rule>
+-------
+
+=== Using +score-attribute+ Instead of +score+ ===
+
+When using +score-attribute+ instead of +score+, each node matched by
+the rule has its score adjusted differently, according to its value
+for the named node attribute.  Thus, in the previous example, if a
+rule used +score-attribute="cpu_mips"+, +c001n01+ would have its
+preference to run the resource increased by +1234+ whereas +c001n02+
+would have its preference increased by +5678+.
+
+== Using Rules to Control Resource Options ==
+
+Often some cluster nodes will be different from their peers; sometimes
+these differences (the location of a binary or the names of network
+interfaces) require resources to be configured differently depending
+on the machine they're hosted on.
+
+By defining multiple +instance_attributes+ objects for the resource
+and adding a rule to each, we can easily handle these special cases.
+
+In the example below, +mySpecialRsc+ will use eth1 and port 9999 when
+run on +node1+, eth2 and port 8888 on +node2+ and default to eth0 and
+port 9999 for all other nodes.
+
+.Defining different resource options based on the node name
+-------
+<primitive id="mySpecialRsc" class="ocf" type="Special" provider="me">
+   <instance_attributes id="special-node1" score="3">
+    <rule id="node1-special-case" score="INFINITY" >
+     <expression id="node1-special-case-expr" attribute="#uname"
+       operation="eq" value="node1"/>
+    </rule>
+    <nvpair id="node1-interface" name="interface" value="eth1"/>
+   </instance_attributes>
+   <instance_attributes id="special-node2" score="2" >
+    <rule id="node2-special-case" score="INFINITY">
+     <expression id="node2-special-case-expr" attribute="#uname"
+       operation="eq" value="node2"/>
+    </rule>
+    <nvpair id="node2-interface" name="interface" value="eth2"/>
+    <nvpair id="node2-port" name="port" value="8888"/>
+   </instance_attributes>
+   <instance_attributes id="defaults" score="1" >
+    <nvpair id="default-interface" name="interface" value="eth0"/>
+    <nvpair id="default-port" name="port" value="9999"/>
+   </instance_attributes>
+</primitive>
+-------
+
+The order in which +instance_attributes+ objects are evaluated is
+determined by their score (highest to lowest).  If not supplied, score
+defaults to zero and objects with an equal score are processed in
+listed order.  If the +instance_attributes+ object does not have a
++rule+ or has a +rule+ that evaluates to +true+, then for any
+parameter the resource does not yet have a value for, the resource
+will use the parameter values defined by the +instance_attributes+
+object.
+
+== Using Rules to Control Cluster Options ==
+indexterm:[Rule,Controlling Cluster Options]
+indexterm:[Cluster Options,Controlled by Rules]
+
+Controlling cluster options is achieved in much the same manner as
+specifying different resource options on different nodes.
+
+The difference is that because they are cluster options, one cannot
+(or should not, because they won't work) use attribute based
+expressions.  The following example illustrates how to set a different
++resource-stickiness+ value during and outside of work hours.  This
+allows resources to automatically move back to their most preferred
+hosts, but at a time that (in theory) does not interfere with business
+activities.
+
+.Change +resource-stickiness+ during working hours
+-------
+<rsc_defaults>
+   <meta_attributes id="core-hours" score="2">
+      <rule id="core-hour-rule" score="0">
+        <date_expression id="nine-to-five-Mon-to-Fri" operation="date_spec">
+          <date_spec id="nine-to-five-Mon-to-Fri-spec" hours="9-16" weekdays="1-5"/>
+        </date_expression>
+      </rule>
+      <nvpair id="core-stickiness" name="resource-stickiness" value="INFINITY"/>
+   </meta_attributes>
+   <meta_attributes id="after-hours" score="1" >
+      <nvpair id="after-stickiness" name="resource-stickiness" value="0"/>
+   </meta_attributes>
+</rsc_defaults>
+-------
+
+== Ensuring Time Based Rules Take Effect ==
+
+anchor:s-rules-recheck[Ensuring Time Based Rules Take Effect]
+A Pacemaker cluster is an event driven system.  As such, it won't
+recalculate the best place for resources to run in unless something
+(like a resource failure or configuration change) happens.  This can
+mean that a location constraint that only allows resource X to run
+between 9am and 5pm is not enforced.
+
+If you rely on time based rules, it is essential that you set the
++cluster-recheck-interval+ option.  This tells the cluster to
+periodically recalculate the ideal state of the cluster.  For example,
+if you set +cluster-recheck-interval=5m+, then sometime between 9:00
+and 9:05 the cluster would notice that it needs to start resource X,
+and between 17:00 and 17:05 it would realize that X needed to be
+stopped.
+
+Note that the timing of the actual start and stop actions depends on
+what else needs to be performed first.

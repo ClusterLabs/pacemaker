@@ -74,8 +74,9 @@ char *strndup(const char *str, size_t len);
 #    	define USE_GNU
 #  endif
 
-#  if !HAVE_LIBGLIB_2_0
+#  if NEED_G_HASH_ITER
 
+#    include <glib.h>
 typedef struct fake_ghi {
     GHashTable *hash;
     int nth;                    /* current index over the iteration */
@@ -92,6 +93,7 @@ g_hash_prepend_value(gpointer key, gpointer value, gpointer user_data)
     *values = g_list_prepend(*values, value);
 }
 
+/* Since: 2.14 */
 static inline GList *
 g_hash_table_get_values(GHashTable * hash_table)
 {
@@ -114,6 +116,7 @@ g_hash_table_nth_data(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
+/* Since: 2.16 */
 static inline void
 g_hash_table_iter_init(GHashTableIter * iter, GHashTable * hash_table)
 {
@@ -143,10 +146,31 @@ g_hash_table_iter_next(GHashTableIter * iter, gpointer * key, gpointer * value)
     return found;
 }
 
+/* Since: 2.16 */
+static inline void
+g_hash_table_iter_remove (GHashTableIter *iter)
+{
+    g_hash_table_remove(iter->hash, iter->key);
+    iter->nth--; /* Or zero to be safe? */
+}
+
+/* Since: 2.16 */
+static inline int
+g_strcmp0 (const char     *str1,
+           const char     *str2)
+{
+  if (!str1)
+    return -(str1 != str2);
+  if (!str2)
+    return str1 != str2;
+  return strcmp (str1, str2);
+}
 #  endif                        /* !HAVE_LIBGLIB_2_0 */
 
 #ifdef NEED_G_LIST_FREE_FULL
 #  include <glib.h>
+#  include <string.h>
+/* Since: 2.28 */
 static inline void g_list_free_full(GList *list, GDestroyNotify free_func)
 {
    g_list_foreach(list, (GFunc) free_func, NULL);
