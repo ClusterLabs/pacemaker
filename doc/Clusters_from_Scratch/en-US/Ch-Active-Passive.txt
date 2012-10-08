@@ -9,7 +9,7 @@ version of Pacemaker being used.
 This is what the base configuration should look like.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs status
 Last updated: Fri Sep 14 10:12:01 2012
@@ -27,7 +27,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm configure show
 node $id="1702537408" pcmk-1
@@ -44,10 +44,13 @@ For those that are not of afraid of XML, you can see the raw cluster
 configuration and status by using the +pcs cluster cib+ command.
 
 .The last XML you'll see in this document
-
-[source,Bash]
+======
+[source,C]
 ----
 # pcs cluster cib
+----
+[source,XML]
+----
 <cib epoch="4" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="pcmk-1" update-client="crmd" cib-last-written="Wed Aug  1 16:08:52 2012" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
@@ -87,15 +90,20 @@ configuration and status by using the +pcs cluster cib+ command.
   </status>
 </cib>
 ----
+======
 endif::[]
 
 ifdef::crm[]
 For those that are not of afraid of XML, you can see the raw configuration by appending "xml" to the previous command.
 
 .The last XML you'll see in this document
-[source,Bash]
+======
+[source,C]
 ----
 # crm configure show xml
+----
+[source,XML]
+----
 <?xml version="1.0" ?>
 <cib admin_epoch="0" cib-last-written="Tue Apr  3 09:26:21 2012" crm_feature_set="3.0.6" dc-uuid="1702537408" epoch="4" have-quorum="1" num_updates="14" update-client="crmd" update-origin="pcmk-1" validate-with="pacemaker-1.2">
   <configuration>
@@ -114,12 +122,13 @@ For those that are not of afraid of XML, you can see the raw configuration by ap
   </configuration>
 </cib>
 ----
+======
 endif::[]
 
 Before we make any changes, its a good idea to check the validity of
 the configuration.
 
-[source,Bash]
+[source,C]
 ----
 # crm_verify -L -V
    error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined
@@ -149,7 +158,7 @@ To disable STONITH, we set the _stonith-enabled_ cluster option to
 false.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs property set stonith-enabled=false
 # crm_verify -L
@@ -157,7 +166,7 @@ ifdef::pcs[]
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm configure property stonith-enabled=false
 # crm_verify -L
@@ -192,16 +201,17 @@ The chosen address must not be one already associated with
 a physical node
 ===========
 
+////
+No syntax highlighting here to avoid line munging with source,C
+////
 ifdef::pcs[]
-[source,Bash]
 ----
-# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \
+# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
     ip=192.168.0.120 cidr_netmask=32 op monitor interval=30s
 ----
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
 ----
 # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
      params ip=192.168.122.120 cidr_netmask=32 \
@@ -222,7 +232,7 @@ ifdef::pcs[]
 To obtain a list of the available resource standards (the ocf part of
 ocf:heartbeat:IPaddr2), run
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource standards
 ocf
@@ -235,7 +245,7 @@ stonith
 To obtain a list of the available ocf resource providers (the heartbeat
 part of ocf:heartbeat:IPaddr2), run
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource providers
 heartbeat
@@ -247,7 +257,7 @@ redhat
 Finally, if you want to see all the resource agents available for
 a specific ocf provider (the IPaddr2 part of ocf:heartbeat:IPaddr2), run
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource agents ocf:heartbeat
 AoEtarget
@@ -274,7 +284,7 @@ ifdef::crm[]
 
 To obtain a list of the available resource classes, run
 
-[source,Bash]
+[source,C]
 ----
 # crm ra classes
 heartbeat
@@ -286,7 +296,7 @@ stonith
 To then find all the OCF resource agents provided by Pacemaker and
 Heartbeat, run
 
-[source,Bash]
+[source,C]
 ----
 # crm ra list ocf pacemaker
 ClusterMon    Dummy         HealthCPU     HealthSMART   Stateful      SysInfo
@@ -317,7 +327,7 @@ Now verify that the IP resource has been added and display the cluster's
 status to see that it is now active.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs status
 
@@ -338,7 +348,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm configure show
 node $id="1702537408" pcmk-1
@@ -375,7 +385,7 @@ resource before moving on.
 First, find the node on which the IP address is running.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs status
 
@@ -396,7 +406,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm resource status ClusterIP
 resource ClusterIP is running on: pcmk-1
@@ -406,7 +416,7 @@ endif::[]
 Shut down Pacemaker and Corosync on that machine.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 #pcs cluster stop pcmk-1
 Stopping Cluster...
@@ -415,7 +425,7 @@ Stopping Cluster...
 Once Corosync is no longer running, go to the other node and check the
 cluster status.
 
-[source,Bash]
+[source,C]
 ----
 # pcs status
 
@@ -437,7 +447,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # ssh pcmk-1 -- service pacemaker stop
 # ssh pcmk-1 -- service corosync stop
@@ -446,7 +456,7 @@ ifdef::crm[]
 Once Corosync is no longer running, go to the other node and check the
 cluster status with crm_mon.
 
-[source,Bash]
+[source,C]
 ----
 # crm_mon -1
 ============
@@ -493,7 +503,7 @@ is lost. In particular, we can tell the cluster to simply ignore
 quorum altogether.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs property set no-quorum-policy=ignore
 # pcs property
@@ -505,7 +515,7 @@ no-quorum-policy: ignore
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm configure property no-quorum-policy=ignore
 # crm configure show
@@ -526,7 +536,7 @@ After a few moments, the cluster will start the IP address on the
 remaining node. Note that the cluster still does not have quorum.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs status
 Last updated: Fri Sep 14 10:38:11 2012
@@ -547,7 +557,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm_mon -1
 ============
@@ -573,7 +583,7 @@ the 'pcs cluster start pcmk-1' command, you must authenticate on the node
 using the 'pcs cluster auth pcmk pcmk-1 pcmk-2' command discussed earlier.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster start pcmk-1
 Starting Cluster...
@@ -596,7 +606,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # service corosync start
 Starting Corosync Cluster Engine (corosync): [ OK ]
@@ -644,7 +654,7 @@ resource placement. We can specify a different stickiness for every
 resource, but it is often sufficient to change the default.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource rsc defaults resource-stickiness=100
 # pcs resource rsc defaults
@@ -653,7 +663,7 @@ resource-stickiness: 100
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm configure rsc_defaults resource-stickiness=100
 # crm configure show

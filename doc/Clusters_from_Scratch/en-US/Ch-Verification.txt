@@ -10,7 +10,7 @@ node than the one you ran the 'pcs cluster auth' command on earlier, you
 must authenticate on current node you are logged into before you will
 be allowed to start the cluster.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster start --all
 pcmk-1: Starting Cluster...
@@ -21,7 +21,7 @@ An alternative to using the 'pcs cluster startall' command
 is to issue either of the below commands on each node in the
 cluster by hand.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster start
 Starting Cluster...
@@ -29,7 +29,7 @@ Starting Cluster...
 
 or
 
-[source,Bash]
+[source,C]
 ----
 # systemctl start corosync.service
 # systemctl start pacemaker.service
@@ -42,7 +42,7 @@ endif::[]
 ifdef::crm[]
 Start Corosync on the first node
 
-[source,Bash]
+[source,C]
 ----
 # systemctl start corosync.service
 ----
@@ -52,7 +52,7 @@ The first thing to check is if cluster communication is happy, for
 that we use `corosync-cfgtool`.
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # corosync-cfgtool -s
 Printing ring status.
@@ -64,6 +64,7 @@ RING ID 0
 endif::[]
 
 ifdef::pcs[]
+[source,C]
 ----
 # corosync-cfgtool -s
 Printing ring status.
@@ -84,7 +85,7 @@ the node's network, firewall and selinux configurations.
 Next we check the membership and quorum APIs:
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # corosync-cmapctl  | grep members 
 runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101) 
@@ -106,7 +107,7 @@ You should see both nodes have joined the cluster.
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # corosync-cmapctl  | grep members
 runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101)
@@ -128,7 +129,7 @@ you've not correctly quorum in 'corosync.conf'.
 With everything looking healthy, we start Corosync on the second node
 and run the same communications check.
 
-[source,Bash]
+[source,C]
 ----
 # ssh pcmk-2 -- systemctl start corosync.service
 # ssh pcmk-2 -- corosync-cfgtool -s
@@ -145,7 +146,7 @@ membership and quorum checks to see if it shows up there too.
 Again, if you see something different to the above, check for the
 usual suspects: network, firewall and selinux.
 
-[source,Bash]
+[source,C]
 ----
 # corosync-cmapctl  | grep members
 runtime.totem.pg.mrp.srp.members.1702537408.ip (str) = r(0) ip(192.168.122.101)
@@ -175,7 +176,7 @@ Now that we have confirmed that Corosync is functional we can check
 the rest of the stack. Pacemaker has already been started, so verify
 the necessary processes are running.
 
-[source,Bash]
+[source,C]
 ----
 # ps axf
   PID TTY      STAT   TIME COMMAND
@@ -193,7 +194,7 @@ the necessary processes are running.
 
 If that looks ok, check the pcs status output.
 
-[source,Bash]
+[source,C]
 ----
 # pcs status
 Last updated: Fri Sep 14 09:52:25 2012
@@ -211,7 +212,7 @@ Full list of resources:
 
 Next, check for any ERRORs during startup - there shouldn't be any.
 
-[source,Bash]
+[source,C]
 ----
 # grep -i error /var/log/messages
 ----
@@ -225,7 +226,7 @@ Now that we have confirmed that Corosync is functional we can check
 the rest of the stack. Start Pacemaker and check the necessary
 processes have been started.
 
-[source,Bash]
+[source,C]
 ----
 # systemctl start pacemaker.service
 # ps axf
@@ -244,7 +245,7 @@ processes have been started.
 
 If that looks ok, check the logs and crm_mon.
 
-[source,Bash]
+[source,C]
 ----
 # grep pacemakerd /var/log/messages | grep -e get_cluster_type -e read_config
 Apr  3 09:19:32 pcmk-1 pacemakerd[28047]:     info: get_cluster_type: Detected an active 'corosync' cluster
@@ -265,14 +266,14 @@ Online: [ pcmk-1 ]
 
 Next, check for any ERRORs during startup - there shouldn't be any.
 
-[source,Bash]
+[source,C]
 ----
 # grep -i error /var/log/messages
 ----
 
 Repeat on the other node and display the cluster's status.
 
-[source,Bash]
+[source,C]
 ----
 # ssh pcmk-2 -- systemctl start pacemaker.service
 # crm_mon -1

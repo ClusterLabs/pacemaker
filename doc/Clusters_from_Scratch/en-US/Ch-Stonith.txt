@@ -97,7 +97,7 @@ active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
 .Obtaining a list of STONITH Parameters
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs stonith describe fence_ipmilan
 Stonith options for: fence_ipmilan
@@ -119,7 +119,7 @@ Stonith options for: fence_ipmilan
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # stonith_admin --metadata -a fence_ipmilan
 ----
@@ -217,19 +217,21 @@ like this
 
 .Sample STONITH Resource
 ifdef::pcs[]
-[source,Bash]
 ----
 # pcs cluster cib stonith_cfg
 # pcs -f stonith_cfg stonith create impi-fencing fence_ipmilan \
- pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
- passwd=acd123 op monitor interval=60s
+      pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
+      passwd=acd123 op monitor interval=60s
+----
+[source,C]
+----
 # pcs -f stonith_cfg stonith
  impi-fencing	(stonith:fence_ipmilan) Stopped
 ----
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm crm(live)# cib new stonith
 INFO: stonith shadow CIB created
@@ -243,7 +245,7 @@ And finally, since we disabled it earlier, we need to re-enable STONITH.
 At this point we should have the following configuration.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs -f stonith_cfg property set stonith-enabled=true
 # pcs -f stonith_cfg property
@@ -256,14 +258,14 @@ stonith-enabled: true
 Now push the configuration into the cluster.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster push cib stonith_cfg
 ----
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 crm(stonith)# configure property stonith-enabled="true"
 crm(stonith)# configure shownode pcmk-1

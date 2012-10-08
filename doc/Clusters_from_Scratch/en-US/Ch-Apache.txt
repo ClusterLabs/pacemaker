@@ -12,9 +12,10 @@ Before continuing, we need to make sure Apache is installed on both
 hosts. We also need the wget tool in order for the cluster to be able to check
 the status of the Apache server.
 
-[source,Bash]
-.....
+[source,C]
 # yum install -y httpd wget
+
+.....
 Loaded plugins: langpacks, presto, refresh-packagekit
 fedora/metalink                                               | 2.6 kB     00:00
 updates/metalink                                              | 3.2 kB     00:00
@@ -95,7 +96,7 @@ First we need to create a page for Apache to serve up. On Fedora the
 default Apache docroot is /var/www/html, so we'll create an index file
 there.
 
-[source,Bash]
+[source,C]
 -----
 # cat <<-END >/var/www/html/index.html
  <html>
@@ -108,7 +109,7 @@ For the moment, we will simplify things by serving up only a static site
 and manually sync the data between the two nodes. So run the command
 again on pcmk-2.
 
-[source,Bash]
+[source,C]
 -----
 [root@pcmk-2 ~]# cat <<-END >/var/www/html/index.html <html>
  <body>My Test Site - pcmk-2</body>
@@ -123,14 +124,15 @@ it fails, the resource agent used by Pacemaker assumes the server-status
 URL is available. Look for the following in '/etc/httpd/conf/httpd.conf'
 and make sure it is not disabled or commented out:
 
-.....
+[source,Apache Configuration]
+-----
 <Location /server-status>
    SetHandler server-status
    Order deny,allow
    Deny from all
    Allow from 127.0.0.1
 </Location>
-.....
+-----
 
 == Update the Configuration ==
 
@@ -143,9 +145,11 @@ configuration file and we'll tell the cluster to check once a
 minute that apache is still running.
 
 ifdef::pcs[]
-[source,Bash]
+////
+source,C doesn't deal well with \'s
+////
 -----
-# pcs resource create WebSite ocf:heartbeat:apache  \
+pcs resource create WebSite ocf:heartbeat:apache  \
       configfile=/etc/httpd/conf/httpd.conf \
       statusurl="http://localhost/server-status" op monitor interval=1min
 -----
@@ -155,7 +159,7 @@ operations is 20 seconds.  In many cases this timeout period is less than
 the advised timeout period.  For the purposes of this tutorial, we will
 adjust the global operation timeout default to 240 seconds.
 
-[source,Bash]
+[source,C]
 -----
 # pcs resource op defaults timeout=240s
 # pcs resource op defaults
@@ -204,7 +208,7 @@ endif::[]
 After a short delay, we should see the cluster start apache
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs status
 
@@ -226,7 +230,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm_mon -1
 ============
@@ -333,7 +337,7 @@ location of +ClusterIP+ before choosing a location for +WebSite+.
 ===========
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs constraint colocation add WebSite ClusterIP INFINITY
 # pcs constraint
@@ -361,7 +365,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
 # crm configure show
@@ -415,7 +419,7 @@ By default all order constraints are mandatory constraints unless
 otherwise configured.  This means that the recovery of ClusterIP will
 also trigger the recovery of WebSite.
 
-[source,Bash]
+[source,C]
 -----
 # pcs constraint order ClusterIP then WebSite
 Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
@@ -435,7 +439,7 @@ apache-after-ip), indicate that its mandatory (so that any recovery for
 ClusterIP will also trigger recovery of WebSite) and list the two
 resources in the order we need them to start.
 
-[source,Bash]
+[source,C]
 -----
 # crm configure order apache-after-ip mandatory: ClusterIP WebSite
 # crm configure show
@@ -474,7 +478,7 @@ In the location constraint below, we are saying the WebSite resource
 prefers the node pcmk-1 with a score of 50.  The score here indicates
 how badly we'd like the resource to run somewhere.
 
-[source,Bash]
+[source,C]
 -----
 # pcs constraint location WebSite prefers pcmk-1=50
 # pcs constraint
@@ -509,7 +513,7 @@ want to run there (WebSite), how badly we'd like it to run there (we'll use
 50 for now, but in a two-node situation almost any value above 0 will do) and
 the host's name.
 
-[source,Bash]
+[source,C]
 -----
 # crm configure location prefer-pcmk-1 WebSite 50: pcmk-1
 WARNING: prefer-pcmk-1: referenced node pcmk-1 does not exist
@@ -517,7 +521,7 @@ WARNING: prefer-pcmk-1: referenced node pcmk-1 does not exist
 
 This warning should be ignored.
 
-[source,Bash]
+[source,C]
 -----
 # crm configure show
 node $id="1702537408" pcmk-1
@@ -567,7 +571,7 @@ preferred not to have unnecessary downtime).
 
 To see the current placement scores, you can use a tool called crm_simulate
 
-[source,Bash]
+[source,C]
 ----
 # crm_simulate -sL
 Current cluster status:
@@ -593,7 +597,7 @@ cluster and force resources to move to a specific location.  By
 updating our previous location constraint with a score of INFINITY,
 WebSite will be forced to move to pcmk-1.
 
-[source,Bash]
+[source,C]
 -----
 # pcs constraint location WebSite prefers pcmk-1=INFINITY
 # pcs constraint all
@@ -630,7 +634,7 @@ use location constraints like the one we created above, happily you don't
 need to care. Just provide the name of the resource and the intended
 location, we'll do the rest.
 
-[source,Bash]
+[source,C]
 -----
 # crm resource move WebSite pcmk-1
 # crm_mon -1
@@ -653,7 +657,7 @@ Online: [ pcmk-1 pcmk-2 ]
 Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.
 For the curious, we can see the effect of this command by examining the configuration
 
-[source,Bash]
+[source,C]
 -----
 # crm configure show
 node $id="1702537408" pcmk-1
@@ -693,7 +697,7 @@ to resume normal operation with the unmove command. Since we previously
 configured a default stickiness, the resources will remain on pcmk-1.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs constraint all
 Location Constraints:
@@ -714,7 +718,7 @@ Colocation Constraints:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm resource unmove WebSite
 # crm configure show
@@ -747,7 +751,7 @@ status, we can also see that as expected the resources are still active
 on pcmk-1.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs status
 
@@ -769,7 +773,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm_mon
 ============

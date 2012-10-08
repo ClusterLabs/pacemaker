@@ -15,9 +15,9 @@ Fedora 17.
 
 === Installing the required Software ===
 
-[source,Bash]
------
+[source,C]
 # yum install -y gfs2-utils dlm kernel-modules-extra
+.....
 Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
@@ -46,7 +46,7 @@ Downloading Packages:
 (1/3): dlm-3.99.4-1.fc17.x86_64.rpm                         |  83 kB     00:00
 (2/3): gfs2-utils-3.1.4-3.fc17.x86_64.rpm                   | 214 kB     00:00
 (3/3): kernel-modules-extra-3.4.4-3.fc17.x86_64.rpm         | 1.7 MB     00:01
- -------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 Total                                              615 kB/s | 1.9 MB     00:03
 Running Transaction Check
 Running Transaction Test
@@ -65,7 +65,7 @@ Installed:
   kernel-modules-extra.x86_64 0:3.4.4-3.fc17
 
 Complete!
------
+.....
 
 == Create a GFS2 Filesystem ==
 
@@ -78,7 +78,7 @@ This will ensure that other resources (in our case, Apache) using WebFS
 are not only stopped, but stopped in the correct order.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource stop WebFS
 # pcs resource
@@ -92,7 +92,7 @@ ifdef::pcs[]
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm resource stop WebFS
 # crm_mon -1
@@ -190,7 +190,7 @@ mounted.  Otherwise you will receive the message:
 -----
 ===========
 
-[source,Bash]
+[source,C]
 -----
 # ssh pcmk-2 -- mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
 This will destroy any data on /dev/drbd1.
@@ -208,7 +208,7 @@ UUID:                      ed293a02-9eee-3fa3-ed1c-435ef1fd0116
 -----
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster cib dlm_cfg
 # pcs -f dlm_cfg resource create dlm ocf:pacemaker:controld op monitor interval=60s
@@ -250,7 +250,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm
 crm(live)# cib new dlm
@@ -326,7 +326,7 @@ endif::[]
 Then (re)populate the new filesystem with data (web pages). For now we'll
 create another variation on our home page.
 
-[source,Bash]
+[source,C]
 -----
 # mount /dev/drbd1 /mnt/
 # cat <<-END >/mnt/index.html
@@ -345,7 +345,7 @@ ifdef::pcs[]
 
 With the WebFS resource stopped, lets update the configuration.
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource show WebFS
 Resource: WebFS
@@ -357,7 +357,7 @@ Resource: WebFS
 
 The fstype option needs to be updated to gfs2 instead of ext4.
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource update WebFS fstype=gfs2
 # pcs resource show WebFS
@@ -371,7 +371,7 @@ CIB updated
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # crm
 crm(live) # cib new GFS2
@@ -384,7 +384,7 @@ Now that we've recreated the resource, we also need to recreate all the
 constraints that used it. This is because the shell will automatically
 remove any constraints that referenced WebFS.
 
-[source,Bash]
+[source,C]
 -----
 crm(GFS2) # configure colocation WebSite-with-WebFS inf: WebSite WebFS
 crm(GFS2) # configure colocation fs_on_drbd inf: WebFS WebDataClone:Master
@@ -425,7 +425,7 @@ rsc_defaults $id="rsc-options" \
 Review the configuration before uploading it to the cluster, quitting the
 shell and watching the cluster's response
 
-[source,Bash]
+[source,C]
 -----
 crm(GFS2) # cib commit GFS2
 INFO: commited 'GFS2' shadow CIB to the cluster
@@ -462,7 +462,7 @@ ifdef::pcs[]
 This will involve a number of changes, so we'll want work with a
 local cib file.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster cib active_cfg
 ----
@@ -472,7 +472,7 @@ ifdef::crm[]
 This will involve a number of changes, so we'll again use interactive
 mode.
 
-[source,Bash]
+[source,C]
 -----
 # crm
 # cib new active
@@ -489,7 +489,6 @@ of them. Otherwise the requests would be simply discarded.
 
 
 ifdef::pcs[]
-[source,Bash]
 ----
 # pcs -f active_cfg resource clone ClusterIP \
      globally-unique=true clone-max=2 clone-node-max=2
@@ -500,7 +499,7 @@ referencing ClusterIP now reference the clone.  This is
 done automatically by pcs.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs -f active_cfg constraint
 Location Constraints:
@@ -516,7 +515,7 @@ Colocation Constraints:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 # configure clone WebIP ClusterIP \
     meta globally-unique="true" clone-max="2" clone-node-max="2"
@@ -528,7 +527,7 @@ processed by which hosts. To do this we must specify the
 clusterip_hash parameter.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs -f active_cfg resource update ClusterIP clusterip_hash=sourceip
 ----
@@ -537,7 +536,7 @@ endif::[]
 ifdef::crm[]
 Open the ClusterIP resource
 
-[source,Bash]
+[source,C]
 -----
 # configure edit ClusterIP
 -----
@@ -558,7 +557,7 @@ primitive ClusterIP ocf:heartbeat:IPaddr2 \
 
 Here is the full transcript
 
-[source,Bash]
+[source,C]
 -----
 # crm crm(live)
 # cib new active
@@ -606,7 +605,7 @@ clones.
 
 ifdef::pcs[]
 Notice how pcs automatically updates the relevant constraints again.
-[source,Bash]
+[source,C]
 ----
 # pcs -f active_cfg resource clone WebFS
 # pcs -f active_cfg resource clone WebSite
@@ -627,7 +626,7 @@ ifdef::crm[]
 Again, the shell will automatically update any relevant
 constraints.
 
-[source,Bash]
+[source,C]
 -----
 crm(active) # configure clone WebFSClone WebFS
 crm(active) # configure clone WebSiteClone WebSite
@@ -638,21 +637,21 @@ The last step is to tell the cluster that it is now allowed to promote
 both instances to be Primary (aka. Master).
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs -f active_cfg resource update WebDataClone master-max=2 
 -----
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 crm(active) # configure edit WebDataClone
 -----
 
 Change master-max to 2
 
-[source,Bash]
+[source,C]
 -----
 crm(active) # configure show
 node pcmk-1
@@ -693,7 +692,7 @@ Review the configuration before uploading it to the cluster, quitting the
 shell and watching the cluster's response
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 -----
 # pcs cluster push cib active_cfg
 # pcs resource start WebFS
@@ -702,7 +701,7 @@ ifdef::pcs[]
 After all the processes are started the status should look
 similar to this.
 
-[source,Bash]
+[source,C]
 -----
 # pcs resource
  Master/Slave Set: WebDataClone [WebData]
@@ -720,7 +719,7 @@ similar to this.
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 -----
 crm(active) # cib commit active
 INFO: commited 'active' shadow CIB to the cluster

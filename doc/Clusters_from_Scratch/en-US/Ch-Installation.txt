@@ -97,16 +97,16 @@ From here on in we're going to be working exclusively from the terminal.
 
 Bring up the network and ensure it starts at boot
 
-[source,Bash]
-....
+[source,C]
+-----
 # service network start
 # chkconfig network on
-....
+-----
 
 Check the machine has the static IP address you configured earlier
 
-[source,Bash]
-....
+[source,C]
+-----
 # ip addr
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue state UNKNOWN
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -118,28 +118,29 @@ Check the machine has the static IP address you configured earlier
     inet 192.168.122.101/24 brd 192.168.122.255 scope global eth0
     inet6 fe80::5054:ff:fed7:d608/64 scope link
        valid_lft forever preferred_lft forever
-....
+-----
 
 Now check the default route setting:
 
-[source,Bash]
-....
+[source,C]
+-----
 [root@pcmk-1 ~]# ip route
 default via 192.168.122.1 dev eth0
 192.168.122.0/24 dev eth0  proto kernel  scope link  src 192.168.122.101
-....
+-----
 
 If there is no line beginning with +default via+, then you may need to add a line such as
 
-  GATEWAY=192.168.122.1
+[source,Bash]
+GATEWAY=192.168.122.1
 
 to '/etc/sysconfig/network' and restart the network.
 
 Now check for connectivity to the outside world.  Start small by
 testing if we can read the gateway we configured.
 
-[source,Bash]
-....
+[source,C]
+-----
 # ping -c 1 192.168.122.1
 PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
 64 bytes from 192.168.122.1: icmp_req=1 ttl=64 time=0.249 ms
@@ -147,12 +148,12 @@ PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
 --- 192.168.122.1 ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 0.249/0.249/0.249/0.000 ms
-....
+-----
 
 Now try something external, choose a location you know will be available.
 
-[source,Bash]
-....
+[source,C]
+-----
 # ping -c 1 www.google.com
 PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
 64 bytes from tf-in-f106.1e100.net (173.194.72.106): icmp_req=1 ttl=41 time=167 ms
@@ -160,7 +161,7 @@ PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
 --- www.l.google.com ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 167.618/167.618/167.618/0.000 ms
-....
+-----
 
 === Leaving the Console ===
 
@@ -170,8 +171,8 @@ use copy&paste etc.
 
 First we check we can see the newly installed at all:
 
-[source,Bash]
-....
+[source,C]
+-----
 beekhof@f16 ~ # ping -c 1 192.168.122.101
 PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
 64 bytes from 192.168.122.101: icmp_req=1 ttl=64 time=1.01 ms
@@ -179,17 +180,17 @@ PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
 --- 192.168.122.101 ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 1.012/1.012/1.012/0.000 ms
-....
+-----
 
 Next we login via SSH
 
-[source,Bash]
-....
+[source,C]
+-----
 beekhof@f16 ~ # ssh -l root 192.168.122.11
 root@192.168.122.11's password:
 Last login: Fri Mar 30 19:41:19 2012 from 192.168.122.1
 [root@pcmk-1 ~]#
-....
+-----
 
 === Security Shortcuts ===
 
@@ -209,12 +210,12 @@ outside world.
  TODO: Create an Appendix that deals with (at least) re-enabling the firewall.
 ===========
 
-[source,Bash]
+[source,C]
 ----
 # setenforce 0
 # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
 # systemctl disable iptables.service
-rm '/etc/systemd/system/basic.target.wants/iptables.service'
+# rm '/etc/systemd/system/basic.target.wants/iptables.service'
 # systemctl stop iptables.service
 ----
 
@@ -225,7 +226,7 @@ name (FQDN) which can be rather long when it appears in cluster logs and
 status output. See for yourself how the machine identifies itself:
 (((Nodes, short name)))
 
-[source,Bash]
+[source,C]
 ----
 # uname -n
 pcmk-1.clusterlabs.org
@@ -239,7 +240,7 @@ domain name included in the basic host details. To address this, we need
 to update /etc/sysconfig/network. This is what it should look like before
 we start.
 
-[source,Bash]
+[source,C]
 ----
 # cat /etc/sysconfig/network
 NETWORKING=yes
@@ -250,7 +251,7 @@ GATEWAY=192.168.122.1
 All we need to do now is strip off the domain name portion, which is
 stored elsewhere anyway.
 
-[source,Bash]
+[source,C]
 ----
  # sed -i.sed 's/\.[a-z].*//g' /etc/sysconfig/network
 ----
@@ -258,7 +259,7 @@ stored elsewhere anyway.
 Now confirm the change was successful. The revised file contents should
 look something like this.
 
-[source,Bash]
+[source,C]
 ----
 # cat /etc/sysconfig/network
 NETWORKING=yes
@@ -269,7 +270,7 @@ GATEWAY=192.168.122.1
 However we're not finished. The machine wont normally see the shortened
 host name until about it reboots, but we can force it to update.
 
-[source,Bash]
+[source,C]
 ----
 # source /etc/sysconfig/network
 # hostname $HOSTNAME
@@ -278,7 +279,7 @@ host name until about it reboots, but we can force it to update.
 
 Now check the machine is using the correct names
 
-[source,Bash]
+[source,C]
 ----
 # uname -n
 pcmk-1
@@ -304,7 +305,7 @@ pcmk-2 with address 192.168.122.102.
 
 Confirm that you can communicate between the two new nodes:
 
-[source,Bash]
+[source,C]
 ----
 # ping -c 3 192.168.122.102
 PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
@@ -322,7 +323,7 @@ name. If you have a DNS server, add additional entries for the two
 machines. Otherwise, you'll need to add the machines to '/etc/hosts' .
 Below are the entries for my cluster nodes:
 
-[source,Bash]
+[source,C]
 ----
 # grep pcmk /etc/hosts
 192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
@@ -331,7 +332,7 @@ Below are the entries for my cluster nodes:
 
 We can now verify the setup by again using ping:
 
-[source,Bash]
+[source,C]
 ----
 # ping -c 3 pcmk-2
 PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
@@ -362,7 +363,7 @@ We use them here only to simplify the demo.
 Create a new key and allow anyone with that key to log in:
 
 .Creating and Activating a new SSH Key
-[source,Bash]
+[source,C]
 ----
 # ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
 Generating public/private dsa key pair.
@@ -392,7 +393,7 @@ Install the key on the other nodes and test that you can now run commands
 remotely, without being prompted
 
 .Installing the SSH Key on Another Host
-[source,Bash]
+[source,C]
 ----
 # scp -r .ssh pcmk-2:
 The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
@@ -415,9 +416,11 @@ pcmk-2
 Since version 12, Fedora comes with recent versions of everything you
 need, so simply fire up the shell and run:
 
-[source,Bash]
+[source,C]
 ----
 # yum install -y pacemaker corosync
+----
+.....
 fedora/metalink                                  |  38 kB     00:00
 fedora                                           | 4.2 kB     00:00
 fedora/primary_db                                |  14 MB     00:21
@@ -583,7 +586,7 @@ Resolving Dependencies
 
 Dependencies Resolved
 
- ==============================================================================================
+=====================================================================================
  Package                        Arch      Version             Repository            Size
 =====================================================================================
 Installing:
@@ -695,7 +698,7 @@ Public key for cifs-utils-5.3-2.fc17.x86_64.rpm is not installed
 (46/48): rpcbind-0.2.0-16.fc17.x86_64.rpm                             |  52 kB     00:00
 (47/48): tcp_wrappers-7.6-69.fc17.x86_64.rpm                          |  72 kB     00:00
 (48/48): xfsprogs-3.1.8-1.fc17.x86_64.rpm                             | 715 kB     00:03
- ---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 Total                                                        333 kB/s |  18 MB     00:55
 Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64
 Importing GPG key 0x1ACA3465:
@@ -835,7 +838,7 @@ Dependency Installed:
 
 Complete!
 [root@pcmk-1 ~]#
-----
+.....
 
 Now install the cluster software on the second node.
 
@@ -845,7 +848,7 @@ The pcs cli command coupled with the pcs daemon creates a cluster
 management system capable of managing all aspects of the cluster stack
 across all nodes from a single location.
 
-[source,Bash]
+[source,C]
 ----
 # yum install -y pcs
 ----
@@ -864,7 +867,7 @@ syncing the corosync configuration across all the nodes in the cluster.
 
 Start and enable the daemon by issuing the following commands on each node.
 
-[source,Bash]
+[source,C]
 ----
 # systemctl start pcsd.service
 # systemctl enable pcsd.service
@@ -876,7 +879,7 @@ is created.  You will be asked to supply a password (or supply one
 with the -p option).  Make sure the username and password is
 consistent across all the nodes.
 
-[source,Bash]
+[source,C]
 ----
 # pcs_passwd pcmk
 password:
@@ -901,7 +904,7 @@ to achieve this is to authenticate as the pcs user 'pcmk' on one of the nodes in
 cluster, and then issue the 'pcs cluster setup' command with a list of all the
 node names in the cluster.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster auth pcmk-1 pcmk-2
 Username: pcmk
@@ -936,7 +939,7 @@ have a more complicated setup, you should edit the configuration
 manually.
 ===========
 
-[source,Bash]
+[source,C]
 ----
 # export ais_port=4000
 # export ais_mcast=239.255.1.1
@@ -947,7 +950,7 @@ address, we make the configuration suitable to be copied to other nodes.
 
 [source,Bash]
 ----
-# export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`
+export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`
 ----
 
 Display and verify the configuration options
@@ -963,7 +966,7 @@ ais_addr=192.168.122.0
 Once you're happy with the chosen values, update the Corosync
 configuration
 
-[source,Bash]
+[source,C]
 ----
 # cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
 # sed -i.bak "s/.*mcastaddr:.*/mcastaddr:\ $ais_mcast/g" /etc/corosync/corosync.conf
@@ -974,14 +977,14 @@ configuration
 Lastly, you'll need to enable quorum
 
 [source,Bash]
-....
+-----
 cat << END >> /etc/corosync/corosync.conf
 quorum {
            provider: corosync_votequorum
            expected_votes: 2
 }
 END
-....
+-----
 
 endif::[]
 
@@ -1007,7 +1010,7 @@ ifdef::crm[]
 
 Now we need to copy the changes so far to the other node:
 
-[source,Bash]
+[source,C]
 ----
 # for f in /etc/corosync/corosync.conf /etc/hosts; do scp $f pcmk-2:$f ; done
 corosync.conf                            100% 1528     1.5KB/s   00:00

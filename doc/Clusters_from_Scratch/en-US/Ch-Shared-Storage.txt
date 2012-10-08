@@ -14,9 +14,10 @@ Since its inclusion in the upstream 2.6.33 kernel, everything needed
 to use DRBD has shiped with Fedora since version 13. All you need to
 do is install it:
 
-[source,Bash]
-.....
+[source,C]
 # yum install -y drbd-pacemaker drbd-udev
+
+.....
 Loaded plugins: langpacks, presto, refresh-packagekit
 Resolving Dependencies
 --> Running transaction check
@@ -80,7 +81,7 @@ If you have more than 1Gb free, feel free to use it. For this guide
 however, 1Gb is plenty of space for a single html file and sufficient for
 later holding the GFS2 metadata.
 
-[source,Bash]
+[source,C]
 ----
 # vgdisplay | grep -e Name - e Free
   VG Name               vg_pcmk1
@@ -100,7 +101,7 @@ Logical volume "drbd-demo" created
 
 Repeat this on the second node, be sure to use the same size partition.
 
-[source,Bash]
+[source,C]
 ----
 # ssh pcmk-2 -- lvs
 LV   VG    Attr  LSize  Origin Snap% Move Log Copy% Convert
@@ -171,7 +172,7 @@ TODO: Explain the reason for the allow-two-primaries option
 With the configuration in place, we can now perform the DRBD
 initialization
 
-[source,Bash]
+[source,C]
 ----
 # drbdadm create-md wwwdata
 Writing meta data...
@@ -183,7 +184,7 @@ success
 
 Now load the DRBD kernel module and confirm that everything is sane
 
-[source,Bash]
+[source,C]
 ----
 # modprobe drbd
 # drbdadm up wwwdata
@@ -197,7 +198,7 @@ srcversion: 0D2B62DEDB020A425130935
 
 Repeat on the second node
 
-[source,Bash]
+[source,C]
 ----
 # ssh pcmk-2 -- drbdadm --force create-md wwwdata
 Writing meta data...
@@ -219,7 +220,7 @@ srcversion: 0D2B62DEDB020A425130935
 Now we need to tell DRBD which set of data to use. Since both sides
 contain garbage, we can run the following on pcmk-1:
 
-[source,Bash]
+[source,C]
 ----
 # drbdadm -- --overwrite-data-of-peer primary wwwdata
 # cat /proc/drbd
@@ -234,7 +235,7 @@ srcversion: 0D2B62DEDB020A425130935
 
 After a while, the sync should finish and you'll see:
 
-[source,Bash]
+[source,C]
 ----
 # cat /proc/drbd
 version: 8.3.11 (api:88/proto:86-96)
@@ -251,7 +252,7 @@ it with some data to serve up via our WebSite resource.
 
 === Populate DRBD with Data ===
 
-[source,Bash]
+[source,C]
 ----
 # mkfs.ext4 /dev/drbd1
 mke2fs 1.42 (29-Nov-2011)
@@ -278,7 +279,7 @@ Writing superblocks and filesystem accounting information: done
 
 Now mount the newly created filesystem so we can create our index file
 
-[source,Bash]
+[source,C]
 ----
 # mount /dev/drbd1 /mnt/
 # cat <<-END >/mnt/index.html
@@ -298,7 +299,7 @@ into a file and commit those changes atomically.  To do this, start by
 populating the file with the current raw xml config from the cib.  This
 can be done using the following command.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster cib drbd_cfg
 ----
@@ -307,13 +308,19 @@ Now using the pcs -f option, make changes to the configuration saved
 in the drbd_cfg file.  These changes will not be seen by the cluster until
 the drbd_cfg file is pushed into the live cluster's cib later on.
 
-[source,Bash]
+////
+source,C doesn't do well with \'s
+////
+
 ----
 # pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \
          drbd_resource=wwwdata op monitor interval=60s
 # pcs -f drbd_cfg resource master WebDataClone WebData \
          master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \
          notify=true
+----
+[source,C]
+----
 # pcs -f drbd_cfg resource show
  ClusterIP	(ocf::heartbeat:IPaddr2) Started 
  WebSite	(ocf::heartbeat:apache) Started 
@@ -325,11 +332,11 @@ After you are satisfied with all the changes, you can commit all
 the changes at once by pushing the drbd_cfg file into the live
 cib.
 
-[source,Bash]
+[source,C]
 ----
 # pcs cluster push cib drbd_cfg 
 CIB updated
-#
+
 # pcs status
 
 Last updated: Fri Sep 14 12:19:49 2012
@@ -359,7 +366,7 @@ interactive mode to make several changes atomically.
 First we launch the shell. The prompt will change to indicate you're
 in interactive mode.
 
-[source,Bash]
+[source,C]
 ----
 # crm
 crm(live) #
@@ -370,7 +377,7 @@ where all our changes will go. The cluster will not see any of them until
 we say it's ok. Notice again how the prompt changes, this time to indicate
 that we're no longer looking at the live cluster.
 
-[source,Bash]
+[source,C]
 ----
 cib crm(live) # cib new drbd
 INFO: drbd shadow CIB created
@@ -379,7 +386,7 @@ crm(drbd) #
 
 Now we can create our DRBD clone and display the revised configuration.
 
-[source,Bash]
+[source,C]
 ----
 crm(drbd) # configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \
     op monitor interval=60s
@@ -417,7 +424,7 @@ op_defaults $id="op-options" \
 Once we're happy with the changes, we can tell the cluster to start using
 them and use crm_mon to check everything is functioning.
 
-[source,Bash]
+[source,C]
 ----
 crm(drbd) # cib commit drbd
 INFO: commited 'drbd' shadow CIB to the cluster
@@ -468,12 +475,14 @@ to specify the exact one we wanted to use.
 Once again we will queue up our changes to a file and then push the
 new configuration to the cluster as the final step.
 
-[source,Bash]
 ----
 # pcs cluster cib fs_cfg
 # pcs -f fs_cfg resource create WebFS Filesystem \
          device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" \
          fstype="ext4"
+----
+[source,C]
+----
 # pcs -f fs_cfg constraint colocation add WebFS WebDataClone INFINITY with-rsc-role=Master
 # pcs -f fs_cfg constraint order promote WebDataClone then start WebFS
 Adding WebDataClone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)
@@ -483,7 +492,7 @@ We also need to tell the cluster that Apache needs to run on the same
 machine as the filesystem and that it must be active before Apache can
 start.
 
-[source,Bash]
+[source,C]
 ----
 # pcs -f fs_cfg constraint colocation add WebSite WebFS INFINITY
 # pcs -f fs_cfg constraint order WebFS then WebSite
@@ -491,7 +500,7 @@ start.
 
 Now review the updated configuration.
 
-[source,Bash]
+[source,C]
 ----
 # pcs -f fs_cfg constraint
 Location Constraints:
@@ -503,7 +512,7 @@ Colocation Constraints:
   WebSite with ClusterIP
   WebFS with WebDataClone (with-rsc-role:Master)
   WebSite with WebFS
-#
+
 # pcs -f fs_cfg resource show
  ClusterIP	(ocf::heartbeat:IPaddr2) Started 
  WebSite	(ocf::heartbeat:apache) Started 
@@ -518,7 +527,7 @@ endif::[]
 ifdef::crm[]
 Once again we'll use the shell's interactive mode
 
-[source,Bash]
+[source,C]
 ----
 # crm
 crm(live) # cib new fs
@@ -533,7 +542,7 @@ We also need to tell the cluster that Apache needs to run on the same
 machine as the filesystem and that it must be active before Apache can
 start.
 
-[source,Bash]
+[source,C]
 ----
 crm(fs) # configure colocation WebSite-with-WebFS inf: WebSite WebFS
 crm(fs) # configure order WebSite-after-WebFS inf: WebFS WebSite
@@ -541,7 +550,7 @@ crm(fs) # configure order WebSite-after-WebFS inf: WebFS WebSite
 
 Time to review the updated configuration:
 
-[source,Bash]
+[source,C]
 ----
 crm(fs) # configure show
 node $id="1702537408" pcmk-1
@@ -583,7 +592,7 @@ After reviewing the new configuration, we again upload it and watch the
 cluster put it into effect.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster push cib fs_cfg
 CIB updated
@@ -611,7 +620,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 crm(fs) # cib commit fs
 INFO: commited 'fs' shadow CIB to the cluster
@@ -653,7 +662,7 @@ the resources to the other node. Note also that the node's status will
 change to indicate that it can no longer host resources.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster standby pcmk-1
 # pcs status
@@ -681,7 +690,7 @@ WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm node standby
 # crm_mon -1
@@ -712,7 +721,7 @@ we just wanted to see the resources move), we can allow the node to be a
 full cluster member again.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster unstandby pcmk-1
 # pcs status
@@ -739,7 +748,7 @@ Full list of resources:
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # crm node online
 # crm_mon -1

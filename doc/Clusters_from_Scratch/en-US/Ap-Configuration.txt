@@ -5,7 +5,7 @@
 
 ifdef::pcs[]
 
-[source,Bash]
+[source,C]
 ----
 # pcs resource
  Master/Slave Set: WebDataClone [WebData]
@@ -271,7 +271,7 @@ operates
 * no-quorum-policy=ignore - Ignore loss of quorum and continue to host resources.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs property
 dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
@@ -301,7 +301,7 @@ Here we configure cluster options that apply to every resource.
 
 ifdef::pcs[]
 * resource-stickiness - Specify the aversion to moving resources to other machines
-[source,Bash]
+[source,C]
 ----
 # pcs resource rsc defaults
 resource-stickiness: 100
@@ -319,7 +319,7 @@ endif::[]
 ==== Fencing ====
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs stonith show
  impi-fencing	(stonith:fence_ipmilan) Started
@@ -353,7 +353,7 @@ node) and that if one node fails, then the remaining node should hold
 both.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource show ClusterIP-clone
 Resource: ClusterIP-clone
@@ -391,7 +391,7 @@ by specifying master-max=2. We also set the notify option so that the
 cluster will tell DRBD agent when it's peer changes state.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource show WebDataClone
 Resource: WebDataClone
@@ -430,7 +430,7 @@ that it can only be started on nodes with active gfs-control and drbd
 instances.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource show WebFS-clone
 Resource: WebFS-clone
@@ -466,7 +466,7 @@ nodes that have the required filesystem mounted and the IP address
 active.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs resource show WebSite-clone
 Resource: WebSite-clone

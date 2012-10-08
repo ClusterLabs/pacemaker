@@ -39,9 +39,10 @@ corosync and pacemaker), it requires a specific cluster stack to be in
 use, (corosync 2.0 with votequorum + Pacemaker version >= 1.8).
 ===========
 
-[source,Bash]
-----
+[source,C]
 # pcs
+
+.....
 Control and configure pacemaker and corosync.
 
 Options:
@@ -55,7 +56,7 @@ Commands:
     property    Set pacemaker properties
     constraint  Set resource constraints
     status      View cluster status
-----
+.....
 
 As you can see, the different aspects of cluster management are broken
 up into categories: resource, cluster, stonith, property, constraint,
@@ -63,10 +64,10 @@ and status. To discover the functionality available in each of these
 categories, one can issue the command 'pcs <category> help'.  Below
 is an example of all the options available under the status category.
 
-[source,Bash]
-----
+[source,C]
 # pcs status help
 
+.....
 Usage: pcs status [commands]...
 View current cluster and resource status
 Commands:
@@ -97,14 +98,16 @@ Commands:
 
     status xml
         View xml version of status (output from crm_mon -r -1 -X)
-----
+.....
 
 Additionally, if you are interested in the Pacemaker version and
 supported cluster stack(s) available with your current Pacemaker
 installation, the pacemakerd --features option is available to you.
 
 
-pass:[# <command>pacemakerd --features</command>]
+[source,C]
+# pacemakerd --features
+
 ------------------
 sys::[pacemakerd --features]
 ------------------
@@ -133,19 +136,16 @@ itself.
 Additionally, the Pacemaker version and supported cluster stack(s) are
 available via the --feature option to pacemakerd.
 
-pass:[# <command>pacemakerd --features</command>]
+[source,C]
+# pacemakerd --features
+
 ------------------
 sys::[pacemakerd --features]
 ------------------
 
+[source,C]
+# crm_mon --help
 
-pass:[# <command>pacemakerd --help</command>]
-------------------
-sys::[pacemakerd --help]
-------------------
-
-
-pass:[# <command>crm_mon --help</command>]
 ------------------
 sys::[crm_mon --help]
 ------------------
