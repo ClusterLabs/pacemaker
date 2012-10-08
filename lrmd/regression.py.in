@@ -269,7 +269,7 @@ class Tests:
 			"stonith_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\" ",
 			"stonith_unreg_line"    : "-c unregister_rsc -r \"stonith_test_rsc\" -t 1000",
 			"stonith_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\"",
-			"stonith_start_line"    : "-c exec -r \"stonith_test_rsc\" -a \"start\" -t 2000 ",
+			"stonith_start_line"    : "-c exec -r \"stonith_test_rsc\" -a \"start\" -t 8000 ",
 			"stonith_start_event"   : "-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:start rc:ok op_status:complete\" ",
 			"stonith_stop_line"     : "-c exec -r \"stonith_test_rsc\" -a \"stop\" -t 2000 ",
 			"stonith_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:stop rc:ok op_status:complete\" ",
