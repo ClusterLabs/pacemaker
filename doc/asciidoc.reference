@@ -18,3 +18,27 @@ Varname:     mono
 Option:      italic
 Emphasis:    italic bold
 Replaceable: italic mono 
+
+
+.Title for Eaxmple
+=====
+Some text
+=====
+
+.Title for Eaxmple with XML Listing
+=====
+[source,XML]
+-----
+<some xml=here/>
+-----
+=====
+
+Naked code listing:
+(Use 'C' and a leading '#' instead of 'Bash' when commands are being show)
+
+[source,C]
+-----
+# some command --here
+-----
+
+

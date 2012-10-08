@@ -12,7 +12,7 @@ variables and runs the same commands as when working on a cluster
 node.
 
 .Environment Variables Used to Connect to Remote Instances of the CIB
-[width="95%",cols="1m,4<",options="header",align="center"]
+[width="95%",cols="1m,2<",options="header",align="center"]
 |=========================================================
 
 |Environment Variable
@@ -53,9 +53,9 @@ for connections, and +someguy+ is a member of the +hacluster+ group,
 then the following would prompt for +someguy+'s password and return
 the cluster's current configuration:
 
-[source,Bash]
-export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;
-cibadmin -Q
+[source,C]
+# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;
+# cibadmin -Q
 
 For security reasons, the cluster does not listen for remote
 connections by default.  If you wish to allow remote access, you need
@@ -110,8 +110,10 @@ example, to specify an operation that would run on the first Monday of
 2009 and every Monday after that you would add:
 
 .Specifying a Base for Recurring Action Intervals
+=====
 [source,XML]
 <op id="my-weekly-action" name="custom-action" interval="P7D" interval-origin="2009-W01-1"/> 
+=====
 
 == Moving Resources ==
 indexterm:[Moving Resources] indexterm:[Resource,Moving]
@@ -132,8 +134,8 @@ Instead one can set a special node attribute which tells the cluster
 query and set it, called `crm_standby`.  To check the standby status
 of the current machine, simply run:
 
-[source,Bash]
-crm_standby --get-value
+[source,C]
+# crm_standby --get-value
 
 A value of +true+ indicates that the node is _NOT_ able to host any
 resources, while a value of +false+ says that it _CAN_.
@@ -141,14 +143,14 @@ resources, while a value of +false+ says that it _CAN_.
 You can also check the status of other nodes in the cluster by
 specifying the `--node-uname` option:
 
-[source,Bash]
-crm_standby --get-value --node-uname sles-2
+[source,C]
+# crm_standby --get-value --node-uname sles-2
 
 To change the current node's standby status, use `--attr-value`
 instead of `--get-value`.
 
-[source,Bash]
-crm_standby --attr-value
+[source,C]
+# crm_standby --attr-value
 
 Again, you can change another host's value by supplying a host name with `--node-uname`.
 
@@ -159,8 +161,8 @@ modifies the extra constraints for you.  If +Email+ was running on
 +sles-1+ and you wanted it moved to a specific location, the command
 would look something like:
         
-[source,Bash]
-crm_resource -M -r Email -H sles-2
+[source,C]
+# crm_resource -M -r Email -H sles-2
 
 Behind the scenes, the tool will create the following location constraint:
 
@@ -170,31 +172,31 @@ Behind the scenes, the tool will create the following location constraint:
 It is important to note that subsequent invocations of `crm_resource
 -M` are not cumulative. So, if you ran these commands
 
-[source,Bash]
-crm_resource -M -r Email -H sles-2
-crm_resource -M -r Email -H sles-3
+[source,C]
+# crm_resource -M -r Email -H sles-2
+# crm_resource -M -r Email -H sles-3
 
 then it is as if you had never performed the first command.
 
 To allow the resource to move back again, use:
 
-[source,Bash]
-crm_resource -U -r Email
+[source,C]
+# crm_resource -U -r Email
 
 Note the use of the word _allow_.  The resource can move back to its
 original location but, depending on +resource-stickiness+, it might
 stay where it is.  To be absolutely certain that it moves back to
 +sles-1+, move it there before issuing the call to `crm_resource -U`:
         
-[source,Bash]
-crm_resource -M -r Email -H sles-1
-crm_resource -U -r Email
+[source,C]
+# crm_resource -M -r Email -H sles-1
+# crm_resource -U -r Email
 
 Alternatively, if you only care that the resource should be moved from
 its current location, try
 
-[source,Bash]
-crm_resource -M -r Email`
+[source,C]
+# crm_resource -M -r Email`
 
 Which will instead create a negative constraint, like
 
@@ -325,7 +327,8 @@ along with a description of the most interesting parameters.
 
 |=========================================================
 
-An example ping cluster resource that checks node connectivity once every minute:
+.An example ping cluster resource that checks node connectivity once every minute
+=====
 [source,XML]
 ------------
 <clone id="Connected">
@@ -341,6 +344,7 @@ An example ping cluster resource that checks node connectivity once every minute
    </primitive>
 </clone>
 ------------
+=====
 
 [IMPORTANT]
 ===========
@@ -367,6 +371,7 @@ TODO: is the idea that only nodes that can reach eg. the router should have acti
 ////
 
 .Don't run on unconnected nodes
+=====
 [source,XML]
 -------
 <rsc_location id="WebServer-no-connectivity" rsc="Webserver">
@@ -375,12 +380,14 @@ TODO: is the idea that only nodes that can reach eg. the router should have acti
    </rule>
 </rsc_location>
 -------
+=====
 
 A more complex setup is to have a number of ping nodes configured.
 You can require the cluster to only run resources on nodes that can
 connect to all (or a minimum subset) of them.
 
-Run only on nodes connected to three or more ping nodes; this assumes +multiplier+ is set to 1000:
+.Run only on nodes connected to three or more ping nodes; this assumes +multiplier+ is set to 1000:
+=====
 [source,XML]
 -------
 <rsc_location id="WebServer-connectivity" rsc="Webserver">
@@ -389,6 +396,7 @@ Run only on nodes connected to three or more ping nodes; this assumes +multiplie
    </rule>
 </rsc_location>
 -------
+=====
 
 Instead you can tell the cluster only to _prefer_ nodes with the best
 connectivity.  Just be sure to set +multiplier+ to a value higher than
@@ -396,6 +404,7 @@ that of +resource-stickiness+ (and don't set either of them to
 +INFINITY+).
 
 .Prefer the node with the most connected ping nodes
+=====
 [source,XML]
 -------
 <rsc_location id="WebServer-connectivity" rsc="Webserver">
@@ -404,6 +413,7 @@ that of +resource-stickiness+ (and don't set either of them to
    </rule>
 </rsc_location>
 -------
+=====
 
 It is perhaps easier to think of this in terms of the simple
 constraints that the cluster translates it into.  For example, if
@@ -412,11 +422,13 @@ connected to 2, then it would be as if you instead had the following
 constraints in your configuration:
 
 .How the cluster translates the pingd constraint
+=====
 [source,XML]
 -------
 <rsc_location id="ping-1" rsc="Webserver" node="sles-1" score="5000"/>
 <rsc_location id="ping-2" rsc="Webserver" node="sles-2" score="2000"/>
 -------
+=====
 
 The advantage is that you don't have to manually update any
 constraints whenever your network connectivity changes.
@@ -427,6 +439,7 @@ most connected ping nodes provided they have connectivity to at least
 three (again assuming that +multiplier+ is set to 1000).
 
 .A more complex example of choosing a location based on connectivity
+=====
 [source,XML]
 -------
 <rsc_location id="WebServer-connectivity" rsc="Webserver">
@@ -438,6 +451,7 @@ three (again assuming that +multiplier+ is set to 1000).
    </rule>
 </rsc_location>
 -------
+=====
 
 === Resource Migration ===
 
@@ -516,12 +530,14 @@ So if for one resource you have
 Then instead of duplicating the rule for all your other resources, you can instead specify:
 
 .Referencing rules from other constraints
+=====
 [source,XML]
 -------
 <rsc_location id="WebDB-connectivity" rsc="WebDB">
       <rule id-ref="ping-prefer-rule"/>
 </rsc_location>
 -------
+=====
 
 [IMPORTANT]
 ===========
@@ -535,6 +551,7 @@ The same principle applies for +meta_attributes+ and
 +instance_attributes+ as illustrated in the example below:
 
 .Referencing attributes, options, and operations from other resources
+=====
 [source,XML]
 -------
 <primitive id="mySpecialRsc" class="ocf" type="Special" provider="me">
@@ -558,6 +575,7 @@ The same principle applies for +meta_attributes+ and
    <operations id-ref="health-checks"/>
 </primitive>
 -------
+=====
 
 == Reloading Services After a Definition Change ==
 
@@ -573,6 +591,7 @@ To take advantage of this capability, your resource agent must:
   _The steps required here depend completely on your application!_
 +
 .The DRBD Agent's Control logic for Supporting the +reload+ Operation
+=====
 [source,Bash]
 -------
 case $1 in
@@ -595,10 +614,11 @@ case $1 in
 esac
 exit $?
 -------
+=====
 . Advertise the +reload+ operation in the +actions+ section of its metadata
-   This is how the DRBD Agent advertisese Support for the +reload+ operation:
 +
 .The DRBD Agent Advertising Support for the +reload+ Operation
+=====
 [source,XML]
 -------
 <?xml version="1.0"?>
@@ -624,12 +644,13 @@ exit $?
     </actions>
   </resource-agent>
 -------
+=====
 . Advertise one or more parameters that can take effect using +reload+.
 +
 Any parameter with the +unique+ set to 0 is eligible to be used in this way.
-For example, the drbdconf parameter from the drbd agent:
 +
 .Parameter that can be changed using reload
+=====
 [source,XML]
 -------
 <parameter name="drbdconf" unique="0">
@@ -638,6 +659,7 @@ For example, the drbdconf parameter from the drbd agent:
     <content type="string" default="${OCF_RESKEY_drbdconf_default}"/>
 </parameter>
 -------
+=====
 
 Once these requirements are satisfied, the cluster will automatically
 know to reload the resource (instead of restarting) when a non-unique

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
 
 
 
@@ -67,7 +69,7 @@ Create a shadow copy to work with <indexterm>
   <primary>example for upgrading</primary>
 </indexterm>
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_shadow --create upgrade06</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_shadow --create upgrade06</programlisting>
 </listitem>
 <listitem>
 <para>
@@ -83,7 +85,7 @@ Verify the configuration is valid <indexterm>
   <primary>Configuration</primary>
 </indexterm>
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_verify --live-check</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_verify --live-check</programlisting>
 </listitem>
 <listitem>
 <para>
@@ -94,7 +96,7 @@ Fix any errors or warnings
 <para>
 Perform the upgrade:
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">cibadmin --upgrade</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># cibadmin --upgrade</programlisting>
 </listitem>
 <listitem>
 <para>
@@ -125,9 +127,9 @@ The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is 
 <para>
 Check the changes
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_shadow --diff</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_shadow --diff</programlisting>
 <para>If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:</para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_shadow --edit</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_shadow --edit</programlisting>
 <para>This will open the configuration in your favorite editor (whichever is specified by the standard <literal>$EDITOR</literal> environment variable)</para>
 </listitem>
 <listitem>
@@ -135,8 +137,8 @@ Check the changes
 Preview how the cluster will react
 </para>
 <para>Test what the cluster will do when you upload the new configuration</para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_simulate --live-check --save-dotfile upgrade06.dot -S
-graphviz upgrade06.dot</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_simulate --live-check --save-dotfile upgrade06.dot -S
+# graphviz upgrade06.dot</programlisting>
 <para>Verify that either no resource actions will occur or that you are
 happy with any that are scheduled.  If the output contains actions you
 do not expect (possibly due to changes to the score calculations), you
@@ -148,7 +150,7 @@ the output of <literal>crm_simulate</literal></para>
 <para>
 Upload the changes
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">crm_shadow --commit upgrade06 --force</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># crm_shadow --commit upgrade06 --force</programlisting>
 </listitem>
 </orderedlist>
 <para>If this step fails, something really strange has occurred. You should report a bug.</para>
@@ -176,7 +178,7 @@ Convert the XML blob: <indexterm>
   <primary>Convert</primary>
 </indexterm>
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">xsltproc /path/to/upgrade06.xsl config06.xml &gt; config10.xml</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># xsltproc /path/to/upgrade06.xsl config06.xml &gt; config10.xml</programlisting>
 </listitem>
 <listitem>
 <para>
@@ -197,7 +199,7 @@ Check the XML validity: <indexterm>
   <primary>Validate XML</primary>
 </indexterm>
 </para>
-<programlisting language="Bash" linenumbering="unnumbered">xmllint --relaxng /path/to/pacemaker.rng config10.xml</programlisting>
+<programlisting language="C" linenumbering="unnumbered"># xmllint --relaxng /path/to/pacemaker.rng config10.xml</programlisting>
 </listitem>
 </orderedlist>
 <para>The advantage of this method is that it can be performed without the

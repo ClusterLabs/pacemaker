@@ -21,9 +21,7 @@ To take these into account, Pacemaker allows you to specify the following
 configurations:
 
 . The `capacity` a certain `node provides`.
-
 . The `capacity` a certain `resource requires`.
-
 . An overall `strategy` for placement of resources.
 
 
@@ -38,42 +36,42 @@ First, specify the capacities the nodes provide:
 
 [source,XML]
 ----
-      <node id="node1" type="normal" uname="node1">
-        <utilization id="node1-utilization">
-          <nvpair id="node1-utilization-cpu" name="cpu" value="2"/>
-          <nvpair id="node1-utilization-memory" name="memory" value="2048"/>
-        </utilization>
-      </node>
-      <node id="node2" type="normal" uname="node2">
-        <utilization id="node2-utilization">
-          <nvpair id="node2-utilization-cpu" name="cpu" value="4"/>
-          <nvpair id="node2-utilization-memory" name="memory" value="4096"/>
-        </utilization>
-      </node>
+<node id="node1" type="normal" uname="node1">
+  <utilization id="node1-utilization">
+    <nvpair id="node1-utilization-cpu" name="cpu" value="2"/>
+    <nvpair id="node1-utilization-memory" name="memory" value="2048"/>
+  </utilization>
+</node>
+<node id="node2" type="normal" uname="node2">
+  <utilization id="node2-utilization">
+    <nvpair id="node2-utilization-cpu" name="cpu" value="4"/>
+    <nvpair id="node2-utilization-memory" name="memory" value="4096"/>
+  </utilization>
+</node>
 ----
 
 Then, specify the capacities the resources require:
 
 [source,XML]
 ----
-      <primitive id="rsc-small" class="ocf" provider="pacemaker" type="Dummy">
-        <utilization id="rsc-small-utilization">
-          <nvpair id="rsc-small-utilization-cpu" name="cpu" value="1"/>
-          <nvpair id="rsc-small-utilization-memory" name="memory" value="1024"/>
-        </utilization>
-      </primitive>
-      <primitive id="rsc-medium" class="ocf" provider="pacemaker" type="Dummy">
-        <utilization id="rsc-medium-utilization">
-          <nvpair id="rsc-medium-utilization-cpu" name="cpu" value="2"/>
-          <nvpair id="rsc-medium-utilization-memory" name="memory" value="2048"/>
-        </utilization>
-      </primitive>
-      <primitive id="rsc-large" class="ocf" provider="pacemaker" type="Dummy">
-        <utilization id="rsc-large-utilization">
-          <nvpair id="rsc-large-utilization-cpu" name="cpu" value="3"/>
-          <nvpair id="rsc-large-utilization-memory" name="memory" value="3072"/>
-        </utilization>
-      </primitive>
+<primitive id="rsc-small" class="ocf" provider="pacemaker" type="Dummy">
+  <utilization id="rsc-small-utilization">
+    <nvpair id="rsc-small-utilization-cpu" name="cpu" value="1"/>
+    <nvpair id="rsc-small-utilization-memory" name="memory" value="1024"/>
+  </utilization>
+</primitive>
+<primitive id="rsc-medium" class="ocf" provider="pacemaker" type="Dummy">
+  <utilization id="rsc-medium-utilization">
+    <nvpair id="rsc-medium-utilization-cpu" name="cpu" value="2"/>
+    <nvpair id="rsc-medium-utilization-memory" name="memory" value="2048"/>
+  </utilization>
+</primitive>
+<primitive id="rsc-large" class="ocf" provider="pacemaker" type="Dummy">
+  <utilization id="rsc-large-utilization">
+    <nvpair id="rsc-large-utilization-cpu" name="cpu" value="3"/>
+    <nvpair id="rsc-large-utilization-memory" name="memory" value="3072"/>
+  </utilization>
+</primitive>
 ----
 
 A node is considered eligible for a resource if it has sufficient free
@@ -120,10 +118,8 @@ on the remaining nodes.
 
 
 Set `placement-strategy` with `crm_attribute`:
-[source,Bash]
-----
+[source,C]
 # crm_attribute --attr-name placement-strategy --attr-value balanced
-----
 
 Now Pacemaker will ensure the load from your resources will be distributed
 evenly throughout the cluster - without the need for convoluted sets of

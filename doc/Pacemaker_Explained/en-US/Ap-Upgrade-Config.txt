@@ -42,22 +42,22 @@ internally).
 
 . Create a shadow copy to work with indexterm:[shadow copy,example for upgrading]
 +
-[source,Bash]
+[source,C]
 -----
-crm_shadow --create upgrade06
+# crm_shadow --create upgrade06
 -----
 . Verify the configuration is valid indexterm:[Configuration,Verify]indexterm:[Verify,Configuration]
 +
-[source,Bash]
+[source,C]
 -----
-crm_verify --live-check
+# crm_verify --live-check
 -----
 . Fix any errors or warnings
 . Perform the upgrade:
 +
-[source,Bash]
+[source,C]
 -----
-cibadmin --upgrade
+# cibadmin --upgrade
 -----
 . If this step fails, there are three main possibilities:
 .. The configuration was not valid to start with - go back to step 2
@@ -70,16 +70,16 @@ If the result of the transformation is invalid, you may see a number of errors f
 +        
 . Check the changes
 +
-[source,Bash]
+[source,C]
 -----
-crm_shadow --diff
+# crm_shadow --diff
 -----
 +
 If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:
 +
-[source,Bash]
+[source,C]
 -----
-crm_shadow --edit
+# crm_shadow --edit
 -----
 +
 This will open the configuration in your favorite editor (whichever is specified by the standard +$EDITOR+ environment variable)
@@ -88,10 +88,10 @@ This will open the configuration in your favorite editor (whichever is specified
 +
 Test what the cluster will do when you upload the new configuration
 +
-[source,Bash]
+[source,C]
 ------
-crm_simulate --live-check --save-dotfile upgrade06.dot -S
-graphviz upgrade06.dot
+# crm_simulate --live-check --save-dotfile upgrade06.dot -S
+# graphviz upgrade06.dot
 ------
 +
 Verify that either no resource actions will occur or that you are
@@ -103,9 +103,9 @@ the output of `crm_simulate`
 +
 . Upload the changes
 +
-[source,Bash]
+[source,C]
 -----
-crm_shadow --commit upgrade06 --force
+# crm_shadow --commit upgrade06 --force
 -----
 If this step fails, something really strange has occurred. You should report a bug.
 
@@ -121,18 +121,16 @@ https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
           
 . Convert the XML blob: indexterm:[XML,Convert]
 +
-[source,Bash]
+[source,C]
 -----
-xsltproc /path/to/upgrade06.xsl config06.xml > config10.xml
+# xsltproc /path/to/upgrade06.xsl config06.xml > config10.xml
 -----
 +          
 . Locate the 'pacemaker.rng' script.
 . Check the XML validity: indexterm:[Validate,XML]indexterm:[xmllint,Validate XML]
 +
-[source,Bash]
------
-xmllint --relaxng /path/to/pacemaker.rng config10.xml
------
+[source,C]
+# xmllint --relaxng /path/to/pacemaker.rng config10.xml
 
 The advantage of this method is that it can be performed without the
 cluster running and any validation errors should be more informative

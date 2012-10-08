@@ -15,6 +15,7 @@ In addition to the cluster's configuration, the CIB holds an
 up-to-date representation of each cluster node in the status section.
       
 .A bare-bones status entry for a healthy node called +cl-virt-1+
+======
 [source,XML]
 -----
   <node_state id="cl-virt-1" uname="cl-virt-2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
@@ -22,8 +23,7 @@ up-to-date representation of each cluster node in the status section.
    <lrm id="cl-virt-1"/>
   </node_state>
 -----
-      
-
+======      
 
 Users are highly recommended _not to modify_ any part of a node's
 state _directly_.  The cluster will periodically regenerate the entire
@@ -60,46 +60,46 @@ versions.
 
 | id |
 indexterm:[id,Node Status Field]
-indexterm:[>Node,Status Field,id]
+indexterm:[Node,Status Field,id]
 Unique identifier for the node. Corosync based clusters use the uname
 of the machine, Heartbeat clusters use a human-readable (but annoying)
 UUID.
 
 | uname |
 indexterm:[uname Node Status Field]
-indexterm:[>Node,Status Field,uname]
+indexterm:[Node,Status Field,uname]
 The node's machine name (output from `uname -n`).
 
 | ha | 
 indexterm:[ha Node Status Field]
-indexterm:[>Node,Status Field,ha]
+indexterm:[Node,Status Field,ha]
 Flag specifying whether the cluster software is active on the
 node. Allowed values: +active+, +dead+.
 
 | in_ccm |            
 indexterm:[in_ccm Node Status Field]
-indexterm:[>Node,Status Field,in_ccm]
+indexterm:[Node,Status Field,in_ccm]
 Flag for cluster membership; allowed values: +true+, +false+.
 
 | crmd |
 indexterm:[crmd Node Status Field]
-indexterm:[>Node,Status Field,crmd]
+indexterm:[Node,Status Field,crmd]
 Flag: is the crmd process active on the node? One of +online+, +offline+.
 
 | join |
 indexterm:[join Node Status Field]
-indexterm:[>Node,Status Field,join]
+indexterm:[Node,Status Field,join]
 Flag saying whether the node participates in hosting
 resources. Possible values: +down+, +pending+, +member+, +banned+.
             
 | expected |
 indexterm:[expected Node Status Field]
-indexterm:[>Node,Status Field,expected]
+indexterm:[Node,Status Field,expected]
 Expected value for +join+.
 
 | crm-debug-origin |
 indexterm:[crm-debug-origin Node Status Field]
-indexterm:[>Node,Status Field,crm-debug-origin]
+indexterm:[Node,Status Field,crm-debug-origin]
 Diagnostic indicator: the origin of the most recent change(s).
 
 |=========================================================
@@ -119,6 +119,7 @@ In addition to any values the administrator sets, the cluster will
 also store information about failed resources here.
       
 .Example set of transient node attributes for node "cl-virt-1"
+======
 [source,XML]
 -----
   <transient_attributes id="cl-virt-1">
@@ -130,6 +131,7 @@ also store information about failed resources here.
     </instance_attributes>
   </transient_attributes>
 -----
+======
 
 In the above example, we can see that the +pingd:0+ resource has
 failed once, at +Mon Apr 6 11:22:22 2009+.
@@ -151,10 +153,10 @@ removed from the +configuration+ section. Specifically the resource's
 +id+, +class+, +type+ and +provider+ are stored.
 
 .A record of the apcstonith resource
+======
 [source,XML]
------
 <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith"/>
------
+======
 
 Additionally, we store the last job for every combination of
 +resource, action+ and +interval+.  The concatenation of the values in
@@ -169,81 +171,81 @@ this tuple are used to create the id of the +lrm_rsc_op+ object.
 
 | id |
 indexterm:[id,Job Field]
-indexterm:[>Job Field,id]
+indexterm:[Job Field,id]
 
 Identifier for the job constructed from the resource's +id+,
 +operation+ and +interval+.
             
 | call-id |
 indexterm:[call-id Job Field]
-indexterm:[>Job Field,call-id]
+indexterm:[Job Field,call-id]
 
 The job's ticket number. Used as a sort key to determine the order in
 which the jobs were executed.
             
 | operation |
 indexterm:[operation Job Field]
-indexterm:[>Job Field,operation]
+indexterm:[Job Field,operation]
 
 The action the resource agent was invoked with.
 
 | interval |
 indexterm:[interval Job Field]
-indexterm:[>Job Field,interval]
+indexterm:[Job Field,interval]
 
 The frequency, in milliseconds, at which the operation will be
 repeated. A one-off job is indicated by 0.
             
 | op-status |
 indexterm:[op-status Job Field]
-indexterm:[>Job Field,op-status]
+indexterm:[Job Field,op-status]
 
 The job's status. Generally this will be either 0 (done) or -1
 (pending). Rarely used in favor of +rc-code+.
             
 | rc-code |
 indexterm:[rc-code Job Field]
-indexterm:[>Job Field,rc-code]
+indexterm:[Job Field,rc-code]
 
 The job's result. Refer to xref:s-ocf-return-codes[] for
 details on what the values here mean and how they are interpreted.
 
 | last-run |
 indexterm:[last-run Job Field]
-indexterm:[>Job Field,last-run]
+indexterm:[Job Field,last-run]
 
 Diagnostic indicator. Machine local date/time, in seconds since epoch,
 at which the job was executed.
 
 | last-rc-change |
 indexterm:[last-rc-change Job Field]
-indexterm:[>Job Field,last-rc-change]
+indexterm:[Job Field,last-rc-change]
 
 Diagnostic indicator. Machine local date/time, in seconds since epoch,
 at which the job first returned the current value of +rc-code+.
 
 | exec-time |
 indexterm:[exec-time Job Field]
-indexterm:[>Job Field,exec-time]
+indexterm:[Job Field,exec-time]
 
 Diagnostic indicator. Time, in milliseconds, that the job was running for.
 
 | queue-time |
 indexterm:[queue-time Job Field]
-indexterm:[>Job Field,queue-time]
+indexterm:[Job Field,queue-time]
 
 Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd.
 
 | crm_feature_set |
 indexterm:[crm_feature_set Job Field]
-indexterm:[>Job Field,crm_feature_set]
+indexterm:[Job Field,crm_feature_set]
 
 The version which this job description conforms to. Used when
 processing +op-digest+.
 
 | transition-key |
 indexterm:[transition-key Job Field]
-indexterm:[>Job Field,transition-key]
+indexterm:[Job Field,transition-key]
 
 A concatenation of the job's graph action number, the graph number,
 the expected result and the UUID of the crmd instance that scheduled
@@ -251,7 +253,7 @@ it. This is used to construct +transition-magic+ (below).
 
 | transition-magic |
 indexterm:[transition-magic Job Field]
-indexterm:[>Job Field,transition-magic]
+indexterm:[Job Field,transition-magic]
 
 A concatenation of the job's +op-status+, +rc-code+ and
 +transition-key+. Guaranteed to be unique for the life of the cluster
@@ -262,7 +264,7 @@ tell the crmd if the job entry was expected and whether it failed.
             
 | op-digest |
 indexterm:[op-digest Job Field]
-indexterm:[>Job Field,op-digest]
+indexterm:[Job Field,op-digest]
 
 An MD5 sum representing the parameters passed to the job. Used to
 detect changes to the configuration, to restart resources if
@@ -270,7 +272,7 @@ necessary.
 
 | crm-debug-origin |
 indexterm:[crm-debug-origin Job Field]
-indexterm:[>Job Field,crm-debug-origin]
+indexterm:[Job Field,crm-debug-origin]
 
 Diagnostic indicator. The origin of the current values.
 
@@ -279,6 +281,7 @@ Diagnostic indicator. The origin of the current values.
 === Simple Example ===
         
 .A monitor operation (determines current state of the apcstonith resource)
+======
 [source,XML]
 -----
 <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith">
@@ -291,6 +294,7 @@ Diagnostic indicator. The origin of the current values.
     last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0"/>
 </lrm_resource>
 -----
+======
         
 In the above example, the job is a non-recurring monitor operation
 often referred to as a "probe" for the +apcstonith+ resource.
@@ -315,6 +319,7 @@ the cluster started the resource elsewhere.
 === Complex Resource History Example ===
         
 .Resource history of a pingd clone with multiple jobs
+======
 [source,XML]
 -----
 <lrm_resource id="pingd:0" type="pingd" class="ocf" provider="pacemaker">
@@ -344,6 +349,7 @@ the cluster started the resource elsewhere.
     last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0"/>
   </lrm_resource>
 -----
+======
 
 When more than one job record exists, it is important to first sort
 them by +call-id+ before interpreting them.

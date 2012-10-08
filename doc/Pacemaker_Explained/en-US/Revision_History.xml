@@ -35,8 +35,9 @@
         <revdescription>
           <simplelist>
             <member>
-	      Converted to asciidoc (which is converted to docbook for
-	      use with <ulink url="https://fedorahosted.org/publican/">Publican</ulink>
+	      Converted to <ulink url="http://www.methods.co.nz/asciidoc">asciidoc</ulink>
+	      (which is converted to docbook for use with 
+	      <ulink url="https://fedorahosted.org/publican/">Publican</ulink>)
 	    </member>
           </simplelist>
         </revdescription>

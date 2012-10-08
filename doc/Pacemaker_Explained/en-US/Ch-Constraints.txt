@@ -73,14 +73,15 @@ indexterm:[Cluster Type,Asymmetrical Opt-In]
 To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
 
-[source,Bash]
-crm_attribute --attr-name symmetric-cluster --attr-value false
+[source,C]
+# crm_attribute --attr-name symmetric-cluster --attr-value false
 
 Then start enabling nodes.  The following fragment says that the web
 server prefers +sles-1+, the database prefers +sles-2+ and both can
 fail over to +sles-3+ if their most preferred node fails.
 
 .Example set of opt-in location constraints 
+======
 [source,XML]
 -------
 <constraints>
@@ -90,6 +91,7 @@ fail over to +sles-3+ if their most preferred node fails.
     <rsc_location id="loc-4" rsc="Database" node="sles-3" score="0"/>
 </constraints>
 -------
+======
 
 === Symmetrical "Opt-Out" Clusters ===
 indexterm:[Symmetrical Opt-Out Clusters]
@@ -98,13 +100,14 @@ indexterm:[Cluster Type,Symmetrical Opt-Out]
 To create an opt-out cluster, start by allowing resources to run
 anywhere by default:
 
-[source,Bash]
-crm_attribute --attr-name symmetric-cluster --attr-value true
+[source,C]
+# crm_attribute --attr-name symmetric-cluster --attr-value true
 
 Then start disabling nodes.  The following fragment is the equivalent
 of the above opt-in configuration.
        
 .Example set of opt-out location constraints 
+======
 [source,XML]
 -------
 <constraints>
@@ -114,6 +117,7 @@ of the above opt-in configuration.
     <rsc_location id="loc-4" rsc="Database" node="sles-2" score="200"/>
 </constraints>
 -------
+======
 
 Whether you should choose opt-in or opt-out depends both on your
 personal preference and the make-up of your cluster.  If most of your
@@ -130,6 +134,7 @@ This choice may seem random and may not be what was intended, however
 the cluster was not given enough information to know any better.
 
 .Example of two resources that prefer two nodes equally 
+======
 [source,XML]
 -------
 <constraints>
@@ -140,6 +145,7 @@ the cluster was not given enough information to know any better.
     <rsc_location id="loc-5" rsc="Database" node="sles-2" score="200"/>
 </constraints>
 -------
+======
 
 In the example above, assuming no other constraints and an inactive
 cluster, Webserver would probably be placed on sles-1 and Database on
@@ -203,6 +209,7 @@ resources are stopping and/or starting.  Any change in state by the
 +first+ resource will have no effect on the +then+ resource.
 
 .Example of an optional and mandatory ordering constraint     
+======
 [source,XML]
 -------
 <constraints>
@@ -210,6 +217,7 @@ resources are stopping and/or starting.  Any change in state by the
     <rsc_order id="order-2" first="IP" then="Webserver" score="0"/>
 </constraints>
 -------
+======
 
 Some additional information on ordering constraints can be found in
 the document http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf[Ordering Explained].
@@ -325,6 +333,7 @@ A common situation is for an administrator to create a chain of
 ordered resources, such as:
 
 .A chain of ordered resources
+======
 [source,XML]
 -------
 <constraints>
@@ -333,6 +342,7 @@ ordered resources, such as:
     <rsc_order id="order-3" first="C" then="D" />
 </constraints>
 -------
+======
         
 == Ordered Set ==
 
@@ -343,6 +353,7 @@ To simplify this situation, there is an alternate format for ordering
 constraints:
 
 .A chain of ordered resources expressed as a set
+======
 [source,XML]
 -------
 <constraints>
@@ -356,11 +367,13 @@ constraints:
     </rsc_order>
 </constraints>
 -------
+======
 
 [NOTE]
 Resource sets have the same ordering semantics as groups.
 
 .A group resource with the equivalent ordering rules
+======
 [source,XML]
 -------
 <group id="dummy">
@@ -370,6 +383,7 @@ Resource sets have the same ordering semantics as groups.
     <primitive id="D" .../>
 </group>
 -------
+======
 
 While the set-based format is not less verbose, it is significantly
 easier to get right and maintain.  It can also be expanded to allow
@@ -379,6 +393,7 @@ however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_
  +rscB+ are active.
 
 .Ordered sets of unordered resources
+======
 [source,XML]
 -------
 <constraints>
@@ -394,6 +409,7 @@ however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_
     </rsc_order>
   </constraints>
 -------
+======
         
 == Two Sets of Unordered Resources ==
 
@@ -406,6 +422,7 @@ internally ordered (by setting +sequential="true"+) and there is no
 limit to the number of sets that can be specified.
 
 .Advanced use of set ordering - Three ordered sets, two of which are internally unordered
+======
 [source,XML]
 -------
 <constraints>
@@ -425,6 +442,7 @@ limit to the number of sets that can be specified.
     </rsc_order>
 </constraints>
 -------
+======
 
 == Three Resources Sets ==
 
@@ -442,6 +460,7 @@ individual constraint, causing a constraint explosion as the number of
 resources and combinations grew.
 
 .A chain of collocated resources
+======
 [source,XML]
 -------
 <constraints>
@@ -450,6 +469,7 @@ resources and combinations grew.
     <rsc_colocation id="coloc-3" rsc="D" with-rsc="C" score="INFINITY"/>
 </constraints>
 -------
+======
 
 To make things easier, we allow an alternate form of colocation
 constraints using +resource_sets+.  Just like the expanded version, a
@@ -459,6 +479,7 @@ able to run, then both +C (+and by inference +D)+ must also remain
 stopped.
 
 .The equivalent colocation chain expressed using +resource_sets+   
+======
 [source,XML]
 -------
 <constraints>
@@ -472,6 +493,7 @@ stopped.
     </rsc_colocation>
 </constraints>
 -------
+======
 
 [NOTE]
 Resource sets have the same colocation semantics as groups.
@@ -494,6 +516,7 @@ previous, +B would+ be allowed to remain active even if +A or+ +C+ (or
 both) were inactive.
 
 .Using colocation sets to specify a common peer.    
+======
 [source,XML]
 -------
 <constraints>
@@ -509,6 +532,7 @@ both) were inactive.
     </rsc_colocation>
 </constraints>
 -------
+======
 
 Of course there is no limit to the number and size of the sets used.
 The only thing that matters is that in order for any member of set N
@@ -519,6 +543,7 @@ active.  You can even specify the role in which the members of a set
 must be in using the set's role attribute.
       
 .A colocation chain where the members of the middle set have no inter-dependencies and the last has master status.
+======
 [source,XML]
 -------
 <constraints>
@@ -539,6 +564,7 @@ must be in using the set's role attribute.
     </rsc_colocation>
 </constraints>
 -------
+======
         
 == Another Three Resources Sets ==
 

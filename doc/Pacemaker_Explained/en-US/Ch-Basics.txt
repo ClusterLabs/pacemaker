@@ -26,6 +26,7 @@ The configuration section itself is divided into four parts:
  * Resource relationships (called +constraints+)
 
 .An empty configuration
+======
 [source,XML]
 -------
   <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
@@ -38,6 +39,7 @@ The configuration section itself is divided into four parts:
      <status/>
   </cib>
 -------
+======
 
 == The Current State of the Cluster ==
 
@@ -59,6 +61,7 @@ Details on all the available options can be obtained using the
 `crm_mon --help` command.
       
 .Sample output from crm_mon
+======
 -------
   ============
   Last updated: Fri Nov 23 15:26:13 2007
@@ -79,8 +82,10 @@ Details on all the available options can be obtained using the
       rsc_sles-3    (heartbeat::ocf:IPaddr):    Started sles-3
       child_DoFencing:0    (stonith:external/vmware):    Started sles-3
 -------
+======
       
 .Sample output from crm_mon -n
+======
 -------
   ============
   Last updated: Fri Nov 23 15:26:13 2007
@@ -105,6 +110,7 @@ Details on all the available options can be obtained using the
     child_DoFencing:1    (stonith:external/vmware):    Stopped
     child_DoFencing:2    (stonith:external/vmware):    Started sles-1
 -------
+======
 
 The DC (Designated Controller) node is where all the decisions are
 made and if the current DC fails a new one is elected from the
@@ -135,12 +141,14 @@ configuration to a temporary file, edit that file with your favorite
 text or XML editor and then upload the revised configuration.
       
 .Safely using an editor to modify the cluster configuration
-[source,Bash]
+======
+[source,C]
 --------
 # cibadmin --query > tmp.xml
 # vi tmp.xml
 # cibadmin --replace --xml-file tmp.xml
 --------
+======
 
 Some of the better XML editors can make use of a Relax NG schema to
 help make sure any changes you make are valid.  The schema describing
@@ -153,12 +161,14 @@ If you only wanted to modify the resources section, you could instead
 do
       
 .Safely using an editor to modify a subsection of the cluster configuration
-[source,Bash]
+======
+[source,C]
 --------
 # cibadmin --query --obj_type resources > tmp.xml
 # vi tmp.xml
 # cibadmin --replace --obj_type resources --xml-file tmp.xml
 --------
+======
 
 to avoid modifying any other part of the configuration.
 
@@ -167,7 +177,8 @@ to avoid modifying any other part of the configuration.
 Identify the object you wish to delete. Eg. run
       
 .Searching for STONITH related configuration items
-[source,Bash]
+======
+[source,C]
 --------
 # cibadmin -Q | grep stonith
    <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
@@ -181,6 +192,7 @@ Identify the object you wish to delete. Eg. run
    <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
    <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
 --------
+======
 
 Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
@@ -195,15 +207,18 @@ tools that avoid the need to read or edit XML.
 
 To enable stonith for example, one could run:
 
-`crm_attribute --attr-name stonith-enabled --attr-value true`
+[source,C]
+# crm_attribute --attr-name stonith-enabled --attr-value true
 
 Or, to see if +somenode+ is allowed to run resources, there is:
 
-`crm_standby --get-value --node-uname somenode`
+[source,C]
+# crm_standby --get-value --node-uname somenode
 
 Or, to find the current location of +my-test-rsc+, one can use:
 
-`crm_resource --locate --resource my-test-rsc`
+[source,C]
+# crm_resource --locate --resource my-test-rsc
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
@@ -225,6 +240,7 @@ destroying the cluster's active configuration!
       
 .Creating and displaying the active sandbox
 [source,Bash]
+======
 --------
  # crm_shadow --create test
  Setting up shadow instance
@@ -233,6 +249,7 @@ destroying the cluster's active configuration!
  shadow[test] # crm_shadow --which
  test
 --------
+======
 
 From this point on, all cluster commands will automatically use the
 shadow copy instead of talking to the cluster's active configuration.
@@ -245,6 +262,7 @@ For a full list of `crm_shadow` options and
 commands, invoke it with the <parameter>--help</parameter> option.
 
 .Using a sandbox to make multiple changes atomically
+======
 [source,Bash]
 --------
  shadow[test] # crm_failcount -G -r rsc_c001n01
@@ -278,20 +296,21 @@ commands, invoke it with the <parameter>--help</parameter> option.
              <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
              <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
 --------
+======
 
 Making changes in a sandbox and verifying the real configuration is untouched
 
 [[s-config-testing-changes]]
 == Testing Your Configuration Changes ==
 
-
 We saw previously how to make a series of changes to a "shadow" copy
 of the configuration.  Before loading the changes back into the
-cluster (eg. `crm_shadow --commit mytest
---force`), it is often advisable to simulate the effect of
-the changes with +crm_simulate+, eg.
+cluster (eg. `crm_shadow --commit mytest --force`), it is often
+advisable to simulate the effect of the changes with +crm_simulate+,
+eg.
       
-`crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot`
+[source,C]
+# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
 
 
 The tool uses the same library as the live cluster to show what it

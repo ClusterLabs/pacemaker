@@ -157,21 +157,22 @@ indexterm:[Resource,Field,provider]
 
 Resource definitions can be queried with the `crm_resource` tool. For example
 
-[source,Bash]
-crm_resource --resource Email --query-xml
+[source,C]
+# crm_resource --resource Email --query-xml
 
 might produce:
 
 .An example LSB resource
+=====
 [source,XML]
 <primitive id="Email" class="lsb" type="exim"/>
+=====
 
 [NOTE]
 One of the main drawbacks to LSB resources is that they do not allow any parameters!
 
-Example for an OCF resource:
-
 .An example OCF resource
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -180,10 +181,12 @@ Example for an OCF resource:
    </instance_attributes>
 </primitive>
 -------
+=====
 
 Or, finally for the equivalent legacy Heartbeat resource:
 
 .An example Heartbeat resource
+=====
 [source,XML]
 -------
 <primitive id="Public-IP-legacy" class="heartbeat" type="IPaddr">
@@ -192,6 +195,7 @@ Or, finally for the equivalent legacy Heartbeat resource:
    </instance_attributes>
 </primitive>
 -------
+=====
 
 [NOTE]
 ======
@@ -285,15 +289,16 @@ indexterm:[Resource,Option,multiple-active]
 
 If you performed the following commands on the previous LSB Email resource
 
-[source,Bash]
+[source,C]
 -------
-crm_resource --meta --resource Email --set-parameter priority --property-value 100
-crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
+# crm_resource --meta --resource Email --set-parameter priority --property-value 100
+# crm_resource --meta --resource Email --set-parameter multiple-active --property-value block
 -------
 
 the resulting resource definition would be
 
 .An LSB resource with cluster options
+=====
 [source,XML]
 -------
 <primitive id="Email" class="lsb" type="exim">
@@ -303,6 +308,7 @@ the resulting resource definition would be
    </meta_attributes>
 </primitive>
 -------
+=====
 
 == Setting Global Defaults for Resource Options ==
 
@@ -310,8 +316,8 @@ anchor:s-resource-defaults[Resource Defaults]
 To set a default value for a resource option, simply add it to the
 +rsc_defaults+ section with `crm_attribute`. Thus,
 
-[source,Bash]
-crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
+[source,C]
+# crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false
 
 would prevent the cluster from starting or stopping any of the
 resources in the configuration (unless of course the individual
@@ -327,12 +333,13 @@ of a service they control.
 If your resource agent supports parameters, you can add them with the
 `crm_resource` command. For instance
 
-[source,Bash]
-crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
+[source,C]
+# crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4
 
 would create an entry in the resource like this:
 
 .An example OCF resource with instance attributes
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -341,6 +348,7 @@ would create an entry in the resource like this:
    </instance_attributes>
 </primitive>
 -------
+=====
 
 For an OCF resource, the result would be an environment variable
 called +OCF_RESKEY_ip+ with a value of +1.2.3.4+.
@@ -351,11 +359,14 @@ The output contains an XML description of all the supported
 attributes, their purpose and default values.
       
 .Displaying the metadata for the Dummy resource agent template
-[source,XML]
+=====
+[source,C]
 -------
 # export OCF_ROOT=/usr/lib/ocf
 # $OCF_ROOT/resource.d/pacemaker/Dummy meta-data
-
+-------
+[source,XML]
+-------
 <?xml version="1.0"?>
   <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
   <resource-agent name="Dummy" version="0.9">
@@ -398,6 +409,7 @@ attributes, their purpose and default values.
     </actions>
   </resource-agent>
 -------
+=====
 
 == Resource Operations ==
 
@@ -409,6 +421,7 @@ healthy.  To instruct the cluster to do this, you need to add a
 +monitor+ operation to the resource's definition.
         
 .An OCF resource with a recurring health check
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -420,6 +433,7 @@ healthy.  To instruct the cluster to do this, you need to add a
   </instance_attributes>
 </primitive>
 -------
+=====
 
 .Properties of an Operation
 [width="95%",cols="1m,6<",options="header",align="center"]
@@ -490,9 +504,8 @@ anchor:s-operation-defaults[Operation Defaults]
 To set a default value for a operation option, simply add it to the
 +op_defaults+ section with `crm_attribute`. Thus,
 
-[source,Bash]
-crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
-
+[source,C]
+# crm_attribute --type op_defaults --attr-name timeout --attr-value 20s
 
 would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
@@ -507,6 +520,7 @@ of these is taking too long, then you can create an entry for them and
 simply specify a new value.
 
 .An OCF resource with custom timeouts for its implicit actions     
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -520,6 +534,7 @@ simply specify a new value.
   </instance_attributes>
 </primitive>
 -------
+=====
 
 ==== Multiple Monitor Operations ====
 
@@ -539,6 +554,7 @@ Whatever name you choose, you can specify it by adding an
 resource agent to look for the parameter and decide how to use it.
         
 .An OCF resource with two recurring health checks, performing different levels of checks - specified via +OCF_CHECK_LEVEL+.
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -559,6 +575,7 @@ resource agent to look for the parameter and decide how to use it.
    </instance_attributes>
 </primitive>
 -------
+=====
 
 ==== Disabling a Monitor Operation ====
 
@@ -568,6 +585,7 @@ temporarily.  In such cases, simply add +enabled="false"+ to the
 operation's definition.
 
 .Example of an OCF resource with a disabled health check     
+=====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
@@ -579,13 +597,11 @@ operation's definition.
    </instance_attributes>
 </primitive>
 -------
+=====
 
 This can be achieved from the command-line by executing
 
-[source,Bash]
-cibadmin -M -X ‘<op id="public-ip-check" enabled="false"/>'
+[source,C]
+# cibadmin -M -X '<op id="public-ip-check" enabled="false"/>'
 
 Once you've done whatever you needed to do, you can then re-enable it with
-
-[source,Bash]
-cibadmin -M -X ‘<op id="public-ip-check" enabled="true"/>'

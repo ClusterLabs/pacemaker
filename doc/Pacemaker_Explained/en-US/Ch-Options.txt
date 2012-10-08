@@ -103,12 +103,14 @@ example, one would use:
 A complete set of fields will look something like this:
 
 .An example of the fields set for a cib object
+======
 [source,XML]
 -------
 <cib have-quorum="true" validate-with="pacemaker-1.0"
   admin_epoch="1" epoch="12" num_updates="65"
   dc-uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
 -------
+======
 
 == Cluster Options ==
 
@@ -230,34 +232,36 @@ Cluster options can be queried and modified using the
 `crm_attribute` tool.  To get the current
 value of +cluster-delay+, simply use:
 
-`crm_attribute --attr-name cluster-delay --get-value`
+[source,C]
+# crm_attribute --attr-name cluster-delay --get-value
 
 which is more simply written as
 
-`crm_attribute --get-value -n cluster-delay`
+[source,C]
+# crm_attribute --get-value -n cluster-delay
 
 If a value is found, you'll see a result like this:
-=======
-` # crm_attribute --get-value -n cluster-delay`
 
+[source,C]
+# crm_attribute --get-value -n cluster-delay
  name=cluster-delay value=60s
-========
 
 However, if no value is found, the tool will display an error:
-=======
-`# crm_attribute --get-value -n clusta-deway`
 
- name=clusta-deway value=(null)
- Error performing operation: The object/attribute does not exist
-========
+[source,C]
+# crm_attribute --get-value -n clusta-deway`
+name=clusta-deway value=(null)
+Error performing operation: The object/attribute does not exist
 
 To use a different value, eg. +30+, simply run:
 
-`crm_attribute --attr-name cluster-delay --attr-value 30s`
+[source,C]
+# crm_attribute --attr-name cluster-delay --attr-value 30s
 
 To go back to the cluster's default value you can delete the value, for example with this command:
 
-`crm_attribute --attr-name cluster-delay --delete-attr`
+[source,C]
+# crm_attribute --attr-name cluster-delay --delete-attr
 
 == When Options are Listed More Than Once ==
 
@@ -265,12 +269,15 @@ If you ever see something like the following, it means that the option you're mo
 
 .Deleting an option that is listed twice
 =======
-`# crm_attribute --attr-name batch-limit --delete-attr`
+[source,C]
+------
+# crm_attribute --attr-name batch-limit --delete-attr
 
- Multiple attributes match name=batch-limit in crm_config:
- Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
- Value: 100         (set=custom, id=custom-batch-limit)
- Please choose from one of the matches above and supply the 'id' with --attr-id
+Multiple attributes match name=batch-limit in crm_config:
+Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
+Value: 100         (set=custom, id=custom-batch-limit)
+Please choose from one of the matches above and supply the 'id' with --attr-id
+-------
 =======
 
 In such cases follow the on-screen instructions to perform the

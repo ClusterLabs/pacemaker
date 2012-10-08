@@ -14,14 +14,16 @@ compatible:
 
 . Start (stopped):
 +
-`/etc/init.d/some_service start ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service start ; echo "result: $?"
 +
   .. Did the service start?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Status (running):
 +
-`/etc/init.d/some_service status ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service status ; echo "result: $?"
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was running?
@@ -29,21 +31,24 @@ compatible:
 +
 . Start (running):
 +
-`/etc/init.d/some_service start ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service start ; echo "result: $?"
 +
   .. Is the service still running?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Stop (running):
 +
-`/etc/init.d/some_service stop ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service stop ; echo "result: $?"
 +
   .. Was the service stopped?
   .. Did the command print result: 0 (in addition to the regular output)?
 +
 . Status (stopped):
 +
-`/etc/init.d/some_service status ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service status ; echo "result: $?"
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was not running?
@@ -51,7 +56,8 @@ compatible:
 +
 . Stop (stopped):
 +
-`/etc/init.d/some_service stop ; echo "result: $?"`
+[source,C]
+# /etc/init.d/some_service stop ; echo "result: $?"
 +
   .. Is the service still stopped?
   .. Did the command print result: 0 (in addition to the regular output)?

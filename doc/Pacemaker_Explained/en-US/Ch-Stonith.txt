@@ -121,7 +121,7 @@ Stonith options for: fence_ipmilan
 endif::[]
 
 ifdef::crm[]
-[source,Bash]
+[source,C]
 ----
 # stonith_admin --metadata -a fence_ipmilan
 ----
@@ -258,7 +258,7 @@ stonith-enabled: true
 Now push the configuration into the cluster.
 
 ifdef::pcs[]
-[source,Bash]
+[source,C]
 ----
 # pcs cluster push cib stonith_cfg
 ----

@@ -7,6 +7,7 @@
 indexterm:[Configuration,Empty]
 
 .An Empty Configuration
+=======
 [source,XML]
 -------
 <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
@@ -19,12 +20,14 @@ indexterm:[Configuration,Empty]
   <status/>
 </cib>
 -------
+=======
 
 === Simple ===
 
 indexterm:[Configuration,Simple]
 
 .Simple Configuration - 2 nodes, some cluster options and a resource
+=======
 [source,XML]
 -------
 <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
@@ -62,6 +65,7 @@ indexterm:[Configuration,Simple]
   <status/>
 </cib>
 -------
+=======
 
 In this example, we have one resource (an IP address) that we check
 every five minutes and will run on host +c001n01+ until either the
@@ -72,6 +76,7 @@ resource fails 10 times or the host shuts down.
 indexterm:[Configuration,Advanced]
 
 .Advanced configuration - groups and clones with stonith
+=======
 [source,XML]
 -------
 <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false"
@@ -139,3 +144,4 @@ indexterm:[Configuration,Advanced]
   <status/>
 </cib>
 -------
+=======

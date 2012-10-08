@@ -11,6 +11,7 @@ reverse order.  To simplify this configuration we support the concept
 of groups.
 
 .An example group
+======
 [source,XML]
 -------
 <group id="shortcut">
@@ -22,6 +23,7 @@ of groups.
    <primitive id="Email" class="lsb" type="exim"/>
   </group> 
 -------
+======
 
 
 Although the example above contains only two resources, there is no
@@ -43,6 +45,7 @@ is allowed to run, too.
 The group above is logically equivalent to writing:
 
 .How the cluster sees a group resource
+======
 [source,XML]
 -------
 <configuration>
@@ -60,6 +63,7 @@ The group above is logically equivalent to writing:
    </constraints>
 </configuration> 
 -------
+======
 
 Obviously as the group grows bigger, the reduced configuration effort
 can become significant.
@@ -106,6 +110,7 @@ Although it is possible to reference the group's children in
 constraints, it is usually preferable to use the group's name instead.
 
 .Example constraints involving groups
+======
 [source,XML]
 -------
 <constraints>
@@ -114,6 +119,7 @@ constraints, it is usually preferable to use the group's name instead.
     <rsc_order id="start-group-then-webserver" first="Webserver" then="shortcut"/>
 </constraints> 
 -------
+======
 
 === Group Stickiness ===
 indexterm:[resource-stickiness,of a Group Resource]
@@ -156,6 +162,7 @@ equivalent.
 Stateful clones are covered later in xref:s-resource-multistate[].
 
 .An example clone
+======
 [source,XML]
 -------
 <clone id="apache-clone">
@@ -165,6 +172,7 @@ Stateful clones are covered later in xref:s-resource-multistate[].
     <primitive id="apache" class="lsb" type="apache"/>
 </clone> 
 -------
+======
 
 === Clone Properties ===
 
@@ -280,6 +288,7 @@ allowed locations for the clone is limited to nodes on which the clone
 is (or will be) active.  Allocation is then performed as normally.
 
 .Example constraints involving clones
+======
 [source,XML]
 -------
 <constraints>
@@ -288,6 +297,7 @@ is (or will be) active.  Allocation is then performed as normally.
     <rsc_order id="start-clone-then-stats" first="apache-clone" then="apache-stats"/>
 </constraints> 
 -------
+======
 
 === Clone Stickiness ===
 
@@ -401,11 +411,13 @@ Thus in order to indicate that +clone:0+ will be started on +sles-1+,
 on +sles-2+, the cluster would set
 
 .Example notification variables
+======
 [source,Bash]
 -------
-OCF_RESKEY_CRM_meta_notify_start_resource+="clone:0 clone:2 clone:3"
-OCF_RESKEY_CRM_meta_notify_start_uname+="sles-1 sles-3 sles-2"
+OCF_RESKEY_CRM_meta_notify_start_resource="clone:0 clone:2 clone:3"
+OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 -------
+======
 
 ==== Proper Interpretation of Notification Environment Variables ====
 
@@ -536,6 +548,7 @@ codes, and therefore unnecessary complications.
 ===========
 
 .Monitoring both states of a multi-state resource
+======
 [source,XML]
 -------
 <master id="myMasterRsc">
@@ -547,6 +560,8 @@ codes, and therefore unnecessary complications.
    </primitive>
 </master> 
 -------
+======
+
 
 === Multi-state Constraints ===
 
@@ -613,6 +628,7 @@ prevented from being active.  Additionally, the database will wait for
 +myApp+ to be stopped before it is demoted.
 
 .Example constraints involving multi-state resources       
+======
 [source,XML]
 -------
 <constraints>
@@ -626,6 +642,7 @@ prevented from being active.  Additionally, the database will wait for
      then="myApp" then-action="start"/>
 </constraints> 
 -------
+======
 
 Colocation of a regular (or group) resource with a multi-state
 resource means that it can run on any machine with an active copy of
@@ -663,6 +680,7 @@ The other alternative is to create a location constraint that
 indicates which nodes are most preferred as masters.
 
 .Manually specifying which node should be promoted
+======
 [source,XML]
 -------
 <rsc_location id="master-location" rsc="myMasterRsc">
@@ -671,6 +689,7 @@ indicates which nodes are most preferred as masters.
     </rule>
 </rsc_location> 
 -------
+======
 
 === Multi-state Resource Agent Requirements ===
 
