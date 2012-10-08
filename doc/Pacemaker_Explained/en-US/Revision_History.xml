@@ -28,6 +28,19 @@
           </simplelist>
         </revdescription>
       </revision>
+      <revision>
+        <revnumber>4</revnumber>
+        <date>Mon Oct 8 2012</date>
+        <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
+        <revdescription>
+          <simplelist>
+            <member>
+	      Converted to asciidoc (which is converted to docbook for
+	      use with <ulink url="https://fedorahosted.org/publican/">Publican</ulink>
+	    </member>
+          </simplelist>
+        </revdescription>
+      </revision>
     </revhistory>
   </simpara>
 </appendix>

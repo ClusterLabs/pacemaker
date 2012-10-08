@@ -1,0 +1,940 @@
+= Advanced Resource Types =
+
+== Groups - A Syntactic Shortcut ==
+indexterm:[Group Resources]
+indexterm:[Resources,Groups]
+anchor:group-resources[Group Resources]
+
+One of the most common elements of a cluster is a set of resources
+that need to be located together, start sequentially, and stop in the
+reverse order.  To simplify this configuration we support the concept
+of groups.
+
+.An example group
+[source,XML]
+-------
+<group id="shortcut">
+   <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+    <instance_attributes id="params-public-ip">
+       <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+    </instance_attributes>
+   </primitive>
+   <primitive id="Email" class="lsb" type="exim"/>
+  </group> 
+-------
+
+
+Although the example above contains only two resources, there is no
+limit to the number of resources a group can contain.  The example is
+also sufficient to explain the fundamental properties of a group:
+
+* Resources are started in the order they appear in (+Public-IP+
+  first, then +Email+)
+* Resources are stopped in the reverse order to which they appear in
+  (+Email+ first, then +Public-IP+)
+
+If a resource in the group can't run anywhere, then nothing after that
+is allowed to run, too.
+
+* If +Public-IP+ can't run anywhere, neither can +Email+;
+* but if +Email+ can't run anywhere, this does not affect +Public-IP+
+  in any way
+
+The group above is logically equivalent to writing:
+
+.How the cluster sees a group resource
+[source,XML]
+-------
+<configuration>
+   <resources>
+    <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+     <instance_attributes id="params-public-ip">
+        <nvpair id="public-ip-addr" name="ip" value="1.2.3.4"/>
+     </instance_attributes>
+    </primitive>
+    <primitive id="Email" class="lsb" type="exim"/>
+   </resources>
+   <constraints>
+      <rsc_colocation id="xxx" rsc="Email" with-rsc="Public-IP" score="INFINITY"/>
+      <rsc_order id="yyy" first="Public-IP" then="Email"/>
+   </constraints>
+</configuration> 
+-------
+
+Obviously as the group grows bigger, the reduced configuration effort
+can become significant.
+
+Another (typical) example of a group is a DRBD volume, the filesystem
+mount, an IP address, and an application that uses them.
+
+=== Group Properties ===
+.Properties of a Group Resource
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|Your name for the group
+ indexterm:[id,Group Resource Property]
+ indexterm:[Group Resource Properties,id]
+ indexterm:[Resource,Group Property,id]
+
+|=========================================================
+
+=== Group Options ===
+
+Options inherited from xref:s-resource-options[]:
++priority, target-role, is-managed+
+
+=== Group Instance Attributes ===
+
+Groups have no instance attributes, however any that are set here will
+be inherited by the group's children.
+
+=== Group Contents ===
+
+Groups may only contain a collection of
+xref:primitive-resource[] cluster resources.  To refer to
+the child of a group resource, just use the child's id instead of the
+group's.
+
+=== Group Constraints ===
+
+Although it is possible to reference the group's children in
+constraints, it is usually preferable to use the group's name instead.
+
+.Example constraints involving groups
+[source,XML]
+-------
+<constraints>
+    <rsc_location id="group-prefers-node1" rsc="shortcut" node="node1" score="500"/>
+    <rsc_colocation id="webserver-with-group" rsc="Webserver" with-rsc="shortcut"/>
+    <rsc_order id="start-group-then-webserver" first="Webserver" then="shortcut"/>
+</constraints> 
+-------
+
+=== Group Stickiness ===
+indexterm:[resource-stickiness,of a Group Resource]
+
+Stickiness, the measure of how much a resource wants to stay where it
+is, is additive in groups.  Every active resource of the group will
+contribute its stickiness value to the group's total.  So if the
+default +resource-stickiness+ is 100, and a group has seven members,
+five of which are active, then the group as a whole will prefer its
+current location with a score of 500.
+
+== Clones - Resources That Get Active on Multiple Hosts ==
+indexterm:[Clone Resources]
+indexterm:[Resources,Clones]
+anchor:s-resource-clone[Clone Resources]
+
+Clones were initially conceived as a convenient way to start N
+instances of an IP resource and have them distributed throughout the
+cluster for load balancing.  They have turned out to quite useful for
+a number of purposes including integrating with Red Hat's DLM, the
+fencing subsystem, and OCFS2.
+
+You can clone any resource, provided the resource agent supports it.
+
+Three types of cloned resources exist:
+
+* Anonymous
+* Globally Unique
+* Stateful
+
+Anonymous clones are the simplest type.  These resources behave
+completely identically everywhere they are running.  Because of this,
+there can only be one copy of an anonymous clone active per machine.
+      
+Globally unique clones are distinct entities.  A copy of the clone
+running on one machine is not equivalent to another instance on
+another node.  Nor would any two copies on the same node be
+equivalent.
+
+Stateful clones are covered later in xref:s-resource-multistate[].
+
+.An example clone
+[source,XML]
+-------
+<clone id="apache-clone">
+    <meta_attributes id="apache-clone-meta">
+       <nvpair id="apache-unique" name="globally-unique" value="false"/>
+    </meta_attributes>
+    <primitive id="apache" class="lsb" type="apache"/>
+</clone> 
+-------
+
+=== Clone Properties ===
+
+.Properties of a Clone Resource
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|Your name for the clone
+ indexterm:[id,Clone Resource Property]
+ indexterm:[Clone Resource Properties,id]
+ indexterm:[Resource,Clone Property,id]
+
+|=========================================================
+
+=== Clone Options ===
+
+Options inherited from xref:s-resource-options[] resources:
++priority, target-role, is-managed+
+
+.Clone specific configuration options
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|clone-max
+|How many copies of the resource to start. Defaults to the number of
+ nodes in the cluster.
+ indexterm:[clone-max Clone Resource Property]
+ indexterm:[Clone Resource Properties,clone-max]
+ indexterm:[Resource,Clone Property,clone-max]
+
+|clone-node-max
+|How many copies of the resource can be started on a single node;
+ default _1_.
+ indexterm:[clone-node-max Clone Resource Property]
+ indexterm:[Clone Resource Properties,clone-node-max]
+ indexterm:[Resource,Clone Property,clone-node-max]
+  
+|notify
+|When stopping or starting a copy of the clone, tell all the other
+ copies beforehand and when the action was successful. Allowed values:
+ _false_, +true+
+ indexterm:[notify Clone Resource Property]
+ indexterm:[Clone Resource Properties,notify]
+ indexterm:[Resource,Clone Property,notify]
+
+|globally-unique
+|Does each copy of the clone perform a different function? Allowed
+ values: _false_, +true+
+ indexterm:[globally-unique Clone Resource Property]
+ indexterm:[Clone Resource Properties,globally-unique]
+ indexterm:[Resource,Clone Property,globally-unique]
+  
+|ordered
+|Should the copies be started in series (instead of in
+ parallel). Allowed values: _false_, +true+
+ indexterm:[ordered Clone Resource Property]
+ indexterm:[Clone Resource Properties,ordered]
+ indexterm:[Resource,Clone Property,ordered]
+
+|interleave
+|Changes the behavior of ordering constraints (between clones/masters)
+ so that instances can start/stop as soon as their peer instance has
+ (rather than waiting for every instance of the other clone
+ has). Allowed values: _false_, +true+
+ indexterm:[interleave Clone Resource Property]
+ indexterm:[Clone Resource Properties,interleave]
+ indexterm:[Resource,Clone Property,interleave]
+
+|=========================================================
+
+=== Clone Instance Attributes ===
+
+Clones have no instance attributes; however, any that are set here
+will be inherited by the clone's children.
+
+=== Clone Contents ===
+
+Clones must contain exactly one group or one regular resource.
+
+[WARNING]
+You should never reference the name of a clone's child.
+If you think you need to do this, you probably need to re-evaluate your design.
+
+=== Clone Constraints ===
+
+In most cases, a clone will have a single copy on each active cluster
+node.  If this is not the case, you can indicate which nodes the
+cluster should preferentially assign copies to with resource location
+constraints.  These constraints are written no differently to those
+for regular resources except that the clone's id is used.
+
+Ordering constraints behave slightly differently for clones.  In the
+example below, +apache-stats+ will wait until all copies of the clone
+that need to be started have done so before being started itself.
+Only if _no_ copies can be started +apache-stats+ will be prevented
+from being active.  Additionally, the clone will wait for
++apache-stats+ to be stopped before stopping the clone.
+
+Colocation of a regular (or group) resource with a clone means that
+the resource can run on any machine with an active copy of the clone.
+The cluster will choose a copy based on where the clone is running and
+the resource's own location preferences.
+
+Colocation between clones is also possible.  In such cases, the set of
+allowed locations for the clone is limited to nodes on which the clone
+is (or will be) active.  Allocation is then performed as normally.
+
+.Example constraints involving clones
+[source,XML]
+-------
+<constraints>
+    <rsc_location id="clone-prefers-node1" rsc="apache-clone" node="node1" score="500"/>
+    <rsc_colocation id="stats-with-clone" rsc="apache-stats" with="apache-clone"/>
+    <rsc_order id="start-clone-then-stats" first="apache-clone" then="apache-stats"/>
+</constraints> 
+-------
+
+=== Clone Stickiness ===
+
+indexterm:[resource-stickiness,of a Clone Resource]
+
+To achieve a stable allocation pattern, clones are slightly sticky by
+default.  If no value for +resource-stickiness+ is provided, the clone
+will use a value of 1.  Being a small value, it causes minimal
+disturbance to the score calculations of other resources but is enough
+to prevent Pacemaker from needlessly moving copies around the cluster.
+
+=== Clone Resource Agent Requirements ===
+
+Any resource can be used as an anonymous clone, as it requires no
+additional support from the resource agent.  Whether it makes sense to
+do so depends on your resource and its resource agent.
+
+Globally unique clones do require some additional support in the
+resource agent.  In particular, it must only respond with
++${OCF_SUCCESS}+ if the node has that exact instance active.  All
+other probes for instances of the clone should result in
++${OCF_NOT_RUNNING}+.  Unless of course they are failed, in which case
+they should return one of the other OCF error codes.
+
+Copies of a clone are identified by appending a colon and a numerical
+offset, eg. +apache:2+.
+
+Resource agents can find out how many copies there are by examining
+the +OCF_RESKEY_CRM_meta_clone_max+ environment variable and which
+copy it is by examining +OCF_RESKEY_CRM_meta_clone+.
+
+You should not make any assumptions (based on
++OCF_RESKEY_CRM_meta_clone+) about which copies are active.  In
+particular, the list of active copies will not always be an unbroken
+sequence, nor always start at 0.
+
+==== Clone Notifications ====
+
+Supporting notifications requires the +notify+ action to be
+implemented.  Once supported, the notify action will be passed a
+number of extra variables which, when combined with additional
+context, can be used to calculate the current state of the cluster and
+what is about to happen to it.
+
+.Environment variables supplied with Clone notify actions
+[width="95%",cols="5,3<",options="header",align="center"]
+|=========================================================
+
+|Variable
+|Description
+
+|OCF_RESKEY_CRM_meta_notify_type
+|Allowed values: +pre+, +post+
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_type]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_type]
+
+|OCF_RESKEY_CRM_meta_notify_operation
+|Allowed values: +start+, +stop+
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_operation]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_operation]
+
+|OCF_RESKEY_CRM_meta_notify_start_resource
+|Resources to be started
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_start_resource]
+
+|OCF_RESKEY_CRM_meta_notify_stop_resource
+|Resources to be stopped
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_resource]
+
+|OCF_RESKEY_CRM_meta_notify_active_resource
+|Resources that are running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_active_resource]
+
+|OCF_RESKEY_CRM_meta_notify_inactive_resource
+|Resources that are not running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+
+|OCF_RESKEY_CRM_meta_notify_start_uname
+|Nodes on which resources will be started
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_start_uname]
+
+|OCF_RESKEY_CRM_meta_notify_stop_uname
+|Nodes on which resources will be stopped
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_uname]
+
+|OCF_RESKEY_CRM_meta_notify_active_uname
+|Nodes on which resources are running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_active_uname]
+
+|OCF_RESKEY_CRM_meta_notify_inactive_uname
+|Nodes on which resources are not running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+
+|=========================================================
+
+The variables come in pairs, such as
++OCF_RESKEY_CRM_meta_notify_start_resource+ and
++OCF_RESKEY_CRM_meta_notify_start_uname+ and should be treated as an
+array of whitespace separated elements.
+
+Thus in order to indicate that +clone:0+ will be started on +sles-1+,
++clone:2+ will be started on +sles-3+, and +clone:3+ will be started
+on +sles-2+, the cluster would set
+
+.Example notification variables
+[source,Bash]
+-------
+OCF_RESKEY_CRM_meta_notify_start_resource+="clone:0 clone:2 clone:3"
+OCF_RESKEY_CRM_meta_notify_start_uname+="sles-1 sles-3 sles-2"
+-------
+
+==== Proper Interpretation of Notification Environment Variables ====
+
+.Pre-notification (stop):
+
+* Active resources: +$OCF_RESKEY_CRM_meta_notify_active_resource+
+* Inactive resources: +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+
+.Post-notification (stop) / Pre-notification (start):
+
+* Active resources
+** +$OCF_RESKEY_CRM_meta_notify_active_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+* Inactive resources
+** +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_stop_resource+ 
+* Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+
+.Post-notification (start):
+
+* Active resources:
+** +$OCF_RESKEY_CRM_meta_notify_active_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Inactive resources:
+** +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+== Multi-state - Resources That Have Multiple Modes ==
+
+indexterm:[Multi-state Resources]
+indexterm:[Resources,Multi-state]
+anchor:s-resource-multistate[Multi-state Resources]
+
+Multi-state resources are a specialization of Clone resources; please
+ensure you understand the section on clones before continuing! They
+allow the instances to be in one of two operating modes; these are
+called +Master+ and +Slave+, but can mean whatever you wish them to
+mean.  The only limitation is that when an instance is started, it
+must come up in the +Slave+ state.
+
+=== Multi-state Properties ===
+
+.Properties of a Multi-State Resource
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|Your name for the multi-state resource
+ indexterm:[id,Multi-State Resource Property]
+ indexterm:[Multi-State Resource Properties,id]
+ indexterm:[Resource,Multi-State Property,id]
+
+|=========================================================
+
+=== Multi-state Options ===
+
+Options inherited from xref:s-resource-options[] resources:
++priority+, +target-role+, +is-managed+
+
+Options inherited from xref:s-resource-clone[]:
++clone-max+, +clone-node-max+, +notify+, +globally-unique+, +ordered+,
++interleave+
+
+.Multi-state specific resource configuration options
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|master-max
+|How many copies of the resource can be promoted to +master+ status;
+ default 1.
+ indexterm:[master-max Multi-State Resource Property]
+ indexterm:[Multi-State Resource Properties,master-max]
+ indexterm:[Resource,Multi-State Property,master-max]
+
+|master-node-max
+|How many copies of the resource can be promoted to +master+ status on
+ a single node; default 1.
+ indexterm:[master-node-max Multi-State Resource Property]
+ indexterm:[Multi-State Resource Properties,master-node-max]
+ indexterm:[Resource,Multi-State Property,master-node-max]
+
+|=========================================================
+
+=== Multi-state Instance Attributes ===
+
+Multi-state resources have no instance attributes; however, any that
+are set here will be inherited by master's children.
+
+=== Multi-state Contents ===
+
+Masters must contain exactly one group or one regular resource.
+
+[WARNING]
+You should never reference the name of a master's child.
+If you think you need to do this, you probably need to re-evaluate your design.
+
+=== Monitoring Multi-State Resources ===
+
+The normal type of monitor actions are not sufficient to monitor a
+multi-state resource in the +Master+ state.  To detect failures of the
++Master+ instance, you need to define an additional monitor action
+with +role="Master"+.
+
+[IMPORTANT]
+===========
+It is crucial that _every_ monitor operation has a different interval!
+
+This is because Pacemaker currently differentiates between operations
+only by resource and interval; so if eg. a master/slave resource has
+the same monitor interval for both roles, Pacemaker would ignore the
+role when checking the status - which would cause unexpected return
+codes, and therefore unnecessary complications.
+===========
+
+.Monitoring both states of a multi-state resource
+[source,XML]
+-------
+<master id="myMasterRsc">
+   <primitive id="myRsc" class="ocf" type="myApp" provider="myCorp">
+    <operations>
+     <op id="public-ip-slave-check" name="monitor" interval="60"/>
+     <op id="public-ip-master-check" name="monitor" interval="61" role="Master"/>
+    </operations>
+   </primitive>
+</master> 
+-------
+
+=== Multi-state Constraints ===
+
+In most cases, a multi-state resources will have a single copy on each
+active cluster node.  If this is not the case, you can indicate which
+nodes the cluster should preferentially assign copies to with resource
+location constraints.  These constraints are written no differently to
+those for regular resources except that the master's id is used.
+
+When considering multi-state resources in constraints, for most
+purposes it is sufficient to treat them as clones.  The exception is
+when the +rsc-role+ and/or +with-rsc-role+ fields (for colocation
+constraints) and +first-action+ and/or +then-action+ fields (for
+ordering constraints) are used.
+          
+.Additional constraint options relevant to multi-state resources
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|rsc-role
+|An additional attribute of colocation constraints that specifies the
+ role that +rsc+ must be in.  Allowed values: _Started_, +Master+,
+ +Slave+.
+ indexterm:[rsc-role Multi-State Resource Constraints]
+ indexterm:[Multi-State Resource Constraints,rsc-role]
+ indexterm:[Resource,Multi-State Constraints,rsc-role]
+
+|with-rsc-role
+|An additional attribute of colocation constraints that specifies the
+ role that +with-rsc+ must be in.  Allowed values: _Started_,
+ +Master+, +Slave+.
+ indexterm:[with-rsc-role Multi-State Resource Constraints]
+ indexterm:[Multi-State Resource Constraints,with-rsc-role]
+ indexterm:[Resource,Multi-State Constraints,with-rsc-role]
+
+|first-action
+|An additional attribute of ordering constraints that specifies the
+ action that the +first+ resource must complete before executing the
+ specified action for the +then+ resource.  Allowed values: _start_,
+ +stop+, +promote+, +demote+.
+ indexterm:[first-action Multi-State Resource Constraints]
+ indexterm:[Multi-State Resource Constraints,first-action]
+ indexterm:[Resource,Multi-State Constraints,first-action]
+
+|then-action
+|An additional attribute of ordering constraints that specifies the
+ action that the +then+ resource can only execute after the
+ +first-action+ on the +first+ resource has completed.  Allowed
+ values: +start+, +stop+, +promote+, +demote+. Defaults to the value
+ (specified or implied) of +first-action+.
+ indexterm:[then-action Multi-State Resource Constraints]
+ indexterm:[Multi-State Resource Constraints,then-action]
+ indexterm:[Resource,Multi-State Constraints,then-action]
+
+|=========================================================
+
+In the example below, +myApp+ will wait until one of the database
+copies has been started and promoted to master before being started
+itself.  Only if no copies can be promoted will +apache-stats+ be
+prevented from being active.  Additionally, the database will wait for
++myApp+ to be stopped before it is demoted.
+
+.Example constraints involving multi-state resources       
+[source,XML]
+-------
+<constraints>
+   <rsc_location id="db-prefers-node1" rsc="database" node="node1" score="500"/>
+   <rsc_colocation id="backup-with-db-slave" rsc="backup"
+     with-rsc="database" with-rsc-role="Slave"/>
+   <rsc_colocation id="myapp-with-db-master" rsc="myApp"
+     with-rsc="database" with-rsc-role="Master"/>
+   <rsc_order id="start-db-before-backup" first="database" then="backup"/>
+   <rsc_order id="promote-db-then-app" first="database" first-action="promote"
+     then="myApp" then-action="start"/>
+</constraints> 
+-------
+
+Colocation of a regular (or group) resource with a multi-state
+resource means that it can run on any machine with an active copy of
+the multi-state resource that is in the specified state (+Master+ or
++Slave+).  In the example, the cluster will choose a location based on
+where database is running as a +Master+, and if there are multiple
++Master+ instances it will also factor in +myApp+'s own location
+preferences when deciding which location to choose.
+
+Colocation with regular clones and other multi-state resources is also
+possible.  In such cases, the set of allowed locations for the +rsc+
+clone is (after role filtering) limited to nodes on which the
++with-rsc+ multi-state resource is (or will be) in the specified role.
+Allocation is then performed as-per-normal.
+
+=== Multi-state Stickiness ===
+
+indexterm:[resource-stickiness,of a Multi-State Resource]
+To achieve a stable allocation pattern, multi-state resources are
+slightly sticky by default.  If no value for +resource-stickiness+ is
+provided, the multi-state resource will use a value of 1.  Being a
+small value, it causes minimal disturbance to the score calculations
+of other resources but is enough to prevent Pacemaker from needlessly
+moving copies around the cluster.
+
+=== Which Resource Instance is Promoted ===
+
+During the start operation, most Resource Agent scripts should call
+the `crm_master` utility.  This tool automatically detects both the
+resource and host and should be used to set a preference for being
+promoted.  Based on this, +master-max+, and +master-node-max+, the
+instance(s) with the highest preference will be promoted.
+
+The other alternative is to create a location constraint that
+indicates which nodes are most preferred as masters.
+
+.Manually specifying which node should be promoted
+[source,XML]
+-------
+<rsc_location id="master-location" rsc="myMasterRsc">
+    <rule id="master-rule" score="100" role="Master">
+      <expression id="master-exp" attribute="#uname" operation="eq" value="node1"/>
+    </rule>
+</rsc_location> 
+-------
+
+=== Multi-state Resource Agent Requirements ===
+
+Since multi-state resources are an extension of cloned resources, all
+the requirements of Clones are also requirements of multi-state
+resources.  Additionally, multi-state resources require two extra
+actions: +demote+ and +promote+; these actions are responsible for
+changing the state of the resource.  Like +start+ and +stop+, they
+should return +OCF_SUCCESS+ if they completed successfully or a
+relevant error code if they did not.
+
+The states can mean whatever you wish, but when the resource is
+started, it must come up in the mode called +Slave+.  From there the
+cluster will then decide which instances to promote to +Master+.
+
+In addition to the Clone requirements for monitor actions, agents must
+also _accurately_ report which state they are in.  The cluster relies
+on the agent to report its status (including role) accurately and does
+not indicate to the agent what role it currently believes it to be in.
+
+.Role implications of OCF return codes
+[width="95%",cols="5,3<",options="header",align="center"]
+|=========================================================
+
+|Monitor Return Code
+|Description
+
+|OCF_NOT_RUNNING
+|Stopped
+ indexterm:[return code,OCF_NOT_RUNNING]
+ indexterm:[Environment Variable,OCF_NOT_RUNNING]
+ indexterm:[OCF_NOT_RUNNING]
+ 
+|OCF_SUCCESS
+|Running (Slave)
+ indexterm:[return code,OCF_SUCCESS]
+ indexterm:[Environment Variable,OCF_SUCCESS]
+ indexterm:[OCF_SUCCESS]
+ 
+|OCF_RUNNING_MASTER
+|Running (Master)
+ indexterm:[return code,OCF_RUNNING_MASTER]
+ indexterm:[Environment Variable,OCF_RUNNING_MASTER]
+ indexterm:[OCF_RUNNING_MASTER]
+
+|OCF_FAILED_MASTER
+|Failed (Master)
+ indexterm:[return code,OCF_FAILED_MASTER]
+ indexterm:[Environment Variable,OCF_FAILED_MASTER]
+ indexterm:[OCF_FAILED_MASTER]
+ 
+|Other
+|Failed (Slave)
+
+|=========================================================
+
+=== Multi-state Notifications ===
+
+Like clones, supporting notifications requires the +notify+ action to
+be implemented.  Once supported the notify action will be passed a
+number of extra variables which, when combined with additional
+context, can be used to calculate the current state of the cluster and
+what is about to happen to it.
+          
+.Environment variables supplied with Master notify actions footnote:[Emphasized variables are specific to +Master+ resources and all behave in the same manner as described for Clone resources.]
+[width="95%",cols="5,3<",options="header",align="center"]
+|=========================================================
+
+|Variable
+|Description
+
+|OCF_RESKEY_CRM_meta_notify_type
+|Allowed values: +pre+, +post+
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_type]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_type]
+
+|OCF_RESKEY_CRM_meta_notify_operation
+|Allowed values: +start+, +stop+
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_operation]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_operation]
+
+|OCF_RESKEY_CRM_meta_notify_active_resource
+|Resources the that are running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_active_resource]
+
+|OCF_RESKEY_CRM_meta_notify_inactive_resource
+|Resources the that are not running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+  
+|_OCF_RESKEY_CRM_meta_notify_master_resource_
+|Resources that are running in +Master+ mode
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_master_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_master_resource]
+
+|_OCF_RESKEY_CRM_meta_notify_slave_resource_
+|Resources that are running in +Slave+ mode
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_slave_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_slave_resource]
+   
+|OCF_RESKEY_CRM_meta_notify_start_resource
+|Resources to be started
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_start_resource]
+  
+|indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_resource]
+  indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_resource]
+  OCF_RESKEY_CRM_meta_notify_stop_resource
+|Resources to be stopped
+
+|_OCF_RESKEY_CRM_meta_notify_promote_resource_
+|Resources to be promoted
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_promote_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_promote_resource]
+   
+|_OCF_RESKEY_CRM_meta_notify_demote_resource_
+|Resources to be demoted
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_demote_resource]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_demote_resource]
+
+|OCF_RESKEY_CRM_meta_notify_start_uname
+|Nodes on which resources will be started
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_start_uname]
+
+|OCF_RESKEY_CRM_meta_notify_stop_uname
+|Nodes on which resources will be stopped
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_uname]
+
+|_OCF_RESKEY_CRM_meta_notify_promote_uname_
+|Nodes on which resources will be promote
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_promote_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_promote_uname]
+
+|_OCF_RESKEY_CRM_meta_notify_demote_uname_
+|Nodes on which resources will be demoted
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_demote_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_demote_uname]
+
+|OCF_RESKEY_CRM_meta_notify_active_uname
+|Nodes on which resources are running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_active_uname]
+
+|OCF_RESKEY_CRM_meta_notify_inactive_uname
+|Nodes on which resources are not running
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+
+|_OCF_RESKEY_CRM_meta_notify_master_uname_
+|Nodes on which resources are running in +Master+ mode
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_master_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_master_uname]
+
+|_OCF_RESKEY_CRM_meta_notify_slave_uname_
+|Nodes on which resources are running in +Slave+ mode
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_slave_uname]
+ indexterm:[OCF_RESKEY_CRM_,meta_notify_slave_uname]
+
+|=========================================================
+
+=== Multi-state - Proper Interpretation of Notification Environment Variables ===
+
+
+.Pre-notification (demote):
+
+* +Active+ resources: +$OCF_RESKEY_CRM_meta_notify_active_resource+
+* +Master+ resources: +$OCF_RESKEY_CRM_meta_notify_master_resource+
+* +Slave+ resources: +$OCF_RESKEY_CRM_meta_notify_slave_resource+
+* Inactive resources: +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources to be demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+
+.Post-notification (demote) / Pre-notification (stop):
+
+* +Active+ resources: +$OCF_RESKEY_CRM_meta_notify_active_resource+
+* +Master+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_master_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_demote_resource+ 
+* +Slave+ resources: +$OCF_RESKEY_CRM_meta_notify_slave_resource+
+* Inactive resources: +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources to be demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+* Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+
+
+.Post-notification (stop) / Pre-notification (start)
+
+* +Active+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_active_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+ 
+* +Master+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_master_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_demote_resource+ 
+* +Slave+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_slave_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+ 
+* Inactive resources:
+** +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_stop_resource+ 
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources to be demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+* Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+
+.Post-notification (start) / Pre-notification (promote)
+
+* +Active+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_active_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_start_resource+ 
+* +Master+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_master_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_demote_resource+ 
+* +Slave+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_slave_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_start_resource+ 
+* Inactive resources:
+** +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_start_resource+           
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources to be demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+* Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+
+.Post-notification (promote)
+
+* +Active+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_active_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_start_resource+ 
+* +Master+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_master_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* +Slave+ resources:
+** +$OCF_RESKEY_CRM_meta_notify_slave_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_start_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_promote_resource+ 
+* Inactive resources:
+** +$OCF_RESKEY_CRM_meta_notify_inactive_resource+
+** plus +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+** minus +$OCF_RESKEY_CRM_meta_notify_start_resource+ 
+* Resources to be started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources to be promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources to be demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources to be stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
+* Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
+* Resources that were promoted: +$OCF_RESKEY_CRM_meta_notify_promote_resource+
+* Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
+* Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+

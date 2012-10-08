@@ -120,7 +120,9 @@ xref:ch-stonith[].
 
 == Properties ==
 
-These values tell the cluster which script to use for the resource, where to find that script and what standards it conforms to.
+anchor:primitive-resource[primitive]
+These values tell the cluster which script to use for the resource,
+where to find that script and what standards it conforms to.
 
 .Properties of a Primitive Resource
 [width="95%",cols="1m,6<",options="header",align="center"]
