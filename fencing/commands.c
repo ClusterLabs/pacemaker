@@ -601,7 +601,7 @@ get_on_target_actions(const char *agent)
         action = crm_element_value(match, "name");
 
         if (action && safe_str_eq(on_target, "true")) {
-            if (strlen(action)) {
+            if (strlen(actions)) {
                 g_strlcat(actions, " ", 512);
             }
             g_strlcat(actions, action, 512);
@@ -650,6 +650,11 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
         g_hash_table_replace(device_list, device->id, device);
 
         crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        if ((device->on_target_actions = get_on_target_actions(device->agent))) {
+            crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
+                device->id,
+                device->on_target_actions);
+        }
     }
     if(desc) {
         *desc = device->id;
@@ -661,7 +666,6 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
         device->api_registered = TRUE;
     }
 
-    device->on_target_actions = get_on_target_actions(device->agent);
     return pcmk_ok;
 }
 

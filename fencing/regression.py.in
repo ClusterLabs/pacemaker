@@ -654,7 +654,6 @@ class Tests:
 		if our_uname:
 			our_uname = our_uname[0]
 
-
 		### Simple test unfencing works
 		test = self.new_test("cpg_unfence_simple",
 				"Verify simple unfencing.", 1)
@@ -668,12 +667,15 @@ class Tests:
 				"Verify unfencing with on_target = true", 1)
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
 
 		### verify failure of unfencing using on_target device
 		test = self.new_test("cpg_unfence_on_target_2",
 				"Verify failure unfencing with on_target = true", 1)
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
 		test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", 194)
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 
 		### verify unfencing using on_target device with topology
@@ -689,6 +691,7 @@ class Tests:
 		test.add_cmd("stonith_admin", "-r %s -i 3 -v true1" % (our_uname))
 
 		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 		### verify unfencing using on_target device with topology fails
 		test = self.new_test("cpg_unfence_on_target_4",
@@ -703,6 +706,7 @@ class Tests:
 		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
 
 		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 194)
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 
 		### verify use of on_target = true for "on" action does not interfere with "off" action
@@ -715,6 +719,7 @@ class Tests:
 		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
 		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
 		test.add_cmd("stonith_admin", "-F node_fake -t 3")
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 	def setup_environment(self, use_corosync):
 		if self.autogen_corosync_cfg and use_corosync:
