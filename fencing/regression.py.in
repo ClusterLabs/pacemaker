@@ -648,6 +648,79 @@ class Tests:
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
 
+	def build_unfence_tests(self):
+
+		our_uname = output_from_command("uname -n")
+		if our_uname:
+			our_uname = our_uname[0]
+
+		### Simple test unfencing works
+		test = self.new_test("cpg_unfence_simple",
+				"Verify simple unfencing.", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-U node3 -t 3")
+
+		### verify unfencing using on_target device
+		test = self.new_test("cpg_unfence_on_target_1",
+				"Verify unfencing with on_target = true", 1)
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
+
+		### verify failure of unfencing using on_target device
+		test = self.new_test("cpg_unfence_on_target_2",
+				"Verify failure unfencing with on_target = true", 1)
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
+		test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", 194)
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
+
+		### verify unfencing using on_target device with topology
+		test = self.new_test("cpg_unfence_on_target_3",
+				"Verify unfencing with on_target = true using topology", 1)
+
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node3\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node3\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s node3\"" % (our_uname))
+
+		test.add_cmd("stonith_admin", "-r %s -i 1 -v false1" % (our_uname))
+		test.add_cmd("stonith_admin", "-r %s -i 2 -v false2" % (our_uname))
+		test.add_cmd("stonith_admin", "-r %s -i 3 -v true1" % (our_uname))
+
+		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
+		### verify unfencing using on_target device with topology fails
+		test = self.new_test("cpg_unfence_on_target_4",
+				"Verify unfencing failure with on_target = true using topology", 1)
+
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+
+		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
+		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
+
+		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 194)
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
+
+		### verify use of on_target = true for "on" action does not interfere with "off" action
+		test = self.new_test("cpg_unfence_on_target_ignored",
+				"Verify on target is ignored for other actions", 1)
+		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_on_target -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
+		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
+		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
+		test.add_cmd("stonith_admin", "-F node_fake -t 3")
+		test.add_stonith_log_pattern("(on) to be executed on the target node")
+
 	def setup_environment(self, use_corosync):
 		if self.autogen_corosync_cfg and use_corosync:
 			corosync_conf = ("""
@@ -689,6 +762,46 @@ logging {
 			self.stop_corosync()
 			self.start_corosync()
 
+
+		on_target_agent = ("""#!/usr/bin/python
+import sys
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("monitor") > 0:
+            sys.exit(0)
+        if line.count("metadata") > 0:
+            print '<resource-agent name="fence_dummy_on_target" shortdesc="Dummy Fence agent for testing">'
+            print '  <longdesc>dummy description.</longdesc>'
+            print '  <vendor-url>http://www.example.com</vendor-url>'
+            print '  <parameters>'
+            print '    <parameter name="action" unique="0" required="1">'
+            print '      <getopt mixed="-o, --action=[action]"/>'
+            print '      <content type="string" default="reboot"/>'
+            print '      <shortdesc lang="en">Fencing Action</shortdesc>'
+            print '    </parameter>'
+            print '    <parameter name="port" unique="0" required="0">'
+            print '      <getopt mixed="-n, --plug=[id]"/>'
+            print '      <content type="string"/>'
+            print '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
+            print '    </parameter>'
+            print '  </parameters>'
+            print '  <actions>'
+            print '    <action name="on" on_target="true"/>'
+            print '    <action name="off"/>'
+            print '    <action name="monitor"/>'
+            print '    <action name="metadata"/>'
+            print '  </actions>'
+            print '</resource-agent>'
+            sys.exit(0)
+        if line.count("on") > 0:
+            sys.exit(0)
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
+""")
+
+		os.system("cat <<-END >>/usr/sbin/fence_dummy_on_target\n%s\nEND" % (on_target_agent))
+		os.system("chmod 711 /usr/sbin/fence_dummy_on_target")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
 
@@ -705,6 +818,8 @@ logging {
 
 		if self.autogen_corosync_cfg:
 			os.system("rm -f /etc/corosync/corosync.conf")
+
+		os.system("rm -f /usr/sbin/fence_dummy_on_target")
 
 class TestOptions:
 	def __init__(self):
@@ -770,6 +885,7 @@ def main(argv):
 	tests.build_custom_timeout_tests()
 	tests.build_api_sanity_tests()
 	tests.build_fence_merge_tests()
+	tests.build_unfence_tests()
 
 	if o.options['list-tests']:
 		tests.print_list()

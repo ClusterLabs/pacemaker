@@ -18,6 +18,10 @@ plug_status="on"
 
 def get_outlets_status(conn, options):
     result={}
+    global plug_status
+
+    if options.has_key("-o") and options["-o"] == "on":
+        plug_status = "off"
 
     # This fake agent has no port data to list, so we have to make
     # something up for the list action.
@@ -43,6 +47,8 @@ def get_power_status(conn, options):
 def set_power_status(conn, options):
     global plug_status
     plug_status = "unknown"
+    if options.has_key("-o") and options["-o"] == "on":
+        plug_status = "off"
 
 def main():
     device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
