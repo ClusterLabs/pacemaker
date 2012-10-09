@@ -157,7 +157,7 @@ cluster will initiate when it is received.
 === OCF Return Codes ===
 
 .OCF Return Codes and their Recovery Types
-[width="95%",cols="1m,5^m,6<,1m",options="header",align="center"]
+[width="95%",cols="2m,5^m,6<,1m",options="header",align="center"]
 |=========================================================
 
 |RC

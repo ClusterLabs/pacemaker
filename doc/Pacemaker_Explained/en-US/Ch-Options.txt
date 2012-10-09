@@ -23,7 +23,7 @@ tuple to replace the configuration on all the nodes - which makes
 setting them, and setting them correctly, very important.
 
 .Configuration Version Properties
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field |Description
 
@@ -51,7 +51,7 @@ Incremented every time the configuration or status is updated (usually by the cl
 
 == Other Fields ==
 .Properties Controlling Validation
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field |Description
       
@@ -68,7 +68,7 @@ operating a mixed version cluster during an upgrade.
 == Fields Maintained by the Cluster ==
 
 .Properties Maintained by the Cluster
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field |Description
 
@@ -98,7 +98,8 @@ most cases the cluster will overwrite any values specified by the
 admin with the "correct" ones.  To change the +admin_epoch+, for
 example, one would use:
 
-`cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'`
+[source,C]
+# cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'
 
 A complete set of fields will look something like this:
 
@@ -129,7 +130,7 @@ For now we will describe the simple case where each option is present at most on
 
 == Available Cluster Options ==
 .Cluster Options
-[width="95%",cols="5m,2m,13",options="header",align="center"]
+[width="95%",cols="5m,2,11<",options="header",align="center"]
 |=========================================================
 |Option |Default |Description
       
@@ -282,4 +283,4 @@ Please choose from one of the matches above and supply the 'id' with --attr-id
 
 In such cases follow the on-screen instructions to perform the
 requested action.  To determine which value is currently being used by
-the cluster, please refer to the section on <<ch-rules>>.
+the cluster, please refer to <<ch-rules>>.

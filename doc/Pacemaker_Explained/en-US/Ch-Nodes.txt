@@ -24,7 +24,7 @@ describe the node's attributes, such as how much RAM, disk, what OS or
 kernel version it has, perhaps even its physical location.  This
 information can then be used by the cluster when deciding where to
 place resources.  For more information on the use of node attributes,
-see the section on <<ch-rules>>.
+see <<ch-rules>>.
 
 Node attributes can be specified ahead of time or populated later,
 when the cluster is running, using `crm_attribute`.

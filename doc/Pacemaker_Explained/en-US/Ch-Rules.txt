@@ -18,7 +18,7 @@ evaluates to +true+ or +false+.  What happens next depends on the
 context in which the rule is being used.
     
 .Properties of a Rule
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -64,7 +64,7 @@ added by the administrator, each node has a built-in node attribute
 called +#uname+ that can also be used.
 
 .Properties of an Expression
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -120,7 +120,7 @@ contain an optional +date_spec+ and/or +duration+ object depending on
 the context.
       
 .Properties of a Date Expression
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field
 |Description
@@ -167,7 +167,7 @@ However, at this time one cannot specify +weekdays="1,2"+ or
 demand, this may be implemented in a future release.
         
 .Properties of a Date Spec
-[width="95%",cols="1m,5<",options="header",align="center"]
+[width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 
 |Field
