@@ -30,6 +30,7 @@ There are five classes of agents supported by Pacemaker:
 * Upstart
 * Systemd
 * Fencing
+* Service
 
 indexterm:[Resource,Heartbeat (legacy)]
 indexterm:[Heartbeat,Legacy Resources]
@@ -106,25 +107,72 @@ for the LSB Spec (as it relates to init scripts).
 ]
 
 Many distributions claim LSB compliance but ship with broken init
-scripts.  To see if your init script is LSB-compatible, see the FAQ
-entry <<ap-lsb>>.  The most common problems are:
+scripts.  For details on how to check if your init script is
+LSB-compatible, see <<ap-lsb>>.  The most common problems are:
 
 * Not implementing the status operation at all
 * Not observing the correct exit status codes for start/stop/status actions
 * Starting a started resource returns an error (this violates the LSB spec)
 * Stopping a stopped resource returns an error (this violates the LSB spec)
 
-=== Legacy Heartbeat ===
-indexterm:[Resource,Heartbeat (legacy)]
-indexterm:[Heartbeat,Legacy Resources]
+=== Systemd ===
+indexterm:[Resource,Systemd]
+indexterm:[Systemd,Resources]
 
-Version 1 of Heartbeat came with its own style of resource agents and
-it is highly likely that many people have written their own agents
-based on its conventions.  To enable administrators to continue to use
-these agents, they are supported by the new cluster manager
-footnote:[
-See http://wiki.linux-ha.org/HeartbeatResourceAgent for more information
-]
+Some newer distributions have replaced the old
+http://en.wikipedia.org/wiki/Init#SysV-style[SYS-V] style of
+initialization daemons (and scripts) with an alternative called
+http://www.freedesktop.org/wiki/Software/systemd[Systemd].
+
+Pacemaker is able to manage these services _if they are present_.
+
+Instead of +init scripts+, systemd has +unit files+.  Generally the
+services (or unit files) are provided by the OS/distribution but there
+are some instructions for converting from init scripts at:
+http://0pointer.de/blog/projects/systemd-for-admins-3.html
+
+[NOTE]
+======
+Remember to make sure the computer is +not+ configured to start any
+services at boot time that should be controlled by the cluster.
+======
+
+=== Upstart ===
+indexterm:[Resource,Upstart]
+indexterm:[Upstart,Resources]
+
+Some newer distributions have replaced the old
+http://en.wikipedia.org/wiki/Init#SysV-style[SYS-V] style of
+initialization daemons (and scripts) with an alternative called
+http://upstart.ubuntu.com[Upstart].
+
+Pacemaker is able to manage these services _if they are present_.
+
+Instead of +init scripts+, upstart has +jobs+.  Generally the
+services (or jobs) are provided by the OS/distribution.
+
+[NOTE]
+======
+Remember to make sure the computer is +not+ configured to start any
+services at boot time that should be controlled by the cluster.
+======
+
+=== System Services ===
+indexterm:[Resource,System Service]
+indexterm:[System Service,Resources]
+
+Since there are now many "common" types of system services (+systemd+,
++upstart+, and +lsb+), Pacemaker supports a special alias which
+intelligently figures out which one applies to a given cluster node.
+
+This is particularly useful when the cluster contains a mix of
++systemd+, +upstart+, and +lsb+.
+
+In order, Pacemaker will try to find the named service as:
+
+. an LSB (SYS-V) init script
+. a Systemd unit file
+. an Upstart job
 
 === STONITH ===
 indexterm:[Resource,STONITH]
@@ -154,7 +202,7 @@ indexterm:[id]
 |class
 indexterm:[class,Resource Field]
 indexterm:[Resource,Field,class]
-|The standard the script conforms to. Allowed values: +heartbeat+, +lsb+, +ocf+, +stonith+
+|The standard the script conforms to. Allowed values: +ocf+, +service+, +upstart+, +systemd+, +lsb+, +stonith+
 
 |type
 indexterm:[type,Resource Field]
@@ -178,14 +226,17 @@ Resource definitions can be queried with the `crm_resource` tool. For example
 
 might produce:
 
-.An example LSB resource
+.An example system resource
 =====
 [source,XML]
-<primitive id="Email" class="lsb" type="exim"/>
+<primitive id="Email" class="service" type="exim"/>
 =====
 
-[NOTE]
-One of the main drawbacks to LSB resources is that they do not allow any parameters!
+[NOTE] 
+=====
+One of the main drawbacks to system services (such as LSB, Systemd and
+Upstart) resources is that they do not allow any parameters!
+=====
 
 .An example OCF resource
 =====
@@ -198,27 +249,6 @@ One of the main drawbacks to LSB resources is that they do not allow any paramet
 </primitive>
 -------
 =====
-
-Or, finally for the equivalent legacy Heartbeat resource:
-
-.An example Heartbeat resource
-=====
-[source,XML]
--------
-<primitive id="Public-IP-legacy" class="heartbeat" type="IPaddr">
-   <instance_attributes id="params-public-ip-legacy">
-      <nvpair id="public-ip-addr-legacy" name="1" value="1.2.3.4"/>
-   </instance_attributes>
-</primitive>
--------
-=====
-
-[NOTE]
-======
-Heartbeat resources take only ordered and unnamed parameters.  The
-supplied name therefore indicates the order in which they are passed
-to the script.  Only single digit values are allowed.
-======
 
 [[s-resource-options]]
 == Resource Options ==
@@ -249,7 +279,7 @@ indexterm:[Resource,Option,priority]
 * 'Stopped' - Force the resource to be stopped
 
 * 'Started' - Allow the resource to be started (In the case of
-  <<s-resource-multistate>> resources, they will not promoted to
+  <<s-resource-multistate,multi-state>> resources, they will not promoted to
   master)
 
 * 'Master' - Allow the resource to be started and, if appropriate, promoted
