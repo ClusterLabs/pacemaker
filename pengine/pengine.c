@@ -114,10 +114,12 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
             crm_xml_add_int(data_set.graph, "transition_id", 0);
             crm_xml_add_int(data_set.graph, "cluster-delay", 0);
             process = FALSE;
+            free(digest);
 
         } else if (safe_str_eq(digest, last_digest)) {
             crm_info("Input has not changed since last time, not saving to disk");
             is_repoke = TRUE;
+            free(digest);
 
         } else {
             free(last_digest);

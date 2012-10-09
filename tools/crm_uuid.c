@@ -52,8 +52,9 @@ int write_local_hb_uuid(const char *buffer);
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tRead the machine's Heartbeat UUID"  },
-    {"read",    0, 0, 'r', "\tChange the machine's Heartbeat UUID to a new value"  },
+    {"version", 0, 0, '$', "\t\tVersion information"  },
+    {"read",    0, 0, 'r', "\tRead the machine's Heartbeat UUID"  },
+    {"write",   1, 0, 'w', "\tChange the machine's Heartbeat UUID to a new value"  },
     
     {0, 0, 0, 0}
 };

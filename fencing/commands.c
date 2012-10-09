@@ -281,6 +281,7 @@ void free_device(gpointer data)
 
     g_list_free_full(device->targets, free);
     free(device->namespace);
+    free(device->on_target_actions);
     free(device->agent);
     free(device->id);
     free(device);
@@ -563,6 +564,63 @@ device_has_duplicate(stonith_device_t *device)
     return dup;
 }
 
+static char *
+get_on_target_actions(const char *agent)
+{
+    stonith_t *st = stonith_api_new();
+    char *actions = NULL;
+    char *buffer = NULL;
+    xmlNode *xml = NULL;
+    xmlXPathObjectPtr xpath = NULL;
+    int rc = 0, max = 0, lpc = 0;
+
+    rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+    if (rc || !buffer) {
+        goto on_target_actions_cleanup;
+    }
+    xml = string2xml(buffer);
+
+    xpath = xpath_search(xml, "//action");
+
+    if (!xpath || !xpath->nodesetval) {
+        goto on_target_actions_cleanup;
+    }
+
+    max = xpath->nodesetval->nodeNr;
+
+    actions = calloc(1, 512);
+
+    for (lpc = 0; lpc < max; lpc++) {
+        const char *on_target = NULL;
+        const char *action = NULL;
+        xmlNode *match = getXpathResult(xpath, lpc);
+
+        CRM_CHECK(match != NULL, continue);
+
+        on_target = crm_element_value(match, "on_target");
+        action = crm_element_value(match, "name");
+
+        if (action && safe_str_eq(on_target, "true")) {
+            if (strlen(actions)) {
+                g_strlcat(actions, " ", 512);
+            }
+            g_strlcat(actions, action, 512);
+        }
+    }
+
+    if (!strlen(actions)) {
+        free(actions);
+        actions = NULL;
+    }
+
+on_target_actions_cleanup:
+    free(buffer);
+    stonith_api_delete(st);
+    free_xml(xml);
+
+    return actions;
+}
+
 int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
 {
     const char *value = NULL;
@@ -592,6 +650,11 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
         g_hash_table_replace(device_list, device->id, device);
 
         crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
+        if ((device->on_target_actions = get_on_target_actions(device->agent))) {
+            crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
+                device->id,
+                device->on_target_actions);
+        }
     }
     if(desc) {
         *desc = device->id;
@@ -775,7 +838,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     return rc;
 }
 
-static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host)
+static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host, const char *action)
 {
     gboolean can = FALSE;
     const char *alias = host;
@@ -786,6 +849,14 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 
     } else if(host == NULL) {
         return TRUE;
+    }
+
+    if (dev->on_target_actions &&
+        action &&
+        strstr(dev->on_target_actions, action) &&
+        safe_str_neq(host, stonith_our_uname)) {
+        /* this device can only execute this action on the target node */
+        return FALSE;
     }
 
     if(g_hash_table_lookup(dev->aliases, host)) {
@@ -859,6 +930,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 struct device_search_s 
 {
     const char *host;
+    const char *action;
     GListPtr capable;
 };
 
@@ -867,7 +939,7 @@ static void search_devices(
 {
     stonith_device_t *dev = value;
     struct device_search_s *search = user_data;
-    if(can_fence_host_with_device(dev, search->host)) {
+    if(can_fence_host_with_device(dev, search->host, search->action)) {
         search->capable = g_list_append(search->capable, value);
     }
 }
@@ -885,6 +957,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     if(dev) {
         const char *device = crm_element_value(dev, F_STONITH_DEVICE);
         search.host = crm_element_value(dev, F_STONITH_TARGET);
+        search.action = crm_element_value(dev, F_STONITH_ACTION);
         if(device && safe_str_eq(device, "manual_ack")) {
             /* No query necessary */
             if(list) {
@@ -893,7 +966,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
             return pcmk_ok;
         }
 
-        action = crm_element_value(dev, F_STONITH_ACTION);
+        action = search.action;
     }
 
     crm_log_xml_debug(msg, "Query");
@@ -1186,6 +1259,7 @@ static int stonith_fence(xmlNode *msg)
 
         search.capable = NULL;
         search.host = crm_element_value(dev, F_STONITH_TARGET);
+        search.action = crm_element_value(dev, F_STONITH_ACTION);
 
         crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
         if(options & st_opt_cs_nodeid) {
