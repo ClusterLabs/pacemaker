@@ -705,19 +705,19 @@ not indicate to the agent what role it currently believes it to be in.
 
 |OCF_NOT_RUNNING
 |Stopped
- indexterm:[return code,OCF_NOT_RUNNING]
+ indexterm:[Return Code,OCF_NOT_RUNNING]
  
 |OCF_SUCCESS
 |Running (Slave)
- indexterm:[return code,OCF_SUCCESS]
+ indexterm:[Return Code,OCF_SUCCESS]
  
 |OCF_RUNNING_MASTER
 |Running (Master)
- indexterm:[return code,OCF_RUNNING_MASTER]
+ indexterm:[Return Code,OCF_RUNNING_MASTER]
 
 |OCF_FAILED_MASTER
 |Failed (Master)
- indexterm:[return code,OCF_FAILED_MASTER]
+ indexterm:[Return Code,OCF_FAILED_MASTER]
  
 |Other
 |Failed (Slave)
