@@ -155,10 +155,9 @@ Upload the changes
 </orderedlist>
 <para>If this step fails, something really strange has occurred. You should report a bug.</para>
 </section>
-<section id="_manually_upgrading_the_configuration">
+<section id="s-upgrade-config-manual">
 <title>Manually Upgrading the Configuration</title>
-<para><anchor id="s-upgrade-config-manual" xreflabel="Manually Upgrading the Configuration"/>
-<indexterm>
+<para><indexterm>
   <primary>Configuration</primary><secondary>Upgrade manually</secondary>
 </indexterm>
 <indexterm>

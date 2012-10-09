@@ -1,9 +1,10 @@
 = Advanced Resource Types =
 
+[[group-resources]]
 == Groups - A Syntactic Shortcut ==
 indexterm:[Group Resources]
 indexterm:[Resources,Groups]
-anchor:group-resources[Group Resources]
+
 
 One of the most common elements of a cluster is a set of resources
 that need to be located together, start sequentially, and stop in the
@@ -89,7 +90,7 @@ mount, an IP address, and an application that uses them.
 
 === Group Options ===
 
-Options inherited from xref:s-resource-options[]:
+Options inherited from <<s-resource-options,primitive>> resources:
 +priority, target-role, is-managed+
 
 === Group Instance Attributes ===
@@ -100,7 +101,7 @@ be inherited by the group's children.
 === Group Contents ===
 
 Groups may only contain a collection of
-xref:primitive-resource[] cluster resources.  To refer to
+<<primitive-resource>> cluster resources.  To refer to
 the child of a group resource, just use the child's id instead of the
 group's.
 
@@ -131,10 +132,10 @@ default +resource-stickiness+ is 100, and a group has seven members,
 five of which are active, then the group as a whole will prefer its
 current location with a score of 500.
 
+[[s-resource-clone]]
 == Clones - Resources That Get Active on Multiple Hosts ==
 indexterm:[Clone Resources]
 indexterm:[Resources,Clones]
-anchor:s-resource-clone[Clone Resources]
 
 Clones were initially conceived as a convenient way to start N
 instances of an IP resource and have them distributed throughout the
@@ -159,7 +160,7 @@ running on one machine is not equivalent to another instance on
 another node.  Nor would any two copies on the same node be
 equivalent.
 
-Stateful clones are covered later in xref:s-resource-multistate[].
+Stateful clones are covered later in <<s-resource-multistate>>.
 
 .An example clone
 ======
@@ -193,7 +194,7 @@ Stateful clones are covered later in xref:s-resource-multistate[].
 
 === Clone Options ===
 
-Options inherited from xref:s-resource-options[] resources:
+Options inherited from <<s-resource-options,primitive>> resources:
 +priority, target-role, is-managed+
 
 .Clone specific configuration options
@@ -454,11 +455,11 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 * Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
 * Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
 
+[[s-resource-multistate]]
 == Multi-state - Resources That Have Multiple Modes ==
 
 indexterm:[Multi-state Resources]
 indexterm:[Resources,Multi-state]
-anchor:s-resource-multistate[Multi-state Resources]
 
 Multi-state resources are a specialization of Clone resources; please
 ensure you understand the section on clones before continuing! They
@@ -486,10 +487,10 @@ must come up in the +Slave+ state.
 
 === Multi-state Options ===
 
-Options inherited from xref:s-resource-options[] resources:
+Options inherited from <<s-resource-options,primitive>> resources:
 +priority+, +target-role+, +is-managed+
 
-Options inherited from xref:s-resource-clone[]:
+Options inherited from <<s-resource-clone,clone>> resources:
 +clone-max+, +clone-node-max+, +notify+, +globally-unique+, +ordered+,
 +interleave+
 

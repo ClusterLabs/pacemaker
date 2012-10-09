@@ -1,8 +1,7 @@
 [appendix]
 
+[[ap-lsb]]
 == init-Script LSB Compliance ==
-
-anchor:ap-lsb[LSB Compliance]
 
 The relevant part of
 http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html[LSB spec]

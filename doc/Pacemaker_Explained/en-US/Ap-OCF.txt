@@ -1,8 +1,7 @@
 [appendix]
 
+[[ap-ocf]]
 == More About OCF Resource Agents ==
-
-anchor:ap-ocf[OCF Resource Agents]
 
 === Location of Custom Scripts ===
 
@@ -33,29 +32,33 @@ All OCF Resource Agents are required to implement the following actions
 
 |start
 |Start the resource
-indexterm:[start action]
-indexterm:[action,start]
-|Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active.
+|Return 0 on success and an appropriate error code otherwise. Must not
+ report success until the resource is fully active.
+ indexterm:[start action]
+ indexterm:[action,start]
 
 |stop
 |Stop the resource
-indexterm:[stop action]
-indexterm:[action,stop]
-|Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped.
+|Return 0 on success and an appropriate error code otherwise. Must not
+ report success until the resource is fully stopped.
+ indexterm:[stop action]
+ indexterm:[action,stop]
 
 |monitor
 |Check the resource's state 
-indexterm:[monitor action]
-indexterm:[action,monitor]
-|Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed. 
+
+|Exit 0 if the resource is running, 7 if it is stopped, and anything
+ else if it is failed. 
+ indexterm:[monitor action]
+ indexterm:[action,monitor]
 
 NOTE: The monitor script should test the state of the resource on the local machine only.
 
 |meta-data
 |Describe the resource
-indexterm:[meta-data action]
-indexterm:[action,meta-data]
 |Provide information about this resource as an XML snippet. Exit with 0.
+ indexterm:[meta-data action]
+ indexterm:[action,meta-data]
 
 NOTE: This is *not* performed as root.
 
@@ -67,7 +70,9 @@ indexterm:[action,validate-all]
 
 |=========================================================
 
-Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like xref:s-resource-clone[clones] and xref:s-resource-multistate[multi-state] resources.
+Additional requirements (not part of the OCF specs) are placed on
+agents that will be used for advanced concepts like
+<<s-resource-clone,clones>> and <<s-resource-multistate,multi-state>> resources.
 
 .Optional Actions for OCF Agents
 [width="95%",cols="2m,6,3",options="header",align="center"]
@@ -79,20 +84,22 @@ Additional requirements (not part of the OCF specs) are placed on agents that wi
 
 |promote
 |Promote the local instance of a multi-state resource to the master/primary state.
-indexterm:[promote action]
-indexterm:[action,promote]
+ indexterm:[promote action]
+ indexterm:[action,promote]
 |Return 0 on success
 
 |demote
 |Demote the local instance of a multi-state resource to the slave/secondary state.
-indexterm:[demote action]
-indexterm:[action,demote]
+ indexterm:[demote action]
+ indexterm:[action,demote]
 |Return 0 on success
 
 |notify
-|Used by the cluster to send the agent pre and post notification events telling the resource what has happened and will happen.
-indexterm:[notify action]
-indexterm:[action,notify]
+
+|Used by the cluster to send the agent pre and post notification
+ events telling the resource what has happened and will happen.
+ indexterm:[notify action]
+ indexterm:[action,notify]
 |Must not fail. Must exit with 0
 
 |=========================================================
@@ -146,7 +153,8 @@ Assuming an action is considered to have failed, the following table
 outlines the different OCF return codes and the type of recovery the
 cluster will initiate when it is received.
 
-anchor:s-ocf-return-codes[OCF Return Codes]
+[[s-ocf-return-codes]]
+=== OCF Return Codes ===
 
 .OCF Return Codes and their Recovery Types
 [width="95%",cols="1m,5^m,6<,1m",options="header",align="center"]

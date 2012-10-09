@@ -1,8 +1,8 @@
+[[ch-stonith]]
 = Configure STONITH =
 
 == What Is STONITH ==
 
-anchor:ch-stonith[Configuring STONITH]
 
 STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it
 protects your data from being corrupted by rogue nodes or concurrent

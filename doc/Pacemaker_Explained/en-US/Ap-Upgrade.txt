@@ -1,7 +1,7 @@
 [appendix]
-== Upgrading Cluster Software
 
-anchor:ap-upgrade[Upgrading Cluster Software]
+[[ap-upgrade]]
+== Upgrading Cluster Software
 
 === Version Compatibility ===
 

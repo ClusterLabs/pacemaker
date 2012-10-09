@@ -1,8 +1,7 @@
 [appendix]
 
+[[ap-install]]
 == Installation == 
-
-anchor:ap-install[Installation]
 
 [WARNING]
 The following text may no longer be accurate in some places.

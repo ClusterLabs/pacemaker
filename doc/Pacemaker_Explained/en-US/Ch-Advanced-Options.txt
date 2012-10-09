@@ -1,9 +1,9 @@
 = Advanced Configuration =
 
+[[s-remote-connection]]
 == Connecting from a Remote Machine ==
 indexterm:[Remote,connect]
 indexterm:[Remote,administration]
-anchor:s-remote-connection[Connecting from a Remote Machine]
 
 Provided Pacemaker is installed on a machine, it is possible to
 connect to the cluster even if the machine itself is not in the same
@@ -82,9 +82,9 @@ indexterm:[Remote,connect, CIB options]
 
 |=========================================================
 
+[[s-recurring-start]]
 == Specifying When Recurring Actions are Performed ==
 
-anchor:s-recurring-start[Specifying When Recurring Actions are Performed]
 
 By default, recurring actions are scheduled relative to when the
 resource started.  So if your resource was last started at 14:32 and
@@ -211,7 +211,7 @@ where every other cluster node is no longer available!
 
 In some cases, such as when +resource-stickiness+ is set to
 +INFINITY+, it is possible that you will end up with the problem
-described in xref:node-score-equal[].  The tool can detect
+described in <<node-score-equal>>.  The tool can detect
 some of these cases and deals with them by also creating both a
 positive and negative constraint. Eg.
 
@@ -221,9 +221,9 @@ positive and negative constraint. Eg.
 
 which has the same long-term consequences as discussed earlier.
 
+[[s-failure-migration]]
 === Moving Resources Due to Failure ===
 
-anchor:s-failure-migration[Moving Resources Due to Failure]
 
 New in 1.0 is the concept of a migration threshold.
 footnote:[
@@ -262,7 +262,7 @@ to start the resource elsewhere, but will try to stop it again after
 the failure timeout.
 
 [IMPORTANT]
-Please read xref:s-rules-recheck[] before enabling this option.
+Please read <<s-rules-recheck>> before enabling this option.
 
 === Moving Resources Due to Connectivity Changes ===
 
@@ -358,7 +358,7 @@ recording.
 [NOTE]
 ======
 Before reading the following, please make sure you have read and
-understood xref:ch-rules[] above.
+understood <<ch-rules>> above.
 ======
 
 There are a number of ways to use the connectivity data provided by
@@ -508,9 +508,9 @@ that are starting, then the resource will be moved in the traditional
 manner.  The Policy Engine is not yet able to model this situation
 correctly and so takes the safe (yet less optimal) path.
 
+[[s-reusing-config-elements]]
 == Reusing Rules, Options and Sets of Operations ==
 
-anchor:s-reusing-config-elements[Reusing Rules, Options and Sets of Operations]
 Sometimes a number of constraints need to use the same set of rules,
 and resources need to set the same options and parameters.  To
 simplify this situation, you can refer to an existing object using an

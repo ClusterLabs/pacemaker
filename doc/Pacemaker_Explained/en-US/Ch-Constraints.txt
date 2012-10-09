@@ -126,9 +126,9 @@ likely to result in a simpler configuration.  On the other-hand, if
 most resources can only run on a small subset of nodes an opt-in
 configuration might be simpler.
 
+[[node-score-equal]]
 === What if Two Nodes Have the Same Score ===
 
-anchor:node-score-equal[What if Two Nodes Have the Same Score]
 If two nodes have the same score, then the cluster will choose one.
 This choice may seem random and may not be what was intended, however
 the cluster was not given enough information to know any better.
@@ -154,9 +154,9 @@ uname and Database based on the desire to spread the resource load
 evenly across the cluster.  However other factors can also be involved
 in more complex configurations.
 
+[[s-resource-ordering]]
 == Specifying in which Order Resources Should Start/Stop ==
 
-anchor:s-resource-ordering[Resource Start Ordering]
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
 
@@ -222,9 +222,9 @@ resources are stopping and/or starting.  Any change in state by the
 Some additional information on ordering constraints can be found in
 the document http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf[Ordering Explained].
 
+[[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==
 
-anchor:s-resource-colocation[Resource Colocation]
 When the location of one resource depends on the location of another
 one, we call this colocation.
 
@@ -326,9 +326,9 @@ mandatory.
 [source,XML]
 <rsc_colocation id="colocate-maybe" rsc="resource1" with-rsc="resource2" score="500"/>
 
+[[s-resource-sets-ordering]]
 == Ordering Sets of Resources ==
 
-anchor:s-resource-sets-ordering[Resource Sets - Start Ordering]
 A common situation is for an administrator to create a chain of
 ordered resources, such as:
 
@@ -449,12 +449,12 @@ limit to the number of sets that can be specified.
 .Visual representation of the start order for the three sets defined above
 image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",align="center"]
 
+[[s-resource-sets-collocation]]
 == Collocating Sets of Resources ==
 
-anchor:s-resource-sets-collocation[Resource Sets - Colocation]
 Another common situation is for an administrator to create a set of
 collocated resources.  Previously this was possible either by defining
-a resource group (See xref:group-resources[]) which could not always
+a resource group (See <<group-resources>>) which could not always
 accurately express the design; or by defining each relationship as an
 individual constraint, causing a constraint explosion as the number of
 resources and combinations grew.

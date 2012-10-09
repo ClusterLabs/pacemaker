@@ -17,7 +17,7 @@ and ensure your configuration validates.
 
 ==== Upgrade the software ====
 
-Refer to the appendix: xref:ap-upgrade[]
+Refer to the appendix: <<ap-upgrade>>
 
 ==== Upgrade the Configuration ====
 
@@ -66,7 +66,7 @@ internally).
 The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.
 ]
 +
-If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit http://clusterlabs.org/wiki/Validation_FAQ and/or try the procedure described below under xref:s-upgrade-config-manual[]
+If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit http://clusterlabs.org/wiki/Validation_FAQ and/or try the procedure described below under <<s-upgrade-config-manual>>
 +        
 . Check the changes
 +
@@ -98,7 +98,7 @@ Verify that either no resource actions will occur or that you are
 happy with any that are scheduled.  If the output contains actions you
 do not expect (possibly due to changes to the score calculations), you
 may need to make further manual changes.  See
-xref:s-config-testing-changes[] for further details on how to interpret
+<<s-config-testing-changes>> for further details on how to interpret
 the output of `crm_simulate`
 +
 . Upload the changes
@@ -109,9 +109,9 @@ the output of `crm_simulate`
 -----
 If this step fails, something really strange has occurred. You should report a bug.
 
+[[s-upgrade-config-manual]]
 ==== Manually Upgrading the Configuration ====
 
-anchor:s-upgrade-config-manual[Manually Upgrading the Configuration]
 indexterm:[Configuration,Upgrade manually]
 It is also possible to perform the configuration upgrade steps manually. To do this
 

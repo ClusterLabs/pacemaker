@@ -16,15 +16,15 @@ this information automatically from the communications and membership
 data.  However one can use the `crm_uuid` tool
 to read an existing UUID or define a value before the cluster starts.
 
+[[s-node-attributes]]
 == Describing a Cluster Node ==
 
-anchor:s-node-attributes[Describing a Cluster Node]
 Beyond the basic definition of a node the administrator can also
 describe the node's attributes, such as how much RAM, disk, what OS or
 kernel version it has, perhaps even its physical location.  This
 information can then be used by the cluster when deciding where to
 place resources.  For more information on the use of node attributes,
-see the section on xref:ch-rules[].
+see the section on <<ch-rules>>.
 
 Node attributes can be specified ahead of time or populated later,
 when the cluster is running, using `crm_attribute`.
@@ -51,20 +51,19 @@ A simpler way to determine the current value of an attribute is to use `crm_attr
 [source,C]
 # crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value
 
-By specifying <parameter>--type nodes</parameter> the admin tells the
-cluster that this attribute is persistent.  There are also transient
-attributes which are kept in the status section which are "forgotten"
-whenever the node rejoins the cluster.  The cluster uses this area to
-store a record of how many times a resource has failed on that node
-but administrators can also read and write to this section by
-specifying <parameter>--type status</parameter>.
-      
+By specifying `--type nodes` the admin tells the cluster that this
+attribute is persistent.  There are also transient attributes which
+are kept in the status section which are "forgotten" whenever the node
+rejoins the cluster.  The cluster uses this area to store a record of
+how many times a resource has failed on that node but administrators
+can also read and write to this section by specifying `--type status`.
+
 == Adding a New Cluster Node ==
 
 === Corosync ===
 
 Adding a new node is as simple as installing Corosync and Pacemaker,
-and copying _/etc/corosync/corosync.conf_ and _/etc/ais/authkey_ (if
+and copying '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if
 it exists) from an existing node.  You may need to modify the
 +mcastaddr+ option to match the new node's IP address.
 
@@ -73,12 +72,12 @@ the keys are not consistent between the machines.
 
 === Heartbeat ===
 
-Provided you specified +autojoin any+ in _ha.cf_, adding a new node is
-as simple as installing heartbeat and copying _ha.cf_ and _authkeys_
+Provided you specified +autojoin any+ in 'ha.cf', adding a new node is
+as simple as installing heartbeat and copying 'ha.cf' and 'authkeys'
 from an existing node.
 
-If you don't want to use +autojoin+, then after setting up _ha.cf_ and
-_authkeys_, you must use the `hb_addnode`
+If you don't want to use +autojoin+, then after setting up 'ha.cf' and
+'authkeys', you must use the `hb_addnode`
 command before starting the new node.
 
 
@@ -140,7 +139,7 @@ The five-step guide to replacing an existing cluster node:
 . Make sure the old node is completely stopped
 . Give the new machine the same hostname and IP address as the old one
 . Install the cluster software :-)
-. Copy _/etc/corosync/corosync.conf_ and _/etc/ais/authkey_ (if it exists) to the new node
+. Copy '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if it exists) to the new node
 . Start the new cluster node
 
 If a log message containing "Invalid digest" appears from Corosync,
@@ -152,8 +151,8 @@ The seven-step guide to replacing an existing cluster node:
 
 . Make sure the old node is completely stopped
 . Give the new machine the same hostname as the old one
-. Go to an active cluster node and look up the UUID for the old node in _/var/lib/heartbeat/hostcache_
+. Go to an active cluster node and look up the UUID for the old node in '/var/lib/heartbeat/hostcache'
 . Install the cluster software
-. Copy _ha.cf_ and _authkeys_ to the new node
+. Copy 'ha.cf' and 'authkeys' to the new node
 . On the new node, populate it's UUID using `crm_uuid -w` and the UUID from step 2
 . Start the new cluster node

@@ -1,6 +1,6 @@
 = Rules =
+[[ch-rules]]
 
-anchor:ch-rules[Rules]
 Rules can be used to make your configuration more dynamic.  One common
 example is to set one value for +resource-stickiness+ during working
 hours, to prevent resources from being moved back to their most
@@ -525,9 +525,9 @@ activities.
 -------
 =====
 
+[[s-rules-recheck]]
 == Ensuring Time Based Rules Take Effect ==
 
-anchor:s-rules-recheck[Ensuring Time Based Rules Take Effect]
 A Pacemaker cluster is an event driven system.  As such, it won't
 recalculate the best place for resources to run in unless something
 (like a resource failure or configuration change) happens.  This can
