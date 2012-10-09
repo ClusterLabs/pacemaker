@@ -83,7 +83,6 @@ mount, an IP address, and an application that uses them.
 |id
 |Your name for the group
  indexterm:[id,Group Resource Property]
- indexterm:[Group Resource Properties,id]
  indexterm:[Resource,Group Property,id]
 
 |=========================================================
@@ -123,7 +122,7 @@ constraints, it is usually preferable to use the group's name instead.
 ======
 
 === Group Stickiness ===
-indexterm:[resource-stickiness,of a Group Resource]
+indexterm:[resource-stickiness,Groups]
 
 Stickiness, the measure of how much a resource wants to stay where it
 is, is additive in groups.  Every active resource of the group will
@@ -186,9 +185,8 @@ Stateful clones are covered later in <<s-resource-multistate>>.
 
 |id
 |Your name for the clone
- indexterm:[id,Clone Resource Property]
- indexterm:[Clone Resource Properties,id]
- indexterm:[Resource,Clone Property,id]
+ indexterm:[id,Clone Property]
+ indexterm:[Clone,Property,id]
 
 |=========================================================
 
@@ -207,47 +205,41 @@ Options inherited from <<s-resource-options,primitive>> resources:
 |clone-max
 |How many copies of the resource to start. Defaults to the number of
  nodes in the cluster.
- indexterm:[clone-max Clone Resource Property]
- indexterm:[Clone Resource Properties,clone-max]
- indexterm:[Resource,Clone Property,clone-max]
+ indexterm:[clone-max,Clone Option]
+ indexterm:[Clone,Option,clone-max]
 
 |clone-node-max
 |How many copies of the resource can be started on a single node;
  default _1_.
- indexterm:[clone-node-max Clone Resource Property]
- indexterm:[Clone Resource Properties,clone-node-max]
- indexterm:[Resource,Clone Property,clone-node-max]
+ indexterm:[clone-node-max,Clone Option]
+ indexterm:[Clone,Option,clone-node-max]
   
 |notify
 |When stopping or starting a copy of the clone, tell all the other
  copies beforehand and when the action was successful. Allowed values:
  _false_, +true+
- indexterm:[notify Clone Resource Property]
- indexterm:[Clone Resource Properties,notify]
- indexterm:[Resource,Clone Property,notify]
+ indexterm:[notify,Clone Option]
+ indexterm:[Clone,Option,notify]
 
 |globally-unique
 |Does each copy of the clone perform a different function? Allowed
  values: _false_, +true+
- indexterm:[globally-unique Clone Resource Property]
- indexterm:[Clone Resource Properties,globally-unique]
- indexterm:[Resource,Clone Property,globally-unique]
+ indexterm:[globally-unique,Clone Option]
+ indexterm:[Clone,Option,globally-unique]
   
 |ordered
 |Should the copies be started in series (instead of in
  parallel). Allowed values: _false_, +true+
- indexterm:[ordered Clone Resource Property]
- indexterm:[Clone Resource Properties,ordered]
- indexterm:[Resource,Clone Property,ordered]
+ indexterm:[ordered,Clone Option]
+ indexterm:[Clone,Option,ordered]
 
 |interleave
 |Changes the behavior of ordering constraints (between clones/masters)
  so that instances can start/stop as soon as their peer instance has
  (rather than waiting for every instance of the other clone
  has). Allowed values: _false_, +true+
- indexterm:[interleave Clone Resource Property]
- indexterm:[Clone Resource Properties,interleave]
- indexterm:[Resource,Clone Property,interleave]
+ indexterm:[interleave,Clone Option]
+ indexterm:[Clone,Option,interleave]
 
 |=========================================================
 
@@ -302,7 +294,7 @@ is (or will be) active.  Allocation is then performed as normally.
 
 === Clone Stickiness ===
 
-indexterm:[resource-stickiness,of a Clone Resource]
+indexterm:[resource-stickiness,Clones]
 
 To achieve a stable allocation pattern, clones are slightly sticky by
 default.  If no value for +resource-stickiness+ is provided, the clone
@@ -352,53 +344,53 @@ what is about to happen to it.
 
 |OCF_RESKEY_CRM_meta_notify_type
 |Allowed values: +pre+, +post+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_type]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_type]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,type]
+ indexterm:[type,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_operation
 |Allowed values: +start+, +stop+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_operation]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_operation]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,operation]
+ indexterm:[operation,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_start_resource
 |Resources to be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_start_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_resource]
+ indexterm:[start_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_stop_resource
 |Resources to be stopped
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_resource]
+ indexterm:[stop_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_active_resource
 |Resources that are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_active_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_resource]
+ indexterm:[active_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_inactive_resource
 |Resources that are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_resource]
+ indexterm:[inactive_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_start_uname
 |Nodes on which resources will be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_start_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_uname]
+ indexterm:[start_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_stop_uname
 |Nodes on which resources will be stopped
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_uname]
+ indexterm:[stop_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_active_uname
 |Nodes on which resources are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_active_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
+ indexterm:[active_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_inactive_uname
 |Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
+ indexterm:[inactive_uname,Notification Environment Variable]
 
 |=========================================================
 
@@ -479,9 +471,8 @@ must come up in the +Slave+ state.
 
 |id
 |Your name for the multi-state resource
- indexterm:[id,Multi-State Resource Property]
- indexterm:[Multi-State Resource Properties,id]
- indexterm:[Resource,Multi-State Property,id]
+ indexterm:[id,Multi-State Property]
+ indexterm:[Multi-State,Property,id]
 
 |=========================================================
 
@@ -504,16 +495,14 @@ Options inherited from <<s-resource-clone,clone>> resources:
 |master-max
 |How many copies of the resource can be promoted to +master+ status;
  default 1.
- indexterm:[master-max Multi-State Resource Property]
- indexterm:[Multi-State Resource Properties,master-max]
- indexterm:[Resource,Multi-State Property,master-max]
+ indexterm:[master-max,Multi-State Option]
+ indexterm:[Multi-State,Option,master-max]
 
 |master-node-max
 |How many copies of the resource can be promoted to +master+ status on
  a single node; default 1.
- indexterm:[master-node-max Multi-State Resource Property]
- indexterm:[Multi-State Resource Properties,master-node-max]
- indexterm:[Resource,Multi-State Property,master-node-max]
+ indexterm:[master-node-max,Multi-State Option]
+ indexterm:[Multi-State,Option,master-node-max]
 
 |=========================================================
 
@@ -589,26 +578,23 @@ ordering constraints) are used.
 |An additional attribute of colocation constraints that specifies the
  role that +rsc+ must be in.  Allowed values: _Started_, +Master+,
  +Slave+.
- indexterm:[rsc-role Multi-State Resource Constraints]
- indexterm:[Multi-State Resource Constraints,rsc-role]
- indexterm:[Resource,Multi-State Constraints,rsc-role]
+ indexterm:[rsc-role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,rsc-role]
 
 |with-rsc-role
 |An additional attribute of colocation constraints that specifies the
  role that +with-rsc+ must be in.  Allowed values: _Started_,
  +Master+, +Slave+.
- indexterm:[with-rsc-role Multi-State Resource Constraints]
- indexterm:[Multi-State Resource Constraints,with-rsc-role]
- indexterm:[Resource,Multi-State Constraints,with-rsc-role]
+ indexterm:[with-rsc-role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,with-rsc-role]
 
 |first-action
 |An additional attribute of ordering constraints that specifies the
  action that the +first+ resource must complete before executing the
  specified action for the +then+ resource.  Allowed values: _start_,
  +stop+, +promote+, +demote+.
- indexterm:[first-action Multi-State Resource Constraints]
- indexterm:[Multi-State Resource Constraints,first-action]
- indexterm:[Resource,Multi-State Constraints,first-action]
+ indexterm:[first-action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,first-action]
 
 |then-action
 |An additional attribute of ordering constraints that specifies the
@@ -616,9 +602,8 @@ ordering constraints) are used.
  +first-action+ on the +first+ resource has completed.  Allowed
  values: +start+, +stop+, +promote+, +demote+. Defaults to the value
  (specified or implied) of +first-action+.
- indexterm:[then-action Multi-State Resource Constraints]
- indexterm:[Multi-State Resource Constraints,then-action]
- indexterm:[Resource,Multi-State Constraints,then-action]
+ indexterm:[then-action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,then-action]
 
 |=========================================================
 
@@ -661,7 +646,7 @@ Allocation is then performed as-per-normal.
 
 === Multi-state Stickiness ===
 
-indexterm:[resource-stickiness,of a Multi-State Resource]
+indexterm:[resource-stickiness,Multi-State]
 To achieve a stable allocation pattern, multi-state resources are
 slightly sticky by default.  If no value for +resource-stickiness+ is
 provided, the multi-state resource will use a value of 1.  Being a
@@ -721,26 +706,18 @@ not indicate to the agent what role it currently believes it to be in.
 |OCF_NOT_RUNNING
 |Stopped
  indexterm:[return code,OCF_NOT_RUNNING]
- indexterm:[Environment Variable,OCF_NOT_RUNNING]
- indexterm:[OCF_NOT_RUNNING]
  
 |OCF_SUCCESS
 |Running (Slave)
  indexterm:[return code,OCF_SUCCESS]
- indexterm:[Environment Variable,OCF_SUCCESS]
- indexterm:[OCF_SUCCESS]
  
 |OCF_RUNNING_MASTER
 |Running (Master)
  indexterm:[return code,OCF_RUNNING_MASTER]
- indexterm:[Environment Variable,OCF_RUNNING_MASTER]
- indexterm:[OCF_RUNNING_MASTER]
 
 |OCF_FAILED_MASTER
 |Failed (Master)
  indexterm:[return code,OCF_FAILED_MASTER]
- indexterm:[Environment Variable,OCF_FAILED_MASTER]
- indexterm:[OCF_FAILED_MASTER]
  
 |Other
 |Failed (Slave)
@@ -764,93 +741,93 @@ what is about to happen to it.
 
 |OCF_RESKEY_CRM_meta_notify_type
 |Allowed values: +pre+, +post+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_type]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_type]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,type]
+ indexterm:[type,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_operation
 |Allowed values: +start+, +stop+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_operation]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_operation]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,operation]
+ indexterm:[operation,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_active_resource
 |Resources the that are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_active_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_resource]
+ indexterm:[active_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_inactive_resource
 |Resources the that are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_resource]
+ indexterm:[inactive_resource,Notification Environment Variable]
   
 |_OCF_RESKEY_CRM_meta_notify_master_resource_
 |Resources that are running in +Master+ mode
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_master_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_master_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_resource]
+ indexterm:[master_resource,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_slave_resource_
 |Resources that are running in +Slave+ mode
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_slave_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_slave_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_resource]
+ indexterm:[slave_resource,Notification Environment Variable]
    
 |OCF_RESKEY_CRM_meta_notify_start_resource
 |Resources to be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_start_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_resource]
+ indexterm:[start_resource,Notification Environment Variable]
   
-|indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_resource]
-  indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_resource]
+|indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_resource]
+ indexterm:[stop_resource,Notification Environment Variable]
   OCF_RESKEY_CRM_meta_notify_stop_resource
 |Resources to be stopped
 
 |_OCF_RESKEY_CRM_meta_notify_promote_resource_
 |Resources to be promoted
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_promote_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_promote_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_resource]
+ indexterm:[promote_resource,Notification Environment Variable]
    
 |_OCF_RESKEY_CRM_meta_notify_demote_resource_
 |Resources to be demoted
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_demote_resource]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_demote_resource]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_resource]
+ indexterm:[demote_resource,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_start_uname
 |Nodes on which resources will be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_start_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_start_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_uname]
+ indexterm:[start_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_stop_uname
 |Nodes on which resources will be stopped
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_stop_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_stop_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_uname]
+ indexterm:[stop_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_promote_uname_
 |Nodes on which resources will be promote
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_promote_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_promote_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_uname]
+ indexterm:[promote_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_demote_uname_
 |Nodes on which resources will be demoted
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_demote_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_demote_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_uname]
+ indexterm:[demote_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_active_uname
 |Nodes on which resources are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_active_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_active_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
+ indexterm:[active_uname,Notification Environment Variable]
 
 |OCF_RESKEY_CRM_meta_notify_inactive_uname
 |Nodes on which resources are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_inactive_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_inactive_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_uname]
+ indexterm:[inactive_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_master_uname_
 |Nodes on which resources are running in +Master+ mode
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_master_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_master_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_uname]
+ indexterm:[master_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_slave_uname_
 |Nodes on which resources are running in +Slave+ mode
- indexterm:[Environment Variable,OCF_RESKEY_CRM_,meta_notify_slave_uname]
- indexterm:[OCF_RESKEY_CRM_,meta_notify_slave_uname]
+ indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_uname]
+ indexterm:[slave_uname,Notification Environment Variable]
 
 |=========================================================
 

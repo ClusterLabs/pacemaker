@@ -59,47 +59,47 @@ versions.
 
 
 | id |
-indexterm:[id,Node Status Field]
-indexterm:[Node,Status Field,id]
+indexterm:[id,Node Status]
+indexterm:[Node,Status,id]
 Unique identifier for the node. Corosync based clusters use the uname
 of the machine, Heartbeat clusters use a human-readable (but annoying)
 UUID.
 
 | uname |
-indexterm:[uname Node Status Field]
-indexterm:[Node,Status Field,uname]
+indexterm:[uname,Node Status]
+indexterm:[Node,Status,uname]
 The node's machine name (output from `uname -n`).
 
 | ha | 
-indexterm:[ha Node Status Field]
-indexterm:[Node,Status Field,ha]
+indexterm:[ha,Node Status]
+indexterm:[Node,Status,ha]
 Flag specifying whether the cluster software is active on the
 node. Allowed values: +active+, +dead+.
 
 | in_ccm |            
-indexterm:[in_ccm Node Status Field]
-indexterm:[Node,Status Field,in_ccm]
+indexterm:[in_ccm,Node Status]
+indexterm:[Node,Status,in_ccm]
 Flag for cluster membership; allowed values: +true+, +false+.
 
 | crmd |
-indexterm:[crmd Node Status Field]
-indexterm:[Node,Status Field,crmd]
+indexterm:[crmd,Node Status]
+indexterm:[Node,Status,crmd]
 Flag: is the crmd process active on the node? One of +online+, +offline+.
 
 | join |
-indexterm:[join Node Status Field]
-indexterm:[Node,Status Field,join]
+indexterm:[join,Node Status]
+indexterm:[Node,Status,join]
 Flag saying whether the node participates in hosting
 resources. Possible values: +down+, +pending+, +member+, +banned+.
             
 | expected |
-indexterm:[expected Node Status Field]
-indexterm:[Node,Status Field,expected]
+indexterm:[expected,Node Status]
+indexterm:[Node,Status,expected]
 Expected value for +join+.
 
 | crm-debug-origin |
-indexterm:[crm-debug-origin Node Status Field]
-indexterm:[Node,Status Field,crm-debug-origin]
+indexterm:[crm-debug-origin,Node Status]
+indexterm:[Node,Status,crm-debug-origin]
 Diagnostic indicator: the origin of the most recent change(s).
 
 |=========================================================
@@ -170,90 +170,90 @@ this tuple are used to create the id of the +lrm_rsc_op+ object.
 |Description
 
 | id |
-indexterm:[id,Job Field]
-indexterm:[Job Field,id]
+indexterm:[id,Action Status]
+indexterm:[Action,Status,id]
 
 Identifier for the job constructed from the resource's +id+,
 +operation+ and +interval+.
             
 | call-id |
-indexterm:[call-id Job Field]
-indexterm:[Job Field,call-id]
+indexterm:[call-id,Action Status]
+indexterm:[Action,Status,call-id]
 
 The job's ticket number. Used as a sort key to determine the order in
 which the jobs were executed.
             
 | operation |
-indexterm:[operation Job Field]
-indexterm:[Job Field,operation]
+indexterm:[operation,Action Status]
+indexterm:[Action,Status,operation]
 
 The action the resource agent was invoked with.
 
 | interval |
-indexterm:[interval Job Field]
-indexterm:[Job Field,interval]
+indexterm:[interval,Action Status]
+indexterm:[Action,Status,interval]
 
 The frequency, in milliseconds, at which the operation will be
 repeated. A one-off job is indicated by 0.
             
 | op-status |
-indexterm:[op-status Job Field]
-indexterm:[Job Field,op-status]
+indexterm:[op-status,Action Status]
+indexterm:[Action,Status,op-status]
 
 The job's status. Generally this will be either 0 (done) or -1
 (pending). Rarely used in favor of +rc-code+.
             
 | rc-code |
-indexterm:[rc-code Job Field]
-indexterm:[Job Field,rc-code]
+indexterm:[rc-code,Action Status]
+indexterm:[Action,Status,rc-code]
 
 The job's result. Refer to <<s-ocf-return-codes>> for
 details on what the values here mean and how they are interpreted.
 
 | last-run |
-indexterm:[last-run Job Field]
-indexterm:[Job Field,last-run]
+indexterm:[last-run,Action Status]
+indexterm:[Action,Status,last-run]
 
 Diagnostic indicator. Machine local date/time, in seconds since epoch,
 at which the job was executed.
 
 | last-rc-change |
-indexterm:[last-rc-change Job Field]
-indexterm:[Job Field,last-rc-change]
+indexterm:[last-rc-change,Action Status]
+indexterm:[Action,Status,last-rc-change]
 
 Diagnostic indicator. Machine local date/time, in seconds since epoch,
 at which the job first returned the current value of +rc-code+.
 
 | exec-time |
-indexterm:[exec-time Job Field]
-indexterm:[Job Field,exec-time]
+indexterm:[exec-time,Action Status]
+indexterm:[Action,Status,exec-time]
 
 Diagnostic indicator. Time, in milliseconds, that the job was running for.
 
 | queue-time |
-indexterm:[queue-time Job Field]
-indexterm:[Job Field,queue-time]
+indexterm:[queue-time,Action Status]
+indexterm:[Action,Status,queue-time]
 
 Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd.
 
 | crm_feature_set |
-indexterm:[crm_feature_set Job Field]
-indexterm:[Job Field,crm_feature_set]
+indexterm:[crm_feature_set,Action Status]
+indexterm:[Action,Status,crm_feature_set]
 
 The version which this job description conforms to. Used when
 processing +op-digest+.
 
 | transition-key |
-indexterm:[transition-key Job Field]
-indexterm:[Job Field,transition-key]
+indexterm:[transition-key,Action Status]
+indexterm:[Action,Status,transition-key]
 
 A concatenation of the job's graph action number, the graph number,
 the expected result and the UUID of the crmd instance that scheduled
 it. This is used to construct +transition-magic+ (below).
 
 | transition-magic |
-indexterm:[transition-magic Job Field]
-indexterm:[Job Field,transition-magic]
+indexterm:[transition-magic,Action Status]
+indexterm:[Action,Status,transition-magic]
 
 A concatenation of the job's +op-status+, +rc-code+ and
 +transition-key+. Guaranteed to be unique for the life of the cluster
@@ -263,16 +263,16 @@ process the completed job. Most importantly, the decomposed elements
 tell the crmd if the job entry was expected and whether it failed.
             
 | op-digest |
-indexterm:[op-digest Job Field]
-indexterm:[Job Field,op-digest]
+indexterm:[op-digest,Action Status]
+indexterm:[Action,Status,op-digest]
 
 An MD5 sum representing the parameters passed to the job. Used to
 detect changes to the configuration, to restart resources if
 necessary.
 
 | crm-debug-origin |
-indexterm:[crm-debug-origin Job Field]
-indexterm:[Job Field,crm-debug-origin]
+indexterm:[crm-debug-origin,Action Status]
+indexterm:[Action,Status,crm-debug-origin]
 
 Diagnostic indicator. The origin of the current values.
 

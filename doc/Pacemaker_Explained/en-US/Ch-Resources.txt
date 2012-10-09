@@ -2,7 +2,7 @@
 
 == What is a Cluster Resource ==
 
-indexterm:[Resource,Description]
+indexterm:[Resource]
 
 The role of a resource agent is to abstract the service it provides
 and present a consistent view to the cluster, which allows the cluster
@@ -21,7 +21,7 @@ that the author is comfortable with.
 [[s-resource-supported]]
 == Supported Resource Classes ==
 
-indexterm:[Resource,Classes]
+indexterm:[Resource,class]
 
 There are five classes of agents supported by Pacemaker:
 
@@ -32,16 +32,17 @@ There are five classes of agents supported by Pacemaker:
 * Fencing
 * Service
 
-indexterm:[Resource,Heartbeat (legacy)]
-indexterm:[Heartbeat,Legacy Resources]
+indexterm:[Resource,Heartbeat]
+indexterm:[Heartbeat,Resources]
 
 Version 1 of Heartbeat came with its own style of resource agents and
 it is highly likely that many people have written their own agents
 based on its conventions.  footnote:[ See
 http://wiki.linux-ha.org/HeartbeatResourceAgent for more information ]
 
-To enable administrators to continue to use these agents, they were
-supported by Pacemaker up until the release of 1.1.8
+Although deprecated with the release of Heartbeat v2, they were
+supported by Pacemaker up until the release of 1.1.8 to enable
+administrators to continue to use these agents.
 
 === Open Cluster Framework ===
 
@@ -95,7 +96,7 @@ http://www.linux-ha.org/wiki/OCF_Resource_Agents[reference] and
 === Linux Standard Base ===
 indexterm:[Resource,LSB]
 indexterm:[LSB,Resources]
-indexterm:[Linus Standard Base,Resources]
+indexterm:[Linux Standard Base,Resources]
 
 LSB resource agents are those found in '/etc/init.d'.
 
@@ -196,26 +197,28 @@ where to find that script and what standards it conforms to.
 |Description
 
 |id
-indexterm:[id]
 |Your name for the resource
+ indexterm:[id,Resource]
+ indexterm:[Resource,Property,id]
 
 |class
-indexterm:[class,Resource Field]
-indexterm:[Resource,Field,class]
-|The standard the script conforms to. Allowed values: +ocf+, +service+, +upstart+, +systemd+, +lsb+, +stonith+
+
+|The standard the script conforms to. Allowed values: +ocf+,
+ +service+, +upstart+, +systemd+, +lsb+, +stonith+
+ indexterm:[class,Resource]
+ indexterm:[Resource,Property,class]
 
 |type
-indexterm:[type,Resource Field]
-indexterm:[Resource,Field,type]
 |The name of the Resource Agent you wish to use. Eg. _IPaddr_ or _Filesystem_
+ indexterm:[type,Resource]
+ indexterm:[Resource,Property,type]
 
 |provider
-indexterm:[provider,Resource Field]
-indexterm:[Resource,Field,provider]
-
 |The OCF spec allows multiple vendors to supply the same
  ResourceAgent. To use the OCF resource agents supplied with
  Heartbeat, you should specify +heartbeat+ here.
+ indexterm:[provider,Resource]
+ indexterm:[Resource,Property,provider]
 
 |=========================================================
 
@@ -302,7 +305,6 @@ indexterm:[Resource,Option,target-role]
 
 |requires
 |Calculated
-
 |Under what conditions can the resource be started. ('Since 1.1.8')
 
  Defaults to +fencing+ unless +stonith-enabled+ is 'false' or +class+
@@ -321,12 +323,11 @@ indexterm:[Resource,Option,target-role]
  * 'unfencing' - The cluster can only start this resource if a majority
    of the configured nodes are active _and_ any failed or unknown nodes
    have been powered off _and_ only on nodes that have been 'unfenced'
- indexterm:[requires,Resource Option]
+ indexterm: Option[requires,Resource]
  indexterm:[Resource,Option,requires]
 
 |migration-threshold
 |+INFINITY+ (disabled)
-
 |How many failures may occur for this resource on a node, before this
  node is marked ineligible to host this resource.
  indexterm:[migration-threshold,Resource Option]
@@ -483,8 +484,9 @@ attributes, their purpose and default values.
 
 == Resource Operations ==
 
-=== Monitoring Resources for Failure ===
+indexterm:[Resource,Action]
 
+=== Monitoring Resources for Failure ===
 
 By default, the cluster will not ensure your resources are still
 healthy.  To instruct the cluster to do this, you need to add a

@@ -62,12 +62,7 @@ internally).</para>
 <orderedlist numeration="arabic">
 <listitem>
 <para>
-Create a shadow copy to work with <indexterm>
-  <primary>shadow copy</primary><secondary>example for upgrading</secondary>
-</indexterm>
-<indexterm>
-  <primary>example for upgrading</primary>
-</indexterm>
+Create a shadow copy to work with
 </para>
 <programlisting language="C" linenumbering="unnumbered"># crm_shadow --create upgrade06</programlisting>
 </listitem>
@@ -187,12 +182,9 @@ Locate the <emphasis>pacemaker.rng</emphasis> script.
 <listitem>
 <para>
 Check the XML validity: <indexterm>
-  <primary>Validate</primary><secondary>XML</secondary>
-</indexterm>
-<indexterm>
-  <primary>XML</primary>
+  <primary>Validate Configuration</primary>
 </indexterm><indexterm>
-  <primary>xmllint</primary><secondary>Validate XML</secondary>
+  <primary>Configuration</primary><secondary>Validate XML</secondary>
 </indexterm>
 <indexterm>
   <primary>Validate XML</primary>

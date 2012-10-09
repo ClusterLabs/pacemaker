@@ -4,8 +4,6 @@
 
 === Empty ===
 
-indexterm:[Configuration,Empty]
-
 .An Empty Configuration
 =======
 [source,XML]
@@ -23,8 +21,6 @@ indexterm:[Configuration,Empty]
 =======
 
 === Simple ===
-
-indexterm:[Configuration,Simple]
 
 .Simple Configuration - 2 nodes, some cluster options and a resource
 =======
@@ -73,7 +69,6 @@ resource fails 10 times or the host shuts down.
 
 
 === Advanced Configuration ===
-indexterm:[Configuration,Advanced]
 
 .Advanced configuration - groups and clones with stonith
 =======

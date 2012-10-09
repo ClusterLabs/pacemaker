@@ -19,6 +19,7 @@ to read an existing UUID or define a value before the cluster starts.
 [[s-node-attributes]]
 == Describing a Cluster Node ==
 
+indexterm:[Node,attribute]
 Beyond the basic definition of a node the administrator can also
 describe the node's attributes, such as how much RAM, disk, what OS or
 kernel version it has, perhaps even its physical location.  This
@@ -62,6 +63,8 @@ can also read and write to this section by specifying `--type status`.
 
 === Corosync ===
 
+indexterm:[Corosync,Add Cluster Node]
+indexterm:[Add Cluster Node,Corosync]
 Adding a new node is as simple as installing Corosync and Pacemaker,
 and copying '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if
 it exists) from an existing node.  You may need to modify the
@@ -72,6 +75,8 @@ the keys are not consistent between the machines.
 
 === Heartbeat ===
 
+indexterm:[Heartbeat,Add Cluster Node]
+indexterm:[Add Cluster Node,Heartbeat]
 Provided you specified +autojoin any+ in 'ha.cf', adding a new node is
 as simple as installing heartbeat and copying 'ha.cf' and 'authkeys'
 from an existing node.
@@ -85,6 +90,8 @@ command before starting the new node.
 
 === Corosync ===
 
+indexterm:[Corosync,Remove Cluster Node]
+indexterm:[Remove Cluster Node,Corosync]
 Because the messaging and membership layers are the authoritative
 source for cluster nodes, deleting them from the CIB is not a reliable
 solution.  First one must arrange for heartbeat to forget about the
@@ -111,6 +118,8 @@ Next, from one of the remaining active cluster nodes:
 
 === Heartbeat ===
 
+indexterm:[Heartbeat,Remove Cluster Node]
+indexterm:[Remove Cluster Node,Heartbeat]
 Because the messaging and membership layers are the authoritative
 source for cluster nodes, deleting them from the CIB is not a reliable
 solution.
@@ -134,6 +143,8 @@ Only then is it safe to delete the node from the CIB with:
 
 === Corosync ===
 
+indexterm:[Corosync,Replace Cluster Node]
+indexterm:[Replace Cluster Node,Corosync]
 The five-step guide to replacing an existing cluster node:
 
 . Make sure the old node is completely stopped
@@ -147,6 +158,8 @@ the keys are not consistent between the machines.
 
 === Heartbeat ===
 
+indexterm:[Heartbeat,Replace Cluster Node]
+indexterm:[Replace Cluster Node,Heartbeat]
 The seven-step guide to replacing an existing cluster node:
 
 . Make sure the old node is completely stopped

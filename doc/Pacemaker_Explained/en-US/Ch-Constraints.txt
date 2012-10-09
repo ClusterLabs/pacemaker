@@ -1,8 +1,8 @@
 =  Resource Constraints =
 
-== Scores ==
 indexterm:[Resource,Constraints]
-indexterm:[Constraints,for Resources]
+
+== Scores ==
 
 Scores of all kinds are integral to how the cluster works.
 Practically everything from moving a resource to deciding which
@@ -25,8 +25,8 @@ with it follows these three basic rules:
 
 == Deciding Which Nodes a Resource Can Run On ==
 
-indexterm:[Constraint,Location]
-indexterm:[Resource,Location]
+indexterm:[Location Constraints]
+indexterm:[Resource,Constraints,Location]
 There are two alternative strategies for specifying which nodes a
 resources can run on.  One way is to say that by default they can run
 anywhere and then create location constraints for nodes that are not
@@ -44,18 +44,18 @@ nothing able to run anywhere and selectively enable allowed nodes.
 
 |id
 |A unique name for the constraint
-indexterm:[id,Location Constraint Field]
-indexterm:[Location Constraint,Field,id]
+indexterm:[id,Location Constraints]
+indexterm:[Constraints,Location,id]
 
 |rsc
 |A resource name
-indexterm:[rsc,Location Constraint Field]
-indexterm:[Location Constraint,Field,rsc]
+indexterm:[rsc,Location Constraints]
+indexterm:[Constraints,Location,rsc]
 
 |node
 |A node's name
-indexterm:[Node,Location Constraint Field]
-indexterm:[Location Constraint,Field,node]
+indexterm:[node,Location Constraints]
+indexterm:[Constraints,Location,node]
 
 |score
 |Positive values indicate the resource should run on this
@@ -64,15 +64,14 @@ indexterm:[Location Constraint,Field,node]
 
  Values of \+/- +INFINITY+ change "should"/"should not" to
  "must"/"must not".
-indexterm:[score,Location Constraint Field]
-indexterm:[Location Constraint,Field,score]
+indexterm:[score,Location Constraints]
+indexterm:[Constraints,Location,score]
 
 |=========================================================
 
 === Asymmetrical "Opt-In" Clusters ===
 indexterm:[Asymmetrical Opt-In Clusters]
 indexterm:[Cluster Type,Asymmetrical Opt-In]
-          
 
 To create an opt-in cluster, start by preventing resources from
 running anywhere by default:
@@ -161,8 +160,9 @@ in more complex configurations.
 [[s-resource-ordering]]
 == Specifying in which Order Resources Should Start/Stop ==
 
-indexterm:[Constraint,Order]
-indexterm:[Resource,Startup Order]
+indexterm:[Resource,Constraints,Ordering]
+indexterm:[Resource,Start Order]
+indexterm:[Ordering Constraints]
 The way to specify the order in which resources should start is by
 creating +rsc_order+ constraints.
 
@@ -175,19 +175,19 @@ creating +rsc_order+ constraints.
 
 |id
 |A unique name for the constraint
-indexterm:[id,Ordering Constraint Field]
-indexterm:[Ordering Constraint,Field,id]
+indexterm:[id,Ordering Constraints]
+indexterm:[Constraints,Ordering,id]
 
 |first
 |The name of a resource that must be started before the +then+
  resource is allowed to.
-indexterm:[first,Ordering Constraint Field]
-indexterm:[Ordering Constraint,Field,first]
+indexterm:[first,Ordering Constraints]
+indexterm:[Constraints,Ordering,first]
 
 |then
 |The name of a resource. This resource will start after the +first+ resource.
-indexterm:[then,Ordering Constraint Field]
-indexterm:[Ordering Constraint,Field,then]
+indexterm:[then,Ordering Constraints]
+indexterm:[Constraints,Ordering,then]
 
 |kind
 |How to enforce the constraint. ('Since 1.1.2')
@@ -201,14 +201,14 @@ indexterm:[Ordering Constraint,Field,then]
 * Serialize - Ensure that no two stop/start actions occur concurrently
   for a set of resources.
 
-indexterm:[kind,Ordering Constraint Field]
-indexterm:[Ordering Constraint,Field,kind]
+indexterm:[kind,Ordering Constraints]
+indexterm:[Constraints,Ordering,kind]
 
 |symmetrical
 |If true, which is the default, stop the resources in the reverse
  order. Default value: _true_
-indexterm:[symmetrical,Ordering Constraint Field]
-indexterm:[Ordering Constraint,Field,symmetrical]
+indexterm:[symmetrical,Ordering Constraints]
+indexterm:[Ordering Constraints,symmetrical]
 
 |=========================================================
 
@@ -250,7 +250,7 @@ the document http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained
 [[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==
 
-indexterm:[Constraint,Colocation]
+indexterm:[Resource,Constraints,Colocation]
 indexterm:[Resource,Location Relative to other Resources]
 When the location of one resource depends on the location of another
 one, we call this colocation.
@@ -287,28 +287,28 @@ Explained] document.
 
 |id
 |A unique name for the constraint.
-indexterm:[id,Colocation Constraint Field]
-indexterm:[Colocation Constraint,Field,id]
+indexterm:[id,Colocation Constraints]
+indexterm:[Constraints,Colocation,id]
 
 |rsc
 |The colocation source. If the constraint cannot be satisfied, the
  cluster may decide not to allow the resource to run at all.
-indexterm:[rsc,Colocation Constraint Field]
-indexterm:[Colocation Constraint,Field,rsc]
+indexterm:[rsc,Colocation Constraints]
+indexterm:[Constraints,Colocation,rsc]
 
 |with-rsc
 |The colocation target. The cluster will decide where to put this
  resource first and then decide where to put the resource in the +rsc+
  field.
- indexterm:[with-rsc,Colocation Constraint Field]
- indexterm:[Colocation Constraint,Field,with-rsc]
+ indexterm:[with-rsc,Colocation Constraints]
+ indexterm:[Constraints,Colocation,with-rsc]
 
 |score
 |Positive values indicate the resource should run on the same
  node. Negative values indicate the resources should not run on the
  same node. Values of \+/- +INFINITY+ change "should" to "must".
- indexterm:[score,Colocation Constraint Field]
- indexterm:[Colocation Constraint,Field,score]
+ indexterm:[score,Colocation Constraints]
+ indexterm:[Constraints,Colocation,score]
 
 |=========================================================
 

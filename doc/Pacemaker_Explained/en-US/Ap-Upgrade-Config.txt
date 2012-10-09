@@ -40,7 +40,7 @@ follow the upgrade procedure to ensure that the cluster is able to use
 your existing configuration (since it will perform much the same task
 internally).
 
-. Create a shadow copy to work with indexterm:[shadow copy,example for upgrading]
+. Create a shadow copy to work with
 +
 [source,C]
 -----
@@ -127,7 +127,7 @@ https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl[Git]
 -----
 +          
 . Locate the 'pacemaker.rng' script.
-. Check the XML validity: indexterm:[Validate,XML]indexterm:[xmllint,Validate XML]
+. Check the XML validity: indexterm:[Validate Configuration]indexterm:[Configuration,Validate XML]
 +
 [source,C]
 # xmllint --relaxng /path/to/pacemaker.rng config10.xml

@@ -2,8 +2,8 @@
 
 [[s-remote-connection]]
 == Connecting from a Remote Machine ==
-indexterm:[Remote,connect]
-indexterm:[Remote,administration]
+indexterm:[Cluster,Remote connection]
+indexterm:[Cluster,Remote administration]
 
 Provided Pacemaker is installed on a machine, it is possible to
 connect to the cluster even if the machine itself is not in the same
@@ -17,34 +17,27 @@ node.
 
 |Environment Variable
 |Description
-indexterm:[Environment Variable,Remote Administration]
 
 |CIB_user
-
 |The user to connect as. Needs to be part of the +hacluster+ group on
  the target host. Defaults to _$USER_.
- indexterm:[CIB_*, Env. Var. for Remote Conn.,user]
- indexterm:[Environment Variable,CIB_,user]
+ indexterm:[Environment Variable,CIB_user]
 
 |CIB_passwd
 |The user's password. Read from the command line if unset.
- indexterm:[CIB_*, Env. Var. for Remote Conn.,passwd]
- indexterm:[Environment Variable,CIB_,passwd]
+ indexterm:[Environment Variable,CIB_passwd]
 
 |CIB_server
 |The host to contact. Defaults to _localhost_.
- indexterm:[CIB_*, Env. Var. for Remote Conn.,server]
- indexterm:[Environment Variable,CIB_,server]
+ indexterm:[Environment Variable,CIB_server]
 
 |CIB_port
 |The port on which to contact the server; required.
- indexterm:[CIB_*, Env. Var. for Remote Conn.,port]
- indexterm:[Environment Variable,CIB_,port]
+ indexterm:[Environment Variable,CIB_port]
 
 |CIB_encrypted
 |Encrypt network traffic; defaults to _true_.
- indexterm:[CIB_*, Env. Var. for Remote Conn.,encrypted]
- indexterm:[Environment Variable,CIB_,encrypted]
+ indexterm:[Environment Variable,CIB_encrypted]
 
 |=========================================================
 
@@ -63,8 +56,6 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 (unencrypted) top-level options (ie., those kept in the cib tag, like
 +num_updates+ and +epoch+).
 
-indexterm:[Remote,connect, CIB options]
-
 .Extra top-level CIB options for remote access
 [width="95%",cols="1m,2<",options="header",align="center"]
 |=========================================================
@@ -74,11 +65,13 @@ indexterm:[Remote,connect, CIB options]
 
 |remote-tls-port
 |Listen for encrypted remote connections on this port. Default: _none_
- indexterm:[remote-tls-port]
+ indexterm:[remote-tls-port,Remote Connection Option]
+ indexterm:[Remote Connection,Option,remote-tls-port]
 
 |remote-clear-port
 |Listen for plaintext remote connections on this port. Default: _none_
- indexterm:[remote-clear-port]
+ indexterm:[remote-clear-port,Remote Connection Option]
+ indexterm:[Remote Connection,Option,remote-clear-port]
 
 |=========================================================
 
@@ -116,7 +109,8 @@ example, to specify an operation that would run on the first Monday of
 =====
 
 == Moving Resources ==
-indexterm:[Moving Resources] indexterm:[Resource,Moving]
+indexterm:[Moving,Resources] 
+indexterm:[Resource,Moving]
 
 === Manual Intervention ===
 
@@ -309,21 +303,21 @@ along with a description of the most interesting parameters.
 |The time to wait (dampening) for further changes to occur. Use this
  to prevent a resource from bouncing around the cluster when cluster
  nodes notice the loss of connectivity at slightly different times.
- indexterm:[dampen,Resource Option]
- indexterm:[Resource,Option,dampen]
+ indexterm:[dampen,Ping Resource Option]
+ indexterm:[Ping Resource,Option,dampen]
 
 |multiplier
 |The number of connected ping nodes gets multiplied by this value to
  get a score. Useful when there are multiple ping nodes configured.
- indexterm:[multiplier,Resource Option]
- indexterm:[Resource,Option,multiplier]
+ indexterm:[multiplier,Ping Resource Option]
+ indexterm:[Ping Resource,Option,multiplier]
 
 |host_list
 |The machines to contact in order to determine the current
  connectivity status. Allowed values include resolvable DNS host
  names, IPv4 and IPv6 addresses.
- indexterm:[host_list,Resource Option]
- indexterm:[Resource,Option,host_list]
+ indexterm:[host_list,Ping Resource Option]
+ indexterm:[Ping Resource,Option,host_list]
 
 |=========================================================
 

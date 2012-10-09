@@ -34,7 +34,7 @@ your needs.
 |Service Recovery During Upgrade
 |Exercises Failover Logic/Configuration
 |Allows change of cluster stack type
-indexterm:[Cluster Stack,switching between]
+indexterm:[Cluster,Switching between Stacks]
 indexterm:[Changing Cluster Stack]
 footnote:[
 For example, switching from Heartbeat to Corosync.  Consult the

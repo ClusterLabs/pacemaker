@@ -2,9 +2,6 @@
 
 == Special Options ==
 
-indexterm:[Special Cluster Options]
-indexterm:[Cluster Options,Special Options]
-
 The reason for these fields to be placed at the top level instead of
 with the rest of cluster options is simply a matter of parsing.  These
 options are used by the configuration database which is, by design,
@@ -13,8 +10,8 @@ place them in an easy to find location.
       
 == Configuration Version ==
 
-indexterm:[Configuration Version, Cluster Option]
-indexterm:[Cluster Options,Configuration Version]
+indexterm:[Configuration Version,Cluster]
+indexterm:[Cluster,Option,Configuration Version]
 
 When a node joins the cluster, the cluster will perform a check to see
 who has the best configuration based on the fields below.  It then
@@ -28,8 +25,8 @@ setting them, and setting them correctly, very important.
 |Field |Description
 
 | admin_epoch |
-indexterm:[admin_epoch Cluster Option]
-indexterm:[Cluster Options,admin_epoch]
+indexterm:[admin_epoch,Cluster Option]
+indexterm:[Cluster,Option,admin_epoch]
 Never modified by the cluster. Use this to make the configurations on
 any inactive nodes obsolete.
 
@@ -38,13 +35,13 @@ the difference between your configuration and the "empty" one used
 when nothing is found on disk.
 
 | epoch | 
-indexterm:[epoch Cluster Option]
-indexterm:[Cluster Options,epoch]
+indexterm:[epoch,Cluster Option]
+indexterm:[Cluster,Option,epoch]
 Incremented every time the configuration is updated (usually by the admin)
 
 | num_updates |
-indexterm:[num_updates Cluster Option]
-indexterm:[Cluster Options,num_updates]
+indexterm:[num_updates,Cluster Option]
+indexterm:[Cluster,Option,num_updates]
 Incremented every time the configuration or status is updated (usually by the cluster)
   
 |=========================================================
@@ -56,8 +53,8 @@ Incremented every time the configuration or status is updated (usually by the cl
 |Field |Description
       
 | validate-with |
-indexterm:[validate-with Cluster Option]
-indexterm:[Cluster Options,validate-with]
+indexterm:[validate-with,Cluster Option]
+indexterm:[Cluster,Option,validate-with]
 Determines the type of validation being done on the configuration.  If
 set to "none", the cluster will not verify that updates conform to the
 DTD (nor reject ones that don't). This option can be useful when
@@ -73,20 +70,20 @@ operating a mixed version cluster during an upgrade.
 |Field |Description
 
 |cib-last-written | 
-indexterm:[cib-last-written Cluster Fields]
-indexterm:[Cluster Fields,cib-last-written]
+indexterm:[cib-last-written,Cluster Property]
+indexterm:[Cluster,Property,cib-last-written]
 Indicates when the configuration was last written to disk. Informational purposes only.
 
 |dc-uuid |
-indexterm:[dc-uuid Cluster Fields]
-indexterm:[Cluster Fields,dc-uuid]
+indexterm:[dc-uuid,Cluster Property]
+indexterm:[Cluster,Property,dc-uuid]
 Indicates which cluster node is the current leader. Used by the
 cluster when placing resources and determining the order of some
 events.
 
 |have-quorum |
-indexterm:[have-quorum Cluster Fields]
-indexterm:[Cluster Fields,have-quorum]
+indexterm:[have-quorum,Cluster Property]
+indexterm:[Cluster,Property,have-quorum]
 Indicates if the cluster has quorum. If false, this may mean that the
 cluster cannot start resources or fence other nodes. See
 +no-quorum-policy+ below.
@@ -135,36 +132,39 @@ For now we will describe the simple case where each option is present at most on
 |Option |Default |Description
       
 | batch-limit | 30 |
-indexterm:[batch-limit Cluster Options]
-indexterm:[Cluster Options,batch-limit]
+indexterm:[batch-limit,Cluster Option]
+indexterm:[Cluster,Option,batch-limit]
 The number of jobs that the TE is allowed to execute in parallel. The
 "correct" value will depend on the speed and load of your network and
 cluster nodes.
 
 | migration-limit | -1 (unlimited) |
-indexterm:[migration-limit Cluster Options]
-indexterm:[Cluster Options,migration-limit]
+indexterm:[migration-limit,Cluster Option]
+indexterm:[Cluster,Option,migration-limit]
 The number of migration jobs that the TE is allowed to execute in
 parallel on a node.
 
 | no-quorum-policy | stop |
-indexterm:[no-quorum-policy Cluster Options]
-indexterm:[Cluster Options,no-quorum-policy]
+indexterm:[no-quorum-policy,Cluster Option]
+indexterm:[Cluster,Option,no-quorum-policy]
 What to do when the cluster does not have quorum.  Allowed values:
 
  * ignore - continue all resource management
+
  * freeze - continue resource management, but don't recover resources from nodes not in the affected partition
+
  * stop - stop all resources in the affected cluster partition
+
  * suicide - fence all nodes in the affected cluster partition
 
 | symmetric-cluster | TRUE | 
-indexterm:[symmetric-cluster Cluster Options]
-indexterm:[Cluster Options,symmetric-cluster]
+indexterm:[symmetric-cluster,Cluster Option]
+indexterm:[Cluster,Option,symmetric-cluster]
 Can all resources run on any node by default?
 
 | stonith-enabled | TRUE |
-indexterm:[stonith-enabled Cluster Options]
-indexterm:[Cluster Options,stonith-enabled]
+indexterm:[stonith-enabled,Cluster Option]
+indexterm:[Cluster,Option,stonith-enabled]
 Should failed nodes and nodes with resources that can't be stopped be
 shot? If you value your data, set up a STONITH device and enable this.
 
@@ -172,48 +172,48 @@ If true, or unset, the cluster will refuse to start resources unless
 one or more STONITH resources have been configured also.
 	
 | stonith-action | reboot |
-indexterm:[stonith-action Cluster Options]
-indexterm:[Cluster Options,stonith-action]
+indexterm:[stonith-action,Cluster Option]
+indexterm:[Cluster,Option,stonith-action]
 Action to send to STONITH device. Allowed values: reboot, off.
 The value 'poweroff' is also allowed, but is only used for
 legacy devices.
 
 | cluster-delay | 60s |
-indexterm:[cluster-delay Cluster Options]
-indexterm:[Cluster Options,cluster-delay]
+indexterm:[cluster-delay,Cluster Option]
+indexterm:[Cluster,Option,cluster-delay]
 Round trip delay over the network (excluding action execution). The
 "correct" value will depend on the speed and load of your network and
 cluster nodes.
 
 | stop-orphan-resources | TRUE |
-indexterm:[stop-orphan-resources Cluster Options]
-indexterm:[Cluster Options,stop-orphan-resources]
+indexterm:[stop-orphan-resources,Cluster Option]
+indexterm:[Cluster,Option,stop-orphan-resources]
 Should deleted resources be stopped?
 
 | stop-orphan-actions | TRUE | 
-indexterm:[stop-orphan-actions Cluster Options]
-indexterm:[Cluster Options,stop-orphan-actions]
+indexterm:[stop-orphan-actions,Cluster Option]
+indexterm:[Cluster,Option,stop-orphan-actions]
 Should deleted actions be cancelled?
 
 | start-failure-is-fatal | TRUE | 
-indexterm:[start-failure-is-fatal Cluster Options]
-indexterm:[Cluster Options,start-failure-is-fatal]
+indexterm:[start-failure-is-fatal,Cluster Option]
+indexterm:[Cluster,Option,start-failure-is-fatal]
 When set to FALSE, the cluster will instead use the resource's
 +failcount+ and value for +resource-failure-stickiness+.
 
 | pe-error-series-max | -1 (all) | 
-indexterm:[pe-error-series-max Cluster Options]
-indexterm:[Cluster Options,pe-error-series-max]
+indexterm:[pe-error-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-error-series-max]
 The number of PE inputs resulting in ERRORs to save. Used when reporting problems.
 
 | pe-warn-series-max | -1 (all) | 
-indexterm:[pe-warn-series-max Cluster Options]
-indexterm:[Cluster Options,pe-warn-series-max]
+indexterm:[pe-warn-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-warn-series-max]
 The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.
 
 | pe-input-series-max | -1 (all) |
-indexterm:[pe-input-series-max Cluster Options]
-indexterm:[Cluster Options,pe-input-series-max]
+indexterm:[pe-input-series-max,Cluster Option]
+indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
   
 |=========================================================
@@ -224,10 +224,10 @@ metadata` command.
 
 == Querying and Setting Cluster Options ==
 
-indexterm:[Querying Cluster Options]
-indexterm:[Setting Cluster Options]
-indexterm:[Cluster Options,Querying]
-indexterm:[Cluster Options,Setting]
+indexterm:[Querying,Cluster Option]
+indexterm:[Setting,Cluster Option]
+indexterm:[Cluster,Querying Options]
+indexterm:[Cluster,Setting Options]
 
 Cluster options can be queried and modified using the
 `crm_attribute` tool.  To get the current

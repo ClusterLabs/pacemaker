@@ -42,3 +42,11 @@ Naked code listing:
 -----
 
 
+Section anchors:
+
+[[s-name]]
+=== Some Section Title ===
+
+References to section anchors:
+
+<<s-name>> or <<s-name,Alternate Text>>

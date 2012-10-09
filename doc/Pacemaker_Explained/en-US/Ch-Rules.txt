@@ -1,6 +1,8 @@
 = Rules =
 [[ch-rules]]
 
+indexterm:[Resource,Constraint,Rule]
+
 Rules can be used to make your configuration more dynamic.  One common
 example is to set one value for +resource-stickiness+ during working
 hours, to prevent resources from being moved back to their most
@@ -25,38 +27,38 @@ context in which the rule is being used.
 |Description
 
 |role
-indexterm:[role Rule Property]
-indexterm:[Rule,Properties,role]
 |Limits the rule to apply only when the resource is in that
  role. Allowed values: _Started_, +Slave,+ and +Master+. NOTE: A rule
  with +role="Master"+ can not determine the initial location of a
  clone instance. It will only affect which of the active instances
  will be promoted.
+ indexterm:[role,Constraint Rule]
+ indexterm:[Constraint,Rule,role]
 
 |score
-indexterm:[score,Rule Property]
-indexterm:[Rule,Properties,score]  
 |The score to apply if the rule evaluates to +true+. Limited to use in
  rules that are part of location constraints.
+ indexterm:[score,Constraint Rule]
+ indexterm:[Constraint,Rule,score]
 
 |score-attribute
-indexterm:[score-attribute Rule Property]
-indexterm:[Rule,Properties,score-attribute]
 |The node attribute to look up and use as a score if the rule
  evaluates to +true+. Limited to use in rules that are part of
  location constraints.
+ indexterm:[score-attribute,Constraint Rule]
+ indexterm:[Constraint,Rule,score-attribute]
 
 |boolean-op 
-indexterm:[boolean-op Rule Property]
-indexterm:[Rule,Properties,boolean-op]  
 |How to combine the result of multiple expression objects. Allowed
  values: _and_ and +or+.
+ indexterm:[boolean-op,Constraint Rule]
+ indexterm:[Constraint,Rule,boolean-op]
 
 |=========================================================
 
 == Node Attribute Expressions ==
 
-indexterm:[Node,Attribute Expressions]
+indexterm:[Resource,Constraint,Attribute Expression]
 
 Expression objects are used to control a resource based on the
 attributes defined by a node or nodes.  In addition to any attributes
@@ -71,48 +73,48 @@ called +#uname+ that can also be used.
 |Description
 
 |value
-indexterm:[value Expression Property]
-indexterm:[Expression Properties,value]
 |User supplied value for comparison
+ indexterm:[value,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,value]
 
 |attribute
-indexterm:[attribute Expression Property]
-indexterm:[Expression Properties,attribute]  
 |The node attribute to test
+ indexterm:[attribute,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,attribute]
 
 |type
-indexterm:[type,Expression Property]
-indexterm:[Expression Properties,type]
 |Determines how the value(s) should be tested. Allowed values:
  _string_, +integer+, +version+
+ indexterm:[type,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,type]
 
 |operation
-indexterm:[operation Expression Property]
-indexterm:[Expression Properties,operation]  
 |The comparison to perform. Allowed values:
 
-* +lt+ - True if the node attribute's value is less than +value+
+* 'lt' - True if the node attribute's value is less than +value+
 
-* +gt+ - True if the node attribute's value is greater than +value+
+* 'gt' - True if the node attribute's value is greater than +value+
 
-* +lte+ - True if the node attribute's value is less than or equal to +value+
+* 'lte' - True if the node attribute's value is less than or equal to +value+
 
-* +gte+ - True if the node attribute's value is greater than or equal to +value+
+* 'gte' - True if the node attribute's value is greater than or equal to +value+
 
-* +eq+ - True if the node attribute's value is equal to +value+
+* 'eq' - True if the node attribute's value is equal to +value+
 
-* +ne+ - True if the node attribute's value is not equal to +value+
+* 'ne' - True if the node attribute's value is not equal to +value+
 
-* +defined+ - True if the node has the named attribute
+* 'defined' - True if the node has the named attribute
 
-* +not_defined+ - True if the node does not have the named attribute
+* 'not_defined' - True if the node does not have the named attribute
+ indexterm:[operation,Constraint Expression]
+ indexterm:[Constraint,Attribute Expression,operation]
 
 |=========================================================
 
 == Time/Date Based Expressions ==
 
 indexterm:[Time Based Expressions]
-indexterm:[Expression,Time/Date Based]
+indexterm:[Resource,Constraint,Date/Time Expression]
         
 As the name suggests, +date_expressions+ are used to control a
 resource or cluster option based on the current date/time.  They can
@@ -127,34 +129,41 @@ the context.
 
 |start
 |A date/time conforming to the ISO8601 specification.
+ indexterm:[start,Constraint Expression]
+ indexterm:[Constraint,Date/Time Expression,start]
 
 |end
 |A date/time conforming to the ISO8601 specification. Can be inferred
  by supplying a value for +start+ and a +duration+.
+ indexterm:[end,Constraint Expression]
+ indexterm:[Constraint,Date/Time Expression,end]
 
 |operation
 |Compares the current date/time with the start and/or end date,
  depending on the context. Allowed values:
 
-* +gt+ - True if the current date/time is after +start+
+* 'gt' - True if the current date/time is after +start+
 
-* +lt+ - True if the current date/time is before +end+
+* 'lt' - True if the current date/time is before +end+
 
-* +in-range+ - True if the current date/time is after +start+ and before +end+
+* 'in-range' - True if the current date/time is after +start+ and before +end+
 
-* +date-spec+ - performs a cron-like comparison to the current date/time
+* 'date-spec' - performs a cron-like comparison to the current date/time
+ indexterm:[operation,Constraint Expression]
+ indexterm:[Constraint,Date/Time Expression,operation]
 
 |=========================================================
 
 [NOTE]
 ======
-Because the comparisons (except for +date_spec+) include the time, the
-+eq+, +neq+, +gte+ and +lte+ operators have not been
-implemented.
+As these comparisons (except for +date_spec+) include the time, the
++eq+, +neq+, +gte+ and +lte+ operators have not been implemented since
+they would only be valid for a single second.
 ======
 
 === Date Specifications ===
-indexterm:[Date Specifications]
+indexterm:[Date Specification]
+indexterm:[Resource,Constraint,Date Specification]
 
 +date_spec+ objects are used to create cron-like expressions relating
 to time.  Each field can contain a single number or a single range.
@@ -174,63 +183,63 @@ demand, this may be implemented in a future release.
 |Description
 
 |id
-indexterm:[id,Date Spec Property]
-indexterm:[Date Spec Properties,id]
 |A unique name for the date
+ indexterm:[id,Date Specification]
+ indexterm:[Constraint,Date Specification,id]
 
 |hours
-indexterm:[hours Date Spec Property]
-indexterm:[Date Spec Properties,hours]
 |Allowed values: 0-23
+ indexterm:[hours,Date Specification]
+ indexterm:[Constraint,Date Specification,hours]
 
 |monthdays
-indexterm:[monthdays Date Spec Property]
-indexterm:[Date Spec Properties,monthdays]
 |Allowed values: 0-31 (depending on month and year)
+ indexterm:[monthdays,Date Specification]
+ indexterm:[Constraint,Date Specification,monthdays]
 
 |weekdays
-indexterm:[weekdays Date Spec Property]
-indexterm:[Date Spec Properties,weekdays]
 |Allowed values: 1-7 (1=Monday, 7=Sunday)
+ indexterm:[weekdays,Date Specification]
+ indexterm:[Constraint,Date Specification,weekdays]
 
 |yeardays
-indexterm:[yeardays Date Spec Property]
-indexterm:[Date Spec Properties,yeardays]  
 |Allowed values: 1-366 (depending on the year)
+ indexterm:[yeardays,Date Specification]
+ indexterm:[Constraint,Date Specification,yeardays]
 
 |months
-indexterm:[months Date Spec Property]
-indexterm:[Date Spec Properties,months]  
 |Allowed values: 1-12
+ indexterm:[months,Date Specification]
+ indexterm:[Constraint,Date Specification,months]
 
 |weeks
-indexterm:[weeks Date Spec Property]
-indexterm:[Date Spec Properties,weeks]  
 |Allowed values: 1-53 (depending on weekyear)
+ indexterm:[weeks,Date Specification]
+ indexterm:[Constraint,Date Specification,weeks]
 
 |years
-indexterm:[years Date Spec Property]
-indexterm:[Date Spec Properties,years]  
 |Year according the Gregorian calendar
+ indexterm:[years,Date Specification]
+ indexterm:[Constraint,Date Specification,years]
 
 |weekyears
-indexterm:[weekyears Date Spec Property]
-indexterm:[Date Spec Properties,weekyears]
 |May differ from Gregorian years; Eg. +2005-001 Ordinal+ is also
  +2005-01-01 Gregorian+ is also +2004-W53-6 Weekly+
+ indexterm:[weekyears,Date Specification]
+ indexterm:[Constraint,Date Specification,weekyears]
 
 |moon
-indexterm:[moon Date Spec Property]
-indexterm:[Date Spec Properties,moon]
 |Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can
  use this. This was implemented to demonstrate the ease with which new
  comparisons could be added.
+ indexterm:[moon,Date Specification]
+ indexterm:[Constraint,Date Specification,moon]
 
 |=========================================================
 
 === Durations ===
-indexterm:[Durations Expressions]
-indexterm:[Expressions,Durations]
+indexterm:[Duration]
+indexterm:[Resource,Constraint,Duration]
 
 Durations are used to calculate a value for +end+ when one is not
 supplied to in_range operations.  They contain the same fields as
@@ -356,7 +365,7 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 
 == Using Rules to Determine Resource Location ==
 indexterm:[Rule,Determine Resource Location]
-indexterm:[Resource,Location, Determine by Rules]
+indexterm:[Resource,Location,Determine by Rules]
 
 If the constraint's outer-most rule evaluates to +false+, the cluster
 treats the constraint as if it was not there.  When the rule evaluates
@@ -492,7 +501,7 @@ object.
 
 == Using Rules to Control Cluster Options ==
 indexterm:[Rule,Controlling Cluster Options]
-indexterm:[Cluster Options,Controlled by Rules]
+indexterm:[Cluster,Setting Options with Rules]
 
 Controlling cluster options is achieved in much the same manner as
 specifying different resource options on different nodes.
@@ -543,4 +552,5 @@ and between 17:00 and 17:05 it would realize that X needed to be
 stopped.
 
 Note that the timing of the actual start and stop actions depends on
-what else needs to be performed first.
+what else needs to be performed first
+.

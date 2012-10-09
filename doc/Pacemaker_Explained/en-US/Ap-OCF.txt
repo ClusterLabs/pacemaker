@@ -34,39 +34,39 @@ All OCF Resource Agents are required to implement the following actions
 |Start the resource
 |Return 0 on success and an appropriate error code otherwise. Must not
  report success until the resource is fully active.
- indexterm:[start action]
- indexterm:[action,start]
+ indexterm:[start,OCF Action]
+ indexterm:[OCF,Action,start]
 
 |stop
 |Stop the resource
 |Return 0 on success and an appropriate error code otherwise. Must not
  report success until the resource is fully stopped.
- indexterm:[stop action]
- indexterm:[action,stop]
+ indexterm:[stop,OCF Action]
+ indexterm:[OCF,Action,stop]
 
 |monitor
 |Check the resource's state 
 
 |Exit 0 if the resource is running, 7 if it is stopped, and anything
  else if it is failed. 
- indexterm:[monitor action]
- indexterm:[action,monitor]
+ indexterm:[monitor,OCF Action]
+ indexterm:[OCF,Action,monitor]
 
 NOTE: The monitor script should test the state of the resource on the local machine only.
 
 |meta-data
 |Describe the resource
 |Provide information about this resource as an XML snippet. Exit with 0.
- indexterm:[meta-data action]
- indexterm:[action,meta-data]
+ indexterm:[meta-data,OCF Action]
+ indexterm:[OCF,Action,meta-data]
 
 NOTE: This is *not* performed as root.
 
 |validate-all
 |Verify the supplied parameters
-indexterm:[validate-all action]
-indexterm:[action,validate-all]
 |Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured.
+ indexterm:[validate-all,OCF Action]
+ indexterm:[OCF,Action,validate-all]
 
 |=========================================================
 
@@ -84,23 +84,22 @@ agents that will be used for advanced concepts like
 
 |promote
 |Promote the local instance of a multi-state resource to the master/primary state.
- indexterm:[promote action]
- indexterm:[action,promote]
 |Return 0 on success
+ indexterm:[promote,OCF Action]
+ indexterm:[OCF,Action,promote]
 
 |demote
 |Demote the local instance of a multi-state resource to the slave/secondary state.
- indexterm:[demote action]
- indexterm:[action,demote]
 |Return 0 on success
+ indexterm:[demote,OCF Action]
+ indexterm:[OCF,Action,demote]
 
 |notify
-
 |Used by the cluster to send the agent pre and post notification
  events telling the resource what has happened and will happen.
- indexterm:[notify action]
- indexterm:[action,notify]
 |Must not fail. Must exit with 0
+ indexterm:[notify,OCF Action]
+ indexterm:[OCF,Action,notify]
 
 |=========================================================
 
@@ -130,20 +129,20 @@ There are three types of failure recovery:
 |Action Taken by the Cluster
 
 |soft
-indexterm:[soft error type]
-indexterm:[error type,soft]
+indexterm:[soft,OCF error]
+indexterm:[OCF,error,soft]
 |A transient error occurred
 |Restart the resource or move it to a new location
 
 |hard
-indexterm:[hard error type]
-indexterm:[error type,hard]
+indexterm:[hard,OCF error]
+indexterm:[OCF,error,hard]
 |A non-transient error that may be specific to the current node occurred
 |Move the resource elsewhere and prevent it from being retried on the current node
 
 |fatal
-indexterm:[fatal error type]
-indexterm:[error type,fatal]
+indexterm:[fatal,OCF error]
+indexterm:[OCF,error,fatal]
 |A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)
 |Stop the resource and prevent it from being started on any cluster node
 
@@ -165,91 +164,80 @@ cluster will initiate when it is received.
 |Description
 |RT
 
-|indexterm:[return code,0]0
+|0
 |OCF_SUCCESS
 |Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands.
-indexterm:[OCF_SUCCESS]
-indexterm:[Environment Variable,OCF_SUCCESS]
-indexterm:[return code,OCF_SUCCESS]
+indexterm:[Return Code,OCF_SUCCESS]
+indexterm:[Return Code,0,OCF_SUCCESS]
 |soft
 
-|indexterm:[return code,1]1
+|1
 |OCF_ERR_GENERIC
 |Generic "there was a problem" error code.
-indexterm:[OCF_ERR_,GENERIC]
-indexterm:[Environment Variable,OCF_ERR_,GENERIC]
-indexterm:[return code,OCF_ERR_,GENERIC]
+indexterm:[Return Code,OCF_ERR_GENERIC]
+indexterm:[Return Code,1,OCF_ERR_GENERIC]
 |soft
 
-|indexterm:[return code,2]2
+|2
 |OCF_ERR_ARGS
 |The resource's configuration is not valid on this machine. Eg. refers to a location/tool not found on the node. 
-indexterm:[OCF_ERR_,ARGS]
-indexterm:[Environment Variable,OCF_ERR_,ARGS]
-indexterm:[return code,OCF_ERR_,ARGS]
+indexterm:[Return Code,OCF_ERR_ARGS]
+indexterm:[Return Code,2,OCF_ERR_ARGS]
 |hard
 
-|indexterm:[return code,3]3
+|3
 |OCF_ERR_UNIMPLEMENTED
 |The requested action is not implemented.
-indexterm:[OCF_ERR_,UNIMPLEMENTED]
-indexterm:[Environment Variable,OCF_ERR_,UNIMPLEMENTED]
-indexterm:[return code,OCF_ERR_,UNIMPLEMENTED]
+indexterm:[Return Code,OCF_ERR_UNIMPLEMENTED]
+indexterm:[Return Code,3,OCF_ERR_UNIMPLEMENTED]
 |hard
 
-|indexterm:[return code,4]4
+|4
 |OCF_ERR_PERM
 |The resource agent does not have sufficient privileges to complete the task.
-indexterm:[OCF_ERR_,PERM]
-indexterm:[Environment Variable,OCF_ERR_,PERM]
-indexterm:[return code,OCF_ERR_,PERM]
+indexterm:[Return Code,OCF_ERR_PERM]
+indexterm:[Return Code,4,OCF_ERR_PERM]
 |hard
 
-|indexterm:[return code,5]5
+|5
 |OCF_ERR_INSTALLED
 |The tools required by the resource are not installed on this machine.
-indexterm:[OCF_ERR_,INSTALLED]
-indexterm:[Environment Variable,OCF_ERR_,INSTALLED]
-indexterm:[return code,OCF_ERR_,INSTALLED]
+indexterm:[Return Code,OCF_ERR_INSTALLED]
+indexterm:[Return Code,5,OCF_ERR_INSTALLED]
 |hard
 
-|indexterm:[return code,6]6
+|6
 |OCF_ERR_CONFIGURED
 |The resource's configuration is invalid. Eg. required parameters are missing.
-indexterm:[OCF_ERR_,CONFIGURED]
-indexterm:[Environment Variable,OCF_ERR_,CONFIGURED]
-indexterm:[return code,OCF_ERR_,CONFIGURED]
+indexterm:[Return Code,OCF_ERR_CONFIGURED]
+indexterm:[Return Code,6,OCF_ERR_CONFIGURED]
 |fatal
 
-|indexterm:[return code,7]7
+|7
 |OCF_NOT_RUNNING
 |The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action.
-indexterm:[OCF_NOT_RUNNING]
-indexterm:[Environment Variable,OCF_NOT_RUNNING]
-indexterm:[return code,OCF_NOT_RUNNING]
+indexterm:[Return Code,OCF_NOT_RUNNING]
+indexterm:[Return Code,7,OCF_NOT_RUNNING]
 |N/A
 
-|indexterm:[return code,8]8
+|8
 |OCF_RUNNING_MASTER
 |The resource is running in +Master+ mode.
-indexterm:[OCF_RUNNING_MASTER]
-indexterm:[Environment Variable,OCF_RUNNING_MASTER]
-indexterm:[return code,OCF_RUNNING_MASTER]
+indexterm:[Return Code,OCF_RUNNING_MASTER]
+indexterm:[Return Code,8,OCF_RUNNING_MASTER]
 |soft
 
-|indexterm:[return code,9]9
+|9
 |OCF_FAILED_MASTER
 |The resource is in +Master+ mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.
-indexterm:[OCF_FAILED_MASTER]
-indexterm:[Environment Variable,OCF_FAILED_MASTER]
-indexterm:[return code,OCF_FAILED_MASTER]
+indexterm:[Return Code,OCF_FAILED_MASTER]
+indexterm:[Return Code,9,OCF_FAILED_MASTER]
 |soft
 
 |other
 |NA
 |Custom error code.
-indexterm:[other return codes]
-indexterm:[return code,other]
+indexterm:[Return Code,other]
 |soft
 
 |=========================================================

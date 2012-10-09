@@ -7,7 +7,9 @@
 The following text may no longer be accurate in some places.
 
 === Choosing a Cluster Stack ===
-indexterm:[Cluster Stack,choosing one]
+indexterm:[Cluster,Choosing Between Heartbeat and Corosync]
+indexterm:[Cluster Stack,Corosync] indexterm:[Corosync]
+indexterm:[Cluster Stack,Heartbeat] indexterm:[Heartbeat]
 
 Ultimately the choice of cluster stack is a personal decision that
 must be made in the context of you or your company's needs and
@@ -18,8 +20,6 @@ Here are some factors that may influence the decision:
 
 * SUSE/Novell, Red Hat and Oracle are all putting their collective
   weight behind the Corosync cluster stack.
-  indexterm:[Cluster Stack,Corosync]
-  indexterm:[Corosync]
 * Using Corosync gives your applications access to the following
   additional cluster services
 ** distributed locking service
@@ -27,8 +27,6 @@ Here are some factors that may influence the decision:
 ** cluster closed process group service
 * It is likely that Pacemaker, at some point in the future, will make
   use of some of these additional services not provided by Heartbeat
-  indexterm:[Cluster Stack,Heartbeat]
-  indexterm:[Heartbeat]
         
 === Enabling Pacemaker ===
 
