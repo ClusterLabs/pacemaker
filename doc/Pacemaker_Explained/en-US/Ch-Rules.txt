@@ -1,6 +1,11 @@
 = Rules =
-[[ch-rules]]
 
+//// 
+We prefer [[ch-rules]], but older versions of asciidoc dont deal well
+with that construct for chapter headings
+////
+
+anchor:ch-rules[Chapter 8, Rules]
 indexterm:[Resource,Constraint,Rule]
 
 Rules can be used to make your configuration more dynamic.  One common
