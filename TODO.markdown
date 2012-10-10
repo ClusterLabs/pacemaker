@@ -7,12 +7,12 @@
 
 - Support
   http://cgit.freedesktop.org/systemd/systemd/commit/?id=96342de68d0d6de71a062d984dafd2a0905ed9fe
-- Allow stonith_admin to optionally route fencing requests via the CIB (terminate=true)
 - Support 'yesterday' and 'thursday' and '24-04' as dates in crm_report 
 - Allow the N in 'give up after N failed fencing attempts' to be configurable 
 - Show an english version of the config with crm_resource --rules
 - Convert cts/CIB.py into a supported Python API for the CIB
 - Re-implement no-quorum filter for cib updates?
+- Allow stonith_admin to optionally route fencing requests via the CIB (terminate=true)?
 
 ## Targeted for 1.4
 
@@ -41,7 +41,6 @@
 # Documentation
 - Clusters from Scratch: Mail
 - Clusters from Scratch: MySQL
-- Document reload in Pacemaker Explained
 - Document advanced fencing logic in Pacemaker Explained
 - Use ann:defaultValue="..." instead of <optional> in the schema more often
 - Document in CFS an Appendix detailing with re-enabling firewall

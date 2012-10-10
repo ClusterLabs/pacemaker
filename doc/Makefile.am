@@ -29,7 +29,7 @@ publican_docs   =
 generated_docs	= 
 generated_mans	= 
 
-DOCBOOK_FORMATS := html-desktop,txt
+DOCBOOK_FORMATS := html-desktop
 DOCBOOK_LANGS   := en-US
 DOTs = $(wildcard */en-US/images/*.dot)
 SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
@@ -95,11 +95,11 @@ CFS_XML=$(CFS_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
-Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
-	@echo Building $(@:%.txt=%) because of $?
-	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
-	rm -rf $(@:%.txt=%)/tmp
+Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
+	@echo Building $(@:%.build=%) because of $?
+	rm -rf $(@:%.build=%)/publish/*
+	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 PE_TXT=$(wildcard Pacemaker_Explained/en-US/*.txt)
@@ -107,11 +107,11 @@ PE_XML=$(PE_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
-Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
-	@echo Building $(@:%.txt=%) because of $?
-	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
-	rm -rf $(@:%.txt=%)/tmp
+Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
+	@echo Building $(@:%.build=%) because of $?
+	rm -rf $(@:%.build=%)/publish/*
+	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
 # Update the translation template
@@ -129,9 +129,9 @@ po:
 	done
 
 if BUILD_DOCBOOK
-docbook_txt = $(docbook:%=%.txt)
+docbook_build = $(docbook:%=%.build)
 
-all-local: $(docbook_txt) */publican.cfg
+all-local: $(docbook_build) */publican.cfg
 
 #install-data-local: all-local
 install-data-local: all-local
@@ -160,7 +160,7 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 www:    $(generated_docs)
 	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
 	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
-	rm -f $(docbook_txt)
+	rm -f $(docbook_build)
 	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" DOCBOOK_LANGS="all" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
 	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
@@ -174,7 +174,7 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_txt) $(CFS_XML) $(PE_XML)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(CFS_XML) $(PE_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
 
 foo:
