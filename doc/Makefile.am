@@ -157,12 +157,12 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	cd publican-clusterlabs && $(PUBLICAN) package --binary
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
-www:    $(generated_docs) www-pcs www-crm
+www:    $(generated_docs) www-pcs www-crmsh
 	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
 	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
 
-www-crm: clean-local
-	make ASCIIDOC_CLI_TYPE=crm www-cli
+www-crmsh: clean-local
+	make ASCIIDOC_CLI_TYPE=crmsh www-cli
 
 www-pcs: clean-local
 	make ASCIIDOC_CLI_TYPE=pcs www-cli

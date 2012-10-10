@@ -191,7 +191,7 @@ In xml it should look similar to this.
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 # crm configure show
 node pcmk-1
@@ -245,7 +245,7 @@ Pacemaker Nodes:
 .....
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 node pcmk-1
 node pcmk-2
@@ -281,7 +281,7 @@ stonith-enabled: true
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 property $id="cib-bootstrap-options" \
     dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
@@ -308,7 +308,7 @@ resource-stickiness: 100
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 * resource-stickiness - Specify the aversion to moving resources to other machines
 .....
 rsc_defaults $id="rsc-options" \
@@ -332,7 +332,7 @@ Resource: impi-fencing
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 primitive ipmi-fencing stonith::fence_ipmilan \
     params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
@@ -367,7 +367,7 @@ Resource: ClusterIP-clone
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
     params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
@@ -409,7 +409,7 @@ Resource: WebDataClone
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 primitive WebData ocf:linbit:drbd \
     params drbd_resource="wwwdata" \
@@ -446,7 +446,7 @@ Resource: WebFS-clone
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 primitive WebFS ocf:heartbeat:Filesystem \
     params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
@@ -483,7 +483,7 @@ Resource: WebSite-clone
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 .....
 primitive WebSite ocf:heartbeat:apache \
     params configfile="/etc/httpd/conf/httpd.conf" \

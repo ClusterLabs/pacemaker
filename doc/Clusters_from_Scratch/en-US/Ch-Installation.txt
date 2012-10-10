@@ -924,7 +924,7 @@ with the same password.
 
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Choose a port number and multi-cast footnote:[http://en.wikipedia.org/wiki/Multicast] address. footnote:[http://en.wikipedia.org/wiki/Multicast_address]
 Be sure that the values you chose do not conflict with any existing clusters you might have.
 For advice on choosing a multi-cast address, see
@@ -1005,7 +1005,7 @@ Also, since Pacemaker made use of the plugin for message routing, a node using t
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
 ===========
 
-ifdef::crm[]
+ifdef::crmsh[]
 === Propagate the Configuration ===
 
 Now we need to copy the changes so far to the other node:

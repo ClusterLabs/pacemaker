@@ -359,7 +359,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 One handy feature of the crm shell is that you can use it in
 interactive mode to make several changes atomically.
 
@@ -524,7 +524,7 @@ Colocation Constraints:
 
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Once again we'll use the shell's interactive mode
 
 [source,C]
@@ -619,7 +619,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 crm(fs) # cib commit fs
@@ -689,7 +689,7 @@ WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm node standby
@@ -747,7 +747,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm node online

@@ -19,9 +19,9 @@ They even allow you to queue up several changes at once and commit
 them atomically.
 
 There are currently two command-line shells that people use, `pcs` and
-the `crm shell`.  This edition of Clusters from Scratch is based on
-{cli_name}.  Start by taking some time to familiarize yourself with what it
-can do.
+`crmsh`.  This edition of Clusters from Scratch is based on
++{cli_name}+.  Start by taking some time to familiarize yourself with
+what it can do.
 
 [NOTE]
 ===========
@@ -122,7 +122,7 @@ whoever supplied you with the packages for more details.
 
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 pass:[# <command>crm --help</command>]
 
 The primary tool for monitoring the status of the cluster is crm_mon

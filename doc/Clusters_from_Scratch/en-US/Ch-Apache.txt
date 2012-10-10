@@ -168,7 +168,7 @@ timeout: 240s
 
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,Bash]
 -----
 # crm configure primitive WebSite ocf:heartbeat:apache \
@@ -229,7 +229,7 @@ Full list of resources:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm_mon -1
@@ -271,7 +271,7 @@ the +<Location /server-status>+ block.
 ======
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [NOTE]
 ======
 If, in the `crm_mon` output, you see:
@@ -311,7 +311,7 @@ score of INFINITY.  The INFINITY score also means that if ClusterIP is not
 active anywhere, WebSite will not be permitted to run.
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 For the constraint, we need a name (choose something descriptive like
 website-with-ip), indicate that its mandatory (so that if ClusterIP is
 not active anywhere, WebSite will not be permitted to run anywhere
@@ -364,7 +364,7 @@ Full list of resources:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
@@ -432,7 +432,7 @@ Colocation Constraints:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 
 We need to give it a name (choose something descriptive like
 apache-after-ip), indicate that its mandatory (so that any recovery for
@@ -507,7 +507,7 @@ Full list of resources:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Again we give it a descriptive name (prefer-pcmk-1), specify the resource we
 want to run there (WebSite), how badly we'd like it to run there (we'll use
 50 for now, but in a two-node situation almost any value above 0 will do) and
@@ -627,7 +627,7 @@ Full list of resources:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. Underneath we
 use location constraints like the one we created above, happily you don't
@@ -717,7 +717,7 @@ Colocation Constraints:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm resource unmove WebSite
@@ -772,7 +772,7 @@ Full list of resources:
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm_mon

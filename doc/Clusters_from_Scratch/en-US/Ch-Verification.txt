@@ -39,7 +39,7 @@ endif::[]
 
 == Verify Corosync Installation ==
 
-ifdef::crm[]
+ifdef::crmsh[]
 Start Corosync on the first node
 
 [source,C]
@@ -51,7 +51,7 @@ endif::[]
 The first thing to check is if cluster communication is happy, for
 that we use `corosync-cfgtool`.
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # corosync-cfgtool -s
@@ -106,7 +106,7 @@ Membership information
 You should see both nodes have joined the cluster.
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # corosync-cmapctl  | grep members
@@ -221,7 +221,7 @@ Repeat these checks on the other node. The results should be the same.
 
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Now that we have confirmed that Corosync is functional we can check
 the rest of the stack. Start Pacemaker and check the necessary
 processes have been started.
