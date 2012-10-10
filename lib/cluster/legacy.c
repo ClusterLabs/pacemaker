@@ -1429,6 +1429,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
     } else if(is_classic_ais_cluster()) {
         if(node->processes < crm_proc_none) {
             crm_debug("%s: unknown process list, assuming active for now", node->uname);
+            return TRUE;
 
         } else if(is_set(node->processes, crm_proc_none)) {
             crm_debug("%s: all processes are inactive", node->uname);
