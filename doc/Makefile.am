@@ -157,19 +157,35 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	cd publican-clusterlabs && $(PUBLICAN) package --binary
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
-www:    $(generated_docs)
+www:    $(generated_docs) www-pcs www-crm
 	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
 	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
-	rm -f $(docbook_build)
-	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" DOCBOOK_LANGS="all" all-local $(generated_docs) $(ascii)
-	echo Uploading current documentation set to clusterlabs.org
+
+www-crm: clean-local
+	make ASCIIDOC_CLI_TYPE=crm www-cli
+
+www-pcs: clean-local
+	make ASCIIDOC_CLI_TYPE=pcs www-cli
+
+www-cli:
+	for book in $(docbook); do 										\
+		sed -i.sed 's@brand:.*@brand: clusterlabs@' $$book/publican.cfg;				\
+		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)@' $$book/publican.cfg;	\
+	done
+	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="all" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local $(generated_docs) $(ascii)
+	echo Uploading current $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE) documentation set to clusterlabs.org
 	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
-		echo "Requires <b>Corosync 2.x</b><br/>" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
-		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES).txt;	\
+		echo "Requires <b>Corosync 2.x</b> and optimized for the <b>$(ASCIIDOC_CLI_TYPE)</b> CLI<br/>" > $$book/publish/build-$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE).txt;	\
+		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE).txt;	\
+		for lang in `ls -1 $$book/publish | grep [a-z][a-z]-[A-Z][A-Z]`; do							\
+			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/epub/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.epub;	\
+			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/pdf/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.pdf;	\
+		done;											\
 		rsync -rtz --progress $$book/publish/* root@www.clusterlabs.org:/var/www/html/doc/;	\
+		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)@' $$book/publican.cfg;		\
 	done
 endif
 
