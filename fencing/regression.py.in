@@ -611,6 +611,22 @@ class Tests:
 			test.add_cmd("stonith_admin", "-Q false1")
 			test.add_expected_fail_cmd("stonith_admin", "-Q true2", 237)
 
+		# Verify monitor occurs for duration of timeout period on failure
+		for test_type in test_types:
+			test = self.new_test("%s_monitor_timeout" % test_type["prefix"],
+					"Verify monitor uses duration of timeout period given.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
+			test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 23)
+			test.add_stonith_log_pattern("Attempt 2 to execute")
+
+		# Verify monitor occurs for duration of timeout period on failure, but stops at max retries
+		for test_type in test_types:
+			test = self.new_test("%s_monitor_timeout_max_retries" % test_type["prefix"],
+					"Verify monitor retries until max retry value or timeout is hit.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_monitor_fail -o \"pcmk_host_list=node3\"")
+			test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15", 23)
+			test.add_stonith_log_pattern("Attempt 10 to execute")
+
 		# simple register test
 		for test_type in test_types:
 			test = self.new_test("%s_register" % test_type["prefix"],
@@ -762,7 +778,16 @@ logging {
 			self.stop_corosync()
 			self.start_corosync()
 
-
+		monitor_fail_agent = ("""#!/usr/bin/python
+import sys
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("monitor") > 0:
+            sys.exit(-1);
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
+""")
 		on_target_agent = ("""#!/usr/bin/python
 import sys
 def main():
@@ -802,6 +827,9 @@ if __name__ == "__main__":
 
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_on_target\n%s\nEND" % (on_target_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_on_target")
+
+		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor_fail\n%s\nEND" % (monitor_fail_agent))
+		os.system("chmod 711 /usr/sbin/fence_dummy_monitor_fail")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
 		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
 
@@ -820,6 +848,7 @@ if __name__ == "__main__":
 			os.system("rm -f /etc/corosync/corosync.conf")
 
 		os.system("rm -f /usr/sbin/fence_dummy_on_target")
+		os.system("rm -f /usr/sbin/fence_dummy_monitor_fail")
 
 class TestOptions:
 	def __init__(self):

@@ -209,6 +209,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
         device->params,
         device->aliases);
 
+    /* for async exec, exec_rc is pid if positive and error code if negative/zero */
     exec_rc = stonith_action_execute_async(action, (void *) cmd, st_child_done);
 
     if(exec_rc > 0) {
