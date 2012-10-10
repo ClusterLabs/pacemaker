@@ -555,9 +555,10 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
         action->needs = rsc_req_nothing;
         value = "nothing (fencing op)";
 
-    } else if (safe_str_neq(action->task, RSC_START)) {
+    } else if (safe_str_neq(action->task, RSC_START)
+        && safe_str_neq(action->task, RSC_PROMOTE)) {
         action->needs = rsc_req_nothing;
-        value = "nothing (not start)";
+        value = "nothing (not start/promote)";
 
     } else if (safe_str_eq(value, "nothing")) {
         action->needs = rsc_req_nothing;
