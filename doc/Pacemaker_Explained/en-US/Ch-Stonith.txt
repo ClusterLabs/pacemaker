@@ -46,7 +46,7 @@ ifdef::pcs[]
   <stonith device type> [stonith device options]+
 
 . Set stonith-enable to true. +pcs -f stonith_cfg property set stonith-enabled=true+
-endif::[]
+endif::pcs[]
 
 ifdef::crm[]
 . Find the correct driver: +stonith_admin --list-installed+
@@ -64,7 +64,7 @@ ifdef::crm[]
   primitive resource with a class of stonith, a type of type and a
   parameter for each of the values returned in step 2: +configure
   primitive ...+
-endif::[]
+endif::crm[]
 
 . If the device does not know how to fence nodes based on their uname,
   you may also need to set the special +pcmk_host_map+ parameter.  See
@@ -80,11 +80,11 @@ endif::[]
 
 ifdef::crm[]
 . Upload it into the CIB from the shell: +cib commit stonith+
-endif::[]
+endif::crm[]
 
 ifdef::pcs[]
 . Commit the new configuration. +pcs cluster push cib stonith_cfg+
-endif::[]
+endif::pcs[]
 
 . Once the stonith resource is running, you can test it by executing:
   +stonith_admin --reboot nodename+. Although you might want to stop the
@@ -118,7 +118,7 @@ Stonith options for: fence_ipmilan
   privlvl: Privilege level on IPMI device
   verbose: Verbose mode
 ----
-endif::[]
+endif::pcs[]
 
 ifdef::crm[]
 [source,C]
@@ -212,7 +212,7 @@ To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / 
 </actions>
 </resource-agent>
 ----
-endif::[]
+endif::crm[]
 
 from which we would create a STONITH resource fragment that might look
 like this
@@ -228,7 +228,7 @@ ifdef::pcs[]
 # pcs -f stonith_cfg stonith
  impi-fencing	(stonith:fence_ipmilan) Stopped
 ----
-endif::[]
+endif::pcs[]
 
 ifdef::crm[]
 [source,Bash]
@@ -239,7 +239,7 @@ crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \
  params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
  op monitor interval="60s"
 ----
-endif::[]
+endif::crm[]
 
 And finally, since we disabled it earlier, we need to re-enable STONITH.
 At this point we should have the following configuration.
@@ -254,6 +254,7 @@ cluster-infrastructure: corosync
 no-quorum-policy: ignore
 stonith-enabled: true
 ----
+endif::pcs[]
 
 Now push the configuration into the cluster.
 
@@ -262,7 +263,7 @@ ifdef::pcs[]
 ----
 # pcs cluster push cib stonith_cfg
 ----
-endif::[]
+endif::pcs[]
 
 ifdef::crm[]
 [source,Bash]
@@ -304,4 +305,4 @@ crm(stonith)# cib commit stonithINFO: commited 'stonith' shadow CIB to the clust
 crm(stonith)# quit
 bye
 ----
-endif::[]
+endif::crm[]

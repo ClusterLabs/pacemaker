@@ -254,6 +254,7 @@ cluster-infrastructure: corosync
 no-quorum-policy: ignore
 stonith-enabled: true
 ----
+endif::[]
 
 Now push the configuration into the cluster.
 

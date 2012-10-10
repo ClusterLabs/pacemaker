@@ -497,6 +497,7 @@ ifdef::pcs[]
 Notice when the ClusterIP becomes a clone, the constraints
 referencing ClusterIP now reference the clone.  This is
 done automatically by pcs.
+endif::[]
 
 ifdef::pcs[]
 [source,C]
