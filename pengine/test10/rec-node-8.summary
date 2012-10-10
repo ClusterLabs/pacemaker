@@ -9,7 +9,7 @@ Online: [ node2 ]
  rsc3	(heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Start   stonith-1	(node2)
+ * Start   stonith-1	(node2 - blocked)
  * Stop    rsc1	(Started node2)
  * Stop    rsc2	(Started node2)
  * Start   rsc3	(node2 - blocked)
@@ -20,13 +20,12 @@ Executing cluster transition:
  * Resource action: rsc2            monitor on node2
  * Resource action: rsc3            monitor on node2
  * Pseudo action:   probe_complete
- * Resource action: stonith-1       start on node2
 
 Revised cluster status:
 Node node1 (uuid1): UNCLEAN (offline)
 Online: [ node2 ]
 
- stonith-1	(stonith:dummy):	Started node2
+ stonith-1	(stonith:dummy):	Stopped 
  rsc1	(heartbeat:apache):	Started node1
  rsc2	(heartbeat:apache):	Started node1
  rsc3	(heartbeat:apache):	Stopped 

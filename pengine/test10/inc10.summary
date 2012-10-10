@@ -15,6 +15,8 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   ocfs2-clone_pre_notify_stop_0
+ * Resource action: child_DoFencing:2 stop on xen-2
+ * Pseudo action:   DoFencing_stopped_0
  * Resource action: ocfs2:1         notify on xen-3
  * Resource action: ocfs2:1         notify on xen-2
  * Resource action: ocfs2:3         notify on xen-1
@@ -29,8 +31,6 @@ Executing cluster transition:
  * Resource action: ocfs2:0         notify on xen-4
  * Pseudo action:   ocfs2-clone_confirmed-post_notify_stopped_0
  * Pseudo action:   all_stopped
- * Resource action: child_DoFencing:2 stop on xen-2
- * Pseudo action:   DoFencing_stopped_0
 
 Revised cluster status:
 Node xen-2 (e3aa8547-3d52-47df-a8a3-ca94538a5282): standby

@@ -37,7 +37,6 @@ Transition Summary:
  * Stop    ocf_msdummy:6	(c001n04)
 
 Executing cluster transition:
- * Pseudo action:   stonith_up
  * Fencing c001n04
  * Pseudo action:   stonith_complete
  * Pseudo action:   master_rsc_1_stop_0

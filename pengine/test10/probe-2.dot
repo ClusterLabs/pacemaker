@@ -11,7 +11,6 @@ digraph "g" {
 "DoFencing_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "DoFencing_stopped_0" -> "DoFencing_start_0" [ style = bold]
 "DoFencing_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"all_stopped" -> "stonith_rackpdu:1_stop_0 wc02" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "apache2:1_stop_0 wc02" -> "all_stopped" [ style = bold]
 "apache2:1_stop_0 wc02" -> "fs_www:1_stop_0 wc02" [ style = bold]
@@ -215,8 +214,10 @@ digraph "g" {
 "stonith_rackpdu:0_start_0 wc01" -> "stonith_rackpdu:0_monitor_5000 wc01" [ style = bold]
 "stonith_rackpdu:0_start_0 wc01" [ style=bold color="green" fontcolor="black" ]
 "stonith_rackpdu:0_stop_0 wc01" -> "DoFencing_stopped_0" [ style = bold]
+"stonith_rackpdu:0_stop_0 wc01" -> "all_stopped" [ style = bold]
 "stonith_rackpdu:0_stop_0 wc01" -> "stonith_rackpdu:0_start_0 wc01" [ style = bold]
 "stonith_rackpdu:0_stop_0 wc01" [ style=bold color="green" fontcolor="black" ]
 "stonith_rackpdu:1_stop_0 wc02" -> "DoFencing_stopped_0" [ style = bold]
+"stonith_rackpdu:1_stop_0 wc02" -> "all_stopped" [ style = bold]
 "stonith_rackpdu:1_stop_0 wc02" [ style=bold color="green" fontcolor="black" ]
 }

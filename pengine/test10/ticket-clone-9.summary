@@ -11,7 +11,6 @@ Transition Summary:
  * Stop    rsc1:1	(node2)
 
 Executing cluster transition:
- * Pseudo action:   stonith_up
  * Fencing node1
  * Fencing node2
  * Pseudo action:   stonith_complete

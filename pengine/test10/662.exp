@@ -172,9 +172,6 @@
      </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="59" operation="stop" operation_key="DoFencing_stop_0"/>
       </trigger>
     </inputs>
@@ -285,7 +282,7 @@
   </synapse>
   <synapse id="29">
     <action_set>
-      <crm_event id="63" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <crm_event id="62" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -434,6 +431,9 @@
        <trigger>
         <rsc_op id="43" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
+      <trigger>
+        <rsc_op id="50" operation="stop" operation_key="child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
      </inputs>
    </synapse>
  </transition_graph>

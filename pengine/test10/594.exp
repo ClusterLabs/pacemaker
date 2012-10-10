@@ -27,7 +27,7 @@
         <rsc_op id="17" operation="stop" operation_key="DcIPaddr_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="35" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -86,7 +86,7 @@
         <rsc_op id="22" operation="stop" operation_key="rsc_hadev2_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="35" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -117,9 +117,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="33" operation="stop" operation_key="DoFencing_stop_0"/>
       </trigger>
     </inputs>
@@ -141,9 +138,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
       <trigger>
         <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
@@ -189,19 +183,15 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
+      <crm_event id="37" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
         <attributes CRM_meta_on_node="hadev3" CRM_meta_on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="35" operation="stonith_up" operation_key="stonith_up"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="16">
     <action_set>
-      <crm_event id="37" operation="do_shutdown" operation_key="do_shutdown" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
+      <crm_event id="36" operation="do_shutdown" operation_key="do_shutdown" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -219,28 +209,17 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="36" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="35" operation="stonith_complete" operation_key="stonith_complete">
         <attributes crm_feature_set="3.0.6"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="35" operation="stonith_up" operation_key="stonith_up"/>
-      </trigger>
-      <trigger>
-        <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+        <crm_event id="37" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
-    <action_set>
-      <pseudo_event id="35" operation="stonith_up" operation_key="stonith_up">
-        <attributes crm_feature_set="3.0.6"/>
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="19" priority="1000000">
+  <synapse id="18" priority="1000000">
     <action_set>
       <rsc_op id="14" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
@@ -255,7 +234,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20" priority="1000000">
+  <synapse id="19" priority="1000000">
     <action_set>
       <rsc_op id="10" operation="probe_complete" operation_key="probe_complete" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
@@ -273,7 +252,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="20">
     <action_set>
       <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete">
         <attributes crm_feature_set="3.0.6"/>
@@ -288,7 +267,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22">
+  <synapse id="21">
     <action_set>
       <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.6"/>
@@ -302,7 +281,13 @@
         <rsc_op id="22" operation="stop" operation_key="rsc_hadev2_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
       </trigger>
       <trigger>
-        <crm_event id="38" operation="stonith" operation_key="stonith-hadev3" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+        <rsc_op id="27" operation="stop" operation_key="child_DoFencing:0_stop_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

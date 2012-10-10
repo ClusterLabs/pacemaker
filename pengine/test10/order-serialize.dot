@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" -> "xen-b-fencing_stop_0 xen-a" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "base_migrate_from_0 xen-b" -> "base_stop_0 xen-a" [ style = bold]
 "base_migrate_from_0 xen-b" [ style=bold color="green" fontcolor="black" ]
@@ -58,7 +57,9 @@ digraph "g" {
 "xen-a-fencing_monitor_60000 xen-b" [ style=bold color="green" fontcolor="black" ]
 "xen-a-fencing_start_0 xen-b" -> "xen-a-fencing_monitor_60000 xen-b" [ style = bold]
 "xen-a-fencing_start_0 xen-b" [ style=bold color="green" fontcolor="black" ]
+"xen-a-fencing_stop_0 xen-b" -> "all_stopped" [ style = bold]
 "xen-a-fencing_stop_0 xen-b" -> "xen-a-fencing_start_0 xen-b" [ style = bold]
 "xen-a-fencing_stop_0 xen-b" [ style=bold color="green" fontcolor="black" ]
+"xen-b-fencing_stop_0 xen-a" -> "all_stopped" [ style = bold]
 "xen-b-fencing_stop_0 xen-a" [ style=bold color="green" fontcolor="black" ]
 }

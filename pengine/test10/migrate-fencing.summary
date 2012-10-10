@@ -34,18 +34,17 @@ Transition Summary:
  * Promote stateful-1:1	(Slave -> Master pcmk-1)
 
 Executing cluster transition:
- * Pseudo action:   Fencing_stop_0
  * Resource action: stateful-1:3    monitor=15000 on pcmk-3
  * Resource action: stateful-1:2    monitor=15000 on pcmk-2
- * Pseudo action:   stonith_up
- * Pseudo action:   FencingChild:0_stop_0
- * Pseudo action:   Fencing_stopped_0
  * Fencing pcmk-4
  * Pseudo action:   stonith_complete
+ * Pseudo action:   Fencing_stop_0
  * Pseudo action:   rsc_pcmk-4_stop_0
  * Pseudo action:   lsb-dummy_stop_0
  * Resource action: migrator        migrate_to on pcmk-1
  * Pseudo action:   Connectivity_stop_0
+ * Pseudo action:   FencingChild:0_stop_0
+ * Pseudo action:   Fencing_stopped_0
  * Pseudo action:   group-1_stop_0
  * Pseudo action:   r192.168.101.183_stop_0
  * Resource action: rsc_pcmk-4      start on pcmk-2

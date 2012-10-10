@@ -1,14 +1,9 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
-"stonith hs21c" -> "all_stopped" [ style = bold]
 "stonith hs21c" [ style=bold color="green" fontcolor="black" ]
-"stonith hs21d" -> "all_stopped" [ style = bold]
 "stonith hs21d" -> "stonith hs21c" [ style = bold]
 "stonith hs21d" -> "stonith_complete" [ style = bold]
 "stonith hs21d" [ style=bold color="green" fontcolor="black" ]
+"stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
-"stonith_up" -> "stonith hs21c" [ style = bold]
-"stonith_up" -> "stonith hs21d" [ style = bold]
-"stonith_up" -> "stonith_complete" [ style = bold]
-"stonith_up" [ style=bold color="green" fontcolor="orange" ]
 }

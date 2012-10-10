@@ -556,5 +556,17 @@
     </action_set>
     <inputs/>
   </synapse>
+  <synapse id="40">
+    <action_set>
+      <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="31" operation="stop" operation_key="stonithsys3_stop_0" on_node="sys2" on_node_uuid="sys2"/>
+      </trigger>
+    </inputs>
+  </synapse>
 </transition_graph>
 

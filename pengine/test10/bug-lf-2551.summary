@@ -100,16 +100,14 @@ Transition Summary:
  * Stop    vm-61	(hex-9)
 
 Executing cluster transition:
- * Pseudo action:   fencing-sbd_stop_0
  * Resource action: dummy1          monitor=300000 on hex-8
  * Resource action: dummy1          monitor=300000 on hex-7
+ * Fencing hex-9
+ * Pseudo action:   stonith_complete
  * Pseudo action:   load_stopped_hex-8
  * Pseudo action:   load_stopped_hex-7
  * Pseudo action:   load_stopped_hex-0
- * Resource action: fencing-sbd     start on hex-0
- * Pseudo action:   stonith_up
- * Fencing hex-9
- * Pseudo action:   stonith_complete
+ * Pseudo action:   fencing-sbd_stop_0
  * Pseudo action:   dummy1_stop_0
  * Pseudo action:   vm-03_stop_0
  * Pseudo action:   vm-06_stop_0
@@ -128,6 +126,7 @@ Executing cluster transition:
  * Pseudo action:   vm-57_stop_0
  * Pseudo action:   vm-61_stop_0
  * Pseudo action:   load_stopped_hex-9
+ * Resource action: fencing-sbd     start on hex-0
  * Resource action: dummy1          start on hex-0
  * Pseudo action:   base-clone_stop_0
  * Resource action: dummy1          monitor=30000 on hex-0

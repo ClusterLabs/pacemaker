@@ -27,6 +27,7 @@ Executing cluster transition:
  * Resource action: xen-a-fencing   stop on xen-b
  * Resource action: xen-a-fencing   start on xen-b
  * Resource action: xen-a-fencing   monitor=60000 on xen-b
+ * Resource action: xen-b-fencing   stop on xen-a
  * Resource action: db              migrate_to on xen-a
  * Resource action: core-101        migrate_to on xen-a
  * Resource action: edge            migrate_to on xen-a
@@ -49,7 +50,6 @@ Executing cluster transition:
  * Resource action: base            migrate_from on xen-b
  * Resource action: base            stop on xen-a
  * Pseudo action:   all_stopped
- * Resource action: xen-b-fencing   stop on xen-a
  * Pseudo action:   core-200_start_0
  * Pseudo action:   base_start_0
  * Resource action: core-200        monitor=10000 on xen-b

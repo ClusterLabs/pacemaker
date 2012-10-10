@@ -1,7 +1,7 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0" priority="1000000">
      <action_set>
-      <rsc_op id="66" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
+      <rsc_op id="65" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -14,7 +14,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-      <rsc_op id="65" operation="notify" operation_key="drbd0:1_pre_notify_demote_0" internal_operation_key="drbd0:0_pre_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
+      <rsc_op id="64" operation="notify" operation_key="drbd0:1_pre_notify_demote_0" internal_operation_key="drbd0:0_pre_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -27,7 +27,7 @@
    </synapse>
   <synapse id="2" priority="1000000">
      <action_set>
-      <rsc_op id="62" operation="notify" operation_key="drbd0:1_post_notify_promote_0" internal_operation_key="drbd0:0_post_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
+      <rsc_op id="61" operation="notify" operation_key="drbd0:1_post_notify_promote_0" internal_operation_key="drbd0:0_post_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -40,7 +40,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <rsc_op id="61" operation="notify" operation_key="drbd0:1_pre_notify_promote_0" internal_operation_key="drbd0:0_pre_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
+      <rsc_op id="60" operation="notify" operation_key="drbd0:1_pre_notify_promote_0" internal_operation_key="drbd0:0_pre_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -97,7 +97,7 @@
    </synapse>
   <synapse id="7" priority="1000000">
      <action_set>
-      <rsc_op id="68" operation="notify" operation_key="drbd0:0_post_notify_demote_0" internal_operation_key="drbd0:1_post_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
+      <rsc_op id="67" operation="notify" operation_key="drbd0:0_post_notify_demote_0" internal_operation_key="drbd0:1_post_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -110,7 +110,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-      <rsc_op id="67" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" internal_operation_key="drbd0:1_pre_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
+      <rsc_op id="66" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" internal_operation_key="drbd0:1_pre_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -123,7 +123,7 @@
    </synapse>
   <synapse id="9" priority="1000000">
      <action_set>
-      <rsc_op id="64" operation="notify" operation_key="drbd0:0_post_notify_promote_0" internal_operation_key="drbd0:1_post_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
+      <rsc_op id="63" operation="notify" operation_key="drbd0:0_post_notify_promote_0" internal_operation_key="drbd0:1_post_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -136,7 +136,7 @@
    </synapse>
    <synapse id="10">
      <action_set>
-      <rsc_op id="63" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" internal_operation_key="drbd0:1_pre_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
+      <rsc_op id="62" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" internal_operation_key="drbd0:1_pre_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.6" drbd_resource="r0"/>
        </rsc_op>
@@ -202,10 +202,10 @@
         <pseudo_event id="37" operation="notify" operation_key="ms_drbd_post_notify_demoted_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="66" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
+        <rsc_op id="65" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
       </trigger>
       <trigger>
-        <rsc_op id="68" operation="notify" operation_key="drbd0:0_post_notify_demote_0" internal_operation_key="drbd0:1_post_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
+        <rsc_op id="67" operation="notify" operation_key="drbd0:0_post_notify_demote_0" internal_operation_key="drbd0:1_post_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
        </trigger>
      </inputs>
    </synapse>
@@ -235,10 +235,10 @@
         <pseudo_event id="35" operation="notify" operation_key="ms_drbd_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="65" operation="notify" operation_key="drbd0:1_pre_notify_demote_0" internal_operation_key="drbd0:0_pre_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
+        <rsc_op id="64" operation="notify" operation_key="drbd0:1_pre_notify_demote_0" internal_operation_key="drbd0:0_pre_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
       </trigger>
       <trigger>
-        <rsc_op id="67" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" internal_operation_key="drbd0:1_pre_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
+        <rsc_op id="66" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" internal_operation_key="drbd0:1_pre_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
       </trigger>
     </inputs>
    </synapse>
@@ -288,10 +288,10 @@
         <pseudo_event id="31" operation="notify" operation_key="ms_drbd_post_notify_promoted_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="62" operation="notify" operation_key="drbd0:1_post_notify_promote_0" internal_operation_key="drbd0:0_post_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
+        <rsc_op id="61" operation="notify" operation_key="drbd0:1_post_notify_promote_0" internal_operation_key="drbd0:0_post_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
        </trigger>
        <trigger>
-        <rsc_op id="64" operation="notify" operation_key="drbd0:0_post_notify_promote_0" internal_operation_key="drbd0:1_post_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
+        <rsc_op id="63" operation="notify" operation_key="drbd0:0_post_notify_promote_0" internal_operation_key="drbd0:1_post_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
        </trigger>
      </inputs>
    </synapse>
@@ -321,10 +321,10 @@
         <pseudo_event id="29" operation="notify" operation_key="ms_drbd_pre_notify_promote_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="61" operation="notify" operation_key="drbd0:1_pre_notify_promote_0" internal_operation_key="drbd0:0_pre_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
+        <rsc_op id="60" operation="notify" operation_key="drbd0:1_pre_notify_promote_0" internal_operation_key="drbd0:0_pre_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
       </trigger>
       <trigger>
-        <rsc_op id="63" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" internal_operation_key="drbd0:1_pre_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
+        <rsc_op id="62" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" internal_operation_key="drbd0:1_pre_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
        </trigger>
      </inputs>
    </synapse>

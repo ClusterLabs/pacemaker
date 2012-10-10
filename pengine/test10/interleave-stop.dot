@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" -> "stonithclone:0_stop_0 node1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "configstoreclone:0_pre_notify_stop_0 node1" -> "configstorecloneset_confirmed-pre_notify_stop_0" [ style = bold]
 "configstoreclone:0_pre_notify_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
@@ -83,6 +82,7 @@ digraph "g" {
 "imagestorecloneset_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "imagestorecloneset_stopped_0" -> "imagestorecloneset_post_notify_stopped_0" [ style = bold]
 "imagestorecloneset_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"stonithclone:0_stop_0 node1" -> "all_stopped" [ style = bold]
 "stonithclone:0_stop_0 node1" -> "stonithcloneset_stopped_0" [ style = bold]
 "stonithclone:0_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 "stonithcloneset_stop_0" -> "stonithclone:0_stop_0 node1" [ style = bold]

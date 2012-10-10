@@ -39,6 +39,7 @@ Transition Summary:
  * Stop    stateful-1:2	(pcmk-4)
 
 Executing cluster transition:
+ * Resource action: Fencing         stop on pcmk-1
  * Resource action: rsc_pcmk-1      stop on pcmk-1
  * Resource action: rsc_pcmk-2      stop on pcmk-2
  * Resource action: rsc_pcmk-4      stop on pcmk-4
@@ -66,9 +67,8 @@ Executing cluster transition:
  * Pseudo action:   master-1_stopped_0
  * Cluster action:  do_shutdown on pcmk-4
  * Cluster action:  do_shutdown on pcmk-2
- * Pseudo action:   all_stopped
- * Resource action: Fencing         stop on pcmk-1
  * Cluster action:  do_shutdown on pcmk-1
+ * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]

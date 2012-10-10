@@ -1,4 +1,5 @@
 digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "baseclone_running_0" [ style=bold color="green" fontcolor="orange" ]
 "baseclone_start_0" -> "baseclone_running_0" [ style = bold]
 "baseclone_start_0" -> "basegrp:1_start_0" [ style = bold]
@@ -80,6 +81,7 @@ digraph "g" {
 "stonithsys3_monitor_15000 sys2" [ style=bold color="green" fontcolor="black" ]
 "stonithsys3_start_0 sys2" -> "stonithsys3_monitor_15000 sys2" [ style = bold]
 "stonithsys3_start_0 sys2" [ style=bold color="green" fontcolor="black" ]
+"stonithsys3_stop_0 sys2" -> "all_stopped" [ style = bold]
 "stonithsys3_stop_0 sys2" -> "stonithsys3_start_0 sys2" [ style = bold]
 "stonithsys3_stop_0 sys2" [ style=bold color="green" fontcolor="black" ]
 "vg1:1_monitor_0 sys3" -> "probe_complete sys3" [ style = bold]

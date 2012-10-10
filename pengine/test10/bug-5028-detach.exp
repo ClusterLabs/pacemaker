@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <crm_event id="16" operation="do_shutdown" operation_key="do_shutdown" on_node="bl460g6a" on_node_uuid="11111111-1111-1111-1111-111111111111">
+      <crm_event id="15" operation="do_shutdown" operation_key="do_shutdown" on_node="bl460g6a" on_node_uuid="11111111-1111-1111-1111-111111111111">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>

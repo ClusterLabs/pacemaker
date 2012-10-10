@@ -57,20 +57,20 @@
    </synapse>
   <synapse id="4" priority="1000000">
      <action_set>
-      <rsc_op id="21" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+      <rsc_op id="20" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="20" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="19" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-      <rsc_op id="20" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <rsc_op id="19" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="3.0.6" xmfile="/etc/xen/test1"/>
       </rsc_op>
@@ -124,7 +124,7 @@
         <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="21" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="20" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -175,7 +175,7 @@
    </synapse>
   <synapse id="12">
      <action_set>
-      <crm_event id="19" operation="do_shutdown" operation_key="do_shutdown" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <crm_event id="18" operation="do_shutdown" operation_key="do_shutdown" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
      </action_set>

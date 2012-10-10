@@ -45,7 +45,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:2 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n02
- * Pseudo action:   DoFencing_stop_0
  * Resource action: ocf_msdummy:4   monitor on c001n08
  * Resource action: ocf_msdummy:4   monitor on c001n03
  * Resource action: ocf_msdummy:4   monitor on c001n02
@@ -56,36 +55,36 @@ Executing cluster transition:
  * Resource action: ocf_msdummy:7   monitor on c001n03
  * Resource action: ocf_msdummy:7   monitor on c001n02
  * Pseudo action:   master_rsc_1_demote_0
- * Pseudo action:   stonith_up
- * Pseudo action:   probe_complete
- * Resource action: ocf_192.168.100.183 stop on c001n03
- * Resource action: lsb_dummy       stop on c001n02
- * Pseudo action:   child_DoFencing:0_stop_0
- * Pseudo action:   DoFencing_stopped_0
  * Fencing c001n01
  * Pseudo action:   stonith_complete
+ * Pseudo action:   probe_complete
  * Pseudo action:   DcIPaddr_stop_0
- * Resource action: heartbeat_192.168.100.182 stop on c001n03
- * Resource action: lsb_dummy       start on c001n08
+ * Resource action: ocf_192.168.100.183 stop on c001n03
+ * Resource action: lsb_dummy       stop on c001n02
  * Pseudo action:   rsc_c001n01_stop_0
+ * Pseudo action:   DoFencing_stop_0
  * Pseudo action:   ocf_msdummy:0_demote_0
  * Pseudo action:   master_rsc_1_demoted_0
  * Pseudo action:   master_rsc_1_stop_0
  * Resource action: DcIPaddr        start on c001n03
- * Resource action: ocf_192.168.100.181 stop on c001n03
- * Resource action: lsb_dummy       monitor=5000 on c001n08
+ * Resource action: heartbeat_192.168.100.182 stop on c001n03
+ * Resource action: lsb_dummy       start on c001n08
  * Resource action: rsc_c001n01     start on c001n03
+ * Pseudo action:   child_DoFencing:0_stop_0
+ * Pseudo action:   DoFencing_stopped_0
  * Pseudo action:   ocf_msdummy:0_stop_0
  * Pseudo action:   ocf_msdummy:4_stop_0
  * Pseudo action:   master_rsc_1_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: DcIPaddr        monitor=5000 on c001n03
+ * Resource action: ocf_192.168.100.181 stop on c001n03
+ * Resource action: lsb_dummy       monitor=5000 on c001n08
+ * Resource action: rsc_c001n01     monitor=5000 on c001n03
+ * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
  * Pseudo action:   group-1_start_0
  * Resource action: ocf_192.168.100.181 start on c001n02
  * Resource action: heartbeat_192.168.100.182 start on c001n02
  * Resource action: ocf_192.168.100.183 start on c001n02
- * Resource action: rsc_c001n01     monitor=5000 on c001n03
  * Pseudo action:   group-1_running_0
  * Resource action: ocf_192.168.100.181 monitor=5000 on c001n02
  * Resource action: heartbeat_192.168.100.182 monitor=5000 on c001n02

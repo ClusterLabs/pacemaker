@@ -37,7 +37,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <crm_event id="16" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
+      <crm_event id="15" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
      </action_set>

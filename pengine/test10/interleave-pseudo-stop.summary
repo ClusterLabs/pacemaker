@@ -19,26 +19,25 @@ Transition Summary:
  * Stop    configstoreclone:1	(node1)
 
 Executing cluster transition:
- * Pseudo action:   stonithcloneset_stop_0
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
- * Pseudo action:   stonith_up
- * Pseudo action:   stonithclone:0_stop_0
- * Pseudo action:   stonithcloneset_stopped_0
- * Resource action: evmsclone:1     notify on node2
- * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
- * Resource action: imagestoreclone:1 notify on node2
- * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
- * Resource action: configstoreclone:1 notify on node2
- * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
  * Fencing node1
  * Pseudo action:   stonith_complete
+ * Pseudo action:   stonithcloneset_stop_0
+ * Resource action: evmsclone:1     notify on node2
  * Pseudo action:   evmsclone:0_post_notify_stop_0
+ * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
+ * Resource action: imagestoreclone:1 notify on node2
  * Pseudo action:   imagestoreclone:0_post_notify_stop_0
+ * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_stop_0
+ * Resource action: configstoreclone:1 notify on node2
  * Pseudo action:   configstoreclone:0_post_notify_stop_0
+ * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   configstorecloneset_stop_0
+ * Pseudo action:   stonithclone:0_stop_0
+ * Pseudo action:   stonithcloneset_stopped_0
  * Pseudo action:   imagestoreclone:0_stop_0
  * Pseudo action:   imagestorecloneset_stopped_0
  * Pseudo action:   configstoreclone:0_stop_0

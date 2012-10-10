@@ -10,7 +10,6 @@ Node node3 (uuid3): UNCLEAN (offline)
 Transition Summary:
 
 Executing cluster transition:
- * Pseudo action:   stonith_up
  * Fencing node1
  * Fencing node3
  * Fencing node2

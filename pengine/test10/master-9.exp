@@ -190,7 +190,7 @@
    </synapse>
    <synapse id="20">
      <action_set>
-      <crm_event id="67" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <crm_event id="66" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
      </action_set>
@@ -284,5 +284,17 @@
        </trigger>
      </inputs>
    </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.6"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+      </trigger>
+    </inputs>
+  </synapse>
  </transition_graph>
 

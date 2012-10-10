@@ -66,16 +66,22 @@ Executing cluster transition:
  * Pseudo action:   group_webservice:1_stop_0
  * Resource action: apache2:1       stop on wc02
  * Resource action: stonith_rackpdu:0 stop on wc01
+ * Resource action: stonith_rackpdu:1 stop on wc02
+ * Pseudo action:   DoFencing_stopped_0
+ * Pseudo action:   DoFencing_start_0
  * Resource action: fs_mysql        stop on wc02
  * Resource action: drbd_www:1      stop on wc02
  * Pseudo action:   ms_drbd_www_stopped_0
  * Pseudo action:   group_mysql-proxy:1_stopped_0
  * Pseudo action:   clone_mysql-proxy_stopped_0
  * Resource action: fs_www:1        stop on wc02
+ * Resource action: stonith_rackpdu:0 start on wc01
+ * Pseudo action:   DoFencing_running_0
  * Pseudo action:   group_mysql_stopped_0
  * Pseudo action:   ms_drbd_www_post_notify_stopped_0
  * Pseudo action:   group_webservice:1_stopped_0
  * Pseudo action:   clone_webservice_stopped_0
+ * Resource action: stonith_rackpdu:0 monitor=5000 on wc01
  * Pseudo action:   ms_drbd_mysql_demote_0
  * Resource action: drbd_www:0      notify on wc01
  * Pseudo action:   ms_drbd_www_confirmed-post_notify_stopped_0
@@ -102,17 +108,11 @@ Executing cluster transition:
  * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_stopped_0
  * Pseudo action:   all_stopped
  * Pseudo action:   ms_drbd_mysql_pre_notify_promote_0
- * Resource action: stonith_rackpdu:1 stop on wc02
- * Pseudo action:   DoFencing_stopped_0
- * Pseudo action:   DoFencing_start_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_promote_0
  * Pseudo action:   ms_drbd_mysql_promote_0
- * Resource action: stonith_rackpdu:0 start on wc01
- * Pseudo action:   DoFencing_running_0
  * Resource action: drbd_mysql:0    promote on wc01
  * Pseudo action:   ms_drbd_mysql_promoted_0
- * Resource action: stonith_rackpdu:0 monitor=5000 on wc01
  * Pseudo action:   ms_drbd_mysql_post_notify_promoted_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_promoted_0

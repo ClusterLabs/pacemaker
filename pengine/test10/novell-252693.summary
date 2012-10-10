@@ -28,6 +28,8 @@ Executing cluster transition:
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
  * Resource action: sles10          migrate_to on node1
+ * Resource action: stonithclone:1  stop on node1
+ * Pseudo action:   stonithcloneset_stopped_0
  * Resource action: evmsclone:0     notify on node2
  * Resource action: evmsclone:1     notify on node1
  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
@@ -62,10 +64,8 @@ Executing cluster transition:
  * Pseudo action:   evmsdcloneset_stop_0
  * Resource action: evmsdclone:1    stop on node1
  * Pseudo action:   evmsdcloneset_stopped_0
- * Pseudo action:   all_stopped
- * Resource action: stonithclone:1  stop on node1
- * Pseudo action:   stonithcloneset_stopped_0
  * Cluster action:  do_shutdown on node1
+ * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 ]

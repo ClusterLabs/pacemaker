@@ -1,20 +1,20 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="1" transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <rsc_op id="58" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001">
+      <rsc_op id="57" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_from" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="57" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="56" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1" priority="4">
     <action_set>
-      <rsc_op id="57" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="56" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
@@ -58,7 +58,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="58" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+        <rsc_op id="57" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
       </trigger>
     </inputs>
   </synapse>

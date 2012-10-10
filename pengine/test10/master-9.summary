@@ -66,6 +66,7 @@ Executing cluster transition:
  * Resource action: child_DoFencing:1 stop on ibm1
  * Pseudo action:   DoFencing_stopped_0
  * Cluster action:  do_shutdown on ibm1
+ * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node sgi2 (619e8a37-147a-4782-ac11-46afad7c32b8): UNCLEAN (offline)

@@ -6,11 +6,7 @@
         <attributes CRM_meta_name="stop" CRM_meta_timeout="180000" crm_feature_set="3.0.6" pcmk_arg_map="domain:uname"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="16" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="1">
     <action_set>
@@ -329,7 +325,7 @@
   </synapse>
   <synapse id="25">
     <action_set>
-      <crm_event id="60" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104">
+      <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -347,7 +343,7 @@
   </synapse>
   <synapse id="26">
     <action_set>
-      <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103">
+      <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -359,7 +355,7 @@
   </synapse>
   <synapse id="27">
     <action_set>
-      <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102">
+      <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -389,7 +385,7 @@
   </synapse>
   <synapse id="28">
     <action_set>
-      <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-1" on_node_uuid="101">
+      <crm_event id="56" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-1" on_node_uuid="101">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
     </action_set>
@@ -410,13 +406,13 @@
         <rsc_op id="43" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
       </trigger>
       <trigger>
-        <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102"/>
+        <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
-        <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103"/>
+        <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103"/>
       </trigger>
       <trigger>
-        <crm_event id="60" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104"/>
+        <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104"/>
       </trigger>
     </inputs>
   </synapse>
@@ -427,6 +423,9 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="22" operation="stop" operation_key="Fencing_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
+      </trigger>
       <trigger>
         <rsc_op id="23" operation="stop" operation_key="r192.168.122.105_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>

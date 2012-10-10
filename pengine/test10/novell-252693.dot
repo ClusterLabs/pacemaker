@@ -1,5 +1,4 @@
  digraph "g" {
-"all_stopped" -> "stonithclone:1_stop_0 node1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "configstoreclone:0_post_notify_stop_0 node2" -> "configstorecloneset_confirmed-post_notify_stopped_0" [ style = bold]
 "configstoreclone:0_post_notify_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
@@ -107,6 +106,7 @@
 "sles10_stop_0 node1" -> "imagestorecloneset_stop_0" [ style = bold]
 "sles10_stop_0 node1" -> "sles10_start_0 node2" [ style = bold]
 "sles10_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
+"stonithclone:1_stop_0 node1" -> "all_stopped" [ style = bold]
 "stonithclone:1_stop_0 node1" -> "do_shutdown node1" [ style = bold]
 "stonithclone:1_stop_0 node1" -> "stonithcloneset_stopped_0" [ style = bold]
 "stonithclone:1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]

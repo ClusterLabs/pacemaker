@@ -36,7 +36,6 @@ Transition Summary:
  * Start   rsc_sles-5	(sles-6)
 
 Executing cluster transition:
- * Pseudo action:   stonith_up
  * Fencing sles-5
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped

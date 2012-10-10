@@ -45,7 +45,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: child_DoFencing:4 monitor=20000 on c001n08
- * Pseudo action:   stonith_up
  * Fencing c001n05
  * Fencing c001n03
  * Pseudo action:   stonith_complete

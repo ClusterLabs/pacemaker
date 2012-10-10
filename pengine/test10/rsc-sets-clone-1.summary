@@ -59,6 +59,7 @@ Executing cluster transition:
  * Resource action: vg2:1           start on sys3
  * Resource action: fs2:1           start on sys3
  * Resource action: stonithsys2     start on sys3
+ * Pseudo action:   all_stopped
  * Pseudo action:   basegrp:1_running_0
  * Resource action: controld:1      monitor=10000 on sys3
  * Resource action: iscsi1:1        monitor=120000 on sys3

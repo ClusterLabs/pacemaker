@@ -203,20 +203,20 @@
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <rsc_op id="613" operation="migrate_from" operation_key="license.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-a" on_node_uuid="v03-a">
+      <rsc_op id="612" operation="migrate_from" operation_key="license.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="612" operation="migrate_to" operation_key="license.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-b" on_node_uuid="v03-b"/>
+        <rsc_op id="611" operation="migrate_to" operation_key="license.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <rsc_op id="612" operation="migrate_to" operation_key="license.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="611" operation="migrate_to" operation_key="license.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
@@ -260,26 +260,26 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="613" operation="migrate_from" operation_key="license.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-a" on_node_uuid="v03-a"/>
+        <rsc_op id="612" operation="migrate_from" operation_key="license.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-a" on_node_uuid="v03-a"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23" priority="1000000">
     <action_set>
-      <rsc_op id="615" operation="migrate_from" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="614" operation="migrate_from" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="614" operation="migrate_to" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-a" on_node_uuid="v03-a"/>
+        <rsc_op id="613" operation="migrate_to" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-a" on_node_uuid="v03-a"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24">
     <action_set>
-      <rsc_op id="614" operation="migrate_to" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-a" on_node_uuid="v03-a">
+      <rsc_op id="613" operation="migrate_to" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
@@ -323,7 +323,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="615" operation="migrate_from" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-b" on_node_uuid="v03-b"/>
+        <rsc_op id="614" operation="migrate_from" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>
     </inputs>
   </synapse>
@@ -392,6 +392,12 @@
       </pseudo_event>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="218" operation="stop" operation_key="stonith-v03-b_stop_0" on_node="v03-a" on_node_uuid="v03-a"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="219" operation="stop" operation_key="stonith-v03-a_stop_0" on_node="v03-b" on_node_uuid="v03-b"/>
+      </trigger>
       <trigger>
         <rsc_op id="398" operation="stop" operation_key="license.anbriz.vds-ok.com-vm_stop_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>

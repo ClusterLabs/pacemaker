@@ -23,6 +23,8 @@ Executing cluster transition:
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
+ * Resource action: stonithclone:0  stop on node1
+ * Pseudo action:   stonithcloneset_stopped_0
  * Resource action: evmsclone:1     notify on node2
  * Resource action: evmsclone:0     notify on node1
  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
@@ -51,8 +53,6 @@ Executing cluster transition:
  * Resource action: evmsclone:1     notify on node2
  * Pseudo action:   evmscloneset_confirmed-post_notify_stopped_0
  * Pseudo action:   all_stopped
- * Resource action: stonithclone:0  stop on node1
- * Pseudo action:   stonithcloneset_stopped_0
 
 Revised cluster status:
 Node node1 (f6d93040-a9ad-4745-a647-57ed32444ca8): standby

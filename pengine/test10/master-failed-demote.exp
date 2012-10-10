@@ -28,7 +28,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-      <rsc_op id="70" operation="notify" operation_key="stateful-1:0_pre_notify_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4">
+      <rsc_op id="69" operation="notify" operation_key="stateful-1:0_pre_notify_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4">
         <primitive id="stateful-1:0" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -81,7 +81,7 @@
    </synapse>
   <synapse id="6" priority="1000000">
      <action_set>
-      <rsc_op id="76" operation="notify" operation_key="stateful-1:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="75" operation="notify" operation_key="stateful-1:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -94,7 +94,7 @@
    </synapse>
   <synapse id="7">
      <action_set>
-      <rsc_op id="75" operation="notify" operation_key="stateful-1:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="74" operation="notify" operation_key="stateful-1:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -107,7 +107,7 @@
    </synapse>
   <synapse id="8" priority="1000000">
      <action_set>
-      <rsc_op id="72" operation="notify" operation_key="stateful-1:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="71" operation="notify" operation_key="stateful-1:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -120,7 +120,7 @@
    </synapse>
   <synapse id="9">
      <action_set>
-      <rsc_op id="71" operation="notify" operation_key="stateful-1:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="70" operation="notify" operation_key="stateful-1:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-1:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -177,7 +177,7 @@
   </synapse>
   <synapse id="13" priority="1000000">
     <action_set>
-      <rsc_op id="78" operation="notify" operation_key="stateful-2:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="77" operation="notify" operation_key="stateful-2:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -190,7 +190,7 @@
    </synapse>
   <synapse id="14">
      <action_set>
-      <rsc_op id="77" operation="notify" operation_key="stateful-2:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="76" operation="notify" operation_key="stateful-2:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -203,7 +203,7 @@
    </synapse>
   <synapse id="15" priority="1000000">
      <action_set>
-      <rsc_op id="74" operation="notify" operation_key="stateful-2:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="73" operation="notify" operation_key="stateful-2:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="post" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -216,7 +216,7 @@
    </synapse>
   <synapse id="16">
      <action_set>
-      <rsc_op id="73" operation="notify" operation_key="stateful-2:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
+      <rsc_op id="72" operation="notify" operation_key="stateful-2:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3">
         <primitive id="stateful-2:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="stateful-2:0 " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="stateful-1:1 stateful-2:1 " CRM_meta_notify_promote_uname="dl380g5a dl380g5a " CRM_meta_notify_slave_resource="stateful-1:0 stateful-1:1 stateful-2:1 " CRM_meta_notify_slave_uname="dl380g5b dl380g5a dl380g5a " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="stateful-1:0 " CRM_meta_notify_stop_uname="dl380g5b " CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.6"/>
        </rsc_op>
@@ -285,10 +285,10 @@
         <pseudo_event id="48" operation="notify" operation_key="ms-sf_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="76" operation="notify" operation_key="stateful-1:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="75" operation="notify" operation_key="stateful-1:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
       <trigger>
-        <rsc_op id="78" operation="notify" operation_key="stateful-2:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="77" operation="notify" operation_key="stateful-2:1_post_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -318,10 +318,10 @@
         <pseudo_event id="46" operation="notify" operation_key="ms-sf_pre_notify_promote_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="75" operation="notify" operation_key="stateful-1:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="74" operation="notify" operation_key="stateful-1:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
        <trigger>
-        <rsc_op id="77" operation="notify" operation_key="stateful-2:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="76" operation="notify" operation_key="stateful-2:1_pre_notify_promote_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -375,10 +375,10 @@
         <pseudo_event id="42" operation="notify" operation_key="ms-sf_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="72" operation="notify" operation_key="stateful-1:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="71" operation="notify" operation_key="stateful-1:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
       <trigger>
-        <rsc_op id="74" operation="notify" operation_key="stateful-2:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="73" operation="notify" operation_key="stateful-2:1_post_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -408,13 +408,13 @@
         <pseudo_event id="40" operation="notify" operation_key="ms-sf_pre_notify_stop_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="70" operation="notify" operation_key="stateful-1:0_pre_notify_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4"/>
+        <rsc_op id="69" operation="notify" operation_key="stateful-1:0_pre_notify_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4"/>
        </trigger>
        <trigger>
-        <rsc_op id="71" operation="notify" operation_key="stateful-1:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="70" operation="notify" operation_key="stateful-1:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
       </trigger>
       <trigger>
-        <rsc_op id="73" operation="notify" operation_key="stateful-2:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
+        <rsc_op id="72" operation="notify" operation_key="stateful-2:1_pre_notify_stop_0" on_node="dl380g5a" on_node_uuid="3831f23f-da0a-470e-b8e7-16e61a18c3c3"/>
        </trigger>
      </inputs>
    </synapse>

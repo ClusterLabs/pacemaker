@@ -122,7 +122,7 @@
    </synapse>
    <synapse id="11">
      <action_set>
-      <crm_event id="20" operation="do_shutdown" operation_key="do_shutdown" on_node="node1" on_node_uuid="node1">
+      <crm_event id="19" operation="do_shutdown" operation_key="do_shutdown" on_node="node1" on_node_uuid="node1">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
       </crm_event>
      </action_set>
