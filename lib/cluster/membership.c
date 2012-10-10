@@ -346,7 +346,7 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
     }
 
     if (changed) {
-        if(status == NULL) {
+        if(status == NULL && flag <= crm_proc_none) {
             crm_info("%s: Node %s[%d] - all processes are now offline", source, node->uname, node->id);
         } else {
             crm_info("%s: Node %s[%d] - %s is now %s", source, node->uname, node->id, peer2text(flag), status);
