@@ -224,7 +224,6 @@ crm_cluster_connect(crm_cluster_t *cluster)
     if (is_heartbeat_cluster()) {
         int rv;
 
-        CRM_ASSERT(cluster->hb_conn != NULL);
         /* coverity[var_deref_op] False positive */
         if (cluster->hb_conn == NULL) {
             /* No object passed in, create a new one. */
