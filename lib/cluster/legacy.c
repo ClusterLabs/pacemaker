@@ -1423,17 +1423,26 @@ crm_is_corosync_peer_active(const crm_node_t * node)
         /* If we can still talk to our peer process on that node,
          * then its also part of the corosync membership
          */
-        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+        crm_trace("%s: processes=%.8x", node->uname, node->processes);
         return TRUE;
 
-    } else if(is_classic_ais_cluster() && (node->processes & crm_proc_plugin) == 0) {
-        crm_trace("%s: processes=%.16x", node->uname, node->processes);
-        return FALSE;
+    } else if(is_classic_ais_cluster()) {
+        if(node->processes < crm_proc_none) {
+            crm_debug("%s: unknown process list, assuming active for now", node->uname);
+
+        } else if(is_set(node->processes, crm_proc_none)) {
+            crm_debug("%s: all processes are inactive", node->uname);
+            return FALSE;
+
+        } else if(is_not_set(node->processes, crm_proc_plugin)) {
+            crm_trace("%s: processes=%.8x", node->uname, node->processes);
+            return FALSE;
+        }
     }
 
     proc = text2proc(crm_system_name);
-    if(proc != crm_proc_none && (node->processes & proc) == 0) {
-        crm_trace("%s: proc %.16x not in %.16x", node->uname, proc, node->processes);
+    if(proc > crm_proc_none && (node->processes & proc) == 0) {
+        crm_trace("%s: proc %.8x not in %.8x", node->uname, proc, node->processes);
         return FALSE;
     }
 
