@@ -536,10 +536,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
-    if (safe_str_eq(class, "stonith")) {
-        value = "nothing (fencing device)";
-
-    } else if (safe_str_eq(value, "nothing")) {
+    if (safe_str_eq(value, "nothing")) {
 
     } else if (safe_str_eq(value, "quorum")) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);

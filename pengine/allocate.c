@@ -1253,7 +1253,6 @@ stage6(pe_working_set_t * data_set)
     action_t *stonith_op = NULL;
     action_t *last_stonith = NULL;
     gboolean integrity_lost = FALSE;
-    action_t *ready = get_pseudo_op(STONITH_UP, data_set);
     action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = FALSE;
@@ -1283,10 +1282,6 @@ stage6(pe_working_set_t * data_set)
             stonith_op = pe_fence_op(node, NULL, data_set);
 
             stonith_constraints(node, stonith_op, data_set);
-            order_actions(ready, stonith_op, pe_order_runnable_left);
-            order_actions(stonith_op, all_stopped, pe_order_implies_then);
-
-            clear_bit(ready->flags, pe_action_optional);
 
             if (node->details->is_dc) {
                 dc_down = stonith_op;
@@ -1366,7 +1361,8 @@ stage6(pe_working_set_t * data_set)
     } else if (dc_fence) {
         order_actions(dc_down, done, pe_order_implies_then);
     }
-    order_actions(ready, done, pe_order_optional);
+
+    order_actions(done, all_stopped, pe_order_implies_then);
     return TRUE;
 }
 

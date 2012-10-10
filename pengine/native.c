@@ -83,16 +83,6 @@ struct capacity_data {
     gboolean is_enough;
 };
 
-static gboolean
-is_fencing_resource(resource_t *rsc) 
-{
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if (safe_str_eq(class, "stonith")) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
 static void
 check_capacity(gpointer key, gpointer value, gpointer user_data)
 {
@@ -533,8 +523,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                  assign_to ? assign_to->details->uname : "'nowhere'", reason);
         native_assign_node(rsc, NULL, assign_to, TRUE);
 
-    } else if (is_set(data_set->flags, pe_flag_stop_everything)
-               && is_fencing_resource(rsc) == FALSE) {
+    } else if (is_set(data_set->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
         native_assign_node(rsc, NULL, NULL, TRUE);
 
@@ -1027,7 +1016,6 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     
     GListPtr gIter = NULL;
     int num_active_nodes = 0;
-    gboolean fence_device = is_fencing_resource(rsc);
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
@@ -1049,12 +1037,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        node_t *n = (node_t *) gIter->data;
+        /* node_t *n = (node_t *) gIter->data; */
 
-        if(fence_device && n->details->unclean) {
-            crm_info("Ignoring %s on %s: fencing resource on an unclean node", rsc->id, n->details->uname);
-            continue;
-        }
         num_active_nodes++;
     }
     
@@ -1197,7 +1181,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    if (is_fencing_resource(rsc) == FALSE) {
+    {
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
         custom_action_order(rsc, stop_key(rsc), NULL,
@@ -2011,16 +1995,6 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
     pe_rsc_trace(rsc, "%s", rsc->id);
 
-    if (rsc->next_role == RSC_ROLE_STOPPED
-        && rsc->variant == pe_native
-        && is_fencing_resource(rsc)) {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        custom_action_order(NULL, strdup(all_stopped->task), all_stopped,
-                            rsc, stop_key(rsc), NULL,
-                            pe_order_optional | pe_order_stonith_stop, data_set);
-    }
-
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
         action_t *stop;
@@ -2342,11 +2316,6 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if(node->details->pending && is_fencing_resource(rsc)) {
-        crm_trace("Skipping probe for fencing resource %s on pending node %s", rsc->id, node->details->uname);
-        return FALSE;
-    }
-
     running = g_hash_table_lookup(rsc->known_on, node->details->id);
     if (running == NULL && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
         /* Anonymous clones */
@@ -2409,16 +2378,6 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
 {
     node_t *target = stonith_op ? stonith_op->node : NULL;
 
-    if (is_stonith) {
-        char *key = start_key(rsc);
-        action_t *ready = get_pseudo_op(STONITH_UP, data_set);
-
-        pe_rsc_trace(rsc, "Ordering %s action before stonith events", key);
-        custom_action_order(rsc, key, NULL,
-                            NULL, strdup(ready->task), ready,
-                            pe_order_optional | pe_order_implies_then, data_set);
-
-    } else {
         GListPtr gIter = NULL;
         action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
         action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
@@ -2451,7 +2410,6 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
                 order_actions(all_stopped, action, pe_order_optional | pe_order_runnable_left);
             }
         }
-    }
 }
 
 static void
@@ -2494,7 +2452,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
         update_action_flags(action, pe_action_runnable);
         update_action_flags(action, pe_action_implied_by_stonith);
 
-        if (is_stonith == FALSE) {
+        {
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
             order_actions(stonith_op, action, pe_order_optional);
@@ -2619,10 +2577,6 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
         return;
-    }
-
-    if (stonith_op != NULL && is_fencing_resource(rsc)) {
-        is_stonith = TRUE;
     }
 
     /* Start constraints */

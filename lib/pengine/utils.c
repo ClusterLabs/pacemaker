@@ -521,7 +521,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
     unsigned long long interval = 0;
     unsigned long long start_delay = 0;
     char *value_ms = NULL;
-    const char *class = NULL;
     const char *value = NULL;
     const char *field = NULL;
 
@@ -549,13 +548,9 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
     g_hash_table_remove(action->meta, "id");
 
     /* Begin compatability code */
-    class = g_hash_table_lookup(action->rsc->meta, "class");
     value = g_hash_table_lookup(action->meta, "requires");
-    if (safe_str_eq(class, "stonith")) {
-        action->needs = rsc_req_nothing;
-        value = "nothing (fencing op)";
 
-    } else if (safe_str_neq(action->task, RSC_START)
+    if (safe_str_neq(action->task, RSC_START)
         && safe_str_neq(action->task, RSC_PROMOTE)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start/promote)";
