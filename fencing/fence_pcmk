@@ -22,7 +22,7 @@ $extra_args = '-E';
 
 sub usage
 {
-    print "Helper that presents a RHCS-style interface for Linux-HA stonith plugins\n\n";
+    print "Helper that presents a RHCS-style interface to stonith-ng for CMAN based clusters\n\n";
     print "Should never need to use invoked by the user directly\n\n";
     print "\n";
     print "Usage: $pname [options]\n";
