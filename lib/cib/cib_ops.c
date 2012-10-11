@@ -561,7 +561,10 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     int diff_del_epoch = 0;
     int diff_del_admin_epoch = 0;
 
-    const char *originator = crm_element_value(req, F_ORIG);
+    char *originator = NULL;
+    if (req != NULL) {
+        originator = crm_element_value(req, F_ORIG);
+    }
     crm_trace("Processing \"%s\" event", op);
 
     cib_diff_version_details(input,
