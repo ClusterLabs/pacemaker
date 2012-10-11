@@ -1718,6 +1718,7 @@ AC_SUBST(PCMK_FEATURES)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
+Doxyfile							\
 coverage.sh							\
 cts/Makefile					        	\
 	cts/CTSvars.py						\

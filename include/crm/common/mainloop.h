@@ -18,6 +18,12 @@
 #ifndef CRM_COMMON_MAINLOOP__H
 #  define CRM_COMMON_MAINLOOP__H
 
+/**
+ * \file
+ * \brief Wrappers for and extensions to glib mainloop
+ * \ingroup core
+ */
+
 #  include <glib.h>
 
 typedef struct trigger_s crm_trigger_t;

@@ -18,6 +18,12 @@
 #ifndef CRM_COMMON_XML__H
 #  define CRM_COMMON_XML__H
 
+/**
+ * \file
+ * \brief Wrappers for and extensions to libxml2
+ * \ingroup core
+ */
+
 #  include <stdio.h>
 #  include <sys/types.h>
 #  include <unistd.h>

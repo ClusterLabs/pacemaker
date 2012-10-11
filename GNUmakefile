@@ -196,17 +196,20 @@ global: clean-generic
 	groff -mandoc `man -w ./$<` -T html > $@
 	rsync -azxlSD --progress $@ root@www.clusterlabs.org:/var/www/html/man/
 
+doxygen:
+	doxygen Doxyfile
+
 abi:
 	abi-check pacemaker $(LAST_RELEASE) $(TAG)
 abi-www:
 	abi-check -u pacemaker $(LAST_RELEASE) $(TAG)
 
-www:	global
-	make all
-	find . -name "[a-z]*.8" -exec make \{\}.html  \;
-	find . -name "[a-z]*.7" -exec make \{\}.html  \;
+www:	all global doxygen
+	find . -name "[a-z]*.8" -exec make \{\}.html \;
+	find . -name "[a-z]*.7" -exec make \{\}.html \;
 	htags -sanhIT
 	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)/$(TAG)
+	rsync -avzxlSD --progress doc/api/html/ root@www.clusterlabs.org:/var/www/html/doxygen/$(PACKAGE)/$(TAG)
 	make -C doc www
 	make coverity
 

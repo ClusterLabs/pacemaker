@@ -19,7 +19,7 @@
 /**
  * \file
  * \brief Services API
- * \ingroup coreapi
+ * \ingroup core
  */
 
 #ifndef __PCMK_SERVICES__
