@@ -185,6 +185,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = rsc->children;
     resource_t *last_rsc = NULL;
+    resource_t *last_active = NULL;
     resource_t *top = uber_parent(rsc);
     group_variant_data_t *group_data = NULL;
 
@@ -268,6 +269,20 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
             }
 
+        }
+
+        /* Look for partially active groups
+         * Make sure they still shut down in sequence
+         */
+        if(child_rsc->running_on) {
+            if(group_data->ordered
+               && last_rsc
+               && last_rsc->running_on == NULL
+               && last_active
+               && last_active->running_on) {
+                order_stop_stop(child_rsc, last_active, pe_order_optional);
+            }
+            last_active = child_rsc;
         }
 
         last_rsc = child_rsc;
