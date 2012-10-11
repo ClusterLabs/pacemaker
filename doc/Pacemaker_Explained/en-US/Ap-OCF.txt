@@ -129,22 +129,22 @@ There are three types of failure recovery:
 |Action Taken by the Cluster
 
 |soft
-indexterm:[soft,OCF error]
-indexterm:[OCF,error,soft]
 |A transient error occurred
 |Restart the resource or move it to a new location
+indexterm:[soft,OCF error]
+indexterm:[OCF,error,soft]
 
 |hard
-indexterm:[hard,OCF error]
-indexterm:[OCF,error,hard]
 |A non-transient error that may be specific to the current node occurred
 |Move the resource elsewhere and prevent it from being retried on the current node
+indexterm:[hard,OCF error]
+indexterm:[OCF,error,hard]
 
 |fatal
-indexterm:[fatal,OCF error]
-indexterm:[OCF,error,fatal]
 |A non-transient error that will be common to all cluster nodes (eg. a bad configuration was specified)
 |Stop the resource and prevent it from being started on any cluster node
+indexterm:[fatal,OCF error]
+indexterm:[OCF,error,fatal]
 
 |=========================================================
 
