@@ -1,5 +1,11 @@
-[[ch-stonith]]
 = Configure STONITH =
+
+//// 
+We prefer [[ch-stonith]], but older versions of asciidoc dont deal well
+with that construct for chapter headings
+////
+anchor:ch-stonith[Chapter 13, STONITH]
+indexterm:[STONITH, Configuration]
 
 == What Is STONITH ==
 
