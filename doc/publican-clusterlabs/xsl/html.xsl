@@ -23,7 +23,11 @@
 <xsl:import href="common.xsl"/>
 
 <xsl:template name="user.head.content">
-   <xsl:variable name="codefile" select="document('header.html',/)"/>
+  <!--
+      Paths to document() are relative to the xml build directory under $book/tmp
+      Not the location of this xslt
+  -->
+   <xsl:variable name="codefile" select="document('/usr/share/publican/Common_Content/clusterlabs/xsl/header.html',/)"/>
    <xsl:copy-of select="$codefile/htmlcode/node()"/>
 </xsl:template>
 
