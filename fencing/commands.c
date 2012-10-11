@@ -647,6 +647,18 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
         free_device(device);
         device = dup;
     } else {
+        stonith_device_t *old = g_hash_table_lookup(device_list, device->id);
+        if (from_cib && old && old->api_registered) {
+            /* If the cib is writing over an entry that is shared with a stonith client,
+             * copy any pending ops that currently exist on the old entry to the new one.
+             * Otherwise the pending ops will be reported as failures */
+            device->pending_ops = old->pending_ops;
+            device->api_registered = TRUE;
+            old->pending_ops = NULL;
+            if (device->pending_ops) {
+                mainloop_set_trigger(device->work);
+            }
+        }
         g_hash_table_replace(device_list, device->id, device);
 
         crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
