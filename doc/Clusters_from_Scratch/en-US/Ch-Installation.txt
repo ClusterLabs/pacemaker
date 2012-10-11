@@ -893,6 +893,81 @@ nodes) will be unavailable.  This tutorial will make use of these remote access 
 
 endif::[]
 
+ifdef::crmsh[]
+
+=== Preparation - Multicast ===
+
+Choose a port number and 
+http://en.wikipedia.org/wiki/Multicast[multi-cast] address.
+http://en.wikipedia.org/wiki/Multicast_address[]
+
+Be sure that the values you chose do not conflict with any existing
+clusters you might have.  For this document, I have chosen port '4000'
+and used '239.255.1.1' as the multi-cast address.
+
+endif::[]
+
+=== Notes on Multicast Address Assignment ===
+
+There are several subtle points that often deserve consideration when
+choosing/assigning multicast addresses.
+footnote:[This information is borrowed from, the now defunct, http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html]
+
+. Avoid '224.0.0.x'
++
+Traffic to addresses of the form '224.0.0.x' is often flooded to all
+switch ports. This address range is reserved for link-local uses. Many
+routing protocols assume that all traffic within this range will be
+received by all routers on the network. Hence (at least all Cisco)
+switches flood traffic within this range. The flooding behavior
+overrides the normal selective forwarding behavior of a
+multicast-aware switch (e.g. IGMP snooping, CGMP, etc.).
+
+. Watch for '32:1' overlap
++
+32 non-contiguous IP multicast addresses are mapped onto each Ethernet
+multicast address. A receiver that joins a single IP multicast group
+implicitly joins 31 others due to this overlap. Of course, filtering
+in the operating system discards undesired multicast traffic from
+applications, but NIC bandwidth and CPU resources are nonetheless
+consumed discarding it. The overlap occurs in the 5 high-order bits,
+so it's best to use the 23 low-order bits to make distinct multicast
+streams unique. For example, IP multicast addresses in the range
+'239.0.0.0' to '239.127.255.255' all map to unique Ethernet multicast
+addresses. However, IP multicast address '239.128.0.0' maps to the
+same Ethernet multicast address as '239.0.0.0', '239.128.0.1' maps to
+the same Ethernet multicast address as '239.0.0.1', etc.
+
+. Avoid 'x.0.0.y' and 'x.128.0.y'
++
+Combining the above two considerations, it's best to avoid using IP
+multicast addresses of the form 'x.0.0.y' and 'x.128.0.y' since they
+all map onto the range of Ethernet multicast addresses that are
+flooded to all switch ports.
+
+. Watch for address assignment conflicts
++
+http://www.iana.org/[IANA] administers
+http://www.iana.org/assignments/multicast-addresses[Internet multicast
+addresses]. Potential conflicts with Internet multicast address
+assignments can be avoided by using
+http://www.ietf.org/rfc/rfc3180.txt[GLOP addressing]
+(http://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29[AS]
+required) or http://www.ietf.org/rfc/rfc2365.txt[administratively
+scoped] addresses. Such addresses can be safely used on a network
+connected to the Internet without fear of conflict with multicast
+sources originating on the Internet. Administratively scoped addresses
+are roughly analogous to the unicast address space for
+http://www.ietf.org/rfc/rfc1918.txt[private internets]. Site-local
+multicast addresses are of the form '239.255.x.y', but can grow down
+to '239.252.x.y' if needed. Organization-local multicast addresses are
+of the form '239.192-251.x.y', but can grow down to '239.x.y.z' if
+needed.
+
+For a more detailed treatment (57 pages!), see
+http://www.cisco.com/en/US/tech/tk828/technologies_white_paper09186a00802d4643.shtml[Cisco's
+Guidelines for Enterprise IP Multicast Address Allocation] paper.
+
 === Configuring Corosync ===
 
 ifdef::pcs[]
@@ -925,12 +1000,6 @@ with the same password.
 endif::[]
 
 ifdef::crmsh[]
-Choose a port number and multi-cast footnote:[http://en.wikipedia.org/wiki/Multicast] address. footnote:[http://en.wikipedia.org/wiki/Multicast_address]
-Be sure that the values you chose do not conflict with any existing clusters you might have.
-For advice on choosing a multi-cast address, see
-http://www.29west.com/docs/THPM/multicast-address-assignment.html
-For this document, I have chosen port 4000 and used 239.255.1.1 as the multi-cast address.
-
 
 [IMPORTANT]
 ===========
@@ -950,7 +1019,7 @@ address, we make the configuration suitable to be copied to other nodes.
 
 [source,Bash]
 ----
-export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`
+export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
 ----
 
 Display and verify the configuration options
