@@ -198,7 +198,7 @@ Next identify the resource's tag name and id (in this case we'll
 choose +primitive+ and +child_DoFencing+).  Then simply execute:
 
 [source,C]
-# cibadmin --delete --crm_xml '&lt;primitive id="child_DoFencing"/>'
+# cibadmin --delete --crm_xml '<primitive id="child_DoFencing"/>'
 
 == Updating the Configuration Without Using XML ==
 
