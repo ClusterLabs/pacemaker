@@ -2274,3 +2274,15 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     free(name);
     return when;
 }
+
+#if HAVE_STONITH_STONITH_H
+#include <pils/plugin.h>
+
+const char *i_hate_pils(int rc);
+
+const char *
+i_hate_pils(int rc)
+{
+    return PIL_strerror(rc);    
+}
+#endif
