@@ -143,7 +143,9 @@ class Test:
 		else:
 			return 0
 
-		output = test.communicate()[0]
+		output_res = test.communicate()
+		output = output_res[0] + output_res[1]
+
 		if self.verbose:
 			print output
 
@@ -209,7 +211,7 @@ class Test:
 			res = self.run_cmd(cmd)
 			if res != cmd['expected_exitcode']:
 				print "Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode'])
-				self.result_txt = "FAILURE - '%s' failed at step %d. Command: lrmd_test %s" % (self.name, i, cmd['args'])
+				self.result_txt = "FAILURE - '%s' failed at step %d. Command: %s %s" % (self.name, i, cmd['cmd'], cmd['args'])
 				self.result_exitcode = -1
 				break
 			else:
@@ -663,6 +665,37 @@ class Tests:
 			test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
 
 			test.add_cmd_check_stdout("stonith_admin", "-H node3", "was able to turn off node node3", "")
+
+		# simple test of dynamic list query
+		for test_type in test_types:
+			test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
+					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true")
+
+			test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
+
+
+		# fence using dynamic list query
+		for test_type in test_types:
+			test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
+					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true")
+
+			test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V");
+
+		# simple test of  query using status action
+		for test_type in test_types:
+			test = self.new_test("%s_status_query" % test_type["prefix"],
+					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_check=status\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_check=status\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_check=status\"")
+
+			test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
 	def build_unfence_tests(self):
 
