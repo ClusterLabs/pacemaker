@@ -1190,7 +1190,7 @@ case $SUPPORT_HEARTBEAT in
 1|yes|true|try)
    AC_MSG_CHECKING(for heartbeat support)
    AC_CHECK_LIB(hbclient, ll_cluster_new, [SUPPORT_HEARTBEAT=1],
-		[if $SUPPORT_HEARTBEAT != try; then
+		[if test $SUPPORT_HEARTBEAT != try; then
 			AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)
 		fi])
 
