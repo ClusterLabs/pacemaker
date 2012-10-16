@@ -140,7 +140,7 @@ extern int stonith_level_remove(xmlNode * msg, char **desc);
 extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 
-extern xmlNode *stonith_construct_reply(xmlNode * request, char *output, xmlNode * data, int rc);
+extern xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, int rc);
 
 void
 do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
