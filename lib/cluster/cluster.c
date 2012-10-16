@@ -400,9 +400,11 @@ get_node_name(uint32_t nodeid)
             name = classic_node_name(nodeid);
             break;
 #else
+#if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, nodeid);
             break;
+#endif
 #endif
 
 #if SUPPORT_CMAN
