@@ -1109,18 +1109,9 @@ stonith_query_capable_device_cb(GList *devices, void *user_data)
     xmlNode *list = NULL;
     GListPtr lpc = NULL;
 
-    available_devices = g_list_length(devices);
-    if (query->target) {
-        crm_debug("Found %d matching devices for '%s'",
-                 available_devices, query->target);
-    } else {
-        crm_debug("%d devices installed", available_devices);
-    }
-
     /* Pack the results into data */
     list = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(list, F_STONITH_TARGET, query->target);
-    crm_xml_add_int(list, "st-available-devices", available_devices);
     for(lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
         int action_specific_timeout;
@@ -1130,6 +1121,8 @@ stonith_query_capable_device_cb(GList *devices, void *user_data)
              * determining who can fence the target */
             continue;
         }
+
+        available_devices++;
 
         action_specific_timeout = get_action_timeout(device, query->action, 0);
         dev = create_xml_node(list, F_STONITH_DEVICE);
@@ -1145,6 +1138,15 @@ stonith_query_capable_device_cb(GList *devices, void *user_data)
             g_hash_table_foreach(device->params, hash2field, attrs);
         }
     }
+
+    crm_xml_add_int(list, "st-available-devices", available_devices);
+    if (query->target) {
+        crm_debug("Found %d matching devices for '%s'",
+                 available_devices, query->target);
+    } else {
+        crm_debug("%d devices installed", available_devices);
+    }
+
 
     if (list != NULL) {
         crm_trace("Attaching query list output");
