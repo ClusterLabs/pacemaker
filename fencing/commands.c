@@ -1064,12 +1064,12 @@ get_capable_devices(const char *host, const char *action, int timeout, void *use
     if (devices_needing_async_query) {
         per_device_timeout = timeout / devices_needing_async_query;
         if (!per_device_timeout) {
-            crm_err("stonith-timeout value %d is too low, raise the duration to %d seconds",
-                DEFAULT_QUERY_TIMEOUT * per_device_timeout);
+            crm_err("stonith-timeout duration %d is too low, raise the duration to %d seconds",
+                    timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
             per_device_timeout = DEFAULT_QUERY_TIMEOUT;
         } else if (per_device_timeout < DEFAULT_QUERY_TIMEOUT) {
-            crm_warn("stonith-timeout duration is low for the current configuration. Consider raising it to %d seconds",
-                DEFAULT_QUERY_TIMEOUT * per_device_timeout);
+            crm_notice("stonith-timeout duration %d is low for the current configuration. Consider raising it to %d seconds",
+                       timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
         }
     }
 
