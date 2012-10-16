@@ -314,7 +314,7 @@ send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service, xmlNode *
 #endif
 #if SUPPORT_HEARTBEAT
     if (is_heartbeat_cluster()) {
-        return send_ha_message(heartbeat_cluster, data, node->uname, ordered);
+        return send_ha_message(heartbeat_cluster, data, node ? node->uname : NULL, ordered);
     }
 #endif
     return FALSE;
