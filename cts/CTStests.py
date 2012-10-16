@@ -1952,6 +1952,11 @@ class NearQuorumPointTest(CTSTest):
         
         return self.failure()
 
+    def is_applicable(self):
+        if self.CM["Name"] == "crm-cman":
+            return None
+        return 1
+
 AllTestClasses.append(NearQuorumPointTest)
 
 ###################################################################
