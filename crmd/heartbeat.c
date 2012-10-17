@@ -48,7 +48,6 @@ int ccm_dispatch(gpointer user_data);
 
 int (*ccm_api_callback_done) (void *cookie) = NULL;
 int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
-static gboolean fsa_have_quorum = FALSE;
 
 static oc_ev_t *fsa_ev_token;
 static void *ccm_library = NULL;
@@ -354,14 +353,13 @@ crmd_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data
 
     if (update_quorum) {
         crm_have_quorum = ccm_have_quorum(event);
-        crm_update_quorum(crm_have_quorum, FALSE);
-
         if (crm_have_quorum == FALSE) {
             /* did we just loose quorum? */
-            if (fsa_have_quorum) {
+            if (fsa_has_quorum) {
                 crm_info("Quorum lost: %s", ccm_event_name(event));
             }
         }
+        crm_update_quorum(crm_have_quorum, FALSE);
     }
 
     if (update_cache) {
