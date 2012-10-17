@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -89,6 +89,11 @@ msgstr ""
 
 #. Tag: contrib
 #, no-c-format
+msgid "Resource Templates chapter"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
 msgid "Multi-Site Clusters chapter"
 msgstr ""
 
@@ -120,5 +125,15 @@ msgstr ""
 #. Tag: surname
 #, no-c-format
 msgid "Schraitle"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Dejan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Muhamedagic"
 msgstr ""
 

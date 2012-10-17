@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2011-04-26 14:39+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -24,8 +24,8 @@ msgid "Defining a Cluster Node"
 msgstr "Definire un nodo del cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "Each node in the cluster will have an entry in the nodes section containing its UUID, uname and type."
+#, fuzzy, no-c-format
+msgid "Each node in the cluster will have an entry in the nodes section containing its UUID, uname, and type."
 msgstr "Ad ogni nodo nel cluster corrisponderà una entry nella sezione nodi contenente il relativo UUID, il valore di uname ed il tipo."
 
 #. Tag: title
@@ -34,19 +34,16 @@ msgid "Example cluster node entry"
 msgstr "Esempio di una entry relativa ad un nodo cluster"
 
 #. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"  &#60;node id=&#34;1186dc9a-324d-425a-966e-d757e693dc86&#34; uname=&#34;pcmk-1&#34; type=&#34;normal&#34;/&#62;\n"
-"\t"
+#, fuzzy, no-c-format
+msgid "&lt;node id=\"1186dc9a-324d-425a-966e-d757e693dc86\" uname=\"pcmk-1\" type=\"normal\"/&gt;"
 msgstr ""
 "\n"
 "  &#60;node id=&#34;1186dc9a-324d-425a-966e-d757e693dc86&#34; uname=&#34;pcmk-1&#34; type=&#34;normal&#34;/&#62;\n"
 "\t"
 
 #. Tag: para
-#, no-c-format
-msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the crm_uuid tool to read an existing UUID or define a value before the cluster starts."
+#, fuzzy, no-c-format
+msgid "In normal circumstances, the admin should let the cluster populate this information automatically from the communications and membership data. However one can use the <literal>crm_uuid</literal> tool to read an existing UUID or define a value before the cluster starts."
 msgstr "In circostanze normali, l'amministratore dovrebbe lasciar popolare le informazioni automaticamente al cluster in base ai dati di communication e membership. Ad ogni modo è possibile utilizzare lo strumento crm_uuid per leggere un UUID esistente o definire un valore prima che il cluster si avii."
 
 #. Tag: title
@@ -55,18 +52,18 @@ msgid "Describing a Cluster Node"
 msgstr "Descrivere un nodo del cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "Beyond the basic definition of a node, the administrator can also describe the node&#39;s attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see the section on <xref linkend=\"ch-rules\" />."
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Node</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm> Beyond the basic definition of a node the administrator can also describe the node’s attributes, such as how much RAM, disk, what OS or kernel version it has, perhaps even its physical location. This information can then be used by the cluster when deciding where to place resources. For more information on the use of node attributes, see <xref linkend=\"ch-rules\" />."
 msgstr "Al di la della definizione base di un nodo, l'amministratore può inoltre descriverne gli attributi, come ad esempio quanta RAM, disco, quale sistema operativo o versione di kernel monta, forse anche la locazione fisica. Queste informazioni possono quindi essere utilizzate dal cluster nel momento in cui viene deciso dove porre le risorse. Per ulteriori informazioni sull'uso degli attributi del nodo, vedere la sezione <xref linkend=\"ch-rules\" />."
 
 #. Tag: para
-#, no-c-format
-msgid "Node attributes can be specified ahead of time or populated later, when the cluster is running, using <command>crm_attribute</command>."
+#, fuzzy, no-c-format
+msgid "Node attributes can be specified ahead of time or populated later, when the cluster is running, using <literal>crm_attribute</literal>."
 msgstr "Gli attributi dei nodi possono essere specificati a priori o popolate in seguito, quando il cluster sta funzionando, utilizzando <command>crm_attribute</command>."
 
 #. Tag: para
-#, no-c-format
-msgid "Below is what the node&#39;s definition would look like if the admin ran the command:"
+#, fuzzy, no-c-format
+msgid "Below is what the node’s definition would look like if the admin ran the command:"
 msgstr "Ecco riportato come sarà la definzione del nodo se l'amministratore lancia il comando:"
 
 #. Tag: title
@@ -75,18 +72,18 @@ msgid "The result of using crm_attribute to specify which kernel pcmk-1 is runni
 msgstr "Risultato dell'utilizzo di crm_attribute per specificare quale kernel sta funzionando su pcmk-1"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
+msgid "# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r`"
+msgstr "<command> crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"  <userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
-"\n"
-"  &#60;node uname=&#34;pcmk-1&#34; type=&#34;normal&#34; id=&#34;1186dc9a-324d-425a-966e-d757e693dc86&#34;&#62;\n"
-"   &#60;instance_attributes id=&#34;nodes-1186dc9a-324d-425a-966e-d757e693dc86&#34;&#62;\n"
-"     &#60;nvpair id=&#34;kernel-1186dc9a-324d-425a-966e-d757e693dc86&#34; name=&#34;kernel&#34; value=&#34;2.6.16.46-0.4-default&#34;/&#62;\n"
-"   &#60;/instance_attributes&#62;\n"
-"  &#60;/node&#62;\n"
-"\n"
-"\t"
+"&lt;node uname=\"pcmk-1\" type=\"normal\" id=\"1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"   &lt;instance_attributes id=\"nodes-1186dc9a-324d-425a-966e-d757e693dc86\"&gt;\n"
+"     &lt;nvpair id=\"kernel-1186dc9a-324d-425a-966e-d757e693dc86\" name=\"kernel\" value=\"2.6.16.46-0.4-default\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"&lt;/node&gt;"
 msgstr ""
 "\n"
 "  <userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>\n"
@@ -100,18 +97,18 @@ msgstr ""
 "\t"
 
 #. Tag: para
-#, no-c-format
-msgid "A simpler way to determine the current value of an attribute is to use crm_attribute command again:"
+#, fuzzy, no-c-format
+msgid "A simpler way to determine the current value of an attribute is to use <literal>crm_attribute</literal> command again:"
 msgstr "Una via più semplice per determinare il valore corrente di un attributo è di utilizzare nuovamente il comando crm_attribute:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command> crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value"
 msgstr "<command> crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "By specifying <parameter>--type</parameter> nodes the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are &#34;forgotten&#34; whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <parameter>--type status</parameter>."
+#, fuzzy, no-c-format
+msgid "By specifying <literal>--type nodes</literal> the admin tells the cluster that this attribute is persistent. There are also transient attributes which are kept in the status section which are \"forgotten\" whenever the node rejoins the cluster. The cluster uses this area to store a record of how many times a resource has failed on that node but administrators can also read and write to this section by specifying <literal>--type status</literal>."
 msgstr "Specificando <parameter>--type</parameter> nodes, l'amministratore comunica al cluster che l'attributo è persistente. Esistono inoltre attributi transitori presenti nella sezione status che sono &#34;dimenticati&#34; ogni volta che il nodo diventa parte nuovamente del cluster. Il cluster utilizza quest'area per registrare il valore relativo a quante volte una risorsa è fallita su quel nodo, ma gli amministratoripossono inoltre leggere e scrivere in questa sezione specificando  <parameter>--type status</parameter>."
 
 #. Tag: title
@@ -126,12 +123,12 @@ msgstr "Corosync"
 
 #. Tag: para
 #, no-c-format
-msgid "Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node&#39;s IP address."
-msgstr "Aggiungere un nuovo nodo è fattibile installando Corosync e Pacemaker, e copiando <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/ais/authkey</filename> (se esiste) da un nodo esistente. Potrebbe essere necessario modificare l'opzione mcastaddr in modo che corrisponda all'indirizzo IP del nuovo nodo."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "If a log message containing &#34;Invalid digest&#34; appears from Corosync, the keys are not consistent between the machines."
+#, fuzzy, no-c-format
+msgid "If a log message containing \"Invalid digest\" appears from Corosync, the keys are not consistent between the machines."
 msgstr "Se appare tra i log di Corosync un messaggio contenente &#34;Invalid digest&#34;, le chiavi tra le due macchine non sono consistenti."
 
 #. Tag: title
@@ -141,12 +138,12 @@ msgstr "Heartbeat"
 
 #. Tag: para
 #, no-c-format
-msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
-msgstr "A condizione che si sia specificato autojon any all'interno del file <filename>ha.cf</filename>,  aggiungere un nuovo nodo è possibile semplicemente installando heartbeat e copiando i file <filename>ha.cf</filename> e <filename>authkeys</filename> da un nodo esistente."
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> Provided you specified <literal>autojoin any</literal> in <emphasis>ha.cf</emphasis>, adding a new node is as simple as installing heartbeat and copying <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis> from an existing node."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "If not, then after setting up <filename>ha.cf</filename> and <filename>authkeys</filename>, you must use the hb_addnode command before starting the new node."
+#, fuzzy, no-c-format
+msgid "If you don’t want to use <literal>autojoin</literal>, then after setting up <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis>, you must use the <literal>hb_addnode</literal> command before starting the new node."
 msgstr "Se l'opzione autojoin non è stata specificata, allora dopo aver modificato <filename>ha.cf</filename> e <filename>authkeys</filename>, sarà necessario utilizzare il comando bh_addnode prima di avviare il nuovo nodo."
 
 #. Tag: title
@@ -155,8 +152,8 @@ msgid "Removing a Cluster Node"
 msgstr "Rimuovere un nodo"
 
 #. Tag: para
-#, no-c-format
-msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (<replaceable>pcmk-1</replaceable> in the example below)."
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Corosync</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (<emphasis>pcmk-1</emphasis> in the example below)."
 msgstr "Poiché il livello di messaging e membership sono sorgenti autoritative per i nodi del cluster, la loro cancellazione dal CIB non è una via percorribile. Prima quindi è necessario fare in modo che heartbeat dimentichi il nodo in questione (<replaceable>pcmk-1</replaceable> nell'esempio sottostante)."
 
 #. Tag: para
@@ -165,13 +162,13 @@ msgid "On the host to be removed:"
 msgstr "Sull'host da rimuovere:"
 
 #. Tag: para
-#, no-c-format
-msgid "Find and record the node&#39;s Corosync id: <command>crm_node -i</command>"
+#, fuzzy, no-c-format
+msgid "Find and record the node’s Corosync id: <literal>crm_node -i</literal>"
 msgstr "Trova e registra l'id Corosync del nodo: <command>crm_node -i</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Stop the cluster: <command>/etc/init.d/corosync stop</command>"
+#, fuzzy, no-c-format
+msgid "Stop the cluster: <literal>/etc/init.d/corosync stop</literal>"
 msgstr "Stop del cluster: <command>/etc/init.d/corosync stop</command>"
 
 #. Tag: para
@@ -181,32 +178,39 @@ msgstr "Quindi, da uno dei nodi rimasti attivi:"
 
 #. Tag: para
 #, no-c-format
-msgid "Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
-msgstr "Comunica al cluster di dimenticare gli host rimossi: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
+msgid "Tell the cluster to forget about the removed host:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# crm_node -R $COROSYNC_ID"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Only now is it safe to delete the node from the CIB with:"
 msgstr "Solamente ora è sicuro rimuovere il nodo dal CIB mediante:"
 
-#. Tag: para
+#. Tag: programlisting
 #, no-c-format
-msgid "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+msgid ""
+"# cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"_pcmk-1_\"/&gt;'\n"
+"# cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"_pcmk-1_\"/&gt;'"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution. First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below). To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:"
+#, fuzzy, no-c-format
+msgid "First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below). To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:"
 msgstr "Poiché i livelli di messaging e membership sono le sorgenti autoritative per i nodi del cluster, cancellarli dal CIB non è una soluzione percorribile. Prima quindi è necessario fare in modo che heartbeat dimentichi il nodo (pcmk-1 in the example below). Per fare questo, è sufficiente fermare heartbeat sul nodo interessato e successivamente, sul nodo rimasto attivo nel cluster, lanciare:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>hb_delnode pcmk-1</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# hb_delnode pcmk-1"
 msgstr "<command>hb_delnode pcmk-1</command>"
 
 #. Tag: para
@@ -214,15 +218,12 @@ msgstr "<command>hb_delnode pcmk-1</command>"
 msgid "Only then is it safe to delete the node from the CIB with:"
 msgstr "Solo a questo punto è sicuro rimuovere il nodo dal CIB con:"
 
-#. Tag: para
+#. Tag: programlisting
 #, no-c-format
-msgid "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
-
-#. Tag: para
-#, no-c-format
-msgid "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
+msgid ""
+"# cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname=\"pcmk-1\"/&gt;'\n"
+"# cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname=\"pcmk-1\"/&gt;'"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -231,8 +232,8 @@ msgstr "Rimpiazzare un nodo del cluster"
 
 #. Tag: para
 #, no-c-format
-msgid "The five-step guide to replacing an existing cluster node:"
-msgstr "Guida in cinque passi per rimpiazzare un nodo esistente del cluster:"
+msgid "<indexterm> <primary>Corosync</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> The five-step guide to replacing an existing cluster node:"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -250,8 +251,8 @@ msgid "Install the cluster software :-)"
 msgstr "Installare il software del cluster :-)"
 
 #. Tag: para
-#, no-c-format
-msgid "Copy <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) to the new node"
+#, fuzzy, no-c-format
+msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) to the new node"
 msgstr "Copiare <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/ais/authkey</filename> (se esiste) nel nuovo nodo"
 
 #. Tag: para
@@ -261,8 +262,8 @@ msgstr "Avviare il nuovo nodo del cluster"
 
 #. Tag: para
 #, no-c-format
-msgid "The seven-step guide to replacing an existing cluster node:"
-msgstr "Guida in sette passi per rimpiazzare un nodo del cluster esistente:"
+msgid "<indexterm> <primary>Heartbeat</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> The seven-step guide to replacing an existing cluster node:"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -270,8 +271,8 @@ msgid "Give the new machine the same hostname as the old one"
 msgstr "Dare alla nuova macchina lo stesso hostname della vecchia"
 
 #. Tag: para
-#, no-c-format
-msgid "Go to an active cluster node and look up the UUID for the old node in <filename>/var/lib/heartbeat/hostcache</filename>"
+#, fuzzy, no-c-format
+msgid "Go to an active cluster node and look up the UUID for the old node in <emphasis>/var/lib/heartbeat/hostcache</emphasis>"
 msgstr "Su un nodo attivo del cluster localizzale l'UUID del vecchio nodo in <filename>/var/lib/heartbeat/hostcache</filename>"
 
 #. Tag: para
@@ -280,11 +281,38 @@ msgid "Install the cluster software"
 msgstr "Installare il software del cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "Copy ha.cf and authkeys to the new node"
+#, fuzzy, no-c-format
+msgid "Copy <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis> to the new node"
 msgstr "Copiare ha.cf ed authkeys nel nuovo nodo"
 
 #. Tag: para
-#, no-c-format
-msgid "On the new node, populate it&#39;s UUID using crm_uuid -w and the UUID from step 2"
+#, fuzzy, no-c-format
+msgid "On the new node, populate it’s UUID using <literal>crm_uuid -w</literal> and the UUID from step 2"
 msgstr "Sul vecchio nodo, popolare il file con il valore UUID utilizzando crm_uuid -w ed il valore UUID ricavato nel passo 2"
+
+#~ msgid "Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node&#39;s IP address."
+#~ msgstr "Aggiungere un nuovo nodo è fattibile installando Corosync e Pacemaker, e copiando <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/ais/authkey</filename> (se esiste) da un nodo esistente. Potrebbe essere necessario modificare l'opzione mcastaddr in modo che corrisponda all'indirizzo IP del nuovo nodo."
+
+#~ msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
+#~ msgstr "A condizione che si sia specificato autojon any all'interno del file <filename>ha.cf</filename>,  aggiungere un nuovo nodo è possibile semplicemente installando heartbeat e copiando i file <filename>ha.cf</filename> e <filename>authkeys</filename> da un nodo esistente."
+
+#~ msgid "Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
+#~ msgstr "Comunica al cluster di dimenticare gli host rimossi: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command>"
+
+#~ msgid "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+#~ msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+
+#~ msgid "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+#~ msgstr "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;<replaceable>pcmk-1</replaceable>&#34;/&#62;&#39;</command>"
+
+#~ msgid "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
+#~ msgstr "<command>cibadmin --delete --obj_type nodes --crm_xml &#39;&#60;node uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
+
+#~ msgid "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
+#~ msgstr "<command>cibadmin --delete --obj_type status --crm_xml &#39;&#60;node_state uname=&#34;pcmk-1&#34;/&#62;&#39;</command>"
+
+#~ msgid "The five-step guide to replacing an existing cluster node:"
+#~ msgstr "Guida in cinque passi per rimpiazzare un nodo esistente del cluster:"
+
+#~ msgid "The seven-step guide to replacing an existing cluster node:"
+#~ msgstr "Guida in sette passi per rimpiazzare un nodo del cluster esistente:"

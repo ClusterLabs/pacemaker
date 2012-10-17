@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -121,8 +122,8 @@ msgstr "Argumentele pentru utilitarele folosite în linia de comandă au fost ad
 
 #. Tag: para
 #, no-c-format
-msgid "Switched to <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG schema validation and <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> parser"
-msgstr "Am trecut la <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG pentru validarea schemei şi <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> ca parser."
+msgid "Switched to <emphasis>RelaxNG</emphasis> schema validation and <emphasis>libxml2</emphasis> parser"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -130,34 +131,49 @@ msgid "id fields are now XML IDs which have the following limitations:"
 msgstr "câmpurile id sunt acum ID-uri XML care au următoarele limitări:"
 
 #. Tag: para
-#, no-c-format
-msgid "id's cannot contain colons (:)"
+#, fuzzy, no-c-format
+msgid "id’s cannot contain colons (:)"
 msgstr "id-urile nu pot conţine două puncte (:)"
 
 #. Tag: para
-#, no-c-format
-msgid "id's cannot begin with a number"
+#, fuzzy, no-c-format
+msgid "id’s cannot begin with a number"
 msgstr "id-urile nu pot începe cu un număr"
 
 #. Tag: para
-#, no-c-format
-msgid "id's must be globally unique (not just unique for that tag)"
+#, fuzzy, no-c-format
+msgid "id’s must be globally unique (not just unique for that tag)"
 msgstr "id-urile trebuie să fie unice la nivel global (nu unice doar pentru acel tag)"
 
 #. Tag: para
 #, no-c-format
-msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
 msgstr "Unele câmpuri (cum ar fi acelea care fac parte din restricţii care fac referinţă la resurse) sunt IDREF-uri. Acest lucru înseamnă că ele trebuie să facă referinţă către resurse sau obiecte existente pentru a fi validă configurarea. Eliminarea unui obiect care este referenţiat altundeva prin urmare va eşua."
 
 #. Tag: para
 #, no-c-format
-msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0.0.6 cluster for any longer than absolutely necessary."
+msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
 msgstr "Reprezentarea CIB-ului din care se generează hash-ul MD5 folosit pentru a verifica CIB-ul s-a schimbat. Acest lucru înseamnă că fiecare actualizare a CIB-ului va necesita o reîmprospătare completă pe oricare dintre nodurile îmbunătăţite până ce clusterul va fi modernizat complet la 1.0. Acest aspect va duce la o degradare semnificativă a performanţei şi prin urmare este total nerecomandată rularea unui cluster mixt 1.0.0.6 pentru o perioadă mai lungă decât este absolut necesar."
 
 #. Tag: para
-#, no-c-format
-msgid "Ping node information no longer needs to be added to <filename>ha.cf</filename>. Simply include the lists of hosts in your ping resource(s)."
+#, fuzzy, no-c-format
+msgid "Ping node information no longer needs to be added to <emphasis>ha.cf</emphasis>."
 msgstr "Informaţii despre noduri către care se pot efectua verificări de tip ICMP (ping) nu mai trebuie adăugate în <filename>ha.cf</filename> Pur şi simplu includeţi lista de host-uri în resursa(ele) de tip ping."
+
+#. Tag: para
+#, no-c-format
+msgid "Simply include the lists of hosts in your ping resource(s)."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -174,3 +190,5 @@ msgstr "Nu mai este posibil să fie setate meta opţiunile resursei ca attribute
 msgid "Resource and operation defaults are no longer read from <literal>crm_config</literal>. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" /> instead."
 msgstr "Valorile implicite ale resurselor si operaţiunilor nu mai sunt citite din <literal>crm_config</literal>. Vedeţi <xref linkend=\"s-resource-defaults\" /> şi <xref linkend=\"s-operation-defaults\" /> în schimb."
 
+#~ msgid "Switched to <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG schema validation and <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> parser"
+#~ msgstr "Am trecut la <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG pentru validarea schemei şi <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> ca parser."

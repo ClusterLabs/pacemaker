@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:07\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2011-04-19 10:30+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -46,4 +46,9 @@ msgstr "Divisione del libro in capitoli e conferma validazione"
 #. Tag: member
 #, no-c-format
 msgid "Re-organize book for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
+msgstr "Riorganizzazione del lbro per l'utilizzo di <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
+
+#. Tag: member
+#, fuzzy, no-c-format
+msgid "Converted to <ulink url=\"http://www.methods.co.nz/asciidoc\">asciidoc</ulink> (which is converted to docbook for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>)"
 msgstr "Riorganizzazione del lbro per l'utilizzo di <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"

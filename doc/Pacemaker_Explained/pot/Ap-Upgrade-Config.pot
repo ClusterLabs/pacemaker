@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -22,19 +22,19 @@ msgstr ""
 msgid "Preparation"
 msgstr ""
 
-#. Tag: indexterm
+#. Tag: para
 #, no-c-format
-msgid "<primary>Upgrading the Configuration</primary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Configuration</primary><secondary>Upgrading</secondary>"
+msgid "<indexterm> <primary>Upgrading the Configuration</primary> </indexterm> <indexterm> <primary>Configuration</primary><secondary>Upgrading</secondary> </indexterm> <indexterm> <primary>Upgrading</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Download</primary><secondary>DTD</secondary></indexterm> <indexterm significance=\"preferred\"><primary>DTD</primary><secondary>Download</secondary></indexterm> Download the latest DTD<footnote><para><ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /></para></footnote> and ensure your configuration validates."
+msgid "<indexterm> <primary>Download</primary><secondary>DTD</secondary> </indexterm> <indexterm> <primary>DTD</primary> </indexterm> <indexterm> <primary>DTD</primary><secondary>Download</secondary> </indexterm> <indexterm> <primary>Download</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Download the latest <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\">DTD</ulink> and ensure your configuration validates."
 msgstr ""
 
 #. Tag: title
@@ -79,22 +79,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Create a <indexterm><primary>shadow copy</primary><secondary>example for upgrading</secondary></indexterm>shadow copy to work with"
+msgid "Create a shadow copy to work with"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_shadow --create upgrade06</command>"
+msgid "# crm_shadow --create upgrade06"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Verify the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Verify</secondary></indexterm><indexterm significance=\"preferred\"><primary>Verify</primary><secondary>Configuration</secondary></indexterm>configuration is valid"
+msgid "Verify the configuration is valid <indexterm> <primary>Configuration</primary><secondary>Verify</secondary> </indexterm> <indexterm> <primary>Verify</primary> </indexterm><indexterm> <primary>Verify</primary><secondary>Configuration</secondary> </indexterm> <indexterm> <primary>Configuration</primary> </indexterm>"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_verify --live-check</command>"
+msgid "# crm_verify --live-check"
 msgstr ""
 
 #. Tag: para
@@ -109,7 +109,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>cibadmin --upgrade</command>"
+msgid "# cibadmin --upgrade"
 msgstr ""
 
 #. Tag: para
@@ -124,17 +124,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The transformation failed - report a bug or email the project<footnote><para><ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\" /></para></footnote>"
+msgid "The transformation failed - report a bug or <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">email the project</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The transformation was successful but produced an invalid result<footnote> <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation.</para> </footnote>"
+msgid "The transformation was successful but produced an invalid result <footnote><para> The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation. </para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> and/or try the procedure described below under <xref linkend=\"s-upgrade-config-manual\" />."
+msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\">http://clusterlabs.org/wiki/Validation_FAQ</ulink> and/or try the procedure described below under <xref linkend=\"s-upgrade-config-manual\" />"
 msgstr ""
 
 #. Tag: para
@@ -144,7 +144,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_shadow --diff</command>"
+msgid "# crm_shadow --diff"
 msgstr ""
 
 #. Tag: para
@@ -154,12 +154,12 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_shadow --edit</command>"
+msgid "# crm_shadow --edit"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <envar>$EDITOR</envar> environment variable)."
+msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <literal>$EDITOR</literal> environment variable)"
 msgstr ""
 
 #. Tag: para
@@ -174,13 +174,13 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "# <command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>\n"
-"# <command>graphviz upgrade06.dot</command>"
+msgid "# crm_simulate --live-check --save-dotfile upgrade06.dot -S\n"
+"# graphviz upgrade06.dot"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of ptest."
+msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of <literal>crm_simulate</literal>"
 msgstr ""
 
 #. Tag: para
@@ -190,7 +190,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_shadow --commit upgrade06 --force</command>"
+msgid "# crm_shadow --commit upgrade06 --force"
 msgstr ""
 
 #. Tag: para
@@ -205,37 +205,37 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "It is also possible to perform the <indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Upgrade manually</secondary></indexterm>configuration upgrade steps manually. To do this"
+msgid "<indexterm> <primary>Configuration</primary><secondary>Upgrade manually</secondary> </indexterm> <indexterm> <primary>Upgrade manually</primary> </indexterm> It is also possible to perform the configuration upgrade steps manually. To do this"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">version control</ulink>"
+msgid "Locate the <emphasis>upgrade06.xsl</emphasis> conversion script or download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl\">Git</ulink>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Convert the <indexterm><primary>XML</primary><secondary>Convert</secondary></indexterm>XML blob:"
+msgid "Convert the XML blob: <indexterm> <primary>XML</primary><secondary>Convert</secondary> </indexterm> <indexterm> <primary>Convert</primary> </indexterm>"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>xsltproc <filename>/path/to/upgrade06.xsl</filename> <filename>config06.xml</filename> &gt; <filename>config10.xml</filename></command>"
+msgid "# xsltproc /path/to/upgrade06.xsl config06.xml &gt; config10.xml"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Locate the <filename>pacemaker.rng</filename> script."
+msgid "Locate the <emphasis>pacemaker.rng</emphasis> script."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Check the <indexterm significance=\"preferred\"><primary>Validate</primary><secondary>XML</secondary></indexterm><indexterm><primary>xmllint</primary><secondary>Validate XML</secondary></indexterm>XML validity:"
+msgid "Check the XML validity: <indexterm> <primary>Validate Configuration</primary> </indexterm><indexterm> <primary>Configuration</primary><secondary>Validate XML</secondary> </indexterm> <indexterm> <primary>Validate XML</primary> </indexterm>"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>xmllint --relaxng <filename>/path/to/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
+msgid "# xmllint --relaxng /path/to/pacemaker.rng config10.xml"
 msgstr ""
 
 #. Tag: para

@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,6 +14,11 @@ msgstr ""
 #, no-c-format
 msgid "Rules"
 msgstr "Reguli"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<anchor id=\"ch-rules\" xreflabel=\"Chapter 8, Rules\"></anchor> <indexterm> <primary>Resource</primary><secondary>Constraint</secondary><tertiary>Rule</tertiary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary> </indexterm> <indexterm> <primary>Rule</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
 
 #. Tag: para
 #, no-c-format
@@ -25,8 +31,8 @@ msgid "Another use of rules might be to assign machines to different processing 
 msgstr "O altă utilizare a regulilor ar putea fi pentru a asigna maşini la grupuri de procesare diferite (folosind un atribut de nod) bazat pe timp şi mai apoi să folosească acel atribut pentru a crea o restricţie de locaţie."
 
 #. Tag: para
-#, no-c-format
-msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule's <literal>boolean-op</literal> field to determine if the rule ultimately evaluates to <literal>true</literal> or <literal>false</literal>. What happens next depends on the context in which the rule is being used."
+#, fuzzy, no-c-format
+msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule’s <literal>boolean-op</literal> field to determine if the rule ultimately evaluates to <literal>true</literal> or <literal>false</literal>. What happens next depends on the context in which the rule is being used."
 msgstr "Fiecare regulă poate conţine un număr de expresii, expresii de dată şi chiar si alte reguli. Rezultatele expresiilor sunt combinate pe baza câmpului <literal>boolean-op</literal> al regulii pentru a determina dacă regula în ultimă instanţă este evaluată ca <literal>true</literal> sau <literal>false</literal>. Ce se întâmplă mai departe depinde de contextul în care regula este folosită."
 
 #. Tag: title
@@ -44,50 +50,55 @@ msgstr "Câmp"
 msgid "Description"
 msgstr "Descriere"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>role Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>role</tertiary></indexterm> role"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii role</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>role</tertiary></indexterm> role"
+msgid "<literal>role</literal>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "Limits the rule to apply only when the resource is in that role. Allowed values: <emphasis>Started</emphasis>, <literal>Slave,</literal> and <literal>Master</literal>. NOTE: A rule with <literal>role=\"Master\"</literal> can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted."
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Limits the rule to apply only when the resource is in that role. Allowed values: <emphasis>Started</emphasis>, <literal>Slave,</literal> and <literal>Master</literal>. NOTE: A rule with <literal>role=\"Master\"</literal> can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted. <indexterm> <primary>role</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
 msgstr "Limitează regula pentru a se aplica numai când resursa se află în acel rol. Valori permise: <emphasis>Started</emphasis>, <literal>Slave,</literal> și <literal>Master</literal>. NOTĂ: O regulă cu <literal>role=\"Master\"</literal> nu poate determina locaţia iniţială a unei instanţe ale unei clone. Va afecta numai care dintre instanţele active va fi promovată."
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>score</primary><secondary>Rule Property</secondary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>score</tertiary></indexterm> score"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
+msgid "<literal>score</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The score to apply if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
-msgstr "Scorul pe care să îl aplice în cazul în care regula este evaluată la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţiile de locaţie."
+msgid "The score to apply if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints. <indexterm> <primary>score</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>score-attribute Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score-attribute</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>score-attribute</literal>"
+msgstr "Folosind <literal>score-attribute</literal> în loc de <literal>score</literal>"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The node attribute to look up and use as a score if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
-msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula se evaluează la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţii de locaţie."
+msgid "The node attribute to look up and use as a score if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints. <indexterm> <primary>score-attribute</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>score-attribute</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>score-attribute</secondary> </indexterm> <indexterm> <primary>score-attribute</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>boolean-op Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii boolean-op</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
+msgid "<literal>boolean-op</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis> and <literal>or</literal>."
-msgstr "Cum să combinaţi rezultatul mai multor obiecte de expresii. Valori permise: <emphasis>and</emphasis> și <literal>or</literal>."
+msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis> and <literal>or</literal>. <indexterm> <primary>boolean-op</primary><secondary>Constraint Rule</secondary> </indexterm> <indexterm> <primary>Constraint Rule</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Rule</secondary><tertiary>boolean-op</tertiary> </indexterm> <indexterm> <primary>Rule</primary><secondary>boolean-op</secondary> </indexterm> <indexterm> <primary>boolean-op</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Attribute Expressions</secondary></indexterm>Node Attribute Expressions"
-msgstr "<indexterm significance=\"preferred\"><primary>Expresiile Atributelor</primary><secondary>Nodului</secondary></indexterm>Expresiile Atributelor Nodului"
+#, fuzzy, no-c-format
+msgid "Node Attribute Expressions"
+msgstr "Proprietăţile unei Expresii"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraint</secondary><tertiary>Attribute Expression</tertiary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary> </indexterm> <indexterm> <primary>Attribute Expression</primary> </indexterm>"
+msgstr "<indexterm><primary>Regula</primary><secondary>Controlarea Opțiunilor Clusterului</secondary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>Controlat de Reguli</secondary></indexterm> Folosirea Regulilor pentru a Controla Opțiunile Clusterului"
 
 #. Tag: para
 #, no-c-format
@@ -99,40 +110,40 @@ msgstr "Obiectele de expresie sunt folosite pentru a controla o resursă pe baza
 msgid "Properties of an Expression"
 msgstr "Proprietăţile unei Expresii"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>value Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>value</secondary></indexterm> value"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei value</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>value</secondary></indexterm> value"
+msgid "<literal>value</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "User supplied value for comparison"
-msgstr "Valorea furnizată de utilizator pentru comparaţie"
+msgid "User supplied value for comparison <indexterm> <primary>value</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>value</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>value</secondary> </indexterm> <indexterm> <primary>value</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>attribute Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>attribute</secondary></indexterm> attribute"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei attribute</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>attribute</secondary></indexterm> attribute"
+msgid "<literal>attribute</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The node attribute to test"
-msgstr "Atributul nodului care să fie testat"
+msgid "The node attribute to test <indexterm> <primary>attribute</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>attribute</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>attribute</secondary> </indexterm> <indexterm> <primary>attribute</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>type</primary><secondary>Expression Property</secondary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>type</secondary></indexterm> type"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei type</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>type</secondary></indexterm> type"
+msgid "<literal>type</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Determines how the value(s) should be tested. Allowed values: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
-msgstr "Determină cum ar trebui să fie testate valorile. Valori permise: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
+msgid "Determines how the value(s) should be tested. Allowed values: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal> <indexterm> <primary>type</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>type</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>type</secondary> </indexterm> <indexterm> <primary>type</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>operation Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>operation</secondary></indexterm> operation"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei operation</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>operation</secondary></indexterm> operation"
+msgid "<literal>operation</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -140,49 +151,54 @@ msgid "The comparison to perform. Allowed values:"
 msgstr "Comparaţia pe care să o efectueze. Valori permise:"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>lt</literal> - True if the node attribute's value is less than <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>lt</emphasis> - True if the node attribute’s value is less than <literal>value</literal>"
 msgstr "<literal>lt</literal> - Adevărat dacă valoarea atributului nodului este mai mică decât <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>gt</literal> - True if the node attribute's value is greater than <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>gt</emphasis> - True if the node attribute’s value is greater than <literal>value</literal>"
 msgstr "<literal>gt</literal> - Adevărat dacă valoarea atributului nodului este mai mare decât <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>lte</literal> - True if the node attribute's value is less than or equal to <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>lte</emphasis> - True if the node attribute’s value is less than or equal to <literal>value</literal>"
 msgstr "<literal>lte</literal> - Adevărat dacă valoarea atributului nodului este mai mică sau egală cu <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>gte</literal> - True if the node attribute's value is greater than or equal to <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>gte</emphasis> - True if the node attribute’s value is greater than or equal to <literal>value</literal>"
 msgstr "<literal>gte</literal> - Adevărat dacă valoarea atributului nodului este mai mare sau egală cu <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>eq</literal> - True if the node attribute's value is equal to <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>eq</emphasis> - True if the node attribute’s value is equal to <literal>value</literal>"
 msgstr "<literal>eq</literal> - Adevărat dacă valoarea atributului nodului este egală cu <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>ne</literal> - True if the node attribute's value is not equal to <literal>value</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>ne</emphasis> - True if the node attribute’s value is not equal to <literal>value</literal>"
 msgstr "<literal>ne</literal> - Adevărat dacă valoarea atributului nodului nu este egală cu <literal>value</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>defined</literal> - True if the node has the named attribute"
+#, fuzzy, no-c-format
+msgid "* <emphasis>defined</emphasis> - True if the node has the named attribute"
 msgstr "<literal>defined</literal> - Adevărat dacă nodul are un atribut numit"
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>not_defined</literal> - True if the node does not have the named attribute"
-msgstr "<literal>not_defined</literal> - Adevărat dacă nodul nu are un atribut numit"
+msgid "* <emphasis>not_defined</emphasis> - True if the node does not have the named attribute <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Attribute Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Attribute Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Time Based Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expression</primary><secondary>Time/Date Based</secondary></indexterm> Time/Date Based Expressions"
-msgstr "<indexterm significance=\"preferred\"><primary>Expresii Bazate pe Timp</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>Bazate pe Timp/Dată</secondary></indexterm> Expresii Bazate pe Timp/Dată"
+#, fuzzy, no-c-format
+msgid "Time/Date Based Expressions"
+msgstr "Exemple de Expresii Bazate pe Timp"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Time Based Expressions</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraint</secondary><tertiary>Date/Time Expression</tertiary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary> </indexterm> <indexterm> <primary>Date/Time Expression</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
 
 #. Tag: para
 #, no-c-format
@@ -194,30 +210,25 @@ msgstr "După cum sugerează numele, <literal>date_expressions</literal> sunt fo
 msgid "Properties of a Date Expression"
 msgstr "Proprietăţile unei Expresii de Dată"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "start"
-msgstr "început"
+msgid "<literal>start</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A date/time conforming to the ISO8601 specification."
-msgstr "O dată/oră conformă cu specificaţia ISO8601."
+msgid "A date/time conforming to the ISO8601 specification. <indexterm> <primary>start</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>start</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>start</secondary> </indexterm> <indexterm> <primary>start</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "end"
-msgstr "sfârşit"
+msgid "<literal>end</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>."
-msgstr "O dată/oră conformă cu specificaţia ISO8601. Poate fi omisă dacă se furnizează o valoare pentru <literal>start</literal> şi o <literal>duration</literal>."
-
-#. Tag: entry
-#, no-c-format
-msgid "operation"
-msgstr "operaţiune"
+msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>. <indexterm> <primary>end</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>end</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>end</secondary> </indexterm> <indexterm> <primary>end</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -225,34 +236,39 @@ msgid "Compares the current date/time with the start and/or end date, depending 
 msgstr "Compară data/ora curentă cu data de început şi/sau sfârşit, în funcţie de context. Valori permise:"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>gt</literal> - True if the current date/time is after <literal>start</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>gt</emphasis> - True if the current date/time is after <literal>start</literal>"
 msgstr "<literal>gt</literal> - Adevărat dacă data/ora curentă este după <literal>start</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>lt</literal> - True if the current date/time is before <literal>end</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>lt</emphasis> - True if the current date/time is before <literal>end</literal>"
 msgstr "<literal>lt</literal> - Adevărat dacă data/ora curentă este înainte de <literal>end</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "<literal>in-range</literal> - True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
+#, fuzzy, no-c-format
+msgid "* <emphasis>in-range</emphasis> - True if the current date/time is after <literal>start</literal> and before <literal>end</literal>"
 msgstr "<literal>in-range</literal> - Adevărat dacă data/ora curentă este după <literal>start</literal> şi înainte de <literal>end</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>date-spec</literal> - performs a cron-like comparison to the current date/time"
-msgstr "<literal>date-spec</literal> - efectuează o comparaţie similară cron-ului față de ora/data curentă"
+msgid "* <emphasis>date-spec</emphasis> - performs a cron-like comparison to the current date/time <indexterm> <primary>operation</primary><secondary>Constraint Expression</secondary> </indexterm> <indexterm> <primary>Constraint Expression</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date/Time Expression</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Date/Time Expression</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Because the comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq</literal>, <literal>neq</literal>, <literal>gte</literal> and <literal>lte</literal> operators have not been implemented."
+#, fuzzy, no-c-format
+msgid "As these comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq</literal>, <literal>neq</literal>, <literal>gte</literal> and <literal>lte</literal> operators have not been implemented since they would only be valid for a single second."
 msgstr "Deoarece comparaţiile (cu excepţia <literal>date_spec</literal>) includ timpul, operatorii <literal>eq</literal>, <literal>neq</literal>, <literal>gte</literal> şi <literal>lte</literal> nu au fost implementaţi."
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Date Specifications</primary></indexterm> Date Specifications"
-msgstr "<indexterm significance=\"preferred\"><primary>Specificațiile Datei</primary></indexterm> Specificațiile Datei"
+msgid "Date Specifications"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraint</secondary><tertiary>Date Specification</tertiary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
 
 #. Tag: para
 #, no-c-format
@@ -269,110 +285,115 @@ msgstr "De exemplu, <literal>monthdays=\"1\"</literal> se potriveşte pentru pri
 msgid "Properties of a Date Spec"
 msgstr "Proprietăţile unei Specificaţii de Dată"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Date Spec Property</secondary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>id</secondary></indexterm> id"
-msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea Specificației de Dată</secondary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>id</secondary></indexterm> id"
-
-#. Tag: entry
-#, no-c-format
-msgid "A unique name for the date"
-msgstr "Un nume unic pentru dată"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>hours Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>hours</secondary></indexterm> hours"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea hours a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>hours</secondary></indexterm> hours"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 0-23"
-msgstr "Valori permise: 0-23"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>monthdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>monthdays</secondary></indexterm> monthdays"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea monthdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>monthdays</secondary></indexterm> monthdays"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 0-31 (depending on month and year)"
-msgstr "Valori permise: 0-31 (în funcţie de luna curentă şi an)"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>weekdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekdays</secondary></indexterm> weekdays"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekdays</secondary></indexterm> weekdays"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 1-7 (1=Monday, 7=Sunday)"
-msgstr "Valori permise: 1-7 (1=Luni, 7=Duminică)"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>yeardays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>yeardays</secondary></indexterm> yeardays"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea yeardays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>yeardays</secondary></indexterm> yeardays"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 1-366 (depending on the year)"
-msgstr "Valori permise: 1-366 (în funcţie de anul curent)"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>months Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>months</secondary></indexterm> months"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea months a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>months</secondary></indexterm> months"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 1-12"
-msgstr "Valori permise: 1-12"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>weeks Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weeks</secondary></indexterm> weeks"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weeks a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weeks</secondary></indexterm> weeks"
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: 1-53 (depending on weekyear)"
-msgstr "Valori permise: 1-53 (în funcţie câte săptămâni are anul)"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>years Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>years</secondary></indexterm> years"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea years a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>years</secondary></indexterm> years"
-
-#. Tag: entry
-#, no-c-format
-msgid "Year according the Gregorian calendar"
-msgstr "Anul conform calendarului Gregorian"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>weekyears Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekyears</secondary></indexterm> weekyears"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekyears a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekyears</secondary></indexterm> weekyears"
+msgid "<literal>id</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "May differ from Gregorian years; Eg. <literal>2005-001 Ordinal</literal> is also <literal>2005-01-01 Gregorian</literal> is also <literal>2004-W53-6 Weekly</literal>"
-msgstr "Ar putea fi diferit față de anii Gregorieni; Ex. <literal>2005-001 Ordinal</literal> este de asemenea <literal>2005-01-01 Gregorian</literal> şi de asemenea <literal>2004-W53-6 Weekly</literal>"
+msgid "A unique name for the date <indexterm> <primary>id</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>moon Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>moon</secondary></indexterm> moon"
-msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea moon a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>moon</secondary></indexterm> moon"
+msgid "<literal>hours</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added."
-msgstr "Valori permise: 0..7 (0 este pentru lună nouă, 4 pentru pentru lună plină). Nu glumesc, puteţi folosi asta. Acest lucru a fost implementat ca să demonstreze uşurinţa cu care se pot adăuga comparaţii noi."
+msgid "Allowed values: 0-23 <indexterm> <primary>hours</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>hours</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>hours</secondary> </indexterm> <indexterm> <primary>hours</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>monthdays</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 0-31 (depending on month and year) <indexterm> <primary>monthdays</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>monthdays</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>monthdays</secondary> </indexterm> <indexterm> <primary>monthdays</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>weekdays</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 1-7 (1=Monday, 7=Sunday) <indexterm> <primary>weekdays</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>weekdays</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>weekdays</secondary> </indexterm> <indexterm> <primary>weekdays</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>yeardays</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 1-366 (depending on the year) <indexterm> <primary>yeardays</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>yeardays</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>yeardays</secondary> </indexterm> <indexterm> <primary>yeardays</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>months</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 1-12 <indexterm> <primary>months</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>months</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>months</secondary> </indexterm> <indexterm> <primary>months</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>weeks</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 1-53 (depending on weekyear) <indexterm> <primary>weeks</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>weeks</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>weeks</secondary> </indexterm> <indexterm> <primary>weeks</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>years</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Year according the Gregorian calendar <indexterm> <primary>years</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>years</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>years</secondary> </indexterm> <indexterm> <primary>years</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>weekyears</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "May differ from Gregorian years; Eg. <literal>2005-001 Ordinal</literal> is also <literal>2005-01-01 Gregorian</literal> is also <literal>2004-W53-6 Weekly</literal> <indexterm> <primary>weekyears</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>weekyears</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>weekyears</secondary> </indexterm> <indexterm> <primary>weekyears</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>moon</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added. <indexterm> <primary>moon</primary><secondary>Date Specification</secondary> </indexterm> <indexterm> <primary>Date Specification</primary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Date Specification</secondary><tertiary>moon</tertiary> </indexterm> <indexterm> <primary>Date Specification</primary><secondary>moon</secondary> </indexterm> <indexterm> <primary>moon</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Durations Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expressions</primary><secondary>Durations</secondary></indexterm> Durations"
-msgstr "<indexterm significance=\"preferred\"><primary>Expresii de Durată</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>de Durată</secondary></indexterm> de Durată"
+#, fuzzy, no-c-format
+msgid "Durations"
+msgstr "operaţiune"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Duration</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraint</secondary><tertiary>Duration</tertiary> </indexterm> <indexterm> <primary>Constraint</primary><secondary>Duration</secondary> </indexterm> <indexterm> <primary>Duration</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score</tertiary></indexterm> score"
 
 #. Tag: para
 #, no-c-format
@@ -384,19 +405,24 @@ msgstr "Duratele sunt folosite pentru a calcula valoarea pentru <literal>end</li
 msgid "Sample Time Based Expressions"
 msgstr "Exemple de Expresii Bazate pe Timp"
 
+#. Tag: para
+#, no-c-format
+msgid "A small sample of how time based expressions can be used."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "True if now is any time in the year 2005"
 msgstr "Adevărat dacă acum este oricând în anul 2005"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule1\"&gt;\n"
+"&lt;rule id=\"rule1\"&gt;\n"
 "   &lt;date_expression id=\"date_expr1\" start=\"2005-001\" operation=\"in_range\"&gt;\n"
 "    &lt;duration years=\"1\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule1\"&gt;\n"
 "   &lt;date_expression id=\"date_expr1\" start=\"2005-001\" operation=\"in_range\"&gt;\n"
@@ -405,18 +431,18 @@ msgstr ""
 "  &lt;/rule&gt;  "
 
 #. Tag: title
-#, no-c-format
-msgid "Equivalent expression."
+#, fuzzy, no-c-format
+msgid "Equivalent expression"
 msgstr "Expresie echivalentă."
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule2\"&gt;\n"
+"&lt;rule id=\"rule2\"&gt;\n"
 "   &lt;date_expression id=\"date_expr2\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec years=\"2005\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule2\"&gt;\n"
 "   &lt;date_expression id=\"date_expr2\" operation=\"date_spec\"&gt;\n"
@@ -430,13 +456,13 @@ msgid "9am-5pm, Mon-Friday"
 msgstr "9am-5pm, Lun-Vineri"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule3\"&gt;\n"
+"&lt;rule id=\"rule3\"&gt;\n"
 "   &lt;date_expression id=\"date_expr3\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule3\"&gt;\n"
 "   &lt;date_expression id=\"date_expr3\" operation=\"date_spec\"&gt;\n"
@@ -455,16 +481,16 @@ msgid "9am-6pm, Mon-Friday, or all day saturday"
 msgstr "9am-6pm, Lun-Vineri sau toată ziua sâmbătă"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
+"&lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
 "   &lt;date_expression id=\"date_expr4-1\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec hours=\"9-16\" days=\"1-5\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
 "   &lt;date_expression id=\"date_expr4-2\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec days=\"6\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule4\" boolean_op=\"or\"&gt;\n"
 "   &lt;date_expression id=\"date_expr4-1\" operation=\"date_spec\"&gt;\n"
@@ -481,9 +507,9 @@ msgid "9am-5pm or 9pm-12pm, Mon-Friday"
 msgstr "9am-5pm sau 9pm-12pm, Lun-Vineri"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
+"&lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
 "   &lt;rule id=\"rule5-nested1\" boolean_op=\"or\"&gt;\n"
 "    &lt;date_expression id=\"date_expr5-1\" operation=\"date_spec\"&gt;\n"
 "     &lt;date_spec hours=\"9-16\"/&gt;\n"
@@ -495,7 +521,7 @@ msgid ""
 "   &lt;date_expression id=\"date_expr5-3\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec days=\"1-5\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"  &lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule5\" boolean_op=\"and\"&gt;\n"
 "   &lt;rule id=\"rule5-nested1\" boolean_op=\"or\"&gt;\n"
@@ -517,15 +543,15 @@ msgid "Mondays in March 2005"
 msgstr "Zilele de Luni în Martie 2005"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
+"&lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr6-1\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec weekdays=\"1\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
 "   &lt;date_expression id=\"date_expr6-2\" operation=\"in_range\"\n"
 "     start=\"2005-03-01\" end=\"2005-04-01\"/&gt;\n"
-"  &lt;/rule&gt;  "
+"  &lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule6\" boolean_op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr6-1\" operation=\"date_spec\"&gt;\n"
@@ -536,18 +562,13 @@ msgstr ""
 "  &lt;/rule&gt;  "
 
 #. Tag: para
-#, no-c-format
-msgid "NOTE: Because no time is specified, 00:00:00 is implied."
+#, fuzzy, no-c-format
+msgid "Because no time is specified, 00:00:00 is implied."
 msgstr "NOTĂ: Pentru că nici un timp nu este specificat, 00:00:00 este subînţeles."
 
 #. Tag: para
-#, no-c-format
-msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01."
-msgstr "Acest lucru înseamnă că şirul include tot din 2005-03-01 dar nimic din 2005-04-01."
-
-#. Tag: para
-#, no-c-format
-msgid "You may wish to write <literal>end=\"2005-03-31T23:59:59\"</literal> to avoid confusion."
+#, fuzzy, no-c-format
+msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01. You may wish to write <literal>end=\"2005-03-31T23:59:59\"</literal> to avoid confusion."
 msgstr "Aţi dori să scrieţi <literal>end=\"2005-03-31T23:59:59\"</literal> pentru a evita confuzia."
 
 #. Tag: title
@@ -556,13 +577,13 @@ msgid "A full moon on Friday the 13th"
 msgstr "O lună plină pe data de Vineri 13"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
+"&lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr7\" operation=\"date_spec\"&gt;\n"
 "    &lt;date_spec weekdays=\"5\" monthdays=\"13\" moon=\"4\"/&gt;\n"
 "   &lt;/date_expression&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"rule7\" boolean_op=\"and\"&gt;\n"
 "   &lt;date_expression id=\"date_expr7\" operation=\"date_spec\"&gt;\n"
@@ -571,13 +592,18 @@ msgstr ""
 "  &lt;/rule&gt;  "
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Rule</primary><secondary>Determine Resource Location</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Location, Determine by Rules</secondary></indexterm> Using Rules to Determine Resource Location"
+#, fuzzy, no-c-format
+msgid "Using Rules to Determine Resource Location"
+msgstr "Folosind Reguli pentru a Controla Opţiunile Resurselor"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Rule</primary><secondary>Determine Resource Location</secondary> </indexterm> <indexterm> <primary>Determine Resource Location</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Location</secondary><tertiary>Determine by Rules</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>Determine by Rules</secondary> </indexterm> <indexterm> <primary>Determine by Rules</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Regulă</primary><secondary>Determină Locația Resursei</secondary></indexterm> <indexterm><primary>Resursă</primary><secondary>Locația, Determinată de Reguli</secondary></indexterm> Folosirea de Reguli pentru a Determina Locația Resursei"
 
 #. Tag: para
-#, no-c-format
-msgid "If the constraint's outer-most rule evaluates to <literal>false</literal>, the cluster treats the constraint as if it was not there. When the rule evaluates to <literal>true</literal>, the node's preference for running the resource is updated with the score associated with the rule."
+#, fuzzy, no-c-format
+msgid "If the constraint’s outer-most rule evaluates to <literal>false</literal>, the cluster treats the constraint as if it was not there. When the rule evaluates to <literal>true</literal>, the node’s preference for running the resource is updated with the score associated with the rule."
 msgstr "Dacă regula cea mai exterioară a unei restricţii este evaluată la <literal>false</literal>, clusterul se poartă cu restricţia ca şi cum nu ar fi fost acolo. Când regula este evaluată ca <literal>true</literal>, preferinţa nodului pentru rularea resursei este actualizată cu scorul asociat cu această regulă."
 
 #. Tag: para
@@ -591,10 +617,10 @@ msgid "Prevent myApacheRsc from running on c001n03"
 msgstr "Împiedică myApacheRsc de a rula pe c001n03"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "&lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"\n"
-"          score=\"-INFINITY\" node=\"c001n03\"/&gt; "
+"              score=\"-INFINITY\" node=\"c001n03\"/&gt;"
 msgstr ""
 "&lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"\n"
 "          score=\"-INFINITY\" node=\"c001n03\"/&gt; "
@@ -610,14 +636,14 @@ msgid "Prevent myApacheRsc from running on c001n03 - expanded version"
 msgstr "Împiedică myApacheRsc de a rula pe c001n03 - versiunea extinsă"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"&gt;\n"
+"&lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"&gt;\n"
 "    &lt;rule id=\"dont-run-apache-rule\" score=\"-INFINITY\"&gt;\n"
 "      &lt;expression id=\"dont-run-apache-expr\" attribute=\"#uname\"\n"
 "        operation=\"eq\" value=\"c00n03\"/&gt;\n"
 "    &lt;/rule&gt;\n"
-"  &lt;/rsc_location&gt;  "
+"&lt;/rsc_location&gt;"
 msgstr ""
 " &lt;rsc_location id=\"dont-run-apache-on-c001n03\" rsc=\"myApacheRsc\"&gt;\n"
 "    &lt;rule id=\"dont-run-apache-rule\" score=\"-INFINITY\"&gt;\n"
@@ -632,8 +658,8 @@ msgid "The advantage of using the expanded form is that one can then add extra c
 msgstr "Avantajul folosirii formei extinse este că se pot adăuga clauze suplimentare la regulă, cum ar fi limitarea regulii astfel încât să se aplice doar în momente specifice ale zilei sau zilelor săptămânii (acest lucru este discutat în secţiunile următoare)."
 
 #. Tag: para
-#, no-c-format
-msgid "It also allows us to match on node properties other than its name. If we rated each machine's CPU power such that the cluster had the following nodes section:"
+#, fuzzy, no-c-format
+msgid "It also allows us to match on node properties other than its name. If we rated each machine’s CPU power such that the cluster had the following nodes section:"
 msgstr "Este folosit de asemenea pentru a realiza potriviri pe proprietăţi ale nodului altele decât numele acestuia. Dacă am apreciat puterea procesorului fiecărei maşini astfel încât clusterul să aibe următoarea secţiune de noduri: "
 
 #. Tag: title
@@ -642,20 +668,20 @@ msgid "A sample nodes section for use with score-attribute"
 msgstr "Un exemplu de secţiune de noduri pentru utilizarea cu score-attribute"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;nodes&gt;\n"
-"     &lt;node id=\"uuid1\" uname=\"c001n01\" type=\"normal\"&gt;\n"
+"&lt;nodes&gt;\n"
+"   &lt;node id=\"uuid1\" uname=\"c001n01\" type=\"normal\"&gt;\n"
 "      &lt;instance_attributes id=\"uuid1-custom_attrs\"&gt;\n"
 "        &lt;nvpair id=\"uuid1-cpu_mips\" name=\"cpu_mips\" value=\"1234\"/&gt;\n"
 "      &lt;/instance_attributes&gt;\n"
-"     &lt;/node&gt;\n"
-"     &lt;node id=\"uuid2\" uname=\"c001n02\" type=\"normal\"&gt;\n"
+"   &lt;/node&gt;\n"
+"   &lt;node id=\"uuid2\" uname=\"c001n02\" type=\"normal\"&gt;\n"
 "      &lt;instance_attributes id=\"uuid2-custom_attrs\"&gt;\n"
 "        &lt;nvpair id=\"uuid2-cpu_mips\" name=\"cpu_mips\" value=\"5678\"/&gt;\n"
 "      &lt;/instance_attributes&gt;\n"
-"     &lt;/node&gt;\n"
-"    &lt;/nodes&gt;  "
+"   &lt;/node&gt;\n"
+"&lt;/nodes&gt;"
 msgstr ""
 " &lt;nodes&gt;\n"
 "     &lt;node id=\"uuid1\" uname=\"c001n01\" type=\"normal\"&gt;\n"
@@ -676,12 +702,12 @@ msgid "then we could prevent resources from running on underpowered machines wit
 msgstr "atunci am putea împiedica resursele de a rula pe maşini fără nivelul de procesare cerut cu această regulă"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
-"        &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
-"          operation=\"lt\" value=\"3000\"/&gt;\n"
-"  &lt;/rule&gt;  "
+"&lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
+"   &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
+"               operation=\"lt\" value=\"3000\"/&gt;\n"
+"&lt;/rule&gt;"
 msgstr ""
 " &lt;rule id=\"need-more-power-rule\" score=\"-INFINITY\"&gt;\n"
 "        &lt;expression id=\" need-more-power-expr\" attribute=\"cpu_mips\"\n"
@@ -704,8 +730,8 @@ msgid "Using Rules to Control Resource Options"
 msgstr "Folosind Reguli pentru a Controla Opţiunile Resurselor"
 
 #. Tag: para
-#, no-c-format
-msgid "Often some cluster nodes will be different from their peers; sometimes these differences (the location of a binary or the names of network interfaces) require resources to be configured differently depending on the machine they're hosted on."
+#, fuzzy, no-c-format
+msgid "Often some cluster nodes will be different from their peers; sometimes these differences (the location of a binary or the names of network interfaces) require resources to be configured differently depending on the machine they’re hosted on."
 msgstr "Adeseori unele noduri din cluster vor fi diferite de altele, câteodată aceste diferenţe (locaţia unui binar sau numele interfeţelor de reţea) necesită ca şi resursele să fie configurate diferit în funcţie de maşina pe care sunt găzduite."
 
 #. Tag: para
@@ -724,9 +750,9 @@ msgid "Defining different resource options based on the node name"
 msgstr "Definirea de opţiuni de resursă diferite pe baza numelui nodului"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"&lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
 "   &lt;instance_attributes id=\"special-node1\" score=\"3\"&gt;\n"
 "    &lt;rule id=\"node1-special-case\" score=\"INFINITY\" &gt;\n"
 "     &lt;expression id=\"node1-special-case-expr\" attribute=\"#uname\"\n"
@@ -746,7 +772,7 @@ msgid ""
 "    &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
 "    &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
 "   &lt;/instance_attributes&gt;\n"
-"  &lt;/primitive&gt;  "
+"&lt;/primitive&gt;"
 msgstr ""
 " &lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
 "   &lt;instance_attributes id=\"special-node1\" score=\"3\"&gt;\n"
@@ -776,8 +802,13 @@ msgid "The order in which <literal>instance_attributes</literal> objects are eva
 msgstr "Ordinea în care obiectele <literal>instance_attributes</literal> sunt evaluate este determinată de către scorul acestora (cel mai mare la cel mai mic). Dacă nu este furnizat, scorul va avea valoarea implicită zero şi obiectele cu un scor egal sunt procesate în ordinea listată. Dacă obiectul <literal>instance_attributes</literal> nu are o <literal>rule</literal> sau are o <literal>rule</literal> care este evaluată la <literal>true</literal>, atunci pentru orice parametru pentru care resursa nu are înca o valoare, resursa va folosi valorile parametrilor definite de obiectul <literal>instance_attributes</literal>."
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm><primary>Rule</primary><secondary>Controlling Cluster Options</secondary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>Controlled by Rules</secondary></indexterm> Using Rules to Control Cluster Options"
+#, fuzzy, no-c-format
+msgid "Using Rules to Control Cluster Options"
+msgstr "Folosind Reguli pentru a Controla Opţiunile Resurselor"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Rule</primary><secondary>Controlling Cluster Options</secondary> </indexterm> <indexterm> <primary>Controlling Cluster Options</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Setting Options with Rules</secondary> </indexterm> <indexterm> <primary>Setting Options with Rules</primary> </indexterm>"
 msgstr "<indexterm><primary>Regula</primary><secondary>Controlarea Opțiunilor Clusterului</secondary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>Controlat de Reguli</secondary></indexterm> Folosirea Regulilor pentru a Controla Opțiunile Clusterului"
 
 #. Tag: para
@@ -786,8 +817,8 @@ msgid "Controlling cluster options is achieved in much the same manner as specif
 msgstr "Controlarea opţiunilor clusterului este reuşită în mare parte prin aceeaşi manieră ca şi specificarea diverselor opţiuni pentru resurse pe noduri diferite."
 
 #. Tag: para
-#, no-c-format
-msgid "The difference is that because they are cluster options, one cannot (or should not, because they won't work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
+#, fuzzy, no-c-format
+msgid "The difference is that because they are cluster options, one cannot (or should not, because they won’t work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
 msgstr "Diferenţa este că din cauza că sunt opţiuni de cluster, nu ar trebui să puteţi (sau nu ar trebui să pentru că acestea nu funcţionează) să folosiţi expresii bazate pe atribute. Următorul exemplu ilustrează cum să setaţi o valoare <literal>resource-stickiness</literal> diferită în timpul şi în afara orelor de lucru. Acest lucru permite resurselor să se mute înapoi în mod automat la gazdele cele mai preferate, dar la un moment în care (teoretic) nu interferează cu activităţile de business."
 
 #. Tag: title
@@ -796,21 +827,21 @@ msgid "Change <literal>resource-stickiness</literal> during working hours"
 msgstr "Schimbarea <literal>resource-stickiness</literal> în timpul orelor de lucru"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-" &lt;rsc_defaults&gt;\n"
+"&lt;rsc_defaults&gt;\n"
 "   &lt;meta_attributes id=\"core-hours\" score=\"2\"&gt;\n"
-"    &lt;rule id=\"core-hour-rule\" score=\"0\"&gt;\n"
-"      &lt;date_expression id=\"nine-to-five-Mon-to-Fri\" operation=\"date_spec\"&gt;\n"
-"        &lt;date_spec id=\"nine-to-five-Mon-to-Fri-spec\" hours=\"9-16\" weekdays=\"1-5\"/&gt;\n"
-"      &lt;/date_expression&gt;\n"
-"    &lt;/rule&gt;\n"
-"    &lt;nvpair id=\"core-stickiness\" name=\"resource-stickiness\" value=\"INFINITY\"/&gt;\n"
+"      &lt;rule id=\"core-hour-rule\" score=\"0\"&gt;\n"
+"        &lt;date_expression id=\"nine-to-five-Mon-to-Fri\" operation=\"date_spec\"&gt;\n"
+"          &lt;date_spec id=\"nine-to-five-Mon-to-Fri-spec\" hours=\"9-16\" weekdays=\"1-5\"/&gt;\n"
+"        &lt;/date_expression&gt;\n"
+"      &lt;/rule&gt;\n"
+"      &lt;nvpair id=\"core-stickiness\" name=\"resource-stickiness\" value=\"INFINITY\"/&gt;\n"
 "   &lt;/meta_attributes&gt;\n"
 "   &lt;meta_attributes id=\"after-hours\" score=\"1\" &gt;\n"
-"    &lt;nvpair id=\"after-stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"      &lt;nvpair id=\"after-stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
 "   &lt;/meta_attributes&gt;\n"
-"  &lt;/rsc_defaults&gt;  "
+"&lt;/rsc_defaults&gt;"
 msgstr ""
 " &lt;rsc_defaults&gt;\n"
 "   &lt;meta_attributes id=\"core-hours\" score=\"2\"&gt;\n"
@@ -832,8 +863,8 @@ msgid "Ensuring Time Based Rules Take Effect"
 msgstr "Asigurarea că Regulile Bazate pe Timp Iau Efect"
 
 #. Tag: para
-#, no-c-format
-msgid "A Pacemaker cluster is an event driven system. As such, it won't recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
+#, fuzzy, no-c-format
+msgid "A Pacemaker cluster is an event driven system. As such, it won’t recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
 msgstr "Un cluster Pacemaker este un sistem condus de evenimente. Prin urmare, nu va recalcula cel mai bun loc pentru a rula resursele decât dacă ceva (cum ar fi eşecul unei resurse sau modificarea configuraţiei) se întâmplă. Asta poate însemna că o restricţie a locaţiei care permite resursei X să ruleze numai între 9am şi 5pm nu este aplicată în mod obligatoriu."
 
 #. Tag: para
@@ -842,7 +873,138 @@ msgid "If you rely on time based rules, it is essential that you set the <litera
 msgstr "Dacă vă bazaţi pe reguli bazate pe timp, este esenţial să setaţi opţiunea <literal>cluster-recheck-interval</literal>. Aceasta spune clusterului să recalculeze periodic starea ideală a clusterului. De exemplu, dacă setaţi <literal>cluster-recheck-interval=5m</literal>, atunci cândva între 9:00 şi 9:05 clusterul va detecta că trebuie să pornească resursa X, iar între 17:00 şi 17:05 va realiza că trebuie să o oprească."
 
 #. Tag: para
-#, no-c-format
-msgid "Note that the timing of the actual start and stop actions depends on what else needs to be performed first."
+#, fuzzy, no-c-format
+msgid "Note that the timing of the actual start and stop actions depends on what else needs to be performed first ."
 msgstr "Ţineţi cont că momentul efectiv de pornire şi oprire al acţiunilor depinde de ce alte lucruri trebuie efectuate mai întâi."
 
+#~ msgid "<indexterm significance=\"preferred\"><primary>role Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>role</tertiary></indexterm> role"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii role</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>role</tertiary></indexterm> role"
+
+#~ msgid "The score to apply if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
+#~ msgstr "Scorul pe care să îl aplice în cazul în care regula este evaluată la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţiile de locaţie."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>score-attribute Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii score-attribute</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>score-attribute</tertiary></indexterm> score-attribute"
+
+#~ msgid "The node attribute to look up and use as a score if the rule evaluates to <literal>true</literal>. Limited to use in rules that are part of location constraints."
+#~ msgstr "Atributul nodului pe care să îl caute şi pe care să îl folosească drept scor dacă regula se evaluează la <literal>true</literal>. Limitată la folosirea în reguli care sunt parte din restricţii de locaţie."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>boolean-op Rule Property</primary></indexterm> <indexterm><primary>Rule</primary><secondary>Properties</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Regulii boolean-op</primary></indexterm> <indexterm><primary>Proprietățile</primary><secondary>Regulii</secondary><tertiary>boolean-op</tertiary></indexterm> boolean-op"
+
+#~ msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis> and <literal>or</literal>."
+#~ msgstr "Cum să combinaţi rezultatul mai multor obiecte de expresii. Valori permise: <emphasis>and</emphasis> și <literal>or</literal>."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Attribute Expressions</secondary></indexterm>Node Attribute Expressions"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Expresiile Atributelor</primary><secondary>Nodului</secondary></indexterm>Expresiile Atributelor Nodului"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>value Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>value</secondary></indexterm> value"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei value</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>value</secondary></indexterm> value"
+
+#~ msgid "User supplied value for comparison"
+#~ msgstr "Valorea furnizată de utilizator pentru comparaţie"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>attribute Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>attribute</secondary></indexterm> attribute"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei attribute</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>attribute</secondary></indexterm> attribute"
+
+#~ msgid "The node attribute to test"
+#~ msgstr "Atributul nodului care să fie testat"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>type</primary><secondary>Expression Property</secondary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>type</secondary></indexterm> type"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei type</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>type</secondary></indexterm> type"
+
+#~ msgid "Determines how the value(s) should be tested. Allowed values: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
+#~ msgstr "Determină cum ar trebui să fie testate valorile. Valori permise: <emphasis>string</emphasis>, <literal>integer</literal>, <literal>version</literal>"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>operation Expression Property</primary></indexterm> <indexterm><primary>Expression Properties</primary><secondary>operation</secondary></indexterm> operation"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea Expresiei operation</primary></indexterm> <indexterm><primary>Proprietățile Proprietății</primary><secondary>operation</secondary></indexterm> operation"
+
+#~ msgid "<literal>not_defined</literal> - True if the node does not have the named attribute"
+#~ msgstr "<literal>not_defined</literal> - Adevărat dacă nodul nu are un atribut numit"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Time Based Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expression</primary><secondary>Time/Date Based</secondary></indexterm> Time/Date Based Expressions"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Expresii Bazate pe Timp</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>Bazate pe Timp/Dată</secondary></indexterm> Expresii Bazate pe Timp/Dată"
+
+#~ msgid "start"
+#~ msgstr "început"
+
+#~ msgid "A date/time conforming to the ISO8601 specification."
+#~ msgstr "O dată/oră conformă cu specificaţia ISO8601."
+
+#~ msgid "end"
+#~ msgstr "sfârşit"
+
+#~ msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for <literal>start</literal> and a <literal>duration</literal>."
+#~ msgstr "O dată/oră conformă cu specificaţia ISO8601. Poate fi omisă dacă se furnizează o valoare pentru <literal>start</literal> şi o <literal>duration</literal>."
+
+#~ msgid "<literal>date-spec</literal> - performs a cron-like comparison to the current date/time"
+#~ msgstr "<literal>date-spec</literal> - efectuează o comparaţie similară cron-ului față de ora/data curentă"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Date Specifications</primary></indexterm> Date Specifications"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Specificațiile Datei</primary></indexterm> Specificațiile Datei"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Date Spec Property</secondary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>id</secondary></indexterm> id"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Proprietatea Specificației de Dată</secondary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>id</secondary></indexterm> id"
+
+#~ msgid "A unique name for the date"
+#~ msgstr "Un nume unic pentru dată"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>hours Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>hours</secondary></indexterm> hours"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea hours a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>hours</secondary></indexterm> hours"
+
+#~ msgid "Allowed values: 0-23"
+#~ msgstr "Valori permise: 0-23"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>monthdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>monthdays</secondary></indexterm> monthdays"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea monthdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>monthdays</secondary></indexterm> monthdays"
+
+#~ msgid "Allowed values: 0-31 (depending on month and year)"
+#~ msgstr "Valori permise: 0-31 (în funcţie de luna curentă şi an)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>weekdays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekdays</secondary></indexterm> weekdays"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekdays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekdays</secondary></indexterm> weekdays"
+
+#~ msgid "Allowed values: 1-7 (1=Monday, 7=Sunday)"
+#~ msgstr "Valori permise: 1-7 (1=Luni, 7=Duminică)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>yeardays Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>yeardays</secondary></indexterm> yeardays"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea yeardays a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>yeardays</secondary></indexterm> yeardays"
+
+#~ msgid "Allowed values: 1-366 (depending on the year)"
+#~ msgstr "Valori permise: 1-366 (în funcţie de anul curent)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>months Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>months</secondary></indexterm> months"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea months a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>months</secondary></indexterm> months"
+
+#~ msgid "Allowed values: 1-12"
+#~ msgstr "Valori permise: 1-12"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>weeks Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weeks</secondary></indexterm> weeks"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weeks a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weeks</secondary></indexterm> weeks"
+
+#~ msgid "Allowed values: 1-53 (depending on weekyear)"
+#~ msgstr "Valori permise: 1-53 (în funcţie câte săptămâni are anul)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>years Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>years</secondary></indexterm> years"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea years a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>years</secondary></indexterm> years"
+
+#~ msgid "Year according the Gregorian calendar"
+#~ msgstr "Anul conform calendarului Gregorian"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>weekyears Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>weekyears</secondary></indexterm> weekyears"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea weekyears a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>weekyears</secondary></indexterm> weekyears"
+
+#~ msgid "May differ from Gregorian years; Eg. <literal>2005-001 Ordinal</literal> is also <literal>2005-01-01 Gregorian</literal> is also <literal>2004-W53-6 Weekly</literal>"
+#~ msgstr "Ar putea fi diferit față de anii Gregorieni; Ex. <literal>2005-001 Ordinal</literal> este de asemenea <literal>2005-01-01 Gregorian</literal> şi de asemenea <literal>2004-W53-6 Weekly</literal>"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>moon Date Spec Property</primary></indexterm> <indexterm><primary>Date Spec Properties</primary><secondary>moon</secondary></indexterm> moon"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Proprietatea moon a Specificației de Dată</primary></indexterm> <indexterm><primary>Proprietățile Specificației de Dată</primary><secondary>moon</secondary></indexterm> moon"
+
+#~ msgid "Allowed values: 0-7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added."
+#~ msgstr "Valori permise: 0..7 (0 este pentru lună nouă, 4 pentru pentru lună plină). Nu glumesc, puteţi folosi asta. Acest lucru a fost implementat ca să demonstreze uşurinţa cu care se pot adăuga comparaţii noi."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Durations Expressions</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expressions</primary><secondary>Durations</secondary></indexterm> Durations"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Expresii de Durată</primary></indexterm> <indexterm significance=\"preferred\"><primary>Expresii</primary><secondary>de Durată</secondary></indexterm> de Durată"
+
+#~ msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01."
+#~ msgstr "Acest lucru înseamnă că şirul include tot din 2005-03-01 dar nimic din 2005-04-01."

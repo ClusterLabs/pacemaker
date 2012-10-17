@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -17,14 +17,24 @@ msgstr ""
 msgid "Installation"
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "The following text may no longer be accurate in some places."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
-msgid "Choosing a <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>choosing one</secondary></indexterm>Cluster Stack"
+msgid "Choosing a Cluster Stack"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company's needs and strategic direction. Pacemaker currently functions equally well with both stacks."
+msgid "<indexterm> <primary>Cluster</primary><secondary>Choosing Between Heartbeat and Corosync</secondary> </indexterm> <indexterm> <primary>Choosing Between Heartbeat and Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company’s needs and strategic direction. Pacemaker currently functions equally well with both stacks."
 msgstr ""
 
 #. Tag: para
@@ -39,17 +49,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>Corosync</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Corosync</primary></indexterm>Corosync is an OSI Certified implementation of an industry standard (the Service Availability Forum Application Interface Specification)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "Using Corosync gives your applications access to the following additional cluster services"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "checkpoint service"
 msgstr ""
 
 #. Tag: para
@@ -72,11 +72,6 @@ msgstr ""
 msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
 msgstr ""
 
-#. Tag: para
-#, no-c-format
-msgid "To date, Pacemaker has received less real-world testing on Corosync than it has on <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>Heartbeat</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Heartbeat</primary></indexterm>Heartbeat."
-msgstr ""
-
 #. Tag: title
 #, no-c-format
 msgid "Enabling Pacemaker"
@@ -89,7 +84,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The Corosync configuration is normally located in <filename>/etc/corosync/corosync.conf</filename> and an example for a machine with an address of <literal>1.2.3.4</literal> in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
+msgid "The Corosync configuration is normally located in <emphasis>/etc/corosync/corosync.conf</emphasis> and an example for a machine with an address of <literal>1.2.3.4</literal> in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
 msgstr ""
 
 #. Tag: title
@@ -99,14 +94,14 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "totem {\n"
+msgid "  totem {\n"
 "      version: 2\n"
 "      secauth: off\n"
 "      threads: 0\n"
 "      interface {\n"
 "          ringnumber: 0\n"
 "          bindnetaddr: 1.2.3.4\n"
-"          mcastaddr: 226.94.1.1\n"
+"          mcastaddr: 239.255.1.1\n"
 "          mcastport: 1234\n"
 "      }\n"
 "  }\n"
@@ -117,8 +112,7 @@ msgid "totem {\n"
 "  }\n"
 "  amf {\n"
 "      mode: disabled\n"
-"  }\n"
-"	"
+"  }"
 msgstr ""
 
 #. Tag: para
@@ -128,7 +122,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<footnote> <para>Please consult the <ulink url=\"http://www.corosync.org/\">Corosync website</ulink> and documentation for details on enabling encryption and peer authentication for the cluster.</para> </footnote>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgid "The interesting part of the configuration is the totem section. This is where we define how the node can communicate with the rest of the cluster and what protocol version and options (including encryption <footnote><para> Please consult the Corosync website (<ulink url=\"http://www.corosync.org/\">http://www.corosync.org/</ulink>) and documentation for details on enabling encryption and peer authentication for the cluster. </para></footnote> ) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
 msgstr ""
 
 #. Tag: para
@@ -143,9 +137,8 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
-"  mcastaddr: ff05::1\n"
-"	  "
+msgid "  bindnetaddr: fec0::1:a800:4ff:fe00:20\n"
+"  mcastaddr: ff05::1"
 msgstr ""
 
 #. Tag: para
@@ -167,13 +160,12 @@ msgid "aisexec {\n"
 "service {\n"
 "    name: pacemaker\n"
 "    ver: 0\n"
-"}\n"
-"	  "
+"}"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster needs to be run as root so that its child processes (the <literal>lrmd</literal> in particular) have sufficient privileges to perform the actions requested of it. After all, a cluster manager that can't add an IP address or start apache is of little use."
+msgid "The cluster needs to be run as root so that its child processes (the <literal>lrmd</literal> in particular) have sufficient privileges to perform the actions requested of it. After all, a cluster manager that can’t add an IP address or start apache is of little use."
 msgstr ""
 
 #. Tag: para
@@ -188,7 +180,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Add the following to a functional <filename>ha.cf</filename> configuration file and restart Heartbeat:"
+msgid "Add the following to a functional <emphasis>ha.cf</emphasis> configuration file and restart Heartbeat:"
 msgstr ""
 
 #. Tag: title
@@ -198,7 +190,6 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "crm respawn\n"
-"	  "
+msgid "crm respawn"
 msgstr ""
 

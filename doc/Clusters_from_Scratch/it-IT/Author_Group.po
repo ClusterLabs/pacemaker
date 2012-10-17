@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-07-07T15:51:40\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-07-07T15:51:40\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -27,3 +28,37 @@ msgstr ""
 msgid "Red Hat"
 msgstr ""
 
+#. Tag: contrib
+#, no-c-format
+msgid "Primary author"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Raoul"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Scarazzini"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Italian translation"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Dan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Frîncu"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Romanian translation"
+msgstr ""

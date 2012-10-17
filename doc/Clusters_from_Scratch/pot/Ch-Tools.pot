@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:57\n"
-"PO-Revision-Date: 2012-02-27T09:17:57\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
+"PO-Revision-Date: 2012-10-17T05:19:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,165 +29,114 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since Pacemaker 1.0, this has all changed and we have an integrated, scriptable, cluster shell that hides all the messy XML scaffolding. It even allows you to queue up several changes at once and commit them atomically."
+msgid "All of that has been greatly simplified with the creation of unified command-line shells (and GUIs) that hide all the messy XML scaffolding."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Take some time to familiarize yourself with what it can do."
+msgid "These shells take all the individual aspects required for managing and configuring a cluster, and packs them into one simple to use command line tool."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "# <command>crm --help</command>"
-msgstr ""
-
-#. Tag: screen
-#, no-c-format
-msgid "usage:\n"
-"    crm [-D display_type] [-f file] [-hF] [args]\n"
-"\n"
-"    Use crm without arguments for an interactive session.\n"
-"    Supply one or more arguments for a \"single-shot\" use.\n"
-"    Specify with -f a file which contains a script. Use '-' for\n"
-"    standard input or use pipe/redirection.\n"
-"\n"
-"    crm displays cli format configurations using a color scheme\n"
-"    and/or in uppercase. Pick one of \"color\" or \"uppercase\", or\n"
-"    use \"-D color,uppercase\" if you want colorful uppercase.\n"
-"    Get plain output by \"-D plain\". The default may be set in\n"
-"    user preferences (options).\n"
-"\n"
-"    -F stands for force, if set all operations will behave as if\n"
-"    force was specified on the line (e.g. configure commit).\n"
-"\n"
-"Examples:\n"
-"\n"
-"    # crm -f stopapp2.cli\n"
-"    # crm &lt; stopapp2.cli\n"
-"    # crm resource stop global_www\n"
-"    # crm status"
+msgid "They even allow you to queue up several changes at once and commit them atomically."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The primary tool for monitoring the status of the cluster is crm_mon (also available as crm status). It can be run in a variety of modes and has a number of output options. To find out about any of the tools that come with Pacemaker, simply invoke them with the --help option or consult the included man pages. Both sets of output are created from the tool, and so will always be in sync with each other and the tool itself."
+msgid "There are currently two command-line shells that people use, <literal>pcs</literal> and <literal>crmsh</literal>. This edition of Clusters from Scratch is based on <literal>pcs</literal>. Start by taking some time to familiarize yourself with what it can do."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, the Pacemaker version and supported cluster stack(s) is available via the --feature option to pacemakerd."
+msgid "The two shells share many concepts but the scope, layout and syntax does differ, so make sure you read the version of this guide that corresponds to the software installed on your system."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "# <command>pacemakerd --features</command>"
+msgid "Since <literal>pcs</literal> has the ability to manage all aspects of the cluster (both corosync and pacemaker), it requires a specific cluster stack to be in use, (corosync 2.0 with votequorum + Pacemaker version &gt;= 1.8)."
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "Pacemaker 1.1.6 (Build: 7249214)\n"
-" Supporting:  generated-manpages agent-manpages ascii-docs publican-docs ncurses trace-logging libqb  heartbeat corosync-native libesmtp"
+msgid "# pcs"
 msgstr ""
 
-#. Tag: para
+#. Tag: literallayout
 #, no-c-format
-msgid "# <command>pacemakerd --help</command>"
-msgstr ""
-
-#. Tag: screen
-#, no-c-format
-msgid "pacemakerd - Start/Stop Pacemaker\n"
+msgid "Control and configure pacemaker and corosync.\n"
 "\n"
-"Usage: pacemakerd mode [options]\n"
 "Options:\n"
-" -?, --help 		This text\n"
-" -$, --version 		Version information\n"
-" -V, --verbose 		Increase debug output\n"
-" -S, --shutdown 		Instruct Pacemaker to shutdown on this machine\n"
-" -F, --features 		Display the full version and list of features Pacemaker was built with\n"
+"    -h          Display usage and exit\n"
+"    -f file     Perform actions on file instead of active CIB\n"
 "\n"
-"Additional Options:\n"
-" -f, --foreground 		Run in the foreground instead of as a daemon\n"
-" -p, --pid-file=value		(Advanced) Daemon pid file location\n"
-"\n"
-"Report bugs to pacemaker@oss.clusterlabs.org"
+"Commands:\n"
+"    resource    Manage cluster resources\n"
+"    cluster     Configure cluster options and nodes\n"
+"    stonith     Configure fence devices\n"
+"    property    Set pacemaker properties\n"
+"    constraint  Set resource constraints\n"
+"    status      View cluster status"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "# <command>crm_mon --help</command>"
+msgid "As you can see, the different aspects of cluster management are broken up into categories: resource, cluster, stonith, property, constraint, and status. To discover the functionality available in each of these categories, one can issue the command <emphasis>pcs &lt;category&gt; help</emphasis>. Below is an example of all the options available under the status category."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# pcs status help"
+msgstr ""
+
+#. Tag: literallayout
+#, no-c-format
+msgid "Usage: pcs status [commands]...\n"
+"View current cluster and resource status\n"
+"Commands:\n"
+"    status\n"
+"        View all information about the cluster and resources\n"
+"\n"
+"    status resources\n"
+"        View current status of cluster resources\n"
+"\n"
+"    status groups\n"
+"        View currently configured groups and their resources\n"
+"\n"
+"    status cluster\n"
+"        View current cluster status\n"
+"\n"
+"    status corosync\n"
+"        View current corosync status\n"
+"\n"
+"    status nodes [corosync]\n"
+"        View current status of nodes from pacemaker, or if corosync is\n"
+"        specified, print nodes currently configured in corosync\n"
+"\n"
+"    status actions\n"
+"        View failed actions\n"
+"\n"
+"    status pcsd &lt;node&gt; ...\n"
+"        Show the current status of pcsd on the specified nodes\n"
+"\n"
+"    status xml\n"
+"        View xml version of status (output from crm_mon -r -1 -X)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, if you are interested in the Pacemaker version and supported cluster stack(s) available with your current Pacemaker installation, the pacemakerd --features option is available to you."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# pacemakerd --features"
 msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "crm_mon - Provides a summary of cluster's current state.\n"
-"\n"
-"Outputs varying levels of detail in a number of different formats.\n"
-"\n"
-"Usage: crm_mon mode [options]\n"
-"Options:\n"
-" -?, --help 		This text\n"
-" -$, --version 		Version information\n"
-" -V, --verbose 		Increase debug output\n"
-" -Q, --quiet 		Display only essential output\n"
-"\n"
-"Modes:\n"
-" -h, --as-html=value	Write cluster status to the named html file\n"
-" -X, --as-xml=value	Write cluster status to the named xml file\n"
-" -w, --web-cgi 		Web mode with output suitable for cgi\n"
-" -s, --simple-status 	Display the cluster status once as a simple one line output (suitable for nagios)\n"
-" -T, --mail-to=value	Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix\n"
-"\n"
-"Display Options:\n"
-" -n, --group-by-node 		Group resources by node\n"
-" -r, --inactive 		Display inactive resources\n"
-" -f, --failcounts 		Display resource fail counts\n"
-" -o, --operations 		Display resource operation history\n"
-" -t, --timing-details 		Display resource operation history with timing details\n"
-" -A, --show-node-attributes 	Display node attributes\n"
-"\n"
-"\n"
-"Additional Options:\n"
-" -i, --interval=value		Update frequency in seconds\n"
-" -1, --one-shot 		Display the cluster status once on the console and exit\n"
-" -N, --disable-ncurses 		Disable the use of ncurses\n"
-" -d, --daemonize 		Run in the background as a daemon\n"
-" -p, --pid-file=value		(Advanced) Daemon pid file location\n"
-" -F, --mail-from=value		Mail alerts should come from the named user\n"
-" -H, --mail-host=value		Mail alerts should be sent via the named host\n"
-" -P, --mail-prefix=value	Subjects for mail alerts should start with this string\n"
-" -E, --external-agent=value	A program to run when resource operations take place.\n"
-" -e, --external-recipient=value	A recipient for your program (assuming you want the program to send something to someone).\n"
-"\n"
-"Examples:\n"
-"\n"
-"Display the cluster status on the console with updates as they occur:\n"
-"\n"
-"	# crm_mon\n"
-"\n"
-"Display the cluster status on the console just once then exit:\n"
-"\n"
-"	# crm_mon -1\n"
-"\n"
-"Display your cluster status, group resources by node, and include inactive resources in the list:\n"
-"\n"
-"	# crm_mon --group-by-node --inactive\n"
-"\n"
-"Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n"
-"\n"
-"	# crm_mon --daemonize --as-html /path/to/docroot/filename.html\n"
-"\n"
-"Start crm_mon and export the current cluster status to an xml file, then exit.:\n"
-"\n"
-"	# crm_mon --one-shot --as-xml /path/to/docroot/filename.xml\n"
-"\n"
-"Start crm_mon as a background daemon and have it send email alerts:\n"
-"\n"
-"	# crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com\n"
-"\n"
-"\n"
-"Report bugs to pacemaker@oss.clusterlabs.org"
+msgid "Pacemaker 1.1.8 (Build: 434edfa)\n"
+" Supporting:  generated-manpages agent-manpages ascii-docs publican-docs ncurses gcov libqb-logging libqb-ipc lha-fencing upstart systemd  heartbeat corosync-native snmp"
 msgstr ""
 
 #. Tag: para

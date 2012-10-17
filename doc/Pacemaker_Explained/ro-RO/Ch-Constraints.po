@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,20 +15,15 @@ msgstr ""
 msgid "Resource Constraints"
 msgstr "Restricţiile Resurselor"
 
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary> </indexterm> <indexterm> <primary>Constraints</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>scor</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>scor</secondary></indexterm> scor"
+
 #. Tag: title
 #, no-c-format
 msgid "Scores"
 msgstr "Scoruri"
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Resource</primary><secondary>Constraints</secondary>"
-msgstr "<primary>Restricțiile</primary><secondary>Resurselor</secondary>"
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Constraints</primary><secondary>for Resources</secondary>"
-msgstr "<primary>Restricții</primary><secondary>pentru Resurse</secondary>"
 
 #. Tag: para
 #, no-c-format
@@ -35,8 +31,8 @@ msgid "Scores of all kinds are integral to how the cluster works. Practically ev
 msgstr "Scorurile de toate tipurile sunt parte integrală din cum funcţionează clusterul. Practic orice de la mutarea unei resurse la a decide care resursă să fie oprită într-un cluster degradat este atinsă prin manipularea scorurilor în vreun fel."
 
 #. Tag: para
-#, no-c-format
-msgid "Scores are calculated on a per-resource basis and any node with a negative score for a resource can't run that resource. After calculating the scores for a resource, the cluster then chooses the node with the highest one."
+#, fuzzy, no-c-format
+msgid "Scores are calculated on a per-resource basis and any node with a negative score for a resource can’t run that resource. After calculating the scores for a resource, the cluster then chooses the node with the highest one."
 msgstr "Scorurile sunt calculate la nivel de resursă şi orice nod cu un scor negativ pentru o resursă nu poate rula acea resursă. După calcularea scorurilor pentru o resursă, clusterul alege mai apoi nodul cu scorul cel mai mare."
 
 #. Tag: title
@@ -70,8 +66,8 @@ msgid "Deciding Which Nodes a Resource Can Run On"
 msgstr "Decizând pe Care Noduri Poate Rula o Resursă"
 
 #. Tag: para
-#, no-c-format
-msgid "There are two alternative strategies for specifying which nodes a resources can run on. One way is to say that by default they can run anywhere and then create location constraints for nodes that are not allowed. The other option is to have nodes \"opt-in\"... to start with nothing able to run anywhere and selectively enable allowed nodes."
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Location</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary> </indexterm> <indexterm> <primary>Location</primary> </indexterm> There are two alternative strategies for specifying which nodes a resources can run on. One way is to say that by default they can run anywhere and then create location constraints for nodes that are not allowed. The other option is to have nodes \"opt-in\"… to start with nothing able to run anywhere and selectively enable allowed nodes."
 msgstr "Sunt două strategii alternative pentru specificarea nodurilor pe care poate rula o resursă. Un mod este acela de a spune că în mod implicit acestea pot rula oriunde şi apoi să se creeze restricţii de locaţie pentru nodurile pe care acestea nu sunt permise. Cealaltă opţiune este cea de a avea noduri care să \"opt-in\"... de a porni fără a permite la nimic de a rula nicăieri şi de a activa în mod selectiv nodurile permise."
 
 #. Tag: title
@@ -94,49 +90,59 @@ msgstr "Câmp"
 msgid "Description"
 msgstr "Descriere"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Constraint Field</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm> entry&gt;id"
-msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Câmp de Restricție</primary><secondary>id</secondary></indexterm> entry&gt;id"
+msgid "<literal>id</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A unique name for the constraint"
-msgstr "Un nume unic pentru restricţie"
+msgid "A unique name for the constraint <indexterm> <primary>id</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>rsc Constraint Field</primary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm> rsc"
-msgstr "<indexterm significance=\"preferred\"><primary>rsc Câmp de Restricție</primary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm> rsc"
+msgid "<literal>rsc</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A resource name"
-msgstr "Un nume de resursă"
+msgid "A resource name <indexterm> <primary>rsc</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Constraint Field</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>node</secondary></indexterm> node"
-msgstr "<indexterm significance=\"preferred\"><primary>Nod</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>nod</secondary></indexterm> nod"
+msgid "<literal>node</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A node's uname"
-msgstr "uname-ul unui nod"
+msgid "A node’s name <indexterm> <primary>node</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>node</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>node</secondary> </indexterm> <indexterm> <primary>node</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>score</primary><secondary>Constraint Field</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>score</secondary></indexterm> score"
-msgstr "<indexterm significance=\"preferred\"><primary>scor</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>scor</secondary></indexterm> scor"
+msgid "<literal>score</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node."
+msgstr "Valorile pozitive indică faptul că resursa ar trebui să ruleze pe acelaşi nod. Valorile negative indică faptul că resursele ar trebui să nu ruleze pe acelaşi nod. Valorile +/- <literal>INFINITY</literal> schimbâ \"ar trebui\" în \"trebuie\"."
+
+#. Tag: para
 #, no-c-format
-msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\"."
-msgstr "Valorile pozitive indică faptul că resursa ar trebui să ruleze pe acelaşi nod. Valorile negative indică faptul că resursele ar trebui să nu ruleze pe acelaşi nod. Valorile +/- <literal>INFINITY</literal> schimbă \"ar putea\"/\"nu ar putea\" în \"trebuie\"/\"nu trebuie\"."
+msgid "Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\". <indexterm> <primary>score</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Asymmetrical Opt-In Clusters</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Type</primary><secondary>Asymmetrical Opt-In</secondary></indexterm> Asymmetrical \"Opt-In\" Clusters"
+msgid "Asymmetrical \"Opt-In\" Clusters"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Asymmetrical Opt-In Clusters</primary> </indexterm> <indexterm> <primary>Cluster Type</primary><secondary>Asymmetrical Opt-In</secondary> </indexterm> <indexterm> <primary>Asymmetrical Opt-In</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Clustere Opt-In Asimetrice</primary></indexterm> <indexterm significance=\"preferred\"><primary>Tip de Cluster</primary><secondary>Opt-In Asimetric</secondary></indexterm> Clustere \"Opt-In\" Asimetrice"
 
 #. Tag: para
@@ -145,8 +151,8 @@ msgid "To create an opt-in cluster, start by preventing resources from running a
 msgstr "Pentru a crea un cluster opt-in, porniţi prin a împiedica resursele din a rula oriunde în mod implicit:"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_attribute --attr-name symmetric-cluster --attr-value false</command>"
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name symmetric-cluster --attr-value false"
 msgstr "<command>crm_attribute --attr-name symmetric-cluster --attr-value false</command>"
 
 #. Tag: para
@@ -160,34 +166,40 @@ msgid "Example set of opt-in location constraints"
 msgstr "Exemplu de restricţii de locaţie opt-in"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "&lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-3\" score=\"0\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-3\" score=\"0\"/&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-3\" score=\"0\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-3\" score=\"0\"/&gt;\n"
 "  &lt;/constraints&gt;  "
-msgstr ""
-"&lt;constraints&gt;\n"                                                                                                                        
-"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"                                                     
-"    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-3\" score=\"0\"/&gt;\n"                                                       
-"    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"                                                      
-"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-3\" score=\"0\"/&gt;\n"                                                        
-"  &lt;/constraints&gt;  "
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Symmetrical Opt-Out Clusters</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Type</primary><secondary>Symmetrical Opt-Out</secondary></indexterm> Symmetrical \"Opt-Out\" Clusters"
+msgid "Symmetrical \"Opt-Out\" Clusters"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Symmetrical Opt-Out Clusters</primary> </indexterm> <indexterm> <primary>Cluster Type</primary><secondary>Symmetrical Opt-Out</secondary> </indexterm> <indexterm> <primary>Symmetrical Opt-Out</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Clustere Opt-Out Simetrice</primary></indexterm> <indexterm significance=\"preferred\"><primary>Tip de Cluster</primary><secondary>Opt-Out Simetrice</secondary></indexterm> Clustere \"Opt-Out\" Simetrice"
 
 #. Tag: para
-#, no-c-format
-msgid "To create an opt-out cluster, start by allowing resources to run anywhere by default"
+#, fuzzy, no-c-format
+msgid "To create an opt-out cluster, start by allowing resources to run anywhere by default:"
 msgstr "Pentru a crea un cluster opt-out, începeţi prin a permite resurselor să ruleze oriunde în mod implicit"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_attribute --attr-name symmetric-cluster --attr-value true</command>"
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name symmetric-cluster --attr-value true"
 msgstr "<command>crm_attribute --attr-name symmetric-cluster --attr-value true</command>"
 
 #. Tag: para
@@ -201,19 +213,20 @@ msgid "Example set of opt-out location constraints"
 msgstr "Exemplu de restricţii de locaţie opt-out"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2-dont-run\" rsc=\"Webserver\" node=\"sles-2\" score=\"-INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3-dont-run\" rsc=\"Database\" node=\"sles-1\" score=\"-INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
-" &lt;constraints&gt;\n"                                                                                                                       
-"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"                                                     
-"    &lt;rsc_location id=\"loc-2-dont-run\" rsc=\"Webserver\" node=\"sles-2\" score=\"-INFINITY\"/&gt;\n"                                      
-"    &lt;rsc_location id=\"loc-3-dont-run\" rsc=\"Database\" node=\"sles-1\" score=\"-INFINITY\"/&gt;\n"                                       
-"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"                                                      
+" &lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"200\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-2-dont-run\" rsc=\"Webserver\" node=\"sles-2\" score=\"-INFINITY\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-3-dont-run\" rsc=\"Database\" node=\"sles-1\" score=\"-INFINITY\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
 "  &lt;/constraints&gt;  "
 
 #. Tag: para
@@ -237,26 +250,27 @@ msgid "Example of two resources that prefer two nodes equally"
 msgstr "Exemplu de două resurse care preferă două noduri în mod egal"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
+"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"INFINITY\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-1\" score=\"500\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"300\"/&gt;\n"
+"    &lt;rsc_location id=\"loc-5\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
+"&lt;/constraints&gt;"
+msgstr ""
+" &lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-1\" score=\"500\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"300\"/&gt;\n"
 "    &lt;rsc_location id=\"loc-5\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"
 "  &lt;/constraints&gt;  "
-msgstr ""
-" &lt;constraints&gt;\n"                                                                                                                       
-"    &lt;rsc_location id=\"loc-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"INFINITY\"/&gt;\n"                                                
-"    &lt;rsc_location id=\"loc-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"INFINITY\"/&gt;\n"                                                
-"    &lt;rsc_location id=\"loc-3\" rsc=\"Database\" node=\"sles-1\" score=\"500\"/&gt;\n"                                                      
-"    &lt;rsc_location id=\"loc-4\" rsc=\"Database\" node=\"sles-2\" score=\"300\"/&gt;\n"                                                      
-"    &lt;rsc_location id=\"loc-5\" rsc=\"Database\" node=\"sles-2\" score=\"200\"/&gt;\n"                                                      
-"  &lt;/constraints&gt;  "
 
 #. Tag: para
-#, no-c-format
-msgid "In the example above, assuming no other constraints and an inactive cluster, Webserver would probably be placed on sles-1 and Database on sles-2. It would likely have placed Webserver based on the node's uname and Database based on the desire to spread the resource load evenly across the cluster. However other factors can also be involved in more complex configurations."
+#, fuzzy, no-c-format
+msgid "In the example above, assuming no other constraints and an inactive cluster, Webserver would probably be placed on sles-1 and Database on sles-2. It would likely have placed Webserver based on the node’s uname and Database based on the desire to spread the resource load evenly across the cluster. However other factors can also be involved in more complex configurations."
 msgstr "În exemplul de mai sus, mergând pe presupunerea că nu sunt alte restricţii şi un cluster inactiv, Webserver ar fi probabil plasat pe sles-1 şi Database pe sles-2. Este probabil să fi plasat Webserver pe baza uname-ului nodului şi Database bazat pe dorinţa de a împrăştia încărcarea cu resurse în mod egal de-a lungul clusterului. Totuşi alţi factori pot fi implicaţi de asemenea în configuraţii mai complexe."
 
 #. Tag: title
@@ -266,58 +280,78 @@ msgstr "Specificând Ordinea în care Resursele ar Trebui să Pornească/Opreasc
 
 #. Tag: para
 #, no-c-format
-msgid "The way to specify the order in which resources should start is by creating <literal>rsc_order</literal> constraints."
-msgstr "Modul în care se poate specifica ordinea în care resursele ar trebui să pornească este prin crearea de restricţii <literal>rsc_order</literal>"
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Ordering</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary> </indexterm> <indexterm> <primary>Ordering</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Start Order</secondary> </indexterm> <indexterm> <primary>Start Order</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> The way to specify the order in which resources should start is by creating <literal>rsc_order</literal> constraints."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Properties of an Ordering Constraint"
 msgstr "Proprietăţile unei Restricţii de Ordonare"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "id"
-msgstr "id"
+msgid "A unique name for the constraint <indexterm> <primary>id</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "first"
-msgstr "first"
+msgid "<literal>first</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The name of a resource that must be started before the <literal>then</literal> resource is allowed to."
-msgstr "Numele unei resurse care trebuie pornită înainte de a îi permite resursei <literal>then</literal> să pornească"
+msgid "The name of a resource that must be started before the <literal>then</literal> resource is allowed to. <indexterm> <primary>first</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first</secondary> </indexterm> <indexterm> <primary>first</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "then"
-msgstr "then"
+msgid "<literal>then</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The name of a resource. This resource will start after the <literal>first</literal> resource."
-msgstr "Numele unei resurse. Această resursă va porni după resursa <literal>first</literal>."
+msgid "The name of a resource. This resource will start after the <literal>first</literal> resource. <indexterm> <primary>then</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then</secondary> </indexterm> <indexterm> <primary>then</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "score"
-msgstr "scor"
+msgid "<literal>kind</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "If greater than zero, the constraint is mandatory. Otherwise it is only a suggestion. Default value: <emphasis>INFINITY</emphasis>"
-msgstr "Dacă este mai mare decât zero, restricţia este obligatorie. Altfel este doar o sugestie. Valoarea implicită: <emphasis>INFINITY</emphasis>"
+msgid "How to enforce the constraint. (<emphasis>Since 1.1.2</emphasis>)"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "symmetrical"
-msgstr "simetric"
+msgid "* Optional - Just a suggestion. Only applies if both resources are starting/stopping."
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "If true, which is the default, stop the resources in the reverse order. Default value: <emphasis>true</emphasis>"
-msgstr "Dacă este adevărat, care este şi valoarea implicită, opreşte resursele în ordine inversă. Valoarea implicită: <emphasis>true</emphasis>"
+msgid "* Mandatory - Always. If <emphasis>first</emphasis> is stopping or cannot be started, <emphasis>then</emphasis> must be stopped."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "* Serialize - Ensure that no two stop/start actions occur concurrently for a set of resources."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>kind</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>kind</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>kind</secondary> </indexterm> <indexterm> <primary>kind</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>symmetrical</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If true, which is the default, stop the resources in the reverse order. Default value: <emphasis>true</emphasis> <indexterm> <primary>symmetrical</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary><secondary>symmetrical</secondary> </indexterm> <indexterm> <primary>symmetrical</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -360,15 +394,16 @@ msgid "Example of an optional and mandatory ordering constraint"
 msgstr "Exemplu de restricţie de ordonare obligatorie şi recomandată"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\" first=\"Database\" then=\"Webserver\" /&gt;\n"
 "    &lt;rsc_order id=\"order-2\" first=\"IP\" then=\"Webserver\" score=\"0\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
-" &lt;constraints&gt;\n"                                                                                                                       
-"    &lt;rsc_order id=\"order-1\" first=\"Database\" then=\"Webserver\" /&gt;\n"                                                               
-"    &lt;rsc_order id=\"order-2\" first=\"IP\" then=\"Webserver\" score=\"0\"/&gt;\n"                                                          
+" &lt;constraints&gt;\n"
+"    &lt;rsc_order id=\"order-1\" first=\"Database\" then=\"Webserver\" /&gt;\n"
+"    &lt;rsc_order id=\"order-2\" first=\"IP\" then=\"Webserver\" score=\"0\"/&gt;\n"
 "  &lt;/constraints&gt;  "
 
 #. Tag: para
@@ -383,17 +418,27 @@ msgstr "Plasarea Resurselor Relativă la alte Resurse"
 
 #. Tag: para
 #, no-c-format
-msgid "When the location of one resource depends on the location of another one, we call this colocation."
-msgstr "Când locaţia unei resurse depinde de locaţia altei resurse, numim acest lucru colocare."
+msgid "<indexterm> <primary>Resource</primary><secondary>Constraints</secondary><tertiary>Colocation</tertiary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary> </indexterm> <indexterm> <primary>Colocation</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Location Relative to other Resources</secondary> </indexterm> <indexterm> <primary>Location Relative to other Resources</primary> </indexterm> When the location of one resource depends on the location of another one, we call this colocation."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "There is an important side-effect of creating a colocation constraint between two resources: it affects the order in which resources are assigned to a node. If you think about it, it's somewhat obvious. You can't place A relative to B unless you know where B is<footnote> <para>While the human brain is sophisticated enough to read the constraint in any order and choose the correct one depending on the situation, the cluster is not quite so smart. Yet.</para> </footnote>. So when you are creating colocation constraints, it is important to consider whether you should colocate A with B or B with A."
+#, fuzzy, no-c-format
+msgid "There is an important side-effect of creating a colocation constraint between two resources: it affects the order in which resources are assigned to a node. If you think about it, it’s somewhat obvious. You can’t place A relative to B unless you know where B is. <footnote><para> While the human brain is sophisticated enough to read the constraint in any order and choose the correct one depending on the situation, the cluster is not quite so smart. Yet. </para></footnote>"
 msgstr "Există un efect secundar important ca urmare a creării unei restricţii de colocare între două resurse, şi anume acela că afectează ordinea în care resursele sunt asignate unui nod. Dacă stai să te gândeşti, este oarecum evident. Nu poţi plasa A relativ la B decât dacă ştii unde B este<footnote> <para>În timp ce creierul uman este destul de sofisticat pentru a citi o restricţie în orice ordine şi de a alege pe cea corectă în funcţie de situaţie, clusterul nu este atât de inteligent. Încă.</para> </footnote>. Aşa că atunci când creaţi restricţii de colocare, este important să ţineţi cont de dacă vreţi să colocaţi A cu B sau B cu A."
 
 #. Tag: para
 #, no-c-format
-msgid "Another thing to keep in mind is that, assuming A is collocated with B, the cluster will also take into account A's preferences when deciding which node to choose for B. For a detailed look at exactly how this occurs, see the <ulink url=\"http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf\">Colocation Explained</ulink> document."
+msgid "So when you are creating colocation constraints, it is important to consider whether you should colocate A with B or B with A."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Another thing to keep in mind is that, assuming A is collocated with B, the cluster will also take into account A’s preferences when deciding which node to choose for B."
+msgstr "Un alt aspect care merită reţinut este acela că, presupunând că A este colocat cu B, clusterul va lua în considerare preferinţele lui A când va decide care nod să aleagă pentru B. Pentru o vedere detaliată asupra modului exact în care se întâmplă acest lucru, vedeţi documentul  <ulink url=\"http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf\">Colocarea Explicată</ulink>."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "For a detailed look at exactly how this occurs, see the <ulink url=\"http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf\">Colocation Explained</ulink> document."
 msgstr "Un alt aspect care merită reţinut este acela că, presupunând că A este colocat cu B, clusterul va lua în considerare preferinţele lui A când va decide care nod să aleagă pentru B. Pentru o vedere detaliată asupra modului exact în care se întâmplă acest lucru, vedeţi documentul  <ulink url=\"http://www.clusterlabs.org/mediawiki/images/6/61/Colocation_Explained.pdf\">Colocarea Explicată</ulink>."
 
 #. Tag: title
@@ -401,35 +446,30 @@ msgstr "Un alt aspect care merită reţinut este acela că, presupunând că A e
 msgid "Properties of a Collocation Constraint"
 msgstr "Proprietăţile unei Restricţii de Colocare"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A unique name for the constraint."
-msgstr "Un nume unic pentru restricţie"
+msgid "A unique name for the constraint. <indexterm> <primary>id</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "rsc"
-msgstr "rsc"
+msgid "The colocation source. If the constraint cannot be satisfied, the cluster may decide not to allow the resource to run at all. <indexterm> <primary>rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The colocation source. If the constraint cannot be satisfied, the cluster may decide not to allow the resource to run at all."
-msgstr "Sursa colocării. Dacă restricţia nu poate fi satisfăcută, clusterul poate decide să nu permită resursei să ruleze deloc."
+msgid "<literal>with-rsc</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "with-rsc"
-msgstr "with-rsc"
+msgid "The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the <literal>rsc</literal> field. <indexterm> <primary>with-rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>with-rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>with-rsc</secondary> </indexterm> <indexterm> <primary>with-rsc</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the <literal>rsc</literal> field."
-msgstr "Destinaţia colocării. Clusterul va decide unde să plaseze această resursă mai întâi şi apoi va decide unde să plaseze resursa din câmpul rsc"
-
-#. Tag: entry
-#, no-c-format
-msgid "Positive values indicate the resource should run on the same node. Negative values indicate the resources should not run on the same node. Values of +/- <literal>INFINITY</literal> change \"should\" to \"must\"."
-msgstr "Valorile pozitive indică faptul că resursa ar trebui să ruleze pe acelaşi nod. Valorile negative indică faptul că resursele ar trebui să nu ruleze pe acelaşi nod. Valorile +/- <literal>INFINITY</literal> schimbâ \"ar trebui\" în \"trebuie\"."
+msgid "Positive values indicate the resource should run on the same node. Negative values indicate the resources should not run on the same node. Values of +/- <literal>INFINITY</literal> change \"should\" to \"must\". <indexterm> <primary>score</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>score</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>score</secondary> </indexterm> <indexterm> <primary>score</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -437,8 +477,8 @@ msgid "Mandatory Placement"
 msgstr "Plasament Obligatoriu"
 
 #. Tag: para
-#, no-c-format
-msgid "Mandatory placement occurs any time the constraint's score is <literal>+INFINITY</literal> or <literal>-INFINITY</literal>. In such cases, if the constraint can't be satisfied, then the <literal>rsc</literal> resource is not permitted to run. For <literal>score=INFINITY</literal>, this includes cases where the <literal>with-rsc</literal> resource is not active."
+#, fuzzy, no-c-format
+msgid "Mandatory placement occurs any time the constraint’s score is <literal>+INFINITY</literal> or <literal>-INFINITY</literal>. In such cases, if the constraint can’t be satisfied, then the <literal>rsc</literal> resource is not permitted to run. For <literal>score=INFINITY</literal>, this includes cases where the <literal>with-rsc</literal> resource is not active."
 msgstr "Plasamentul obligatoriu se întâmplă oricând scorul restricţiei este <literal>+INFINITY</literal> sau <literal>-INFINITY</literal>. În astfel de cazuri, dacă restricţia poate fi satisfăcută, atunci resursei <literal>rsc</literal> nu îi este permis să ruleze. Pentru <literal>scor=INFINITY</literal>, acest aspect include cazuri în care resursa <literal>with-rsc</literal> nu este activă."
 
 #. Tag: para
@@ -452,21 +492,20 @@ msgid "An example colocation constraint"
 msgstr "Un exemplu de restricţie de colocare"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "&lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;\n"
-"	  "
+#, fuzzy, no-c-format
+msgid "&lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;"
 msgstr ""
 " &lt;rsc_colocation id=\"colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"INFINITY\"/&gt;\n"
-"	  "
+"\t  "
 
 #. Tag: para
-#, no-c-format
-msgid "Remember, because <literal>INFINITY</literal> was used, if <literal>resource2</literal> can't run on any of the cluster nodes (for whatever reason) then <literal>resource1</literal> will not be allowed to run."
+#, fuzzy, no-c-format
+msgid "Remember, because <literal>INFINITY</literal> was used, if <literal>resource2</literal> can’t run on any of the cluster nodes (for whatever reason) then <literal>resource1</literal> will not be allowed to run."
 msgstr "Ţineţi minte, datorită faptului că <literal>INFINITY</literal> a fost folosit, dacă <literal>resource2</literal> nu poate rula pe nici unul din nodurile clusterului (indiferent de motiv) atunci <literal>resource1</literal> nu îi va fi permis să ruleze."
 
 #. Tag: para
-#, no-c-format
-msgid "Alternatively, you may want the opposite... that <literal>resource1</literal> cannot run on the same machine as <literal>resource2</literal>. In this case use <literal>score=\"-INFINITY\"</literal>"
+#, fuzzy, no-c-format
+msgid "Alternatively, you may want the opposite… that <literal>resource1</literal> cannot run on the same machine as <literal>resource2</literal>. In this case use <literal>score=\"-INFINITY\"</literal>"
 msgstr "Alternativ, aţi putea dori opusul... ca <literal>resource1</literal> să nu poată rula pe aceeaşi maşină ca <literal>resource2</literal>. În acest caz folosiţi <literal>scor=\"-INFINITY\"</literal>"
 
 #. Tag: title
@@ -475,14 +514,12 @@ msgid "An example anti-colocation constraint"
 msgstr "Un exemplu de restricţie anti-colocare"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "&lt;rsc_colocation id=\"anti-colocate\"\n"
-"    rsc=\"resource1\" with-rsc=\"resource2\" score=\"-INFINITY\"/&gt; \n"
-"	  "
+#, fuzzy, no-c-format
+msgid "&lt;rsc_colocation id=\"anti-colocate\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"-INFINITY\"/&gt;"
 msgstr ""
 "&lt;rsc_colocation id=\"anti-colocate\"\n"
 "    rsc=\"resource1\" with-rsc=\"resource2\" score=\"-INFINITY\"/&gt; \n"
-"	  "
+"\t  "
 
 #. Tag: para
 #, no-c-format
@@ -495,8 +532,8 @@ msgid "Advisory Placement"
 msgstr "Plasament Recomandat"
 
 #. Tag: para
-#, no-c-format
-msgid "If mandatory placement is about \"must\" and \"must not\", then advisory placement is the \"I'd prefer if\" alternative. For constraints with scores greater than <literal>-INFINITY</literal> and less than <literal>INFINITY</literal>, the cluster will try and accommodate your wishes but may ignore them if the alternative is to stop some of the cluster resources."
+#, fuzzy, no-c-format
+msgid "If mandatory placement is about \"must\" and \"must not\", then advisory placement is the \"I’d prefer if\" alternative. For constraints with scores greater than <literal>-INFINITY</literal> and less than <literal>INFINITY</literal>, the cluster will try and accommodate your wishes but may ignore them if the alternative is to stop some of the cluster resources."
 msgstr "Dacă plasamentul obligatoriu se referă la \"trebuie\" şi \"nu trebuie\", atunci plasamentul recomandat este alternativa \"aş prefera dacă\". Pentru restricţii cu scoruri mai mari decât <literal>-INFINITY</literal> şi mai mici decât <literal>INFINITY</literal>, clusterul va încerca să acomodeze dorinţele voastre dar le-ar putea ignora dacă alternativa este să oprească unele din resursele clusterului."
 
 #. Tag: para
@@ -510,12 +547,11 @@ msgid "An example advisory-only colocation constraint"
 msgstr "Un exemplu de restricţie de colocare doar recomandată"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;\n"
-"	  "
+#, fuzzy, no-c-format
+msgid "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;"
 msgstr ""
 "&lt;rsc_colocation id=\"colocate-maybe\" rsc=\"resource1\" with-rsc=\"resource2\" score=\"500\"/&gt;\n"
-"	  "
+"\t  "
 
 #. Tag: title
 #, no-c-format
@@ -533,12 +569,13 @@ msgid "A chain of ordered resources"
 msgstr "Un lanţ de resurse ordonate"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\" first=\"A\" then=\"B\" /&gt;\n"
 "    &lt;rsc_order id=\"order-2\" first=\"B\" then=\"C\" /&gt;\n"
 "    &lt;rsc_order id=\"order-3\" first=\"C\" then=\"D\" /&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\" first=\"A\" then=\"B\" /&gt;\n"
@@ -551,10 +588,15 @@ msgstr ""
 msgid "Ordered Set"
 msgstr "Set Ordonat"
 
-#. Tag: caption
+#. Tag: title
 #, no-c-format
 msgid "Visual representation of the four resources' start order for the above constraints"
 msgstr "Reprezentarea vizuală a ordinii de pornire a celor patru resurse pentru restricţiile de mai sus"
+
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "Ordered set"
+msgstr "Set Ordonat"
 
 #. Tag: para
 #, no-c-format
@@ -567,8 +609,9 @@ msgid "A chain of ordered resources expressed as a set"
 msgstr "Un lanţ de resurse ordonate exprimate ca un set"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-example\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -577,7 +620,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_order&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
@@ -601,13 +644,14 @@ msgid "A group resource with the equivalent ordering rules"
 msgstr "Un grup de resurse cu regulile de ordonare echivalente"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;group id=\"dummy\"&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;group id=\"dummy\"&gt;\n"
 "    &lt;primitive id=\"A\" .../&gt;\n"
 "    &lt;primitive id=\"B\" .../&gt;\n"
 "    &lt;primitive id=\"C\" .../&gt;\n"
 "    &lt;primitive id=\"D\" .../&gt;\n"
-"  &lt;/group&gt;  "
+"&lt;/group&gt;"
 msgstr ""
 " &lt;group id=\"dummy\"&gt;\n"
 "    &lt;primitive id=\"A\" .../&gt;\n"
@@ -627,8 +671,9 @@ msgid "Ordered sets of unordered resources"
 msgstr "Seturi ordonate de resurse neordonate"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -639,7 +684,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_order&gt;\n"
-"  &lt;/constraints&gt;  "
+"  &lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
@@ -659,14 +704,19 @@ msgstr ""
 msgid "Two Sets of Unordered Resources"
 msgstr "Două Seturi de Resurse Neordonate"
 
-#. Tag: caption
+#. Tag: title
 #, no-c-format
 msgid "Visual representation of the start order for two ordered sets of unordered resources"
 msgstr "Reprezentarea vizuală a ordinii de pornire pentru două seturi de resurse neordonate"
 
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "Two ordered sets"
+msgstr "Set Ordonat"
+
 #. Tag: para
-#, no-c-format
-msgid "Of course either set -- or both sets -- of resources can also be internally ordered (by setting <literal>sequential=\"true\"</literal>) and there is no limit to the number of sets that can be specified."
+#, fuzzy, no-c-format
+msgid "Of course either set — or both sets — of resources can also be internally ordered (by setting <literal>sequential=\"true\"</literal>) and there is no limit to the number of sets that can be specified."
 msgstr "Desigur că oricare set -- sau ambele seturi -- de resurse pot de asemenea să fie ordonate intern (prin setarea <literal>sequential=\"true\"</literal>) şi nu este nici o limită asupra numărului de seturi care poate fi specificat."
 
 #. Tag: title
@@ -675,8 +725,9 @@ msgid "Advanced use of set ordering - Three ordered sets, two of which are inter
 msgstr "Utilizări avansate ale ordonării seturilor - Trei seturi ordonate, două din care sunt neordonate intern"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
 "      &lt;resource_set id=\"ordered-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -691,7 +742,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"F\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_order&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_order id=\"order-1\"&gt;\n"
@@ -715,10 +766,15 @@ msgstr ""
 msgid "Three Resources Sets"
 msgstr "Trei Seturi de Resurse"
 
-#. Tag: caption
+#. Tag: title
 #, no-c-format
 msgid "Visual representation of the start order for the three sets defined above"
 msgstr "Reprezentarea vizuală a ordinii de pornire pentru cele trei seturi definite mai sus"
+
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "Three ordered sets"
+msgstr "Trei Seturi de Resurse"
 
 #. Tag: title
 #, no-c-format
@@ -736,12 +792,13 @@ msgid "A chain of collocated resources"
 msgstr "Un lanţ de resurse colocate"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" rsc=\"B\" with-rsc=\"A\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-2\" rsc=\"C\" with-rsc=\"B\" score=\"INFINITY\"/&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-3\" rsc=\"D\" with-rsc=\"C\" score=\"INFINITY\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" rsc=\"B\" with-rsc=\"A\" score=\"INFINITY\"/&gt;\n"
@@ -750,8 +807,8 @@ msgstr ""
 "  &lt;/constraints&gt;  "
 
 #. Tag: para
-#, no-c-format
-msgid "To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>. Just like the expanded version, a resource that can't be active also prevents any resource that must be collocated with it from being active. For example, if <literal>B</literal> was not able to run, then both <literal>C</literal> (and by inference <literal>D</literal>) must also remain stopped."
+#, fuzzy, no-c-format
+msgid "To make things easier, we allow an alternate form of colocation constraints using <literal>resource_sets</literal>. Just like the expanded version, a resource that can’t be active also prevents any resource that must be collocated with it from being active. For example, if <literal>B was</literal> not able to run, then both <literal>C (+and by inference +D)</literal> must also remain stopped."
 msgstr "Pentru a face lucrurile mai uşoare, permitem o altă formă de restricţii de colocare folosind <literal>resource_sets</literal> (seturi de resurse). La fel ca şi versiunea extinsă, o resursă care nu poate fi activă împiedică de asemenea orice resursă care trebuie colocată cu aceasta de a fi activă. De exemplu dacă <literal>B</literal> nu era capabil să ruleze, atunci atât <literal>C</literal> (şi prin alianţă <literal>D</literal>) trebuie să rămână oprite."
 
 #. Tag: title
@@ -760,8 +817,9 @@ msgid "The equivalent colocation chain expressed using <literal>resource_sets</l
 msgstr "Lanţul echivalent de restricţii de colocare exprimat folosind <literal>resource_sets</literal>"
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-example\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -770,7 +828,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_colocation&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
@@ -794,8 +852,8 @@ msgid "A group resource with the equivalent colocation rules"
 msgstr "O resursă de grup cu regulile echivalente de colocare"
 
 #. Tag: para
-#, no-c-format
-msgid "This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous, <literal>B</literal> would be allowed to remain active even if <literal>A</literal> or <literal>C</literal> (or both) were inactive."
+#, fuzzy, no-c-format
+msgid "This notation can also be used in this context to tell the cluster that a set of resources must all be located with a common peer, but have no dependencies on each other. In this scenario, unlike the previous, <literal>B would</literal> be allowed to remain active even if <literal>A or</literal> <literal>C</literal> (or both) were inactive."
 msgstr "Această notaţie poate fi folosită de asemenea în acest context pentru a spune clusterului că un set de resurse trebuie să fie toate amplasate pe un nod comun, dar că nu au dependinţe unele de altele. În acest scenariu, contrar faţă de cel anterior, lui <literal>B</literal> i-ar fi permis să rămână activă chiar dacă <literal>A</literal> sau <literal>C</literal> (sau ambele) ar fi fost inactive."
 
 #. Tag: title
@@ -804,8 +862,9 @@ msgid "Using colocation sets to specify a common peer."
 msgstr "Folosirea seturilor de colocare pentru a specifica un nod comun."
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-1\" sequential=\"false\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -816,7 +875,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"D\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_colocation&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
@@ -832,8 +891,8 @@ msgstr ""
 "  &lt;/constraints&gt;  "
 
 #. Tag: para
-#, no-c-format
-msgid "Of course there is no limit to the number and size of the sets used. The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for member M to be active, member M+1 must also be active. You can even specify the role in which the members of a set must be in using the set's role attribute."
+#, fuzzy, no-c-format
+msgid "Of course there is no limit to the number and size of the sets used. The only thing that matters is that in order for any member of set N to be active, all the members of set N+1 must also be active (and naturally on the same node); and if a set has <literal>sequential=\"true\"</literal>, then in order for member M to be active, member M+1 must also be active. You can even specify the role in which the members of a set must be in using the set’s role attribute."
 msgstr "Desigur nu există nici o limită asupra numărului şi mărimii seturilor folosite. Singurul lucru care contează este ca pentru orice membru al setului N să fie activ, toţi membrii setului N+1 trebuie să fie activi de asemenea (şi evident pe acelaşi nod) şi dacă un set are <literal>sequential=\"true\"</literal>, atunci pentru ca membrul M să fie activ, membrul M+1 trebuie să fie activ de asemenea. Puteţi specifica chiar rolul în care membrii unui set trebuie să fie folosind atributele de rol ale setului."
 
 #. Tag: title
@@ -842,8 +901,9 @@ msgid "A colocation chain where the members of the middle set have no inter-depe
 msgstr "Un lanţ de colocare unde membrii setului mijlociu nu au interdependenţe şi ultimul are statusul de master."
 
 #. Tag: programlisting
-#, no-c-format
-msgid " &lt;constraints&gt;\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
 "      &lt;resource_set id=\"collocated-set-1\" sequential=\"true\"&gt;\n"
 "        &lt;resource_ref id=\"A\"/&gt;\n"
@@ -859,7 +919,7 @@ msgid " &lt;constraints&gt;\n"
 "        &lt;resource_ref id=\"G\"/&gt;\n"
 "      &lt;/resource_set&gt;\n"
 "    &lt;/rsc_colocation&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 " &lt;constraints&gt;\n"
 "    &lt;rsc_colocation id=\"coloc-1\" score=\"INFINITY\" &gt;\n"
@@ -884,8 +944,87 @@ msgstr ""
 msgid "Another Three Resources Sets"
 msgstr "Încă Trei Seturi de Resurse"
 
-#. Tag: caption
+#. Tag: title
 #, no-c-format
 msgid "Visual representation of a colocation chain where the members of the middle set have no inter-dependencies"
 msgstr "Reprezentarea vizuală a unui lanţ de colocare unde membrii setului mijlociu nu au interdependenţe"
 
+#. Tag: phrase
+#, no-c-format
+msgid "Colocation chain"
+msgstr ""
+
+#~ msgid "<primary>Resource</primary><secondary>Constraints</secondary>"
+#~ msgstr "<primary>Restricțiile</primary><secondary>Resurselor</secondary>"
+
+#~ msgid "<primary>Constraints</primary><secondary>for Resources</secondary>"
+#~ msgstr "<primary>Restricții</primary><secondary>pentru Resurse</secondary>"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Constraint Field</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>id</secondary></indexterm> entry&gt;id"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Câmp de Restricție</primary><secondary>id</secondary></indexterm> entry&gt;id"
+
+#~ msgid "A unique name for the constraint"
+#~ msgstr "Un nume unic pentru restricţie"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>rsc Constraint Field</primary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm> rsc"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>rsc Câmp de Restricție</primary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>rsc</secondary></indexterm> rsc"
+
+#~ msgid "A resource name"
+#~ msgstr "Un nume de resursă"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Constraint Field</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>node</secondary></indexterm> node"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Nod</primary><secondary>Câmp de Restricție</secondary></indexterm> <indexterm><primary>Constraint Field</primary><secondary>nod</secondary></indexterm> nod"
+
+#~ msgid "A node's uname"
+#~ msgstr "uname-ul unui nod"
+
+#~ msgid "Positive values indicate the resource should run on this node. Negative values indicate the resource should not run on this node. Values of +/- <literal>INFINITY</literal> change \"should\"/\"should not\" to \"must\"/\"must not\"."
+#~ msgstr "Valorile pozitive indică faptul că resursa ar trebui să ruleze pe acelaşi nod. Valorile negative indică faptul că resursele ar trebui să nu ruleze pe acelaşi nod. Valorile +/- <literal>INFINITY</literal> schimbă \"ar putea\"/\"nu ar putea\" în \"trebuie\"/\"nu trebuie\"."
+
+#~ msgid "The way to specify the order in which resources should start is by creating <literal>rsc_order</literal> constraints."
+#~ msgstr "Modul în care se poate specifica ordinea în care resursele ar trebui să pornească este prin crearea de restricţii <literal>rsc_order</literal>"
+
+#~ msgid "id"
+#~ msgstr "id"
+
+#~ msgid "first"
+#~ msgstr "first"
+
+#~ msgid "The name of a resource that must be started before the <literal>then</literal> resource is allowed to."
+#~ msgstr "Numele unei resurse care trebuie pornită înainte de a îi permite resursei <literal>then</literal> să pornească"
+
+#~ msgid "then"
+#~ msgstr "then"
+
+#~ msgid "The name of a resource. This resource will start after the <literal>first</literal> resource."
+#~ msgstr "Numele unei resurse. Această resursă va porni după resursa <literal>first</literal>."
+
+#~ msgid "score"
+#~ msgstr "scor"
+
+#~ msgid "If greater than zero, the constraint is mandatory. Otherwise it is only a suggestion. Default value: <emphasis>INFINITY</emphasis>"
+#~ msgstr "Dacă este mai mare decât zero, restricţia este obligatorie. Altfel este doar o sugestie. Valoarea implicită: <emphasis>INFINITY</emphasis>"
+
+#~ msgid "symmetrical"
+#~ msgstr "simetric"
+
+#~ msgid "If true, which is the default, stop the resources in the reverse order. Default value: <emphasis>true</emphasis>"
+#~ msgstr "Dacă este adevărat, care este şi valoarea implicită, opreşte resursele în ordine inversă. Valoarea implicită: <emphasis>true</emphasis>"
+
+#~ msgid "When the location of one resource depends on the location of another one, we call this colocation."
+#~ msgstr "Când locaţia unei resurse depinde de locaţia altei resurse, numim acest lucru colocare."
+
+#~ msgid "A unique name for the constraint."
+#~ msgstr "Un nume unic pentru restricţie"
+
+#~ msgid "rsc"
+#~ msgstr "rsc"
+
+#~ msgid "The colocation source. If the constraint cannot be satisfied, the cluster may decide not to allow the resource to run at all."
+#~ msgstr "Sursa colocării. Dacă restricţia nu poate fi satisfăcută, clusterul poate decide să nu permită resursei să ruleze deloc."
+
+#~ msgid "with-rsc"
+#~ msgstr "with-rsc"
+
+#~ msgid "The colocation target. The cluster will decide where to put this resource first and then decide where to put the resource in the <literal>rsc</literal> field."
+#~ msgstr "Destinaţia colocării. Clusterul va decide unde să plaseze această resursă mai întâi şi apoi va decide unde să plaseze resursa din câmpul rsc"

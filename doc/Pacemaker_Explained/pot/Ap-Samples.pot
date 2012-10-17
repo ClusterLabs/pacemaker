@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,12 +19,12 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An Empty Configuration"
+msgid "Empty"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An <indexterm significance=\"preferred\"><primary>Empty Configuration</primary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Empty</secondary></indexterm>empty configuration"
+msgid "An Empty Configuration"
 msgstr ""
 
 #. Tag: programlisting
@@ -37,17 +37,17 @@ msgid "&lt;cib admin_epoch=\"0\" epoch=\"0\" num_updates=\"0\" have-quorum=\"fal
 "    &lt;constraints/&gt;\n"
 "  &lt;/configuration&gt;\n"
 "  &lt;status/&gt;\n"
-"&lt;/cib&gt;  "
+"&lt;/cib&gt;"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "A <indexterm significance=\"preferred\"><primary>Simple</primary><secondary>Configuration</secondary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Simple</secondary></indexterm>Simple Configuration"
+msgid "Simple"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "2 nodes, some cluster options and a resource"
+msgid "Simple Configuration - 2 nodes, some cluster options and a resource"
 msgstr ""
 
 #. Tag: programlisting
@@ -85,7 +85,7 @@ msgid "&lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"fal
 "    &lt;/constraints&gt;\n"
 "  &lt;/configuration&gt;\n"
 "  &lt;status/&gt;\n"
-"&lt;/cib&gt;  "
+"&lt;/cib&gt;"
 msgstr ""
 
 #. Tag: para
@@ -95,17 +95,17 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "An <indexterm significance=\"preferred\"><primary>Advanced</primary><secondary>Configuration</secondary></indexterm><indexterm significance=\"preferred\"><primary>Configuration</primary><secondary>Advanced</secondary></indexterm>Advanced Configuration"
+msgid "Advanced Configuration"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "groups and clones with stonith"
+msgid "Advanced configuration - groups and clones with stonith"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
+msgid "&lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"false\"\n"
 "    validate-with=\"pacemaker-1.0\"&gt;\n"
 "  &lt;configuration&gt;\n"
 "    &lt;crm_config&gt;\n"
@@ -168,6 +168,6 @@ msgid " &lt;cib admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\" have-quorum=\"fa
 "    &lt;/constraints&gt;\n"
 "  &lt;/configuration&gt;\n"
 "  &lt;status/&gt;\n"
-"&lt;/cib&gt;  "
+"&lt;/cib&gt;"
 msgstr ""
 

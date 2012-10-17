@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-07-07T15:51:40\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-07-14 14:59+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,6 +22,11 @@ msgstr "Clusters from Scratch"
 #, no-c-format
 msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
 msgstr "Creare cluster Active/Passive e Active/Active su Fedora"
+
+#. Tag: productname
+#, no-c-format
+msgid "Pacemaker"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -59,11 +65,8 @@ msgstr "GFS2 come cluster filesystem (nella modalità active/active)"
 
 #. Tag: para
 #, no-c-format
-msgid "The crm shell for displaying the configuration and making changes"
-msgstr "La shell crm per la visualizzazione della configurazione e l'attuazione delle modifiche"
-
-#. Tag: para
-#, no-c-format
 msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
 msgstr "Per via del processo grafico di installazione di Fedora, diversi screenshot sono inclusi. Ad ogni modo questa guida è composta primariamente dai comandi, dalle ragioni per cui questi vengono eseguiti e l'output da loro prodotto."
 
+#~ msgid "The crm shell for displaying the configuration and making changes"
+#~ msgstr "La shell crm per la visualizzazione della configurazione e l'attuazione delle modifiche"

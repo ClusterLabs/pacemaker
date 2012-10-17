@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -85,46 +86,46 @@ msgid "Exercises Failover Logic/Configuration"
 msgstr "Exersează Logica/Configuraţia de Failover"
 
 #. Tag: entry
-#, no-c-format
-msgid "Allows change of cluster stack type<footnote> <para> <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>switching between</secondary></indexterm> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para> </footnote>"
+#, fuzzy, no-c-format
+msgid "Allows change of cluster stack type <indexterm> <primary>Cluster</primary><secondary>Switching between Stacks</secondary> </indexterm> <indexterm> <primary>Switching between Stacks</primary> </indexterm> <indexterm> <primary>Changing Cluster Stack</primary> </indexterm> <footnote><para> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para></footnote>"
 msgstr "Permite schimbarea tipului de stivă de cluster<footnote> <para> <indexterm significance=\"preferred\"><primary>Stivă de Cluster</primary><secondary>trecerea de la</secondary></indexterm> De exemplu, trecerea de la Heartbeat la Corosync. Consultaţi documentaţia de Heartbeat sau Corosync pentru vedea dacă actualizarea acestora la o versiune mai nouă este de asemenea suportată. </para> </footnote>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Shutdown</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Shutdown Upgrade</primary></indexterm> Shutdown"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Shutdown <indexterm> <primary>Upgrade</primary><secondary>Shutdown</secondary> </indexterm> <indexterm> <primary>Shutdown</primary> </indexterm> <indexterm> <primary>Shutdown Upgrade</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Închidere</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Închidere pentru Actualizare</primary></indexterm> Închidere"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "yes"
 msgstr "da"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "always"
 msgstr "întotdeauna"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "N/A"
 msgstr "N/A"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "no"
 msgstr "nu"
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Rolling</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Rolling Upgrade</primary></indexterm> Rolling"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Rolling <indexterm> <primary>Upgrade</primary><secondary>Rolling</secondary> </indexterm> <indexterm> <primary>Rolling</primary> </indexterm> <indexterm> <primary>Rolling Upgrade</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Secvenţială</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Actualizare Secvenţială</primary></indexterm> Secvenţială"
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Reattach</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Reattach Upgrade</primary></indexterm> Reattach"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Reattach <indexterm> <primary>Upgrade</primary><secondary>Reattach</secondary> </indexterm> <indexterm> <primary>Reattach</primary> </indexterm> <indexterm> <primary>Reattach Upgrade</primary> </indexterm>"
 msgstr "<indexterm significance=\"preferred\"><primary>Actualizare</primary><secondary>Reatașare</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Actualizare cu Reatașare</primary></indexterm> Reatașare"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "only due to failure"
 msgstr "doar din cauza eşecului"
@@ -155,8 +156,8 @@ msgid "Upgrade the Pacemaker software. This may also include upgrading the clust
 msgstr "Actualizaţi soft-ul Pacemaker. Acest lucru poate include actualizarea stivei de cluster şi/sau a sistemului de operare de bază."
 
 #. Tag: para
-#, no-c-format
-msgid "Check the configuration manually or with the <command>crm_verify</command> tool if available."
+#, fuzzy, no-c-format
+msgid "Check the configuration manually or with the <literal>crm_verify</literal> tool if available."
 msgstr "Verificaţi configuraţia manual sau cu utilitarul <command>crm_verify</command> dacă este disponibil."
 
 #. Tag: para
@@ -175,23 +176,23 @@ msgid "This method is currently broken between Pacemaker 0.6.x and 1.0.x."
 msgstr "Această metodă este în prezent nefuncţională între Pacemaker 0.6.x şi 1.0.x"
 
 #. Tag: para
-#, no-c-format
-msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out. Otherwise, please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
+#, fuzzy, no-c-format
+msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. Please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
 msgstr "Măsuri au fost implementate pentru a asigura că actualizările secvenţiale vor funcţiona întotdeauna pentru versiunile după 1.0.0. Dacă există o cerere suficientă, munca necesară pentru a repara compatibilitatea între 0.6 -&gt; 1.0 va fi dusă la final. În caz contrar, vă rugăm să încercaţi una din celelalte strategii de actualizare. Detaşare/Reataşare este o opţiune deosebit de bună pentru majoritatea persoanelor."
 
 #. Tag: para
 #, no-c-format
-msgid "On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available."
-msgstr "Pe primul nod, verificaţi configuraţia manual sau cu utilitarul <command>crm_verify</command> dacă este disponibil."
+msgid "On each node: . Shutdown the cluster stack (Heartbeat or Corosync) . Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system. .. On the first node, check the configuration manually or with the <literal>crm_verify</literal> tool if available. .. Start the cluster stack."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Start the cluster stack. This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
+#, fuzzy, no-c-format
+msgid "+ This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
 msgstr "Porniţi stiva de cluster. Aceasta trebuie să fie acelaşi tip de stivă de cluster (Corosync sau Heartbeat) care este folosită de către restul clusterului. Actualizarea Corosync/Heartbeat este posibilă de asemenea, vă rugăm să consultaţi documentaţia pentru acele proiecte pentru a vedea dacă cele două versiuni vor fi compatibile."
 
 #. Tag: para
-#, no-c-format
-msgid "Repeat for each node in the cluster."
+#, fuzzy, no-c-format
+msgid "+ .. Repeat for each node in the cluster."
 msgstr "Repetaţi pentru fiecare nod din cluster"
 
 #. Tag: title
@@ -209,57 +210,57 @@ msgstr "Versiunea care este Instalată"
 msgid "Oldest Compatible Version"
 msgstr "Cea mai Veche Versiune Compatibilă"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 1.0.x"
 msgstr "Pacemaker 1.0.x"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 1.0.0"
 msgstr "Pacemaker 1.0.0"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.7.x"
 msgstr "Pacemaker 0.7.x"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.6 or Heartbeat 2.1.3"
 msgstr "Pacemaker 0.6 sau Heartbeat 2.1.3"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.6.x"
 msgstr "Pacemaker 0.6.x"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.8"
 msgstr "Heartbeat 2.0.8"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.1.3 (or less)"
 msgstr "Heartbeat 2.1.3 (sau mai mică)"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.4"
 msgstr "Heartbeat 2.0.4"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.4 (or less)"
 msgstr "Heartbeat 2.0.4 (sau mai mică)"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.0"
 msgstr "Heartbeat 2.0.0"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "None. Use an alternate upgrade strategy."
 msgstr "Niciuna. Folosiţi o strategie de actualizare alternativă."
@@ -295,13 +296,18 @@ msgid "A variant of a complete cluster shutdown, but the resources are left acti
 msgstr "O variantă de închidere completă a clusterului, dar resursele sunt lăsate active şi re-detectate când clusterul este repornit."
 
 #. Tag: para
-#, no-c-format
-msgid "Tell the cluster to stop managing services. This is required to allow the services to remain active after the cluster shuts down."
+#, fuzzy, no-c-format
+msgid "Tell the cluster to stop managing services."
+msgstr "Permiteţi clusterului să reia gestionarea resurselor"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This is required to allow the services to remain active after the cluster shuts down."
 msgstr "Spune clusterului să se oprească din gestionarea serviciilor. Acest lucru este necesar pentru a permite serviciilor să rămână active după ce clusterul este oprit."
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
+#, fuzzy, no-c-format
+msgid "# crm_attribute -t crm_config -n is-managed-default -v false"
 msgstr "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
 
 #. Tag: para
@@ -310,14 +316,24 @@ msgid "For any resource that has a value for <literal>is-managed</literal>, make
 msgstr "Pentru orice resursă care are o valoare pentru <literal>is-managed</literal>, vă rugăm să vă asiguraţi că este setată pe <literal>false</literal> (astfel încât clusterul să nu o oprească)"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
-msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
+#, fuzzy, no-c-format
+msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v false"
+msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
 
 #. Tag: para
 #, no-c-format
 msgid "Upgrade the cluster stack program - This may also include upgrading the underlying operating system."
 msgstr "Actualizaţi stiva de cluster - Acest lucru poate include actualizarea sistemului de operare de bază."
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster stack."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack."
+msgstr "Porniţi stiva de cluster. Aceasta poate fi oricare dintre Corosync sau Heartbeat şi nu trebuie să fie aceeaşi ca stiva anterioară de cluster."
 
 #. Tag: para
 #, no-c-format
@@ -330,8 +346,8 @@ msgid "Allow the cluster to resume managing resources again:"
 msgstr "Permiteţi clusterului să reia gestionarea resurselor"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
+#, fuzzy, no-c-format
+msgid "# crm_attribute -t crm_config -n is-managed-default -v true"
 msgstr "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
 
 #. Tag: para
@@ -340,8 +356,8 @@ msgid "For any resource that has a value for <literal>is-managed</literal> reset
 msgstr "Pentru orice resursă care are o valoare pentru <literal>is-managed</literal> resetaţi-o, dacă doriţi, pe <literal>true</literal> (astfel încât clusterul să poată recupera serviciul dacă acesta eşuează)"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
+#, fuzzy, no-c-format
+msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v true"
 msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
 
 #. Tag: title
@@ -359,3 +375,8 @@ msgstr "Întotdeauna verificaţi configuraţia existentă şi că este in contin
 msgid "The oldest version of the CRM to support this upgrade type was in Heartbeat 2.0.4"
 msgstr "Cea mai veche versiune de CRM care suportă acest tip de actualizare a fost Heartbeat 2.0.4"
 
+#~ msgid "On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available."
+#~ msgstr "Pe primul nod, verificaţi configuraţia manual sau cu utilitarul <command>crm_verify</command> dacă este disponibil."
+
+#~ msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
+#~ msgstr "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2011-04-23 23:07+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -35,7 +35,12 @@ msgstr "Versione della configurazione"
 
 #. Tag: para
 #, no-c-format
-msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<varname>admin_epoch, epoch, num_updates</varname>) tuple to replace the configuration on all the nodes - which makes setting them and setting them correctly very important."
+msgid "<indexterm> <primary>Configuration Version</primary><secondary>Cluster</secondary> </indexterm> <indexterm> <primary>Cluster</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>Configuration Version</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>Configuration Version</secondary> </indexterm> <indexterm> <primary>Configuration Version</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<literal>admin_epoch</literal>, <literal>epoch</literal>, <literal>num_updates</literal>) tuple to replace the configuration on all the nodes - which makes setting them, and setting them correctly, very important."
 msgstr "Quando un nodo aderisce al cluster, questo effettuerà un controllo per vedere chi ha la migliore configurazione in base ai campi riportati sotto. Esso domanda poi al nodo con la più alta (<varname>admin_epoch, epoch, num_updates</varname>) tupla di rimpiazzare la configurazione su tutti i nodi - il che implica una notevole importanza ai valori, i quali dovranno essere impostati correttamente."
 
 #. Tag: title
@@ -53,40 +58,40 @@ msgstr "Campo"
 msgid "Description"
 msgstr "Descrizione"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "admin_epoch"
-msgstr "admin_epoch"
+msgid "<literal>admin_epoch</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
-msgstr "Non viene mai modificata dal cluster. Viene utilizzata per applicare le configurazioni su qualsiasi nodo inattivo obsoleto."
+msgid "<indexterm> <primary>admin_epoch</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>admin_epoch</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>admin_epoch</secondary> </indexterm> <indexterm> <primary>admin_epoch</primary> </indexterm> Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "<emphasis>Never set this value to zero</emphasis>, in such cases the cluster cannot tell the difference between your configuration and the &#34;empty&#34; one used when nothing is found on disk."
+#, fuzzy, no-c-format
+msgid "<emphasis>Never set this value to zero</emphasis>, in such cases the cluster cannot tell the difference between your configuration and the \"empty\" one used when nothing is found on disk."
 msgstr "<emphasis>Non settare mai questo valore a zero</emphasis>, in questi casi il cluster non potrà determinare la differenza tra la configurazione attiva e quella &#34;vuota&#34; utilizzata quando non viene trovato nulla sul disco."
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "epoch"
-msgstr "epoch"
+msgid "<literal>epoch</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Incremented every time the configuration is updated (usually by the admin)"
-msgstr "Incrementata ogni volta che la configurazione viene aggiornata (generalmente dall'admin)"
+msgid "<indexterm> <primary>epoch</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>epoch</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>epoch</secondary> </indexterm> <indexterm> <primary>epoch</primary> </indexterm> Incremented every time the configuration is updated (usually by the admin)"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "num_updates"
-msgstr "num_updates"
+msgid "<literal>num_updates</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Incremented every time the configuration or status is updated (usually by the cluster)"
-msgstr "Incrementata ogni volta che la configurazione o lo stato vengono aggiornati (generalmente dal cluster)"
+msgid "<indexterm> <primary>num_updates</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>num_updates</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>num_updates</secondary> </indexterm> <indexterm> <primary>num_updates</primary> </indexterm> Incremented every time the configuration or status is updated (usually by the cluster)"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -94,19 +99,19 @@ msgid "Other Fields"
 msgstr "Altri campi"
 
 #. Tag: title
-#, no-c-format
-msgid "Properties Controling Validation"
+#, fuzzy, no-c-format
+msgid "Properties Controlling Validation"
 msgstr "Proprietà del controllo di validazione"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "validate-with"
-msgstr "validate-with"
+msgid "<literal>validate-with</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Determines the type of validation being done on the configuration. If set to &#34;none&#34;, the cluster will not verify that updates conform the the DTD (nor reject ones that don&#39;t). This option can be useful when operating a mixed version cluster during an upgrade."
-msgstr "Determina il tipo di validazione effettuata sulla configurazione. Se valorizzata a  &#34;none&#34; il cluster non verificherà che gli aggiornamenti siano conformi al DTD (e non scarterà quelli che non lo sono). Questa opzione può essere utile quando si opera con versioni del cluster mixate, durante un aggiornamento."
+msgid "<indexterm> <primary>validate-with</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>validate-with</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>validate-with</secondary> </indexterm> <indexterm> <primary>validate-with</primary> </indexterm> Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform to the DTD (nor reject ones that don’t). This option can be useful when operating a mixed version cluster during an upgrade."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -118,54 +123,44 @@ msgstr "Campi gestiti dal cluster"
 msgid "Properties Maintained by the Cluster"
 msgstr "Proprietà gestite dal cluster"
 
-#. Tag: entry
-#, no-c-format
-msgid "crm-debug-origin"
-msgstr "crm-debug-origin"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates where the last update came from. Informational purposes only."
-msgstr "Indica da dove  è provenuto l'ultimo aggiornamento. Ha scopo puramente informativo."
-
-#. Tag: entry
-#, no-c-format
-msgid "cib-last-written"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>cib-last-written</literal>"
 msgstr "cib-last-written"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Indicates when the configuration was last written to disk. Informational purposes only."
-msgstr "Indica quando la configurazione è stata scritta su disco. Ha scopo puramente informativo."
-
-#. Tag: entry
-#, no-c-format
-msgid "dc-uuid"
-msgstr "dc-uuid"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
-msgstr "Indica quale nodo del cluster è l'attuale capo. Viene utilizzato dal cluster durante l'assegnamento delle risorse e determinato l'ordine di alcuni eventi."
-
-#. Tag: entry
-#, no-c-format
-msgid "have-quorum"
-msgstr "have-quorum"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See no-quorum-policy below."
-msgstr "Indica se il cluster ha quorumi. Se valorizzata a \"false\" potrebbe significare che il cluster non può avviare risorse od effettuare il fence di altri nodi. Vedere no-quorum-policy sotto."
+msgid "<indexterm> <primary>cib-last-written</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>cib-last-written</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>cib-last-written</secondary> </indexterm> <indexterm> <primary>cib-last-written</primary> </indexterm> Indicates when the configuration was last written to disk. Informational purposes only."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Note that although these fields can be written to by the admin, in most cases the cluster will overwrite any values specified by the admin with the &#34;correct&#34; ones. To change the <varname>admin_epoch</varname>, for example, one would use:"
+msgid "<literal>dc-uuid</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>dc-uuid</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>dc-uuid</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>dc-uuid</secondary> </indexterm> <indexterm> <primary>dc-uuid</primary> </indexterm> Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>have-quorum</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>have-quorum</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>have-quorum</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>have-quorum</secondary> </indexterm> <indexterm> <primary>have-quorum</primary> </indexterm> Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See <literal>no-quorum-policy</literal> below."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Note that although these fields can be written to by the admin, in most cases the cluster will overwrite any values specified by the admin with the \"correct\" ones. To change the <literal>admin_epoch</literal>, for example, one would use:"
 msgstr "Da notare come sebbene questi campi possono essere impostati dall'admin, in molti casi il cluster li riscriverà qualsiasi valore specificato da admin con quelli &#34;corretti&#34;"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>cibadmin --modify --crm_xml ‘&#60;cib admin_epoch=&#34;42&#34;/&#62;&#39;</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# cibadmin --modify --crm_xml '&lt;cib admin_epoch=\"42\"/&gt;'"
 msgstr "<command>cibadmin --modify --crm_xml ‘&#60;cib admin_epoch=&#34;42&#34;/&#62;&#39;</command>"
 
 #. Tag: para
@@ -179,14 +174,11 @@ msgid "An example of the fields set for a cib object"
 msgstr "Un esempio dei campi settati per un oggetto cib"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-" &#60;cib have-quorum=&#34;true&#34; validate-with=&#34;pacemaker-1.0&#34; admin_epoch=&#34;1&#34; epoch=&#34;12&#34; num_updates=&#34;65&#34;\n"
-"    dc-uuid=&#34;ea7d39f4-3b94-4cfa-ba7a-952956daabee&#34;&#62;\n"
-"\n"
-"\t  "
+"&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
+"  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
+"  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -196,13 +188,13 @@ msgstr ""
 "\t  "
 
 #. Tag: para
-#, no-c-format
-msgid "Cluster options, as you&#39;d expect, control how the cluster behaves when confronted with certain situations."
+#, fuzzy, no-c-format
+msgid "Cluster options, as you might expect, control how the cluster behaves when confronted with certain situations."
 msgstr "Le opzioni del cluster, come presumibile, controllano come il cluster si comporta di fronte a determinate situazioni."
 
 #. Tag: para
-#, no-c-format
-msgid "They are grouped into sets and, in advanced configurations, there may be more than one.<footnote> <para>This will be described later in the section on <xref linkend=\"ch-rules\" /> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)</para> </footnote> For now we will describe the simple case where each option is present at most once."
+#, fuzzy, no-c-format
+msgid "They are grouped into sets and, in advanced configurations, there may be more than one. <footnote><para>This will be described later in the section on <xref linkend=\"ch-rules\" /> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)</para></footnote> For now we will describe the simple case where each option is present at most once."
 msgstr "Esse sono raggruppate in set e, in configurazioni avanzate, ne possono esistere più di uno. <footnote> <para>Questo verrà descritto più avanti nel <xref linkend=\"ch-rules\" /> dove verrà mostrato come sia possibile fare in modo che il cluster utilizzi diversi set di opzioni durante gli orari lavorativi (dove qualsiasi downtime va evitato ad ogni costo) e durate i weekend (quando le risorse possono essere spostate ai loro host preferiti senza annoiare gli utilizzatori finali)</para> </footnote> Per ora verrà descritto il semplice caso in cui ogni opzione è presente al massimo una volta."
 
 #. Tag: title
@@ -220,184 +212,199 @@ msgstr "Opzione"
 msgid "Default"
 msgstr "Default"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "batch-limit"
-msgstr "batch-limit"
+msgid "<literal>batch-limit</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "30"
 msgstr "30"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The number of jobs that the TE is allowed to execute in parallel. The &#34;correct&#34; value will depend on the speed and load of your network and cluster nodes."
-msgstr "Il numero di job che il TE è abilitato ad eseguire in parallelo. Il valore &#34;corretto&#34; dipenderà dalla velocità e dal carico della rete e dei nodi del cluster."
+msgid "<indexterm> <primary>batch-limit</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>batch-limit</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>batch-limit</secondary> </indexterm> <indexterm> <primary>batch-limit</primary> </indexterm> The number of jobs that the TE is allowed to execute in parallel. The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "no-quorum-policy"
+msgid "<literal>migration-limit</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "-1 (unlimited)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>migration-limit</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>migration-limit</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>migration-limit</secondary> </indexterm> <indexterm> <primary>migration-limit</primary> </indexterm> The number of migration jobs that the TE is allowed to execute in parallel on a node."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>no-quorum-policy</literal>"
 msgstr "no-quorum-policy"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "stop"
 msgstr "stop"
 
-#. Tag: entry
-#, no-c-format
-msgid "What to do when the cluster does not have quorum. Allowed values:"
-msgstr "Cosa fare quando il cluster non ha quorum. Valori permessi:"
-
 #. Tag: para
 #, no-c-format
-msgid "ignore - continue all resource management"
+msgid "<indexterm> <primary>no-quorum-policy</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>no-quorum-policy</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>no-quorum-policy</secondary> </indexterm> <indexterm> <primary>no-quorum-policy</primary> </indexterm> What to do when the cluster does not have quorum. Allowed values:"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "* ignore - continue all resource management"
 msgstr "ignore - continua a gestire tutte le risorse"
 
 #. Tag: para
-#, no-c-format
-msgid "freeze - continue resource management, but don&#39;t recover resources from nodes not in the affected partition"
+#, fuzzy, no-c-format
+msgid "* freeze - continue resource management, but don’t recover resources from nodes not in the affected partition"
 msgstr "freeze - continua a gestire le risorse, ma non ripara risorse da nodi non presenti nella partizione interessata"
 
 #. Tag: para
-#, no-c-format
-msgid "stop - stop all resources in the affected cluster parition"
+#, fuzzy, no-c-format
+msgid "* stop - stop all resources in the affected cluster partition"
 msgstr "stop - ferma tutte le risorse nella partizione del cluster interessata"
 
 #. Tag: para
-#, no-c-format
-msgid "suicide - fence all nodes in the affected cluster partition"
+#, fuzzy, no-c-format
+msgid "* suicide - fence all nodes in the affected cluster partition"
 msgstr "suicide - effettua il fence di tutti i nodi nella partizione del cluster interessata"
 
-#. Tag: entry
-#, no-c-format
-msgid "symmetric-cluster"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>symmetric-cluster</literal>"
 msgstr "symmetric-cluster"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "TRUE"
 msgstr "TRUE"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Can all resources run on any node by default?"
-msgstr "Possono di default tutte le risorse funzionare su qualsiasi nodo?"
+msgid "<indexterm> <primary>symmetric-cluster</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>symmetric-cluster</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>symmetric-cluster</secondary> </indexterm> <indexterm> <primary>symmetric-cluster</primary> </indexterm> Can all resources run on any node by default?"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "stonith-enabled"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>stonith-enabled</literal>"
 msgstr "stonith-enabled"
 
 #. Tag: para
 #, no-c-format
-msgid "Should failed nodes and nodes with resources that can&#39;t be stopped be shot? If you value your data, set up a STONITH device and enable this."
-msgstr "I nodi falliti ed i nodi con risorse che non possono essere fermate possono essere colpiti? Se si ritengono i propri dati importanti, sarà necessario configurare un dispositivo STONITH ed abilitare questa opzione. "
+msgid "<indexterm> <primary>stonith-enabled</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stonith-enabled</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stonith-enabled</secondary> </indexterm> <indexterm> <primary>stonith-enabled</primary> </indexterm> Should failed nodes and nodes with resources that can’t be stopped be shot? If you value your data, set up a STONITH device and enable this."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "If true, or unset, the cluster will refuse to start resources unless one or more STONITH resources have been configured also."
 msgstr "Se \"true\" o non valorizzata, il cluster rifiuterà di avviare risorse a meno che uno o più dispositivi STONITH siano stati configurati."
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "stonith-action"
-msgstr "stonith-action"
+msgid "<literal>stonith-action</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "reboot"
 msgstr "reboot"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Action to send to STONITH device. Allowed values: reboot, poweroff."
-msgstr "Azione da inviare al dispositivo STONITH. Valori permessi: reboot, poweroff."
+msgid "<indexterm> <primary>stonith-action</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stonith-action</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stonith-action</secondary> </indexterm> <indexterm> <primary>stonith-action</primary> </indexterm> Action to send to STONITH device. Allowed values: reboot, off. The value <emphasis>poweroff</emphasis> is also allowed, but is only used for legacy devices."
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "cluster-delay"
-msgstr "cluster-delay"
+msgid "<literal>cluster-delay</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "60s"
 msgstr "60s"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Round trip delay over the network (excluding action execution). The &#34;correct&#34; value will depend on the speed and load of your network and cluster nodes."
-msgstr "Ritardo guidato sulla rete (con esclusione dell'esecuzione dell'azione). Il valore &#34;corretto&#34; dipenderà dalla velocità e dal carico della propria rete e dai nodi del cluster."
+msgid "<indexterm> <primary>cluster-delay</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>cluster-delay</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>cluster-delay</secondary> </indexterm> <indexterm> <primary>cluster-delay</primary> </indexterm> Round trip delay over the network (excluding action execution). The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "stop-orphan-resources"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>stop-orphan-resources</literal>"
 msgstr "stop-orphan-resources"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Should deleted resources be stopped"
-msgstr "Le risorse cancellate devono essere fermate?"
+msgid "<indexterm> <primary>stop-orphan-resources</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stop-orphan-resources</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stop-orphan-resources</secondary> </indexterm> <indexterm> <primary>stop-orphan-resources</primary> </indexterm> Should deleted resources be stopped?"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "stop-orphan-actions"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>stop-orphan-actions</literal>"
 msgstr "stop-orphan-actions"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Should deleted actions be cancelled"
-msgstr "Le azioni cancellate devono essere annullate?"
+msgid "<indexterm> <primary>stop-orphan-actions</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stop-orphan-actions</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stop-orphan-actions</secondary> </indexterm> <indexterm> <primary>stop-orphan-actions</primary> </indexterm> Should deleted actions be cancelled?"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "start-failure-is-fatal"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>start-failure-is-fatal</literal>"
 msgstr "start-failure-is-fatal"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "When set to FALSE, the cluster will instead use the resource&#39;s failcount and value for resource-failure-stickiness"
-msgstr "Quando settata a FALSE il cluster utilizzerà invece il valore di failcount delle risorse ed il valore di resource-failure-stickiness"
+msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> When set to FALSE, the cluster will instead use the resource’s <literal>failcount</literal> and value for <literal>resource-failure-stickiness</literal>."
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "pe-error-series-max"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>pe-error-series-max</literal>"
 msgstr "pe-error-series-max"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "-1 (all)"
 msgstr "-1 (tutti)"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
-msgstr "Il numero da salvare di input PE che risultano in stato ERROR. Utilizzato in fase di comunicazione di problemi."
+msgid "<indexterm> <primary>pe-error-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-error-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-error-series-max</secondary> </indexterm> <indexterm> <primary>pe-error-series-max</primary> </indexterm> The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "pe-warn-series-max"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>pe-warn-series-max</literal>"
 msgstr "pe-warn-series-max"
-
-#. Tag: entry
-#, no-c-format
-msgid "The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
-msgstr "Il numero da salvare di input PE che risultano in stato WARNING. Utilizzato in fase di comunicazione di problemi."
-
-#. Tag: entry
-#, no-c-format
-msgid "pe-input-series-max"
-msgstr "pe-input-series-max"
-
-#. Tag: entry
-#, no-c-format
-msgid "The number of &#34;normal&#34; PE inputs to save. Used when reporting problems."
-msgstr "Il numero da salvare di input PE in stato &#34;normal&#34;. Utilizzato in fase di comunicazione di problemi."
 
 #. Tag: para
 #, no-c-format
-msgid "You can always obtain an up-to-date list of cluster options, including their default values by running the pengine metadata command."
+msgid "<indexterm> <primary>pe-warn-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-warn-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-warn-series-max</secondary> </indexterm> <indexterm> <primary>pe-warn-series-max</primary> </indexterm> The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>pe-input-series-max</literal>"
+msgstr "pe-input-series-max"
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>pe-input-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-input-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-input-series-max</secondary> </indexterm> <indexterm> <primary>pe-input-series-max</primary> </indexterm> The number of \"normal\" PE inputs to save. Used when reporting problems."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You can always obtain an up-to-date list of cluster options, including their default values, by running the <literal>pengine metadata</literal> command."
 msgstr "E' sempre possibile ottenere una lista aggiornata delle opzioni del cluster, inclusi i loro valori di default lanciando il comando pengine metadata."
 
 #. Tag: title
@@ -407,12 +414,17 @@ msgstr "Interrogare e valorizzare le opzioni del cluster"
 
 #. Tag: para
 #, no-c-format
-msgid "Cluster options can be queried and modified using the crm_attribute tool. To get the current value of cluster-delay, simply use:"
-msgstr "Le opzioni del cluster possono essere interrogate e modificate mediante l'utilizzo dello strumento crm_attribute. Per ottenere il valore del parametro cluster-delay è sufficiente utilizzare:"
+msgid "<indexterm> <primary>Querying</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Setting</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Querying Options</secondary> </indexterm> <indexterm> <primary>Querying Options</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Setting Options</secondary> </indexterm> <indexterm> <primary>Setting Options</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
+#, fuzzy, no-c-format
+msgid "Cluster options can be queried and modified using the <literal>crm_attribute</literal> tool. To get the current value of <literal>cluster-delay</literal>, simply use:"
+msgstr "Le opzioni del cluster possono essere interrogate e modificate mediante l'utilizzo dello strumento crm_attribute. Per ottenere il valore del parametro cluster-delay è sufficiente utilizzare:"
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --get-value"
 msgstr "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
 
 #. Tag: para
@@ -420,21 +432,20 @@ msgstr "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
 msgid "which is more simply written as"
 msgstr "più semplicemente scrivibile come"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --get-value -n cluster-delay</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --get-value -n cluster-delay"
 msgstr "<command>crm_attribute --get-value -n cluster-delay</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "If a value is found, the you&#39;ll see a result such as this"
+#, fuzzy, no-c-format
+msgid "If a value is found, you’ll see a result like this:"
 msgstr "Se viene trovato un valore, allora sarà possibile vederlo come segue"
 
-#. Tag: screen
-#, no-c-format
+#. Tag: programlisting
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-" <command> # crm_attribute --get-value -n cluster-delay</command>\n"
+"# crm_attribute --get-value -n cluster-delay\n"
 " name=cluster-delay value=60s"
 msgstr ""
 "\n"
@@ -442,17 +453,16 @@ msgstr ""
 " name=cluster-delay value=60s"
 
 #. Tag: para
-#, no-c-format
-msgid "However if no value is found, the tool will display an error:"
+#, fuzzy, no-c-format
+msgid "However, if no value is found, the tool will display an error:"
 msgstr "Ad ogni modo se nessun valore viene trovato lo strumento restituirà un errore:"
 
-#. Tag: screen
-#, no-c-format
+#. Tag: programlisting
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-" <command># crm_attribute --get-value -n clusta-deway</command>\n"
-" name=clusta-deway value=(null)\n"
-" Error performing operation: The object/attribute does not exist"
+"# crm_attribute --get-value -n clusta-deway`\n"
+"name=clusta-deway value=(null)\n"
+"Error performing operation: The object/attribute does not exist"
 msgstr ""
 "\n"
 " <command># crm_attribute --get-value -n clusta-deway</command>\n"
@@ -460,23 +470,23 @@ msgstr ""
 " Error performing operation: The object/attribute does not exist"
 
 #. Tag: para
-#, no-c-format
-msgid "To use a different value, eg. 30s, simply run:"
+#, fuzzy, no-c-format
+msgid "To use a different value, eg. <literal>30</literal>, simply run:"
 msgstr "Per utilizzare un valore differente, ad esempio 30s, è sufficiente lanciare:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --attr-value 30s"
 msgstr "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "To go back to the cluster&#39;s default value, you can then delete the value with:"
+#, fuzzy, no-c-format
+msgid "To go back to the cluster’s default value you can delete the value, for example with this command:"
 msgstr "Per ripristinare il valore di default è possibile cancellare il valore con:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --delete-attr"
 msgstr "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
 
 #. Tag: title
@@ -485,8 +495,8 @@ msgid "When Options are Listed More Than Once"
 msgstr "Quando le opzioni vengono elencate più di una volta"
 
 #. Tag: para
-#, no-c-format
-msgid "If you ever see something like the following, it means that the option you&#39;re modifying is present more than once."
+#, fuzzy, no-c-format
+msgid "If you ever see something like the following, it means that the option you’re modifying is present more than once."
 msgstr "Se capiterà mai di vedere quanto illustrato, il motivo risiederà nel fatto che sono state dichiarate le stesse opzioni più di una volta."
 
 #. Tag: title
@@ -494,15 +504,15 @@ msgstr "Se capiterà mai di vedere quanto illustrato, il motivo risiederà nel f
 msgid "Deleting an option that is listed twice"
 msgstr "Cancellare un'opzione dichiarata due volte"
 
-#. Tag: screen
-#, no-c-format
+#. Tag: programlisting
+#, fuzzy, no-c-format
 msgid ""
+"# crm_attribute --attr-name batch-limit --delete-attr\n"
 "\n"
-" <command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
-" Multiple attributes match name=batch-limit in crm_config:\n"
-" Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
-" Value: 100         (set=custom, id=custom-batch-limit)\n"
-" Please choose from one of the matches above and supply the &#39;id&#39; with --attr-id"
+"Multiple attributes match name=batch-limit in crm_config:\n"
+"Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
+"Value: 100         (set=custom, id=custom-batch-limit)\n"
+"Please choose from one of the matches above and supply the 'id' with --attr-id"
 msgstr ""
 "\n"
 " <command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
@@ -512,6 +522,96 @@ msgstr ""
 " Please choose from one of the matches above and supply the &#39;id&#39; with --attr-id"
 
 #. Tag: para
-#, no-c-format
-msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to the the section on <xref linkend=\"ch-rules\" />."
+#, fuzzy, no-c-format
+msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to <xref linkend=\"ch-rules\" />."
 msgstr "In questi casi seguendo le istruzioni a video sarà possibile eseguire l'azione richiesta. Per determinare quale valore è attualmente utilizzato dal cluster bisognerà fare riferimento al <xref linkend=\"ch-rules\" />."
+
+#~ msgid "admin_epoch"
+#~ msgstr "admin_epoch"
+
+#~ msgid "Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
+#~ msgstr "Non viene mai modificata dal cluster. Viene utilizzata per applicare le configurazioni su qualsiasi nodo inattivo obsoleto."
+
+#~ msgid "epoch"
+#~ msgstr "epoch"
+
+#~ msgid "Incremented every time the configuration is updated (usually by the admin)"
+#~ msgstr "Incrementata ogni volta che la configurazione viene aggiornata (generalmente dall'admin)"
+
+#~ msgid "num_updates"
+#~ msgstr "num_updates"
+
+#~ msgid "Incremented every time the configuration or status is updated (usually by the cluster)"
+#~ msgstr "Incrementata ogni volta che la configurazione o lo stato vengono aggiornati (generalmente dal cluster)"
+
+#~ msgid "validate-with"
+#~ msgstr "validate-with"
+
+#~ msgid "Determines the type of validation being done on the configuration. If set to &#34;none&#34;, the cluster will not verify that updates conform the the DTD (nor reject ones that don&#39;t). This option can be useful when operating a mixed version cluster during an upgrade."
+#~ msgstr "Determina il tipo di validazione effettuata sulla configurazione. Se valorizzata a  &#34;none&#34; il cluster non verificherà che gli aggiornamenti siano conformi al DTD (e non scarterà quelli che non lo sono). Questa opzione può essere utile quando si opera con versioni del cluster mixate, durante un aggiornamento."
+
+#~ msgid "crm-debug-origin"
+#~ msgstr "crm-debug-origin"
+
+#~ msgid "Indicates where the last update came from. Informational purposes only."
+#~ msgstr "Indica da dove  è provenuto l'ultimo aggiornamento. Ha scopo puramente informativo."
+
+#~ msgid "Indicates when the configuration was last written to disk. Informational purposes only."
+#~ msgstr "Indica quando la configurazione è stata scritta su disco. Ha scopo puramente informativo."
+
+#~ msgid "dc-uuid"
+#~ msgstr "dc-uuid"
+
+#~ msgid "Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
+#~ msgstr "Indica quale nodo del cluster è l'attuale capo. Viene utilizzato dal cluster durante l'assegnamento delle risorse e determinato l'ordine di alcuni eventi."
+
+#~ msgid "have-quorum"
+#~ msgstr "have-quorum"
+
+#~ msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See no-quorum-policy below."
+#~ msgstr "Indica se il cluster ha quorumi. Se valorizzata a \"false\" potrebbe significare che il cluster non può avviare risorse od effettuare il fence di altri nodi. Vedere no-quorum-policy sotto."
+
+#~ msgid "batch-limit"
+#~ msgstr "batch-limit"
+
+#~ msgid "The number of jobs that the TE is allowed to execute in parallel. The &#34;correct&#34; value will depend on the speed and load of your network and cluster nodes."
+#~ msgstr "Il numero di job che il TE è abilitato ad eseguire in parallelo. Il valore &#34;corretto&#34; dipenderà dalla velocità e dal carico della rete e dei nodi del cluster."
+
+#~ msgid "What to do when the cluster does not have quorum. Allowed values:"
+#~ msgstr "Cosa fare quando il cluster non ha quorum. Valori permessi:"
+
+#~ msgid "Can all resources run on any node by default?"
+#~ msgstr "Possono di default tutte le risorse funzionare su qualsiasi nodo?"
+
+#~ msgid "Should failed nodes and nodes with resources that can&#39;t be stopped be shot? If you value your data, set up a STONITH device and enable this."
+#~ msgstr "I nodi falliti ed i nodi con risorse che non possono essere fermate possono essere colpiti? Se si ritengono i propri dati importanti, sarà necessario configurare un dispositivo STONITH ed abilitare questa opzione. "
+
+#~ msgid "stonith-action"
+#~ msgstr "stonith-action"
+
+#~ msgid "Action to send to STONITH device. Allowed values: reboot, poweroff."
+#~ msgstr "Azione da inviare al dispositivo STONITH. Valori permessi: reboot, poweroff."
+
+#~ msgid "cluster-delay"
+#~ msgstr "cluster-delay"
+
+#~ msgid "Round trip delay over the network (excluding action execution). The &#34;correct&#34; value will depend on the speed and load of your network and cluster nodes."
+#~ msgstr "Ritardo guidato sulla rete (con esclusione dell'esecuzione dell'azione). Il valore &#34;corretto&#34; dipenderà dalla velocità e dal carico della propria rete e dai nodi del cluster."
+
+#~ msgid "Should deleted resources be stopped"
+#~ msgstr "Le risorse cancellate devono essere fermate?"
+
+#~ msgid "Should deleted actions be cancelled"
+#~ msgstr "Le azioni cancellate devono essere annullate?"
+
+#~ msgid "When set to FALSE, the cluster will instead use the resource&#39;s failcount and value for resource-failure-stickiness"
+#~ msgstr "Quando settata a FALSE il cluster utilizzerà invece il valore di failcount delle risorse ed il valore di resource-failure-stickiness"
+
+#~ msgid "The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
+#~ msgstr "Il numero da salvare di input PE che risultano in stato ERROR. Utilizzato in fase di comunicazione di problemi."
+
+#~ msgid "The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
+#~ msgstr "Il numero da salvare di input PE che risultano in stato WARNING. Utilizzato in fase di comunicazione di problemi."
+
+#~ msgid "The number of &#34;normal&#34; PE inputs to save. Used when reporting problems."
+#~ msgstr "Il numero da salvare di input PE in stato &#34;normal&#34;. Utilizzato in fase di comunicazione di problemi."

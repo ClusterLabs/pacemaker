@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-05-05 15:32+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -25,7 +25,17 @@ msgstr "Preparazione"
 
 #. Tag: para
 #, no-c-format
-msgid "Download the latest DTD from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /> and ensure your configuration validates."
+msgid "<indexterm> <primary>Upgrading the Configuration</primary> </indexterm> <indexterm> <primary>Configuration</primary><secondary>Upgrading</secondary> </indexterm> <indexterm> <primary>Upgrading</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Download</primary><secondary>DTD</secondary> </indexterm> <indexterm> <primary>DTD</primary> </indexterm> <indexterm> <primary>DTD</primary><secondary>Download</secondary> </indexterm> <indexterm> <primary>Download</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Download the latest <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\">DTD</ulink> and ensure your configuration validates."
 msgstr "Scaricare l'ultimo DTD da <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd\" /> ed assicurarsi che la propria configurazione venga validata."
 
 #. Tag: title
@@ -59,8 +69,8 @@ msgid "In order to support such environments, it is actually possible to continu
 msgstr "Al fine di supportare tali ambienti, è possibile continuare ad utilizzare la vecchia sintassi 0.6."
 
 #. Tag: para
-#, no-c-format
-msgid "The downside however, is that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
+#, fuzzy, no-c-format
+msgid "The downside is, however, that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely."
 msgstr "Gli aspetti negativi sono che non tutte le nuove funzionalità saranno disponibili e si verificherà un impatto sulle performance, visto che il cluster deve effettuare una aggiornamento di configurazione non persistente prima di ogni transizione. Quindi sebbene l'utilizzo della vecchia sintassi è consentito, non è consigliabile utilizzarlo continuativamente."
 
 #. Tag: para
@@ -73,19 +83,19 @@ msgstr "Anche se il proprio desiderio è quello di utilizzare la vecchia sintass
 msgid "Create a shadow copy to work with"
 msgstr "Creare di una copia shadow del proprio lavoro con"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_shadow --create upgrade06</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_shadow --create upgrade06"
 msgstr "<command>crm_shadow --create upgrade06</command>"
 
 #. Tag: para
 #, no-c-format
-msgid "Verify the configuration is valid"
-msgstr "Verificare la validità della configurazione"
+msgid "Verify the configuration is valid <indexterm> <primary>Configuration</primary><secondary>Verify</secondary> </indexterm> <indexterm> <primary>Verify</primary> </indexterm><indexterm> <primary>Verify</primary><secondary>Configuration</secondary> </indexterm> <indexterm> <primary>Configuration</primary> </indexterm>"
+msgstr ""
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_verify --live-check</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_verify --live-check"
 msgstr "<command>crm_verify --live-check</command>"
 
 #. Tag: para
@@ -94,13 +104,18 @@ msgid "Fix any errors or warnings"
 msgstr "Correggere eventuali errori o allerta"
 
 #. Tag: para
-#, no-c-format
-msgid "<command>cibadmin --upgrade</command>"
+#, fuzzy, no-c-format
+msgid "Perform the upgrade:"
+msgstr "Effettuale l'aggiornamento"
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# cibadmin --upgrade"
 msgstr "<command>cibadmin --upgrade</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "If this step fails, there are three main possibilities"
+#, fuzzy, no-c-format
+msgid "If this step fails, there are three main possibilities:"
 msgstr "Se questo passo fallisce il motivo potrebbe essere uno fra questi"
 
 #. Tag: para
@@ -109,18 +124,18 @@ msgid "The configuration was not valid to start with - go back to step 2"
 msgstr "La configurazione non è valida per l'avvio - tornare al passo 2"
 
 #. Tag: para
-#, no-c-format
-msgid "The transformation failed - report a bug or email the project at <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">pacemaker@oss.clusterlabs.org</ulink>"
+#, fuzzy, no-c-format
+msgid "The transformation failed - report a bug or <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">email the project</ulink>"
 msgstr "La trasformazione è fallita - segnalare un bug o scrivere un'email al progetto presso <ulink url=\"mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade\">pacemaker@oss.clusterlabs.org</ulink>"
 
 #. Tag: para
-#, no-c-format
-msgid "The transformation was successful but produced an invalid result <footnote> <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation </para> </footnote>"
+#, fuzzy, no-c-format
+msgid "The transformation was successful but produced an invalid result <footnote><para> The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation. </para></footnote>"
 msgstr "La trasformazione ha avuto successo, ma ha prodotto risultati invalidi <footnote> <para>La ragione più comune è che i valori di ID siano ripetuti o invalidi. Pacemaker 1.0 è molto più rigido riguardo a questi tipi di validazione </para> </footnote>"
 
 #. Tag: para
-#, no-c-format
-msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> and/or try the following procedure described below under <xref linkend=\"s-upgrade-config-manual\" />."
+#, fuzzy, no-c-format
+msgid "If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\">http://clusterlabs.org/wiki/Validation_FAQ</ulink> and/or try the procedure described below under <xref linkend=\"s-upgrade-config-manual\" />"
 msgstr "Se il risultato della trasformazione è invalido, si potrebbero notare diversi errori dalla libreria di validazione. Se questi non risultano essere d'aiuto vedere <ulink url=\"http://clusterlabs.org/wiki/Validation_FAQ\" /> e/o provare la procedura descritta più avanti sotto <xref linkend=\"s-upgrade-config-manual\" />."
 
 #. Tag: para
@@ -128,9 +143,9 @@ msgstr "Se il risultato della trasformazione è invalido, si potrebbero notare d
 msgid "Check the changes"
 msgstr "Verificare le modifiche"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_shadow --diff</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_shadow --diff"
 msgstr "<command>crm_shadow --diff</command>"
 
 #. Tag: para
@@ -138,14 +153,14 @@ msgstr "<command>crm_shadow --diff</command>"
 msgid "If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:"
 msgstr "Se a questo punto si necessita di approfondire altro in merio all'aggioramento (ad esempio cambiare qualcuno degli ID automatici) questo è il momento. Dal momento che la configurazione shadow non è utilizzata dal cluster è possibile modificare il file manualmenee."
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_shadow --edit</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_shadow --edit"
 msgstr "<command>crm_shadow --edit</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Will open the configuration in your favorite editor (or whichever one is specified by the standard <envar>EDITOR</envar> environment variable)."
+#, fuzzy, no-c-format
+msgid "This will open the configuration in your favorite editor (whichever is specified by the standard <literal>$EDITOR</literal> environment variable)"
 msgstr "Aprirà la configurazione nel proprio editor preferito (o in quello specificato alla variabile d'abiente) <envar>EDITOR</envar>"
 
 #. Tag: para
@@ -158,19 +173,16 @@ msgstr "Presenterà un'anteprima delle azioni del cluster"
 msgid "Test what the cluster will do when you upload the new configuration"
 msgstr "Controlla quello che fa il cluster quando viene caricata la nuova configurazione"
 
-#. Tag: para
+#. Tag: programlisting
 #, no-c-format
-msgid "<command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>"
-msgstr "<command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>"
+msgid ""
+"# crm_simulate --live-check --save-dotfile upgrade06.dot -S\n"
+"# graphviz upgrade06.dot"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "<command>graphviz upgrade06.dot</command>"
-msgstr "<command>graphviz upgrade06.dot</command>"
-
-#. Tag: para
-#, no-c-format
-msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of ptest."
+#, fuzzy, no-c-format
+msgid "Verify that either no resource actions will occur or that you are happy with any that are scheduled. If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes. See <xref linkend=\"s-config-testing-changes\" /> for further details on how to interpret the output of <literal>crm_simulate</literal>"
 msgstr "Verifica che non avvenga nessuna delle azioni relative alle risorse o e che quelle schedulate rispettino le proprioe intenzioni. Se l'output contiene azioni inattese (verosimilmente sui punteggi calcolati) potrebbero essere necessari ulteriori modifiche manuali. Vedere <xref linkend=\"s-config-testing-changes\" /> per altri ettagli  su come interpretare più ptest."
 
 #. Tag: para
@@ -178,9 +190,9 @@ msgstr "Verifica che non avvenga nessuna delle azioni relative alle risorse o e 
 msgid "Upload the changes"
 msgstr "Applicare le modifiche"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_shadow --commit upgrade06 --force</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_shadow --commit upgrade06 --force"
 msgstr "<command>crm_shadow --commit upgrade06 --force</command>"
 
 #. Tag: para
@@ -195,30 +207,55 @@ msgstr "Aggiornamento manuale della configurazione"
 
 #. Tag: para
 #, no-c-format
-msgid "It is also possible to perform the configuration upgrade steps manually. To do this"
-msgstr "E' inoltre possibile eseguire la procedura di aggiornamento manualmente. Per farlo"
+msgid "<indexterm> <primary>Configuration</primary><secondary>Upgrade manually</secondary> </indexterm> <indexterm> <primary>Upgrade manually</primary> </indexterm> It is also possible to perform the configuration upgrade steps manually. To do this"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">version control</ulink>"
+#, fuzzy, no-c-format
+msgid "Locate the <emphasis>upgrade06.xsl</emphasis> conversion script or download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/xml/upgrade06.xsl\">Git</ulink>"
 msgstr "Recuperare lo script di conversione  <filename>upgrade06.xsl</filename>  oppure scaricare l'ultima versione da <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl\">version control</ulink>"
 
 #. Tag: para
 #, no-c-format
-msgid "<command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> &#62; <filename>config10.xml</filename></command>"
-msgstr "<command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> &#62; <filename>config10.xml</filename></command>"
+msgid "Convert the XML blob: <indexterm> <primary>XML</primary><secondary>Convert</secondary> </indexterm> <indexterm> <primary>Convert</primary> </indexterm>"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# xsltproc /path/to/upgrade06.xsl config06.xml &gt; config10.xml"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Locate the <filename>pacemaker.rng</filename> script."
+#, fuzzy, no-c-format
+msgid "Locate the <emphasis>pacemaker.rng</emphasis> script."
 msgstr "Individuare lo script <filename>pacemaker.rng</filename>."
 
 #. Tag: para
 #, no-c-format
-msgid "<command>xmllint --relaxng <filename>/path/tp/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
+msgid "Check the XML validity: <indexterm> <primary>Validate Configuration</primary> </indexterm><indexterm> <primary>Configuration</primary><secondary>Validate XML</secondary> </indexterm> <indexterm> <primary>Validate XML</primary> </indexterm>"
+msgstr ""
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# xmllint --relaxng /path/to/pacemaker.rng config10.xml"
 msgstr "<command>xmllint --relaxng <filename>/path/tp/pacemaker.rng</filename> <filename>config10.xml</filename></command>"
 
 #. Tag: para
 #, no-c-format
 msgid "The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers."
 msgstr "Il vantaggio di questo metodo è che può essere eseguito senza che il cluster sia attivo e qualsiasi errore di validazione dovrebbe risultare esplicativo (sebbene generato dalla stessa libreria!) dato che ciascuna riga è numerata."
+
+#~ msgid "Verify the configuration is valid"
+#~ msgstr "Verificare la validità della configurazione"
+
+#~ msgid "<command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>"
+#~ msgstr "<command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command>"
+
+#~ msgid "<command>graphviz upgrade06.dot</command>"
+#~ msgstr "<command>graphviz upgrade06.dot</command>"
+
+#~ msgid "It is also possible to perform the configuration upgrade steps manually. To do this"
+#~ msgstr "E' inoltre possibile eseguire la procedura di aggiornamento manualmente. Per farlo"
+
+#~ msgid "<command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> &#62; <filename>config10.xml</filename></command>"
+#~ msgstr "<command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> &#62; <filename>config10.xml</filename></command>"

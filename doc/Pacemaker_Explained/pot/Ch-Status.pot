@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
+"PO-Revision-Date: 2012-10-17T05:19:02\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,17 +19,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Most users never need to understand the contents of the status section and can be happy with the output from <command>crm_mon</command>. However for those with a curious inclination, this section attempts to provide an overview of its contents."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Node</primary><secondary>Status</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Status of a Node</primary></indexterm> Node Status"
+msgid "Most users never need to understand the contents of the status section and can be happy with the output from <literal>crm_mon</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In addition to the cluster's configuration, the CIB holds an up-to-date representation of each cluster node in the status section."
+msgid "However for those with a curious inclination, this section attempts to provide an overview of its contents."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Node Status"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Node</primary><secondary>Status</secondary> </indexterm> <indexterm> <primary>Status</primary> </indexterm> <indexterm> <primary>Status of a Node</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In addition to the cluster’s configuration, the CIB holds an up-to-date representation of each cluster node in the status section."
 msgstr ""
 
 #. Tag: title
@@ -39,15 +49,15 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;node_state id=\"cl-virt-1\" uname=\"cl-virt-2\" ha=\"active\" in_ccm=\"true\" crmd=\"online\" join=\"member\" expected=\"member\" crm-debug-origin=\"do_update_resource\"&gt;\n"
+msgid "  &lt;node_state id=\"cl-virt-1\" uname=\"cl-virt-2\" ha=\"active\" in_ccm=\"true\" crmd=\"online\" join=\"member\" expected=\"member\" crm-debug-origin=\"do_update_resource\"&gt;\n"
 "   &lt;transient_attributes id=\"cl-virt-1\"/&gt;\n"
 "   &lt;lrm id=\"cl-virt-1\"/&gt;\n"
-"  &lt;/node_state&gt;  "
+"  &lt;/node_state&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Users are highly recommended <emphasis>not to modify</emphasis> any part of a node's state <emphasis>directly</emphasis>. The cluster will periodically regenerate the entire section from authoritative sources. So any changes should be done with the tools for those subsystems."
+msgid "Users are highly recommended <emphasis>not to modify</emphasis> any part of a node’s state <emphasis>directly</emphasis>. The cluster will periodically regenerate the entire section from authoritative sources. So any changes should be done with the tools for those subsystems."
 msgstr ""
 
 #. Tag: title
@@ -65,39 +75,44 @@ msgstr ""
 msgid "Authoritative Source"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "node_state fields"
+msgid "<literal>node_state fields</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "crmd"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "transient_attributes tag"
+msgid "<literal>transient_attributes tag</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "attrd"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "lrm tag"
+msgid "<literal>lrm tag</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "lrmd"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker's origins as the Heartbeat resource manager. They have remained unchanged to preserve compatibility with older versions."
+msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker’s origins as the Heartbeat resource manager."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "They have remained unchanged to preserve compatibility with older versions."
 msgstr ""
 
 #. Tag: title
@@ -115,84 +130,84 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Node Status Field</secondary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>id</tertiary></indexterm> id"
+msgid "<literal>id</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Unique identifier for the node. Corosync based clusters use the uname of the machine, Heartbeat clusters use a human-readable (but annoying) UUID."
+msgid "<indexterm> <primary>id</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm> Unique identifier for the node. Corosync based clusters use the uname of the machine, Heartbeat clusters use a human-readable (but annoying) UUID."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>uname Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>uname</tertiary></indexterm> uname"
+msgid "<literal>uname</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The node's machine name (output from <command>uname -n</command>)."
+msgid "<indexterm> <primary>uname</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>uname</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>uname</secondary> </indexterm> <indexterm> <primary>uname</primary> </indexterm> The node’s machine name (output from <literal>uname -n</literal>)."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>ha Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>ha</tertiary></indexterm> ha"
+msgid "<literal>ha</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Flag specifying whether the cluster software is active on the node. Allowed values: <literal>active</literal>, <literal>dead</literal>."
+msgid "<indexterm> <primary>ha</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>ha</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>ha</secondary> </indexterm> <indexterm> <primary>ha</primary> </indexterm> Flag specifying whether the cluster software is active on the node. Allowed values: <literal>active</literal>, <literal>dead</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>in_ccm Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>in_ccm</tertiary></indexterm> in_ccm"
+msgid "<literal>in_ccm</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Flag for cluster membership; allowed values: <literal>true</literal>, <literal>false</literal>."
+msgid "<indexterm> <primary>in_ccm</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>in_ccm</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>in_ccm</secondary> </indexterm> <indexterm> <primary>in_ccm</primary> </indexterm> Flag for cluster membership; allowed values: <literal>true</literal>, <literal>false</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>crmd Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>crmd</tertiary></indexterm> crmd"
+msgid "<literal>crmd</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Flag: is the crmd process active on the node? One of <literal>online</literal>, <literal>offline</literal>."
+msgid "<indexterm> <primary>crmd</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crmd</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crmd</secondary> </indexterm> <indexterm> <primary>crmd</primary> </indexterm> Flag: is the crmd process active on the node? One of <literal>online</literal>, <literal>offline</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>join Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>join</tertiary></indexterm> join"
+msgid "<literal>join</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Flag saying whether the node participates in hosting resources. Possible values: <literal>down</literal>, <literal>pending</literal>, <literal>member</literal>, <literal>banned</literal>."
+msgid "<indexterm> <primary>join</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>join</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>join</secondary> </indexterm> <indexterm> <primary>join</primary> </indexterm> Flag saying whether the node participates in hosting resources. Possible values: <literal>down</literal>, <literal>pending</literal>, <literal>member</literal>, <literal>banned</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>expected Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>expected</tertiary></indexterm> expected"
+msgid "<literal>expected</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Expected value for <literal>join</literal>."
+msgid "<indexterm> <primary>expected</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>expected</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>expected</secondary> </indexterm> <indexterm> <primary>expected</primary> </indexterm> Expected value for <literal>join</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>crm-debug-origin Node Status Field</primary></indexterm> <indexterm><primary>Node</primary><secondary>Status Field</secondary><tertiary>crm-debug-origin</tertiary></indexterm> crm-debug-origin"
+msgid "<literal>crm-debug-origin</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Diagnostic indicator: the origin of the most recent change(s)."
+msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> Diagnostic indicator: the origin of the most recent change(s)."
 msgstr ""
 
 #. Tag: para
@@ -222,30 +237,34 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;transient_attributes id=\"cl-virt-1\"&gt;\n"
-"      &lt;instance_attributes id=\"status-cl-virt-1\"&gt;\n"
+msgid "  &lt;transient_attributes id=\"cl-virt-1\"&gt;\n"
+"    &lt;instance_attributes id=\"status-cl-virt-1\"&gt;\n"
 "       &lt;nvpair id=\"status-cl-virt-1-pingd\" name=\"pingd\" value=\"3\"/&gt;\n"
 "       &lt;nvpair id=\"status-cl-virt-1-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
 "       &lt;nvpair id=\"status-cl-virt-1-fail-count-pingd:0\" name=\"fail-count-pingd:0\" value=\"1\"/&gt;\n"
-"       &lt;nvpair id=\"status-cl-virt-1-last-failure-pingd:0\" name=\"last-failure-pingd:0\"\n"
-"           value=\"1239009742\"/&gt;\n"
-"      &lt;/instance_attributes&gt;\n"
-"     &lt;/transient_attributes&gt;  "
+"       &lt;nvpair id=\"status-cl-virt-1-last-failure-pingd:0\" name=\"last-failure-pingd:0\" value=\"1239009742\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"  &lt;/transient_attributes&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the above example, we can see that the <literal>pingd:0</literal> resource has failed once, at <literal>Mon Apr 6 11:22:22 2009</literal><footnote> <para>You can use the standard <literal>date</literal> command to print a human readable of any seconds-since-epoch value: <programlisting># <command>date -d @<parameter>number</parameter></command></programlisting></para> </footnote>. We also see that the node is connected to three \"pingd\" peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
+msgid "In the above example, we can see that the <literal>pingd:0</literal> resource has failed once, at <literal>Mon Apr 6 11:22:22 2009</literal>. <footnote><para> You can use the standard <literal>date</literal> command to print a human readable of any seconds-since-epoch value: # <literal>date -d @&lt;parameter&gt;number&lt;/parameter&gt;</literal> </para></footnote> We also see that the node is connected to three \"pingd\" peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Operation History</primary></indexterm> Operation History"
+msgid "Operation History"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A node's resource history is held in the <literal>lrm_resources</literal> tag (a child of the <literal>lrm</literal> tag). The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section. Specifically the resource's <literal>id</literal>, <literal>class</literal>, <literal>type</literal> and <literal>provider</literal> are stored."
+msgid "<indexterm> <primary>Operation History</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A node’s resource history is held in the <literal>lrm_resources</literal> tag (a child of the <literal>lrm</literal> tag). The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section. Specifically the resource’s <literal>id</literal>, <literal>class</literal>, <literal>type</literal> and <literal>provider</literal> are stored."
 msgstr ""
 
 #. Tag: title
@@ -253,10 +272,9 @@ msgstr ""
 msgid "A record of the apcstonith resource"
 msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid "&lt;lrm_resource id=\"apcstonith\" type=\"apcmastersnmp\" class=\"stonith\"&gt;\n"
-"	"
+msgid "&lt;lrm_resource id=\"apcstonith\" type=\"apcmastersnmp\" class=\"stonith\"/&gt;"
 msgstr ""
 
 #. Tag: para
@@ -266,155 +284,220 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Contents of an <literal>lrm_rsc_op</literal> job."
+msgid "Contents of an <literal>lrm_rsc_op</literal> job"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Job Field</secondary></indexterm> <indexterm><primary>Job Field</primary><secondary>id</secondary></indexterm> id"
+msgid "<indexterm> <primary>id</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Identifier for the job constructed from the resource's <literal>id</literal>, <literal>operation</literal> and <literal>interval</literal>."
+msgid "Identifier for the job constructed from the resource’s <literal>id</literal>, <literal>operation</literal> and <literal>interval</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>call-id Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>call-id</secondary></indexterm> call-id"
+msgid "<literal>call-id</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The job's ticket number. Used as a sort key to determine the order in which the jobs were executed."
+msgid "<indexterm> <primary>call-id</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>call-id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>call-id</secondary> </indexterm> <indexterm> <primary>call-id</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>operation Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>operation</secondary></indexterm> operation"
+msgid "The job’s ticket number. Used as a sort key to determine the order in which the jobs were executed."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<literal>operation</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>operation</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "The action the resource agent was invoked with."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>interval Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>interval</secondary></indexterm> interval"
+msgid "<literal>interval</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>interval</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>interval</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>interval</secondary> </indexterm> <indexterm> <primary>interval</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "The frequency, in milliseconds, at which the operation will be repeated. A one-off job is indicated by 0."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>op-status Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>op-status</secondary></indexterm> op-status"
+msgid "<literal>op-status</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The job's status. Generally this will be either 0 (done) or -1 (pending). Rarely used in favor of <literal>rc-code</literal>."
+msgid "<indexterm> <primary>op-status</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>op-status</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>op-status</secondary> </indexterm> <indexterm> <primary>op-status</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>rc-code Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>rc-code</secondary></indexterm> rc-code"
+msgid "The job’s status. Generally this will be either 0 (done) or -1 (pending). Rarely used in favor of <literal>rc-code</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The job's result. Refer to <xref linkend=\"s-ocf-return-codes\" /> for details on what the values here mean and how they are interpreted."
+msgid "<literal>rc-code</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>last-run Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>last-run</secondary></indexterm> last-run"
+msgid "<indexterm> <primary>rc-code</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>rc-code</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>rc-code</secondary> </indexterm> <indexterm> <primary>rc-code</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "The job’s result. Refer to <xref linkend=\"s-ocf-return-codes\" /> for details on what the values here mean and how they are interpreted."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>last-run</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>last-run</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>last-run</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>last-run</secondary> </indexterm> <indexterm> <primary>last-run</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job was executed."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>last-rc-change Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>last-rc-change</secondary></indexterm> last-rc-change"
+msgid "<literal>last-rc-change</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>last-rc-change</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>last-rc-change</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>last-rc-change</secondary> </indexterm> <indexterm> <primary>last-rc-change</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job first returned the current value of <literal>rc-code</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>exec-time Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>exec-time</secondary></indexterm> exec-time"
+msgid "<literal>exec-time</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>exec-time</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>exec-time</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>exec-time</secondary> </indexterm> <indexterm> <primary>exec-time</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "Diagnostic indicator. Time, in milliseconds, that the job was running for."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>queue-time Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>queue-time</secondary></indexterm> queue-time"
+msgid "<literal>queue-time</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>queue-time</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>queue-time</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>queue-time</secondary> </indexterm> <indexterm> <primary>queue-time</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>crm_feature_set Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>crm_feature_set</secondary></indexterm> crm_feature_set"
+msgid "<literal>crm_feature_set</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>crm_feature_set</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>crm_feature_set</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm_feature_set</secondary> </indexterm> <indexterm> <primary>crm_feature_set</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "The version which this job description conforms to. Used when processing <literal>op-digest</literal>."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>transition-key Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>transition-key</secondary></indexterm> transition-key"
+msgid "<literal>transition-key</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A concatenation of the job's graph action number, the graph number, the expected result and the UUID of the crmd instance that scheduled it. This is used to construct <literal>transition-magic</literal> (below)."
+msgid "<indexterm> <primary>transition-key</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>transition-key</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>transition-key</secondary> </indexterm> <indexterm> <primary>transition-key</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>transition-magic Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>transition-magic</secondary></indexterm> transition-magic"
+msgid "A concatenation of the job’s graph action number, the graph number, the expected result and the UUID of the crmd instance that scheduled it. This is used to construct <literal>transition-magic</literal> (below)."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "A concatenation of the job's <literal>op-status</literal>, <literal>rc-code</literal> and <literal>transition-key</literal>. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the crmd to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the crmd if the job entry was expected and whether it failed."
+msgid "<literal>transition-magic</literal>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>op-digest Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>op-digest</secondary></indexterm> op-digest"
+msgid "<indexterm> <primary>transition-magic</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>transition-magic</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>transition-magic</secondary> </indexterm> <indexterm> <primary>transition-magic</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "A concatenation of the job’s <literal>op-status</literal>, <literal>rc-code</literal> and <literal>transition-key</literal>. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the crmd to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the crmd if the job entry was expected and whether it failed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>op-digest</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>op-digest</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>op-digest</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>op-digest</secondary> </indexterm> <indexterm> <primary>op-digest</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "An MD5 sum representing the parameters passed to the job. Used to detect changes to the configuration, to restart resources if necessary."
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>crm-debug-origin Job Field</primary></indexterm> <indexterm><primary>Job Field</primary><secondary>crm-debug-origin</secondary></indexterm> crm-debug-origin"
+msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Action Status</secondary> </indexterm> <indexterm> <primary>Action Status</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Diagnostic indicator. The origin of the current values."
 msgstr ""
@@ -431,25 +514,40 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;lrm_resource id=\"apcstonith\" type=\"apcmastersnmp\" class=\"stonith\"&gt; \n"
+msgid "&lt;lrm_resource id=\"apcstonith\" type=\"apcmastersnmp\" class=\"stonith\"&gt;\n"
 "  &lt;lrm_rsc_op id=\"apcstonith_monitor_0\" operation=\"monitor\" call-id=\"2\"\n"
-"    rc-code=\"7\" op-status=\"0\" interval=\"0\" \n"
-"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\" \n"
+"    rc-code=\"7\" op-status=\"0\" interval=\"0\"\n"
+"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\"\n"
 "    op-digest=\"2e3da9274d3550dc6526fb24bfcbcba0\"\n"
 "    transition-key=\"22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
-"    transition-magic=\"0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a\" \n"
+"    transition-magic=\"0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
 "    last-run=\"1239008085\" last-rc-change=\"1239008085\" exec-time=\"10\" queue-time=\"0\"/&gt;\n"
-"          &lt;/lrm_resource&gt;  "
+"&lt;/lrm_resource&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the above example, the job is a non-recurring monitor operation often referred to as a \"probe\" for the <literal>apcstonith</literal> resource. The cluster schedules probes for every configured resource on when a new node starts, in order to determine the resource's current state before it takes any further action."
+msgid "In the above example, the job is a non-recurring monitor operation often referred to as a \"probe\" for the <literal>apcstonith</literal> resource."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a). The third field of the <literal>transition-key</literal> contains a 7, this indicates that the job expects to find the resource inactive. By looking at the <literal>rc-code</literal> property, we see that this was the case."
+msgid "The cluster schedules probes for every configured resource on when a new node starts, in order to determine the resource’s current state before it takes any further action."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The third field of the <literal>transition-key</literal> contains a 7, this indicates that the job expects to find the resource inactive."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "By looking at the <literal>rc-code</literal> property, we see that this was the case."
 msgstr ""
 
 #. Tag: para
@@ -469,37 +567,42 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;lrm_resource id=\"pingd:0\" type=\"pingd\" class=\"ocf\" provider=\"pacemaker\"&gt;\n"
+msgid "&lt;lrm_resource id=\"pingd:0\" type=\"pingd\" class=\"ocf\" provider=\"pacemaker\"&gt;\n"
 "  &lt;lrm_rsc_op id=\"pingd:0_monitor_30000\" operation=\"monitor\" call-id=\"34\"\n"
-"    rc-code=\"0\" op-status=\"0\" interval=\"30000\" \n"
-"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\" \n"
-"    transition-key=\"10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\" \n"
+"    rc-code=\"0\" op-status=\"0\" interval=\"30000\"\n"
+"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\"\n"
+"    transition-key=\"10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
 "    ...\n"
 "    last-run=\"1239009741\" last-rc-change=\"1239009741\" exec-time=\"10\" queue-time=\"0\"/&gt;\n"
-"  &lt;lrm_rsc_op id=\"pingd:0_stop_0\" operation=\"stop\" \n"
+"  &lt;lrm_rsc_op id=\"pingd:0_stop_0\" operation=\"stop\"\n"
 "    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\" call-id=\"32\"\n"
-"    rc-code=\"0\" op-status=\"0\" interval=\"0\" \n"
-"    transition-key=\"11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\" \n"
+"    rc-code=\"0\" op-status=\"0\" interval=\"0\"\n"
+"    transition-key=\"11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
 "    ...\n"
 "    last-run=\"1239009741\" last-rc-change=\"1239009741\" exec-time=\"10\" queue-time=\"0\"/&gt;\n"
 "  &lt;lrm_rsc_op id=\"pingd:0_start_0\" operation=\"start\" call-id=\"33\"\n"
-"    rc-code=\"0\" op-status=\"0\" interval=\"0\" \n"
-"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\" \n"
-"    transition-key=\"31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\" \n"
+"    rc-code=\"0\" op-status=\"0\" interval=\"0\"\n"
+"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\"\n"
+"    transition-key=\"31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
 "    ...\n"
 "    last-run=\"1239009741\" last-rc-change=\"1239009741\" exec-time=\"10\" queue-time=\"0\" /&gt;\n"
 "  &lt;lrm_rsc_op id=\"pingd:0_monitor_0\" operation=\"monitor\" call-id=\"3\"\n"
-"    rc-code=\"0\" op-status=\"0\" interval=\"0\" \n"
-"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\" \n"
-"    transition-key=\"23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a\" \n"
+"    rc-code=\"0\" op-status=\"0\" interval=\"0\"\n"
+"    crm-debug-origin=\"do_update_resource\" crm_feature_set=\"3.0.1\"\n"
+"    transition-key=\"23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a\"\n"
 "    ...\n"
 "    last-run=\"1239008085\" last-rc-change=\"1239008085\" exec-time=\"20\" queue-time=\"0\"/&gt;\n"
-"  &lt;/lrm_resource&gt;  "
+"  &lt;/lrm_resource&gt;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When more than one job record exists, it is important to first sort them by <literal>call-id</literal> before interpreting them. Once sorted, the above example can be summarized as:"
+msgid "When more than one job record exists, it is important to first sort them by <literal>call-id</literal> before interpreting them."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once sorted, the above example can be summarized as:"
 msgstr ""
 
 #. Tag: para
@@ -524,11 +627,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The cluster processes each job record to build up a picture of the resource's state. After the first and second entries, it is considered stopped and after the third it considered active. Based on the last operation, we can tell that the resource is currently active."
+msgid "The cluster processes each job record to build up a picture of the resource’s state. After the first and second entries, it is considered stopped and after the third it considered active."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted. Specifically this occurred as part of actions 11 and 31 of transition 11 from the crmd instance with the key <literal>2668bbeb...</literal>. This information can be helpful for locating the relevant section of the logs when looking for the source of a failure."
+msgid "Based on the last operation, we can tell that the resource is currently active."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted. Specifically this occurred as part of actions 11 and 31 of transition 11 from the crmd instance with the key <literal>2668bbeb…</literal>. This information can be helpful for locating the relevant section of the logs when looking for the source of a failure."
 msgstr ""
 

@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-07-07T15:51:41\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-08-02 16:00+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,70 +20,109 @@ msgstr "Verifica dell'installazione del cluster"
 
 #. Tag: title
 #, no-c-format
+msgid "Start the Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that corosync is configured, it is time to start the cluster. The command below will start corosync and pacemaker on both nodes in the cluster. If you are issuing the start command from a different node than the one you ran the <emphasis>pcs cluster auth</emphasis> command on earlier, you must authenticate on current node you are logged into before you will be allowed to start the cluster."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"# pcs cluster start --all\n"
+"pcmk-1: Starting Cluster...\n"
+"pcmk-2: Starting Cluster..."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An alternative to using the <emphasis>pcs cluster startall</emphasis> command is to issue either of the below commands on each node in the cluster by hand."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"# pcs cluster start\n"
+"Starting Cluster..."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "or"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"# systemctl start corosync.service\n"
+"# systemctl start pacemaker.service"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Verify Corosync Installation"
 msgstr "Verifica dell'installazione di Corosync"
 
 #. Tag: para
 #, no-c-format
-msgid "Start Corosync on the first node"
-msgstr "Avvio di Corosync sul primo nodo"
+msgid "The first thing to check is if cluster communication is happy, for that we use <literal>corosync-cfgtool</literal>."
+msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>\n"
-"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
+"# corosync-cfgtool -s\n"
+"Printing ring status.\n"
+"Local node ID 1\n"
+"RING ID 0\n"
+"        id      = 192.168.122.101\n"
+"        status  = ring 0 active with no faults"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Check the cluster started correctly and that an initial membership was able to form"
-msgstr "Controllo del corretto avvio del cluster e che è stata formata la membership iniziale"
-
-#. Tag: screen
-#, no-c-format
-msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>grep -e \"corosync.*network interface\" -e \"Corosync Cluster Engine\" -e \"Successfully read main configuration file\" /var/log/messages</userinput>\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Successfully read main configuration file '/etc/corosync/corosync.conf'.\n"
-"[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
+msgid "We can see here that everything appears normal with our fixed IP address, not a 127.0.0.x loopback address, listed as the <literal>id</literal> and <literal>no faults</literal> for the status."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "With one node functional, its now safe to start Corosync on the second node as well."
-msgstr "Con un nodo funzionante è ora sicuro avviare Corosync anche sul secondo nodo."
-
-#. Tag: screen
-#, no-c-format
-msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- /etc/init.d/corosync start</userinput>\n"
-"<emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>\n"
-"[root@pcmk-1 ~]#\n"
+msgid "If you see something different, you might want to start by checking the node’s network, firewall and selinux configurations."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Check the cluster formed correctly"
-msgstr "Controllo della corretta formazione del cluster"
+msgid "Next we check the membership and quorum APIs:"
+msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# corosync-cmapctl  | grep members\n"
+"runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101)\n"
+"runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1\n"
+"runtime.totem.pg.mrp.srp.members.1.status (str) = joined\n"
+"runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102)\n"
+"runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1\n"
+"runtime.totem.pg.mrp.srp.members.2.status (str) = joined\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transport (UDP/IP).\n"
-"Aug 27 09:05:34 pcmk-1 corosync[1540]: [TOTEM ] Initializing transmit/receive security: libtomcrypt SOBER128/SHA1HMAC (mode 0).\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>The network interface [192.168.122.101] is now up.</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed.</emphasis>\n"
-"Aug 27 09:12:11 pcmk-1 corosync[1540]: [TOTEM ] <emphasis>A processor joined or left the membership and a new membership was formed</emphasis>.\n"
+"# pcs status corosync\n"
+"Membership information\n"
+" --------------------------\n"
+"    Nodeid      Votes Name\n"
+"         1          1 pcmk-1\n"
+"         2          1 pcmk-2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "You should see both nodes have joined the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All good!"
 msgstr ""
 
 #. Tag: title
@@ -91,65 +131,75 @@ msgid "Verify Pacemaker Installation"
 msgstr "Verifica dell'installazione di Pacemaker"
 
 #. Tag: para
-#, no-c-format
-msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack."
+#, fuzzy, no-c-format
+msgid "Now that we have confirmed that Corosync is functional we can check the rest of the stack. Pacemaker has already been started, so verify the necessary processes are running."
 msgstr "Ora che è stato verificato come Corosync sia funzionante è quindi possibile controllare il resto dello stack."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>grep pcmk_startup /var/log/messages</userinput>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>CRM: Initialized</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] Logging: Initialized pcmk_startup\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: Maximum core file size is: 18446744073709551615\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Service: 9</emphasis>\n"
-"Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Local hostname: pcmk-1</emphasis>\n"
+"# ps axf\n"
+"  PID TTY      STAT   TIME COMMAND\n"
+"    2 ?        S      0:00 [kthreadd]\n"
+"...lots of processes...\n"
+"28019 ?        Ssl    0:03 /usr/sbin/corosync\n"
+"28047 ?        Ss     0:00 /usr/sbin/pacemakerd -f\n"
+"28048 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/cib\n"
+"28049 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/stonithd\n"
+"28050 ?        Ss     0:00  \\_ /usr/lib64/heartbeat/lrmd\n"
+"28051 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/attrd\n"
+"28052 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/pengine\n"
+"28053 ?        Ss     0:00  \\_ /usr/libexec/pacemaker/crmd"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Now verify the Pacemaker processes have been started"
-msgstr "Verifica che i processi Pacemaker sono stati avviati"
+msgid "If that looks ok, check the pcs status output."
+msgstr ""
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# pcs status\n"
+"Last updated: Fri Sep 14 09:52:25 2012\n"
+"Last change: Fri Sep 14 09:51:55 2012 via crmd on pcmk-2\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
+"0 Resources configured.\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>ps axf</userinput>\n"
-"  PID TTY      STAT   TIME COMMAND\n"
-"    2 ?        S&lt;     0:00 [kthreadd]\n"
-"    3 ?        S&lt;     0:00  \\_ [migration/0]\n"
-"... lots of processes ...\n"
-" 2166 pts/0    SLl    0:01 <emphasis>/usr/sbin/corosync</emphasis>\n"
-" 2172 ?        SLs    0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>stonithd</emphasis>\n"
-" 2173 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>cib</emphasis>\n"
-" 2174 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>lrmd</emphasis>\n"
-" 2175 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>attrd</emphasis>\n"
-" 2176 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>pengine</emphasis>\n"
-" 2177 pts/0    S      0:00  <emphasis>\\_ </emphasis>/usr/lib64/heartbeat/<emphasis>crmd</emphasis>\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"Full list of resources:"
 msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "And finally, check for any ERRORs during startup, there shouldn’t be any, and display the cluster’s status."
+#, fuzzy, no-c-format
+msgid "Next, check for any ERRORs during startup - there shouldn’t be any."
 msgstr "Ed infine controllo di errori di qualsiasi tipo durante l'avvio (non se ne dovrebbero rilevare) e visualizzare lo stato del cluster."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
-msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>grep ERROR: /var/log/messages | grep -v unpack_resources</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Thu Aug 27 16:54:55 2009\n"
-"<emphasis>Stack: openais</emphasis>\n"
-"Current DC: pcmk-1 - <emphasis>partition with quorum</emphasis>\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"<emphasis>2 Nodes configured, 2 expected votes</emphasis>\n"
-"<emphasis>0 Resources configured</emphasis>.\n"
-"============\n"
-"\n"
-"<emphasis>Online: [ pcmk-1 pcmk-2 ]</emphasis>\n"
+msgid "# grep -i error /var/log/messages"
 msgstr ""
 
+#. Tag: para
+#, no-c-format
+msgid "Repeat these checks on the other node. The results should be the same."
+msgstr ""
+
+#~ msgid "Start Corosync on the first node"
+#~ msgstr "Avvio di Corosync sul primo nodo"
+
+#~ msgid "Check the cluster started correctly and that an initial membership was able to form"
+#~ msgstr "Controllo del corretto avvio del cluster e che è stata formata la membership iniziale"
+
+#~ msgid "With one node functional, its now safe to start Corosync on the second node as well."
+#~ msgstr "Con un nodo funzionante è ora sicuro avviare Corosync anche sul secondo nodo."
+
+#~ msgid "Check the cluster formed correctly"
+#~ msgstr "Controllo della corretta formazione del cluster"
+
+#~ msgid "Now verify the Pacemaker processes have been started"
+#~ msgstr "Verifica che i processi Pacemaker sono stati avviati"

@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -153,4 +154,3 @@ msgstr "Vă rugam să consultaţi pagina de Releases<footnote><para><ulink url=\
 #, no-c-format
 msgid "When seeking assistance, please try to ensure you have one of these versions."
 msgstr "Când căutaţi asistenţă, vă rugăm să vă asiguraţi că aveţi una din versiunile acestea."
-

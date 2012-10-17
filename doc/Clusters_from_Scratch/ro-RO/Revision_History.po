@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:51\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2011-11-26 13:59+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,3 +32,53 @@ msgstr "Beekhof"
 #, no-c-format
 msgid "Import from Pages.app"
 msgstr "Import din Pages.app"
+
+#. Tag: firstname
+#, no-c-format
+msgid "Raoul"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Scarazzini"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Italian translation"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for Fedora 13"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Update the GFS2 section to use CMAN"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Generate docbook content from asciidoc sources"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for Fedora 17"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "David"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Vossel"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for pcs"
+msgstr ""

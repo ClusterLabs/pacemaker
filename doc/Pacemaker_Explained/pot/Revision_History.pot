@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
+"PO-Revision-Date: 2012-10-17T05:19:02\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -45,5 +45,10 @@ msgstr ""
 #. Tag: member
 #, no-c-format
 msgid "Re-organize book for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Converted to <ulink url=\"http://www.methods.co.nz/asciidoc\">asciidoc</ulink> (which is converted to docbook for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>)"
 msgstr ""
 

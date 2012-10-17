@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -15,9 +16,9 @@ msgid "Cluster Options"
 msgstr "Opţiunile Clusterului"
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Special Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Special Options</secondary></indexterm> Special Options"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunile Speciale ale Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Opțiuni Speciale</secondary></indexterm> Opțiuni Speciale"
+#, fuzzy, no-c-format
+msgid "Special Options"
+msgstr "Descriere"
 
 #. Tag: para
 #, no-c-format
@@ -25,13 +26,18 @@ msgid "The reason for these fields to be placed at the top level instead of with
 msgstr "Motivul pentru care aceste câmpuri să fie plasate la nivelul cel mai înalt în loc să fie cu restul opţiunilor clusterului este pur şi simplu legat de parsare. Aceste opţiuni sunt folosite de către baza de date cu configuraţii care este, prin design, în principal ignorantă faţă de conţinutul pe care îl deţine. Aşa că decizia a fost luată de a le plasa într-o locaţie uşor de găsit."
 
 #. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Configuration Version, Cluster Option</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Configuration Version</secondary></indexterm> Configuration Version"
-msgstr "<indexterm significance=\"preferred\"><primary>Versiunea Configurației, Opțiunea Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Versiunea Configurației</secondary></indexterm> Versiunea Configurației"
+#, fuzzy, no-c-format
+msgid "Configuration Version"
+msgstr "Proprietăţi ale Versiunii Configuraţiei"
 
 #. Tag: para
-#, no-c-format
-msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<varname>admin_epoch</varname>, <varname>epoch</varname>, <varname>num_updates</varname>) tuple to replace the configuration on all the nodes - which makes setting them, and setting them correctly, very important."
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Configuration Version</primary><secondary>Cluster</secondary> </indexterm> <indexterm> <primary>Cluster</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>Configuration Version</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>Configuration Version</secondary> </indexterm> <indexterm> <primary>Configuration Version</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "When a node joins the cluster, the cluster will perform a check to see who has the best configuration based on the fields below. It then asks the node with the highest (<literal>admin_epoch</literal>, <literal>epoch</literal>, <literal>num_updates</literal>) tuple to replace the configuration on all the nodes - which makes setting them, and setting them correctly, very important."
 msgstr "Când un nod aderă la cluster, clusterul va efectua o verificare pentru a vedea cine are cea mai bună configuraţie bazată pe câmpurile de mai jos. Apoi întreabă nodul cu cea mai mare tuplă (<varname>admin_epoch, epoch, num_updates</varname>) să înlocuiască configuraţia pe toate nodurile - fapt care face setarea acestora şi setarea lor corectă, foarte importantă."
 
 #. Tag: title
@@ -49,40 +55,40 @@ msgstr "Câmp"
 msgid "Description"
 msgstr "Descriere"
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>admin_epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului admin_epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
-
 #. Tag: para
 #, no-c-format
-msgid "Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
-msgstr "Niciodată modificat de către cluster. Folosiţi acesta pentru a face configuraţiile pe nodurile inactive să fie învechite."
+msgid "<literal>admin_epoch</literal>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>admin_epoch</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>admin_epoch</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>admin_epoch</secondary> </indexterm> <indexterm> <primary>admin_epoch</primary> </indexterm> Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: para
 #, no-c-format
 msgid "<emphasis>Never set this value to zero</emphasis>, in such cases the cluster cannot tell the difference between your configuration and the \"empty\" one used when nothing is found on disk."
 msgstr "<emphasis>Nu setaţi niciodată această valoare la zero</emphasis>, în astfel de cazuri clusterul nu poate face diferenţa între configuraţia voastră şi cea \"goală\" folosită atunci când nu este găsit nimic pe disc."
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>epoch</secondary></indexterm> epoch"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>epoch</secondary></indexterm> epoch"
+msgid "<literal>epoch</literal>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "Incremented every time the configuration is updated (usually by the admin)"
-msgstr "Incrementată de fiecare dată când configuraţia este actualizată (de obicei de către administrator)"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>epoch</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>epoch</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>epoch</secondary> </indexterm> <indexterm> <primary>epoch</primary> </indexterm> Incremented every time the configuration is updated (usually by the admin)"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>num_updates Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>num_updates</secondary></indexterm> num_updates"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului num_updates</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>num_updates</secondary></indexterm> num_updates"
+msgid "<literal>num_updates</literal>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "Incremented every time the configuration or status is updated (usually by the cluster)"
-msgstr "Incrementată de fiecare dată când configuraţia sau statusul este actualizat (de obicei de către cluster)"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>num_updates</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>num_updates</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>num_updates</secondary> </indexterm> <indexterm> <primary>num_updates</primary> </indexterm> Incremented every time the configuration or status is updated (usually by the cluster)"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: title
 #, no-c-format
@@ -94,15 +100,15 @@ msgstr "Alte Câmpuri"
 msgid "Properties Controlling Validation"
 msgstr "Proprietăţi care Controlează Validarea"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>validate-with Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>validate-with</secondary></indexterm> validate-with"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului validate-with</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>validate-with</secondary></indexterm> validate-with"
+msgid "<literal>validate-with</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform to the DTD (nor reject ones that don't). This option can be useful when operating a mixed version cluster during an upgrade."
-msgstr "Determină tipul de validare care este realizat pe configuraţie. Dacă este setat pe \"none\", clusterul nu va verifica dacă actualizările sunt conforme cu DTD (nici nu le va respinge pe cele care nu sunt). Această opţiune poate fi utilă când lucraţi cu o versiune combinată a clusterului în timpul unei actualizări."
+msgid "<indexterm> <primary>validate-with</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>validate-with</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>validate-with</secondary> </indexterm> <indexterm> <primary>validate-with</primary> </indexterm> Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform to the DTD (nor reject ones that don’t). This option can be useful when operating a mixed version cluster during an upgrade."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -114,44 +120,44 @@ msgstr "Câmpuri Menţinute de către Cluster"
 msgid "Properties Maintained by the Cluster"
 msgstr "Proprietăţi Menţinute de către Cluster"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>cib-last-written Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
-msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului cib-last-written</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates when the configuration was last written to disk. Informational purposes only."
-msgstr "Indică momentul când configuraţia a fost scrisă ultima oară pe disc. Numai cu scop informaţional."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>dc-uuid Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
-msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului dc-uuid</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
-msgstr "Arată care dintre nodurile clusterului este conducătorul curent. Folosit de către cluster când plasează resurse şi determină ordinea anumitor evenimente."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>have-quorum Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
-msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului have-quorum</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
-
-#. Tag: entry
-#, no-c-format
-msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See <literal>no-quorum-policy</literal> below."
-msgstr "Indică dacă clusterul are quorum. Dacă este fals, acest lucru ar putea însemna că, clusterul nu poate porni resurse sau evacua forțat alte noduri. Vedeţi <literal>no-quorum-policy</literal> mai jos."
+msgid "<literal>cib-last-written</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Note that although these fields can be written to by the admin, in most cases the cluster will overwrite any values specified by the admin with the \"correct\" ones. To change the <varname>admin_epoch</varname>, for example, one would use:"
+msgid "<indexterm> <primary>cib-last-written</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>cib-last-written</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>cib-last-written</secondary> </indexterm> <indexterm> <primary>cib-last-written</primary> </indexterm> Indicates when the configuration was last written to disk. Informational purposes only."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>dc-uuid</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>dc-uuid</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>dc-uuid</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>dc-uuid</secondary> </indexterm> <indexterm> <primary>dc-uuid</primary> </indexterm> Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>have-quorum</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>have-quorum</primary><secondary>Cluster Property</secondary> </indexterm> <indexterm> <primary>Cluster Property</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Property</secondary><tertiary>have-quorum</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>have-quorum</secondary> </indexterm> <indexterm> <primary>have-quorum</primary> </indexterm> Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See <literal>no-quorum-policy</literal> below."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Note that although these fields can be written to by the admin, in most cases the cluster will overwrite any values specified by the admin with the \"correct\" ones. To change the <literal>admin_epoch</literal>, for example, one would use:"
 msgstr "Luaţi aminte că deşi aceste câmpuri pot fi scrise de către administrator, în majoritatea cazurilor clusterul va suprascrie orice valoare specificată de către administrator cu cele \"corecte\". Pentru a schimba <varname>admin_epoch</varname> de exemplu, cineva ar putea folosi:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# cibadmin --modify --crm_xml '&lt;cib admin_epoch=\"42\"/&gt;'"
 msgstr "<command>cibadmin --modify --crm_xml ‘&lt;cib admin_epoch=\"42\"/&gt;'</command>"
 
 #. Tag: para
@@ -165,16 +171,16 @@ msgid "An example of the fields set for a cib object"
 msgstr "Un exemplu al câmpurilor setate pentru un obiect CIB"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
+#, fuzzy, no-c-format
+msgid ""
+"&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
 "  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
-"  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt; \n"
-"	  "
+"  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt;"
 msgstr ""
 "&lt;cib have-quorum=\"true\" validate-with=\"pacemaker-1.0\"\n"
 "  admin_epoch=\"1\" epoch=\"12\" num_updates=\"65\"\n"
 "  dc-uuid=\"ea7d39f4-3b94-4cfa-ba7a-952956daabee\"&gt; \n"
-"	  "
+"\t  "
 
 #. Tag: para
 #, no-c-format
@@ -182,8 +188,8 @@ msgid "Cluster options, as you might expect, control how the cluster behaves whe
 msgstr "Opţiunile clusterului, aşa cum v-aţi aştepta, controlează cum se comportă clusterul când se confruntă cu anumite situaţii."
 
 #. Tag: para
-#, no-c-format
-msgid "They are grouped into sets and, in advanced configurations, there may be more than one<footnote> <para>This will be described later in the section on <xref linkend=\"ch-rules\" /> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)</para> </footnote>. For now we will describe the simple case where each option is present at most once."
+#, fuzzy, no-c-format
+msgid "They are grouped into sets and, in advanced configurations, there may be more than one. <footnote><para>This will be described later in the section on <xref linkend=\"ch-rules\" /> where we will show how to have the cluster use different sets of options during working hours (when downtime is usually to be avoided at all costs) than it does during the weekends (when resources can be moved to the their preferred hosts without bothering end users)</para></footnote> For now we will describe the simple case where each option is present at most once."
 msgstr "Sunt grupate în seturi şi, în configuraţii avansate, ar putea fi mai mult de una<footnote> <para>Acest aspect va fi descris mai târziu în secţiunea despre <xref linkend=\"ch-rules\" /> unde vă vom arăta cum să punem clusterul să folosească diferite seturi de opţiuni în timpul orelor de lucru (când nefuncţionarea este de evitat cu orice preţ) faţă de cele folosite în timpul weekend-urilor (când resursele pot fi mutate pe gazdele preferate fără să deranjeze utilizatorii finali)</para> </footnote>. Momentan vom descrie cazul simplu în care fiecare opţiune este prezentă cel mult o dată."
 
 #. Tag: title
@@ -201,199 +207,219 @@ msgstr "Opţiune"
 msgid "Default"
 msgstr "Valoare implicită"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>batch-limit Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului batch-limit</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
+msgid "<literal>batch-limit</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "30"
 msgstr "30"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The number of jobs that the TE is allowed to execute in parallel. The \"correct\" value will depend on the speed and load of your network and cluster nodes."
-msgstr "Numărul de sarcini pe care TE-ul este permis să le execute în paralel. Valoarea \"corectă\" va depinde de viteza şi de încărcarea reţelei şi a nodurilor voastre din cluster."
+msgid "<indexterm> <primary>batch-limit</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>batch-limit</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>batch-limit</secondary> </indexterm> <indexterm> <primary>batch-limit</primary> </indexterm> The number of jobs that the TE is allowed to execute in parallel. The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>no-quorum-policy Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului no-quorum-policy</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
+msgid "<literal>migration-limit</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
+#, no-c-format
+msgid "-1 (unlimited)"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>migration-limit</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>migration-limit</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>migration-limit</secondary> </indexterm> <indexterm> <primary>migration-limit</primary> </indexterm> The number of migration jobs that the TE is allowed to execute in parallel on a node."
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>no-quorum-policy</literal>"
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid "stop"
 msgstr "stop"
 
-#. Tag: entry
-#, no-c-format
-msgid "What to do when the cluster does not have quorum. Allowed values:"
-msgstr "Ce este de făcut atunci când clusterul nu are quorum. Valori permise:"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>no-quorum-policy</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>no-quorum-policy</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>no-quorum-policy</secondary> </indexterm> <indexterm> <primary>no-quorum-policy</primary> </indexterm> What to do when the cluster does not have quorum. Allowed values:"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: para
-#, no-c-format
-msgid "ignore - continue all resource management"
+#, fuzzy, no-c-format
+msgid "* ignore - continue all resource management"
 msgstr "ignore - continuă toată gestionarea resurselor"
 
 #. Tag: para
-#, no-c-format
-msgid "freeze - continue resource management, but don't recover resources from nodes not in the affected partition"
+#, fuzzy, no-c-format
+msgid "* freeze - continue resource management, but don’t recover resources from nodes not in the affected partition"
 msgstr "freeze - continuă gestionarea resurselor, dar nu recupera resurse de pe noduri care nu sunt în partiţia afectată"
 
 #. Tag: para
-#, no-c-format
-msgid "stop - stop all resources in the affected cluster partition"
+#, fuzzy, no-c-format
+msgid "* stop - stop all resources in the affected cluster partition"
 msgstr "stop - opreşte toate resursele în partiţia de cluster afectată"
 
 #. Tag: para
-#, no-c-format
-msgid "suicide - fence all nodes in the affected cluster partition"
+#, fuzzy, no-c-format
+msgid "* suicide - fence all nodes in the affected cluster partition"
 msgstr "suicide - evacuează forțat toate nodurile din partiţia de cluster afectată"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>symmetric-cluster Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului symmetric-cluster</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
+msgid "<literal>symmetric-cluster</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "TRUE"
 msgstr "TRUE"
 
-#. Tag: entry
-#, no-c-format
-msgid "Can all resources run on any node by default?"
-msgstr "Pot rula toate resursele pe orice nod în mod implicit?"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>stonith-enabled Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-enabled</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>symmetric-cluster</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>symmetric-cluster</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>symmetric-cluster</secondary> </indexterm> <indexterm> <primary>symmetric-cluster</primary> </indexterm> Can all resources run on any node by default?"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: para
 #, no-c-format
-msgid "Should failed nodes and nodes with resources that can't be stopped be shot? If you value your data, set up a STONITH device and enable this."
-msgstr "Ar trebui nodurile care au eşuat şi nodurile cu resurse care nu pot fi oprite să fie împuşcate? Dacă ţineţi la datele voastre, setaţi un dispozitiv STONITH şi activaţi această opţiune."
+msgid "<literal>stonith-enabled</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>stonith-enabled</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stonith-enabled</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stonith-enabled</secondary> </indexterm> <indexterm> <primary>stonith-enabled</primary> </indexterm> Should failed nodes and nodes with resources that can’t be stopped be shot? If you value your data, set up a STONITH device and enable this."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "If true, or unset, the cluster will refuse to start resources unless one or more STONITH resources have been configured also."
 msgstr "Dacă este true, sau nu este setată, clusterul va refuza să pornească resurse decât dacă unul sau mai multe dispozitive STONITH au fost configurate de asemenea."
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>stonith-action Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-action</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
+msgid "<literal>stonith-action</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "reboot"
 msgstr "reboot"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Action to send to STONITH device. Allowed values: reboot, poweroff."
-msgstr "Acţiunea care să fie trimisă către dispozitivul STONITH. Valori permise: reboot, poweroff."
+msgid "<indexterm> <primary>stonith-action</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stonith-action</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stonith-action</secondary> </indexterm> <indexterm> <primary>stonith-action</primary> </indexterm> Action to send to STONITH device. Allowed values: reboot, off. The value <emphasis>poweroff</emphasis> is also allowed, but is only used for legacy devices."
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>cluster-delay Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului cluster-delay</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
+msgid "<literal>cluster-delay</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "60s"
 msgstr "60s"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Round trip delay over the network (excluding action execution). The \"correct\" value will depend on the speed and load of your network and cluster nodes."
-msgstr "Întârzierea dus-întors experimentată pe reţea (excluzând timpul necesar executării acţiunii). Valoarea \"corectă\" va depinde de viteza şi de nivelul de încărcare al reţelei şi al nodurilor voastre din cluster."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-resources Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-resources</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
-
-#. Tag: entry
-#, no-c-format
-msgid "Should deleted resources be stopped?"
-msgstr "Ar trebui să fie oprite resursele şterse?"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-actions Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-actions</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
-
-#. Tag: entry
-#, no-c-format
-msgid "Should deleted actions be cancelled?"
-msgstr "Ar trebui anulate acţiunile şterse?"
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>start-failure-is-fatal Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului start-failure-is-fatal</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
-
-#. Tag: entry
-#, no-c-format
-msgid "When set to FALSE, the cluster will instead use the resource's <literal>failcount</literal> and value for <literal>resource-failure-stickiness</literal>."
-msgstr "Când este setat pe FALSE, clusterul va folosi în schimb <literal>failcount</literal>-ul şi valoarea resursei pentru <literal>resource-failure-stickiness</literal>."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>pe-error-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-error-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
-
-#. Tag: entry
-#, no-c-format
-msgid "-1 (all)"
-msgstr "-1 (all)"
-
-#. Tag: entry
-#, no-c-format
-msgid "The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
-msgstr "Numărul de intrări PE care rezultă în ERROR(i) de a salva. Folosite când se raporteazâ probleme."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>pe-warn-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-warn-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
-
-#. Tag: entry
-#, no-c-format
-msgid "The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
-msgstr "Numărul de intrări PE care rezultă în WARNING-uri de a salva. Folosite când se raportează probleme."
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>pe-input-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
-msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-input-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
-
-#. Tag: entry
-#, no-c-format
-msgid "The number of \"normal\" PE inputs to save. Used when reporting problems."
-msgstr "Numărul de intrări PE \"normale\" care să fie salvate. Folosite când se raportează probleme."
+msgid "<indexterm> <primary>cluster-delay</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>cluster-delay</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>cluster-delay</secondary> </indexterm> <indexterm> <primary>cluster-delay</primary> </indexterm> Round trip delay over the network (excluding action execution). The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You can always obtain an up-to-date list of cluster options, including their default values, by running the <command>pengine metadata</command> command."
-msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora, prin rularea comenzii <command>pengine metadata</command>."
+msgid "<literal>stop-orphan-resources</literal>"
+msgstr ""
 
-#. Tag: title
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Querying Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setting Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Querying</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Setting</secondary></indexterm> Querying and Setting Cluster Options"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>stop-orphan-resources</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stop-orphan-resources</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stop-orphan-resources</secondary> </indexterm> <indexterm> <primary>stop-orphan-resources</primary> </indexterm> Should deleted resources be stopped?"
 msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: para
 #, no-c-format
-msgid "Cluster options can be queried and modified using the <command>crm_attribute</command> tool. To get the current value of <literal>cluster-delay</literal>, simply use:"
-msgstr "Opţiunile clusterului pot fi interogate şi modificate folosind utilitarul <command>crm_attribute</command>. Pentru a obţine valoarea curentă a <literal>cluster-delay</literal>, pur şi simplu folosiţi:"
+msgid "<literal>stop-orphan-actions</literal>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>stop-orphan-actions</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>stop-orphan-actions</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>stop-orphan-actions</secondary> </indexterm> <indexterm> <primary>stop-orphan-actions</primary> </indexterm> Should deleted actions be cancelled?"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
 
 #. Tag: para
 #, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
+msgid "<literal>start-failure-is-fatal</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>start-failure-is-fatal</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>start-failure-is-fatal</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>start-failure-is-fatal</secondary> </indexterm> <indexterm> <primary>start-failure-is-fatal</primary> </indexterm> When set to FALSE, the cluster will instead use the resource’s <literal>failcount</literal> and value for <literal>resource-failure-stickiness</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pe-error-series-max</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "-1 (all)"
+msgstr "-1 (all)"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>pe-error-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-error-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-error-series-max</secondary> </indexterm> <indexterm> <primary>pe-error-series-max</primary> </indexterm> The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pe-warn-series-max</literal>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>pe-warn-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-warn-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-warn-series-max</secondary> </indexterm> <indexterm> <primary>pe-warn-series-max</primary> </indexterm> The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pe-input-series-max</literal>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>pe-input-series-max</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Option</secondary><tertiary>pe-input-series-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>pe-input-series-max</secondary> </indexterm> <indexterm> <primary>pe-input-series-max</primary> </indexterm> The number of \"normal\" PE inputs to save. Used when reporting problems."
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You can always obtain an up-to-date list of cluster options, including their default values, by running the <literal>pengine metadata</literal> command."
+msgstr "Puteţi întotdeauna să obţineţi o listă actualizată a opţiunilor clusterului, incluzând valorile implicite ale acestora, prin rularea comenzii <command>pengine metadata</command>."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Querying and Setting Cluster Options"
+msgstr "Opţiuni Disponibile ale Clusterului"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<indexterm> <primary>Querying</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Setting</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Querying Options</secondary> </indexterm> <indexterm> <primary>Querying Options</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Setting Options</secondary> </indexterm> <indexterm> <primary>Setting Options</primary> </indexterm>"
+msgstr "<indexterm significance=\"preferred\"><primary>Interogarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Setarea Opțiunilor Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Interogarea</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunilor Clusterului</primary><secondary>Setarea</secondary></indexterm> Interogarea și Setarea Opțiunilor Clusterului"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Cluster options can be queried and modified using the <literal>crm_attribute</literal> tool. To get the current value of <literal>cluster-delay</literal>, simply use:"
+msgstr "Opţiunile clusterului pot fi interogate şi modificate folosind utilitarul <command>crm_attribute</command>. Pentru a obţine valoarea curentă a <literal>cluster-delay</literal>, pur şi simplu folosiţi:"
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --get-value"
 msgstr "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
 
 #. Tag: para
@@ -401,19 +427,20 @@ msgstr "<command>crm_attribute --attr-name cluster-delay --get-value</command>"
 msgid "which is more simply written as"
 msgstr "care este scrisă mai simplu ca"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --get-value -n cluster-delay</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --get-value -n cluster-delay"
 msgstr "<command>crm_attribute --get-value -n cluster-delay</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "If a value is found, you'll see a result like this:"
+#, fuzzy, no-c-format
+msgid "If a value is found, you’ll see a result like this:"
 msgstr "Dacă o valoare este găsită, atunci veţi vedea un rezultat ca acesta"
 
-#. Tag: screen
-#, no-c-format
-msgid "<command> # crm_attribute --get-value -n cluster-delay</command>\n"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"# crm_attribute --get-value -n cluster-delay\n"
 " name=cluster-delay value=60s"
 msgstr ""
 "<command> # crm_attribute --get-value -n cluster-delay</command>\n"
@@ -424,34 +451,35 @@ msgstr ""
 msgid "However, if no value is found, the tool will display an error:"
 msgstr "Însă dacă nici o valoare nu este găsită, utilitarul va arăta o eroare:"
 
-#. Tag: screen
-#, no-c-format
-msgid "<command># crm_attribute --get-value -n clusta-deway</command>\n"
-" name=clusta-deway value=(null)\n"
-" Error performing operation: The object/attribute does not exist"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"# crm_attribute --get-value -n clusta-deway`\n"
+"name=clusta-deway value=(null)\n"
+"Error performing operation: The object/attribute does not exist"
 msgstr ""
 "<command># crm_attribute --get-value -n clusta-deway</command>\n"
 " name=clusta-deway value=(null)\n"
 " Error performing operation: The object/attribute does not exist"
 
 #. Tag: para
-#, no-c-format
-msgid "To use a different value, eg. <option>30s</option>, simply run:"
+#, fuzzy, no-c-format
+msgid "To use a different value, eg. <literal>30</literal>, simply run:"
 msgstr "Pentru a folosi o altă valoare, ex. <option>30s</option>, pur şi simplu rulaţi:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --attr-value 30s"
 msgstr "<command>crm_attribute --attr-name cluster-delay --attr-value 30s</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "To go back to the cluster's default value you can delete the value, for example with this command:"
+#, fuzzy, no-c-format
+msgid "To go back to the cluster’s default value you can delete the value, for example with this command:"
 msgstr "Pentru a reveni la valoarea implicită a clusterului puteţi ştergeţi valoarea, de exemplu cu această comandă: "
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --attr-name cluster-delay --delete-attr"
 msgstr "<command>crm_attribute --attr-name cluster-delay --delete-attr</command>"
 
 #. Tag: title
@@ -460,8 +488,8 @@ msgid "When Options are Listed More Than Once"
 msgstr "Când Opţiunile sunt Listate Mai Mult De O Dată"
 
 #. Tag: para
-#, no-c-format
-msgid "If you ever see something like the following, it means that the option you're modifying is present more than once."
+#, fuzzy, no-c-format
+msgid "If you ever see something like the following, it means that the option you’re modifying is present more than once."
 msgstr "Dacă vedeţi vreodată ceva precum următoarele, înseamnă că opţiunea pe care o modificaţi este prezentă mai mult de o dată."
 
 #. Tag: title
@@ -469,13 +497,15 @@ msgstr "Dacă vedeţi vreodată ceva precum următoarele, înseamnă că opţiun
 msgid "Deleting an option that is listed twice"
 msgstr "Ştergerea unei opţiuni care este listată de două ori"
 
-#. Tag: screen
-#, no-c-format
-msgid "<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
-" Multiple attributes match name=batch-limit in crm_config:\n"
-" Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
-" Value: 100         (set=custom, id=custom-batch-limit)\n"
-" Please choose from one of the matches above and supply the 'id' with --attr-id"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"# crm_attribute --attr-name batch-limit --delete-attr\n"
+"\n"
+"Multiple attributes match name=batch-limit in crm_config:\n"
+"Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
+"Value: 100         (set=custom, id=custom-batch-limit)\n"
+"Please choose from one of the matches above and supply the 'id' with --attr-id"
 msgstr ""
 "<command># crm_attribute --attr-name batch-limit --delete-attr</command>\n"
 " Multiple attributes match name=batch-limit in crm_config:\n"
@@ -484,7 +514,126 @@ msgstr ""
 " Please choose from one of the matches above and supply the 'id' with --attr-id"
 
 #. Tag: para
-#, no-c-format
-msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to the section on <xref linkend=\"ch-rules\" />."
+#, fuzzy, no-c-format
+msgid "In such cases follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, please refer to <xref linkend=\"ch-rules\" />."
 msgstr "În astfel de cazuri urmaţi instrucţiunile de pe ecran pentru a efectua acţiunea cerută. Pentru a determina care valoare este folosită în mod curent de către cluster, vă rugăm să faceţi referinţă la secţiunea despre <xref linkend=\"ch-rules\" />."
 
+#~ msgid "<indexterm significance=\"preferred\"><primary>Special Cluster Options</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Special Options</secondary></indexterm> Special Options"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunile Speciale ale Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Opțiuni Speciale</secondary></indexterm> Opțiuni Speciale"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>Configuration Version, Cluster Option</primary></indexterm> <indexterm significance=\"preferred\"><primary>Cluster Options</primary><secondary>Configuration Version</secondary></indexterm> Configuration Version"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Versiunea Configurației, Opțiunea Clusterului</primary></indexterm> <indexterm significance=\"preferred\"><primary>Opțiunile Clusterului</primary><secondary>Versiunea Configurației</secondary></indexterm> Versiunea Configurației"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>admin_epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului admin_epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>admin_epoch</secondary></indexterm> admin_epoch"
+
+#~ msgid "Never modified by the cluster. Use this to make the configurations on any inactive nodes obsolete."
+#~ msgstr "Niciodată modificat de către cluster. Folosiţi acesta pentru a face configuraţiile pe nodurile inactive să fie învechite."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>epoch Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>epoch</secondary></indexterm> epoch"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului epoch</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>epoch</secondary></indexterm> epoch"
+
+#~ msgid "Incremented every time the configuration is updated (usually by the admin)"
+#~ msgstr "Incrementată de fiecare dată când configuraţia este actualizată (de obicei de către administrator)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>num_updates Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>num_updates</secondary></indexterm> num_updates"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului num_updates</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>num_updates</secondary></indexterm> num_updates"
+
+#~ msgid "Incremented every time the configuration or status is updated (usually by the cluster)"
+#~ msgstr "Incrementată de fiecare dată când configuraţia sau statusul este actualizat (de obicei de către cluster)"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>validate-with Cluster Option</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>validate-with</secondary></indexterm> validate-with"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului validate-with</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>validate-with</secondary></indexterm> validate-with"
+
+#~ msgid "Determines the type of validation being done on the configuration. If set to \"none\", the cluster will not verify that updates conform to the DTD (nor reject ones that don't). This option can be useful when operating a mixed version cluster during an upgrade."
+#~ msgstr "Determină tipul de validare care este realizat pe configuraţie. Dacă este setat pe \"none\", clusterul nu va verifica dacă actualizările sunt conforme cu DTD (nici nu le va respinge pe cele care nu sunt). Această opţiune poate fi utilă când lucraţi cu o versiune combinată a clusterului în timpul unei actualizări."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>cib-last-written Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului cib-last-written</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>cib-last-written</secondary></indexterm> cib-last-written"
+
+#~ msgid "Indicates when the configuration was last written to disk. Informational purposes only."
+#~ msgstr "Indică momentul când configuraţia a fost scrisă ultima oară pe disc. Numai cu scop informaţional."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>dc-uuid Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului dc-uuid</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>dc-uuid</secondary></indexterm> dc-uuid"
+
+#~ msgid "Indicates which cluster node is the current leader. Used by the cluster when placing resources and determining the order of some events."
+#~ msgstr "Arată care dintre nodurile clusterului este conducătorul curent. Folosit de către cluster când plasează resurse şi determină ordinea anumitor evenimente."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>have-quorum Cluster Fields</primary></indexterm> <indexterm><primary>Cluster Fields</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Câmpurile Clusterului have-quorum</primary></indexterm> <indexterm><primary>Câmpurile Clusterului</primary><secondary>have-quorum</secondary></indexterm> have-quorum"
+
+#~ msgid "Indicates if the cluster has quorum. If false, this may mean that the cluster cannot start resources or fence other nodes. See <literal>no-quorum-policy</literal> below."
+#~ msgstr "Indică dacă clusterul are quorum. Dacă este fals, acest lucru ar putea însemna că, clusterul nu poate porni resurse sau evacua forțat alte noduri. Vedeţi <literal>no-quorum-policy</literal> mai jos."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>batch-limit Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului batch-limit</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>batch-limit</secondary></indexterm> batch-limit"
+
+#~ msgid "The number of jobs that the TE is allowed to execute in parallel. The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+#~ msgstr "Numărul de sarcini pe care TE-ul este permis să le execute în paralel. Valoarea \"corectă\" va depinde de viteza şi de încărcarea reţelei şi a nodurilor voastre din cluster."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>no-quorum-policy Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului no-quorum-policy</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>no-quorum-policy</secondary></indexterm> no-quorum-policy"
+
+#~ msgid "What to do when the cluster does not have quorum. Allowed values:"
+#~ msgstr "Ce este de făcut atunci când clusterul nu are quorum. Valori permise:"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>symmetric-cluster Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului symmetric-cluster</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>symmetric-cluster</secondary></indexterm> symmetric-cluster"
+
+#~ msgid "Can all resources run on any node by default?"
+#~ msgstr "Pot rula toate resursele pe orice nod în mod implicit?"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>stonith-enabled Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-enabled</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-enabled</secondary></indexterm> stonith-enabled"
+
+#~ msgid "Should failed nodes and nodes with resources that can't be stopped be shot? If you value your data, set up a STONITH device and enable this."
+#~ msgstr "Ar trebui nodurile care au eşuat şi nodurile cu resurse care nu pot fi oprite să fie împuşcate? Dacă ţineţi la datele voastre, setaţi un dispozitiv STONITH şi activaţi această opţiune."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>stonith-action Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stonith-action</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stonith-action</secondary></indexterm> stonith-action"
+
+#~ msgid "Action to send to STONITH device. Allowed values: reboot, poweroff."
+#~ msgstr "Acţiunea care să fie trimisă către dispozitivul STONITH. Valori permise: reboot, poweroff."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>cluster-delay Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului cluster-delay</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>cluster-delay</secondary></indexterm> cluster-delay"
+
+#~ msgid "Round trip delay over the network (excluding action execution). The \"correct\" value will depend on the speed and load of your network and cluster nodes."
+#~ msgstr "Întârzierea dus-întors experimentată pe reţea (excluzând timpul necesar executării acţiunii). Valoarea \"corectă\" va depinde de viteza şi de nivelul de încărcare al reţelei şi al nodurilor voastre din cluster."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-resources Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-resources</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-resources</secondary></indexterm> stop-orphan-resources"
+
+#~ msgid "Should deleted resources be stopped?"
+#~ msgstr "Ar trebui să fie oprite resursele şterse?"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>stop-orphan-actions Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului stop-orphan-actions</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>stop-orphan-actions</secondary></indexterm> stop-orphan-actions"
+
+#~ msgid "Should deleted actions be cancelled?"
+#~ msgstr "Ar trebui anulate acţiunile şterse?"
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>start-failure-is-fatal Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului start-failure-is-fatal</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>start-failure-is-fatal</secondary></indexterm> start-failure-is-fatal"
+
+#~ msgid "When set to FALSE, the cluster will instead use the resource's <literal>failcount</literal> and value for <literal>resource-failure-stickiness</literal>."
+#~ msgstr "Când este setat pe FALSE, clusterul va folosi în schimb <literal>failcount</literal>-ul şi valoarea resursei pentru <literal>resource-failure-stickiness</literal>."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>pe-error-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-error-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-error-series-max</secondary></indexterm> pe-error-series-max"
+
+#~ msgid "The number of PE inputs resulting in ERRORs to save. Used when reporting problems."
+#~ msgstr "Numărul de intrări PE care rezultă în ERROR(i) de a salva. Folosite când se raporteazâ probleme."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>pe-warn-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-warn-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-warn-series-max</secondary></indexterm> pe-warn-series-max"
+
+#~ msgid "The number of PE inputs resulting in WARNINGs to save. Used when reporting problems."
+#~ msgstr "Numărul de intrări PE care rezultă în WARNING-uri de a salva. Folosite când se raportează probleme."
+
+#~ msgid "<indexterm significance=\"preferred\"><primary>pe-input-series-max Cluster Options</primary></indexterm> <indexterm><primary>Cluster Options</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
+#~ msgstr "<indexterm significance=\"preferred\"><primary>Opțiunea Clusterului pe-input-series-max</primary></indexterm> <indexterm><primary>Opțiunile Clusterului</primary><secondary>pe-input-series-max</secondary></indexterm> pe-input-series-max"
+
+#~ msgid "The number of \"normal\" PE inputs to save. Used when reporting problems."
+#~ msgstr "Numărul de intrări PE \"normale\" care să fie salvate. Folosite când se raportează probleme."

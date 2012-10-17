@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-10-12 10:17+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -19,13 +19,18 @@ msgid "Advanced Configuration"
 msgstr "Configurazione avanzata"
 
 #. Tag: title
-#, no-c-format
-msgid "Connecting to the Cluster Configuration from a Remote Machine"
+#, fuzzy, no-c-format
+msgid "Connecting from a Remote Machine"
 msgstr "Connessione alla configurazione del cluster da una macchina remota"
 
 #. Tag: para
 #, no-c-format
-msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not a part of it. To do this, one simply sets up a number of environment variables and runs the same commands as you would when working on a cluster node."
+msgid "<indexterm> <primary>Cluster</primary><secondary>Remote connection</secondary> </indexterm> <indexterm> <primary>Remote connection</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Remote administration</secondary> </indexterm> <indexterm> <primary>Remote administration</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster. To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node."
 msgstr "Supponendo che Pacemaker sia installato su una macchina, è possibile collegarsi al cluster anche se questa non è parte di esso. Per farlo è sufficiente valorizzare alcune variabili d'ambiente ed eseguire gli stessi comandi che si eseguirebbero su un nodo del cluster."
 
 #. Tag: title
@@ -43,70 +48,66 @@ msgstr "Variabile d'ambiente"
 msgid "Description"
 msgstr "Descrizione"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "CIB_user"
-msgstr "CIB_user"
-
-#. Tag: entry
-#, no-c-format
-msgid "The user to connect as. Needs to be part of the hacluster group on the target host. Defaults to <emphasis>$USER</emphasis>"
-msgstr "L'utente mediante il quale connettersi. Deve essere parte del gruppo hacluster sull'host di destinazione. Il valore di default è <emphasis>$USER</emphasis>"
-
-#. Tag: entry
-#, no-c-format
-msgid "CIB_passwd"
-msgstr "CIB_passwd"
-
-#. Tag: entry
-#, no-c-format
-msgid "The user&#39;s password. Read from the command line if unset"
-msgstr "La password dell'utente. Viene letta da linea di comando se non passata"
-
-#. Tag: entry
-#, no-c-format
-msgid "CIB_server"
-msgstr "CIB_server"
-
-#. Tag: entry
-#, no-c-format
-msgid "The host to contact. Defaults to <emphasis>localhost</emphasis>."
-msgstr "L'host da contattare. Il valore di default è <emphasis>localhost</emphasis>."
-
-#. Tag: entry
-#, no-c-format
-msgid "CIB_port"
-msgstr "CIB_port"
-
-#. Tag: entry
-#, no-c-format
-msgid "The port on which to contact the server. Required."
-msgstr "La porta alla quale contattare il server. Richiesto."
-
-#. Tag: entry
-#, no-c-format
-msgid "CIB_encrypted"
-msgstr "CIB_encrypted"
-
-#. Tag: entry
-#, no-c-format
-msgid "Encrypt network traffic. Defaults to <emphasis>true</emphasis>."
-msgstr "Crittare o meno il traffico network. Il valore di default è <emphasis>true</emphasis>."
+msgid "<literal>CIB_user</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "So if c001n01 is an active cluster node and is listening on 1234 for connections, and someguy is a member of the hacluster group. Then the following would prompt for someguy&#39;s password and return the cluster&#39;s current configuration:"
+msgid "The user to connect as. Needs to be part of the <literal>hacluster</literal> group on the target host. Defaults to <emphasis>$USER</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_passwd</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The user’s password. Read from the command line if unset. <indexterm> <primary>Environment Variable</primary><secondary>CIB_passwd</secondary> </indexterm> <indexterm> <primary>CIB_passwd</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_server</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The host to contact. Defaults to <emphasis>localhost</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_server</secondary> </indexterm> <indexterm> <primary>CIB_server</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The port on which to contact the server; required. <indexterm> <primary>Environment Variable</primary><secondary>CIB_port</secondary> </indexterm> <indexterm> <primary>CIB_port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_encrypted</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Encrypt network traffic; defaults to <emphasis>true</emphasis>. <indexterm> <primary>Environment Variable</primary><secondary>CIB_encrypted</secondary> </indexterm> <indexterm> <primary>CIB_encrypted</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "So, if <literal>c001n01</literal> is an active cluster node and is listening on <literal>1234</literal> for connections, and <literal>someguy</literal> is a member of the <literal>hacluster</literal> group, then the following would prompt for <literal>someguy</literal>'s password and return the cluster’s current configuration:"
 msgstr "Quindi se c001n01 è un nodo del cluster attivo in ascolto alle connessioni sulla porta 1234 e someguy è un parte del gruppo hacluster, allora di seguito verrà richiesta la password e restituito lo stato della configurazione del cluster:"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\t<userinput>\n"
-"  export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
-"  cibadmin -Q\n"
-"\t</userinput>\n"
-"      "
+"# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someguy;\n"
+"# cibadmin -Q"
 msgstr ""
 "\n"
 "\t<userinput>\n"
@@ -116,8 +117,8 @@ msgstr ""
 "      "
 
 #. Tag: para
-#, no-c-format
-msgid "For security reasons, the cluster does not listen remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie. those kept in the cib tag , like <literal>num_updates</literal> and <literal>epoch</literal>)."
+#, fuzzy, no-c-format
+msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) top-level options (ie., those kept in the cib tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
 msgstr "Per ragioni di sicurezza il cluster non è per default in ascolto alle connessioni remote. Per abilitare l'accesso remoto è necessario impostare le opzioni top-level (ad esempio quelle dichiarate nel tag cib, come <literal>num_updates</literal> e <literal>epoch</literal>) <literal>remote-tls-port</literal> (criptato) o <literal>remote-clear-port</literal> (non criptato) ."
 
 #. Tag: title
@@ -130,25 +131,25 @@ msgstr "Opzioni top-level extra per l'accesso remoto"
 msgid "Field"
 msgstr "Campo"
 
-#. Tag: entry
-#, no-c-format
-msgid "remote-tls-port"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>remote-tls-port</literal>"
 msgstr "remote-tls-port"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis>"
-msgstr "Ascolta per connessioni non criptate su questa porta. Default: <emphasis>none</emphasis>"
+msgid "Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis> <indexterm> <primary>remote-tls-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-tls-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-tls-port</secondary> </indexterm> <indexterm> <primary>remote-tls-port</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "remote-clear-port"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>remote-clear-port</literal>"
 msgstr "remote-clear-port"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis>"
-msgstr "Ascolta per connessioni in chiaro su questa porta. Default: <emphasis>none</emphasis>"
+msgid "Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis> <indexterm> <primary>remote-clear-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-clear-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-clear-port</secondary> </indexterm> <indexterm> <primary>remote-clear-port</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -161,13 +162,13 @@ msgid "By default, recurring actions are scheduled relative to when the resource
 msgstr "Per default, le operazioni ricorrenti vengono schedulate quando le risorse relative sono avviate. Quindi se una risorsa è stata avviata l'ultima volta alle 14:32 ed è stata dichiarata un'operazione di backup che deve essere eseguita ogni 24 ore, allora tale  backup verrà eseguito sempre nel mezzo di un giorno lavorativo, il che non è particolarmente desiderabile..."
 
 #. Tag: para
-#, no-c-format
-msgid "To specify a date/time that the operation should be relative to, set the operation&#39;s <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at origin + (interval * N)."
+#, fuzzy, no-c-format
+msgid "To specify a date/time that the operation should be relative to, set the operation’s <literal>interval-origin</literal>. The cluster uses this point to calculate the correct <literal>start-delay</literal> such that the operation will occur at <emphasis>origin + (interval * N)</emphasis>."
 msgstr "Per dichiarare tempistiche specifiche a cui le operazioni devono riferirsi l'opzione di riferimento è <literal>interval-origin</literal>. Il cluster utilizza questo punto di partenza per calcolare il corretto <literal>start-delay</literal> con cui l'operazione dovrà essere eseguita (interval + N)."
 
 #. Tag: para
-#, no-c-format
-msgid "So if the operation&#39;s interval is 24h, it&#39;s interval-origin is set to 02:00 and it is currently 14:32, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
+#, fuzzy, no-c-format
+msgid "So, if the operation’s interval is 24h, it’s interval-origin is set to <literal>02:00</literal> and it is currently <literal>14:32</literal>, then the cluster would initiate the operation with a start delay of 11 hours and 28 minutes. If the resource is moved to another node before 2am, then the operation is of course cancelled."
 msgstr "Quindi se l'intervallo dell'operazione è 24 ore, il relativo interval-origin è 02:00 e l'orario attuale è 14:32, allore il cluster avvierà le operazioni con un ritardo di 11 ore e 28 minuti. Se la risorsa viene spostata su un altro nodo prima delle 2, allora l'operazione è ovviamente cancellata."
 
 #. Tag: para
@@ -181,11 +182,8 @@ msgid "Specifying a Base for Recurring Action Intervals"
 msgstr "Specificare una base di partenza per gli intervalli relativi alle azioni ricorrenti"
 
 #. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"  &#60;op id=&#34;my-weekly-action&#34; name=&#34;custom-action&#34; interval=&#34;P7D&#34; interval-origin=&#34;2009-W01-1&#34;/&#62;\n"
-"\t"
+#, fuzzy, no-c-format
+msgid "&lt;op id=\"my-weekly-action\" name=\"custom-action\" interval=\"P7D\" interval-origin=\"2009-W01-1\"/&gt;"
 msgstr ""
 "\n"
 "  &#60;op id=&#34;my-weekly-action&#34; name=&#34;custom-action&#34; interval=&#34;P7D&#34; interval-origin=&#34;2009-W01-1&#34;/&#62;\n"
@@ -196,64 +194,74 @@ msgstr ""
 msgid "Moving Resources"
 msgstr "Spostare le risorse"
 
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Moving</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Moving</secondary> </indexterm> <indexterm> <primary>Moving</primary> </indexterm>"
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Manual Intervention"
 msgstr "Intervenire manualmente"
 
 #. Tag: para
-#, no-c-format
-msgid "There are primarily two occasions when you would want to move a resource from it&#39;s current location: when the whole node is under maintenance and when a single resource needs to be moved."
+#, fuzzy, no-c-format
+msgid "There are primarily two occasions when you would want to move a resource from it’s current location: when the whole node is under maintenance, and when a single resource needs to be moved."
 msgstr "Esistono due casi in cui potrebbe essere necessario spostare una risorsa dalla posizione attuale: quando l'intero nodo è in manutenzione e quando una singola risorsa necessita di essere spostata."
 
 #. Tag: para
-#, no-c-format
-msgid "In the case where everything needs to move, since everything eventually comes down to a score, you could create constraints for every resource you have preventing it from running on that node. While the configuration can seem convoluted at times, not even we would require this of administrators."
+#, fuzzy, no-c-format
+msgid "Since everything eventually comes down to a score, you could create constraints for every resource to prevent them from running on one node. While the configuration can seem convoluted at times, not even we would require this of administrators."
 msgstr "Nel caso in cui tutto necessita di essere spostato, dato che tutto si riduce ad un punteggio, è possibile creare una constraint per ciascuna riosrsa per prevenire che questa venga eseguita sul nodo. Questo approccio può sembrare contorto, ma difficilmente ci si troverà nella condizione di doverlo utilizzare."
 
 #. Tag: para
-#, no-c-format
-msgid "Instead one can set a special node attribute which tells the cluster &#34;don&#39;t let anything run here&#34;. There is even a helpful tool to help query and set it called <command>crm_standby</command>. To check the standby status of the current machine, simply run:"
+#, fuzzy, no-c-format
+msgid "Instead one can set a special node attribute which tells the cluster \"don’t let anything run here\". There is even a helpful tool to help query and set it, called <literal>crm_standby</literal>. To check the standby status of the current machine, simply run:"
 msgstr "Infatti è possibile valorizzare un attributo del nodo che indica al cluster di non lasciare nessun processo su di esso. Esiste un comando per facilitare l'interrogazione ed il settaggio di questa condizione chiamato <command>crm_standby</command>. Per controllare che un lo stato standby della macchina è sufficiente lanciare:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_standby --get-value</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_standby --get-value"
 msgstr "<command>crm_standby --get-value</command>"
 
 #. Tag: para
 #, no-c-format
-msgid "A value of true indicates that the node is NOT able to host any resources and a value of false indicates that it CAN. You can also check the status of other nodes in the cluster by specifying the <parameter>--node-uname</parameter> option. Eg."
-msgstr "Il valore true indica che il nodo NON è in grado di erogare alcuna risorsa, mentr eil valore false indica che PUO'. E' possibile inoltre controllare lo stato degli altri nodi specificando l'opzione <parameter>--node-uname</parameter>. Ad esempio"
+msgid "A value of <literal>true</literal> indicates that the node is <emphasis>NOT</emphasis> able to host any resources, while a value of <literal>false</literal> says that it <emphasis>CAN</emphasis>."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "<command>crm_standby --get-value --node-uname sles-2</command>"
+#, fuzzy, no-c-format
+msgid "You can also check the status of other nodes in the cluster by specifying the <literal>--node-uname</literal> option:"
+msgstr "Il valore true indica che il nodo NON è in grado di erogare alcuna risorsa, mentr eil valore false indica che PUO'. E' possibile inoltre controllare lo stato degli altri nodi specificando l'opzione <parameter>--node-uname</parameter>. Ad esempio"
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_standby --get-value --node-uname sles-2"
 msgstr "<command>crm_standby --get-value --node-uname sles-2</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "To change the current node&#39;s standby status, use <parameter>--attr-value</parameter> instead of <parameter>--get-value</parameter>. Eg."
+#, fuzzy, no-c-format
+msgid "To change the current node’s standby status, use <literal>--attr-value</literal> instead of <literal>--get-value</literal>."
 msgstr "Per cambiare lo stato standby del nodo attuale è possibile utilizzare <parameter>--attr-value</parameter> invece di <parameter>--get-value</parameter> ad esempio"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_standby --attr-value</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_standby --attr-value"
 msgstr "<command>crm_standby --attr-value</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Again, you can change another host&#39;s value by supplying a host name with <parameter>--node-uname</parameter>."
+#, fuzzy, no-c-format
+msgid "Again, you can change another host’s value by supplying a host name with <literal>--node-uname</literal>."
 msgstr "Nuovamente, è possibile cambiare il valore di un altro host fornendo un nome al parametro <parameter>--node-uname</parameter>."
 
 #. Tag: para
-#, no-c-format
-msgid "When only one resource is required to move, we do this by creating location constraints. However once again we provide a user friendly shortcut as part of the <command>crm_resource</command> command which creates and modifies the extra constraints for you. If Email was running on sles-1 and you wanted it moved to a specific location, the command would look something like:"
+#, fuzzy, no-c-format
+msgid "When only one resource is required to move, we do this by creating location constraints. However, once again we provide a user friendly shortcut as part of the <literal>crm_resource</literal> command, which creates and modifies the extra constraints for you. If <literal>Email</literal> was running on <literal>sles-1</literal> and you wanted it moved to a specific location, the command would look something like:"
 msgstr "Quando è necessario spostare una sola risorsa è possibile creare una location constraint. Ad ogni modo esiste un via più rapida mediante il comando <command>crm_resource</command> che crea e modifica extra constraint in autonomia. Se si vuole spostare in una determinata posizione Email operativa su sles-1 il comando sarà:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource -M -r Email -H sles-2</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_resource -M -r Email -H sles-2"
 msgstr "<command>crm_resource -M -r Email -H sles-2</command>"
 
 #. Tag: para
@@ -262,25 +270,21 @@ msgid "Behind the scenes, the tool will create the following location constraint
 msgstr "Dietro le quinte il comando creerà la seguente location constraint:"
 
 #. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"  &#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-2&#34; score=&#34;INFINITY&#34;/&#62;\n"
-"\t  "
-msgstr ""
-"\n"
-"  &#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-2&#34; score=&#34;INFINITY&#34;/&#62;\n"
-"\t  "
+#, fuzzy, no-c-format
+msgid "&lt;rsc_location rsc=\"Email\" node=\"sles-2\" score=\"INFINITY\"/&gt;"
+msgstr "&#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-1&#34; score=&#34;-INFINITY&#34;/&#62;"
 
 #. Tag: para
-#, no-c-format
-msgid "It is important to note that subsequent invocations of <command>crm_resource -M</command> are not cumulative. So if you ran:"
+#, fuzzy, no-c-format
+msgid "It is important to note that subsequent invocations of <literal>crm_resource -M</literal> are not cumulative. So, if you ran these commands"
 msgstr "E' importante notare che successive invocazioni di <command>crm_resource -M</command> non saranno cumulative. Quindi se il comando successivo sarà:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource -M -r Email -H sles-3</command>"
-msgstr "<command>crm_resource -M -r Email -H sles-3</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"# crm_resource -M -r Email -H sles-2\n"
+"# crm_resource -M -r Email -H sles-3"
+msgstr "<command>crm_resource -M -r Email -H sles-2</command>"
 
 #. Tag: para
 #, no-c-format
@@ -292,19 +296,21 @@ msgstr "allora risulterà come se il primo comando non fosse mai stato eseguito.
 msgid "To allow the resource to move back again, use:"
 msgstr "Per permettere ad una risorsa di essere nuovamente spostata è possibile utilizzare:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource -U -r Email</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_resource -U -r Email"
 msgstr "<command>crm_resource -U -r Email</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Note the use of the word allow. The resource can move back to its original location but, depending on resource stickiness, it may stay where it is. To be absolutely certain that it moves back to sles-1, move it there before issuing the call to <command>crm_resource -U</command>:"
+#, fuzzy, no-c-format
+msgid "Note the use of the word <emphasis>allow</emphasis>. The resource can move back to its original location but, depending on <literal>resource-stickiness</literal>, it might stay where it is. To be absolutely certain that it moves back to <literal>sles-1</literal>, move it there before issuing the call to <literal>crm_resource -U</literal>:"
 msgstr "Da notare l'uso della parola <literal>permettere</literal>. La risorsa potrà spostarsi nuovamente nella sua posizione originaria ma, dipendentemente dal valore di stickiness, potrebbe rimanere dov'è. Per essere assolutamente certi che essa venga spostata nuovamente su sles-1 bisognerà spostarla prima di invocare la chiamata a <command>crm_resource -U</command>:"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource -M -r Email -H sles-1</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"# crm_resource -M -r Email -H sles-1\n"
+"# crm_resource -U -r Email"
 msgstr "<command>crm_resource -M -r Email -H sles-1</command>"
 
 #. Tag: para
@@ -312,39 +318,39 @@ msgstr "<command>crm_resource -M -r Email -H sles-1</command>"
 msgid "Alternatively, if you only care that the resource should be moved from its current location, try"
 msgstr "Alternativamente, se l'unica esigenza è quella di spostare la risorsa dalla posizione attuale si può provare con"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource -M -r Email</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_resource -M -r Email`"
 msgstr "<command>crm_resource -M -r Email</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Which will instead create a negative constraint. Eg."
+#, fuzzy, no-c-format
+msgid "Which will instead create a negative constraint, like"
 msgstr "Che creerà invece una constraint negativa. Ad esempio:"
 
-#. Tag: para
-#, no-c-format
-msgid "&#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-1&#34; score=&#34;-INFINITY&#34;/&#62;"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "&lt;rsc_location rsc=\"Email\" node=\"sles-1\" score=\"-INFINITY\"/&gt;"
 msgstr "&#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-1&#34; score=&#34;-INFINITY&#34;/&#62;"
 
 #. Tag: para
-#, no-c-format
-msgid "This will achieve the desired effect but will also have long-term consequences. As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <command>crm_resource -U</command> is used. This includes the situation where every other cluster node is no longer available."
+#, fuzzy, no-c-format
+msgid "This will achieve the desired effect, but will also have long-term consequences. As the tool will warn you, the creation of a <literal>-INFINITY</literal> constraint will prevent the resource from running on that node until <literal>crm_resource -U</literal> is used. This includes the situation where every other cluster node is no longer available!"
 msgstr "Questo comando servirà allo scopo, ma avrà conseguenze a lungo termine. Il comando avviserà come la creazione di una constraint <literal>-INFINITY</literal> precluderà alla risorsa la possibilità di essere eseguita su quel particolare nodo finché non verrà usato il comando <command>crm_resource -U</command>. Questo include situazioni in cui nessun altro nodo del cluster sia disponibile."
 
 #. Tag: para
-#, no-c-format
-msgid "In some cases, such as when resource stickiness is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\" />. The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg."
+#, fuzzy, no-c-format
+msgid "In some cases, such as when <literal>resource-stickiness</literal> is set to <literal>INFINITY</literal>, it is possible that you will end up with the problem described in <xref linkend=\"node-score-equal\" />. The tool can detect some of these cases and deals with them by also creating both a positive and negative constraint. Eg."
 msgstr "In alcuni casi, come quando il valore di stickiness è settato a <literal>INFINITY</literal>, è possibile trovarsi nel problema descritto nel capitolo <xref linkend=\"node-score-equal\" />. Il tool può rilevare alcuni di questi casi ed agire in modo da creare constraint sia positive che negative. Ad esempio:"
 
 #. Tag: para
-#, no-c-format
-msgid "Email prefers sles-1 with a score of <literal>-INFINITY</literal>"
+#, fuzzy, no-c-format
+msgid "<literal>Email</literal> prefers <literal>sles-1</literal> with a score of <literal>-INFINITY</literal>"
 msgstr "Email preferisce sles-1 con un punteggio di <literal>-INFINITY</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "Email prefers sles-2 with a score of <literal>INFINITY</literal>"
+#, fuzzy, no-c-format
+msgid "<literal>Email</literal> prefers <literal>sles-2</literal> with a score of <literal>INFINITY</literal>"
 msgstr "Email preferisce sles-2 con un punteggio di <literal>INFINITY</literal>"
 
 #. Tag: para
@@ -358,23 +364,28 @@ msgid "Moving Resources Due to Failure"
 msgstr "Spostare risorse in seguito ad un fallimento"
 
 #. Tag: para
-#, no-c-format
-msgid "New in 1.0 is the concept of a migration threshold <footnote> <para> The naming of this option was unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para> </footnote>. Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures. There is no threshold defined by default. To determine the resource&#39;s current failure status and limits, use <command>crm_mon --failcounts</command>"
+#, fuzzy, no-c-format
+msgid "New in 1.0 is the concept of a migration threshold. <footnote><para> The naming of this option was perhaps unfortunate as it is easily confused with true migration, the process of moving a resource from one node to another without stopping it. Xen virtual guests are the most common example of resources that can be migrated in this manner. </para></footnote>"
 msgstr "Dalla release 1.0 è stato introdotto il concetto di migration threshold <footnote> <para> Il nome di questa opzione sfortunatamente si confonde con la true migration, la migrazione cioè di una risorsa da un nodo all'altro senza che questa venga stoppata. L'esempio più comune riguarda i virtual guest Xen che possono appunto essere migrate in queto modo. </para> </footnote>. E' sufficiente definire il parametro <literal>migration-threshold=N</literal> per una risorsa e questa migrerà ad un nuovo nodo dopo N fallimenti. Non esiste un treshold definito per default. Per determinare lo stato ed i limiti attuali dei fallimenti di una risorsa è possibile utilizzare <command>crm_mon --failcounts</command>"
 
 #. Tag: para
 #, no-c-format
-msgid "By default, once the threshold has been reached, node will no longer be allowed to run the failed resource until the administrator manually resets the resource&#39;s failcount using <command>crm_failcount</command> (after hopefully first fixing the failure&#39;s cause). However it is possible to expire them by setting the resource&#39;s <literal>failure-timeout</literal> option."
+msgid "Simply define <literal>migration-threshold=N</literal> for a resource and it will migrate to a new node after N failures. There is no threshold defined by default. To determine the resource’s current failure status and limits, use <literal>crm_mon --failcounts</literal>."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "By default, once the threshold has been reached, this node will no longer be allowed to run the failed resource until the administrator manually resets the resource’s failcount using <literal>crm_failcount</literal> (after hopefully first fixing the failure’s cause). However it is possible to expire them by setting the resource’s <literal>failure-timeout</literal> option."
 msgstr "Per default, quando il valore di treshold viene raggiunto, al verrà proibito di eseguire la risorsa finché l'amministratore non effettuerà un reset manuale del valore utilizzando il comando <command>crm_failcount</command> (si spera dopo aver sistemato la causa del problema). Ad ogni modo è possibile forzare la scadenza impostando l'opzione <literal>failure-timeout</literal>."
 
 #. Tag: para
-#, no-c-format
-msgid "So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures and potentially allow it to move back (depending on the stickiness and constraint scores) after one minute."
+#, fuzzy, no-c-format
+msgid "So a setting of <literal>migration-threshold=2</literal> and <literal>failure-timeout=60s</literal> would cause the resource to move to a new node after 2 failures, and allow it to move back (depending on the stickiness and constraint scores) after one minute."
 msgstr "Quindi impostare valori di <literal>migration-threshold=2</literal> e <literal>failure-timeout=60s</literal> comporterà la riduzione degli spostamenti ad un nuovo nodo dopo 2 fallimenti e riabiliando il successivo spostamente (dipendentemente dai punteggi di stickiness e constraint) dopo un minuto"
 
 #. Tag: para
-#, no-c-format
-msgid "There are two exceptions to the migration threshold concept and occur when a resource either fails to start or fails to stop. Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
+#, fuzzy, no-c-format
+msgid "There are two exceptions to the migration threshold concept; they occur when a resource either fails to start or fails to stop. Start failures cause the failcount to be set to <literal>INFINITY</literal> and thus always cause the resource to move immediately."
 msgstr "Esistono due eccezioni al concetto di migration threshold e capitano quando una risorsa fallisce l'avvio o lo stop. Fallimenti in fase di avvio forzano il valore di failcount a <literal>INFINITY</literal> e questo provoca sempre uno spostamento immediato della risorsa."
 
 #. Tag: para
@@ -393,8 +404,8 @@ msgid "Moving Resources Due to Connectivity Changes"
 msgstr "Spostare le risorse in base a variazioni della connettività"
 
 #. Tag: para
-#, no-c-format
-msgid "Setting up the cluster to move resources when external connectivity is lost, is a two-step process."
+#, fuzzy, no-c-format
+msgid "Setting up the cluster to move resources when external connectivity is lost is a two-step process."
 msgstr "Configurare il cluster affinché sposti le risorse se la connettività viene persa è un processo di due fasi."
 
 #. Tag: title
@@ -403,84 +414,85 @@ msgid "Tell Pacemaker to monitor connectivity"
 msgstr "Comunicare a Pacemaker di controllare la connettività"
 
 #. Tag: para
-#, no-c-format
-msgid "To do this, you need to add a ping resource to the cluster. The ping resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/ IPv6 address) are reachable and uses the results to maintain a node attribute normally called pingd. <footnote> <para>The attribute name is customizable which allows multiple ping groups to be defined</para> </footnote>"
+#, fuzzy, no-c-format
+msgid "To do this, you need to add a <literal>ping</literal> resource to the cluster. The <literal>ping</literal> resource uses the system utility of the same name to a test if list of machines (specified by DNS hostname or IPv4/IPv6 address) are reachable and uses the results to maintain a node attribute normally called <literal>pingd</literal>. <footnote><para> The attribute name is customizable; that allows multiple ping groups to be defined. </para></footnote>"
 msgstr "Per fare ciò è necessario disporre di una risorsa ping all'interno del cluster. La risorsa ping utilizza l'omonima utility di sistama per controllare che una lista di macchine (specificate da un hostname nel DNS o da un indirizzo IPv4/IPv6) sia raggiungibile e conserva i risultati nell'attributo pingd. <footnote> <para>Il nome dell'attributo è personalizzabile in modo da poter dichiarare ping multipli o gruppi di ping</para> </footnote>"
 
 #. Tag: para
-#, no-c-format
-msgid "Older versions of Heartbeat required users to add ping nodes to ha.cf - this is no longer required."
+#, fuzzy, no-c-format
+msgid "Older versions of Heartbeat required users to add ping nodes to <emphasis>ha.cf</emphasis> - this is no longer required."
 msgstr "Versioni passate di Heartbeat richiedevano all'utente di aggiungere i ping node all'interno del file ha.cf, oggi non è più richiesto."
 
 #. Tag: para
 #, no-c-format
-msgid "Older versions of Pacemaker used a custom binary called pingd for this functionality, this is now deprecated in favor of ping. If your version of Pacemaker does not contain the ping agent, you can download the latest version from: <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" />"
-msgstr "Versioni passate di Pacemaker utilizzavano un eseguibile chiamato pingd per garantire questa funzionalità, al momento questo approccio è deprecato in virtù di ping. Se la versione di Pacemaker di cui si dispone non contiene l'eseguibile ping, è possibile scaricare l'ultima versione da <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" />"
+msgid "Older versions of Pacemaker used a custom binary called <emphasis>pingd</emphasis> for this functionality; this is now deprecated in favor of <emphasis>ping</emphasis>."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Normally the resource will run on all cluster nodes, which means that you&#39;ll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
+msgid "If your version of Pacemaker does not contain the ping agent, you can download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping\">https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping</ulink>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Normally the resource will run on all cluster nodes, which means that you’ll need to create a clone. A template for this can be found below along with a description of the most interesting parameters."
 msgstr "Tipicamente la risorsa verrà eseguita su tutti i nodi del cluster, che significa come sia necessario creare un clone. Il template relativo è disponibile sotto con una descrizione dei parametri più interessanti."
 
 #. Tag: title
-#, no-c-format
-msgid "Common Options for a &#39;ping&#39; Resource"
+#, fuzzy, no-c-format
+msgid "Common Options for a <emphasis>ping</emphasis> Resource"
 msgstr "Opzioni comuni per la risorsa &#39;ping&#39;"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "dampen"
-msgstr "dampen"
+msgid "<literal>dampen</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The time to wait (dampening) for further changes occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times."
-msgstr "Il tempo di attesa (dampening) dopo il quale avverrà un cambiamento. Utilizzare questio parametro per prevenire che una risorsa rimbalzi all'interno dei nodi del cluster quando gli stessi notificano assenza di connettività in tempi diversi."
+msgid "The time to wait (dampening) for further changes to occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times. <indexterm> <primary>dampen</primary><secondary>Ping Resource Option</secondary> </indexterm> <indexterm> <primary>Ping Resource Option</primary> </indexterm> <indexterm> <primary>Ping Resource</primary><secondary>Option</secondary><tertiary>dampen</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>dampen</secondary> </indexterm> <indexterm> <primary>dampen</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "multiplier"
-msgstr "multiplier"
+msgid "<literal>multiplier</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The number by which to multiply the number of connected ping nodes by. Useful when there are multiple ping nodes configured."
-msgstr "Il numero da moltiplicare ai nodi connessi. Utile quando sono configurati nodi multipli."
+msgid "The number of connected ping nodes gets multiplied by this value to get a score. Useful when there are multiple ping nodes configured. <indexterm> <primary>multiplier</primary><secondary>Ping Resource Option</secondary> </indexterm> <indexterm> <primary>Ping Resource Option</primary> </indexterm> <indexterm> <primary>Ping Resource</primary><secondary>Option</secondary><tertiary>multiplier</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>multiplier</secondary> </indexterm> <indexterm> <primary>multiplier</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "host_list"
-msgstr "host_list"
+msgid "<literal>host_list</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS hostnames, IPv4 and IPv6 addresses."
-msgstr "Le macchine da contattare per determinare lo stato della connettività. I valori permessi sono hostname DNS risolvibili, indirizzi IPv4 ed IPv6."
+msgid "The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS host names, IPv4 and IPv6 addresses. <indexterm> <primary>host_list</primary><secondary>Ping Resource Option</secondary> </indexterm> <indexterm> <primary>Ping Resource Option</primary> </indexterm> <indexterm> <primary>Ping Resource</primary><secondary>Option</secondary><tertiary>host_list</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>host_list</secondary> </indexterm> <indexterm> <primary>host_list</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
-#, no-c-format
-msgid "An example ping cluster resource, checks node connectivity once every minute"
+#, fuzzy, no-c-format
+msgid "An example ping cluster resource that checks node connectivity once every minute"
 msgstr "Un esempio di risorsa ping che controlla la connettività ogni minuto"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;clone id=&#34;Connected&#34;&#62;\n"
-"   &#60;primitive id=&#34;ping&#34; provider=&#34;pacemaker&#34; class=&#34;ocf&#34; type=&#34;ping&#34;&#62;\n"
-"    &#60;instance_attributes id=&#34;ping-attrs&#34;&#62;\n"
-"      &#60;nvpair id=&#34;pingd-dampen&#34; name=&#34;dampen&#34; value=&#34;5s&#34;/&#62;\n"
-"      &#60;nvpair id=&#34;pingd-multiplier&#34; name=&#34;multiplier&#34; value=&#34;1000&#34;/&#62;\n"
-"      &#60;nvpair id=&#34;pingd-hosts&#34; name=&#34;host_list&#34; value=&#34;my.gateway.com www.bigcorp.com&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"    &#60;operations&#62;\n"
-"      &#60;op id=&#34;ping-monitor-60s&#34; interval=&#34;60s&#34; name=&#34;monitor&#34;/&#62;\n"
-"    &#60;/operations&#62;\n"
-"   &#60;/primitive&#62;\n"
-"  &#60;/clone&#62;\n"
-"\n"
-"\t    "
+"&lt;clone id=\"Connected\"&gt;\n"
+"   &lt;primitive id=\"ping\" provider=\"pacemaker\" class=\"ocf\" type=\"ping\"&gt;\n"
+"    &lt;instance_attributes id=\"ping-attrs\"&gt;\n"
+"      &lt;nvpair id=\"pingd-dampen\" name=\"dampen\" value=\"5s\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-multiplier\" name=\"multiplier\" value=\"1000\"/&gt;\n"
+"      &lt;nvpair id=\"pingd-hosts\" name=\"host_list\" value=\"my.gateway.com www.bigcorp.com\"/&gt;\n"
+"    &lt;/instance_attributes&gt;\n"
+"    &lt;operations&gt;\n"
+"      &lt;op id=\"ping-monitor-60s\" interval=\"60s\" name=\"monitor\"/&gt;\n"
+"    &lt;/operations&gt;\n"
+"   &lt;/primitive&gt;\n"
+"&lt;/clone&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -500,8 +512,8 @@ msgstr ""
 "\t    "
 
 #. Tag: para
-#, no-c-format
-msgid "You&#39;re only half done. The next section deals with telling Pacemaker how to deal with the connectivity status that ocf:pacemaker:ping is recording."
+#, fuzzy, no-c-format
+msgid "You’re only half done. The next section deals with telling Pacemaker how to deal with the connectivity status that <literal>ocf:pacemaker:ping</literal> is recording."
 msgstr "A questo punto metà del lavoro è fatto. La sezione successiva descrive come deve agire Pacemaker sulla base dello stato che ocf:pacemaker:ping sta registrando."
 
 #. Tag: title
@@ -510,32 +522,28 @@ msgid "Tell Pacemaker how to interpret the connectivity data"
 msgstr "Specificare a Pacemaker come intepretare i dati di connettività"
 
 #. Tag: para
-#, no-c-format
-msgid "NOTE: Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\" /> above."
+#, fuzzy, no-c-format
+msgid "Before reading the following, please make sure you have read and understood <xref linkend=\"ch-rules\" /> above."
 msgstr "NOTA: prima di continuare a leggere accertarsi di aver letto e capito la sezione <xref linkend=\"ch-rules\" />"
 
 #. Tag: para
-#, no-c-format
-msgid "There are a number of ways to use the connectivity data provided by Heartbeat. The most common setup is for people to have a single ping node and want to prevent the cluster from running a resource on any unconnected node."
+#, fuzzy, no-c-format
+msgid "There are a number of ways to use the connectivity data provided by Heartbeat. The most common setup is for people to have a single ping node, to prevent the cluster from running a resource on any unconnected node."
 msgstr "Esistono diversi modi per utilizzare i dati di connettività forniti da Heartbeat. Il setup più comune è composto da un singolo nodo ping che preclude ad una risorsa di essere eseguita su un nodo non connesso."
 
 #. Tag: title
-#, no-c-format
-msgid "Don&#39;t run on unconnected nodes"
+#, fuzzy, no-c-format
+msgid "Don’t run on unconnected nodes"
 msgstr "Non operare su nodi non connessi"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-no-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-exclude-rule&#34; score=&#34;-INFINITY&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-exclude&#34; attribute=&#34;pingd&#34; operation=&#34;not_defined&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62;\n"
-"\n"
-"\t    "
+"&lt;rsc_location id=\"WebServer-no-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"not_defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"&lt;/rsc_location&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -548,27 +556,23 @@ msgstr ""
 "\t    "
 
 #. Tag: para
-#, no-c-format
-msgid "A more complex setup is to have a number of ping nodes configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them"
+#, fuzzy, no-c-format
+msgid "A more complex setup is to have a number of ping nodes configured. You can require the cluster to only run resources on nodes that can connect to all (or a minimum subset) of them."
 msgstr "Un setup maggiormente complesso consiste nell'avere diversi nodi ping configurati. E' possibile richiedere al cluster di eseguire risorse su nodi che sono connessi a tutti (o ad un set ridotto) di nodi ping."
 
 #. Tag: title
-#, no-c-format
-msgid "Run only on nodes connected to 3 or more ping nodes (assumes <literal>multiplier</literal> is set to 1000)"
+#, fuzzy, no-c-format
+msgid "Run only on nodes connected to three or more ping nodes; this assumes <literal>multiplier</literal> is set to 1000:"
 msgstr "Opera solo sui nodi connessi a 3 o più nodi ping  (assumendo che <literal>multiplier</literal> sia impostato a 1000)"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-prefer-rule&#34; score=&#34;-INFINITY&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;lt&#34; value=&#34;3000&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62; \n"
-"\n"
-"\t    "
+"&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"&lt;/rsc_location&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -581,8 +585,8 @@ msgstr ""
 "\t    "
 
 #. Tag: para
-#, no-c-format
-msgid "or instead you can tell the cluster only to prefer nodes with the most connectivity. Just be sure to set the multiplier to a value higher than that of <literal>resource-stickiness</literal> (and don&#39;t set either of them to <literal>INFINITY</literal>)."
+#, fuzzy, no-c-format
+msgid "Instead you can tell the cluster only to <emphasis>prefer</emphasis> nodes with the best connectivity. Just be sure to set <literal>multiplier</literal> to a value higher than that of <literal>resource-stickiness</literal> (and don’t set either of them to <literal>INFINITY</literal>)."
 msgstr "o altrimenti è possibile comunicare al cluster di prediligere i nodi con la connettività maggiore. E' sufficiente assicurarsi che  il moltiplicatore sia maggiore del valore di <literal>resource-stickiness</literal> (e che non ci siano impostati valori di <literal>INFINITY</literal>)"
 
 #. Tag: title
@@ -591,17 +595,13 @@ msgid "Prefer the node with the most connected ping nodes"
 msgstr "Prediligi il nodo che il maggior numero di nodi ping"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62; \n"
-"\n"
-"\t    "
+"&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"&lt;/rsc_location&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -614,8 +614,8 @@ msgstr ""
 "\t    "
 
 #. Tag: para
-#, no-c-format
-msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if sles-1 is connected to all 5 ping nodes but sles-2 is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
+#, fuzzy, no-c-format
+msgid "It is perhaps easier to think of this in terms of the simple constraints that the cluster translates it into. For example, if <literal>sles-1</literal> is connected to all 5 ping nodes but <literal>sles-2</literal> is only connected to 2, then it would be as if you instead had the following constraints in your configuration:"
 msgstr "E' comunque più semplice ragionare in questi termini sulla base delle constraint che il cluster crea. Ad esempio, se sles-1 è connessa a tutti e 5 i nodi ping, ma sles-2 è connessa solo a 2 di questi, allora sarà più semplice operare con questa constraint all'interno della configurazione:"
 
 #. Tag: title
@@ -624,14 +624,10 @@ msgid "How the cluster translates the pingd constraint"
 msgstr "Come il cluster traduce le constraint pingd"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;ping-1&#34; rsc=&#34;Webserver&#34; node=&#34;sles-1&#34; score=&#34;5000&#34;/&#62;\n"
-"  &#60;rsc_location id=&#34;ping-2&#34; rsc=&#34;Webserver&#34; node=&#34;sles-2&#34; score=&#34;2000&#34;/&#62;\n"
-"\n"
-"\t    "
+"&lt;rsc_location id=\"ping-1\" rsc=\"Webserver\" node=\"sles-1\" score=\"5000\"/&gt;\n"
+"&lt;rsc_location id=\"ping-2\" rsc=\"Webserver\" node=\"sles-2\" score=\"2000\"/&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -641,13 +637,13 @@ msgstr ""
 "\t    "
 
 #. Tag: para
-#, no-c-format
-msgid "The advantage being that you don&#39;t have to manually update them whenever your network connectivity changes."
+#, fuzzy, no-c-format
+msgid "The advantage is that you don’t have to manually update any constraints whenever your network connectivity changes."
 msgstr "Il vantaggio risiede nel fatto che quando la connettività è ripristinata, non è necessario un intervento manuale."
 
 #. Tag: para
-#, no-c-format
-msgid "You can also combine the concepts above into something even more complex. The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (assuming multiplier is set to 1000)."
+#, fuzzy, no-c-format
+msgid "You can also combine the concepts above into something even more complex. The example below shows how you can prefer the node with the most connected ping nodes provided they have connectivity to at least three (again assuming that <literal>multiplier</literal> is set to 1000)."
 msgstr "E' possibile inoltre combinare i concetti sopra elencati per ottenere qualcosa di ulteriormente complesso. L'esempio riportato mostra come sia possibile preferire il nodo con il maggior numero di nodi ping forniti con un minimo di tre  (assumendo che il valore multiplier sia 1000)."
 
 #. Tag: title
@@ -656,20 +652,16 @@ msgid "A more complex example of choosing a location based on connectivity"
 msgstr "Un esempio più complesso di location basata sui valori di connettività"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-exclude-rule&#34; score=&#34;-INFINITY&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-exclude&#34; attribute=&#34;pingd&#34; operation=&#34;lt&#34; value=&#34;3000&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62; \n"
-"\n"
-"\t    "
+"&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-exclude-rule\" score=\"-INFINITY\" &gt;\n"
+"    &lt;expression id=\"ping-exclude\" attribute=\"pingd\" operation=\"lt\" value=\"3000\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"&lt;/rsc_location&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -690,13 +682,13 @@ msgid "Resource Migration"
 msgstr "Migrazione delle risorse"
 
 #. Tag: para
-#, no-c-format
-msgid "Some resources, such as Xen virtual guests, are able to move to another location without lose of state. We call this resource migration and is different from the normal practice of stopping the resource on the first machine and starting it elsewhere."
+#, fuzzy, no-c-format
+msgid "Some resources, such as Xen virtual guests, are able to move to another location without loss of state. We call this resource migration; this is different from the normal practice of stopping the resource on the first machine and starting it elsewhere."
 msgstr "Alcune risorse, come i virtual guest Xen, supportano gli spostamenti presso una nuova destinazione senza smettere di funzionare. Questo processo viene chiamato resource migration ed è differente dalla pratica comune di stoppare una risorsa su una macchina ed avviarla altrove."
 
 #. Tag: para
-#, no-c-format
-msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can wont do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
+#, fuzzy, no-c-format
+msgid "Not all resources are able to migrate, see the Migration Checklist below, and those that can, won’t do so in all situations. Conceptually there are two requirements from which the other prerequisites follow:"
 msgstr "Non tutte le risorse sono in grado di migrare, come dimostra la lista riportata sotto, e non tutte le risorse migrabili possono farlo in tutte le situazioni. Concettualmente esistono due requisiti da cui derivano altri pre requisiti:"
 
 #. Tag: para
@@ -715,8 +707,8 @@ msgid "The cluster is able to accommodate both push and pull migration models by
 msgstr "Il cluster supporta sia la migrazione \"da\" che quella \"verso\" richiedendo al resource agent di supportare due nuove azioni:<literal>migrate_to</literal> (eseguita sulla locazione attuale) e <literal>migrate_from</literal> (eseguita sulla destinazione)."
 
 #. Tag: para
-#, no-c-format
-msgid "In push migration, the process on the current location transfers the to the new location where is it later activated. In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>."
+#, fuzzy, no-c-format
+msgid "In push migration, the process on the current location transfers the resource to the new location where is it later activated. In this scenario, most of the work would be done in the <literal>migrate_to</literal> action and, if anything, the activation would occur during <literal>migrate_from</literal>."
 msgstr "Nella migrazione \"da\", il processo dalla locazione attuale è trasferito alla nuova dove verrà poi attivato. In questo scenario la maggior parte del lavoro verrà svolto durante l'azione <literal>migrate_to</literal> e, salvo imprevisti, l'attivazione verrà completata durante il <literal>migrate_from</literal>."
 
 #. Tag: para
@@ -755,13 +747,13 @@ msgid "The resource must not, directly or indirectly, depend on any primitive or
 msgstr "La risorsa non deve, direttamente o indirettamente, dipendere da una primitiva o da un gruppo di risorse."
 
 #. Tag: para
-#, no-c-format
-msgid "The resources must support two new actions: migrate_to and migrate_from and advertise them in its metadata."
+#, fuzzy, no-c-format
+msgid "The resource must support two new actions: <literal>migrate_to</literal> and <literal>migrate_from</literal>, and advertise them in its metadata."
 msgstr "La risorsa deve supportare due nuove azioni: migrate_to e migrate_from ed notificare queste nei propri metadata."
 
 #. Tag: para
-#, no-c-format
-msgid "The resource must have the allow-migrate meta-attribute set to true (not the default)."
+#, fuzzy, no-c-format
+msgid "The resource must have the <literal>allow-migrate</literal> meta-attribute set to <literal>true</literal> (which is not the default)."
 msgstr "La risorsa deve avere il meta-attribute allow-migrate impostato a true (che non è il default)."
 
 #. Tag: para
@@ -775,8 +767,8 @@ msgid "Reusing Rules, Options and Sets of Operations"
 msgstr "Riutilizzare regole, opzioni e set di operazioni"
 
 #. Tag: para
-#, no-c-format
-msgid "Sometimes a number of constraints need to use the same set of rules and resources need to set the same options an parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
+#, fuzzy, no-c-format
+msgid "Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
 msgstr "A volte alcune constraint necessitano di utilizzare lo stesso set di regole ed alcune risorse necessitano di impostare le stesse opzioni su dei parametri. Per semplificare questa situazione è possibile riferirsi all'oggetto esistente mediante un <literal>id-ref</literal> anziché un id."
 
 #. Tag: para
@@ -784,32 +776,9 @@ msgstr "A volte alcune constraint necessitano di utilizzare lo stesso set di reg
 msgid "So if for one resource you have"
 msgstr "Quindi data una risorsa"
 
-#. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62;\n"
-"\n"
-"      "
-msgstr ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
-"   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
-"    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
-"   &#60;/rule&#62;\n"
-"  &#60;/rsc_location&#62;\n"
-"\n"
-"      "
-
 #. Tag: para
-#, no-c-format
-msgid "Then instead of duplicating the rule for all your other resources, you can instead specify"
+#, fuzzy, no-c-format
+msgid "Then instead of duplicating the rule for all your other resources, you can instead specify:"
 msgstr "anziché duplicare la regola per tutte le altre risorse, è possibile specificare"
 
 #. Tag: title
@@ -818,15 +787,11 @@ msgid "Referencing rules from other constraints"
 msgstr "Referenziare regole da altre constraint"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;rsc_location id=&#34;WebDB-connectivity&#34; rsc=&#34;WebDB&#34;&#62;\n"
-"      &#60;rule id-ref=&#34;ping-prefer-rule&#34;/&#62;\n"
-"  &#60;/rsc_location&#62; \n"
-"\n"
-"\t"
+"&lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
+"      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
+"&lt;/rsc_location&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -842,42 +807,38 @@ msgid "The cluster will insist that the <literal>rule</literal> exists somewhere
 msgstr "Il cluster insisterà sul fatto che la <literal>rule</literal> esiste da qualche parte. Cercare di aggiungere una referenza ad una regola inesistente provocherà problemi nella validazione, in quanto seguirà un tentativo di rimuovere una <literal>rule</literal> referenziata altrove."
 
 #. Tag: para
-#, no-c-format
-msgid "The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below"
+#, fuzzy, no-c-format
+msgid "The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below:"
 msgstr "Lo stesso principio è applicabile a <literal>meta_attributes</literal> e <literal>instance_attributes</literal> come illustrato nell'esempio seguente"
 
 #. Tag: title
-#, no-c-format
-msgid "Referencing attributes, options and operations from other resources"
+#, fuzzy, no-c-format
+msgid "Referencing attributes, options, and operations from other resources"
 msgstr "Referenziare attributi, opzioni ed operazioni da altre risorse"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;mySpecialRsc&#34; class=&#34;ocf&#34; type=&#34;Special&#34; provider=&#34;me&#34;&#62;\n"
-"   &#60;instance_attributes id=&#34;mySpecialRsc-attrs&#34; score=&#34;1&#34; &#62;\n"
-"    &#60;nvpair id=&#34;default-interface&#34; name=&#34;interface&#34; value=&#34;eth0&#34;/&#62;\n"
-"    &#60;nvpair id=&#34;default-port&#34; name=&#34;port&#34; value=&#34;9999&#34;/&#62;\n"
-"   &#60;/instance_attributes&#62;\n"
-"   &#60;meta_attributes id=&#34;mySpecialRsc-options&#34;&#62;\n"
-"    &#60;nvpair id=&#34;failure-timeout&#34; name=&#34;failure-timeout&#34; value=&#34;5m&#34;/&#62;\n"
-"    &#60;nvpair id=&#34;migration-threshold&#34; name=&#34;migration-threshold&#34; value=&#34;1&#34;/&#62;\n"
-"    &#60;nvpair id=&#34;stickiness&#34; name=&#34;resource-stickiness&#34; value=&#34;0&#34;/&#62;\n"
-"   &#60;/meta_attributes&#62;\n"
-"   &#60;operations id=&#34;health-checks&#34;&#62;\n"
-"     &#60;op id=&#34;health-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34;/&#62;\n"
-"     &#60;op id=&#34;health-check&#34; name=&#34;monitor&#34; interval=&#34;30min&#34;/&#62;\n"
-"    &#60;/operations&#62;\n"
-"  &#60;/primitive&#62;\n"
-"  &#60;primitive id=&#34;myOtherlRsc&#34; class=&#34;ocf&#34; type=&#34;Other&#34; provider=&#34;me&#34;&#62;\n"
-"   &#60;instance_attributes id-ref=&#34;mySpecialRsc-attrs&#34;/&#62;\n"
-"   &#60;meta_attributes id-ref=&#34;mySpecialRsc-options&#34;/&#62;\n"
-"   &#60;operations id-ref=&#34;health-checks&#34;/&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
+"&lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
+"     &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"     &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;meta_attributes id=\"mySpecialRsc-options\"&gt;\n"
+"     &lt;nvpair id=\"failure-timeout\" name=\"failure-timeout\" value=\"5m\"/&gt;\n"
+"     &lt;nvpair id=\"migration-threshold\" name=\"migration-threshold\" value=\"1\"/&gt;\n"
+"     &lt;nvpair id=\"stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;operations id=\"health-checks\"&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"30min\"/&gt;\n"
+"   &lt;/operations&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive id=\"myOtherlRsc\" class=\"ocf\" type=\"Other\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id-ref=\"mySpecialRsc-attrs\"/&gt;\n"
+"   &lt;meta_attributes id-ref=\"mySpecialRsc-options\"/&gt;\n"
+"   &lt;operations id-ref=\"health-checks\"/&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -910,8 +871,8 @@ msgid "Reloading Services After a Definition Change"
 msgstr "Effettuare il reload dei servizi dopo una variazione della definizione"
 
 #. Tag: para
-#, no-c-format
-msgid "The cluster automatically detects changes to the definition of services it manages. However, the normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smart and can be told to use a new set of options without restarting."
+#, fuzzy, no-c-format
+msgid "The cluster automatically detects changes to the definition of services it manages. However, the normal response is to stop the service (using the old definition) and start it again (with the new definition). This works well, but some services are smarter and can be told to use a new set of options without restarting."
 msgstr "Il cluster rileva autoamticamente variazioni alle definizioni dei servizi che gestisce. Il comportamento normale prevede lo stop del servizio (utilizzando la vecchia definizione) ed il nuovo avvio (con la nuova definizione). Quanto illustrato funziona egregiamente, ma alcuni servizi sono abbastanza furbu da poter essere guidati ad utilizzare un nuovo set di opzioni senza che venga eseguito un riavvio."
 
 #. Tag: para
@@ -920,46 +881,37 @@ msgid "To take advantage of this capability, your resource agent must:"
 msgstr "Per trarre beneficio da questa abilità il proprio resource agent dovrà"
 
 #. Tag: para
-#, no-c-format
-msgid "Accept the <literal>reload</literal> operation and perform any required actions."
+#, fuzzy, no-c-format
+msgid "Accept the <literal>reload</literal> operation and perform any required actions. <emphasis>The steps required here depend completely on your application!</emphasis>"
 msgstr "Accettare l'operazione <literal>reload</literal> ed eseguire ogni azione richiesta."
 
-#. Tag: para
-#, no-c-format
-msgid "The steps required here depend completely on your application"
-msgstr "Le fasi richieste qui dipendono completamente dall'applicazione utilizzata"
-
 #. Tag: title
-#, no-c-format
-msgid "The DRBD Agent&#39;s Control logic for Supporting the <literal>reload</literal> Operation"
+#, fuzzy, no-c-format
+msgid "The DRBD Agent’s Control logic for Supporting the <literal>reload</literal> Operation"
 msgstr "L'agent di controllo di DRBD "
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  case $1 in\n"
+"case $1 in\n"
 "    start)\n"
-"\tdrbd_start\n"
-"\t;;\n"
+"        drbd_start\n"
+"        ;;\n"
 "    stop)\n"
-"\tdrbd_stop\n"
-"\t;;\n"
+"        drbd_stop\n"
+"        ;;\n"
 "    reload)\n"
-"\tdrbd_reload\n"
-"\t;;\n"
+"        drbd_reload\n"
+"        ;;\n"
 "    monitor)\n"
-"\tdrbd_monitor\n"
-"\t;;\n"
-"    *)\t\n"
-"\tdrbd_usage\n"
-"\texit $OCF_ERR_UNIMPLEMENTED\n"
-"\t;;\n"
-"  esac\n"
-"  exit $?\n"
-"\n"
-"\t\t"
+"        drbd_monitor\n"
+"        ;;\n"
+"    *)\n"
+"        drbd_usage\n"
+"        exit $OCF_ERR_UNIMPLEMENTED\n"
+"        ;;\n"
+"esac\n"
+"exit $?"
 msgstr ""
 "\n"
 "\n"
@@ -998,95 +950,29 @@ msgstr "La logica di controllo dell'operazione di <literal>reload</literal> impl
 #. Tag: programlisting
 #, no-c-format
 msgid ""
+"&lt;?xml version=\"1.0\"?&gt;\n"
+"  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
+"  &lt;resource-agent name=\"drbd\"&gt;\n"
+"    &lt;version&gt;1.1&lt;/version&gt;\n"
 "\n"
-"\n"
-"  &#60;?xml version=&#34;1.0&#34;?&#62;\n"
-"  &#60;!DOCTYPE resource-agent SYSTEM &#34;ra-api-1.dtd&#34;&#62;\n"
-"  &#60;resource-agent name=&#34;drbd&#34;&#62;\n"
-"    &#60;version&#62;1.1&#60;/version&#62;\n"
-"    \n"
-"    &#60;longdesc lang=&#34;en&#34;&#62;\n"
+"    &lt;longdesc&gt;\n"
 "      Master/Slave OCF Resource Agent for DRBD\n"
-"    &#60;/longdesc&#62;\n"
-"    \n"
-"    &#60;shortdesc lang=&#34;en&#34;&#62;\n"
-"      This resource agent manages a DRBD resource as a master/slave\n"
-"      resource. DRBD is a shared-nothing replicated storage device.\n"
-"    &#60;/shortdesc&#62;\n"
-"    \n"
-"    &#60;parameters&#62;\n"
-"      &#60;parameter name=&#34;drbd_resource&#34; unique=&#34;1&#34; required=&#34;1&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en&#34;&#62;The name of the drbd resource from the drbd.conf file.&#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en&#34;&#62;drbd resource name&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34;/&#62;\n"
-"      &#60;/parameter&#62;\n"
-"      \n"
-"      &#60;parameter name=&#34;drbdconf&#34; unique=&#34;0&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en&#34;&#62;Full path to the drbd.conf file.&#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en&#34;&#62;Path to drbd.conf&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34; default=&#34;${OCF_RESKEY_drbdconf_default}&#34;/&#62;\n"
-"      &#60;/parameter&#62;\n"
-"      \n"
-"    &#60;/parameters&#62;\n"
-"    \n"
-"    &#60;actions&#62;\n"
-"      &#60;action name=&#34;start&#34;   timeout=&#34;240&#34; /&#62;\n"
-"      &#60;action name=&#34;reload&#34;  timeout=&#34;240&#34; /&#62;\n"
-"      &#60;action name=&#34;promote&#34; timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;demote&#34;  timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;notify&#34;  timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;stop&#34;    timeout=&#34;100&#34; /&#62;\n"
-"      &#60;action name=&#34;meta-data&#34;    timeout=&#34;5&#34; /&#62;\n"
-"      &#60;action name=&#34;validate-all&#34; timeout=&#34;30&#34; /&#62;\n"
-"    &#60;/actions&#62;\n"
-"  &#60;/resource-agent&#62;\n"
+"    &lt;/longdesc&gt;\n"
 "\n"
-"\t\t"
+"    ...\n"
+"\n"
+"    &lt;actions&gt;\n"
+"      &lt;action name=\"start\"   timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"reload\"  timeout=\"240\" /&gt;\n"
+"      &lt;action name=\"promote\" timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"demote\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"notify\"  timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"stop\"    timeout=\"100\" /&gt;\n"
+"      &lt;action name=\"meta-data\"    timeout=\"5\" /&gt;\n"
+"      &lt;action name=\"validate-all\" timeout=\"30\" /&gt;\n"
+"    &lt;/actions&gt;\n"
+"  &lt;/resource-agent&gt;"
 msgstr ""
-"\n"
-"\n"
-"  &#60;?xml version=&#34;1.0&#34;?&#62;\n"
-"  &#60;!DOCTYPE resource-agent SYSTEM &#34;ra-api-1.dtd&#34;&#62;\n"
-"  &#60;resource-agent name=&#34;drbd&#34;&#62;\n"
-"    &#60;version&#62;1.1&#60;/version&#62;\n"
-"    \n"
-"    &#60;longdesc lang=&#34;en&#34;&#62;\n"
-"      Master/Slave OCF Resource Agent for DRBD\n"
-"    &#60;/longdesc&#62;\n"
-"    \n"
-"    &#60;shortdesc lang=&#34;en&#34;&#62;\n"
-"      This resource agent manages a DRBD resource as a master/slave\n"
-"      resource. DRBD is a shared-nothing replicated storage device.\n"
-"    &#60;/shortdesc&#62;\n"
-"    \n"
-"    &#60;parameters&#62;\n"
-"      &#60;parameter name=&#34;drbd_resource&#34; unique=&#34;1&#34; required=&#34;1&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en&#34;&#62;The name of the drbd resource from the drbd.conf file.&#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en&#34;&#62;drbd resource name&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34;/&#62;\n"
-"      &#60;/parameter&#62;\n"
-"      \n"
-"      &#60;parameter name=&#34;drbdconf&#34; unique=&#34;0&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en&#34;&#62;Full path to the drbd.conf file.&#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en&#34;&#62;Path to drbd.conf&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34; default=&#34;${OCF_RESKEY_drbdconf_default}&#34;/&#62;\n"
-"      &#60;/parameter&#62;\n"
-"      \n"
-"    &#60;/parameters&#62;\n"
-"    \n"
-"    &#60;actions&#62;\n"
-"      &#60;action name=&#34;start&#34;   timeout=&#34;240&#34; /&#62;\n"
-"      &#60;action name=&#34;reload&#34;  timeout=&#34;240&#34; /&#62;\n"
-"      &#60;action name=&#34;promote&#34; timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;demote&#34;  timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;notify&#34;  timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;stop&#34;    timeout=&#34;100&#34; /&#62;\n"
-"      &#60;action name=&#34;meta-data&#34;    timeout=&#34;5&#34; /&#62;\n"
-"      &#60;action name=&#34;validate-all&#34; timeout=&#34;30&#34; /&#62;\n"
-"    &#60;/actions&#62;\n"
-"  &#60;/resource-agent&#62;\n"
-"\n"
-"\t\t"
 
 #. Tag: para
 #, no-c-format
@@ -1094,8 +980,8 @@ msgid "Advertise one or more parameters that can take effect using <literal>relo
 msgstr "Promuove uno o più paramtri che vengono attivati utilizzando <literal>reload</literal>."
 
 #. Tag: para
-#, no-c-format
-msgid "Any parameter with the <literal>unique</literal> set to 0 is eligable to be used in this way."
+#, fuzzy, no-c-format
+msgid "Any parameter with the <literal>unique</literal> set to 0 is eligible to be used in this way."
 msgstr "Qualsiasi parametro con il valore <literal>unique</literal> impostato a 0 è abile ad essere utilizzato in questo modo."
 
 #. Tag: title
@@ -1104,17 +990,13 @@ msgid "Parameter that can be changed using reload"
 msgstr "Paramtro modificabile utilizzando reload"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;parameter name=&#34;drbdconf&#34; unique=&#34;0&#34;&#62;\n"
-"    &#60;longdesc lang=&#34;en&#34;&#62;Full path to the drbd.conf file.&#60;/longdesc&#62;\n"
-"    &#60;shortdesc lang=&#34;en&#34;&#62;Path to drbd.conf&#60;/shortdesc&#62;\n"
-"    &#60;content type=&#34;string&#34; default=&#34;${OCF_RESKEY_drbdconf_default}&#34;/&#62;\n"
-"  &#60;/parameter&#62;\n"
-"\n"
-"\t\t"
+"&lt;parameter name=\"drbdconf\" unique=\"0\"&gt;\n"
+"    &lt;longdesc&gt;Full path to the drbd.conf file.&lt;/longdesc&gt;\n"
+"    &lt;shortdesc&gt;Path to drbd.conf&lt;/shortdesc&gt;\n"
+"    &lt;content type=\"string\" default=\"${OCF_RESKEY_drbdconf_default}\"/&gt;\n"
+"&lt;/parameter&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -1127,8 +1009,8 @@ msgstr ""
 "\t\t"
 
 #. Tag: para
-#, no-c-format
-msgid "Once these requirements are satisfied, the cluster will automatically know to reload, instead of restarting, the resource when a non-unique fields changes."
+#, fuzzy, no-c-format
+msgid "Once these requirements are satisfied, the cluster will automatically know to reload the resource (instead of restarting) when a non-unique fields changes."
 msgstr "Una volta che questi requisiti sono soddisfatti, il cluster saprà automaticamente di dover effettuare un reload (anziché un restart) della risorsa in seguito alla variazione di un campo non-unique."
 
 #. Tag: para
@@ -1137,7 +1019,190 @@ msgid "The metadata is re-read when the resource is started. This may mean that 
 msgstr "I metadata vengono nuovamente letti quando la risorsa viene avviata. Questo potrebbe significare che la risorsa verrà riavviata la prima volta, anche se è stato modificato un parametro con <literal>unique=0</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "If both a unique and non-unique field is changed simultaneously, the resource will still be restarted."
+#, fuzzy, no-c-format
+msgid "If both a unique and non-unique field are changed simultaneously, the resource will still be restarted."
 msgstr "Se due campi unique e non-unique vengono cambiati simultaneamente, allora la risorsa verrà comunque riavviata."
 
+#~ msgid "CIB_user"
+#~ msgstr "CIB_user"
+
+#~ msgid "The user to connect as. Needs to be part of the hacluster group on the target host. Defaults to <emphasis>$USER</emphasis>"
+#~ msgstr "L'utente mediante il quale connettersi. Deve essere parte del gruppo hacluster sull'host di destinazione. Il valore di default è <emphasis>$USER</emphasis>"
+
+#~ msgid "CIB_passwd"
+#~ msgstr "CIB_passwd"
+
+#~ msgid "The user&#39;s password. Read from the command line if unset"
+#~ msgstr "La password dell'utente. Viene letta da linea di comando se non passata"
+
+#~ msgid "CIB_server"
+#~ msgstr "CIB_server"
+
+#~ msgid "The host to contact. Defaults to <emphasis>localhost</emphasis>."
+#~ msgstr "L'host da contattare. Il valore di default è <emphasis>localhost</emphasis>."
+
+#~ msgid "CIB_port"
+#~ msgstr "CIB_port"
+
+#~ msgid "The port on which to contact the server. Required."
+#~ msgstr "La porta alla quale contattare il server. Richiesto."
+
+#~ msgid "CIB_encrypted"
+#~ msgstr "CIB_encrypted"
+
+#~ msgid "Encrypt network traffic. Defaults to <emphasis>true</emphasis>."
+#~ msgstr "Crittare o meno il traffico network. Il valore di default è <emphasis>true</emphasis>."
+
+#~ msgid "Listen for encrypted remote connections on this port. Default: <emphasis>none</emphasis>"
+#~ msgstr "Ascolta per connessioni non criptate su questa porta. Default: <emphasis>none</emphasis>"
+
+#~ msgid "Listen for plaintext remote connections on this port. Default: <emphasis>none</emphasis>"
+#~ msgstr "Ascolta per connessioni in chiaro su questa porta. Default: <emphasis>none</emphasis>"
+
+#~ msgid ""
+#~ "\n"
+#~ "  &#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-2&#34; score=&#34;INFINITY&#34;/&#62;\n"
+#~ "\t  "
+#~ msgstr ""
+#~ "\n"
+#~ "  &#60;rsc_location rsc=&#34;Email&#34; node=&#34;sles-2&#34; score=&#34;INFINITY&#34;/&#62;\n"
+#~ "\t  "
+
+#~ msgid "<command>crm_resource -M -r Email -H sles-3</command>"
+#~ msgstr "<command>crm_resource -M -r Email -H sles-3</command>"
+
+#~ msgid "Older versions of Pacemaker used a custom binary called pingd for this functionality, this is now deprecated in favor of ping. If your version of Pacemaker does not contain the ping agent, you can download the latest version from: <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" />"
+#~ msgstr "Versioni passate di Pacemaker utilizzavano un eseguibile chiamato pingd per garantire questa funzionalità, al momento questo approccio è deprecato in virtù di ping. Se la versione di Pacemaker di cui si dispone non contiene l'eseguibile ping, è possibile scaricare l'ultima versione da <ulink url=\"http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/extra/resources/ping\" />"
+
+#~ msgid "dampen"
+#~ msgstr "dampen"
+
+#~ msgid "The time to wait (dampening) for further changes occur. Use this to prevent a resource from bouncing around the cluster when cluster nodes notice the loss of connectivity at slightly different times."
+#~ msgstr "Il tempo di attesa (dampening) dopo il quale avverrà un cambiamento. Utilizzare questio parametro per prevenire che una risorsa rimbalzi all'interno dei nodi del cluster quando gli stessi notificano assenza di connettività in tempi diversi."
+
+#~ msgid "multiplier"
+#~ msgstr "multiplier"
+
+#~ msgid "The number by which to multiply the number of connected ping nodes by. Useful when there are multiple ping nodes configured."
+#~ msgstr "Il numero da moltiplicare ai nodi connessi. Utile quando sono configurati nodi multipli."
+
+#~ msgid "host_list"
+#~ msgstr "host_list"
+
+#~ msgid "The machines to contact in order to determine the current connectivity status. Allowed values include resolvable DNS hostnames, IPv4 and IPv6 addresses."
+#~ msgstr "Le macchine da contattare per determinare lo stato della connettività. I valori permessi sono hostname DNS risolvibili, indirizzi IPv4 ed IPv6."
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
+#~ "   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
+#~ "    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
+#~ "   &#60;/rule&#62;\n"
+#~ "  &#60;/rsc_location&#62;\n"
+#~ "\n"
+#~ "      "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;rsc_location id=&#34;WebServer-connectivity&#34; rsc=&#34;Webserver&#34;&#62;\n"
+#~ "   &#60;rule id=&#34;ping-prefer-rule&#34; score-attribute=&#34;pingd&#34; &#62;\n"
+#~ "    &#60;expression id=&#34;ping-prefer&#34; attribute=&#34;pingd&#34; operation=&#34;defined&#34;/&#62;\n"
+#~ "   &#60;/rule&#62;\n"
+#~ "  &#60;/rsc_location&#62;\n"
+#~ "\n"
+#~ "      "
+
+#~ msgid "The steps required here depend completely on your application"
+#~ msgstr "Le fasi richieste qui dipendono completamente dall'applicazione utilizzata"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;?xml version=&#34;1.0&#34;?&#62;\n"
+#~ "  &#60;!DOCTYPE resource-agent SYSTEM &#34;ra-api-1.dtd&#34;&#62;\n"
+#~ "  &#60;resource-agent name=&#34;drbd&#34;&#62;\n"
+#~ "    &#60;version&#62;1.1&#60;/version&#62;\n"
+#~ "    \n"
+#~ "    &#60;longdesc lang=&#34;en&#34;&#62;\n"
+#~ "      Master/Slave OCF Resource Agent for DRBD\n"
+#~ "    &#60;/longdesc&#62;\n"
+#~ "    \n"
+#~ "    &#60;shortdesc lang=&#34;en&#34;&#62;\n"
+#~ "      This resource agent manages a DRBD resource as a master/slave\n"
+#~ "      resource. DRBD is a shared-nothing replicated storage device.\n"
+#~ "    &#60;/shortdesc&#62;\n"
+#~ "    \n"
+#~ "    &#60;parameters&#62;\n"
+#~ "      &#60;parameter name=&#34;drbd_resource&#34; unique=&#34;1&#34; required=&#34;1&#34;&#62;\n"
+#~ "        &#60;longdesc lang=&#34;en&#34;&#62;The name of the drbd resource from the drbd.conf file.&#60;/longdesc&#62;\n"
+#~ "        &#60;shortdesc lang=&#34;en&#34;&#62;drbd resource name&#60;/shortdesc&#62;\n"
+#~ "        &#60;content type=&#34;string&#34;/&#62;\n"
+#~ "      &#60;/parameter&#62;\n"
+#~ "      \n"
+#~ "      &#60;parameter name=&#34;drbdconf&#34; unique=&#34;0&#34;&#62;\n"
+#~ "        &#60;longdesc lang=&#34;en&#34;&#62;Full path to the drbd.conf file.&#60;/longdesc&#62;\n"
+#~ "        &#60;shortdesc lang=&#34;en&#34;&#62;Path to drbd.conf&#60;/shortdesc&#62;\n"
+#~ "        &#60;content type=&#34;string&#34; default=&#34;${OCF_RESKEY_drbdconf_default}&#34;/&#62;\n"
+#~ "      &#60;/parameter&#62;\n"
+#~ "      \n"
+#~ "    &#60;/parameters&#62;\n"
+#~ "    \n"
+#~ "    &#60;actions&#62;\n"
+#~ "      &#60;action name=&#34;start&#34;   timeout=&#34;240&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;reload&#34;  timeout=&#34;240&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;promote&#34; timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;demote&#34;  timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;notify&#34;  timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;stop&#34;    timeout=&#34;100&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;meta-data&#34;    timeout=&#34;5&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;validate-all&#34; timeout=&#34;30&#34; /&#62;\n"
+#~ "    &#60;/actions&#62;\n"
+#~ "  &#60;/resource-agent&#62;\n"
+#~ "\n"
+#~ "\t\t"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;?xml version=&#34;1.0&#34;?&#62;\n"
+#~ "  &#60;!DOCTYPE resource-agent SYSTEM &#34;ra-api-1.dtd&#34;&#62;\n"
+#~ "  &#60;resource-agent name=&#34;drbd&#34;&#62;\n"
+#~ "    &#60;version&#62;1.1&#60;/version&#62;\n"
+#~ "    \n"
+#~ "    &#60;longdesc lang=&#34;en&#34;&#62;\n"
+#~ "      Master/Slave OCF Resource Agent for DRBD\n"
+#~ "    &#60;/longdesc&#62;\n"
+#~ "    \n"
+#~ "    &#60;shortdesc lang=&#34;en&#34;&#62;\n"
+#~ "      This resource agent manages a DRBD resource as a master/slave\n"
+#~ "      resource. DRBD is a shared-nothing replicated storage device.\n"
+#~ "    &#60;/shortdesc&#62;\n"
+#~ "    \n"
+#~ "    &#60;parameters&#62;\n"
+#~ "      &#60;parameter name=&#34;drbd_resource&#34; unique=&#34;1&#34; required=&#34;1&#34;&#62;\n"
+#~ "        &#60;longdesc lang=&#34;en&#34;&#62;The name of the drbd resource from the drbd.conf file.&#60;/longdesc&#62;\n"
+#~ "        &#60;shortdesc lang=&#34;en&#34;&#62;drbd resource name&#60;/shortdesc&#62;\n"
+#~ "        &#60;content type=&#34;string&#34;/&#62;\n"
+#~ "      &#60;/parameter&#62;\n"
+#~ "      \n"
+#~ "      &#60;parameter name=&#34;drbdconf&#34; unique=&#34;0&#34;&#62;\n"
+#~ "        &#60;longdesc lang=&#34;en&#34;&#62;Full path to the drbd.conf file.&#60;/longdesc&#62;\n"
+#~ "        &#60;shortdesc lang=&#34;en&#34;&#62;Path to drbd.conf&#60;/shortdesc&#62;\n"
+#~ "        &#60;content type=&#34;string&#34; default=&#34;${OCF_RESKEY_drbdconf_default}&#34;/&#62;\n"
+#~ "      &#60;/parameter&#62;\n"
+#~ "      \n"
+#~ "    &#60;/parameters&#62;\n"
+#~ "    \n"
+#~ "    &#60;actions&#62;\n"
+#~ "      &#60;action name=&#34;start&#34;   timeout=&#34;240&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;reload&#34;  timeout=&#34;240&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;promote&#34; timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;demote&#34;  timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;notify&#34;  timeout=&#34;90&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;stop&#34;    timeout=&#34;100&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;meta-data&#34;    timeout=&#34;5&#34; /&#62;\n"
+#~ "      &#60;action name=&#34;validate-all&#34; timeout=&#34;30&#34; /&#62;\n"
+#~ "    &#60;/actions&#62;\n"
+#~ "  &#60;/resource-agent&#62;\n"
+#~ "\n"
+#~ "\t\t"

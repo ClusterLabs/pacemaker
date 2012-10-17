@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-15T23:32:37\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-16 00:38+0800\n"
 "Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
 "Language-Team: None\n"
@@ -19,13 +19,13 @@ msgid "Configure STONITH"
 msgstr "配置 STONITH"
 
 #. Tag: title
-#, no-c-format
-msgid "Why You Need STONITH"
+#, fuzzy, no-c-format
+msgid "What Is STONITH"
 msgstr "为什么需要 STONITH"
 
 #. Tag: para
-#, no-c-format
-msgid "STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rouge nodes or concurrent access."
+#, fuzzy, no-c-format
+msgid "STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access."
 msgstr "STONITH 是爆其他节点的头（ Shoot-The-Other-Node-In-The-Head）的缩写，它能保护你的数据不被不正常的节点破坏或是并发写入。"
 
 #. Tag: para
@@ -49,13 +49,13 @@ msgid "It is crucial that the STONITH device can allow the cluster to differenti
 msgstr "重要的一点是STONITH设备可以让集群区分节点故障和网络故障。"
 
 #. Tag: para
-#, no-c-format
-msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many onboard IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
+#, fuzzy, no-c-format
+msgid "The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault."
 msgstr "人们常常犯得一个错误就是选择远程电源开关作为STONITH设备(比如许多主板自带的IPMI控制器) 。在那种情况下，集群不能分辨节点是真正的下线了，还是网络无法连通了。"
 
 #. Tag: para
-#, no-c-format
-msgid "Likewise, any device that relies on the machine being active (such as SSH-based “devices” used during testing) are inappropriate."
+#, fuzzy, no-c-format
+msgid "Likewise, any device that relies on the machine being active (such as SSH-based \"devices\" used during testing) are inappropriate."
 msgstr "同样地， 任何依靠可用节点的设备（比如测试用的基于SSH的“设备”）都是不适当的。"
 
 #. Tag: title
@@ -64,44 +64,54 @@ msgid "Configuring STONITH"
 msgstr "配置STONITH"
 
 #. Tag: para
-#, no-c-format
-msgid "Find the correct driver: stonith -L"
+#, fuzzy, no-c-format
+msgid "Find the correct driver: <literal>pcs stonith list</literal>"
 msgstr "找到正确的STONITH驱动: stonith -L"
 
 #. Tag: para
 #, no-c-format
-msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters required by the device: stonith -t {type} -n"
-msgstr "因为设备的不同, 配置的参数也不一样。 想看设备所需设置的参数，可以用: stonith -t {type} -n"
+msgid "Find the parameters associated with the device: <literal>pcs stonith describe &lt;agent name&gt;</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:"
-msgstr "希望开发者选择了合适的名称，如果不是这样，你可以在活动的机器上面执行以下命令来获得更多信息。"
-
-#. Tag: screen
-#, no-c-format
-msgid "lrmadmin -M stonith {type} pacemaker\n"
-msgstr "lrmadmin -M stonith {type} pacemaker\n"
+msgid "Create a local config to make changes to <literal>pcs cluster cib stonith_cfg</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The output should be XML formatted text containing additional parameter descriptions"
-msgstr "输出应该是XML格式的文本文件，它包含了更详细的描述"
+msgid "Create the fencing resource using <literal>pcs -f stonith_cfg stonith create &lt;stonith_id&gt; &lt;stonith device type&gt; [stonith device options]</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of {type} and a parameter for each of the values returned in step 2"
-msgstr "创建stonith.xml文件 包含了一个原始的源，它定义了资stonith类下面的某个type和这个type所需的参数。"
+msgid "Set stonith-enable to true. <literal>pcs -f stonith_cfg property set stonith-enabled=true</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>."
-msgstr "如果这个设备可以击杀多个设备并且支持从多个节点连接过来，那我们从这个原始资源创建一个克隆。"
+msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <literal>pcmk_host_map</literal> parameter. See <literal>man stonithd</literal> for details."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Upload it into the CIB using cibadmin: cibadmin -C -o resources --xml-file stonith.xml"
-msgstr "使用cibadmin来更新CIB配置文件:cibadmin -C -o resources --xml-file stonith.xml"
+msgid "If the device does not support the list command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man stonithd</literal> for details."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the device does not expect the victim to be specified with the port parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man stonithd</literal> for details."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Commit the new configuration. <literal>pcs cluster push cib stonith_cfg</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the stonith resource is running, you can test it by executing: <literal>stonith_admin --reboot nodename</literal>. Although you might want to stop the cluster on that machine first."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -109,162 +119,247 @@ msgid "Example"
 msgstr "例子"
 
 #. Tag: para
-#, no-c-format
-msgid "Assuming we have an IBM BladeCenter containing our two nodes and the management interface is active on 192.168.122.31, then we would chose the external/ibmrsa driver in step 2 and obtain the following list of parameters"
+#, fuzzy, no-c-format
+msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the fence_ipmilan driver in step 2 and obtain the following list of parameters"
 msgstr "假设我们有一个 包含两个节点的IBM BladeCenter，控制界面的IP是192.168.122.31,然后我们选择 external/ibmrsa作为驱动，然后配置下面列表当中的参数。"
 
-#. Tag: screen
+#. Tag: title
+#, no-c-format
+msgid "Obtaining a list of STONITH Parameters"
+msgstr ""
+
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"stonith -t external/ibmrsa -n\n"
-"[root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>\n"
-"hostname  ipaddr  userid  passwd  type\n"
+"# pcs stonith describe fence_ipmilan\n"
+"Stonith options for: fence_ipmilan\n"
+"  auth: IPMI Lan Auth type (md5, password, or none)\n"
+"  ipaddr: IPMI Lan IP to talk to\n"
+"  passwd: Password (if required) to control power on IPMI device\n"
+"  passwd_script: Script to retrieve password (if required)\n"
+"  lanplus: Use Lanplus\n"
+"  login: Username/Login (if required) to control power on IPMI device\n"
+"  action: Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata\n"
+"  timeout: Timeout (sec) for IPMI operation\n"
+"  cipher: Ciphersuite to use (same as ipmitool -C parameter)\n"
+"  method: Method to fence (onoff or cycle)\n"
+"  power_wait: Wait X seconds after on/off operation\n"
+"  delay: Wait X seconds before fencing is started\n"
+"  privlvl: Privilege level on IPMI device\n"
+"  verbose: Verbose mode"
 msgstr ""
-"\n"
-"stonith -t external/ibmrsa -n\n"
-"[root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>\n"
-"hostname  ipaddr  userid  passwd  type\n"
 
 #. Tag: para
 #, no-c-format
-msgid "Assuming we know the username and password for the management interface, we would create a STONITH resource with the shell"
-msgstr "假设我们知道管理界面的用户名和密码，我们要创建一个STONITH的资源:"
+msgid "from which we would create a STONITH resource fragment that might look like this"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Sample STONITH Resource"
+msgstr ""
 
 #. Tag: screen
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
-"crm(live)# <userinput>cib new stonith</userinput>\n"
-"INFO: stonith shadow CIB created\n"
-"crm(stonith)# <userinput>configure primitive rsa-fencing stonith::external/ibmrsa \\</userinput>\n"
-"<userinput>        params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</userinput>\n"
-"<userinput>        op monitor interval=\"60s\"</userinput>\n"
-"crm(stonith)# <userinput>configure clone Fencing rsa-fencing</userinput>\n"
+"# pcs cluster cib stonith_cfg\n"
+"# pcs -f stonith_cfg stonith create impi-fencing fence_ipmilan \\\n"
+"      pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser \\\n"
+"      passwd=acd123 op monitor interval=60s"
 msgstr ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
-"crm(live)# <userinput>cib new stonith</userinput>\n"
-"INFO: stonith shadow CIB created\n"
-"crm(stonith)# <userinput>configure primitive rsa-fencing stonith::external/ibmrsa \\</userinput>\n"
-"<userinput>        params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</userinput>\n"
-"<userinput>        op monitor interval=\"60s\"</userinput>\n"
-"crm(stonith)# <userinput>configure clone Fencing rsa-fencing</userinput>\n"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"# pcs -f stonith_cfg stonith\n"
+" impi-fencing   (stonith:fence_ipmilan) Stopped"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "And finally, since we disabled it earlier, we need to re-enable STONITH"
+#, fuzzy, no-c-format
+msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration."
 msgstr "最后，我们要重新打开之前禁用的STONITH:"
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
-"crm(stonith)# <userinput>configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebData ocf:linbit:drbd \\\n"
-"        params drbd_resource=\"wwwdata\" \\\n"
-"        op monitor interval=\"60s\"\n"
-"primitive WebFS ocf:heartbeat:Filesystem \\\n"
-"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=”gfs2”\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
-"        op monitor interval=\"30s\"\n"
-"primitive dlm ocf:pacemaker:controld \\\n"
-"        op monitor interval=\"120s\"\n"
-"primitive gfs-control ocf:pacemaker:controld \\\n"
-"   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
-"        op monitor interval=\"120s\"\n"
-"<emphasis>primitive rsa-fencing stonith::external/ibmrsa \\</emphasis>\n"
-"<emphasis> params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</emphasis>\n"
-"<emphasis> op monitor interval=\"60s\"</emphasis>\n"
-"ms WebDataClone WebData \\\n"
-"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
-"<emphasis>clone Fencing rsa-fencing </emphasis>\n"
-"clone WebFSClone WebFS\n"
-"clone WebIP ClusterIP  \\\n"
-"        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
-"clone WebSiteClone WebSite\n"
-"clone dlm-clone dlm \\\n"
-"        meta interleave=\"true\"\n"
-"clone gfs-clone gfs-control \\\n"
-"        meta interleave=\"true\"\n"
-"colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
-"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
-"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
-"colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
-"colocation website-with-ip inf: WebSiteClone WebIP\n"
-"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
-"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
-"order apache-after-ip inf: WebIP WebSiteClone\n"
-"order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
-"order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=”2” \\\n"
-"        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=”100”\n"
+"# pcs -f stonith_cfg property set stonith-enabled=true\n"
+"# pcs -f stonith_cfg property\n"
+"dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"cluster-infrastructure: corosync\n"
+"no-quorum-policy: ignore\n"
+"stonith-enabled: true"
 msgstr ""
-"\n"
-"crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
-"crm(stonith)# <userinput>configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebData ocf:linbit:drbd \\\n"
-"        params drbd_resource=\"wwwdata\" \\\n"
-"        op monitor interval=\"60s\"\n"
-"primitive WebFS ocf:heartbeat:Filesystem \\\n"
-"        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=”gfs2”\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
-"        op monitor interval=\"30s\"\n"
-"primitive dlm ocf:pacemaker:controld \\\n"
-"        op monitor interval=\"120s\"\n"
-"primitive gfs-control ocf:pacemaker:controld \\\n"
-"   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
-"        op monitor interval=\"120s\"\n"
-"<emphasis>primitive rsa-fencing stonith::external/ibmrsa \\</emphasis>\n"
-"<emphasis> params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</emphasis>\n"
-"<emphasis> op monitor interval=\"60s\"</emphasis>\n"
-"ms WebDataClone WebData \\\n"
-"        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
-"<emphasis>clone Fencing rsa-fencing </emphasis>\n"
-"clone WebFSClone WebFS\n"
-"clone WebIP ClusterIP  \\\n"
-"        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
-"clone WebSiteClone WebSite\n"
-"clone dlm-clone dlm \\\n"
-"        meta interleave=\"true\"\n"
-"clone gfs-clone gfs-control \\\n"
-"        meta interleave=\"true\"\n"
-"colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
-"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
-"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
-"colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
-"colocation website-with-ip inf: WebSiteClone WebIP\n"
-"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
-"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
-"order apache-after-ip inf: WebIP WebSiteClone\n"
-"order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
-"order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=”2” \\\n"
-"        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=”100”\n"
 
+#. Tag: para
+#, no-c-format
+msgid "Now push the configuration into the cluster."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# pcs cluster push cib stonith_cfg"
+msgstr ""
+
+#~ msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters required by the device: stonith -t {type} -n"
+#~ msgstr "因为设备的不同, 配置的参数也不一样。 想看设备所需设置的参数，可以用: stonith -t {type} -n"
+
+#~ msgid "Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:"
+#~ msgstr "希望开发者选择了合适的名称，如果不是这样，你可以在活动的机器上面执行以下命令来获得更多信息。"
+
+#~ msgid "lrmadmin -M stonith {type} pacemaker\n"
+#~ msgstr "lrmadmin -M stonith {type} pacemaker\n"
+
+#~ msgid "The output should be XML formatted text containing additional parameter descriptions"
+#~ msgstr "输出应该是XML格式的文本文件，它包含了更详细的描述"
+
+#~ msgid "Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of {type} and a parameter for each of the values returned in step 2"
+#~ msgstr "创建stonith.xml文件 包含了一个原始的源，它定义了资stonith类下面的某个type和这个type所需的参数。"
+
+#~ msgid "Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>."
+#~ msgstr "如果这个设备可以击杀多个设备并且支持从多个节点连接过来，那我们从这个原始资源创建一个克隆。"
+
+#~ msgid "Upload it into the CIB using cibadmin: cibadmin -C -o resources --xml-file stonith.xml"
+#~ msgstr "使用cibadmin来更新CIB配置文件:cibadmin -C -o resources --xml-file stonith.xml"
+
+#~ msgid ""
+#~ "\n"
+#~ "stonith -t external/ibmrsa -n\n"
+#~ "[root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>\n"
+#~ "hostname  ipaddr  userid  passwd  type\n"
+#~ msgstr ""
+#~ "\n"
+#~ "stonith -t external/ibmrsa -n\n"
+#~ "[root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>\n"
+#~ "hostname  ipaddr  userid  passwd  type\n"
+
+#~ msgid "Assuming we know the username and password for the management interface, we would create a STONITH resource with the shell"
+#~ msgstr "假设我们知道管理界面的用户名和密码，我们要创建一个STONITH的资源:"
+
+#~ msgid ""
+#~ "\n"
+#~ "[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
+#~ "crm(live)# <userinput>cib new stonith</userinput>\n"
+#~ "INFO: stonith shadow CIB created\n"
+#~ "crm(stonith)# <userinput>configure primitive rsa-fencing stonith::external/ibmrsa \\</userinput>\n"
+#~ "<userinput>        params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</userinput>\n"
+#~ "<userinput>        op monitor interval=\"60s\"</userinput>\n"
+#~ "crm(stonith)# <userinput>configure clone Fencing rsa-fencing</userinput>\n"
+#~ msgstr ""
+#~ "\n"
+#~ "[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
+#~ "crm(live)# <userinput>cib new stonith</userinput>\n"
+#~ "INFO: stonith shadow CIB created\n"
+#~ "crm(stonith)# <userinput>configure primitive rsa-fencing stonith::external/ibmrsa \\</userinput>\n"
+#~ "<userinput>        params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</userinput>\n"
+#~ "<userinput>        op monitor interval=\"60s\"</userinput>\n"
+#~ "crm(stonith)# <userinput>configure clone Fencing rsa-fencing</userinput>\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
+#~ "crm(stonith)# <userinput>configure show</userinput>\n"
+#~ "node pcmk-1\n"
+#~ "node pcmk-2\n"
+#~ "primitive WebData ocf:linbit:drbd \\\n"
+#~ "        params drbd_resource=\"wwwdata\" \\\n"
+#~ "        op monitor interval=\"60s\"\n"
+#~ "primitive WebFS ocf:heartbeat:Filesystem \\\n"
+#~ "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=”gfs2”\n"
+#~ "primitive WebSite ocf:heartbeat:apache \\\n"
+#~ "        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+#~ "        op monitor interval=\"1min\"\n"
+#~ "primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+#~ "        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
+#~ "        op monitor interval=\"30s\"\n"
+#~ "primitive dlm ocf:pacemaker:controld \\\n"
+#~ "        op monitor interval=\"120s\"\n"
+#~ "primitive gfs-control ocf:pacemaker:controld \\\n"
+#~ "   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
+#~ "        op monitor interval=\"120s\"\n"
+#~ "<emphasis>primitive rsa-fencing stonith::external/ibmrsa \\</emphasis>\n"
+#~ "<emphasis> params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</emphasis>\n"
+#~ "<emphasis> op monitor interval=\"60s\"</emphasis>\n"
+#~ "ms WebDataClone WebData \\\n"
+#~ "        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+#~ "<emphasis>clone Fencing rsa-fencing </emphasis>\n"
+#~ "clone WebFSClone WebFS\n"
+#~ "clone WebIP ClusterIP  \\\n"
+#~ "        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
+#~ "clone WebSiteClone WebSite\n"
+#~ "clone dlm-clone dlm \\\n"
+#~ "        meta interleave=\"true\"\n"
+#~ "clone gfs-clone gfs-control \\\n"
+#~ "        meta interleave=\"true\"\n"
+#~ "colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
+#~ "colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+#~ "colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+#~ "colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
+#~ "colocation website-with-ip inf: WebSiteClone WebIP\n"
+#~ "order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+#~ "order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+#~ "order apache-after-ip inf: WebIP WebSiteClone\n"
+#~ "order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+#~ "order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
+#~ "property $id=\"cib-bootstrap-options\" \\\n"
+#~ "        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+#~ "        cluster-infrastructure=\"openais\" \\\n"
+#~ "        expected-quorum-votes=”2” \\\n"
+#~ "        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
+#~ "        no-quorum-policy=\"ignore\"\n"
+#~ "rsc_defaults $id=\"rsc-options\" \\\n"
+#~ "        resource-stickiness=”100”\n"
+#~ msgstr ""
+#~ "\n"
+#~ "crm(stonith)# <userinput>configure property stonith-enabled=\"true\"</userinput>\n"
+#~ "crm(stonith)# <userinput>configure show</userinput>\n"
+#~ "node pcmk-1\n"
+#~ "node pcmk-2\n"
+#~ "primitive WebData ocf:linbit:drbd \\\n"
+#~ "        params drbd_resource=\"wwwdata\" \\\n"
+#~ "        op monitor interval=\"60s\"\n"
+#~ "primitive WebFS ocf:heartbeat:Filesystem \\\n"
+#~ "        params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=”gfs2”\n"
+#~ "primitive WebSite ocf:heartbeat:apache \\\n"
+#~ "        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
+#~ "        op monitor interval=\"1min\"\n"
+#~ "primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+#~ "        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
+#~ "        op monitor interval=\"30s\"\n"
+#~ "primitive dlm ocf:pacemaker:controld \\\n"
+#~ "        op monitor interval=\"120s\"\n"
+#~ "primitive gfs-control ocf:pacemaker:controld \\\n"
+#~ "   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
+#~ "        op monitor interval=\"120s\"\n"
+#~ "<emphasis>primitive rsa-fencing stonith::external/ibmrsa \\</emphasis>\n"
+#~ "<emphasis> params hostname=”pcmk-1 pcmk-2\" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \\</emphasis>\n"
+#~ "<emphasis> op monitor interval=\"60s\"</emphasis>\n"
+#~ "ms WebDataClone WebData \\\n"
+#~ "        meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
+#~ "<emphasis>clone Fencing rsa-fencing </emphasis>\n"
+#~ "clone WebFSClone WebFS\n"
+#~ "clone WebIP ClusterIP  \\\n"
+#~ "        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
+#~ "clone WebSiteClone WebSite\n"
+#~ "clone dlm-clone dlm \\\n"
+#~ "        meta interleave=\"true\"\n"
+#~ "clone gfs-clone gfs-control \\\n"
+#~ "        meta interleave=\"true\"\n"
+#~ "colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone\n"
+#~ "colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
+#~ "colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
+#~ "colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
+#~ "colocation website-with-ip inf: WebSiteClone WebIP\n"
+#~ "order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
+#~ "order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
+#~ "order apache-after-ip inf: WebIP WebSiteClone\n"
+#~ "order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+#~ "order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
+#~ "property $id=\"cib-bootstrap-options\" \\\n"
+#~ "        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
+#~ "        cluster-infrastructure=\"openais\" \\\n"
+#~ "        expected-quorum-votes=”2” \\\n"
+#~ "        <emphasis>stonith-enabled=\"true\"</emphasis> \\\n"
+#~ "        no-quorum-policy=\"ignore\"\n"
+#~ "rsc_defaults $id=\"rsc-options\" \\\n"
+#~ "        resource-stickiness=”100”\n"

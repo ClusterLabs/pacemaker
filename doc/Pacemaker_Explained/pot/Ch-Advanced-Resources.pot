@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,12 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Group Resources</primary></indexterm> <indexterm><primary>Resources</primary><secondary>Groups</secondary></indexterm> Groups - A Syntactic Shortcut"
+msgid "Groups - A Syntactic Shortcut"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Group Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Groups</secondary> </indexterm> <indexterm> <primary>Groups</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -34,14 +39,14 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;group id=\"shortcut\"&gt;\n"
+msgid "&lt;group id=\"shortcut\"&gt;\n"
 "   &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "    &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
 "       &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
 "    &lt;/instance_attributes&gt;\n"
 "   &lt;/primitive&gt;\n"
 "   &lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"/&gt;\n"
-"  &lt;/group&gt;  "
+"  &lt;/group&gt;"
 msgstr ""
 
 #. Tag: para
@@ -61,17 +66,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If a resource in the group can't run anywhere, then nothing after that is allowed to run, too."
+msgid "If a resource in the group can’t run anywhere, then nothing after that is allowed to run, too."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If <literal>Public-IP</literal> can't run anywhere, neither can <literal>Email</literal>;"
+msgid "If <literal>Public-IP</literal> can’t run anywhere, neither can <literal>Email</literal>;"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "but if <literal>Email</literal> can't run anywhere, this does not affect <literal>Public-IP</literal> in any way"
+msgid "but if <literal>Email</literal> can’t run anywhere, this does not affect <literal>Public-IP</literal> in any way"
 msgstr ""
 
 #. Tag: para
@@ -86,7 +91,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;configuration&gt;\n"
+msgid "&lt;configuration&gt;\n"
 "   &lt;resources&gt;\n"
 "    &lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
 "     &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
@@ -99,7 +104,7 @@ msgid " &lt;configuration&gt;\n"
 "      &lt;rsc_colocation id=\"xxx\" rsc=\"Email\" with-rsc=\"Public-IP\" score=\"INFINITY\"/&gt;\n"
 "      &lt;rsc_order id=\"yyy\" first=\"Public-IP\" then=\"Email\"/&gt;\n"
 "   &lt;/constraints&gt;\n"
-"  &lt;/configuration&gt;  "
+"&lt;/configuration&gt;"
 msgstr ""
 
 #. Tag: para
@@ -114,7 +119,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Properties"
+msgid "Group Properties"
 msgstr ""
 
 #. Tag: title
@@ -132,54 +137,54 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Group Resource Property</secondary></indexterm> <indexterm><primary>Group Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary></indexterm> id"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Your name for the group"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Options"
+msgid "<literal>id</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Options inherited from <link linkend=\"s-resource-options\">simple resources</link>: <literal>priority, target-role, is-managed</literal>"
+msgid "Your name for the group <indexterm> <primary>id</primary><secondary>Group Resource Property</secondary> </indexterm> <indexterm> <primary>Group Resource Property</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Group Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Group Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Instance Attributes"
+msgid "Group Options"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Groups have no instance attributes, however any that are set here will be inherited by the group's children."
+msgid "Options inherited from <link linkend=\"s-resource-options\">primitive</link> resources: <literal>priority, target-role, is-managed</literal>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Contents"
+msgid "Group Instance Attributes"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Groups may only contain a collection of <link linkend=\"s-resource-supported\">primitive</link> cluster resources. To refer to the child of a group resource, just use the child's id instead of the group's."
+msgid "Groups have no instance attributes, however any that are set here will be inherited by the group’s children."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Constraints"
+msgid "Group Contents"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Although it is possible to reference the group's children in constraints, it is usually preferable to use the group's name instead."
+msgid "Groups may only contain a collection of <xref linkend=\"primitive-resource\" /> cluster resources. To refer to the child of a group resource, just use the child’s id instead of the group’s."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Group Constraints"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Although it is possible to reference the group’s children in constraints, it is usually preferable to use the group’s name instead."
 msgstr ""
 
 #. Tag: title
@@ -189,31 +194,41 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;constraints&gt;\n"
+msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"group-prefers-node1\" rsc=\"shortcut\" node=\"node1\" score=\"500\"/&gt;\n"
 "    &lt;rsc_colocation id=\"webserver-with-group\" rsc=\"Webserver\" with-rsc=\"shortcut\"/&gt;\n"
 "    &lt;rsc_order id=\"start-group-then-webserver\" first=\"Webserver\" then=\"shortcut\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Group Resource</secondary></indexterm> Stickiness"
+msgid "Group Stickiness"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups. Every active resource of the group will contribute its stickiness value to the group's total. So if the default <literal>resource-stickiness</literal> is 100, and a group has seven members, five of which are active, then the group as a whole will prefer its current location with a score of 500."
+msgid "<indexterm> <primary>resource-stickiness</primary><secondary>Groups</secondary> </indexterm> <indexterm> <primary>Groups</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stickiness, the measure of how much a resource wants to stay where it is, is additive in groups. Every active resource of the group will contribute its stickiness value to the group’s total. So if the default <literal>resource-stickiness</literal> is 100, and a group has seven members, five of which are active, then the group as a whole will prefer its current location with a score of 500."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Clone Resources</primary></indexterm> <indexterm><primary>Resources</primary><secondary>Clones</secondary></indexterm> Clones - Resources That Get Active on Multiple Hosts"
+msgid "Clones - Resources That Get Active on Multiple Hosts"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat's DLM, the fencing subsystem, and OCFS2."
+msgid "<indexterm> <primary>Clone Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Clones</secondary> </indexterm> <indexterm> <primary>Clones</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Clones were initially conceived as a convenient way to start N instances of an IP resource and have them distributed throughout the cluster for load balancing. They have turned out to quite useful for a number of purposes including integrating with Red Hat’s DLM, the fencing subsystem, and OCFS2."
 msgstr ""
 
 #. Tag: para
@@ -263,12 +278,17 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;clone id=\"apache-clone\"&gt;\n"
+msgid "&lt;clone id=\"apache-clone\"&gt;\n"
 "    &lt;meta_attributes id=\"apache-clone-meta\"&gt;\n"
 "       &lt;nvpair id=\"apache-unique\" name=\"globally-unique\" value=\"false\"/&gt;\n"
 "    &lt;/meta_attributes&gt;\n"
 "    &lt;primitive id=\"apache\" class=\"lsb\" type=\"apache\"/&gt;\n"
-"  &lt;/clone&gt;  "
+"&lt;/clone&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Clone Properties"
 msgstr ""
 
 #. Tag: title
@@ -276,19 +296,14 @@ msgstr ""
 msgid "Properties of a Clone Resource"
 msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Clone Resource Property</secondary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>id</tertiary></indexterm> id"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Your name for the clone"
-msgstr ""
-
 #. Tag: para
 #, no-c-format
-msgid "Options inherited from <link linkend=\"s-resource-supported\">simple resources</link>: <literal>priority, target-role, is-managed</literal>"
+msgid "Your name for the clone <indexterm> <primary>id</primary><secondary>Clone Property</secondary> </indexterm> <indexterm> <primary>Clone Property</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Clone Options"
 msgstr ""
 
 #. Tag: title
@@ -296,69 +311,79 @@ msgstr ""
 msgid "Clone specific configuration options"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>clone-max Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>clone-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-max</tertiary></indexterm> clone-max"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "How many copies of the resource to start. Defaults to the number of nodes in the cluster."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>clone-node-max Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>clone-node-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>clone-node-max</tertiary></indexterm> clone-node-max"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>notify Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>notify</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>notify</tertiary></indexterm> notify"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>globally-unique Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>globally-unique</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>globally-unique</tertiary></indexterm> globally-unique"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>ordered Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>ordered</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>ordered</tertiary></indexterm> ordered"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>interleave Clone Resource Property</primary></indexterm> <indexterm><primary>Clone Resource Properties</primary><secondary>interleave</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Clone Property</secondary><tertiary>interleave</tertiary></indexterm> interleave"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal>"
+msgid "<literal>clone-max</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Clones have no instance attributes; however, any that are set here will be inherited by the clone's children."
+msgid "How many copies of the resource to start. Defaults to the number of nodes in the cluster. <indexterm> <primary>clone-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-max</secondary> </indexterm> <indexterm> <primary>clone-max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>clone-node-max</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How many copies of the resource can be started on a single node; default <emphasis>1</emphasis>. <indexterm> <primary>clone-node-max</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>clone-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>clone-node-max</secondary> </indexterm> <indexterm> <primary>clone-node-max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>notify</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When stopping or starting a copy of the clone, tell all the other copies beforehand and when the action was successful. Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>notify</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>notify</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>notify</secondary> </indexterm> <indexterm> <primary>notify</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>globally-unique</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Does each copy of the clone perform a different function? Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>globally-unique</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>globally-unique</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>globally-unique</secondary> </indexterm> <indexterm> <primary>globally-unique</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>ordered</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Should the copies be started in series (instead of in parallel). Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>ordered</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>ordered</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>ordered</secondary> </indexterm> <indexterm> <primary>ordered</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>interleave</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Changes the behavior of ordering constraints (between clones/masters) so that instances can start/stop as soon as their peer instance has (rather than waiting for every instance of the other clone has). Allowed values: <emphasis>false</emphasis>, <literal>true</literal> <indexterm> <primary>interleave</primary><secondary>Clone Option</secondary> </indexterm> <indexterm> <primary>Clone Option</primary> </indexterm> <indexterm> <primary>Clone</primary><secondary>Option</secondary><tertiary>interleave</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>interleave</secondary> </indexterm> <indexterm> <primary>interleave</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Clone Instance Attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Clones have no instance attributes; however, any that are set here will be inherited by the clone’s children."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Clone Contents"
 msgstr ""
 
 #. Tag: para
@@ -368,12 +393,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You should never reference the name of a clone's child. If you think you need to do this, you probably need to re-evaluate your design."
+msgid "You should never reference the name of a clone’s child. If you think you need to do this, you probably need to re-evaluate your design."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Clone Constraints"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In most cases, a clone will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone's id is used."
+msgid "In most cases, a clone will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the clone’s id is used."
 msgstr ""
 
 #. Tag: para
@@ -383,7 +413,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the resource's own location preferences."
+msgid "Colocation of a regular (or group) resource with a clone means that the resource can run on any machine with an active copy of the clone. The cluster will choose a copy based on where the clone is running and the resource’s own location preferences."
 msgstr ""
 
 #. Tag: para
@@ -398,26 +428,31 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;constraints&gt;\n"
+msgid "&lt;constraints&gt;\n"
 "    &lt;rsc_location id=\"clone-prefers-node1\" rsc=\"apache-clone\" node=\"node1\" score=\"500\"/&gt;\n"
 "    &lt;rsc_colocation id=\"stats-with-clone\" rsc=\"apache-stats\" with=\"apache-clone\"/&gt;\n"
 "    &lt;rsc_order id=\"start-clone-then-stats\" first=\"apache-clone\" then=\"apache-stats\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Stickiness"
+msgid "Clone Stickiness"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Clone Resource</secondary></indexterm> To achieve a stable allocation pattern, clones are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
+msgid "<indexterm> <primary>resource-stickiness</primary><secondary>Clones</secondary> </indexterm> <indexterm> <primary>Clones</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To achieve a stable allocation pattern, clones are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the clone will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Resource Agent Requirements"
+msgid "Clone Resource Agent Requirements"
 msgstr ""
 
 #. Tag: para
@@ -427,7 +462,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with <envar>${OCF_SUCCESS}</envar> if the node has that exact instance active. All other probes for instances of the clone should result in <envar>${OCF_NOT_RUNNING}</envar>. Unless of course they are failed, in which case they should return one of the other OCF error codes."
+msgid "Globally unique clones do require some additional support in the resource agent. In particular, it must only respond with other probes for instances of the clone should result in they should return one of the other OCF error codes."
 msgstr ""
 
 #. Tag: para
@@ -437,17 +472,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resource agents can find out how many copies there are by examining the <envar>OCF_RESKEY_CRM_meta_clone_max</envar> environment variable and which copy it is by examining <envar>OCF_RESKEY_CRM_meta_clone</envar>."
+msgid "Resource agents can find out how many copies there are by examining the <literal>OCF_RESKEY_CRM_meta_clone_max</literal> environment variable and which copy it is by examining <literal>OCF_RESKEY_CRM_meta_clone</literal>."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You should not make any assumptions (based on <envar>OCF_RESKEY_CRM_meta_clone</envar>) about which copies are active. In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0."
+msgid "You should not make any assumptions (based on <literal>OCF_RESKEY_CRM_meta_clone</literal>) about which copies are active. In particular, the list of active copies will not always be an unbroken sequence, nor always start at 0."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Notifications"
+msgid "Clone Notifications"
 msgstr ""
 
 #. Tag: para
@@ -465,109 +500,109 @@ msgstr ""
 msgid "Variable"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_type"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: <literal>pre</literal>, <literal>post</literal>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_operation"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Allowed values: <literal>start</literal>, <literal>stop</literal>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_resource"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources to be started"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_resource"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources to be stopped"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_resource"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources that are running"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_resource"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources that are not running"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_start_uname"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources will be started"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_stop_uname"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources will be stopped"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_active_uname"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources are running"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> OCF_RESKEY_CRM_meta_notify_inactive_uname"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources are not running"
+msgid "OCF_RESKEY_CRM_meta_notify_type"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The variables come in pairs, such as <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar> and <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar> and should be treated as an array of whitespace separated elements."
+msgid "Allowed values: <literal>pre</literal>, <literal>post</literal> <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>type</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>type</secondary> </indexterm> <indexterm> <primary>type</primary> </indexterm> <indexterm> <primary>type</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_operation"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Allowed values: <literal>start</literal>, <literal>stop</literal> <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>operation</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>operation</secondary> </indexterm> <indexterm> <primary>operation</primary> </indexterm> <indexterm> <primary>operation</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_start_resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources to be started <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>start_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>start_resource</secondary> </indexterm> <indexterm> <primary>start_resource</primary> </indexterm> <indexterm> <primary>start_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_stop_resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources to be stopped <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>stop_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>stop_resource</secondary> </indexterm> <indexterm> <primary>stop_resource</primary> </indexterm> <indexterm> <primary>stop_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_active_resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that are running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>active_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>active_resource</secondary> </indexterm> <indexterm> <primary>active_resource</primary> </indexterm> <indexterm> <primary>active_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_inactive_resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that are not running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>inactive_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>inactive_resource</secondary> </indexterm> <indexterm> <primary>inactive_resource</primary> </indexterm> <indexterm> <primary>inactive_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_start_uname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources will be started <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>start_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>start_uname</secondary> </indexterm> <indexterm> <primary>start_uname</primary> </indexterm> <indexterm> <primary>start_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_stop_uname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources will be stopped <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>stop_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>stop_uname</secondary> </indexterm> <indexterm> <primary>stop_uname</primary> </indexterm> <indexterm> <primary>stop_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_active_uname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources are running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>active_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>active_uname</secondary> </indexterm> <indexterm> <primary>active_uname</primary> </indexterm> <indexterm> <primary>active_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "OCF_RESKEY_CRM_meta_notify_inactive_uname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources are not running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>inactive_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>inactive_uname</secondary> </indexterm> <indexterm> <primary>inactive_uname</primary> </indexterm> <indexterm> <primary>inactive_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The variables come in pairs, such as <literal>OCF_RESKEY_CRM_meta_notify_start_resource</literal> and <literal>OCF_RESKEY_CRM_meta_notify_start_uname</literal> and should be treated as an array of whitespace separated elements."
 msgstr ""
 
 #. Tag: para
@@ -582,10 +617,8 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<envar>\n"
-"		OCF_RESKEY_CRM_meta_notify_start_resource</envar>=\"clone:0 clone:2 clone:3\" <envar>\n"
-"		OCF_RESKEY_CRM_meta_notify_start_uname</envar>=\"sles-1 sles-3 sles-2\"\n"
-"	    "
+msgid "OCF_RESKEY_CRM_meta_notify_start_resource=\"clone:0 clone:2 clone:3\"\n"
+"OCF_RESKEY_CRM_meta_notify_start_uname=\"sles-1 sles-3 sles-2\""
 msgstr ""
 
 #. Tag: title
@@ -593,32 +626,32 @@ msgstr ""
 msgid "Proper Interpretation of Notification Environment Variables"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Pre-notification (stop):"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Active resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgid "Active resources: <literal>$OCF_RESKEY_CRM_meta_notify_active_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Inactive resources: <envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+msgid "Inactive resources: <literal>$OCF_RESKEY_CRM_meta_notify_inactive_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources to be started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgid "Resources to be started: <literal>$OCF_RESKEY_CRM_meta_notify_start_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources to be stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgid "Resources to be stopped: <literal>$OCF_RESKEY_CRM_meta_notify_stop_resource</literal>"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (stop) / Pre-notification (start):"
 msgstr ""
@@ -630,12 +663,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgid "<literal>$OCF_RESKEY_CRM_meta_notify_active_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgid "minus <literal>$OCF_RESKEY_CRM_meta_notify_stop_resource</literal>"
 msgstr ""
 
 #. Tag: para
@@ -645,25 +678,25 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<envar>$OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
+msgid "<literal>$OCF_RESKEY_CRM_meta_notify_inactive_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgid "plus <literal>$OCF_RESKEY_CRM_meta_notify_stop_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources that were started: <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgid "Resources that were started: <literal>$OCF_RESKEY_CRM_meta_notify_start_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources that were stopped: <envar>$OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
+msgid "Resources that were stopped: <literal>$OCF_RESKEY_CRM_meta_notify_stop_resource</literal>"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (start):"
 msgstr ""
@@ -675,7 +708,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgid "plus <literal>$OCF_RESKEY_CRM_meta_notify_start_resource</literal>"
 msgstr ""
 
 #. Tag: para
@@ -685,12 +718,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
+msgid "minus <literal>$OCF_RESKEY_CRM_meta_notify_start_resource</literal>"
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Multi-state Resources</primary></indexterm> <indexterm significance=\"preferred\"><primary>Resources</primary><secondary>Multi-state</secondary></indexterm> Multi-state - Resources That Have Multiple Modes"
+msgid "Multi-state - Resources That Have Multiple Modes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Multi-state Resources</primary> </indexterm> <indexterm> <primary>Resources</primary><secondary>Multi-state</secondary> </indexterm> <indexterm> <primary>Multi-state</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -700,27 +738,32 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Multi-state Properties"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Properties of a Multi-State Resource"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>id</primary><secondary>Multi-State Resource Property</secondary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>id</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>id</tertiary></indexterm> id"
+msgid "Your name for the multi-state resource <indexterm> <primary>id</primary><secondary>Multi-State Property</secondary> </indexterm> <indexterm> <primary>Multi-State Property</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: title
 #, no-c-format
-msgid "Your name for the multi-state resource"
+msgid "Multi-state Options"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Options inherited from <link linkend=\"s-resource-supported\">simple resources</link>: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal>"
+msgid "Options inherited from <link linkend=\"s-resource-options\">primitive</link> resources: <literal>priority</literal>, <literal>target-role</literal>, <literal>is-managed</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Options inherited from <link linkend=\"s-resource-clone\">clone resources</link>: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal>"
+msgid "Options inherited from <link linkend=\"s-resource-clone\">clone</link> resources: <literal>clone-max</literal>, <literal>clone-node-max</literal>, <literal>notify</literal>, <literal>globally-unique</literal>, <literal>ordered</literal>, <literal>interleave</literal>"
 msgstr ""
 
 #. Tag: title
@@ -728,29 +771,39 @@ msgstr ""
 msgid "Multi-state specific resource configuration options"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>master-max Multi-State Resource Property</primary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-max</tertiary></indexterm> master-max"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "How many copies of the resource can be promoted to <literal>master</literal> status; default 1."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>master-node-max Multi-State Resource Property</primary></indexterm> <indexterm><primary>Multi-State Resource Properties</primary><secondary>master-node-max</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Property</secondary><tertiary>master-node-max</tertiary></indexterm> master-node-max"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1."
+msgid "<literal>master-max</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Multi-state resources have no instance attributes; however, any that are set here will be inherited by master's children."
+msgid "How many copies of the resource can be promoted to <literal>master</literal> status; default 1. <indexterm> <primary>master-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-max</secondary> </indexterm> <indexterm> <primary>master-max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>master-node-max</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "How many copies of the resource can be promoted to <literal>master</literal> status on a single node; default 1. <indexterm> <primary>master-node-max</primary><secondary>Multi-State Option</secondary> </indexterm> <indexterm> <primary>Multi-State Option</primary> </indexterm> <indexterm> <primary>Multi-State</primary><secondary>Option</secondary><tertiary>master-node-max</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>master-node-max</secondary> </indexterm> <indexterm> <primary>master-node-max</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Instance Attributes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-state resources have no instance attributes; however, any that are set here will be inherited by master’s children."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Contents"
 msgstr ""
 
 #. Tag: para
@@ -760,7 +813,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "You should never reference the name of a master's child. If you think you need to do this, you probably need to re-evaluate your design."
+msgid "You should never reference the name of a master’s child. If you think you need to do this, you probably need to re-evaluate your design."
 msgstr ""
 
 #. Tag: title
@@ -790,19 +843,24 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;master id=\"myMasterRsc\"&gt;\n"
+msgid "&lt;master id=\"myMasterRsc\"&gt;\n"
 "   &lt;primitive id=\"myRsc\" class=\"ocf\" type=\"myApp\" provider=\"myCorp\"&gt;\n"
 "    &lt;operations&gt;\n"
 "     &lt;op id=\"public-ip-slave-check\" name=\"monitor\" interval=\"60\"/&gt;\n"
 "     &lt;op id=\"public-ip-master-check\" name=\"monitor\" interval=\"61\" role=\"Master\"/&gt;\n"
 "    &lt;/operations&gt;\n"
 "   &lt;/primitive&gt;\n"
-"  &lt;/master&gt;  "
+"&lt;/master&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Constraints"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In most cases, a multi-state resources will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the master's id is used."
+msgid "In most cases, a multi-state resources will have a single copy on each active cluster node. If this is not the case, you can indicate which nodes the cluster should preferentially assign copies to with resource location constraints. These constraints are written no differently to those for regular resources except that the master’s id is used."
 msgstr ""
 
 #. Tag: para
@@ -815,44 +873,44 @@ msgstr ""
 msgid "Additional constraint options relevant to multi-state resources"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>rsc-role Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>rsc-role</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>rsc-role</tertiary></indexterm> rsc-role"
+msgid "<literal>rsc-role</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>with-rsc-role Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>with-rsc-role</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>with-rsc-role</tertiary></indexterm> with-rsc-role"
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>rsc-role</secondary> </indexterm> <indexterm> <primary>rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>first-action Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>first-action</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>first-action</tertiary></indexterm> first-action"
+msgid "<literal>with-rsc-role</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource. Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>."
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>then-action Multi-State Resource Constraints</primary></indexterm> <indexterm><primary>Multi-State Resource Constraints</primary><secondary>then-action</secondary></indexterm> <indexterm><primary>Resource</primary><secondary>Multi-State Constraints</secondary><tertiary>then-action</tertiary></indexterm> then-action"
+msgid "An additional attribute of colocation constraints that specifies the role that <literal>with-rsc</literal> must be in. Allowed values: <emphasis>Started</emphasis>, <literal>Master</literal>, <literal>Slave</literal>. <indexterm> <primary>with-rsc-role</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>with-rsc-role</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>with-rsc-role</secondary> </indexterm> <indexterm> <primary>with-rsc-role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>."
+msgid "<literal>first-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of ordering constraints that specifies the action that the <literal>first</literal> resource must complete before executing the specified action for the <literal>then</literal> resource. Allowed values: <emphasis>start</emphasis>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. <indexterm> <primary>first-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>first-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>first-action</secondary> </indexterm> <indexterm> <primary>first-action</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>then-action</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "An additional attribute of ordering constraints that specifies the action that the <literal>then</literal> resource can only execute after the <literal>first-action</literal> on the <literal>first</literal> resource has completed. Allowed values: <literal>start</literal>, <literal>stop</literal>, <literal>promote</literal>, <literal>demote</literal>. Defaults to the value (specified or implied) of <literal>first-action</literal>. <indexterm> <primary>then-action</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Ordering</secondary><tertiary>then-action</tertiary> </indexterm> <indexterm> <primary>Ordering</primary><secondary>then-action</secondary> </indexterm> <indexterm> <primary>then-action</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -867,7 +925,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;constraints&gt;\n"
+msgid "&lt;constraints&gt;\n"
 "   &lt;rsc_location id=\"db-prefers-node1\" rsc=\"database\" node=\"node1\" score=\"500\"/&gt;\n"
 "   &lt;rsc_colocation id=\"backup-with-db-slave\" rsc=\"backup\"\n"
 "     with-rsc=\"database\" with-rsc-role=\"Slave\"/&gt;\n"
@@ -876,7 +934,7 @@ msgid " &lt;constraints&gt;\n"
 "   &lt;rsc_order id=\"start-db-before-backup\" first=\"database\" then=\"backup\"/&gt;\n"
 "   &lt;rsc_order id=\"promote-db-then-app\" first=\"database\" first-action=\"promote\"\n"
 "     then=\"myApp\" then-action=\"start\"/&gt;\n"
-"  &lt;/constraints&gt;  "
+"&lt;/constraints&gt;"
 msgstr ""
 
 #. Tag: para
@@ -889,9 +947,14 @@ msgstr ""
 msgid "Colocation with regular clones and other multi-state resources is also possible. In such cases, the set of allowed locations for the <literal>rsc</literal> clone is (after role filtering) limited to nodes on which the <literal>with-rsc</literal> multi-state resource is (or will be) in the specified role. Allocation is then performed as-per-normal."
 msgstr ""
 
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Stickiness"
+msgstr ""
+
 #. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>resource-stickiness</primary><secondary>of a Multi-State Resource</secondary></indexterm> To achieve a stable allocation pattern, multi-state resources are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
+msgid "<indexterm> <primary>resource-stickiness</primary><secondary>Multi-State</secondary> </indexterm> <indexterm> <primary>Multi-State</primary> </indexterm> To achieve a stable allocation pattern, multi-state resources are slightly sticky by default. If no value for <literal>resource-stickiness</literal> is provided, the multi-state resource will use a value of 1. Being a small value, it causes minimal disturbance to the score calculations of other resources but is enough to prevent Pacemaker from needlessly moving copies around the cluster."
 msgstr ""
 
 #. Tag: title
@@ -901,7 +964,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "During the start operation, most Resource Agent scripts should call the <command>crm_master</command> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
+msgid "During the start operation, most Resource Agent scripts should call the <literal>crm_master</literal> utility. This tool automatically detects both the resource and host and should be used to set a preference for being promoted. Based on this, <literal>master-max</literal>, and <literal>master-node-max</literal>, the instance(s) with the highest preference will be promoted."
 msgstr ""
 
 #. Tag: para
@@ -916,16 +979,21 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid " &lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"
+msgid "&lt;rsc_location id=\"master-location\" rsc=\"myMasterRsc\"&gt;\n"
 "    &lt;rule id=\"master-rule\" score=\"100\" role=\"Master\"&gt;\n"
 "      &lt;expression id=\"master-exp\" attribute=\"#uname\" operation=\"eq\" value=\"node1\"/&gt;\n"
 "    &lt;/rule&gt;\n"
-"  &lt;/rsc_location&gt;  "
+"&lt;/rsc_location&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Resource Agent Requirements"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>; these actions are responsible for changing the state of the resource. Like <literal>start</literal> and <literal>stop</literal>, they should return <envar>OCF_SUCCESS</envar> if they completed successfully or a relevant error code if they did not."
+msgid "Since multi-state resources are an extension of cloned resources, all the requirements of Clones are also requirements of multi-state resources. Additionally, multi-state resources require two extra actions: <literal>demote</literal> and <literal>promote</literal>; these actions are responsible for changing the state of the resource. Like <literal>start</literal> and <literal>stop</literal>, they should return <literal>OCF_SUCCESS</literal> if they completed successfully or a relevant error code if they did not."
 msgstr ""
 
 #. Tag: para
@@ -948,54 +1016,59 @@ msgstr ""
 msgid "Monitor Return Code"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>return code</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_NOT_RUNNING</secondary></indexterm> <indexterm><primary>OCF_NOT_RUNNING</primary></indexterm> OCF_NOT_RUNNING"
+msgid "OCF_NOT_RUNNING"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Stopped"
+msgid "Stopped <indexterm> <primary>Return Code</primary><secondary>OCF_NOT_RUNNING</secondary> </indexterm> <indexterm> <primary>OCF_NOT_RUNNING</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>return code</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_SUCCESS</secondary></indexterm> <indexterm><primary>OCF_SUCCESS</primary></indexterm> OCF_SUCCESS"
+msgid "OCF_SUCCESS"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Running (Slave)"
+msgid "Running (Slave) <indexterm> <primary>Return Code</primary><secondary>OCF_SUCCESS</secondary> </indexterm> <indexterm> <primary>OCF_SUCCESS</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>return code</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_RUNNING_MASTER</secondary></indexterm> <indexterm><primary>OCF_RUNNING_MASTER</primary></indexterm> OCF_RUNNING_MASTER"
+msgid "OCF_RUNNING_MASTER"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Running (Master)"
+msgid "Running (Master) <indexterm> <primary>Return Code</primary><secondary>OCF_RUNNING_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_RUNNING_MASTER</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm><primary>return code</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>Environment Variable</primary><secondary>OCF_FAILED_MASTER</secondary></indexterm> <indexterm><primary>OCF_FAILED_MASTER</primary></indexterm> OCF_FAILED_MASTER"
+msgid "OCF_FAILED_MASTER"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Failed (Master)"
+msgid "Failed (Master) <indexterm> <primary>Return Code</primary><secondary>OCF_FAILED_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_FAILED_MASTER</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Other"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Failed (Slave)"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state Notifications"
 msgstr ""
 
 #. Tag: para
@@ -1005,260 +1078,145 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Environment variables supplied with <literal>Master</literal> notify actions<footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_type</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_type</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_type</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_operation</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_operation</secondary></indexterm><envar>OCF_RESKEY_CRM_meta_notify_operation</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources the that are running"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_resource</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources the that are not running"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_resource</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_resource</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_resource</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources that are running in <literal>Master</literal> mode"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_resource</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_resource</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_resource</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources that are running in <literal>Slave</literal> mode"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_resource</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_resource</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_resource</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_resource</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_resource</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_resource</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_resource</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources to be promoted"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_resource</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_resource</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_resource</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Resources to be demoted"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_start_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_start_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_start_uname</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_stop_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_stop_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_stop_uname</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_promote_uname</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_promote_uname</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_promote_uname</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources will be promoted"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_demote_uname</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_demote_uname</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_demote_uname</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources will be demoted"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_active_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_active_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_active_uname</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<indexterm><primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_inactive_uname</tertiary></indexterm> <indexterm><primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_inactive_uname</secondary></indexterm> <envar>OCF_RESKEY_CRM_meta_notify_inactive_uname</envar>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_master_uname</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_master_uname</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_master_uname</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources are running in <literal>Master</literal> mode"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis> <envar>OCF_RESKEY_CRM_meta_notify_slave_uname</envar></emphasis>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_</secondary><tertiary>_meta_notify_slave_uname</tertiary>"
-msgstr ""
-
-#. Tag: indexterm
-#, no-c-format
-msgid "<primary>OCF_RESKEY_CRM_</primary><secondary>meta_notify_slave_uname</secondary>"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Nodes on which resources are running in <literal>Slave</literal> mode"
+msgid "Environment variables supplied with Master notify actions <footnote><para>Emphasized variables are specific to <literal>Master</literal> resources and all behave in the same manner as described for Clone resources.</para></footnote>"
 msgstr ""
 
 #. Tag: para
+#, no-c-format
+msgid "Resources the that are running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>active_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>active_resource</secondary> </indexterm> <indexterm> <primary>active_resource</primary> </indexterm> <indexterm> <primary>active_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources the that are not running <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>inactive_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>inactive_resource</secondary> </indexterm> <indexterm> <primary>inactive_resource</primary> </indexterm> <indexterm> <primary>inactive_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_master_resource</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that are running in <literal>Master</literal> mode <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>master_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>master_resource</secondary> </indexterm> <indexterm> <primary>master_resource</primary> </indexterm> <indexterm> <primary>master_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_slave_resource</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources that are running in <literal>Slave</literal> mode <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>slave_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>slave_resource</secondary> </indexterm> <indexterm> <primary>slave_resource</primary> </indexterm> <indexterm> <primary>slave_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>stop_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>stop_resource</secondary> </indexterm> <indexterm> <primary>stop_resource</primary> </indexterm> <indexterm> <primary>stop_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm> OCF_RESKEY_CRM_meta_notify_stop_resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources to be stopped"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_promote_resource</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources to be promoted <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>promote_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>promote_resource</secondary> </indexterm> <indexterm> <primary>promote_resource</primary> </indexterm> <indexterm> <primary>promote_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_demote_resource</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resources to be demoted <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>demote_resource</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>demote_resource</secondary> </indexterm> <indexterm> <primary>demote_resource</primary> </indexterm> <indexterm> <primary>demote_resource</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_promote_uname</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources will be promote <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>promote_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>promote_uname</secondary> </indexterm> <indexterm> <primary>promote_uname</primary> </indexterm> <indexterm> <primary>promote_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_demote_uname</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources will be demoted <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>demote_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>demote_uname</secondary> </indexterm> <indexterm> <primary>demote_uname</primary> </indexterm> <indexterm> <primary>demote_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_master_uname</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources are running in <literal>Master</literal> mode <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>master_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>master_uname</secondary> </indexterm> <indexterm> <primary>master_uname</primary> </indexterm> <indexterm> <primary>master_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>OCF_RESKEY_CRM_meta_notify_slave_uname</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes on which resources are running in <literal>Slave</literal> mode <indexterm> <primary>Environment Variable</primary><secondary>OCF_RESKEY_CRM_meta_notify_</secondary><tertiary>slave_uname</tertiary> </indexterm> <indexterm> <primary>OCF_RESKEY_CRM_meta_notify_</primary><secondary>slave_uname</secondary> </indexterm> <indexterm> <primary>slave_uname</primary> </indexterm> <indexterm> <primary>slave_uname</primary><secondary>Notification Environment Variable</secondary> </indexterm> <indexterm> <primary>Notification Environment Variable</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Multi-state - Proper Interpretation of Notification Environment Variables"
+msgstr ""
+
+#. Tag: title
 #, no-c-format
 msgid "Pre-notification (demote):"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Active</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_active_resource</envar>"
+msgid "<literal>Active</literal> resources: <literal>$OCF_RESKEY_CRM_meta_notify_active_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Master</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
+msgid "<literal>Master</literal> resources: <literal>$OCF_RESKEY_CRM_meta_notify_master_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Slave</literal> resources: <envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
+msgid "<literal>Slave</literal> resources: <literal>$OCF_RESKEY_CRM_meta_notify_slave_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources to be promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgid "Resources to be promoted: <literal>$OCF_RESKEY_CRM_meta_notify_promote_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources to be demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgid "Resources to be demoted: <literal>$OCF_RESKEY_CRM_meta_notify_demote_resource</literal>"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (demote) / Pre-notification (stop):"
 msgstr ""
@@ -1270,20 +1228,20 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<envar>$OCF_RESKEY_CRM_meta_notify_master_resource</envar>"
+msgid "<literal>$OCF_RESKEY_CRM_meta_notify_master_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgid "minus <literal>$OCF_RESKEY_CRM_meta_notify_demote_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources that were demoted: <envar>$OCF_RESKEY_CRM_meta_notify_demote_resource</envar>"
+msgid "Resources that were demoted: <literal>$OCF_RESKEY_CRM_meta_notify_demote_resource</literal>"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (stop) / Pre-notification (start)"
 msgstr ""
@@ -1300,31 +1258,31 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<envar>$OCF_RESKEY_CRM_meta_notify_slave_resource</envar>"
+msgid "<literal>$OCF_RESKEY_CRM_meta_notify_slave_resource</literal>"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (start) / Pre-notification (promote)"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
 #, no-c-format
 msgid "Post-notification (promote)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "plus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgid "plus <literal>$OCF_RESKEY_CRM_meta_notify_promote_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "minus <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgid "minus <literal>$OCF_RESKEY_CRM_meta_notify_promote_resource</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resources that were promoted: <envar>$OCF_RESKEY_CRM_meta_notify_promote_resource</envar>"
+msgid "Resources that were promoted: <literal>$OCF_RESKEY_CRM_meta_notify_promote_resource</literal>"
 msgstr ""
 

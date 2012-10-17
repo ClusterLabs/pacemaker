@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-07-07T15:51:40\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-08-03 12:16+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -16,6 +17,11 @@ msgstr ""
 #, no-c-format
 msgid "Apache - Adding More Services"
 msgstr "Apache - Aggiungere ulteriori servizi"
+
+#. Tag: title
+#, no-c-format
+msgid "Forward"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -28,129 +34,90 @@ msgid "Installation"
 msgstr "Installazione"
 
 #. Tag: para
-#, no-c-format
-msgid "Before continuing, we need to make sure Apache is installed on <emphasis>both</emphasis> hosts."
-msgstr "Prima di cominciare è necessario assicurarsi che Apache sia installato su <emphasis>entrambi</emphasis> gli host."
-
-#. Tag: screen
-#, no-c-format
-msgid ""
-"\n"
-"[root@ppcmk-1 ~]# <userinput>yum install -y httpd</userinput>\n"
-"Setting up Install Process\n"
-"Resolving Dependencies\n"
-"--&gt; Running transaction check\n"
-"---&gt; Package httpd.x86_64 0:2.2.13-2.fc12 set to be updated\n"
-"--&gt; Processing Dependency: httpd-tools = 2.2.13-2.fc12 for package: httpd-2.2.13-2.fc12.x86_64\n"
-"--&gt; Processing Dependency: apr-util-ldap for package: httpd-2.2.13-2.fc12.x86_64\n"
-"--&gt; Processing Dependency: /etc/mime.types for package: httpd-2.2.13-2.fc12.x86_64\n"
-"--&gt; Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64\n"
-"--&gt; Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.13-2.fc12.x86_64\n"
-"--&gt; Running transaction check\n"
-"---&gt; Package apr.x86_64 0:1.3.9-2.fc12 set to be updated\n"
-"---&gt; Package apr-util.x86_64 0:1.3.9-2.fc12 set to be updated\n"
-"---&gt; Package apr-util-ldap.x86_64 0:1.3.9-2.fc12 set to be updated\n"
-"---&gt; Package httpd-tools.x86_64 0:2.2.13-2.fc12 set to be updated\n"
-"---&gt; Package mailcap.noarch 0:2.1.30-1.fc12 set to be updated\n"
-"--&gt; Finished Dependency Resolution\n"
-"\n"
-"Dependencies Resolved\n"
-"\n"
-"=======================================================================================\n"
-" Package               Arch             Version                Repository         Size\n"
-"=======================================================================================\n"
-"Installing:\n"
-" httpd               x86_64           2.2.13-2.fc12            rawhide           735 k\n"
-"Installing for dependencies:\n"
-" apr                 x86_64           1.3.9-2.fc12             rawhide           117 k\n"
-" apr-util            x86_64           1.3.9-2.fc12             rawhide            84 k\n"
-" apr-util-ldap       x86_64           1.3.9-2.fc12             rawhide            15 k\n"
-" httpd-tools         x86_64           2.2.13-2.fc12            rawhide            63 k\n"
-" mailcap             noarch           2.1.30-1.fc12            rawhide            25 k\n"
-"\n"
-"Transaction Summary\n"
-"=======================================================================================\n"
-"Install       6 Package(s)\n"
-"Upgrade       0 Package(s)\n"
-"\n"
-"Total download size: 1.0 M\n"
-"Downloading Packages:\n"
-"(1/6): apr-1.3.9-2.fc12.x86_64.rpm                                   | 117 kB     00:00     \n"
-"(2/6): apr-util-1.3.9-2.fc12.x86_64.rpm                              |  84 kB     00:00     \n"
-"(3/6): apr-util-ldap-1.3.9-2.fc12.x86_64.rpm                         |  15 kB     00:00     \n"
-"(4/6): httpd-2.2.13-2.fc12.x86_64.rpm                                | 735 kB     00:00     \n"
-"(5/6): httpd-tools-2.2.13-2.fc12.x86_64.rpm                          |  63 kB     00:00     \n"
-"(6/6): mailcap-2.1.30-1.fc12.noarch.rpm                              |  25 kB     00:00     \n"
-"----------------------------------------------------------------------------------------\n"
-"Total                                                       875 kB/s | 1.0 MB     00:01     \n"
-"Running rpm_check_debug\n"
-"Running Transaction Test\n"
-"Finished Transaction Test\n"
-"Transaction Test Succeeded\n"
-"Running Transaction\n"
-"  Installing     : apr-1.3.9-2.fc12.x86_64                                          1/6 \n"
-"  Installing     : apr-util-1.3.9-2.fc12.x86_64                                     2/6 \n"
-"  Installing     : apr-util-ldap-1.3.9-2.fc12.x86_64                                3/6 \n"
-"  Installing     : httpd-tools-2.2.13-2.fc12.x86_64                                 4/6 \n"
-"  Installing     : mailcap-2.1.30-1.fc12.noarch                                     5/6 \n"
-"  Installing     : httpd-2.2.13-2.fc12.x86_64                                       6/6 \n"
-"\n"
-"Installed:\n"
-"  httpd.x86_64 0:2.2.13-2.fc12                                                          \n"
-"\n"
-"Dependency Installed:\n"
-"  apr.x86_64 0:1.3.9-2.fc12            apr-util.x86_64 0:1.3.9-2.fc12\n"
-"  apr-util-ldap.x86_64 0:1.3.9-2.fc12  httpd-tools.x86_64 0:2.2.13-2.fc12\n"
-"  mailcap.noarch 0:2.1.30-1.fc12  \n"
-"\n"
-"Complete!\n"
-"[root@pcmk-1 ~]#\n"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Also, we need the wget tool in order for the cluster to be able to check the status of the Apache server."
+#, fuzzy, no-c-format
+msgid "Before continuing, we need to make sure Apache is installed on both hosts. We also need the wget tool in order for the cluster to be able to check the status of the Apache server."
 msgstr "Inoltre il cluster necessita del tool wget per assicurarsi la capacità di controllare lo stato del server Apache."
 
-#. Tag: screen
+#. Tag: programlisting
+#, no-c-format
+msgid "# yum install -y httpd wget"
+msgstr ""
+
+#. Tag: literallayout
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>yum install -y wget</userinput>\n"
-"Setting up Install Process\n"
+"Loaded plugins: langpacks, presto, refresh-packagekit\n"
+"fedora/metalink                                               | 2.6 kB     00:00\n"
+"updates/metalink                                              | 3.2 kB     00:00\n"
+"updates-testing/metalink                                      |  41 kB     00:00\n"
 "Resolving Dependencies\n"
 "--&gt; Running transaction check\n"
-"---&gt; Package wget.x86_64 0:1.11.4-5.fc12 set to be updated\n"
+"---&gt; Package httpd.x86_64 0:2.2.22-3.fc17 will be installed\n"
+"--&gt; Processing Dependency: httpd-tools = 2.2.22-3.fc17 for package: httpd-2.2.22-3.fc17.x86_64\n"
+"--&gt; Processing Dependency: apr-util-ldap for package: httpd-2.2.22-3.fc17.x86_64\n"
+"--&gt; Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.22-3.fc17.x86_64\n"
+"--&gt; Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.22-3.fc17.x86_64\n"
+"--&gt; Running transaction check\n"
+"---&gt; Package apr.x86_64 0:1.4.6-1.fc17 will be installed\n"
+"---&gt; Package apr-util.x86_64 0:1.4.1-2.fc17 will be installed\n"
+"---&gt; Package apr-util-ldap.x86_64 0:1.4.1-2.fc17 will be installed\n"
+"---&gt; Package httpd-tools.x86_64 0:2.2.22-3.fc17 will be installed\n"
 "--&gt; Finished Dependency Resolution\n"
 "\n"
 "Dependencies Resolved\n"
 "\n"
-"===========================================================================================\n"
-" Package        Arch             Version                      Repository               Size\n"
-"===========================================================================================\n"
+"=====================================================================================\n"
+" Package             Arch         Version                Repository             Size\n"
+"=====================================================================================\n"
 "Installing:\n"
-" wget          x86_64          1.11.4-5.fc12                   rawhide                393 k\n"
+" httpd               x86_64       2.2.22-3.fc17          updates-testing       823 k\n"
+" wget                x86_64       1.13.4-2.fc17          fedora                495 k\n"
+"Installing for dependencies:\n"
+" apr                 x86_64       1.4.6-1.fc17           fedora                 99 k\n"
+" apr-util            x86_64       1.4.1-2.fc17           fedora                 78 k\n"
+" apr-util-ldap       x86_64       1.4.1-2.fc17           fedora                 17 k\n"
+" httpd-tools         x86_64       2.2.22-3.fc17          updates-testing        74 k\n"
 "\n"
 "Transaction Summary\n"
-"===========================================================================================\n"
-"Install       1 Package(s)\n"
-"Upgrade       0 Package(s)\n"
+"=====================================================================================\n"
+"Install  1 Package (+4 Dependent packages)\n"
 "\n"
-"Total download size: 393 k\n"
+"Total download size: 1.1 M\n"
+"Installed size: 3.5 M\n"
 "Downloading Packages:\n"
-"wget-1.11.4-5.fc12.x86_64.rpm                                            | 393 kB     00:00     \n"
-"Running rpm_check_debug\n"
+"(1/6): apr-1.4.6-1.fc17.x86_64.rpm                            |  99 kB     00:00\n"
+"(2/6): apr-util-1.4.1-2.fc17.x86_64.rpm                       |  78 kB     00:00\n"
+"(3/6): apr-util-ldap-1.4.1-2.fc17.x86_64.rpm                  |  17 kB     00:00\n"
+"(4/6): httpd-2.2.22-3.fc17.x86_64.rpm                         | 823 kB     00:01\n"
+"(5/6): httpd-tools-2.2.22-3.fc17.x86_64.rpm                   |  74 kB     00:00\n"
+"(6/6): wget-1.13.4-2.fc17.x86_64.rpm                          | 495 kB     00:01\n"
+"-------------------------------------------------------------------------------------\n"
+"Total                                                238 kB/s | 1.1 MB     00:04\n"
+"Running Transaction Check\n"
 "Running Transaction Test\n"
-"Finished Transaction Test\n"
 "Transaction Test Succeeded\n"
 "Running Transaction\n"
-"  Installing     : wget-1.11.4-5.fc12.x86_64                                            1/1 \n"
+"  Installing : apr-1.4.6-1.fc17.x86_64                                           1/6\n"
+"  Installing : apr-util-1.4.1-2.fc17.x86_64                                      2/6\n"
+"  Installing : apr-util-ldap-1.4.1-2.fc17.x86_64                                 3/6\n"
+"  Installing : httpd-tools-2.2.22-3.fc17.x86_64                                  4/6\n"
+"  Installing : httpd-2.2.22-3.fc17.x86_64                                        5/6\n"
+"  Installing : wget-1.13.4-2.fc17.x86_64                                         6/6\n"
+"  Verifying  : apr-util-ldap-1.4.1-2.fc17.x86_64                                 1/6\n"
+"  Verifying  : httpd-tools-2.2.22-3.fc17.x86_64                                  2/6\n"
+"  Verifying  : apr-util-1.4.1-2.fc17.x86_64                                      3/6\n"
+"  Verifying  : apr-1.4.6-1.fc17.x86_64                                           4/6\n"
+"  Verifying  : httpd-2.2.22-3.fc17.x86_64                                        5/6\n"
+"  Verifying  : wget-1.13.4-2.fc17.x86_64                                         6/6\n"
 "\n"
 "Installed:\n"
-"  wget.x86_64 0:1.11.4-5.fc12\n"
+"  httpd.x86_64 0:2.2.22-3.fc17              wget.x86_64 0:1.13.4-2.fc17\n"
 "\n"
-"Complete!\n"
-"[root@pcmk-1 ~]#\n"
+"Dependency Installed:\n"
+"  apr.x86_64 0:1.4.6-1.fc17                 apr-util.x86_64 0:1.4.1-2.fc17\n"
+"  apr-util-ldap.x86_64 0:1.4.1-2.fc17       httpd-tools.x86_64 0:2.2.22-3.fc17\n"
+"\n"
+"Complete!"
 msgstr ""
 
 #. Tag: title
@@ -163,16 +130,14 @@ msgstr "Preparazione"
 msgid "First we need to create a page for Apache to serve up. On Fedora the default Apache docroot is /var/www/html, so we’ll create an index file there."
 msgstr "Prima di tutto è necessario creare la pagina che Apache servirà. Su Fedora la docroot di default di Apache è /var/www/html, qui verrà creato il file index."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
+"# cat &lt;&lt;-END &gt;/var/www/html/index.html\n"
 " &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-1&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
-" END\n"
-"[root@pcmk-1 ~]#\n"
+"END"
 msgstr ""
 
 #. Tag: para
@@ -180,16 +145,34 @@ msgstr ""
 msgid "For the moment, we will simplify things by serving up only a static site and manually sync the data between the two nodes. So run the command again on pcmk-2."
 msgstr "Per il momento l'architettura verrà semplificata in modo da servire unicamente un sito statico e sincronizzare manualmente i dati tra i due nodi. Quindi lo stesso comando andrà lanciato su pcmk-2."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-2 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>\n"
-" &lt;html&gt;\n"
+"[root@pcmk-2 ~]# cat &lt;&lt;-END &gt;/var/www/html/index.html &lt;html&gt;\n"
 " &lt;body&gt;My Test Site - pcmk-2&lt;/body&gt;\n"
 " &lt;/html&gt;\n"
-" END\n"
-"[root@pcmk-2 ~]#\n"
+" END"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Enable the Apache status URL"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In order to monitor the health of your Apache instance, and recover it if it fails, the resource agent used by Pacemaker assumes the server-status URL is available. Look for the following in <emphasis>/etc/httpd/conf/httpd.conf</emphasis> and make sure it is not disabled or commented out:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"&lt;Location /server-status&gt;\n"
+"   SetHandler server-status\n"
+"   Order deny,allow\n"
+"   Deny from all\n"
+"   Allow from 127.0.0.1\n"
+"&lt;/Location&gt;"
 msgstr ""
 
 #. Tag: title
@@ -198,32 +181,29 @@ msgid "Update the Configuration"
 msgstr "Aggiornare la configurazione"
 
 #. Tag: para
-#, no-c-format
-msgid "At this point, Apache is ready to go, all that needs to be done is to add it to the cluster. Lets call the resource WebSite. We need to use an OCF script called apache in the heartbeat namespace <footnote> <para> Compare the key used here ocf:heartbeat:apache with the one we used earlier for the IP address: ocf:heartbeat:IPaddr2 </para> </footnote> , the only required parameter is the path to the main Apache configuration file and we’ll tell the cluster to check once a minute that apache is still running."
+#, fuzzy, no-c-format
+msgid "At this point, Apache is ready to go, all that needs to be done is to add it to the cluster. Lets call the resource WebSite. We need to use an OCF script called apache in the heartbeat namespace <footnote><para>Compare the key used here ocf:heartbeat:apache with the one we used earlier for the IP address: ocf:heartbeat:IPaddr2</para></footnote> , the only required parameter is the path to the main Apache configuration file and we’ll tell the cluster to check once a minute that apache is still running."
 msgstr "A questo punto Apache è pronto a funzionare, non rimane che aggiungere il servizio al cluster. La risorsa sarà nominata WebSite. Verrà utilizzato uno script OCF chiamato apache all'interno del namespace heartbeat<footnote> <para> Confrontare la chiave usata qui ocf:heartbeat:apache con quella usata in precedenza per l'indirizzo IP: ocf:heartbeat:IPaddr2 </para> </footnote> , l'unico altro parametro richiesto è il path al file di configurazione principale di Apache, inoltre verrà indicato al cluster di controllare una volta al minuto che il servizio apache sia in esecuzione."
 
 #. Tag: screen
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"<emphasis>primitive WebSite ocf:heartbeat:apache \\</emphasis>\n"
-"<emphasis> params configfile=\"/etc/httpd/conf/httpd.conf\" \\</emphasis>\n"
-"<emphasis> op monitor interval=\"1min\"</emphasis>\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
+"pcs resource create WebSite ocf:heartbeat:apache  \\\n"
+"      configfile=/etc/httpd/conf/httpd.conf \\\n"
+"      statusurl=\"http://localhost/server-status\" op monitor interval=1min"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "By default, the operation timeout for all resource’s start, stop, and monitor operations is 20 seconds. In many cases this timeout period is less than the advised timeout period. For the purposes of this tutorial, we will adjust the global operation timeout default to 240 seconds."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"# pcs resource op defaults timeout=240s\n"
+"# pcs resource op defaults\n"
+"timeout: 240s"
 msgstr ""
 
 #. Tag: para
@@ -231,24 +211,25 @@ msgstr ""
 msgid "After a short delay, we should see the cluster start apache"
 msgstr "Dopo una breve attesa il cluster dovrbbe avviare apache"
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# pcs status\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Fri Aug 28 16:12:49 2009\n"
-"Stack: openais\n"
-"Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"2 Nodes configured, 2 expected votes\n"
+"Last updated: Fri Sep 14 10:51:27 2012\n"
+"Last change: Fri Sep 14 10:50:46 2012 via crm_attribute on pcmk-1\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
 "2 Resources configured.\n"
-"============\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
-"WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-1"
 msgstr ""
 
 #. Tag: para
@@ -256,53 +237,71 @@ msgstr ""
 msgid "Wait a moment, the WebSite resource isn’t running on the same host as our IP address!"
 msgstr "Attenzione però, la risorsa WebSite non sta girando sullo stesso host dell'indirizzo IP!"
 
+#. Tag: para
+#, no-c-format
+msgid "If, in the <literal>pcs status</literal> output, you see the WebSite resource has failed to start, then you’ve likely not enabled the status URL correctly. You can check if this is the problem by running:"
+msgstr ""
+
+#. Tag: literallayout
+#, no-c-format
+msgid "wget http://127.0.0.1/server-status"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you see <literal>Connection refused</literal> in the output, then this is indeed the problem. Check to ensure that <literal>Allow from 127.0.0.1</literal> is present for the <literal>&lt;Location /server-status&gt;</literal> block."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Ensuring Resources Run on the Same Host"
 msgstr "Assicurarsi che le risorse funzionino sullo stesso host"
 
 #. Tag: para
-#, no-c-format
-msgid "To reduce the load on any one machine, Pacemaker will generally try to spread the configured resources across the cluster nodes. However we can tell the cluster that two resources are related and need to run on the same host (or not at all). Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on. If ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere."
+#, fuzzy, no-c-format
+msgid "To reduce the load on any one machine, Pacemaker will generally try to spread the configured resources across the cluster nodes. However we can tell the cluster that two resources are related and need to run on the same host (or not at all). Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on."
 msgstr "Per ridurre il carico su ogni macchina, Pacemaker generalmente tende a distribuire le risorse configurate sui nodi. E' possibile comunicare al cluster che due risorse sono relazionate e necessitano di funzionare sullo stesso host (oppure no). A questo punto il cluster verrà istruito in merito al fatto che WebSite può solamente funzionare sull'host che eroga ClusterIP. Se ClusterIP non è attiva in nessun nodo, a WebSite non verrà permesso di funzionare ovunque."
 
-#. Tag: screen
+#. Tag: para
+#, no-c-format
+msgid "To achieve this we use a colocation constraint that indicates it is mandatory for WebSite to run on the same node as ClusterIP. The \"mandatory\" part of the colocation constraint is indicated by using a score of INFINITY. The INFINITY score also means that if ClusterIP is not active anywhere, WebSite will not be permitted to run."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Colocation constraints are \"directional\", in that they imply certain things about the order in which the two resources will have a location chosen. In this case we’re saying <literal>WebSite</literal> needs to be placed on the same machine as <literal>ClusterIP</literal>, this implies that we must know the location of <literal>ClusterIP</literal> before choosing a location for <literal>WebSite</literal>."
+msgstr ""
+
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# pcs constraint colocation add WebSite ClusterIP INFINITY\n"
+"# pcs constraint\n"
+"Location Constraints:\n"
+"Ordering Constraints:\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP\n"
+"# pcs status\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>crm configure colocation website-with-ip INFINITY: WebSite ClusterIP</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"<emphasis>colocation website-with-ip inf: WebSite ClusterIP</emphasis>\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Fri Aug 28 16:14:34 2009\n"
-"Stack: openais\n"
-"Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"2 Nodes configured, 2 expected votes\n"
+"Last updated: Fri Sep 14 11:00:44 2012\n"
+"Last change: Fri Sep 14 11:00:25 2012 via cibadmin on pcmk-1\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
 "2 Resources configured.\n"
-"============\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
-"WebSite        (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-2"
 msgstr ""
 
 #. Tag: title
@@ -311,34 +310,26 @@ msgid "Controlling Resource Start/Stop Ordering"
 msgstr "Controllare l'ordinamento di start e stop di una risorsa"
 
 #. Tag: para
-#, no-c-format
-msgid "When Apache starts, it binds to the available IP addresses. It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. We do this by adding an ordering constraint. We need to give it a name (chose something descriptive like apache-after-ip), indicate that its mandatory (so that any recovery for ClusterIP will also trigger recovery of WebSite) and list the two resources in the order we need them to start."
+#, fuzzy, no-c-format
+msgid "When Apache starts, it binds to the available IP addresses. It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. We do this by adding an ordering constraint."
 msgstr "Quando Apache si avvia, effettua l'associazione con gli indirizzi IP disponibili. Questo implica che non sarà a conoscenza di indirizzi aggiunti successivamente, quindi è necessario assicurarsi che ClusterIP sia attiva prima di avviare WebSite. Questo è possibile attraverso una ordering constraint. A questa verrà assegnato un nome (scelto in maniera descrittiva, come apache-after-ip), indicato che è obbligatoria (in modo che qualsiasi recovery per ClusterIP implicherà il recovery di WebSite) ed al suo interno verrà definito che l'ordine per l'avvio dei servizi è quello indicato."
 
-#. Tag: screen
+#. Tag: para
+#, no-c-format
+msgid "By default all order constraints are mandatory constraints unless otherwise configured. This means that the recovery of ClusterIP will also trigger the recovery of WebSite."
+msgstr ""
+
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm configure order apache-after-ip mandatory: ClusterIP WebSite</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"colocation website-with-ip inf: WebSite ClusterIP\n"
-"<emphasis>order apache-after-ip inf: ClusterIP WebSite</emphasis>\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
+"# pcs constraint order ClusterIP then WebSite\n"
+"Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)\n"
+"# pcs constraint\n"
+"Location Constraints:\n"
+"Ordering Constraints:\n"
+"  start ClusterIP then start WebSite\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP"
 msgstr ""
 
 #. Tag: title
@@ -347,48 +338,42 @@ msgid "Specifying a Preferred Location"
 msgstr "Specificare una Location preferita"
 
 #. Tag: para
-#, no-c-format
-msgid "Pacemaker does not rely on any sort of hardware symmetry between nodes, so it may well be that one machine is more powerful than the other. In such cases it makes sense to host the resources there if it is available. To do this we create a location constraint. Again we give it a descriptive name (prefer-pcmk-1), specify the resource we want to run there (WebSite), how badly we’d like it to run there (we’ll use 50 for now, but in a two-node situation almost any value above 0 will do) and the host’s name."
+#, fuzzy, no-c-format
+msgid "Pacemaker does not rely on any sort of hardware symmetry between nodes, so it may well be that one machine is more powerful than the other. In such cases it makes sense to host the resources there if it is available. To do this we create a location constraint."
 msgstr "Pacemaker non si basa su una sorta di simmetria tra i nodi hardware, quindi si potrebbe prevedere di avere anche una macchina più potente di un'altra. In questi casi ha senso erogare le risorse su questa macchina, se è disponibile. Per fare ciò viene creata una location constraint. Anche in questo caso viene assegnato un nome descrittivo (prefer-pcmk-1), specificata la risorsa che girerà qui (WebSite), quanto peso avrà per girare qui (verrà utilizzato 50, ma in una situazione a due nodi ogni valore superiore allo 0 andrà bene)  ed il nome dell'host."
 
-#. Tag: screen
+#. Tag: para
+#, no-c-format
+msgid "In the location constraint below, we are saying the WebSite resource prefers the node pcmk-1 with a score of 50. The score here indicates how badly we’d like the resource to run somewhere."
+msgstr ""
+
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm configure location prefer-pcmk-1 WebSite 50: pcmk-1</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"<emphasis>location prefer-pcmk-1 WebSite 50: pcmk-1</emphasis>\n"
-"colocation website-with-ip inf: WebSite ClusterIP\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Fri Aug 28 16:17:35 2009\n"
-"Stack: openais\n"
-"Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"2 Nodes configured, 2 expected votes\n"
+"# pcs constraint location WebSite prefers pcmk-1=50\n"
+"# pcs constraint\n"
+"Location Constraints:\n"
+"  Resource: WebSite\n"
+"    Enabled on: pcmk-1 (score:50)\n"
+"Ordering Constraints:\n"
+"  start ClusterIP then start WebSite\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP\n"
+"# pcs status\n"
+"Last updated: Fri Sep 14 11:06:37 2012\n"
+"Last change: Fri Sep 14 11:06:26 2012 via cibadmin on pcmk-1\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
 "2 Resources configured.\n"
-"============\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-2</emphasis>\n"
-"WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-2</emphasis>\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-2\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-2"
 msgstr ""
 
 #. Tag: para
@@ -402,24 +387,28 @@ msgid "Even though we now prefer pcmk-1 over pcmk-2, that preference is (intenti
 msgstr "Anche se al momento viene preferito pcmk-1 a pcmk-2, questa preferenza è (intenzionalmente) minore dello stickiness della risorsa (quanto è stato preferito non avere un downtime superfluo)."
 
 #. Tag: para
-#, no-c-format
-msgid "To see the current placement scores, you can use a tool called ptest"
+#, fuzzy, no-c-format
+msgid "To see the current placement scores, you can use a tool called crm_simulate"
 msgstr "Per osservare gli attuali punteggi di piazzamento è possibile usare un tool denominato ptest"
 
-#. Tag: para
+#. Tag: programlisting
 #, no-c-format
-msgid "ptest -sL"
+msgid ""
+"# crm_simulate -sL\n"
+"Current cluster status:\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+" ClusterIP      (ocf:heartbeat:IPaddr2):        Started pcmk-2\n"
+" WebSite        (ocf:heartbeat:apache): Started pcmk-2\n"
+"\n"
+"Allocation scores:\n"
+"native_color: ClusterIP allocation score on pcmk-1: 50\n"
+"native_color: ClusterIP allocation score on pcmk-2: 200\n"
+"native_color: WebSite allocation score on pcmk-1: -INFINITY\n"
+"native_color: WebSite allocation score on pcmk-2: 100\n"
+"\n"
+"Transition Summary:"
 msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Include output"
-msgstr "Output incluso"
-
-#. Tag: para
-#, no-c-format
-msgid "There is a way to force them to move though..."
-msgstr "Esiste un modo per spostare forzatamente le risorse..."
 
 #. Tag: title
 #, no-c-format
@@ -427,59 +416,39 @@ msgid "Manually Moving Resources Around the Cluster"
 msgstr "Spostamento manuale delle risorse all'interno del cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "There are always times when an administrator needs to override the cluster and force resources to move to a specific location. Underneath we use location constraints like the one we created above, happily you don’t need to care. Just provide the name of the resource and the intended location, we’ll do the rest."
+#, fuzzy, no-c-format
+msgid "There are always times when an administrator needs to override the cluster and force resources to move to a specific location. By updating our previous location constraint with a score of INFINITY, WebSite will be forced to move to pcmk-1."
 msgstr "C'è sempre la necessità da parte di un amministratore di soprassedere il cluster e forzare le risorse a spostarsi in una posizione specifica. E' possibile ignorare felicemente le location constraint create sopra, fornendo il nome della risorsa che si vuole spostare e la destinazione della stessa, il comando farà il resto."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# pcs constraint location WebSite prefers pcmk-1=INFINITY\n"
+"# pcs constraint all\n"
+"Location Constraints:\n"
+"  Resource: WebSite\n"
+"    Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)\n"
+"Ordering Constraints:\n"
+"  start ClusterIP then start WebSite (Mandatory) (id:order-ClusterIP-WebSite-mandatory)\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP (INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)\n"
+"# pcs status\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>crm resource move WebSite pcmk-1</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Fri Aug 28 16:19:24 2009\n"
-"Stack: openais\n"
-"Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"2 Nodes configured, 2 expected votes\n"
+"Last updated: Fri Sep 14 11:16:26 2012\n"
+"Last change: Fri Sep 14 11:16:18 2012 via cibadmin on pcmk-1\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
 "2 Resources configured.\n"
-"============\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
-"WebSite        (ocf::heartbeat:apache):        Started pcmk-1\n"
-"Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.\n"
-"For the curious, we can see the effect of this command by examining the configuration\n"
-"crm configure show\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"<emphasis>location cli-prefer-WebSite WebSite \\</emphasis>\n"
-"<emphasis> rule $id=\"cli-prefer-rule-WebSite\" inf: #uname eq pcmk-1</emphasis>\n"
-"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
-"colocation website-with-ip inf: WebSite ClusterIP\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-1\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-1"
 msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Highlighted is the automated constraint used to move the resources to pcmk-1"
-msgstr "Viene evidenziata la constraint automatizzata utilizzata per spostare la risorsa in pcmk-1"
 
 #. Tag: title
 #, no-c-format
@@ -491,54 +460,60 @@ msgstr "Restituire il controllo nuovamente al cluster"
 msgid "Once we’ve finished whatever activity that required us to move the resources to pcmk-1, in our case nothing, we can then allow the cluster to resume normal operation with the unmove command. Since we previously configured a default stickiness, the resources will remain on pcmk-1."
 msgstr "Una volta terminata una qualsiasi attività che richiede lo spostamento della risorsa in pcmk-1, in questo caso nessuna, è possibile consentire al cluster di riprendere le normali operazioni con il comando unmove. Dal momento che in precedenza è stata configurata una default stickiness, la risorsa rimarra in pcmk-1."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
-"\n"
-"[root@pcmk-1 ~]# <userinput>crm resource unmove WebSite</userinput>\n"
-"[root@pcmk-1 ~]# <userinput>crm configure show</userinput>\n"
-"node pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"        params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"        op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"        params ip=\"192.168.122.101\" cidr_netmask=\"32\" \\\n"
-"        op monitor interval=\"30s\"\n"
-"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
-"colocation website-with-ip inf: WebSite ClusterIP\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"        dc-version=\"1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\" \\\n"
-"        cluster-infrastructure=\"openais\" \\\n"
-"        expected-quorum-votes=\"2\" \\\n"
-"        stonith-enabled=\"false\" \\\n"
-"        no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"        resource-stickiness=\"100\"\n"
+"# pcs constraint all\n"
+"Location Constraints:\n"
+"  Resource: WebSite\n"
+"    Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)\n"
+"Ordering Constraints:\n"
+"  start ClusterIP then start WebSite (Mandatory) (id:order-ClusterIP-WebSite-mandatory)\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP (INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)\n"
+"# pcs constraint rm location-WebSite-pcmk-1-INFINITY\n"
+"# pcs constraint\n"
+"Location Constraints:\n"
+"Ordering Constraints:\n"
+"  start ClusterIP then start WebSite\n"
+"Colocation Constraints:\n"
+"  WebSite with ClusterIP"
 msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Note that the automated constraint is now gone. If we check the cluster status, we can also see that as expected the resources are still active on pcmk-1."
+#, fuzzy, no-c-format
+msgid "Note that the constraint is now gone. If we check the cluster status, we can also see that as expected the resources are still active on pcmk-1."
 msgstr "E' da notare come la constraint automatizzata non esiste più. Se viene controllato lo stato del cluster è possibile osservare che, così come aspettato, le risorse sono ancora attiva su pcmk-1."
 
-#. Tag: screen
+#. Tag: programlisting
 #, no-c-format
 msgid ""
+"# pcs status\n"
 "\n"
-"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
-"============\n"
-"Last updated: Fri Aug 28 16:20:53 2009\n"
-"Stack: openais\n"
-"Current DC: pcmk-2 - partition with quorum\n"
-"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
-"2 Nodes configured, 2 expected votes\n"
+"Last updated: Fri Sep 14 11:57:12 2012\n"
+"Last change: Fri Sep 14 11:57:03 2012 via cibadmin on pcmk-1\n"
+"Stack: corosync\n"
+"Current DC: pcmk-2 (2) - partition with quorum\n"
+"Version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"2 Nodes configured, unknown expected votes\n"
 "2 Resources configured.\n"
-"============\n"
 "\n"
 "Online: [ pcmk-1 pcmk-2 ]\n"
 "\n"
-" ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-1</emphasis>\n"
-" WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1</emphasis>\n"
+"Full list of resources:\n"
+"\n"
+" ClusterIP      (ocf::heartbeat:IPaddr2):       Started pcmk-1\n"
+" WebSite        (ocf::heartbeat:apache):        Started pcmk-1"
 msgstr ""
 
+#~ msgid "Before continuing, we need to make sure Apache is installed on <emphasis>both</emphasis> hosts."
+#~ msgstr "Prima di cominciare è necessario assicurarsi che Apache sia installato su <emphasis>entrambi</emphasis> gli host."
+
+#~ msgid "Include output"
+#~ msgstr "Output incluso"
+
+#~ msgid "There is a way to force them to move though..."
+#~ msgstr "Esiste un modo per spostare forzatamente le risorse..."
+
+#~ msgid "Highlighted is the automated constraint used to move the resources to pcmk-1"
+#~ msgstr "Viene evidenziata la constraint automatizzata utilizzata per spostare la risorsa in pcmk-1"

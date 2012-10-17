@@ -4,10 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"POT-Creation-Date: 2012-02-09T05:01:55\n"
 "PO-Revision-Date: 2011-11-20 10:41+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,8 +29,8 @@ msgid "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6
 msgstr "<ulink url=\"http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Suite_Overview/index.html#s2-clumembership-overview-CSO\">CMAN v3</ulink> este un plugin al Corosync care monitorizează numele și numărul de noduri active din cluster pentru a livra informații de apartenență și quorum clienților (cum ar fi daemonii Pacemaker-ului)."
 
 #. Tag: para
-#, no-c-format
-msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <footnote> <para> A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecessary downtime and/or data corruption. </para> </footnote>"
+#, fuzzy, no-c-format
+msgid "In a traditional Corosync-Pacemaker cluster, a Pacemaker plugin is loaded to provide membership and quorum information. The motivation for wanting to use CMAN for this instead, is to ensure all elements of the cluster stack are making decisions based on the same membership and quorum data. <footnote> <para> A failure to do this can lead to what is called <literal>internal split-brain</literal> - a situation where different parts of the stack disagree about whether some nodes are alive or dead - which quickly leads to unnecssary down-time and/or data corruption. </para> </footnote>"
 msgstr "Într-un cluster tradițional Corosync-Pacemaker, un plugin Pacemaker este încărcat pentru a furniza informații de apartenență și quorum. Motivația pentru dorința de a folosi CMAN în schimb, este de a asigura că toate elementele stivei de cluster realizează decizii pe baza acelorași date de apartenență și quorum. <footnote> <para> Un eșec de a realiza acest lucru poate conduce la ceea ce este numit a fi un <literal>split-brain intern</literal> - o situație în care părți diferite ale stivei nu sunt de acord dacă unele noduri sunt funcționale sau nu - fapt care conduce rapid către un downtime inutil și/sau către coruperea datelor. </para> </footnote>"
 
 #. Tag: para
@@ -53,8 +54,8 @@ msgid "Adding CMAN Support - cluster.conf"
 msgstr "Adăugarea de Suport pentru CMAN - cluster.conf"
 
 #. Tag: para
-#, no-c-format
-msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. It's far easier to maintain and start automatically starts the necessary pieces for using GFS2."
+#, fuzzy, no-c-format
+msgid "The preferred approach for enabling CMAN is to configure <filename>cluster.conf</filename> and use the <filename>/etc/init.d/cman</filename> script to start Corosync. Its far easier to maintain and start automatically starts the necessary pieces for using GFS2."
 msgstr "Abordarea preferată pentru activarea CMAN este să configurați <filename>cluster.conf</filename> și să folosiți scriptul <filename>/etc/init.d/cman</filename> pentru a porni Corosync. Este mult mai ușor de menținut și pornirea acestuia pornește automat piesele necesare pentru folosirea GFS2."
 
 #. Tag: para
@@ -69,8 +70,9 @@ msgstr "Exemplu de cluster.conf pentru un cluster format din două noduri"
 
 #. Tag: programlisting
 #, no-c-format
-msgid "\n"
-"	\n"
+msgid ""
+"\n"
+"\t\n"
 "&lt;?xml version=\"1.0\"?&gt;\n"
 "&lt;cluster config_version=\"1\" name=\"east8\"&gt;\n"
 "  &lt;logging debug=\"off\"/&gt;\n"
@@ -94,10 +96,11 @@ msgid "\n"
 "    &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
 "  &lt;/fencedevices&gt;\n"
 "&lt;/cluster&gt;\n"
-"	\n"
-"	"
-msgstr "\n"
-"	\n"
+"\t\n"
+"\t"
+msgstr ""
+"\n"
+"\t\n"
 "&lt;?xml version=\"1.0\"?&gt;\n"
 "&lt;cluster config_version=\"1\" name=\"east8\"&gt;\n"
 "  &lt;logging debug=\"off\"/&gt;\n"
@@ -121,8 +124,8 @@ msgstr "\n"
 "    &lt;fencedevice name=\"pcmk\" agent=\"fence_pcmk\"/&gt;\n"
 "  &lt;/fencedevices&gt;\n"
 "&lt;/cluster&gt;\n"
-"	\n"
-"	"
+"\t\n"
+"\t"
 
 #. Tag: title
 #, no-c-format
@@ -135,8 +138,8 @@ msgid "The alternative is to add the necessary cman configuration elements to <f
 msgstr "Alternativa este să adăugați elementele necesare pentru configurarea cman în <filename>corosync.conf</filename>. Vă recomandăm să plasați aceste directive în <filename>/etc/corosync/service.d/cman</filename> din moment ce acestea vor fi diferite între mașini."
 
 #. Tag: para
-#, no-c-format
-msgid "If you choose this approach, you would continue to start and stop Corosync with its init script as previously described in this document."
+#, fuzzy, no-c-format
+msgid "If you choose this approach, you would continue to start and stop Corosync with it's init script as previously described in this document."
 msgstr "Dacă alegeți această abordare, veți continua să porniți și să opriți Corosync cu scriptul său de init după cum am descris în prealabil în acest document."
 
 #. Tag: title
@@ -146,7 +149,8 @@ msgstr "Exemplu de extensii ale corosync.conf pentru un cluster format din două
 
 #. Tag: programlisting
 #, no-c-format
-msgid "\n"
+msgid ""
+"\n"
 "[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/cman</userinput>\n"
 "cluster {\n"
 "    name: beekhof\n"
@@ -181,8 +185,9 @@ msgid "\n"
 "    provider: quorum_cman\n"
 "}\n"
 "END\n"
-"	"
-msgstr "\n"
+"\t"
+msgstr ""
+"\n"
 "[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/cman</userinput>\n"
 "cluster {\n"
 "    name: beekhof\n"
@@ -217,7 +222,7 @@ msgstr "\n"
 "    provider: quorum_cman\n"
 "}\n"
 "END\n"
-"	"
+"\t"
 
 #. Tag: para
 #, no-c-format

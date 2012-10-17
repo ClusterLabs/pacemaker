@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:50\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2011-11-25 09:08+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -29,7 +30,12 @@ msgstr "Clusterele de calculatoare pot fi folosite pentru a furniza servicii sau
 
 #. Tag: para
 #, no-c-format
-msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 14. The clusters described here will use Pacemaker and Corosync to provide resource management and messaging. Required packages and modifications to their configuration files are described along with the use of the Pacemaker command line tool for generating the XML used for cluster control."
+msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 17."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "The clusters described here will use Pacemaker and Corosync to provide resource management and messaging. Required packages and modifications to their configuration files are described along with the use of the Pacemaker command line tool for generating the XML used for cluster control."
 msgstr "Acest document va merge prin instalarea și setarea de clustere simple folosind distribuția Fedora, versiunea 14. Clusterele descrise aici vor folosi Pacemaker și Corosync pentru a furniza gestiunea și mesageria resurselor. Pachetele necesare și modificările realizate fișierelor de configurare ale acestora sunt descrise împreună cu folosirea utilitarului din linie de comandă al Pacemaker-ului pentru generarea XML-ului folosit pentru controlul clusterului."
 
 #. Tag: para
@@ -48,13 +54,13 @@ msgid "What Is Pacemaker?"
 msgstr "Ce Este Pacemaker?"
 
 #. Tag: para
-#, no-c-format
-msgid "Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url=\"http://www.corosync.org/\">Corosync</ulink> or Heartbeat)."
+#, fuzzy, no-c-format
+msgid "Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either Corosync or Heartbeat)."
 msgstr "Pacemaker este un gestionar de resurse în cluster. Atinge disponibilitatea maximă pentru serviciile voastre din cluster (cunoscute drept resurse/le) prin detectarea şi recuperarea din eşecuri la nivel de nod sau de resursă prin folosirea capabilităţilor de mesagerie şi apartenenţă furnizate de infrastructura voastră preferată de cluster (fie <ulink url=\"http://www.corosync.org/\">Corosync</ulink> sau Heartbeat)."
 
 #. Tag: para
-#, no-c-format
-msgid "Pacemaker's key features include:"
+#, fuzzy, no-c-format
+msgid "Pacemaker’s key features include:"
 msgstr "Caracteristicile cheie ale Pacemaker includ:"
 
 #. Tag: para
@@ -73,8 +79,8 @@ msgid "Resource agnostic, anything that can be scripted can be clustered"
 msgstr "Agnostic d.p.d.v. al resurselor, orice poate fi scriptat poate fi folosit într-un cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "Supports <ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> for ensuring data integrity"
+#, fuzzy, no-c-format
+msgid "Supports STONITH for ensuring data integrity"
 msgstr "Suportă <ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> pentru asigurarea integrităţii datelor"
 
 #. Tag: para
@@ -83,14 +89,14 @@ msgid "Supports large and small clusters"
 msgstr "Suportă clustere mici şi mari"
 
 #. Tag: para
-#, no-c-format
-msgid "Supports both <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> and <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">resource driven</ulink> clusters"
-msgstr "Suportă atât clustere <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> cât şi <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">conduse de resurse</ulink>"
+#, fuzzy, no-c-format
+msgid "Supports both quorate and resource driven clusters"
+msgstr "Suportă clustere mici şi mari"
 
 #. Tag: para
 #, no-c-format
-msgid "Supports practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink>"
-msgstr "Suportă practic orice <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">configuraţie redundantă</ulink>"
+msgid "Supports practically any redundancy configuration"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -118,8 +124,8 @@ msgid "Multi-state: for services with multiple modes (eg. master/slave, primary/
 msgstr "Stări-multiple: pentru servicii cu mai multe moduri de operare (ex. master/slave, primar/secundar)"
 
 #. Tag: para
-#, no-c-format
-msgid "Unified, scriptable, cluster shell"
+#, fuzzy, no-c-format
+msgid "Unified, scriptable, cluster management tools."
 msgstr "Shell de cluster unificat, scriptabil"
 
 #. Tag: title
@@ -133,33 +139,18 @@ msgid "At the highest level, the cluster is made up of three pieces:"
 msgstr "La cel mai înalt nivel, clusterul este compus din trei părţi:"
 
 #. Tag: para
-#, no-c-format
-msgid "Non-cluster aware components (illustrated in green)."
-msgstr "Componente fără cunoștințe despre cluster (ilustrate în verde)."
-
-#. Tag: para
-#, no-c-format
-msgid "These pieces include the resources themselves, scripts that start, stop and monitor them, and also a local daemon that masks the differences between the different standards these scripts implement."
+#, fuzzy, no-c-format
+msgid "Non-cluster aware components (illustrated in green). These pieces include the resources themselves, scripts that start, stop and monitor them, and also a local daemon that masks the differences between the different standards these scripts implement."
 msgstr "Aceste părți includ resursele în sine, scripturi care le pornesc, le opresc și le monitorizează și de asemenea un daemon local care maschează diferenţele între diferitele standarde pe care le implementează aceste scripturi."
 
 #. Tag: para
-#, no-c-format
-msgid "Resource management"
-msgstr "Gestiunea resurselor"
-
-#. Tag: para
-#, no-c-format
-msgid "Pacemaker provides the brain (illustrated in blue) that processes and reacts to events regarding the cluster. These events include nodes joining or leaving the cluster; resource events caused by failures, maintenance, scheduled activities; and other administrative actions. Pacemaker will compute the ideal state of the cluster and plot a path to achieve it after any of these events. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
+#, fuzzy, no-c-format
+msgid "Resource management Pacemaker provides the brain (illustrated in blue) that processes and reacts to events regarding the cluster. These events include nodes joining or leaving the cluster; resource events caused by failures, maintenance, scheduled activities; and other administrative actions. Pacemaker will compute the ideal state of the cluster and plot a path to achieve it after any of these events. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
 msgstr "Pacemaker furnizează creierul (ilustrat în albastru) care procesează și reacționează la evenimente care privesc clusterul. Aceste evenimente includ noduri care se alătură sau pleacă din cluster; evenimente ale resurselor cauzate de eșecuri, mentenanță, activități programate; și alte acțiuni administrative. Pacemaker va calcula starea ideală a clusterului și va cartografia o cale de a atinge țelul după oricare din aceste evenimente. Acest lucru poate include mutarea resurselor, oprirea nodurilor sau chiar oprirea forțată a acestora cu switch-uri de curent cu acces de la distanță."
 
 #. Tag: para
-#, no-c-format
-msgid "Low level infrastructure"
-msgstr "Infrastructura la nivel inferior"
-
-#. Tag: para
-#, no-c-format
-msgid "Corosync provides reliable messaging, membership and quorum information about the cluster (illustrated in red)."
+#, fuzzy, no-c-format
+msgid "Low level infrastructure Corosync provides reliable messaging, membership and quorum information about the cluster (illustrated in red)."
 msgstr "Corosync furnizează informații de mesagerie, apartenență și quorum de încredere despre cluster (ilustrate cu roșu)."
 
 #. Tag: title
@@ -167,24 +158,29 @@ msgstr "Corosync furnizează informații de mesagerie, apartenență și quorum 
 msgid "Conceptual Stack Overview"
 msgstr "Vederea Conceptuală a Stivei"
 
-#. Tag: caption
+#. Tag: phrase
 #, no-c-format
 msgid "Conceptual overview of the cluster stack"
 msgstr "Vederea conceptuală a stivei de cluster"
 
 #. Tag: para
-#, no-c-format
-msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <footnote> <para> Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this. </para> </footnote> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+#, fuzzy, no-c-format
+msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems. <footnote><para>Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they’re standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this.</para></footnote>"
 msgstr "În combinaţie cu Corosync, Pacemaker suportă de asemenea sistemele de fişiere de cluster open source populare <footnote> <para> Deși Pacemaker suportă de asemenea și Heartbeat, sistemele de fișiere au nevoie să folosească stiva pentru mesagerie și apartenență și Corosync pare să fie ținta standardizării. Tehnic ar fi posibil ca acestea să suporte Heartbeat de asemenea, însă există puţin interes pentru acest aspect. </para> </footnote> Datorită standardizării recente dinăuntrul comunităţii de sisteme de fişiere de cluster, acestea folosesc un manager de blocare distribuit care foloseşte la rândul său Corosync pentru capabilităţile acestuia de mesagerie şi Pacemaker pentru apartenenţă (care noduri sunt funcţionale şi care nu) şi pentru servicii de evacuare forțată."
+
+#. Tag: para
+#, no-c-format
+msgid "Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "The Pacemaker Stack"
 msgstr "Stiva Pacemaker"
 
-#. Tag: caption
-#, no-c-format
-msgid "The Pacemaker stack when running on Corosync"
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "The Pacemaker StackThe Pacemaker stack when running on Corosync"
 msgstr "Stiva Pacemaker atunci când rulează pe Corosync"
 
 #. Tag: title
@@ -217,24 +213,24 @@ msgstr "PEngine (aka. PE sau Policy Engine)"
 msgid "STONITHd"
 msgstr "STONITHd"
 
-#. Tag: caption
+#. Tag: phrase
 #, no-c-format
 msgid "Subsystems of a Pacemaker cluster running on Corosync"
 msgstr "Subsisteme ale unui cluster Pacemaker rulând pe Corosync"
 
 #. Tag: para
-#, no-c-format
-msgid "The CIB uses XML to represent both the cluster's configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
+#, fuzzy, no-c-format
+msgid "The CIB uses XML to represent both the cluster’s configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
 msgstr "CIB-ul foloseşte XML pentru a reprezenta atât configuraţia clusterului cât şi starea curentă a tuturor resurselor din cluster. Conţinutul CIB-ului este ţinut sincronizat în mod automat pe tot clusterul şi este folosit de către PEngine pentru a calcula starea ideală a clusterului şi de a arăta cum poate fi atinsă."
 
 #. Tag: para
-#, no-c-format
-msgid "This list of instructions is then fed to the DC (Designated Co-ordinator). Pacemaker centralizes all cluster decision making by electing one of the CRMd instances to act as a master. Should the elected CRMd process, or the node it is on, fail... a new one is quickly established."
+#, fuzzy, no-c-format
+msgid "This list of instructions is then fed to the DC (Designated Co-ordinator). Pacemaker centralizes all cluster decision making by electing one of the CRMd instances to act as a master. Should the elected CRMd process, or the node it is on, fail… a new one is quickly established."
 msgstr "Lista de instrucţiuni este apoi furnizată către DC (Designated Co-ordinator). Pacemaker centralizează toate deciziile clusterului prin alegerea uneia dintre instanţele de CRMd pentru a se comporta ca master. Dacă procesul ales de CRMd sau nodul pe care acesta există eşuează ... unul nou este stabilit repede."
 
 #. Tag: para
-#, no-c-format
-msgid "The DC carries out the PEngine's instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
+#, fuzzy, no-c-format
+msgid "The DC carries out the PEngine’s instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
 msgstr "DC-ul îndeplineşte instrucţiunile PEngine-ului în ordinea necesară prin pasarea acestora fie către LRMd (Local Resource Managemen daemon) fie altor noduri pe care rulează CRMd prin infrastructura de mesagerie a clusterului (care la rândul ei le pasează către procesul lor LRMd)."
 
 #. Tag: para
@@ -267,9 +263,9 @@ msgstr "În acest document ne vom concentra pe setarea unui server web Apache cu
 msgid "Active/Passive Redundancy"
 msgstr "Redundanţă Activă/Pasivă"
 
-#. Tag: caption
-#, no-c-format
-msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations."
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations"
 msgstr "Clusterele Active/Pasive formate din două noduri care folosesc Pacemaker şi DRBD sunt o soluţie eficientă d.p.d.v. al costului pentru multe situaţii de Disponibilitate Crescută."
 
 #. Tag: title
@@ -277,7 +273,22 @@ msgstr "Clusterele Active/Pasive formate din două noduri care folosesc Pacemake
 msgid "N to N Redundancy"
 msgstr "Redundanţă N la N"
 
-#. Tag: caption
-#, no-c-format
-msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
+#. Tag: phrase
+#, fuzzy, no-c-format
+msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload"
 msgstr "Când un mediu de stocare partajat este disponibil, fiecare nod poate fi folosit în mod potenţial pentru failover. Pacemaker poate chiar rula mai multe copii ale serviciilor pentru a distribui sarcina de lucru."
+
+#~ msgid "Supports both <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> and <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">resource driven</ulink> clusters"
+#~ msgstr "Suportă atât clustere <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> cât şi <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">conduse de resurse</ulink>"
+
+#~ msgid "Supports practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink>"
+#~ msgstr "Suportă practic orice <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">configuraţie redundantă</ulink>"
+
+#~ msgid "Non-cluster aware components (illustrated in green)."
+#~ msgstr "Componente fără cunoștințe despre cluster (ilustrate în verde)."
+
+#~ msgid "Resource management"
+#~ msgstr "Gestiunea resurselor"
+
+#~ msgid "Low level infrastructure"
+#~ msgstr "Infrastructura la nivel inferior"

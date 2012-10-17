@@ -1,13 +1,14 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2011-12-31T15:15:49\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2011-11-21 23:38+0200\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -64,10 +65,8 @@ msgstr "GFS2 ca și sistem de fișiere de cluster (în mod activ/activ)"
 
 #. Tag: para
 #, no-c-format
-msgid "The crm shell for displaying the configuration and making changes"
-msgstr "Shell-ul crm pentru vizualizarea configurației și pentru realizarea de modificări"
-
-#. Tag: para
-#, no-c-format
 msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
 msgstr "Dată fiind natura grafică a procesului de instalare al Fedora, un număr de capturi de ecran sunt incluse. Însă ghidul este compus în mod primar din comenzi, motivele pentru care sunt executate și rezultatele de ieșire așteptate ale acestora."
+
+#~ msgid "The crm shell for displaying the configuration and making changes"
+#~ msgstr "Shell-ul crm pentru vizualizarea configurației și pentru realizarea de modificări"

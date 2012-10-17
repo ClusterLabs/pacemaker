@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -34,11 +34,11 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell; a Python based GUI exists, too, however these tools will not be covered at all in this document<footnote> <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para> </footnote>, precisely because they hide the XML."
+msgid "For those that are allergic to XML, there exist several unified shells and GUIs for Pacemaker. However these tools will not be covered at all in this document<footnote> <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para> </footnote>, precisely because they hide the XML."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster."
+msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster. Try the <ulink url=\"http://www.clusterlabs.org/doc\">Clusters from Scratch</ulink> document instead."
 msgstr ""
 

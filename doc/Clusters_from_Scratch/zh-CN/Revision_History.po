@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-15T23:32:37\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:43+0800\n"
 "Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
 "Language-Team: None\n"
@@ -33,3 +33,52 @@ msgstr "Beekhof"
 msgid "Import from Pages.app"
 msgstr "Import from Pages.app"
 
+#. Tag: firstname
+#, no-c-format
+msgid "Raoul"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Scarazzini"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Italian translation"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for Fedora 13"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Update the GFS2 section to use CMAN"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Generate docbook content from asciidoc sources"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for Fedora 17"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "David"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Vossel"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Updated for pcs"
+msgstr ""

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-05-04 09:59+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -27,3 +27,113 @@ msgstr "Beekhof"
 #, no-c-format
 msgid "Red Hat"
 msgstr "Red Hat"
+
+#. Tag: contrib
+#, no-c-format
+msgid "Primary author"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Dan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Frîncu"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Romanian translation"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Philipp"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Marek"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "LINBit"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Style and formatting updates. Indexing."
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Tanja"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Roth"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "SUSE"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Utilization chapter"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Resource Templates chapter"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Multi-Site Clusters chapter"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Lars"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Marowsky-Bree"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Yan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Gao"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Thomas"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Schraitle"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Dejan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Muhamedagic"
+msgstr ""

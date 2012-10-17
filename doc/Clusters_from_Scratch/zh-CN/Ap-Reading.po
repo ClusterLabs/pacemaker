@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-15T23:32:36\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 20:03+0800\n"
 "Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
 "Language-Team: None\n"
@@ -19,36 +19,28 @@ msgid "Further Reading"
 msgstr "延伸阅读"
 
 #. Tag: para
-#, no-c-format
-msgid "<emphasis>Project Website</emphasis>"
-msgstr "<emphasis>Project Website</emphasis>"
-
-#. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.clusterlabs.org/\">http://www.clusterlabs.org</ulink>"
+#, fuzzy, no-c-format
+msgid "Project Website <ulink url=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</ulink>"
 msgstr "<ulink url=\"http://www.clusterlabs.org/\">http://www.clusterlabs.org</ulink>"
 
 #. Tag: para
-#, no-c-format
-msgid "<emphasis>Cluster Commands</emphasis>"
-msgstr "<emphasis>Cluster Commands</emphasis>"
-
-#. Tag: para
-#, no-c-format
-msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at:"
-msgstr "一个综合的指南,包含了Novell所写的集群命令,可以在这里被找到:"
-
-#. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\">http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html</ulink>"
+#, fuzzy, no-c-format
+msgid "Cluster Commands A comprehensive guide to cluster commands has been written by SuSE and can be found at: <ulink url=\"http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html\">http://www.suse.com/documentation/sle_ha/book_sleha/?page=/documentation/sle_ha/book_sleha/data/book_sleha.html</ulink>"
 msgstr "<ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\">http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html</ulink>"
 
 #. Tag: para
-#, no-c-format
-msgid "<emphasis>Corosync</emphasis>"
-msgstr "<emphasis>Corosync</emphasis>"
-
-#. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.corosync.org/\">http://www.corosync.org</ulink>"
+#, fuzzy, no-c-format
+msgid "Corosync <ulink url=\"http://www.corosync.org\">http://www.corosync.org</ulink>"
 msgstr "<ulink url=\"http://www.corosync.org/\">http://www.corosync.org</ulink>"
+
+#~ msgid "<emphasis>Project Website</emphasis>"
+#~ msgstr "<emphasis>Project Website</emphasis>"
+
+#~ msgid "<emphasis>Cluster Commands</emphasis>"
+#~ msgstr "<emphasis>Cluster Commands</emphasis>"
+
+#~ msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at:"
+#~ msgstr "一个综合的指南,包含了Novell所写的集群命令,可以在这里被找到:"
+
+#~ msgid "<emphasis>Corosync</emphasis>"
+#~ msgstr "<emphasis>Corosync</emphasis>"

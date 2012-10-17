@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -124,7 +124,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Switched to <indexterm><primary>RelaxNG</primary></indexterm>RelaxNG schema validation and <indexterm><primary>libxml2</primary></indexterm><filename>libxml2</filename> parser"
+msgid "Switched to <emphasis>RelaxNG</emphasis> schema validation and <emphasis>libxml2</emphasis> parser"
 msgstr ""
 
 #. Tag: para
@@ -134,32 +134,47 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "id's cannot contain colons (:)"
+msgid "id’s cannot contain colons (:)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "id's cannot begin with a number"
+msgid "id’s cannot begin with a number"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "id's must be globally unique (not just unique for that tag)"
+msgid "id’s must be globally unique (not just unique for that tag)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgid "This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Ping node information no longer needs to be added to <filename>ha.cf</filename>. Simply include the lists of hosts in your ping resource(s)."
+msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ping node information no longer needs to be added to <emphasis>ha.cf</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Simply include the lists of hosts in your ping resource(s)."
 msgstr ""
 
 #. Tag: title

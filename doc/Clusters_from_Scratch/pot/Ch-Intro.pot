@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:57\n"
-"PO-Revision-Date: 2012-02-27T09:17:57\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
+"PO-Revision-Date: 2012-10-17T05:19:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +29,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 14."
+msgid "This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 17."
 msgstr ""
 
 #. Tag: para
@@ -124,7 +124,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Unified, scriptable, cluster shell"
+msgid "Unified, scriptable, cluster management tools."
 msgstr ""
 
 #. Tag: title

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2011-05-03 15:46+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -25,8 +25,18 @@ msgstr "Cos'è una risorsa del cluster"
 
 #. Tag: para
 #, no-c-format
-msgid "The role of a resource agent is to abstract the service it provides and present a consistent view to the cluster, which allows the cluster to be agnostic about the resources it manages. The cluster doesn&#39;t need to understand how the resource works because it relies on the resource agent to do the right thing when given a start, stop or monitor command."
+msgid "<indexterm> <primary>Resource</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "The role of a resource agent is to abstract the service it provides and present a consistent view to the cluster, which allows the cluster to be agnostic about the resources it manages."
 msgstr "Il ruolo di un resource agent è quello di astrarre il servizio che eroga e presentarne una vista consistente al cluster, il che abilita il cluster ad essere all'oscuro delle risorse che gestisce. Il cluster non necessità di capire come funziona una risorsa perché si appoggia al resource agent per fare la cosa giusta quando viene eseguito uno start, uno stop o un comando di monitor."
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster doesn’t need to understand how the resource works because it relies on the resource agent to do the right thing when given a <literal>start</literal>, <literal>stop</literal> or <literal>monitor</literal> command."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -45,8 +55,58 @@ msgstr "Classi di risorse supportate"
 
 #. Tag: para
 #, no-c-format
-msgid "There are three basic classes of agents supported by Pacemaker. In order of encouraged usage they are:"
+msgid "<indexterm> <primary>Resource</primary><secondary>class</secondary> </indexterm> <indexterm> <primary>class</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "There are five classes of agents supported by Pacemaker:"
 msgstr "Esistono tre classi base di agenti supportati da Pacemaker. Il cui utilizzo viene caldeggiato:"
+
+#. Tag: para
+#, no-c-format
+msgid "OCF"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "LSB"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Upstart"
+msgstr "stop_start"
+
+#. Tag: para
+#, no-c-format
+msgid "Systemd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Fencing"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> <indexterm> <primary>Heartbeat</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Version 1 of Heartbeat came with its own style of resource agents and it is highly likely that many people have written their own agents based on its conventions. <footnote><para> See <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\">http://wiki.linux-ha.org/HeartbeatResourceAgent</ulink> for more information </para></footnote>"
+msgstr "La versione 1 di Heartbeat  aveva un proprio stile per i resource agent e verosimilmente tutte le persone che hanno sviluppato propri resource agent si sono basati su queste convenzioni. Per fare in modo che gli amministratori continuino ad utilizzare quest agenti questi sono supportati dal nuovo cluster manager."
+
+#. Tag: para
+#, no-c-format
+msgid "Although deprecated with the release of Heartbeat v2, they were supported by Pacemaker up until the release of 1.1.8 to enable administrators to continue to use these agents."
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -54,18 +114,23 @@ msgid "Open Cluster Framework"
 msgstr "Open Cluster Framework"
 
 #. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>OCF</secondary> </indexterm> <indexterm> <primary>OCF</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm> <indexterm> <primary>Open Cluster Framework</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
 #, fuzzy, no-c-format
-msgid "The OCF Spec (as it relates to resource agents) can be found at: <ulink url=\"http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD\" /> <footnote><para>Note: The Pacemaker implementation has been somewhat extended from the OCF Specs, but none of those changes are incompatible with the original OCF specification</para></footnote> and is basically an extension of the Linux Standard Base conventions for init scripts to"
+msgid "The OCF standard <footnote><para> <ulink url=\"http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD\">http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD</ulink> - at least as it relates to resource agents. </para></footnote> <footnote><para> The Pacemaker implementation has been somewhat extended from the OCF Specs, but none of those changes are incompatible with the original OCF specification. </para></footnote> is basically an extension of the Linux Standard Base conventions for init scripts to:"
 msgstr "Le specifiche OCF (per come si riferiscono ai resource agent, possono essere trovate qui: <ulink url=\"http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD\" />) <footnote><para>Nota: l'implementazione di Pacemaker è stata in qualche modo estesa dalle specifiche OCF, ma nessuno di questi cambiamenti è incompabile con la specifica originale OCF</para></footnote> sono sostanzialmente un'estensione delle convenzioni degli script di init Linux Standard Base per "
 
 #. Tag: para
-#, no-c-format
-msgid "support parameters"
+#, fuzzy, no-c-format
+msgid "support parameters,"
 msgstr "supportare parametri"
 
 #. Tag: para
-#, no-c-format
-msgid "make them self describing, and"
+#, fuzzy, no-c-format
+msgid "make them self describing and"
 msgstr "renderli auto esplicativi ed"
 
 #. Tag: para
@@ -75,17 +140,27 @@ msgstr "estensibili"
 
 #. Tag: para
 #, no-c-format
-msgid "OCF specs have strict definitions of what exit codes actions must return <footnote> <para>Included with the cluster is the ocf-tester script which can be useful in this regard.</para> </footnote> The cluster follows these specifications exactly, and exiting with the wrong exit code will cause the cluster to behave in ways you will likely find puzzling and annoying. In particular, the cluster needs to distinguish a completely stopped resource from one which is in some erroneous and indeterminate state."
-msgstr "Le specifiche OCF hanno definizioni rigorose di quali exit code devono restituire <footnote> <para>Incluso nel cluster vi è lo script ocf-tester che può essere utile in questo senso.</para> </footnote>Il cluster segue esattamente queste specifiche e restituire un exit code non corretto causerebbe al cluster comportamenti inaspettati e noiosi difficili da interpretare. In particolare il cluster necessita di distinguere una risorsa competamente stoppata da una che si trova in stato errato o indeterminabile."
-
-#. Tag: para
-#, no-c-format
-msgid "Parameters are passed to the script as environment variables, with the special prefix <envar>OCF_RESKEY_</envar>. So, if you need to be given a parameter which the user thinks of as ip it will be passed to the script as <envar>OCF_RESKEY_ip</envar>. The number and purpose of the parameters is completely arbitrary, however your script should advertise any that it supports using the meta-data command."
-msgstr "I parametri sono passati allo script come variabili d'ambiente, con il prefisso speciale <envar>OCF_RESKEY_</envar>. Quindi se la propria necessità è quella di utilizzare una variabile chiamata ip, questa verrà passata allo script come <envar>OCF_RESKEY_ip</envar>. Il numero e lo scopo dei parametri è completamente arbitrario, ad ogni modo lo script dovrebbe allertare su quali parametri supporta mediante il comando meta-data."
+msgid "OCF specs have strict definitions of the exit codes that actions must return. <footnote><para> Included with the cluster is the ocf-tester script, which can be useful in this regard. </para></footnote>"
+msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "For more information, see <ulink url=\"http://www.linux-ha.org/wiki/OCF_Resource_Agents\" /> and <xref linkend=\"ap-ocf\" />."
+msgid "The cluster follows these specifications exactly, and giving the wrong exit code will cause the cluster to behave in ways you will likely find puzzling and annoying. In particular, the cluster needs to distinguish a completely stopped resource from one which is in some erroneous and indeterminate state."
+msgstr "Le specifiche OCF hanno definizioni rigorose di quali exit code devono restituire <footnote> <para>Incluso nel cluster vi è lo script ocf-tester che può essere utile in questo senso.</para> </footnote>Il cluster segue esattamente queste specifiche e restituire un exit code non corretto causerebbe al cluster comportamenti inaspettati e noiosi difficili da interpretare. In particolare il cluster necessita di distinguere una risorsa competamente stoppata da una che si trova in stato errato o indeterminabile."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Parameters are passed to the script as environment variables, with the special prefix <literal>OCF_RESKEY_</literal>. So, a parameter which the user thinks of as ip it will be passed to the script as <literal>OCF_RESKEY_ip</literal>. The number and purpose of the parameters is completely arbitrary, however your script should advertise any that it supports using the <literal>meta-data</literal> command."
+msgstr "I parametri sono passati allo script come variabili d'ambiente, con il prefisso speciale <envar>OCF_RESKEY_</envar>. Quindi se la propria necessità è quella di utilizzare una variabile chiamata ip, questa verrà passata allo script come <envar>OCF_RESKEY_ip</envar>. Il numero e lo scopo dei parametri è completamente arbitrario, ad ogni modo lo script dovrebbe allertare su quali parametri supporta mediante il comando meta-data."
+
+#. Tag: para
+#, no-c-format
+msgid "The OCF class is the most preferred one as it is an industry standard, highly flexible (allowing parameters to be passed to agents in a non-positional manner) and self-describing."
+msgstr "La classe OCF è la preferita poiché è uno standard industriale, altamente flessibile (permettendo che i parametri vengano passati agli agenti in maniera non posizionale) ed auto esplicativi."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "For more information, see the <ulink url=\"http://www.linux-ha.org/wiki/OCF_Resource_Agents\">reference</ulink> and <xref linkend=\"ap-ocf\" />."
 msgstr "Per ulteriori informazioni, vedere <ulink url=\"http://wiki.linux-ha.org/OCFResourceAgent\" /> e <xref linkend=\"ap-ocf\" />."
 
 #. Tag: title
@@ -95,17 +170,22 @@ msgstr "Linux Standard Base"
 
 #. Tag: para
 #, no-c-format
-msgid "LSB resource agents are those found in <filename>/etc/init.d</filename>. Generally they are provided by the OS/distribution and in order to be used with the cluster, must conform to the LSB Spec."
-msgstr "I resource agents LSB si trovano in <filename>/etc/init.d</filename>. Generalmente sono forniti dalla distribuzione e per essere utilizzati con il cluster devono essere conformi alle specifiche LSB."
+msgid "<indexterm> <primary>Resource</primary><secondary>LSB</secondary> </indexterm> <indexterm> <primary>LSB</primary> </indexterm> <indexterm> <primary>LSB</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm> <indexterm> <primary>Linux Standard Base</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The LSB Spec (as it relates to init scripts) can be found at: <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" />"
-msgstr "Le specifiche LSB (per come si riferiscono agli script di init) si trovano qui: <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" />"
+msgid "LSB resource agents are those found in <emphasis>/etc/init.d</emphasis>."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Many distributions claim LSB compliance but ship with broken init scripts. To see if your init script is LSB-compatible, see the FAQ entry <xref linkend=\"ap-lsb\" />. The most common problems are:"
+msgid "Generally they are provided by the OS/distribution and, in order to be used with the cluster, they must conform to the LSB Spec. <footnote><para> See <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink> for the LSB Spec (as it relates to init scripts). </para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Many distributions claim LSB compliance but ship with broken init scripts. For details on how to check if your init script is LSB-compatible, see <xref linkend=\"ap-lsb\" />. The most common problems are:"
 msgstr "Molte distribuzioni affermano di essere LSB compatibili, ma in realtà hanno script di init non funzionanti. Per vedere se i propri script di init sono LSB-compatibili fare riferimento alla FAQ <xref linkend=\"ap-lsb\" />."
 
 #. Tag: para
@@ -128,25 +208,95 @@ msgstr "Lo start di una risorsa avviata restituisce un errore (questo viola le s
 msgid "Stopping a stopped resource returns an error (this violates the LSB spec)"
 msgstr "Lo stop di una risorsa ferma restituisce un errore (questo viola le specifiche LSB)"
 
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Systemd</secondary> </indexterm> <indexterm> <primary>Systemd</primary> </indexterm> <indexterm> <primary>Systemd</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some newer distributions have replaced the old <ulink url=\"http://en.wikipedia.org/wiki/Init#SysV-style\">SYS-V</ulink> style of initialization daemons (and scripts) with an alternative called <ulink url=\"http://www.freedesktop.org/wiki/Software/systemd\">Systemd</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker is able to manage these services <emphasis>if they are present</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Instead of <literal>init scripts</literal>, systemd has <literal>unit files</literal>. Generally the services (or unit files) are provided by the OS/distribution but there are some instructions for converting from init scripts at: <ulink url=\"http://0pointer.de/blog/projects/systemd-for-admins-3.html\">http://0pointer.de/blog/projects/systemd-for-admins-3.html</ulink>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Remember to make sure the computer is <literal>not</literal> configured to start any services at boot time that should be controlled by the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Upstart</secondary> </indexterm> <indexterm> <primary>Upstart</primary> </indexterm> <indexterm> <primary>Upstart</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some newer distributions have replaced the old <ulink url=\"http://en.wikipedia.org/wiki/Init#SysV-style\">SYS-V</ulink> style of initialization daemons (and scripts) with an alternative called <ulink url=\"http://upstart.ubuntu.com\">Upstart</ulink>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Instead of <literal>init scripts</literal>, upstart has <literal>jobs</literal>. Generally the services (or jobs) are provided by the OS/distribution."
+msgstr ""
+
 #. Tag: title
 #, no-c-format
-msgid "Legacy Heartbeat"
-msgstr "Legacy Heartbeat"
+msgid "System Services"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Version 1 of Heartbeat came with its own style of resource agents and it is highly likely that many people have written their own agents based on its conventions. To enable administrators to continue to use these agents, they are supported by the new cluster manager."
-msgstr "La versione 1 di Heartbeat  aveva un proprio stile per i resource agent e verosimilmente tutte le persone che hanno sviluppato propri resource agent si sono basati su queste convenzioni. Per fare in modo che gli amministratori continuino ad utilizzare quest agenti questi sono supportati dal nuovo cluster manager."
+msgid "<indexterm> <primary>Resource</primary><secondary>System Services</secondary> </indexterm> <indexterm> <primary>System Services</primary> </indexterm> <indexterm> <primary>System Service</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For more information, see: <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\" />"
-msgstr "Per ulteriori informazioni vedere: <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\" />"
+msgid "Since there are now many \"common\" types of system services (<literal>systemd</literal>, <literal>upstart</literal>, and <literal>lsb</literal>), Pacemaker supports a special alias which intelligently figures out which one applies to a given cluster node."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The OCF class is the most preferred one as it is an industry standard, highly flexible (allowing parameters to be passed to agents in a non-positional manner) and self-describing."
-msgstr "La classe OCF è la preferita poiché è uno standard industriale, altamente flessibile (permettendo che i parametri vengano passati agli agenti in maniera non posizionale) ed auto esplicativi."
+msgid "This is particularly useful when the cluster contains a mix of <literal>systemd</literal>, <literal>upstart</literal>, and <literal>lsb</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In order, Pacemaker will try to find the named service as:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "an LSB (SYS-V) init script"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "a Systemd unit file"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "an Upstart job"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "STONITH"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>STONITH</secondary> </indexterm> <indexterm> <primary>STONITH</primary> </indexterm> <indexterm> <primary>STONITH</primary><secondary>Resources</secondary> </indexterm> <indexterm> <primary>Resources</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -154,9 +304,9 @@ msgid "There is also an additional class, STONITH, which is used exclusively for
 msgstr "Esiste ancheuna classe aggiuntiva, STONITH, che viene usata esclusivamente per effettuare il fence delle risorse relative. L'argomento è trattato più avanti nel <xref linkend=\"ch-stonith\" />."
 
 #. Tag: title
-#, no-c-format
-msgid "Properties"
-msgstr "Proprietà"
+#, fuzzy, no-c-format
+msgid "Resource Properties"
+msgstr "Operazioni sulle risorse"
 
 #. Tag: para
 #, no-c-format
@@ -178,86 +328,75 @@ msgstr "Campo"
 msgid "Description"
 msgstr "Descrizione"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "id"
-msgstr "id"
-
-#. Tag: entry
-#, no-c-format
-msgid "Your name for the resource"
-msgstr "Il nome della risorsa"
-
-#. Tag: entry
-#, no-c-format
-msgid "class"
-msgstr "class"
-
-#. Tag: entry
-#, no-c-format
-msgid "The standard the script conforms to. Allowed values: heartbeat, lsb, ocf, stonith"
-msgstr "Lo standard a cui lo script è conforme. Valori permessi: heartbeat, lsb, ocf, stonith"
-
-#. Tag: entry
-#, no-c-format
-msgid "type"
-msgstr "type"
-
-#. Tag: entry
-#, no-c-format
-msgid "The name of the Resource Agent you wish to use. eg. IPaddr or Filesystem"
-msgstr "Il nome del Resource Agent che si vuole utilizzare. Ad esempio IPaddr o Filesystem"
-
-#. Tag: entry
-#, no-c-format
-msgid "provider"
-msgstr "provider"
-
-#. Tag: entry
-#, no-c-format
-msgid "The OCF spec allows multiple vendors to supply the same ResourceAgent. To use the OCF resource agents supplied with Heartbeat, you should specify heartbeat here."
-msgstr "La specifica OCF consente fornitori multipli per lo stesso Resource Agent. Per utilizzare i resource agent OCF forniti da Heartbeat, andrebbe specificato qui \"heartbeat\"."
+msgid "<literal>id</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Resource definitions can be queried with the crm_resource tool. For example"
+msgid "Your name for the resource <indexterm> <primary>id</primary><secondary>Resource</secondary> </indexterm> <indexterm> <primary>Resource</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>class</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The standard the script conforms to. Allowed values: <literal>ocf</literal>, <literal>service</literal>, <literal>upstart</literal>, <literal>systemd</literal>, <literal>lsb</literal>, <literal>stonith</literal> <indexterm> <primary>class</primary><secondary>Resource</secondary> </indexterm> <indexterm> <primary>Resource</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Property</secondary><tertiary>class</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>class</secondary> </indexterm> <indexterm> <primary>class</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>type</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of the Resource Agent you wish to use. Eg. <emphasis>IPaddr</emphasis> or <emphasis>Filesystem</emphasis> <indexterm> <primary>type</primary><secondary>Resource</secondary> </indexterm> <indexterm> <primary>Resource</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Property</secondary><tertiary>type</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>type</secondary> </indexterm> <indexterm> <primary>type</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>provider</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The OCF spec allows multiple vendors to supply the same ResourceAgent. To use the OCF resource agents supplied with Heartbeat, you should specify <literal>heartbeat</literal> here. <indexterm> <primary>provider</primary><secondary>Resource</secondary> </indexterm> <indexterm> <primary>Resource</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Property</secondary><tertiary>provider</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>provider</secondary> </indexterm> <indexterm> <primary>provider</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Resource definitions can be queried with the <literal>crm_resource</literal> tool. For example"
 msgstr "Le definizioni della risorsa possono essere interrogate con lo strumento crm_resource. Ad esempio"
 
-#. Tag: screen
-#, no-c-format
-msgid "<command>crm_resource --resource Email --query-xml</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_resource --resource Email --query-xml"
 msgstr "<command>crm_resource --resource Email --query-xml</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "might produce"
+#, fuzzy, no-c-format
+msgid "might produce:"
 msgstr "potrebbe restituire"
 
 #. Tag: title
-#, no-c-format
-msgid "An example LSB resource"
+#, fuzzy, no-c-format
+msgid "An example system resource"
 msgstr "Una risorsa LSB di esempio"
 
 #. Tag: programlisting
 #, no-c-format
-msgid ""
-"\n"
-"  &#60;primitive id=&#34;Email&#34; class=&#34;lsb&#34; type=&#34;exim&#34;/&#62;\n"
-"\t"
+msgid "&lt;primitive id=\"Email\" class=\"service\" type=\"exim\"/&gt;"
 msgstr ""
-"\n"
-"  &#60;primitive id=&#34;Email&#34; class=&#34;lsb&#34; type=&#34;exim&#34;/&#62;\n"
-"\t"
 
 #. Tag: para
-#, no-c-format
-msgid "One of the main drawbacks to LSB resources is that they do not allow any parameters"
+#, fuzzy, no-c-format
+msgid "One of the main drawbacks to system services (such as LSB, Systemd and Upstart) resources is that they do not allow any parameters!"
 msgstr "Uno dei principali svantaggi delle risorse LSB è che essi non supportano alcun parametro"
-
-#. Tag: para
-#, no-c-format
-msgid "or, for an OCF resource:"
-msgstr "o, per una risorsa OCF:"
 
 #. Tag: title
 #, no-c-format
@@ -265,65 +404,23 @@ msgid "An example OCF resource"
 msgstr "Un esempio di risorsa OCF"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"     &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"        &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"     &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
+"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"   &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"      &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
 "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"     &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"        &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"     &#60;/instance_attributes&#62;\n"
+"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
+"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+"    &#60;/instance_attributes&#62;\n"
 "  &#60;/primitive&#62;\n"
 "\n"
 "\t"
-
-#. Tag: para
-#, no-c-format
-msgid "or, finally for the equivalent legacy Heartbeat resource:"
-msgstr "o, infine per la risora legacy Heartbeat equivalente:"
-
-#. Tag: title
-#, no-c-format
-msgid "An example Heartbeat resource"
-msgstr "Una risorsa Heartbeat di esempio"
-
-#. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP-legacy&#34; class=&#34;heartbeat&#34; type=&#34;IPaddr&#34;&#62;\n"
-"     &#60;instance_attributes id=&#34;params-public-ip-legacy&#34;&#62;\n"
-"        &#60;nvpair id=&#34;public-ip-addr-legacy&#34; name=&#34;1&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"     &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
-msgstr ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP-legacy&#34; class=&#34;heartbeat&#34; type=&#34;IPaddr&#34;&#62;\n"
-"     &#60;instance_attributes id=&#34;params-public-ip-legacy&#34;&#62;\n"
-"        &#60;nvpair id=&#34;public-ip-addr-legacy&#34; name=&#34;1&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"     &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
-
-#. Tag: para
-#, no-c-format
-msgid "Heartbeat resources take only ordered and unnamed parameters. The supplied name therefor indicates the order in which they are passed to the script. Only single digit values are allowed."
-msgstr "Le risorse heartbeat supportano solo parametri non ordinati e senza nome. Il nome fornito indica quindi l'ordine in cui essi vengono passati allo script. Sono permessi solo valori a singola cifra."
 
 #. Tag: title
 #, no-c-format
@@ -331,8 +428,8 @@ msgid "Resource Options"
 msgstr "Opzioni delle risorse"
 
 #. Tag: para
-#, no-c-format
-msgid "Options are used by the cluster to decide how your resource should behave and can be easily set using the <parameter>--meta</parameter> option of the <command>crm_resource</command> command."
+#, fuzzy, no-c-format
+msgid "Options are used by the cluster to decide how your resource should behave and can be easily set using the <literal>--meta</literal> option of the <literal>crm_resource</literal> command."
 msgstr "Le opzioni vengono utilizzate dal cluster per decidere come la propria risorsa debba comportarsi. Esse possono facilmente essere impostate utilizzando l'opzione <parameter>--meta</parameter> del comando <command>crm_resource</command>."
 
 #. Tag: title
@@ -345,30 +442,30 @@ msgstr "Opzioni per una Primitive Resource"
 msgid "Default"
 msgstr "Default"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "priority"
-msgstr "priority"
+msgid "<literal>priority</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "0"
-msgstr "0"
+msgid "<literal>0</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "If not all resources can be active, the cluster will stop lower priority resources in order to keep higher priority ones active."
-msgstr "Se non possono essere attive tutte le risorse, il cluster fermerà le risorse con la minore priorità in modo da mantenere attive quelle ad alta prorità."
+msgid "If not all resources can be active, the cluster will stop lower priority resources in order to keep higher priority ones active. <indexterm> <primary>priority</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>priority</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>priority</secondary> </indexterm> <indexterm> <primary>priority</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "target-role"
-msgstr "target-role"
+msgid "<literal>target-role</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Started"
-msgstr "Started"
+msgid "<literal>Started</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -377,88 +474,123 @@ msgstr "In quale stato il cluster deve cercare di tenere questa risorsa? Valori 
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Stopped - Force the resource to be stopped"
+msgid "* <emphasis>Stopped</emphasis> - Force the resource to be stopped"
 msgstr "Stopped - Forza lo stop risorsa"
 
 #. Tag: para
-#, no-c-format
-msgid "Started - Allow the resource to be started (In the case of <link linkend=\"s-resource-multistate\">multi-state</link> resources, they will not promoted to master)"
+#, fuzzy, no-c-format
+msgid "* <emphasis>Started</emphasis> - Allow the resource to be started (In the case of <link linkend=\"s-resource-multistate\">multi-state</link> resources, they will not promoted to master)"
 msgstr "Started - Permetti alla risorsa di essere avviata (nel caso di risorse <link linkend=\"s-resource-multistate\">multi-state</link> esse non verranno promosse a master)"
 
 #. Tag: para
 #, no-c-format
-msgid "Master - Allow the resource to be started and, if appropriate, promoted"
-msgstr "Master - Consenti alla risorsa di essere avviata e, se è il caso, promossa a master"
+msgid "* <emphasis>Master</emphasis> - Allow the resource to be started and, if appropriate, promoted <indexterm> <primary>target-role</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>target-role</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>target-role</secondary> </indexterm> <indexterm> <primary>target-role</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "is-managed"
-msgstr "is-managed"
+msgid "<literal>is-managed</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "TRUE"
-msgstr "TRUE"
+msgid "<literal>TRUE</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Is the cluster allowed to start and stop the resource? Allowed values: true, false"
-msgstr "Il cluster può avviare e stoppare la risorsa? Valori permessi: true, false"
+msgid "Is the cluster allowed to start and stop the resource? Allowed values: <literal>true</literal>, <literal>false</literal> <indexterm> <primary>is-managed</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>is-managed</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>is-managed</secondary> </indexterm> <indexterm> <primary>is-managed</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "resource-stickiness"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>resource-stickiness</literal>"
 msgstr "resource-stickiness"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Inherited"
-msgstr "Inherited"
+msgid "Calculated"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "How much does the resource prefer to stay where it is? Defaults to the value of resource-stickiness in the rsc_defaults section"
-msgstr "Quanto la risorsa deve preferire rimanere dov'è? Il valore di default corrisponde al valore resource-stickiness nella sezione rsc_defaults"
+msgid "How much does the resource prefer to stay where it is? Defaults to the value of <literal>resource-stickiness</literal> in the <literal>rsc_defaults</literal> section <indexterm> <primary>resource-stickiness</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>resource-stickiness</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>resource-stickiness</secondary> </indexterm> <indexterm> <primary>resource-stickiness</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "migration-threshold"
+msgid "<literal>requires</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Under what conditions can the resource be started. (<emphasis>Since 1.1.8</emphasis>)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Defaults to <literal>fencing</literal> unless <literal>stonith-enabled</literal> is <emphasis>false</emphasis> or <literal>class</literal> is <emphasis>stonith</emphasis> - under those conditions the default is <literal>quorum</literal>. Possible values:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "* <emphasis>nothing</emphasis> - can always be started"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "* <emphasis>quorum</emphasis> - The cluster can only start this resource if a majority of the configured nodes are active"
+msgstr "quorum - Il cluster può avviare questa risorsa solamente se la maggioranza dei nodi configurati è attiva"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "* <emphasis>fencing</emphasis> - The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off."
+msgstr "fencing - Il cluster può avviare questa risorsa solo se la maggioranza dei nodi configurati è attiva <emphasis>e</emphasis> qualsiasi nodo fallito o sconosciuto è stato spento."
+
+#. Tag: para
+#, no-c-format
+msgid "* <emphasis>unfencing</emphasis> - The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off <emphasis>and</emphasis> only on nodes that have been <emphasis>unfenced</emphasis> indexterm: Option[requires,Resource] <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>requires</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>requires</secondary> </indexterm> <indexterm> <primary>requires</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>migration-threshold</literal>"
 msgstr "migration-threshold"
 
-#. Tag: entry
+#. Tag: para
 #, fuzzy, no-c-format
-msgid "INFINITY (disabled)"
+msgid "<literal>INFINITY</literal> (disabled)"
 msgstr "0 (disabilitata)"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "How many failures should occur for this resource on a node before making the node ineligible to host this resource."
-msgstr "Quanti fallimenti si devono verificare su un nodo per questa risorsa prima di rendere il nodo ineleggibile all'erogazione di questa risorsa."
+msgid "How many failures may occur for this resource on a node, before this node is marked ineligible to host this resource. <indexterm> <primary>migration-threshold</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>migration-threshold</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>migration-threshold</secondary> </indexterm> <indexterm> <primary>migration-threshold</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "failure-timeout"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>failure-timeout</literal>"
 msgstr "failure-timeout"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "0 (disabled)"
-msgstr "0 (disabilitata)"
+msgid "<literal>0</literal> (disabled)"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "How many seconds to wait before acting as if the failure had not occurred (and potentially allowing the resource back to the node on which it failed."
-msgstr "Quanti secondo aspettare prima di agire come se il fallimento non si fosse verificato (abilitando potenzialmente la risorsa sul nodo in cui è fallita)."
+msgid "How many seconds to wait before acting as if the failure had not occurred, and potentially allowing the resource back to the node on which it failed. <indexterm> <primary>failure-timeout</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>failure-timeout</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>failure-timeout</secondary> </indexterm> <indexterm> <primary>failure-timeout</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "multiple-active"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>multiple-active</literal>"
 msgstr "multiple-active"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "stop_start"
-msgstr "stop_start"
+msgid "<literal>stop_start</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -466,32 +598,35 @@ msgid "What should the cluster do if it ever finds the resource active on more t
 msgstr "Cosa dovrebbe fare il cluster se mai trovasse la risorsa attiva su più di un nodo. Valori permessi:"
 
 #. Tag: para
-#, no-c-format
-msgid "block - mark the resource as unmanaged"
+#, fuzzy, no-c-format
+msgid "* <emphasis>block</emphasis> - mark the resource as unmanaged"
 msgstr "block - marchiare la risorse come non gestita (unmanaged)"
 
 #. Tag: para
-#, no-c-format
-msgid "stop_only - stop all active instances and leave them that way"
+#, fuzzy, no-c-format
+msgid "* <emphasis>stop_only</emphasis> - stop all active instances and leave them that way"
 msgstr "stop_only - ferma tutte le istanze attive a le lascia in questo stato"
 
 #. Tag: para
-#, no-c-format
-msgid "stop_start - stop all active instances and start the resource in one location only"
+#, fuzzy, no-c-format
+msgid "* <emphasis>stop_start</emphasis> - stop all active instances and start the resource in one location only"
 msgstr "stop_start - ferma tutte le istanze attive ed avvia le risorse in una sola posizione"
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>multiple-active</primary><secondary>Resource Option</secondary> </indexterm> <indexterm> <primary>Resource Option</primary> </indexterm> <indexterm> <primary>Resource</primary><secondary>Option</secondary><tertiary>multiple-active</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>multiple-active</secondary> </indexterm> <indexterm> <primary>multiple-active</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "If you performed the following commands on the previous LSB Email resource"
 msgstr "Se sono stati eseguiti i seguenti comandi nella precedente risorsa LSB Email"
 
-#. Tag: screen
-#, no-c-format
+#. Tag: programlisting
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\t<command>crm_resource --meta --resource Email --set-parameter priority --property-value 100</command>\n"
-"\t<command>crm_resource --meta --resource Email --set-parameter multiple-active --property-value block</command>\n"
-"      "
+"# crm_resource --meta --resource Email --set-parameter priority --property-value 100\n"
+"# crm_resource --meta --resource Email --set-parameter multiple-active --property-value block"
 msgstr ""
 "\n"
 "\t<command>crm_resource --meta --resource Email --set-parameter priority --property-value 100</command>\n"
@@ -509,18 +644,14 @@ msgid "An LSB resource with cluster options"
 msgstr "Una risorsa LSB con le opzioni cluster"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Email&#34; class=&#34;lsb&#34; type=&#34;exim&#34;&#62;\n"
-"     &#60;meta_attributes id=&#34;meta-email&#34;&#62;\n"
-"        &#60;nvpair id=&#34;email-priority&#34; name=&#34;priority&#34; value=&#34;100&#34;/&#62;\n"
-"        &#60;nvpair id=&#34;email-active&#34; name=&#34;multiple-active&#34; value=&#34;block&#34;/&#62;\n"
-"     &#60;/meta_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
+"&lt;primitive id=\"Email\" class=\"lsb\" type=\"exim\"&gt;\n"
+"   &lt;meta_attributes id=\"meta-email\"&gt;\n"
+"      &lt;nvpair id=\"email-priority\" name=\"priority\" value=\"100\"/&gt;\n"
+"      &lt;nvpair id=\"email-active\" name=\"multiple-active\" value=\"block\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -539,18 +670,18 @@ msgid "Setting Global Defaults for Resource Options"
 msgstr "Settaggio dei valori di default globali per le opzioni delle risorse"
 
 #. Tag: para
-#, no-c-format
-msgid "To set a default value for a resource option, simply add it to the <literal>rsc_defaults</literal> section with <command>crm_attribute</command>. Thus,"
+#, fuzzy, no-c-format
+msgid "To set a default value for a resource option, simply add it to the <literal>rsc_defaults</literal> section with <literal>crm_attribute</literal>. Thus,"
 msgstr "Per assegnare il valore di default dell'opzione di una risorsa è sufficiente aggiungerla alla sezione <literal>rsc_defaults</literal> mediante <command>crm_attribute</command>. In questo modo,"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false"
 msgstr "<command>crm_attribute --type rsc_defaults --attr-name is-managed --attr-value false</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "would prevent the cluster from starting or stopping any of the resources in the configuration (unless of course the individual resources were specifically enabled and had <literal>is-managed</literal> set to true)."
+#, fuzzy, no-c-format
+msgid "would prevent the cluster from starting or stopping any of the resources in the configuration (unless of course the individual resources were specifically enabled and had <literal>is-managed</literal> set to <literal>true</literal>)."
 msgstr "verrà evitato che il cluster avvii o fermi una qualsiasi risorsa nella configurazione (a meno che le risorse siano specificamente abilitate e sia a true il valore <literal>is-managed</literal>)."
 
 #. Tag: title
@@ -564,18 +695,18 @@ msgid "The scripts of some resource classes (LSB not being one of them) can be g
 msgstr "Gli script di alcune classi di risorse (ad esclusione di quelli LSB) supportano il passaggio di parametri che determinano come questi si devono comportare e quale istanza del servizio controllano."
 
 #. Tag: para
-#, no-c-format
-msgid "If your resource agent supports parameters, you can add them with the <command>crm_resource</command> command. For instance"
+#, fuzzy, no-c-format
+msgid "If your resource agent supports parameters, you can add them with the <literal>crm_resource</literal> command. For instance"
 msgstr "Se il resource agent prescelto supporta parametri, è possibile aggiungerli mediante il comando <command>crm_resource</command>. Ad esempio"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4"
 msgstr "<command>crm_resource --resource Public-IP --set-parameter ip --property-value 1.2.3.4</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "would create an entry in the resource like this"
+#, fuzzy, no-c-format
+msgid "would create an entry in the resource like this:"
 msgstr "creerà una entry come questa"
 
 #. Tag: title
@@ -583,37 +714,14 @@ msgstr "creerà una entry come questa"
 msgid "An example OCF resource with instance attributes"
 msgstr "Una risorsa OCF di esempio con attributi di istanza"
 
-#. Tag: programlisting
-#, no-c-format
-msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
-msgstr ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t"
-
 #. Tag: para
-#, no-c-format
-msgid "For an OCF resource, the result would be an environment variable called <envar>OCF_RESKEY_ip</envar> with a value of 1.2.3.4"
+#, fuzzy, no-c-format
+msgid "For an OCF resource, the result would be an environment variable called <literal>OCF_RESKEY_ip</literal> with a value of <literal>1.2.3.4</literal>."
 msgstr "Per una risorsa OCF il risultato sarà una variabile d'ambiente chiamata <envar>OCF_RESKEY_ip</envar> il cui valore è 1.2.3.4"
 
 #. Tag: para
-#, no-c-format
-msgid "The list of instance attributes supported by an OCF script can be found by calling the resource script with the <parameter>meta-data</parameter> command. The output contains an XML description of all the supported attributes, their purpose and default values."
+#, fuzzy, no-c-format
+msgid "The list of instance attributes supported by an OCF script can be found by calling the resource script with the <literal>meta-data</literal> command. The output contains an XML description of all the supported attributes, their purpose and default values."
 msgstr "La lista degli attriuti di istanza supportati da uno script OCF può essere recuperata richiamando lo script con il comando <parameter>meta-data</parameter>. L'output contiene una descrizione XML di tutti gli attributi supportati, la loro funzione ed i valori di default."
 
 #. Tag: title
@@ -624,52 +732,54 @@ msgstr "Visualizzazione dei metadata per il template del resource agent Dummy"
 #. Tag: programlisting
 #, no-c-format
 msgid ""
+"# export OCF_ROOT=/usr/lib/ocf\n"
+"# $OCF_ROOT/resource.d/pacemaker/Dummy meta-data"
+msgstr ""
+
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid ""
+"&lt;?xml version=\"1.0\"?&gt;\n"
+"  &lt;!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\"&gt;\n"
+"  &lt;resource-agent name=\"Dummy\" version=\"0.9\"&gt;\n"
+"    &lt;version&gt;1.0&lt;/version&gt;\n"
 "\n"
-"    <userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>\n"
-"\n"
-"  &#60;?xml version=&#34;1.0&#34;?&#62;\n"
-"  &#60;!DOCTYPE resource-agent SYSTEM &#34;ra-api-1.dtd&#34;&#62;\n"
-"  &#60;resource-agent name=&#34;Dummy&#34; version=&#34;0.9&#34;&#62;\n"
-"    &#60;version&#62;1.0&#60;/version&#62;\n"
-"  \n"
-"    &#60;longdesc lang=&#34;en-US&#34;&#62;\n"
-"      This is a Dummy Resource Agent. It does absolutely nothing except \n"
+"    &lt;longdesc lang=\"en-US\"&gt;\n"
+"      This is a Dummy Resource Agent. It does absolutely nothing except\n"
 "      keep track of whether its running or not.\n"
 "      Its purpose in life is for testing and to serve as a template for RA writers.\n"
-"    &#60;/longdesc&#62;\n"
-"    &#60;shortdesc lang=&#34;en-US&#34;&#62;Dummy resource agent&#60;/shortdesc&#62;\n"
-"  \n"
-"    &#60;parameters&#62;\n"
-"      &#60;parameter name=&#34;state&#34; unique=&#34;1&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en-US&#34;&#62;\n"
-"          Location to store the resource state in.\n"
-"        &#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en-US&#34;&#62;State file&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34; default=&#34;/var/run//Dummy-{OCF_RESOURCE_INSTANCE}.state&#34; /&#62;\n"
-"      &#60;/parameter&#62;\n"
-"  \n"
-"      &#60;parameter name=&#34;dummy&#34; unique=&#34;0&#34;&#62;\n"
-"        &#60;longdesc lang=&#34;en-US&#34;&#62; \n"
-"          Dummy attribute that can be changed to cause a reload\n"
-"        &#60;/longdesc&#62;\n"
-"        &#60;shortdesc lang=&#34;en-US&#34;&#62;Dummy attribute that can be changed to cause a reload&#60;/shortdesc&#62;\n"
-"        &#60;content type=&#34;string&#34; default=&#34;blah&#34; /&#62;\n"
-"      &#60;/parameter&#62;\n"
-"    &#60;/parameters&#62;\n"
-"  \n"
-"    &#60;actions&#62;\n"
-"      &#60;action name=&#34;start&#34;        timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;stop&#34;         timeout=&#34;100&#34; /&#62;\n"
-"      &#60;action name=&#34;monitor&#34;      timeout=&#34;20&#34; interval=&#34;10&#34; depth=&#34;0&#34; start-delay=&#34;0&#34; /&#62;\n"
-"      &#60;action name=&#34;reload&#34;       timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;migrate_to&#34;   timeout=&#34;100&#34; /&#62;\n"
-"      &#60;action name=&#34;migrate_from&#34; timeout=&#34;90&#34; /&#62;\n"
-"      &#60;action name=&#34;meta-data&#34;    timeout=&#34;5&#34; /&#62;\n"
-"      &#60;action name=&#34;validate-all&#34; timeout=&#34;30&#34; /&#62;\n"
-"    &#60;/actions&#62;\n"
-"  &#60;/resource-agent&#62;\n"
+"    &lt;/longdesc&gt;\n"
+"    &lt;shortdesc lang=\"en-US\"&gt;Dummy resource agent&lt;/shortdesc&gt;\n"
 "\n"
-"  "
+"    &lt;parameters&gt;\n"
+"      &lt;parameter name=\"state\" unique=\"1\"&gt;\n"
+"        &lt;longdesc lang=\"en-US\"&gt;\n"
+"          Location to store the resource state in.\n"
+"        &lt;/longdesc&gt;\n"
+"        &lt;shortdesc lang=\"en-US\"&gt;State file&lt;/shortdesc&gt;\n"
+"        &lt;content type=\"string\" default=\"/var/run/Dummy-{OCF_RESOURCE_INSTANCE}.state\" /&gt;\n"
+"      &lt;/parameter&gt;\n"
+"\n"
+"      &lt;parameter name=\"dummy\" unique=\"0\"&gt;\n"
+"        &lt;longdesc lang=\"en-US\"&gt;\n"
+"          Dummy attribute that can be changed to cause a reload\n"
+"        &lt;/longdesc&gt;\n"
+"        &lt;shortdesc lang=\"en-US\"&gt;Dummy attribute that can be changed to cause a reload&lt;/shortdesc&gt;\n"
+"        &lt;content type=\"string\" default=\"blah\" /&gt;\n"
+"      &lt;/parameter&gt;\n"
+"    &lt;/parameters&gt;\n"
+"\n"
+"    &lt;actions&gt;\n"
+"      &lt;action name=\"start\"        timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"stop\"         timeout=\"100\" /&gt;\n"
+"      &lt;action name=\"monitor\"      timeout=\"20\" interval=\"10\",height=\"0\" start-delay=\"0\" /&gt;\n"
+"      &lt;action name=\"reload\"       timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"migrate_to\"   timeout=\"100\" /&gt;\n"
+"      &lt;action name=\"migrate_from\" timeout=\"90\" /&gt;\n"
+"      &lt;action name=\"meta-data\"    timeout=\"5\" /&gt;\n"
+"      &lt;action name=\"validate-all\" timeout=\"30\" /&gt;\n"
+"    &lt;/actions&gt;\n"
+"  &lt;/resource-agent&gt;"
 msgstr ""
 "\n"
 "    <userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>\n"
@@ -723,14 +833,19 @@ msgstr ""
 msgid "Resource Operations"
 msgstr "Operazioni sulle risorse"
 
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Resource</primary><secondary>Action</secondary> </indexterm> <indexterm> <primary>Action</primary> </indexterm>"
+msgstr ""
+
 #. Tag: title
 #, no-c-format
 msgid "Monitoring Resources for Failure"
 msgstr "Monitoraggio di anomalie sulle risorse"
 
 #. Tag: para
-#, no-c-format
-msgid "By default, the cluster will not ensure your resources are still healthy. To instruct the cluster to do this, you need to add a monitor operation to the resource&#39;s definition."
+#, fuzzy, no-c-format
+msgid "By default, the cluster will not ensure your resources are still healthy. To instruct the cluster to do this, you need to add a <literal>monitor</literal> operation to the resource’s definition."
 msgstr "Come comportamento di default il cluster non accerterà che le risorse siano in salute. Per istruire il cluster a farlo è necessario aggiungere alla definizione della risorsa un'operazione di monitor."
 
 #. Tag: title
@@ -739,20 +854,16 @@ msgid "An OCF resource with a recurring health check"
 msgstr "Una risorsa OCF con un controllo dello stato di salute ciclico"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;operations&#62;\n"
-"     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34;/&#62;\n"
-"    &#60;/operations&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t  "
+"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"  &lt;operations&gt;\n"
+"     &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
+"  &lt;/operations&gt;\n"
+"  &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"     &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -772,75 +883,45 @@ msgstr ""
 msgid "Properties of an Operation"
 msgstr "Proprietà di un'operazione"
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "Your name for the action. Must be unique."
-msgstr "Nome assegnato all'azione. Deve essere univoco."
-
-#. Tag: entry
-#, no-c-format
-msgid "name"
-msgstr "name"
-
-#. Tag: entry
-#, no-c-format
-msgid "The action to perform. Common values: monitor, start, stop"
-msgstr "L'azione da eseguire. Valori possibili: monitor, start, stop"
-
-#. Tag: entry
-#, no-c-format
-msgid "interval"
-msgstr "interval"
-
-#. Tag: entry
-#, no-c-format
-msgid "How frequently (in seconds) to perform the operation. Default value: 0"
-msgstr "Quanto frequentemente (in secondi) effettuare l'operazione. Valore di default: 0"
-
-#. Tag: entry
-#, no-c-format
-msgid "timeout"
-msgstr "timeout"
-
-#. Tag: entry
-#, no-c-format
-msgid "How long to wait before declaring the action has failed."
-msgstr "Quanto aspettare prima di dichiarare che un'azione è fallita."
-
-#. Tag: entry
-#, no-c-format
-msgid "requires"
-msgstr "requires"
+msgid "Your name for the action. Must be unique. <indexterm> <primary>id</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "What conditions need to be satisfied before this action occurs. Allowed values:"
-msgstr "Quali condizioni devono essere soddisfatte prima che l'azione avvenga. Valori permessi:"
+msgid "<literal>name</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "nothing - The cluster may start this resource at any time"
-msgstr "nothing - Il cluster può avviare la risorsa quando vuole"
+msgid "The action to perform. Common values: <literal>monitor</literal>, <literal>start</literal>, <literal>stop</literal> <indexterm> <primary>name</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>name</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>name</secondary> </indexterm> <indexterm> <primary>name</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "quorum - The cluster can only start this resource if a majority of the configured nodes are active"
-msgstr "quorum - Il cluster può avviare questa risorsa solamente se la maggioranza dei nodi configurati è attiva"
+msgid "<literal>interval</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "fencing - The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off."
-msgstr "fencing - Il cluster può avviare questa risorsa solo se la maggioranza dei nodi configurati è attiva <emphasis>e</emphasis> qualsiasi nodo fallito o sconosciuto è stato spento."
+msgid "How frequently (in seconds) to perform the operation. Default value: <literal>0</literal>, meaning never. <indexterm> <primary>interval</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>interval</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>interval</secondary> </indexterm> <indexterm> <primary>interval</primary> </indexterm>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "STONITH resources default to nothing, and all others default to fencing if STONITH is enabled and quorum otherwise."
-msgstr "Le risorse STONITH per default non fanno nulla mentre tutte le altre, per default, utilizzano \"fencing\" se STONITH è abilitato nel cluster e \"quorum\" in tutti gli altri casi."
+msgid "<literal>timeout</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "on-fail"
-msgstr "on-fail"
+msgid "How long to wait before declaring the action has failed. <indexterm> <primary>timeout</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>timeout</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>timeout</secondary> </indexterm> <indexterm> <primary>timeout</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>on-fail</literal>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -848,49 +929,49 @@ msgid "The action to take if this action ever fails. Allowed values:"
 msgstr "L'azione da intraprendere se l'azione principale dovesse fallire. Valori permessi:"
 
 #. Tag: para
-#, no-c-format
-msgid "ignore - Pretend the resource did not fail"
+#, fuzzy, no-c-format
+msgid "* <emphasis>ignore</emphasis> - Pretend the resource did not fail"
 msgstr "ignore - Pretende che la risorsa non fallisca."
 
 #. Tag: para
-#, no-c-format
-msgid "block - Don&#39;t perform any further operations on the resource"
+#, fuzzy, no-c-format
+msgid "* <emphasis>block</emphasis> - Don’t perform any further operations on the resource"
 msgstr "block - Non effettuar alcuna altra operazione sulla risorsa"
 
 #. Tag: para
-#, no-c-format
-msgid "stop - Stop the resource and do not start it elsewhere"
+#, fuzzy, no-c-format
+msgid "* <emphasis>stop</emphasis> - Stop the resource and do not start it elsewhere"
 msgstr "stop - Ferma la risorsa che non verrà avviata da nessuna parte"
 
 #. Tag: para
-#, no-c-format
-msgid "restart - Stop the resource and start it again (possibly on a different node)"
+#, fuzzy, no-c-format
+msgid "* <emphasis>restart</emphasis> - Stop the resource and start it again (possibly on a different node)"
 msgstr "restart - Ferma la risorsa e la avvia di nuovo (possibilmente su di un altro nodo)"
 
 #. Tag: para
-#, no-c-format
-msgid "fence - STONITH the node on which the resource failed"
+#, fuzzy, no-c-format
+msgid "* <emphasis>fence</emphasis> - STONITH the node on which the resource failed"
 msgstr "fence - effettua lo STONITH sul nodo dove è fallita la risorsa"
 
 #. Tag: para
-#, no-c-format
-msgid "standby - Move <emphasis>all</emphasis> resources away from the node on which the resource failed"
+#, fuzzy, no-c-format
+msgid "* <emphasis>standby</emphasis> - Move <emphasis>all</emphasis> resources away from the node on which the resource failed"
 msgstr "standby - Sposta <emphasis>tutte</emphasis> le risorse altrove dal nodo in cui queste sono fallite"
 
 #. Tag: para
 #, no-c-format
-msgid "The default for the stop operation is fence when STONITH is enabled and block otherwise. All other operations default to stop."
-msgstr "Il valore di default per l'operazione di stop è \"fence\" quando STONITH è abilitato e \"block\" negli altri casi. Tutte le altre operazioni per default utilizzano \"stop\"."
+msgid "The default for the <literal>stop</literal> operation is <literal>fence</literal> when STONITH is enabled and <literal>block</literal> otherwise. All other operations default to <literal>stop</literal>. <indexterm> <primary>on-fail</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>on-fail</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>on-fail</secondary> </indexterm> <indexterm> <primary>on-fail</primary> </indexterm>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "enabled"
-msgstr "enabled"
+msgid "<literal>enabled</literal>"
+msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "If false, the operation is treated as if it does not exist. Allowed values: <emphasis>true</emphasis>, false"
-msgstr "Se impostato a \"false\" l'operazione viene trattata come se non esiste. Valori permessi: <emphasis>true</emphasis>, false"
+msgid "If <literal>false</literal>, the operation is treated as if it does not exist. Allowed values: <literal>true</literal>, <literal>false</literal> <indexterm> <primary>enabled</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>enabled</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>enabled</secondary> </indexterm> <indexterm> <primary>enabled</primary> </indexterm>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -898,18 +979,18 @@ msgid "Setting Global Defaults for Operations"
 msgstr "Settaggio dei valori di default globali per le operazioni"
 
 #. Tag: para
-#, no-c-format
-msgid "To set a default value for a operation option, simply add it to the op_defaults section with crm_attribute. Thus,"
-msgstr "Per impostare il valore di default dell'opzione di un'operazione è sufficiente aggiungerlo alla sezione op_defaults section mediante crm_attribute. Quindi."
+#, fuzzy, no-c-format
+msgid "To set a default value for a operation option, simply add it to the <literal>op_defaults</literal> section with <literal>crm_attribute</literal>. Thus,"
+msgstr "Per assegnare il valore di default dell'opzione di una risorsa è sufficiente aggiungerla alla sezione <literal>rsc_defaults</literal> mediante <command>crm_attribute</command>. In questo modo,"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>crm_attribute --type op_defaults --attr-name timeout --attr-value 20s</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# crm_attribute --type op_defaults --attr-name timeout --attr-value 20s"
 msgstr "<command>crm_attribute --type op_defaults --attr-name timeout --attr-value 20s</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "would default each operation&#39;s timeout to 20 seconds. If an operation&#39;s definition also includes a value for <literal>timeout</literal>, then that value would be used instead (for that operation only)."
+#, fuzzy, no-c-format
+msgid "would default each operation’s <literal>timeout</literal> to 20 seconds. If an operation’s definition also includes a value for <literal>timeout</literal>, then that value would be used instead (for that operation only)."
 msgstr "imposterà 20 secondi come valore di default per ciascuna operazione. Se la definizione dell'operazione include anche un valore per il <literal>timeout</literal>, allora verrà utilizzato questo valore (solamente per questa operazione)."
 
 #. Tag: title
@@ -918,8 +999,8 @@ msgid "When Resources Take a Long Time to Start/Stop"
 msgstr "Quando una risorsa impiega molto tempo per Avviarsi/Fermarsi"
 
 #. Tag: para
-#, no-c-format
-msgid "There are a number of implicit operations that the cluster will always perform - start, stop and a non-recurring monitor operation (used at startup to check the resource isn&#39;t already active). If one of these is taking too long, then you can create an entry for them and simply specify a new value."
+#, fuzzy, no-c-format
+msgid "There are a number of implicit operations that the cluster will always perform - <literal>start</literal>, <literal>stop</literal> and a non-recurring <literal>monitor</literal> operation (used at startup to check the resource isn’t already active). If one of these is taking too long, then you can create an entry for them and simply specify a new value."
 msgstr "Esistono diverse operazioni implicite che il cluster effettuerà sempre - start, stop e monitoraggi non ricorrenti (utilizzati in fase di avvio per verificare che la risorsa non sia già attiva). Se una di queste impiega troppo tempo, sarà possibile creare una entry relativa e specificare semplicemente un nuovo valore."
 
 #. Tag: title
@@ -928,22 +1009,18 @@ msgid "An OCF resource with custom timeouts for its implicit actions"
 msgstr "Una risorsa OCF on timeout personalizzato per le proprie azioni implicite"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;operations&#62;\n"
-"     &#60;op id=&#34;public-ip-startup&#34; name=&#34;monitor&#34; interval=&#34;0&#34; timeout=&#34;90s&#34;/&#62;\n"
-"     &#60;op id=&#34;public-ip-start&#34; name=&#34;start&#34; interval=&#34;0&#34; timeout=&#34;180s&#34;/&#62;\n"
-"     &#60;op id=&#34;public-ip-stop&#34; name=&#34;stop&#34; interval=&#34;0&#34; timeout=&#34;15min&#34;/&#62;\n"
-"    &#60;/operations&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t  "
+"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"  &lt;operations&gt;\n"
+"     &lt;op id=\"public-ip-startup\" name=\"monitor\" interval=\"0\" timeout=\"90s\"/&gt;\n"
+"     &lt;op id=\"public-ip-start\" name=\"start\" interval=\"0\" timeout=\"180s\"/&gt;\n"
+"     &lt;op id=\"public-ip-stop\" name=\"stop\" interval=\"0\" timeout=\"15min\"/&gt;\n"
+"  &lt;/operations&gt;\n"
+"  &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"     &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"  &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -971,44 +1048,40 @@ msgid "Provided no two operations (for a single resource) have the same name and
 msgstr "Purché non ci sono due operazioni (per una singola risorsa) con lo stesso nome ed intervallo è possibile avere un umero arbitrario di operazioni di monitoraggio . In questo modo si può fare un controllo superficiale ogni minuto, che si intensificherà con intervalli più alti."
 
 #. Tag: para
-#, no-c-format
-msgid "To tell the resource agent what kind of check to perform, you need to provide each monitor with a different value for a common parameter. The OCF standard creates a special parameter called <envar>OCF_CHECK_LEVEL</envar> for this purpose and dictates that it is <emphasis>made available to the resource agent without the normal <envar>OCF_RESKEY_</envar> prefix</emphasis>."
+#, fuzzy, no-c-format
+msgid "To tell the resource agent what kind of check to perform, you need to provide each monitor with a different value for a common parameter. The OCF standard creates a special parameter called <literal>OCF_CHECK_LEVEL</literal> for this purpose and dictates that it is <emphasis>\"made available to the resource agent without the normal <literal>OCF_RESKEY</literal> prefix\"</emphasis>."
 msgstr "Per comunicare al resource agent che tipo di controllo effettuare è necessario fornire ogni monitor con un valore di parametro comune differente. Lo standard OCF, per questo scopo, crea un parametro speciale denominato <envar>OCF_CHECK_LEVEL</envar> ed impone che questo <emphasis>sia reso disponibile al resource agent senza il normale prefisso <envar>OCF_RESKEY_</envar></emphasis>."
 
 #. Tag: para
-#, no-c-format
-msgid "Whatever name you choose, you can specify it by adding an instance_attributes block to the op tag. Note that it is up to each resource agent to look for the parameter and decide how to use it."
+#, fuzzy, no-c-format
+msgid "Whatever name you choose, you can specify it by adding an <literal>instance_attributes</literal> block to the op tag. Note that it is up to each resource agent to look for the parameter and decide how to use it."
 msgstr "Qualsiasi nome venga scelto sarà possibile specificarlo aggiungendo un blocco instance_attributes al tag op. Va sottolineato come è compito di ciascun resource agent controllae il parametro e decidere come utilizzarlo."
 
 #. Tag: title
-#, no-c-format
-msgid "An OCF resource with two recurring health checks performing different levels of checks"
+#, fuzzy, no-c-format
+msgid "An OCF resource with two recurring health checks, performing different levels of checks - specified via <literal>OCF_CHECK_LEVEL</literal>."
 msgstr "Una risorsa OCF con due controlli di sanità ricorrenti che effettuano differenti livelli di controllo"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;operations&#62;\n"
-"     &#60;op id=&#34;public-ip-health-60&#34; name=&#34;monitor&#34; interval=&#34;60&#34;&#62;\n"
-"       &#60;instance_attributes id=&#34;params-public-ip-depth-60&#34;&#62;\n"
-"           &#60;nvpair id=&#34;public-ip-depth-60&#34; name=&#34;OCF_CHECK_LEVEL&#34; value=&#34;10&#34;/&#62;\n"
-"       &#60;/instance_attributes&#62;\n"
-"     &#60;/op&#62;\n"
-"     &#60;op id=&#34;public-ip-health-300&#34; name=&#34;monitor&#34; interval=&#34;300&#34;&#62;\n"
-"       &#60;instance_attributes id=&#34;params-public-ip-depth-300&#34;&#62;\n"
-"           &#60;nvpair id=&#34;public-ip-depth-300&#34; name=&#34;OCF_CHECK_LEVEL&#34; value=&#34;20&#34;/&#62;\n"
-"       &#60;/instance_attributes&#62;\n"
-"     &#60;/op&#62;\n"
-"    &#60;/operations&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-level&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t  "
+"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"   &lt;operations&gt;\n"
+"      &lt;op id=\"public-ip-health-60\" name=\"monitor\" interval=\"60\"&gt;\n"
+"         &lt;instance_attributes id=\"params-public-ip-depth-60\"&gt;\n"
+"            &lt;nvpair id=\"public-ip-depth-60\" name=\"OCF_CHECK_LEVEL\" value=\"10\"/&gt;\n"
+"         &lt;/instance_attributes&gt;\n"
+"      &lt;/op&gt;\n"
+"      &lt;op id=\"public-ip-health-300\" name=\"monitor\" interval=\"300\"&gt;\n"
+"         &lt;instance_attributes id=\"params-public-ip-depth-300\"&gt;\n"
+"            &lt;nvpair id=\"public-ip-depth-300\" name=\"OCF_CHECK_LEVEL\" value=\"20\"/&gt;\n"
+"       &lt;/instance_attributes&gt;\n"
+"     &lt;/op&gt;\n"
+"   &lt;/operations&gt;\n"
+"   &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"       &lt;nvpair id=\"public-ip-level\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
@@ -1038,8 +1111,8 @@ msgid "Disabling a Monitor Operation"
 msgstr "Disabilitare un'operazione di monitoring"
 
 #. Tag: para
-#, no-c-format
-msgid "The easiest way to stop a recurring monitor is to just delete it. However there can be times when you only want to disable it temporarily. In such cases, simply add <literal>disabled=&#34;true&#34;</literal> to the operation&#39;s definition."
+#, fuzzy, no-c-format
+msgid "The easiest way to stop a recurring monitor is to just delete it. However, there can be times when you only want to disable it temporarily. In such cases, simply add <literal>enabled=\"false\"</literal> to the operation’s definition."
 msgstr "La via più semplice per fermare un monitor ricorrente è semplicemente quella di cancellarlo. Ad ogni modo ci saranno occasioni in cui l'esigenza sia semplicemente quella di disabilitare il controllo temporaneamente. In questi casi, sarà sufficiente aggiungere <literal>disabled=&#34;true&#34;</literal>  akka definizione dell'operazione."
 
 #. Tag: title
@@ -1048,26 +1121,22 @@ msgid "Example of an OCF resource with a disabled health check"
 msgstr "Esempio di una risorsa OCF con controllo di sanità disabilitato"
 
 #. Tag: programlisting
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"\n"
-"\n"
-"  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
-"    &#60;operations&#62;\n"
-"     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34; disabled=&#34;true&#34;/&#62;\n"
-"    &#60;/operations&#62;\n"
-"    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
-"       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
-"    &#60;/instance_attributes&#62;\n"
-"  &#60;/primitive&#62;\n"
-"\n"
-"\t  "
+"&lt;primitive id=\"Public-IP\" class=\"ocf\" type=\"IPaddr\" provider=\"heartbeat\"&gt;\n"
+"   &lt;operations&gt;\n"
+"      &lt;op id=\"public-ip-check\" name=\"monitor\" interval=\"60s\" enabled=\"false\"/&gt;\n"
+"   &lt;/operations&gt;\n"
+"   &lt;instance_attributes id=\"params-public-ip\"&gt;\n"
+"      &lt;nvpair id=\"public-ip-addr\" name=\"ip\" value=\"1.2.3.4\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"&lt;/primitive&gt;"
 msgstr ""
 "\n"
 "\n"
 "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
 "    &#60;operations&#62;\n"
-"     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34; disabled=&#34;true&#34;/&#62;\n"
+"     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34;/&#62;\n"
 "    &#60;/operations&#62;\n"
 "    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
 "       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
@@ -1081,17 +1150,234 @@ msgstr ""
 msgid "This can be achieved from the command-line by executing"
 msgstr "L'operazione è effettuabile da linea di comando, eseguendo"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;true&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;true&#34;/&#62;&#39;</command>"
+#. Tag: programlisting
+#, fuzzy, no-c-format
+msgid "# cibadmin -M -X '&lt;op id=\"public-ip-check\" enabled=\"false\"/&gt;'"
+msgstr "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;false&#34;/&#62;&#39;</command>"
 
 #. Tag: para
-#, no-c-format
-msgid "Once you&#39;ve done whatever you needed to do, you can then re-enable it with"
+#, fuzzy, no-c-format
+msgid "Once you’ve done whatever you needed to do, you can then re-enable it with"
 msgstr "Una volta ottenuto il proprio scopo, sarà possibile riabilitare nuovamente il controllo con"
 
-#. Tag: para
-#, no-c-format
-msgid "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;false&#34;/&#62;&#39;</command>"
-msgstr "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;false&#34;/&#62;&#39;</command>"
+#~ msgid "LSB resource agents are those found in <filename>/etc/init.d</filename>. Generally they are provided by the OS/distribution and in order to be used with the cluster, must conform to the LSB Spec."
+#~ msgstr "I resource agents LSB si trovano in <filename>/etc/init.d</filename>. Generalmente sono forniti dalla distribuzione e per essere utilizzati con il cluster devono essere conformi alle specifiche LSB."
+
+#~ msgid "The LSB Spec (as it relates to init scripts) can be found at: <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" />"
+#~ msgstr "Le specifiche LSB (per come si riferiscono agli script di init) si trovano qui: <ulink url=\"http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" />"
+
+#~ msgid "Legacy Heartbeat"
+#~ msgstr "Legacy Heartbeat"
+
+#~ msgid "For more information, see: <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\" />"
+#~ msgstr "Per ulteriori informazioni vedere: <ulink url=\"http://wiki.linux-ha.org/HeartbeatResourceAgent\" />"
+
+#~ msgid "Properties"
+#~ msgstr "Proprietà"
+
+#~ msgid "id"
+#~ msgstr "id"
+
+#~ msgid "Your name for the resource"
+#~ msgstr "Il nome della risorsa"
+
+#~ msgid "class"
+#~ msgstr "class"
+
+#~ msgid "The standard the script conforms to. Allowed values: heartbeat, lsb, ocf, stonith"
+#~ msgstr "Lo standard a cui lo script è conforme. Valori permessi: heartbeat, lsb, ocf, stonith"
+
+#~ msgid "type"
+#~ msgstr "type"
+
+#~ msgid "The name of the Resource Agent you wish to use. eg. IPaddr or Filesystem"
+#~ msgstr "Il nome del Resource Agent che si vuole utilizzare. Ad esempio IPaddr o Filesystem"
+
+#~ msgid "provider"
+#~ msgstr "provider"
+
+#~ msgid "The OCF spec allows multiple vendors to supply the same ResourceAgent. To use the OCF resource agents supplied with Heartbeat, you should specify heartbeat here."
+#~ msgstr "La specifica OCF consente fornitori multipli per lo stesso Resource Agent. Per utilizzare i resource agent OCF forniti da Heartbeat, andrebbe specificato qui \"heartbeat\"."
+
+#~ msgid ""
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Email&#34; class=&#34;lsb&#34; type=&#34;exim&#34;/&#62;\n"
+#~ "\t"
+#~ msgstr ""
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Email&#34; class=&#34;lsb&#34; type=&#34;exim&#34;/&#62;\n"
+#~ "\t"
+
+#~ msgid "or, for an OCF resource:"
+#~ msgstr "o, per una risorsa OCF:"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
+#~ "     &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
+#~ "        &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "     &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
+#~ "     &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
+#~ "        &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "     &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t"
+
+#~ msgid "or, finally for the equivalent legacy Heartbeat resource:"
+#~ msgstr "o, infine per la risora legacy Heartbeat equivalente:"
+
+#~ msgid "An example Heartbeat resource"
+#~ msgstr "Una risorsa Heartbeat di esempio"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP-legacy&#34; class=&#34;heartbeat&#34; type=&#34;IPaddr&#34;&#62;\n"
+#~ "     &#60;instance_attributes id=&#34;params-public-ip-legacy&#34;&#62;\n"
+#~ "        &#60;nvpair id=&#34;public-ip-addr-legacy&#34; name=&#34;1&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "     &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP-legacy&#34; class=&#34;heartbeat&#34; type=&#34;IPaddr&#34;&#62;\n"
+#~ "     &#60;instance_attributes id=&#34;params-public-ip-legacy&#34;&#62;\n"
+#~ "        &#60;nvpair id=&#34;public-ip-addr-legacy&#34; name=&#34;1&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "     &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t"
+
+#~ msgid "Heartbeat resources take only ordered and unnamed parameters. The supplied name therefor indicates the order in which they are passed to the script. Only single digit values are allowed."
+#~ msgstr "Le risorse heartbeat supportano solo parametri non ordinati e senza nome. Il nome fornito indica quindi l'ordine in cui essi vengono passati allo script. Sono permessi solo valori a singola cifra."
+
+#~ msgid "priority"
+#~ msgstr "priority"
+
+#~ msgid "0"
+#~ msgstr "0"
+
+#~ msgid "If not all resources can be active, the cluster will stop lower priority resources in order to keep higher priority ones active."
+#~ msgstr "Se non possono essere attive tutte le risorse, il cluster fermerà le risorse con la minore priorità in modo da mantenere attive quelle ad alta prorità."
+
+#~ msgid "target-role"
+#~ msgstr "target-role"
+
+#~ msgid "Started"
+#~ msgstr "Started"
+
+#~ msgid "Master - Allow the resource to be started and, if appropriate, promoted"
+#~ msgstr "Master - Consenti alla risorsa di essere avviata e, se è il caso, promossa a master"
+
+#~ msgid "is-managed"
+#~ msgstr "is-managed"
+
+#~ msgid "TRUE"
+#~ msgstr "TRUE"
+
+#~ msgid "Is the cluster allowed to start and stop the resource? Allowed values: true, false"
+#~ msgstr "Il cluster può avviare e stoppare la risorsa? Valori permessi: true, false"
+
+#~ msgid "Inherited"
+#~ msgstr "Inherited"
+
+#~ msgid "How much does the resource prefer to stay where it is? Defaults to the value of resource-stickiness in the rsc_defaults section"
+#~ msgstr "Quanto la risorsa deve preferire rimanere dov'è? Il valore di default corrisponde al valore resource-stickiness nella sezione rsc_defaults"
+
+#~ msgid "How many failures should occur for this resource on a node before making the node ineligible to host this resource."
+#~ msgstr "Quanti fallimenti si devono verificare su un nodo per questa risorsa prima di rendere il nodo ineleggibile all'erogazione di questa risorsa."
+
+#~ msgid "0 (disabled)"
+#~ msgstr "0 (disabilitata)"
+
+#~ msgid "How many seconds to wait before acting as if the failure had not occurred (and potentially allowing the resource back to the node on which it failed."
+#~ msgstr "Quanti secondo aspettare prima di agire come se il fallimento non si fosse verificato (abilitando potenzialmente la risorsa sul nodo in cui è fallita)."
+
+#~ msgid "Your name for the action. Must be unique."
+#~ msgstr "Nome assegnato all'azione. Deve essere univoco."
+
+#~ msgid "name"
+#~ msgstr "name"
+
+#~ msgid "The action to perform. Common values: monitor, start, stop"
+#~ msgstr "L'azione da eseguire. Valori possibili: monitor, start, stop"
+
+#~ msgid "interval"
+#~ msgstr "interval"
+
+#~ msgid "How frequently (in seconds) to perform the operation. Default value: 0"
+#~ msgstr "Quanto frequentemente (in secondi) effettuare l'operazione. Valore di default: 0"
+
+#~ msgid "timeout"
+#~ msgstr "timeout"
+
+#~ msgid "How long to wait before declaring the action has failed."
+#~ msgstr "Quanto aspettare prima di dichiarare che un'azione è fallita."
+
+#~ msgid "requires"
+#~ msgstr "requires"
+
+#~ msgid "What conditions need to be satisfied before this action occurs. Allowed values:"
+#~ msgstr "Quali condizioni devono essere soddisfatte prima che l'azione avvenga. Valori permessi:"
+
+#~ msgid "nothing - The cluster may start this resource at any time"
+#~ msgstr "nothing - Il cluster può avviare la risorsa quando vuole"
+
+#~ msgid "STONITH resources default to nothing, and all others default to fencing if STONITH is enabled and quorum otherwise."
+#~ msgstr "Le risorse STONITH per default non fanno nulla mentre tutte le altre, per default, utilizzano \"fencing\" se STONITH è abilitato nel cluster e \"quorum\" in tutti gli altri casi."
+
+#~ msgid "on-fail"
+#~ msgstr "on-fail"
+
+#~ msgid "The default for the stop operation is fence when STONITH is enabled and block otherwise. All other operations default to stop."
+#~ msgstr "Il valore di default per l'operazione di stop è \"fence\" quando STONITH è abilitato e \"block\" negli altri casi. Tutte le altre operazioni per default utilizzano \"stop\"."
+
+#~ msgid "enabled"
+#~ msgstr "enabled"
+
+#~ msgid "If false, the operation is treated as if it does not exist. Allowed values: <emphasis>true</emphasis>, false"
+#~ msgstr "Se impostato a \"false\" l'operazione viene trattata come se non esiste. Valori permessi: <emphasis>true</emphasis>, false"
+
+#~ msgid "To set a default value for a operation option, simply add it to the op_defaults section with crm_attribute. Thus,"
+#~ msgstr "Per impostare il valore di default dell'opzione di un'operazione è sufficiente aggiungerlo alla sezione op_defaults section mediante crm_attribute. Quindi."
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
+#~ "    &#60;operations&#62;\n"
+#~ "     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34; disabled=&#34;true&#34;/&#62;\n"
+#~ "    &#60;/operations&#62;\n"
+#~ "    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
+#~ "       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "    &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t  "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "  &#60;primitive id=&#34;Public-IP&#34; class=&#34;ocf&#34; type=&#34;IPaddr&#34; provider=&#34;heartbeat&#34;&#62;\n"
+#~ "    &#60;operations&#62;\n"
+#~ "     &#60;op id=&#34;public-ip-check&#34; name=&#34;monitor&#34; interval=&#34;60s&#34; disabled=&#34;true&#34;/&#62;\n"
+#~ "    &#60;/operations&#62;\n"
+#~ "    &#60;instance_attributes id=&#34;params-public-ip&#34;&#62;\n"
+#~ "       &#60;nvpair id=&#34;public-ip-addr&#34; name=&#34;ip&#34; value=&#34;1.2.3.4&#34;/&#62;\n"
+#~ "    &#60;/instance_attributes&#62;\n"
+#~ "  &#60;/primitive&#62;\n"
+#~ "\n"
+#~ "\t  "
+
+#~ msgid "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;true&#34;/&#62;&#39;</command>"
+#~ msgstr "<command>cibadmin -M -X ‘&#60;op id=&#34;public-ip-check&#34; disabled=&#34;true&#34;/&#62;&#39;</command>"

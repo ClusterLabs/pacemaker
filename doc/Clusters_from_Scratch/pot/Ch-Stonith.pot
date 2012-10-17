@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:57\n"
-"PO-Revision-Date: 2012-02-27T09:17:57\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
+"PO-Revision-Date: 2012-10-17T05:19:03\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -64,24 +64,27 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Find the correct driver: <literal>stonith_admin --list-installed</literal>"
+msgid "Find the correct driver: <literal>pcs stonith list</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Since every device is different, the parameters needed to configure it will vary. To find out the parameters associated with the device, run: <literal>stonith_admin --metadata --agent type</literal>"
-msgstr ""
-
-#. Tag: literallayout
-#, no-c-format
-msgid "The output should be XML formatted text containing additional\n"
-"parameter descriptions. We will endevor to make the output more\n"
-"friendly in a later version."
+msgid "Find the parameters associated with the device: <literal>pcs stonith describe &lt;agent name&gt;</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Enter the shell crm Create an editable copy of the existing configuration cib new stonith Create a fencing resource containing a primitive resource with a class of stonith, a type of type and a parameter for each of the values returned in step 2: <literal>configure primitive …</literal>"
+msgid "Create a local config to make changes to <literal>pcs cluster cib stonith_cfg</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Create the fencing resource using <literal>pcs -f stonith_cfg stonith create &lt;stonith_id&gt; &lt;stonith device type&gt; [stonith device options]</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Set stonith-enable to true. <literal>pcs -f stonith_cfg property set stonith-enabled=true</literal>"
 msgstr ""
 
 #. Tag: para
@@ -101,7 +104,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Upload it into the CIB from the shell: <literal>cib commit stonith</literal>"
+msgid "Commit the new configuration. <literal>pcs cluster push cib stonith_cfg</literal>"
 msgstr ""
 
 #. Tag: para
@@ -119,97 +122,29 @@ msgstr ""
 msgid "Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then we would chose the fence_ipmilan driver in step 2 and obtain the following list of parameters"
 msgstr ""
 
-#. Tag: programlisting
+#. Tag: title
 #, no-c-format
-msgid "# stonith_admin --metadata -a fence_ipmilan"
+msgid "Obtaining a list of STONITH Parameters"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;?xml version=\"1.0\" ?&gt;\n"
-"&lt;resource-agent name=\"fence_ipmilan\" shortdesc=\"Fence agent for IPMI over LAN\"&gt;\n"
-"&lt;longdesc&gt;\n"
-"fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).\n"
-"\n"
-"To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc&gt;\n"
-"&lt;parameters&gt;\n"
-"        &lt;parameter name=\"auth\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-A\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"ipaddr\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-a\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;IPMI Lan IP to talk to&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"passwd\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-p\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Password (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"passwd_script\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-S\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Script to retrieve password (if required)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"lanplus\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-P\" /&gt;\n"
-"                &lt;content type=\"boolean\" /&gt;\n"
-"                &lt;shortdesc&gt;Use Lanplus&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"login\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-l\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Username/Login (if required) to control power on IPMI device&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"action\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-o\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"reboot\"/&gt;\n"
-"                &lt;shortdesc&gt;Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"timeout\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-t\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Timeout (sec) for IPMI operation&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"cipher\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-C\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"method\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-M\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"onoff\"/&gt;\n"
-"                &lt;shortdesc&gt;Method to fence (onoff or cycle)&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"power_wait\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-T\" /&gt;\n"
-"                &lt;content type=\"string\" default=\"2\"/&gt;\n"
-"                &lt;shortdesc&gt;Wait X seconds after on/off operation&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"delay\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-f\" /&gt;\n"
-"                &lt;content type=\"string\" /&gt;\n"
-"                &lt;shortdesc&gt;Wait X seconds before fencing is started&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"        &lt;parameter name=\"verbose\" unique=\"1\"&gt;\n"
-"                &lt;getopt mixed=\"-v\" /&gt;\n"
-"                &lt;content type=\"boolean\" /&gt;\n"
-"                &lt;shortdesc&gt;Verbose mode&lt;/shortdesc&gt;\n"
-"        &lt;/parameter&gt;\n"
-"&lt;/parameters&gt;\n"
-"&lt;actions&gt;\n"
-"        &lt;action name=\"on\" /&gt;\n"
-"        &lt;action name=\"off\" /&gt;\n"
-"        &lt;action name=\"reboot\" /&gt;\n"
-"        &lt;action name=\"status\" /&gt;\n"
-"        &lt;action name=\"diag\" /&gt;\n"
-"        &lt;action name=\"list\" /&gt;\n"
-"        &lt;action name=\"monitor\" /&gt;\n"
-"        &lt;action name=\"metadata\" /&gt;\n"
-"&lt;/actions&gt;\n"
-"&lt;/resource-agent&gt;"
+msgid "# pcs stonith describe fence_ipmilan\n"
+"Stonith options for: fence_ipmilan\n"
+"  auth: IPMI Lan Auth type (md5, password, or none)\n"
+"  ipaddr: IPMI Lan IP to talk to\n"
+"  passwd: Password (if required) to control power on IPMI device\n"
+"  passwd_script: Script to retrieve password (if required)\n"
+"  lanplus: Use Lanplus\n"
+"  login: Username/Login (if required) to control power on IPMI device\n"
+"  action: Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata\n"
+"  timeout: Timeout (sec) for IPMI operation\n"
+"  cipher: Ciphersuite to use (same as ipmitool -C parameter)\n"
+"  method: Method to fence (onoff or cycle)\n"
+"  power_wait: Wait X seconds after on/off operation\n"
+"  delay: Wait X seconds before fencing is started\n"
+"  privlvl: Privilege level on IPMI device\n"
+"  verbose: Verbose mode"
 msgstr ""
 
 #. Tag: para
@@ -217,56 +152,47 @@ msgstr ""
 msgid "from which we would create a STONITH resource fragment that might look like this"
 msgstr ""
 
+#. Tag: title
+#, no-c-format
+msgid "Sample STONITH Resource"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# pcs cluster cib stonith_cfg\n"
+"# pcs -f stonith_cfg stonith create impi-fencing fence_ipmilan \\\n"
+"      pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser \\\n"
+"      passwd=acd123 op monitor interval=60s"
+msgstr ""
+
 #. Tag: programlisting
 #, no-c-format
-msgid "# crm crm(live)# cib new stonith\n"
-"INFO: stonith shadow CIB created\n"
-"crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \\\n"
-" params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\\n"
-" op monitor interval=\"60s\""
+msgid "# pcs -f stonith_cfg stonith\n"
+" impi-fencing   (stonith:fence_ipmilan) Stopped"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration.."
+msgid "And finally, since we disabled it earlier, we need to re-enable STONITH. At this point we should have the following configuration."
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "crm(stonith)# configure property stonith-enabled=\"true\"crm(stonith)# configure shownode pcmk-1\n"
-"node pcmk-2\n"
-"primitive WebData ocf:linbit:drbd \\\n"
-"    params drbd_resource=\"wwwdata\" \\\n"
-"    op monitor interval=\"60s\"\n"
-"primitive WebFS ocf:heartbeat:Filesystem \\\n"
-"    params device=\"/dev/drbd/by-res/wwwdata\" directory=\"/var/www/html\" fstype=\"gfs2\"\n"
-"primitive WebSite ocf:heartbeat:apache \\\n"
-"    params configfile=\"/etc/httpd/conf/httpd.conf\" \\\n"
-"    op monitor interval=\"1min\"\n"
-"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
-"    params ip=\"192.168.122.101\" cidr_netmask=\"32\" clusterip_hash=\"sourceip\" \\\n"
-"    op monitor interval=\"30s\"primitive ipmi-fencing stonith::fence_ipmilan \\ params pcmk_host_list=\"pcmk-1 pcmk-2\" ipaddr=10.0.0.1 login=testuser passwd=abc123 \\ op monitor interval=\"60s\"ms WebDataClone WebData \\\n"
-"    meta master-max=\"2\" master-node-max=\"1\" clone-max=\"2\" clone-node-max=\"1\" notify=\"true\"\n"
-"clone WebFSClone WebFS\n"
-"clone WebIP ClusterIP \\\n"
-"    meta globally-unique=\"true\" clone-max=\"2\" clone-node-max=\"2\"\n"
-"clone WebSiteClone WebSite\n"
-"colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone\n"
-"colocation fs_on_drbd inf: WebFSClone WebDataClone:Master\n"
-"colocation website-with-ip inf: WebSiteClone WebIP\n"
-"order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start\n"
-"order WebSite-after-WebFS inf: WebFSClone WebSiteClone\n"
-"order apache-after-ip inf: WebIP WebSiteClone\n"
-"property $id=\"cib-bootstrap-options\" \\\n"
-"    dc-version=\"1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f\" \\\n"
-"    cluster-infrastructure=\"openais\" \\\n"
-"    expected-quorum-votes=\"2\" \\\n"
-"    stonith-enabled=\"true\" \\\n"
-"    no-quorum-policy=\"ignore\"\n"
-"rsc_defaults $id=\"rsc-options\" \\\n"
-"    resource-stickiness=\"100\"\n"
-"crm(stonith)# cib commit stonithINFO: commited 'stonith' shadow CIB to the cluster\n"
-"crm(stonith)# quit\n"
-"bye"
+msgid "# pcs -f stonith_cfg property set stonith-enabled=true\n"
+"# pcs -f stonith_cfg property\n"
+"dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0\n"
+"cluster-infrastructure: corosync\n"
+"no-quorum-policy: ignore\n"
+"stonith-enabled: true"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now push the configuration into the cluster."
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "# pcs cluster push cib stonith_cfg"
 msgstr ""
 

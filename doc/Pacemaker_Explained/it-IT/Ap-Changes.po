@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:05\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-05-04 10:28+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -94,8 +94,8 @@ msgid "The operation field <literal>pre-req</literal> has been renamed <literal>
 msgstr "Il campo operazione <literal>pre-req</literal> è stato rinominato in <literal>requires</literal>"
 
 #. Tag: para
-#, no-c-format
-msgid "All operations must have an <literal>interval</literal>, start/stop must have it set to zero"
+#, fuzzy, no-c-format
+msgid "All operations must have an <literal>interval</literal>, <literal>start</literal>/<literal>stop</literal> must have it set to zero"
 msgstr "Tutte le operazioni devono avere un intervallo <literal>interval</literal> e le operazioni start/stop devono averlo valorizzato a zero"
 
 #. Tag: para
@@ -119,49 +119,64 @@ msgid "<literal>resource-failure-stickiness</literal> has been replaced by <lite
 msgstr "<literal>resource-failure-stickiness</literal> è stata rimpiazzata da <literal>migration-threshold</literal>. Vedere <xref linkend=\"s-failure-migration\" />"
 
 #. Tag: para
-#, no-c-format
-msgid "The arguments for command-line tools has been made consistent"
+#, fuzzy, no-c-format
+msgid "The parameters for command-line tools have been made consistent"
 msgstr "Gli argomenti degli strumenti a linea di comando sono stati resi consistenti"
 
 #. Tag: para
-#, no-c-format
-msgid "Switched to RelaxNG schema validation and libxml2 parser."
+#, fuzzy, no-c-format
+msgid "Switched to <emphasis>RelaxNG</emphasis> schema validation and <emphasis>libxml2</emphasis> parser"
 msgstr "Passaggio allo schema di validazione RelaxNG ed al parser libxml2."
 
 #. Tag: para
-#, no-c-format
-msgid "id fields are now XML IDs which have the following limitations"
+#, fuzzy, no-c-format
+msgid "id fields are now XML IDs which have the following limitations:"
 msgstr "I campi id ora sono XML ID con le seguenti limitazioni"
 
 #. Tag: para
-#, no-c-format
-msgid "id&#39;s cannot contain colons (:)"
+#, fuzzy, no-c-format
+msgid "id’s cannot contain colons (:)"
 msgstr "gli id non possonoo contenere due punti (:)"
 
 #. Tag: para
-#, no-c-format
-msgid "id&#39;s cannot begin with a number"
+#, fuzzy, no-c-format
+msgid "id’s cannot begin with a number"
 msgstr "gli id non possono iniziare con numeri"
 
 #. Tag: para
-#, no-c-format
-msgid "id&#39;s must be globally unique (not just unique for that tag)"
+#, fuzzy, no-c-format
+msgid "id’s must be globally unique (not just unique for that tag)"
 msgstr "gli id devono essere globalmente univoci (non solamente univoci per il tag relativo)"
 
 #. Tag: para
 #, no-c-format
-msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefor fail."
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefore fail."
 msgstr "Alcuni campi (come quelli presenti nei vincoli riferiti alle risorse) sono IDREF. Questo significa che essi devono riferirsi a risorse esistenti o oggetti affinché la configurazione venga ritenuta valida. Rimuovere un oggetto che è referenziato alltrove quindi fallirà."
 
 #. Tag: para
 #, no-c-format
-msgid "The CIB representation from which the MD5 digest used to verify CIBs has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefor highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgid "The CIB representation, from which a MD5 digest is calculated to verify CIBs on the nodes, has changed."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefore highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
 msgstr "La rappresentazione del CIB da cui è ricavato l'hash MD5 utilizzato per verificare il CIB è stata modificata. Questo significa che ogni variazione del CIB richiederà un completo refresh su ogni nodo aggiornato finché il cluster non verrà totalmente passato alla versione 1.0. Questo provocherà significative perdite di performance ed è assolutamente sconsigliato utilizzare versioni mixate del cluster 1.0/0.6 a meno che non sia strettamente necessario."
 
 #. Tag: para
-#, no-c-format
-msgid "Ping node information no longer needs to be added to <filename>ha.cf</filename> Simply include the lists of hosts in your ping resource(s)."
+#, fuzzy, no-c-format
+msgid "Ping node information no longer needs to be added to <emphasis>ha.cf</emphasis>."
 msgstr "Le informazioni sui ping node non necessitano più di essere aggiunte al file <filename>ha.cf</filename>. Sarà sufficiente includere gli host nella lista delle risorse ping definite."
+
+#. Tag: para
+#, no-c-format
+msgid "Simply include the lists of hosts in your ping resource(s)."
+msgstr ""
 
 #. Tag: title
 #, no-c-format

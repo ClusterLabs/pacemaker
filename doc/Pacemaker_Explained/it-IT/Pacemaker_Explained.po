@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2011-04-19 10:27+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -14,8 +14,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#, no-c-format
-msgid "Receiving Notification of Cluster Events"
+#, fuzzy, no-c-format
+msgid "Receiving Notification for Cluster Events"
 msgstr "Ricevere notifiche in merito agli eventi del Cluster"
 
 #. Tag: title
@@ -34,18 +34,18 @@ msgid "Further Reading"
 msgstr "Approfondimenti"
 
 #. Tag: para
-#, no-c-format
-msgid "Project Website: <ulink url=\"http://www.clusterlabs.org/\" /> and Documentation <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
+#, fuzzy, no-c-format
+msgid "Project Website <ulink url=\"http://www.clusterlabs.org/\" />"
+msgstr "Configurazione di Corosync: <ulink url=\"http://www.corosync.org/\" />"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Project Documentation <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
 msgstr "Sito del progetto: <ulink url=\"http://www.clusterlabs.org/\" /> e documentazione <ulink url=\"http://www.clusterlabs.org/wiki/Documentation\" />"
 
 #. Tag: para
-#, no-c-format
-msgid "Cluster Commands"
-msgstr "Comandi del Cluster"
-
-#. Tag: para
-#, no-c-format
-msgid "A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" />"
+#, fuzzy, no-c-format
+msgid "A comprehensive guide to cluster commands has been written by Novell<footnote><para><ulink url=\"http://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html\" /></para></footnote>"
 msgstr "Una guida completa ai comandi cluster è stata scritta da Novell ed è disponibile qui: <ulink url=\"http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html\" />"
 
 #. Tag: para
@@ -57,3 +57,6 @@ msgstr "Configurazione di Heartbeat: <ulink url=\"http://www.linux-ha.org/\" />"
 #, no-c-format
 msgid "Corosync Configuration: <ulink url=\"http://www.corosync.org/\" />"
 msgstr "Configurazione di Corosync: <ulink url=\"http://www.corosync.org/\" />"
+
+#~ msgid "Cluster Commands"
+#~ msgstr "Comandi del Cluster"

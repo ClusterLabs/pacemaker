@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:02\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -42,6 +43,11 @@ msgstr "Împărţirea cărţii în capitole şi trecerea validării"
 #. Tag: member
 #, no-c-format
 msgid "Re-organize book for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Converted to <ulink url=\"http://www.methods.co.nz/asciidoc\">asciidoc</ulink> (which is converted to docbook for use with <ulink url=\"https://fedorahosted.org/publican/\">Publican</ulink>)"
 msgstr ""
 
 #~ msgid "1"

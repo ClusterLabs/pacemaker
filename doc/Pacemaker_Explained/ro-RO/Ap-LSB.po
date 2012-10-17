@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -15,8 +16,8 @@ msgid "init-Script LSB Compliance"
 msgstr "Este acest script de init compatibil LSB?"
 
 #. Tag: para
-#, no-c-format
-msgid "The relevant part of <indexterm significance=\"preferred\"><primary>LSB init scripts</primary></indexterm><indexterm><primary>init scripts</primary><secondary>compatibility</secondary></indexterm>LSB spec<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" /></para></footnote> includes a description of all the return codes listed here."
+#, fuzzy, no-c-format
+msgid "The relevant part of <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">LSB spec</ulink> includes a description of all the return codes listed here."
 msgstr "Partea relevantă a <indexterm significance=\"preferred\"><primary>scripturi de init LSB</primary></indexterm><indexterm><primary>scripturi de init</primary><secondary>compatibilitate</secondary></indexterm>specificaţiei LSB<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink></para></footnote> include o descriere a tuturor codurilor de ieşire listate aici."
 
 #. Tag: para
@@ -30,9 +31,9 @@ msgid "Start (stopped):"
 msgstr "Porneşte (oprit):"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>/etc/init.d/some_service start ; echo \"result: $?\"</command>"
-msgstr "<command>/etc/init.d/some_service start ; echo \"rezultat: $?\"</command>"
+#, fuzzy, no-c-format
+msgid "# /etc/init.d/some_service start ; echo \"result: $?\""
+msgstr "<command> /etc/init.d/some_service start ; echo \"rezultat: $?\" </command>"
 
 #. Tag: para
 #, no-c-format
@@ -50,8 +51,8 @@ msgid "Status (running):"
 msgstr "Status (rulând):"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>/etc/init.d/some_service status ; echo \"result: $?\" </command>"
+#, fuzzy, no-c-format
+msgid "# /etc/init.d/some_service status ; echo \"result: $?\""
 msgstr "<command>/etc/init.d/some_service status ; echo \"rezultat: $?\" </command>"
 
 #. Tag: para
@@ -69,11 +70,6 @@ msgstr "A indicat scriptul dacă serviciul rula?"
 msgid "Start (running):"
 msgstr "Porneşte (rulând):"
 
-#. Tag: programlisting
-#, no-c-format
-msgid "<command> /etc/init.d/some_service start ; echo \"result: $?\" </command>"
-msgstr "<command> /etc/init.d/some_service start ; echo \"rezultat: $?\" </command>"
-
 #. Tag: para
 #, no-c-format
 msgid "Is the service still running?"
@@ -85,8 +81,8 @@ msgid "Stop (running):"
 msgstr "Opreşte (rulând):"
 
 #. Tag: programlisting
-#, no-c-format
-msgid "<command>/etc/init.d/some_service stop ; echo \"result: $?\" </command>"
+#, fuzzy, no-c-format
+msgid "# /etc/init.d/some_service stop ; echo \"result: $?\""
 msgstr "<command>/etc/init.d/some_service stop ; echo \"rezultat: $?\" </command>"
 
 #. Tag: para
@@ -139,3 +135,5 @@ msgstr "Scriptul poate folosi unul din codurile de eroare (altul decât 3) lista
 msgid "If the answer to any of the above questions is no, then the script is not LSB compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
 msgstr "Dacă răspunsul la oricare din întrebările de mai sus este nu, atunci scriptul nu este compatibil LSB. Opţiunile disponibile în acel moment sunt fie de a repara scriptul fie de a scrie un agent OCF bazat pe scriptul existent."
 
+#~ msgid "<command>/etc/init.d/some_service start ; echo \"result: $?\"</command>"
+#~ msgstr "<command>/etc/init.d/some_service start ; echo \"rezultat: $?\"</command>"

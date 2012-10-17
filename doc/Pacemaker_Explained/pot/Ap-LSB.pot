@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The relevant part of <indexterm significance=\"preferred\"><primary>LSB init scripts</primary></indexterm><indexterm><primary>init scripts</primary><secondary>compatibility</secondary></indexterm>LSB spec<footnote><para> <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\" /></para></footnote> includes a description of all the return codes listed here."
+msgid "The relevant part of <ulink url=\"http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html\">LSB spec</ulink> includes a description of all the return codes listed here."
 msgstr ""
 
 #. Tag: para
@@ -34,7 +34,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>/etc/init.d/some_service start ; echo \"result: $?\"</command>"
+msgid "# /etc/init.d/some_service start ; echo \"result: $?\""
 msgstr ""
 
 #. Tag: para
@@ -54,7 +54,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>/etc/init.d/some_service status ; echo \"result: $?\" </command>"
+msgid "# /etc/init.d/some_service status ; echo \"result: $?\""
 msgstr ""
 
 #. Tag: para
@@ -72,11 +72,6 @@ msgstr ""
 msgid "Start (running):"
 msgstr ""
 
-#. Tag: programlisting
-#, no-c-format
-msgid "<command> /etc/init.d/some_service start ; echo \"result: $?\" </command>"
-msgstr ""
-
 #. Tag: para
 #, no-c-format
 msgid "Is the service still running?"
@@ -89,7 +84,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>/etc/init.d/some_service stop ; echo \"result: $?\" </command>"
+msgid "# /etc/init.d/some_service stop ; echo \"result: $?\""
 msgstr ""
 
 #. Tag: para

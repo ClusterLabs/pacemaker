@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-12-15T23:32:36\n"
+"POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:35+0800\n"
 "Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
 "Language-Team: None\n"
@@ -39,8 +39,8 @@ msgid "The example cluster will use:"
 msgstr "示例集群会使用以下软件:"
 
 #. Tag: para
-#, no-c-format
-msgid "&DISTRO; &amp;DISTRO_VERSION; as the host operating system"
+#, fuzzy, no-c-format
+msgid "&DISTRO; &DISTRO_VERSION; as the host operating system"
 msgstr "&DISTRO; &amp;DISTRO_VERSION; 作为基本操作系统"
 
 #. Tag: para
@@ -65,11 +65,8 @@ msgstr "GFS2 作为集群文件系统（主/主模式中）"
 
 #. Tag: para
 #, no-c-format
-msgid "The crm shell for displaying the configuration and making changes"
-msgstr "crm shell 来显示并修改配置文件"
-
-#. Tag: para
-#, no-c-format
 msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
 msgstr "虽然给出了图形化安装Fedora的过程，并且有很多截图，但是本文的主要是靠命令来操作，包括为什么要运行这个命令和这些操作产生的结果。(译者注:本文中基本是crm shell来操作的，这里应该是老版本文档的遗留)"
 
+#~ msgid "The crm shell for displaying the configuration and making changes"
+#~ msgstr "crm shell 来显示并修改配置文件"

@@ -122,10 +122,10 @@ pot:
 	done
 
 # Update the actual translations
-po:
+po: pot
 	for book in $(docbook); do 				      \
 		echo "Updating translations in: $$book";     \
-		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=$(DOCBOOK_LANGS) );\
+		( cd $$book && RPM_BUILD_DIR="" $(PUBLICAN) update_po --langs=all );\
 	done
 
 if BUILD_DOCBOOK

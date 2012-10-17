@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2012-02-27T09:17:56\n"
-"PO-Revision-Date: 2012-02-27T09:17:56\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
+"PO-Revision-Date: 2012-10-17T05:19:01\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -89,45 +89,45 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "Allows change of cluster stack type<footnote> <para> <indexterm significance=\"preferred\"><primary>Cluster Stack</primary><secondary>switching between</secondary></indexterm> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para> </footnote>"
+msgid "Allows change of cluster stack type <indexterm> <primary>Cluster</primary><secondary>Switching between Stacks</secondary> </indexterm> <indexterm> <primary>Switching between Stacks</primary> </indexterm> <indexterm> <primary>Changing Cluster Stack</primary> </indexterm> <footnote><para> For example, switching from Heartbeat to Corosync. Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported. </para></footnote>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Shutdown</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Shutdown Upgrade</primary></indexterm> Shutdown"
+msgid "Shutdown <indexterm> <primary>Upgrade</primary><secondary>Shutdown</secondary> </indexterm> <indexterm> <primary>Shutdown</primary> </indexterm> <indexterm> <primary>Shutdown Upgrade</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "yes"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "always"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "N/A"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "no"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Rolling</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Rolling Upgrade</primary></indexterm> Rolling"
+msgid "Rolling <indexterm> <primary>Upgrade</primary><secondary>Rolling</secondary> </indexterm> <indexterm> <primary>Rolling</primary> </indexterm> <indexterm> <primary>Rolling Upgrade</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
-msgid "<indexterm significance=\"preferred\"><primary>Upgrade</primary><secondary>Reattach</secondary></indexterm> <indexterm significance=\"preferred\"><primary>Reattach Upgrade</primary></indexterm> Reattach"
+msgid "Reattach <indexterm> <primary>Upgrade</primary><secondary>Reattach</secondary> </indexterm> <indexterm> <primary>Reattach</primary> </indexterm> <indexterm> <primary>Reattach Upgrade</primary> </indexterm>"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "only due to failure"
 msgstr ""
@@ -159,7 +159,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Check the configuration manually or with the <command>crm_verify</command> tool if available."
+msgid "Check the configuration manually or with the <literal>crm_verify</literal> tool if available."
 msgstr ""
 
 #. Tag: para
@@ -179,22 +179,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. If there is sufficient demand, the work to repair 0.6 -&gt; 1.0 compatibility will be carried out. Otherwise, please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
+msgid "Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0. Please try one of the other upgrade strategies. Detach/Reattach is a particularly good option for most people."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "On the first node, check the configuration manually or with the <command>crm_verify</command> tool if available."
+msgid "On each node: . Shutdown the cluster stack (Heartbeat or Corosync) . Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system. .. On the first node, check the configuration manually or with the <literal>crm_verify</literal> tool if available. .. Start the cluster stack."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Start the cluster stack. This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
+msgid "+ This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using. Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Repeat for each node in the cluster."
+msgid "+ .. Repeat for each node in the cluster."
 msgstr ""
 
 #. Tag: title
@@ -212,57 +212,57 @@ msgstr ""
 msgid "Oldest Compatible Version"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 1.0.x"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 1.0.0"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.7.x"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.6 or Heartbeat 2.1.3"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Pacemaker 0.6.x"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.8"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.1.3 (or less)"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.4"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.4 (or less)"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "Heartbeat 2.0.0"
 msgstr ""
 
-#. Tag: entry
+#. Tag: para
 #, no-c-format
 msgid "None. Use an alternate upgrade strategy."
 msgstr ""
@@ -299,12 +299,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Tell the cluster to stop managing services. This is required to allow the services to remain active after the cluster shuts down."
+msgid "Tell the cluster to stop managing services."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This is required to allow the services to remain active after the cluster shuts down."
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_attribute -t crm_config -n is-managed-default -v false </command>"
+msgid "# crm_attribute -t crm_config -n is-managed-default -v false"
 msgstr ""
 
 #. Tag: para
@@ -314,12 +319,22 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false </command>"
+msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v false"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Upgrade the cluster stack program - This may also include upgrading the underlying operating system."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster stack."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack."
 msgstr ""
 
 #. Tag: para
@@ -334,7 +349,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_attribute -t crm_config -n is-managed-default -v true </command>"
+msgid "# crm_attribute -t crm_config -n is-managed-default -v true"
 msgstr ""
 
 #. Tag: para
@@ -344,7 +359,7 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "<command>crm_resource -t primitive -r &lt;rsc_id&gt; -p is-managed -v false</command>"
+msgid "# crm_resource -t primitive -r $rsc_id -p is-managed -v true"
 msgstr ""
 
 #. Tag: title

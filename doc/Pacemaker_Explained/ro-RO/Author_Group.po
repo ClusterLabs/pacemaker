@@ -1,10 +1,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Clusters from Scratch 1.1\n"
-"POT-Creation-Date: 2012-01-01T17:48:32\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2012-01-01T17:48:32\n"
 "Last-Translator: Dan Frîncu <df.cluster@gmail.com>\n"
 "Language-Team: None\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -24,6 +25,11 @@ msgstr "Beekhof"
 msgid "Red Hat"
 msgstr "Red Hat"
 
+#. Tag: contrib
+#, no-c-format
+msgid "Primary author"
+msgstr ""
+
 #. Tag: firstname
 #, no-c-format
 msgid "Dan"
@@ -39,3 +45,92 @@ msgstr "Frîncu"
 msgid "Romanian translation"
 msgstr "Traducerea în limba română"
 
+#. Tag: firstname
+#, no-c-format
+msgid "Philipp"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Marek"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "LINBit"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Style and formatting updates. Indexing."
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Tanja"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Roth"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "SUSE"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Utilization chapter"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Resource Templates chapter"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Multi-Site Clusters chapter"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Lars"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Marowsky-Bree"
+msgstr ""
+
+#. Tag: firstname
+#, fuzzy, no-c-format
+msgid "Yan"
+msgstr "Dan"
+
+#. Tag: surname
+#, no-c-format
+msgid "Gao"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Thomas"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Schraitle"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Dejan"
+msgstr ""
+
+#. Tag: surname
+#, no-c-format
+msgid "Muhamedagic"
+msgstr ""

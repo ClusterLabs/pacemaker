@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-10-12 10:18+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -25,17 +25,17 @@ msgstr "Storia"
 
 #. Tag: para
 #, no-c-format
-msgid "Why is the Project Called Pacemaker?"
-msgstr "Perché il progetto è chiamato Pacemaker?"
+msgid "Why is the Project Called <indexterm significance=\"preferred\"><primary>Pacemaker</primary><secondary>naming</secondary></indexterm>Pacemaker?"
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "First of all, the reason its not called the CRM is because of the abundance of <ulink url=\"http://en.wikipedia.org/wiki/CRM\">terms</ulink> that are commonly abbreviated to those three letters."
+#, fuzzy, no-c-format
+msgid "First of all, the reason its not called the CRM is because of the abundance of terms<footnote><para><ulink url=\"http://en.wikipedia.org/wiki/CRM\" /></para></footnote> that are commonly abbreviated to those three letters."
 msgstr "Prima di tutto non è chiamato CRM per via dell'abbondanza di <ulink url=\"http://en.wikipedia.org/wiki/CRM\">termini</ulink> a cui l'acronimo corrisponde."
 
 #. Tag: para
-#, no-c-format
-msgid "The Pacemaker name came from <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
+#, fuzzy, no-c-format
+msgid "The Pacemaker name came from Kham<footnote><para><ulink url=\"http://khamsouk.souvanlasy.com/\" /></para></footnote>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
 msgstr "Il nome Pacemaker deriva da <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, un caro amico, e venne originariamente usato per una GUI Java che stavo costruendo all'inizio del 2007. Purtroppo altri impegni hanno portato la GUI a non progredire a sufficienza e quando venne il momento di scegliere un nome per questo progetto, Lars suggerì che calzava ancora meglio su un CRM indipendente."
 
 #. Tag: para
@@ -44,8 +44,8 @@ msgid "The idea stems from the analogy between the role of this software and tha
 msgstr "L'idea su basa sull'analogia del ruolo di questo software con il piccolo dispositivo che mantiene il cuore umano in grado di pompare. Pacemaker controlla il cluster ed interviene quando necessario per assicurare il buon funzionamento dei servizi che fornisce."
 
 #. Tag: para
-#, no-c-format
-msgid "There were a number of other names (and acronyms) tossed around, but suffice to say &#34;Pacemaker&#34; was the best"
+#, fuzzy, no-c-format
+msgid "There were a number of other names (and acronyms) tossed around, but suffice to say \"Pacemaker\" was the best"
 msgstr "Ci furono diversi altri nomi (ed acronimi) proposti, ma è sufficiente affermare che &#34;Pacemaker&#34; era il migliore"
 
 #. Tag: para
@@ -85,8 +85,8 @@ msgstr "Setup"
 
 #. Tag: para
 #, no-c-format
-msgid "What Messaging Layers are Supported?"
-msgstr "Quali Messaging Layers sono supportati?"
+msgid "What <indexterm significance=\"preferred\"><primary>Messaging Layers </primary></indexterm>Messaging Layers are Supported?"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -104,8 +104,8 @@ msgid "Can I Choose which Messaging Layer to use at Run Time?"
 msgstr "E' possibile scegliere a runtime il Message Layer da usare?"
 
 #. Tag: para
-#, no-c-format
-msgid "Yes. The CRM will automatically detect who started it and behave accordingly."
+#, fuzzy, no-c-format
+msgid "Yes. The CRM will automatically detect which started it and behave accordingly."
 msgstr "Sì. Il CRM identificherà da chi è stato avviato, comportandosi di conseguenza."
 
 #. Tag: para
@@ -134,18 +134,13 @@ msgid "Where Can I Get Pre-built Packages?"
 msgstr "Dove si possono reperire pacchetti pre compilati?"
 
 #. Tag: para
-#, no-c-format
-msgid "Official packages for most major .rpm and based distributions are available from:"
+#, fuzzy, no-c-format
+msgid "Official packages for most major .rpm and based distributions are available from the ClusterLabs Website<footnote><para><ulink url=\"http://www.clusterlabs.org/rpm\" /></para></footnote>."
 msgstr "I pacchetti ufficiali per le distribuzioni basate su rpm sono disponibili presso:"
 
 #. Tag: para
-#, no-c-format
-msgid "<ulink url=\"http://www.clusterlabs.org/rpm\" />"
-msgstr "<ulink url=\"http://www.clusterlabs.org/rpm\" />"
-
-#. Tag: para
-#, no-c-format
-msgid "For Debian packages, building from source and details on using the above repositories, see our <ulink url=\"http://clusterlabs.org/wiki/Install\">installation page</ulink>."
+#, fuzzy, no-c-format
+msgid "For Debian packages, building from source and details on using the above repositories, see our installation page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Install\" /></para></footnote>."
 msgstr "Per i pacchetti Debian, compilare dai sorgenti e dettagli sull'utilizzo dei repository indicati sopra, vedere la nostra <ulink url=\"http://clusterlabs.org/wiki/Install\">Pagina di installazione</ulink>."
 
 #. Tag: para
@@ -154,8 +149,8 @@ msgid "What Versions of Pacemaker Are Supported?"
 msgstr "Quali versioni di Pacemaker sono supportate?"
 
 #. Tag: para
-#, no-c-format
-msgid "Please refer to the <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> page for an up-to-date list of versions supported directly by the project."
+#, fuzzy, no-c-format
+msgid "Please refer to the Releases page<footnote><para><ulink url=\"http://clusterlabs.org/wiki/Releases\" /></para></footnote> for an up-to-date list of versions supported directly by the project."
 msgstr "Riferirsi alla pagina <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> per una lista aggiornata delle versioni supportate direttamente dal progetto."
 
 #. Tag: para
@@ -163,3 +158,11 @@ msgstr "Riferirsi alla pagina <ulink url=\"http://clusterlabs.org/wiki/Releases\
 msgid "When seeking assistance, please try to ensure you have one of these versions."
 msgstr "Quando si necessita di assistenza è ideale utilizzare una di queste versioni."
 
+#~ msgid "Why is the Project Called Pacemaker?"
+#~ msgstr "Perché il progetto è chiamato Pacemaker?"
+
+#~ msgid "What Messaging Layers are Supported?"
+#~ msgstr "Quali Messaging Layers sono supportati?"
+
+#~ msgid "<ulink url=\"http://www.clusterlabs.org/rpm\" />"
+#~ msgstr "<ulink url=\"http://www.clusterlabs.org/rpm\" />"

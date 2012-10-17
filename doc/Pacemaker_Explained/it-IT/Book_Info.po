@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"POT-Creation-Date: 2012-10-17T05:19:01\n"
 "PO-Revision-Date: 2011-04-07 13:27+0100\n"
 "Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
 "Language-Team: None\n"
@@ -19,8 +19,8 @@ msgid "Configuration Explained"
 msgstr "Configuration Explained"
 
 #. Tag: subtitle
-#, no-c-format
-msgid "An A-Z guide to Pacemaker&#39;s Configuration Options"
+#, fuzzy, no-c-format
+msgid "An A-Z guide to Pacemaker's Configuration Options"
 msgstr "Una guida dalla A alla Z alle opzioni di configurazione di Pacemaker"
 
 #. Tag: productname
@@ -29,16 +29,16 @@ msgid "Pacemaker"
 msgstr "Pacemaker"
 
 #. Tag: para
-#, no-c-format
-msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB."
+#, fuzzy, no-c-format
+msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this, it will focus exclusively on the XML syntax used to configure the CIB."
 msgstr "Lo scopo di questo documento e di spiegare definitivamente i concetti utilizzati per configurare Pacemaker. Per ottenere il risultato migliore, si focalizzerà esclusivamente sulla sintassi XML utilizzata per configurare il CIB"
 
 #. Tag: para
-#, no-c-format
-msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document <footnote> <para>It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood.</para> </footnote> , precisely because they hide the XML."
+#, fuzzy, no-c-format
+msgid "For those that are allergic to XML, there exist several unified shells and GUIs for Pacemaker. However these tools will not be covered at all in this document<footnote> <para>I hope, however, that the concepts explained here make the functionality of these tools more easily understood.</para> </footnote>, precisely because they hide the XML."
 msgstr "Per tutti gli allergici ad XML Pacemaker dispone di una cluster shell ed una GUI scritta in Python, ma questi strumenti non verranno assolutamente trattati in questo documento <footnote> <para>Si spera comunque che attraverso l'apprendimento dei concetti spiegati qui le funzionalità di questi strumenti possano essere compresi ancora meglio.</para> </footnote> , in particolare perché questi nascondono l'XML."
 
 #. Tag: para
-#, no-c-format
-msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster."
+#, fuzzy, no-c-format
+msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster. Try the <ulink url=\"http://www.clusterlabs.org/doc\">Clusters from Scratch</ulink> document instead."
 msgstr "In aggiunta, questo documento NON E' una guida passo passo per configurare specifici scenari cluster. Sebbene queste guide esistano, lo scopo di questo documento è di far acquisire fondamentea che possano essere utilizzate per costruire qualsiasi tipo di cluster Pacemaker."
