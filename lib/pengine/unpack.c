@@ -932,13 +932,11 @@ clone_strip(const char *last_rsc_id)
     char *zero = NULL;
 
     CRM_CHECK(last_rsc_id != NULL, return NULL);
-    if (last_rsc_id != NULL) {
-        lpc = strlen(last_rsc_id);
-    }
-
+    lpc = strlen(last_rsc_id);
     while (--lpc > 0) {
         switch (last_rsc_id[lpc]) {
             case 0:
+                crm_err("Empty string: %s", last_rsc_id);
                 return NULL;
                 break;
             case '0':
@@ -958,11 +956,12 @@ clone_strip(const char *last_rsc_id)
                 zero[lpc] = 0;
                 return zero;
             default:
-                zero = strdup(last_rsc_id);
-                return zero;
+                goto done;
         }
     }
-    return NULL;
+  done:
+    zero = strdup(last_rsc_id);
+    return zero;
 }
 
 char *
@@ -1000,17 +999,18 @@ clone_zero(const char *last_rsc_id)
                 zero[lpc + 2] = 0;
                 return zero;
             default:
-                lpc = strlen(last_rsc_id);
-                zero = calloc(1, lpc + 3);
-                memcpy(zero, last_rsc_id, lpc);
-                zero[lpc] = ':';
-                zero[lpc + 1] = '0';
-                zero[lpc + 2] = 0;
-                crm_trace("%s -> %s", last_rsc_id, zero);
-                return zero;
+                goto done;
         }
     }
-    return NULL;
+  done:
+    lpc = strlen(last_rsc_id);
+    zero = calloc(1, lpc + 3);
+    memcpy(zero, last_rsc_id, lpc);
+    zero[lpc] = ':';
+    zero[lpc + 1] = '0';
+    zero[lpc + 2] = 0;
+    crm_trace("%s -> %s", last_rsc_id, zero);
+    return zero;
 }
 
 static resource_t *
