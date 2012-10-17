@@ -1,0 +1,609 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2012-05-07 13:13+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Status - Here be dragons"
+msgstr "Status - Here be dragons"
+
+#. Tag: para
+#, no-c-format
+msgid "Most users never need understand the contents of the status section and can be content with the output from <command>crm_mon</command>. However for those with a curious inclination, the following attempts to provide an overview of its contents."
+msgstr "Molti utenti non hanno necessità di capire il contenuto della sezione status e possono ritenersi soddisfatti con l'output di <command>crm_mon</command>. Ad ogni modo, per quanti possiedono una vena curiosa, quanto segue rappresenta una panoramica sull'argomento."
+
+#. Tag: title
+#, no-c-format
+msgid "Node Status"
+msgstr "Stato dei nodi"
+
+#. Tag: para
+#, no-c-format
+msgid "In addition to the cluster&#39;s configuration, the CIB holds an up-to-date representation of each cluster node in the status section."
+msgstr "Inaggiunta alla configurazione del cluster, il CIB, all'interno della sezione status, contiene una rappresentazione aggiornata di ciascun nodo del cluster."
+
+#. Tag: title
+#, no-c-format
+msgid "A bare-bones status entry for a healthy node called cl-virt-1"
+msgstr "Una entry nuda e cruda dello stato del nodo chiamato cl-virt-1"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;node_state id=&#34;cl-virt-1&#34; uname=&#34;cl-virt-2&#34; ha=&#34;active&#34; in_ccm=&#34;true&#34; crmd=&#34;online&#34; join=&#34;member&#34; expected=&#34;member&#34; crm-debug-origin=&#34;do_update_resource&#34;&#62;\n"
+"   &#60;transient_attributes id=&#34;cl-virt-1&#34;/&#62;\n"
+"   &#60;lrm id=&#34;cl-virt-1&#34;/&#62;\n"
+"  &#60;/node_state&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"  &#60;node_state id=&#34;cl-virt-1&#34; uname=&#34;cl-virt-2&#34; ha=&#34;active&#34; in_ccm=&#34;true&#34; crmd=&#34;online&#34; join=&#34;member&#34; expected=&#34;member&#34; crm-debug-origin=&#34;do_update_resource&#34;&#62;\n"
+"   &#60;transient_attributes id=&#34;cl-virt-1&#34;/&#62;\n"
+"   &#60;lrm id=&#34;cl-virt-1&#34;/&#62;\n"
+"  &#60;/node_state&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "Users are highly recommended <emphasis>not to modify</emphasis> any part of a node&#39;s state <emphasis>directly</emphasis>. The cluster will periodically regenerate the entire section from authoritative sources. So any changes should be with the tools for those subsystems."
+msgstr "E' vivamente consigliato <emphasis>non modificare</emphasis> le parti dello stato di un nodo <emphasis>direttamente</emphasis>. Il cluster periodicamente rigenera l'intera sezione da sorgenti autoritative. Quindi qualsiasi cambiamento dovrà essere effettuato mediante i sotto sistemi disponibili."
+
+#. Tag: title
+#, no-c-format
+msgid "Authoritative Sources for State Information"
+msgstr "Sorgenti autoritative per le informazioni di stato"
+
+#. Tag: entry
+#, no-c-format
+msgid "Dataset"
+msgstr "Dataset"
+
+#. Tag: entry
+#, no-c-format
+msgid "Authoritative Source"
+msgstr "Sorgente autoritativa"
+
+#. Tag: entry
+#, no-c-format
+msgid "node_state fields"
+msgstr "campi node_state"
+
+#. Tag: entry
+#, no-c-format
+msgid "crmd"
+msgstr "crmd"
+
+#. Tag: entry
+#, no-c-format
+msgid "transient_attributes tag"
+msgstr "tag transient_attributes"
+
+#. Tag: entry
+#, no-c-format
+msgid "attrd"
+msgstr "attrd"
+
+#. Tag: entry
+#, no-c-format
+msgid "lrm tag"
+msgstr "tag lrm"
+
+#. Tag: entry
+#, no-c-format
+msgid "lrmd"
+msgstr "lrmd"
+
+#. Tag: para
+#, no-c-format
+msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker&#39;s origins as the Heartbeat resource manager. They have remained unchanged to preserve compatibility with older versions."
+msgstr "I campi usati negli oggetti <literal>node_state</literal> sono nominati in questo modo per ragioni storiche ed affondano le proprie radici nelle origini di Pacemaker come resource manager di Heartbeat. Sono rimasti immutati per retro compatibilità."
+
+#. Tag: title
+#, no-c-format
+msgid "Node Status Fields"
+msgstr "Campi relativi allo status dei nodi"
+
+#. Tag: entry
+#, no-c-format
+msgid "Field"
+msgstr "Campo"
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr "Descrizione"
+
+#. Tag: entry
+#, no-c-format
+msgid "id"
+msgstr "id"
+
+#. Tag: entry
+#, no-c-format
+msgid "Unique identifier for the node. Corosync based clusters use the same value as uname, Heartbeat cluster use a human-readable (but annoying) UUID."
+msgstr "Identificatore univoco per il nodo. I cluster basati su Corosync utilizzano lo stesso valore di numae, mentre quelli Heartbeat sono UUID leggibili (ma tediosi)."
+
+#. Tag: entry
+#, no-c-format
+msgid "uname"
+msgstr "uname"
+
+#. Tag: entry
+#, no-c-format
+msgid "The node&#39;s machine name (output from uname -n)"
+msgstr "Il nome macchina del nodo (dall'output di uname -n)"
+
+#. Tag: entry
+#, no-c-format
+msgid "ha"
+msgstr "ha"
+
+#. Tag: entry
+#, no-c-format
+msgid "Is the cluster software active on the node. Allowed values: active, dead"
+msgstr "Il cluster software attivo nel nodo. Valori permessi: active, dead"
+
+#. Tag: entry
+#, no-c-format
+msgid "in_ccm"
+msgstr "in_ccm"
+
+#. Tag: entry
+#, no-c-format
+msgid "Is the node part of the cluster&#39;s membership. Allowed values: true, false"
+msgstr "E' la parte del nodo relativa ai membri del cluster. Valori permessi: true, false"
+
+#. Tag: entry
+#, no-c-format
+msgid "Is the crmd process active on the node. Allowed values: online, offline"
+msgstr "E' lo stato del processo crmd nel nodo. Valori permesse: online, offline"
+
+#. Tag: entry
+#, no-c-format
+msgid "join"
+msgstr "join"
+
+#. Tag: entry
+#, no-c-format
+msgid "Is the node participating in hosting resources. Allowed values: down, pending, member, banned"
+msgstr "Determina se il nodo sta partecipando all'erogazione delle risorse. Valori permessi: down, pending, member, banned"
+
+#. Tag: entry
+#, no-c-format
+msgid "expected"
+msgstr "expected"
+
+#. Tag: entry
+#, no-c-format
+msgid "Expected value for join"
+msgstr "Valore atteso per join"
+
+#. Tag: entry
+#, no-c-format
+msgid "crm-debug-origin"
+msgstr "crm-debug-origin"
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. The origin of the most recent change(s)."
+msgstr "Indicatore diagnostico. L'origine del cambiamento o dei cambiamenti più recenti."
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster uses these fields to determine if, at the node level, the node is healthy or is in a failed state and needs to be fenced."
+msgstr "Il cluster utilizza questi campi per determinare se, a livello di nodo, il nodo è sano o in uno stato fallito e necessita di essere ucciso (fenced)."
+
+#. Tag: title
+#, no-c-format
+msgid "Transient Node Attributes"
+msgstr "Attributi dei nodi transitori"
+
+#. Tag: para
+#, no-c-format
+msgid "Like regular <link linkend=\"s-node-attributes\">node attributes</link>, the name/value pairs listed here also help describe the node. However they are forgotten by the cluster when the node goes offline. This can be useful, for instance, when you only want a node to be in standby mode (not able to run resources) until the next reboot."
+msgstr "Come gli <link linkend=\"s-node-attributes\">attributi del nodo</link> regolari, la coppia nome/valore listata qui aiuta a descrivere il nodo. Ad ogni modo tali valori vengono dimenticati dal cluster quando il nodo va offline. Questo può essere utile, ad esempio, quando si vuole che un nodo rimanga in standby mode (quindi inabile ad erogare risorse) fino al successivo reboot."
+
+#. Tag: para
+#, no-c-format
+msgid "In addition to any values the administrator sets, the cluster will also store information about failed resources here."
+msgstr "In aggiunta a qualsiasi valore impostato dall'amministratore, il cluster registrerà informazioni a proposito di azioni fallite."
+
+#. Tag: title
+#, no-c-format
+msgid "Example set of transient node attributes for node &#34;cl-virt-1&#34;"
+msgstr "Esempio di set di attributi dei nodi transitori per il nodo &#34;cl-virt-1&#34;"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"     &#60;transient_attributes id=&#34;cl-virt-1&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;status-cl-virt-1&#34;&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-pingd&#34; name=&#34;pingd&#34; value=&#34;3&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-probe_complete&#34; name=&#34;probe_complete&#34; value=&#34;true&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-fail-count-pingd:0&#34; name=&#34;fail-count-pingd:0&#34; value=&#34;1&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-last-failure-pingd:0&#34; name=&#34;last-failure-pingd:0&#34; value=&#34;1239009742&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/transient_attributes&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"     &#60;transient_attributes id=&#34;cl-virt-1&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;status-cl-virt-1&#34;&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-pingd&#34; name=&#34;pingd&#34; value=&#34;3&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-probe_complete&#34; name=&#34;probe_complete&#34; value=&#34;true&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-fail-count-pingd:0&#34; name=&#34;fail-count-pingd:0&#34; value=&#34;1&#34;/&#62;\n"
+"       &#60;nvpair id=&#34;status-cl-virt-1-last-failure-pingd:0&#34; name=&#34;last-failure-pingd:0&#34; value=&#34;1239009742&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/transient_attributes&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"In the above example, we can see that the pingd:0 resource has failed once, at <literal>Mon Apr 6 11:22:22 2009</literal>. <footnote> <para>You can use the following Perl one-liner to print a human readable of any seconds-since-epoch value:</para> <para><command>perl -e &#39;print scalar(localtime(<literal>$seconds</literal>)).&#34;\\n"
+"&#34;&#39;</command></para> </footnote> We also see that the node is connected to three &#34;pingd&#34; peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
+msgstr ""
+"Nell'esempio sopra, si può osservare che la risorsa pingd:0 è fallita una volta in data <literal>Mon Apr 6 11:22:22 2009</literal>. <footnote> <para>E' possibile utilizzare questo script perl per rendere comprensibie il valore data:</para><para><command>perl -e &#39;print scalar(localtime(<literal>$seconds</literal>)).&#34;\\n"
+"&#34;&#39;</command></para> </footnote> E' possibie inoltre osservare come il nodo sia connesso a tre punti &#34;pingd&#34; a come tutte le risorse conosciute siano state controllate da questa macchina (<literal>probe_complete</literal>)."
+
+#. Tag: title
+#, no-c-format
+msgid "Operation History"
+msgstr "Storico delle operazioni"
+
+#. Tag: para
+#, no-c-format
+msgid "A node&#39;s resource history is held in the <literal>lrm_resources</literal> tag (a child of the lrm tag). The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section. Specifically we store the resource&#39;s <literal>id, class, type</literal> and <literal>provider</literal>."
+msgstr "Lo storico di una risorsa relativo al nodo è contenuto nel tag (che è un tag figlio del tag lrm) <literal>lrm_resources</literal>. Le informazioni registrate qui includono sufficienti dati per il cluster affinché stoppi la risorsa in sicureza se questa viene rimossa dalla sezione <literal>configuration</literal>. Specificamente vengono registrati per la risorsa i valori <literal>id, class, type</literal> e <literal>provider</literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "A record of the apcstonith resource"
+msgstr "Un record della risorsa apcstonith"
+
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"  &#60;lrm_resource id=&#34;apcstonith&#34; type=&#34;apcmastersnmp&#34; class=&#34;stonith&#34;&#62;\n"
+"\t"
+msgstr ""
+"\n"
+"  &#60;lrm_resource id=&#34;apcstonith&#34; type=&#34;apcmastersnmp&#34; class=&#34;stonith&#34;&#62;\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, we store the last job for every combination of <literal>resource, action</literal> and <literal>interval</literal>. The concatenation of the values in this tuple are used to create the id of the <literal>lrm_rsc_op</literal> object."
+msgstr "In aggiunta, viene registrato l'ultimo job per ciascuna combinazione di <literal>resource, action</literal> e <literal>interval</literal>. La concatenazione di valori in questa tupla viene usata per creare l'id dell'oggetto <literal>lrm_rsc_op</literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "Contents of an lrm_rsc_op job."
+msgstr "Contenuti di un job lrm_rsc_op."
+
+#. Tag: entry
+#, no-c-format
+msgid "Identifier for the job constructed from the resource id, operation and interval."
+msgstr "Identificatore per il job costruito partendo dai valori della risorsa relativi a id, operation ed interval."
+
+#. Tag: entry
+#, no-c-format
+msgid "call-id"
+msgstr "call-id"
+
+#. Tag: entry
+#, no-c-format
+msgid "The job&#39;s ticket number. Used as a sort key to determine the order in which the jobs were executed."
+msgstr "Il numero di ticket del job. Utilizzato come una sorta di chiave per determirnare l'ordine in cui i job sono stati eseguiti."
+
+#. Tag: entry
+#, no-c-format
+msgid "operation"
+msgstr "operation"
+
+#. Tag: entry
+#, no-c-format
+msgid "The action the resource agent was invoked with."
+msgstr "L'azione con cui il resource agent è stato invocato."
+
+#. Tag: entry
+#, no-c-format
+msgid "interval"
+msgstr "interval"
+
+#. Tag: entry
+#, no-c-format
+msgid "The frequency, in milliseconds, at which the operation will be repeated. 0 indicates a one-off job."
+msgstr "La frequenza, in millisecondi, in cui l'operazione verrà ripetuta. 0 indica un job una tantum."
+
+#. Tag: entry
+#, no-c-format
+msgid "op-status"
+msgstr "op-status"
+
+#. Tag: entry
+#, no-c-format
+msgid "The job&#39;s status. Generally this will be either 0 (done) or -1 (pending). Rarely used in favor of rc-code."
+msgstr "Lo status del job. Generalmente questo sarà 0 (done) o -1 (pending). Raramente usato al posto di rc-code."
+
+#. Tag: entry
+#, no-c-format
+msgid "rc-code"
+msgstr "rc-code"
+
+#. Tag: entry
+#, no-c-format
+msgid "The job&#39;s result. Refer to <xref linkend=\"s-ocf-return-codes\" /> for details on what the values here mean and how they are interpreted."
+msgstr "Il risultato del job. Riferirsi a <xref linkend=\"s-ocf-return-codes\" /> per dettagli su cosa significano questi valori e come vengono interpretati."
+
+#. Tag: entry
+#, no-c-format
+msgid "last-run"
+msgstr "last-run"
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job was executed."
+msgstr "Indicatore diagnostico. Data/ora locale della macchina in cui il job è stato eseguito, in secondi da epoch (00:00:00 UTC on 1 January 1970)."
+
+#. Tag: entry
+#, no-c-format
+msgid "last-rc-change"
+msgstr "last-rc-change"
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job first returned the current value of rc-code"
+msgstr "Indicatore diagnostico. Data/ora locale della macchina in cui il job ha restituito la prima volta il valore di rc-code, in secondi da epoch (00:00:00 UTC on 1 January 1970)."
+
+#. Tag: entry
+#, no-c-format
+msgid "exec-time"
+msgstr "exec-time"
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. Time, in milliseconds, that the job was running for"
+msgstr "Indicatore diagnostico. Da quando il job è attivo, in millisecondi."
+
+#. Tag: entry
+#, no-c-format
+msgid "queue-time"
+msgstr "queue-time"
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd"
+msgstr "Indicatore diagnostico. Tempo in cui il job è stato accodato all'interno di LRMd, in secondi."
+
+#. Tag: entry
+#, no-c-format
+msgid "crm_feature_set"
+msgstr "crm_feature_set"
+
+#. Tag: entry
+#, no-c-format
+msgid "The version which this job description conforms to. Used when processing op-digest"
+msgstr "La versione a cui questa descrizione del job è conforme. Utilizzato quando si processa op-digest"
+
+#. Tag: entry
+#, no-c-format
+msgid "transition-key"
+msgstr "transition-key"
+
+#. Tag: entry
+#, no-c-format
+msgid "A concatenation of the job&#39;s graph action number, the graph number, the expected result and the UUID of the crmd instance that scheduled it. This is used to construct transition-magic (below)."
+msgstr "Una concatenazione del numero azione grafica del job, del numero grafico, del risultato atteso e dell'UUID dell'istanza crmd che l'ha schedulato. Viene usato per costruire la transition-magic (sotto)."
+
+#. Tag: entry
+#, no-c-format
+msgid "transition-magic"
+msgstr "transition-magic"
+
+#. Tag: entry
+#, no-c-format
+msgid "A concatenation of the job&#39;s op-status, rc-code and transition-key. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the crmd to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the crmd if the job entry was expected and whether it failed."
+msgstr "Una concatenazione del valore di op-status del job, di rc-code e del valore transition-key. L'unicità è garantita per l'intera vita del cluster (ciò assicura che sarà parte delle notifiche di update del CIB) e contiene tutte le informazioni necessarie a crmd per la corretta analisi ed elaborazione del lavoro completato. Più importante, gli elementi decomposti comunicano al crmd se le entry dei job erano attese e se non sono riuscite."
+
+#. Tag: entry
+#, no-c-format
+msgid "op-digest"
+msgstr "op-digest"
+
+#. Tag: entry
+#, no-c-format
+msgid "An MD5 sum representing the parameters passed to the job. Used to detect changes to the configuration and restart resources if necessary."
+msgstr "Un MD5 sum che rappresenta i parametri passati al job. Utilizzato per rilevare cambiamenti alla configurazione ed effettuare restart se necessario."
+
+#. Tag: entry
+#, no-c-format
+msgid "Diagnostic indicator. The origin of the current values."
+msgstr "Indicatore diagnostico. L'originie degli attuali valori."
+
+#. Tag: title
+#, no-c-format
+msgid "Simple Example"
+msgstr "Un semplice esempio"
+
+#. Tag: title
+#, no-c-format
+msgid "A monitor operation performed by the cluster to determine the current state of the apcstonith resource"
+msgstr "Un'operazione di monitor eseguita dal cluster per determinare lo stato attuale della risorsa apcstonith"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;lrm_resource id=&#34;apcstonith&#34; type=&#34;apcmastersnmp&#34; class=&#34;stonith&#34;&#62; \n"
+"    &#60;lrm_rsc_op id=&#34;apcstonith_monitor_0&#34; operation=&#34;monitor&#34; call-id=&#34;2&#34; rc-code=&#34;7&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;2e3da9274d3550dc6526fb24bfcbcba0&#34;\n"
+"\t\ttransition-key=&#34;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34;\n"
+"\t\ttransition-magic=&#34;0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239008085&#34; last-rc-change=&#34;1239008085&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"  &#60;/lrm_resource&#62;\n"
+"\n"
+"\t  "
+msgstr ""
+"\n"
+"\n"
+"  &#60;lrm_resource id=&#34;apcstonith&#34; type=&#34;apcmastersnmp&#34; class=&#34;stonith&#34;&#62; \n"
+"    &#60;lrm_rsc_op id=&#34;apcstonith_monitor_0&#34; operation=&#34;monitor&#34; call-id=&#34;2&#34; rc-code=&#34;7&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;2e3da9274d3550dc6526fb24bfcbcba0&#34;\n"
+"\t\ttransition-key=&#34;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34;\n"
+"\t\ttransition-magic=&#34;0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239008085&#34; last-rc-change=&#34;1239008085&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"  &#60;/lrm_resource&#62;\n"
+"\n"
+"\t  "
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, the job is a non-recurring monitor often referred to as a &#34;probe&#34; for the apcstonith resource. The cluster schedules probes for every configured resource on when a new node starts, in order to determine the resource&#39;s current state before it takes further any further action."
+msgstr "Nell'esempio sopra il job è un monitor non ricorrente spesso denominato &#34;probe&#34; per la risorsa apcstonith. Il cluster schedula delle interrogazioni per ogni risorsa configurata ogni volta che un nodo si avvia, in modo da determinare lo stato attuale della risora prima che questa compia qualsiasi altra azione."
+
+#. Tag: para
+#, no-c-format
+msgid "From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a). The third field of the <literal>transition-key</literal> contains a 7, this indicates that the job expects to find the resource inactive. By now looking at the rc-code property, we see that this was the case."
+msgstr "Mediante <literal>transition-key</literal> è possibile osservare che questa era la ventiduesima azione del secondo grafo prodotto da questa istanza di crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a). Il terzo coampo di <literal>transition-key</literal> contiene un 7 che indica come il job si aspetti di trovare la risorsa inattiva. Osservando alla proprietà di rc-code, si può concludere che è questo il caso."
+
+#. Tag: para
+#, no-c-format
+msgid "Evidently, the cluster started the resource elsewhere as that is the only job recorded for this node."
+msgstr "Evidentemente, il cluster ha avviato la risorsa altrove visto che quello è l'unico job registrato per questo nodo."
+
+#. Tag: title
+#, no-c-format
+msgid "Complex Resource History Example"
+msgstr "Un complesso esempio di storico per risorsa"
+
+#. Tag: title
+#, no-c-format
+msgid "Resource history of a pingd clone with multiple jobs"
+msgstr "Storico di una risorsa clone pingd con job multipli"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;lrm_resource id=&#34;pingd:0&#34; type=&#34;pingd&#34; class=&#34;ocf&#34; provider=&#34;pacemaker&#34;&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_monitor_30000&#34; operation=&#34;monitor&#34; call-id=&#34;34&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;30000&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;a0f8398dac7ced82320fe99fd20fbd2f&#34;\n"
+"\t\ttransition-key=&#34;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_stop_0&#34; operation=&#34;stop&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; call-id=&#34;32&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_start_0&#34; operation=&#34;start&#34; call-id=&#34;33&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34; /&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_monitor_0&#34; operation=&#34;monitor&#34; call-id=&#34;3&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239008085&#34; last-rc-change=&#34;1239008085&#34; exec-time=&#34;20&#34; queue-time=&#34;0&#34;/&#62;\n"
+"  &#60;/lrm_resource&#62;\n"
+"\n"
+"\t  "
+msgstr ""
+"\n"
+"\n"
+"  &#60;lrm_resource id=&#34;pingd:0&#34; type=&#34;pingd&#34; class=&#34;ocf&#34; provider=&#34;pacemaker&#34;&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_monitor_30000&#34; operation=&#34;monitor&#34; call-id=&#34;34&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;30000&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;a0f8398dac7ced82320fe99fd20fbd2f&#34;\n"
+"\t\ttransition-key=&#34;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_stop_0&#34; operation=&#34;stop&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; call-id=&#34;32&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34;/&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_start_0&#34; operation=&#34;start&#34; call-id=&#34;33&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239009741&#34; last-rc-change=&#34;1239009741&#34; exec-time=&#34;10&#34; queue-time=&#34;0&#34; /&#62;\n"
+"    &#60;lrm_rsc_op id=&#34;pingd:0_monitor_0&#34; operation=&#34;monitor&#34; call-id=&#34;3&#34; rc-code=&#34;0&#34; op-status=&#34;0&#34; interval=&#34;0&#34; \n"
+"\t\tcrm-debug-origin=&#34;do_update_resource&#34; crm_feature_set=&#34;3.0.1&#34; \n"
+"\t\top-digest=&#34;313aee7c6aad26e290b9084427bbab60&#34;\n"
+"\t\ttransition-key=&#34;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\ttransition-magic=&#34;0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a&#34; \n"
+"\t\tlast-run=&#34;1239008085&#34; last-rc-change=&#34;1239008085&#34; exec-time=&#34;20&#34; queue-time=&#34;0&#34;/&#62;\n"
+"  &#60;/lrm_resource&#62;\n"
+"\n"
+"\t  "
+
+#. Tag: para
+#, no-c-format
+msgid "When more than one job record exists, it is important to first sort them by <literal>call-id</literal> before interpret them. Once sorted, the above example can be summarized as:"
+msgstr "Quando esiste più di una registrazione per il job da interpretare, è importante l'ordinamento mediante <literal>call-id</literal>. Una volta ordinato, l'esempio sopra può essere riassunto come:"
+
+#. Tag: para
+#, no-c-format
+msgid "A non-recurring monitor operation returning 7 (not running), with a call-id of 3"
+msgstr "Un'operazione di monitor non ricorrente che restituisce 7 (not running), con un valore call-id di 3"
+
+#. Tag: para
+#, no-c-format
+msgid "A stop operation returning 0 (success), with a call-id of 32"
+msgstr "Un'operazione di stop che restituisce 0 (successo), con un call-id del valore di 32"
+
+#. Tag: para
+#, no-c-format
+msgid "A start operation returning 0 (success), with a call-id of 33"
+msgstr "Un'operazione di start che restituisce 0 (successo), con un call-id del valore di 33"
+
+#. Tag: para
+#, no-c-format
+msgid "A recurring monitor returning 0 (success), with a call-id of 34"
+msgstr "Un'operazione di monitor ricorrente che restituisce 0 (successo), con un call-id del valore di 34"
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster processes each job record to build up a picture of the resource&#39;s state. After the first and second entries, it is considered stopped and after the third it considered active. Based on the last operation, we can tell that the resource is currently active."
+msgstr "Il cluster processa ogni registrazione di job per costruire un disegno dello stato delle risorse. Dopo la prima e la seconda entry, è considerato stoppato e dopo la terza è considerato attivo. In base all'ultima operazione è possibile concludere che la risorsa è attualmente attiva."
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted. Specifically this occurred as part of actions 11 and 31 of transition 11 from the crmd instance with the key <literal>2668bbeb-06d5-40f9-936d-24cb7f87006a</literal>. This information can be helpful for locating the relevant section of the logs when looking for the source of a failure."
+msgstr "In aggiunta, dalla presenza di un'operazione di tipo <literal>stop</literal> con un numero minore di <literal>call-id</literal> rispetto al valore per l'operazione di <literal>start</literal>, è possibile concludere che la risorsa è stata avviata. Specificamente ciò è avvenuto come parte delle azioni 11 e 31 della transazione 11 dall'istanza crmd con chiave <literal>2668bbeb-06d5-40f9-936d-24cb7f87006a</literal>. Questa informazione può essere utile per localizzare la sezione del log rilevavnte se si è alla ricerca del motivo di un'anomalia."
+

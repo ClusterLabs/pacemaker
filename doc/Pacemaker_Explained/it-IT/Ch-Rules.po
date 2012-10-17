@@ -1,0 +1,935 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2012-01-30 17:16+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Rules"
+msgstr "Regole"
+
+#. Tag: para
+#, no-c-format
+msgid "Rules can be used to make your configuration more dynamic. One common example is to set one value for resource-stickiness during working hours, to prevent resources from being moved back to their most preferred location, and another on weekends when no-one is around to notice an outage."
+msgstr "Le regole possono essere utilizzate per rendere la propria configurazione più dinamica. Un esempio comune sta nell'impostare un valore di resource-stickiness durante le ore lavorative, per prevenire che le risorse vengano spostate alla loro posizione preferita, ed un altro nei weekend, quando l'impatto dell'operazione di spostamento non verrà notato."
+
+#. Tag: para
+#, no-c-format
+msgid "Another use of rules might be to assign machines to different processing groups (using a node attribute) based on time and to then use that attribute when creating location constraints."
+msgstr "Un'altra regola impostabile potrebbe essere quella di assegnare le macchine a differenti gruppi di processo (utilizzando gli attributi del nodo) basati sulle tempistiche ed utilizzare quindi questi attributi nella creazione delle constraint di tipo location."
+
+#. Tag: para
+#, no-c-format
+msgid "Each rule can contain a number of expressions, date-expressions and even other rules. The results of the expressions are combined based on the rule&#39;s boolean-op field to determine if the rule ultimately evaluates to true or false. What happens next depends on the context in which the rule is being used."
+msgstr "Ogni regola può contenere diverse espressioni, espressioni di tipo data ed altre regole. L'esito delle espressione è combinato in base al valore del campo boolean-op per determinare se la regola infine risulta vera o falsa. Quello che accade successivamente dipende dal contesto in cui la regola viene utilizzata."
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Rule"
+msgstr "Proprietà di una regola"
+
+#. Tag: entry
+#, no-c-format
+msgid "Field"
+msgstr "Campo"
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr "Descrizione"
+
+#. Tag: entry
+#, no-c-format
+msgid "role"
+msgstr "role"
+
+#. Tag: entry
+#, no-c-format
+msgid "Limits the rule to only apply when the resource is in that role. Allowed values: <emphasis>Started</emphasis>, Slave, Master. NOTE: A rule with role=&#34;Master&#34; can not determine the initial location of a clone instance. It will only affect which of the active instances will be promoted."
+msgstr "Limita l'applicazione della regola a quando la risorsa è nel role indicato. Valori permessi: <emphasis>Started</emphasis>, Slave, Master. NOTA: una regola con role=&#34;Master&#34; non può determinare la posizione iniziale di un'istanza clone. Essa agirà unicamente su quale delle istanze attive verrà promossa."
+
+#. Tag: entry
+#, no-c-format
+msgid "score"
+msgstr "score"
+
+#. Tag: entry
+#, no-c-format
+msgid "The score to apply if the rule evaluates to &#34;true&#34;. Limited to use in rules that are part of location constraints."
+msgstr "Il punteggio da applicare se la regola risulta &#34;true&#34;. L'utilizzo è limitato nelle regole che sono parte di constraint di tipo location."
+
+#. Tag: entry
+#, no-c-format
+msgid "score-attribute"
+msgstr "score-attribute"
+
+#. Tag: entry
+#, no-c-format
+msgid "The node attribute to look up and use as a score if the rule evaluates to &#34;true&#34;. Limited to use in rules that are part of location constraints."
+msgstr "L'attributo del nodo da controllare ed utilizzare come punteggio de la regola risulta &#34;true&#34;. L'utilizzo è limitato nelle regole che sono parte di constraint tipo location."
+
+#. Tag: entry
+#, no-c-format
+msgid "boolean-op"
+msgstr "boolean-op"
+
+#. Tag: entry
+#, no-c-format
+msgid "How to combine the result of multiple expression objects. Allowed values: <emphasis>and</emphasis>, or"
+msgstr "Come combinare il risultato di oggetti con espressioni multiple. Valori permessi: <emphasis>and</emphasis>, or"
+
+#. Tag: title
+#, no-c-format
+msgid "Node Attribute Expressions"
+msgstr "Espressioni relative agli attributi del nodo"
+
+#. Tag: para
+#, no-c-format
+msgid "Expression objects are used to control a resource based on the attributes defined by a node or nodes. In addition to any attributes added by the administrator, each node has a built-in node attribute called <literal>#uname</literal> that can also be used."
+msgstr "Gli oggetti espressione sono utilizzati per controllare una risorsa basata sugli attributi definiti da uno o più nodi. In aggiunta a qualsiasi attributo aggiunto dall'amministratore, ogni nodo possiede un attributo predefinito che può essere utilizzato chiamato <literal>#uname</literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of an Expression"
+msgstr "Proprietà di un'espressione"
+
+#. Tag: entry
+#, no-c-format
+msgid "value"
+msgstr "value"
+
+#. Tag: entry
+#, no-c-format
+msgid "User supplied value for comparison"
+msgstr "Valore fornito dall'utente per la comparazione"
+
+#. Tag: entry
+#, no-c-format
+msgid "attribute"
+msgstr "attribute"
+
+#. Tag: entry
+#, no-c-format
+msgid "The node attribute to test"
+msgstr "L'attributo del nodo da controllare"
+
+#. Tag: entry
+#, no-c-format
+msgid "type"
+msgstr "type"
+
+#. Tag: entry
+#, no-c-format
+msgid "Determines how the value(s) should be tested. Allowed values: integer, <emphasis>string</emphasis>, version"
+msgstr "Determina come i valori devono essere testati. Valori permessi: integer, <emphasis>string</emphasis>, version"
+
+#. Tag: entry
+#, no-c-format
+msgid "operation"
+msgstr "operation"
+
+#. Tag: para
+#, no-c-format
+msgid "The comparison to perform. Allowed values:"
+msgstr "Il confronto da effettuare. Valori permessi:"
+
+#. Tag: para
+#, no-c-format
+msgid "lt,- True if the node attribute&#39;s value is less than value"
+msgstr "lt - Vera se l'attributo del nodo è minore del valore"
+
+#. Tag: para
+#, no-c-format
+msgid "gt - True if the node attribute&#39;s value is greater than value"
+msgstr "gt - Vera se l'attributo del nodo è maggiore del valore"
+
+#. Tag: para
+#, no-c-format
+msgid "lte- True if the node attribute&#39;s value is less than or equal to value"
+msgstr "lte - Vera se l'attributo del nodo è minore o uguale al valore"
+
+#. Tag: para
+#, no-c-format
+msgid "gte- True if the node attribute&#39;s value is greater than or equal to value"
+msgstr "gte - Vera se l'attributo del nodo è maggiore o ugulae del valore"
+
+#. Tag: para
+#, no-c-format
+msgid "eq- True if the node attribute&#39;s value is equal to value"
+msgstr "eq - Vera se l'attributo del nodo è uguale al valore"
+
+#. Tag: para
+#, no-c-format
+msgid "ne - True if the node attribute&#39;s value is not equal to value"
+msgstr "ne - Vera se l'attributo del nodo non è uguale al valore"
+
+#. Tag: para
+#, no-c-format
+msgid "defined- True if the node has an the named attribute"
+msgstr "defined - Vera se il nodo possiede l'attributo indicato"
+
+#. Tag: para
+#, no-c-format
+msgid "not_defined- True if the node does not have the named attribute"
+msgstr "not_defined - Vera se il nodo non possiede l'attributo indicato"
+
+#. Tag: title
+#, no-c-format
+msgid "Time/Date Based Expressions"
+msgstr "Espressioni basate su Ora/Data"
+
+#. Tag: para
+#, no-c-format
+msgid "As the name suggests, date_expressions are used to control a resource or cluster option based on the current date/time. They can contain an optional <literal>date_spec</literal> and/or <literal>duration</literal> object depending on the context."
+msgstr "Come suggerisce il nome, le date_expressions sono utilizzate per contollare una risorsa o un'opzione del cluster in base alla data/ora attuale."
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Date Expression"
+msgstr "Proprietà di un'espressione basata sulla data"
+
+#. Tag: entry
+#, no-c-format
+msgid "start"
+msgstr "start"
+
+#. Tag: entry
+#, no-c-format
+msgid "A date/time conforming to the ISO8601 specification."
+msgstr "Una data/ora conforme alle specifiche ISO8601."
+
+#. Tag: entry
+#, no-c-format
+msgid "end"
+msgstr "end"
+
+#. Tag: entry
+#, no-c-format
+msgid "A date/time conforming to the ISO8601 specification. Can be inferred by supplying a value for start and a duration."
+msgstr "Una data/ora conforme alle specifiche ISO8601. Può essere dedotta fornendo un valore per start e duration."
+
+#. Tag: para
+#, no-c-format
+msgid "Compares the current date/time with the start and/or end date, depending on the context. Allowed values:"
+msgstr "Confronta la data/ora attuale con la data/ora indicata nei parametri start ed end, dipendentemente dal contesto. Valori permessi:"
+
+#. Tag: para
+#, no-c-format
+msgid "gt - True if the current date/time is after start"
+msgstr "gt - Vera se la data/ora attuale è successiva al valore start"
+
+#. Tag: para
+#, no-c-format
+msgid "lt - True if the current date/time is before end"
+msgstr "lt - Vera se la data/ora attuale è precedente al valore start"
+
+#. Tag: para
+#, no-c-format
+msgid "in-range - True if the current date/time is after start and before end"
+msgstr "in-range - Vera se la data/ora attuale è successiva al valore start e precedente al valore end"
+
+#. Tag: para
+#, no-c-format
+msgid "date-spec - performs a cron-like comparison between the contents of date_spec and now"
+msgstr "date-spec - effettua una comparazione simile a cron tra il contenuto di date_spec e la data/ora attuale."
+
+#. Tag: para
+#, no-c-format
+msgid "Because the comparisons (except for <literal>date_spec</literal>) include the time, the <literal>eq, neq, gte</literal> and <literal>lte</literal> operators have not been implemented."
+msgstr "Dato che la comparazione (ad eccezione di <literal>date_spec</literal>) include l'ora, gli operatori <literal>eq, neq, gte</literal> e <literal>lte</literal> non sono stati implementati."
+
+#. Tag: title
+#, no-c-format
+msgid "Date Specifications"
+msgstr "Dichiarare date"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>date_spec</literal> objects are used to create cron-like expressions relating to time. Each field can contain a single number or a single range. Instead of defaulting to zero, any field not supplied is ignored."
+msgstr "gli oggetti di tipo <literal>date_spec</literal> sono utilizzati per creare espressioni simili a quelle cron. Ogi campo contiene un singolo numero ed un singolo range Anziché impostare per default zero, ogni campo non difinito viene ignorato."
+
+#. Tag: para
+#, no-c-format
+msgid "For example, <literal>monthdays=&#34;1&#34;</literal> matches the first day of every month and <literal>hours=&#34;09-17&#34;</literal> matches the hours between 9am and 5pm inclusive). However at this time one cannot specify <literal>weekdays=&#34;1,2&#34;</literal> or <literal>weekdays=&#34;1-2,5-6&#34;</literal> since they contain multiple ranges. Depending on demand, this may be implemented in a future release."
+msgstr "Ad esempio, <literal>monthdays=&#34;1&#34;</literal> identificherà il primo giorno di ogni mese e <literal>hours=&#34;09-17&#34;</literal> identificherà le ore tra le 9:00 e le 17:00 incluse. Per via del fatto che sono specificati range multipli è impossibile specificare <literal>weekdays=&#34;1,2&#34;</literal> o <literal>weekdays=&#34;1-2,5-6&#34;</literal>. A seconda della richiesta, questa funzionalità potrebbe essere implementata in futuro."
+
+#. Tag: title
+#, no-c-format
+msgid "Properties of a Date Spec"
+msgstr "Prorpietà di una specifica data"
+
+#. Tag: entry
+#, no-c-format
+msgid "id"
+msgstr "id"
+
+#. Tag: entry
+#, no-c-format
+msgid "A unique name for the date"
+msgstr "Un nome univoco per la data"
+
+#. Tag: entry
+#, no-c-format
+msgid "hours"
+msgstr "hours"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 0-23"
+msgstr "Valori permessi 0-23"
+
+#. Tag: entry
+#, no-c-format
+msgid "monthdays"
+msgstr "monthdays"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 0-31 (depending on current month and year)"
+msgstr "Valori permessi: 0-31 (dipendentemente dall'attuale mese ed anno)"
+
+#. Tag: entry
+#, no-c-format
+msgid "weekdays"
+msgstr "weekdays"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 1-7 (1=Monday, 7=Sunday)"
+msgstr "Valori permessi: 1-7 (1=lunedì, 7=domenica)"
+
+#. Tag: entry
+#, no-c-format
+msgid "yeardays"
+msgstr "yesterdays"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 1-366 (depending on the current year)"
+msgstr "Valori permessi: 1-366 (dipendente dall'anno attuale)"
+
+#. Tag: entry
+#, no-c-format
+msgid "months"
+msgstr "months"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 1-12"
+msgstr "Valori permessi: 1-12"
+
+#. Tag: entry
+#, no-c-format
+msgid "weeks"
+msgstr "weeks"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 1-53 (depending on weekyear)"
+msgstr "Valori permessi: 1-53 (dipendentemente dalla settimana dell'anno)"
+
+#. Tag: entry
+#, no-c-format
+msgid "years"
+msgstr "years"
+
+#. Tag: entry
+#, no-c-format
+msgid "Year according the Gregorian calendar"
+msgstr "Anno relativo nel calendario gregoriano"
+
+#. Tag: entry
+#, no-c-format
+msgid "weekyears"
+msgstr "weekyears"
+
+#. Tag: para
+#, no-c-format
+msgid "May differ from Gregorian years."
+msgstr "Potrebbe differire dal calendario gregoriano."
+
+#. Tag: para
+#, no-c-format
+msgid "Eg. &#34;2005-001 Ordinal&#34; is also &#34;2005-01-01 Gregorian&#34; is also &#34;2004-W53-6 Weekly&#34;"
+msgstr "Ad esempio &#34;2005-001 Ordinal&#34; è anche &#34;2005-01-01 Gregorian&#34;  è anche  &#34;2004-W53-6 Weekly&#34;"
+
+#. Tag: entry
+#, no-c-format
+msgid "moon"
+msgstr "moon"
+
+#. Tag: entry
+#, no-c-format
+msgid "Allowed values: 0..7 (0 is new, 4 is full moon). Seriously, you can use this. This was implemented to demonstrate the ease with which new comparisons could be added."
+msgstr "Valori permessi: 0..7 (0 è luna nuova, 4 è luna piena). L'opzione è realmente utilizzabile. E' stata inclusa per dimostrare la facilità con cui è possibile aggiungere le nuove comparazioni."
+
+#. Tag: title
+#, no-c-format
+msgid "Durations"
+msgstr "Durate"
+
+#. Tag: para
+#, no-c-format
+msgid "Durations are used to calculate a value for end when one is not supplied to in_range operations. They contain the same fields as <literal>date_spec</literal> objects but without the limitations (ie. you can have a duration of 19 days). Like <literal>date_specs</literal>, any field not supplied is ignored."
+msgstr "Le durate vengono utilizzate per calcolare un valore finale nelle operazioni in_range quando non viene fornito. Essi contengono gli stessi campi degli oggetti <literal>date_spec</literal> ma senza le limitazioni (ad esempio è possibile avere durate da 19 giorni). Come per  <literal>date_specs</literal> qualsiasi campo non fornito viene ignorato."
+
+#. Tag: title
+#, no-c-format
+msgid "Sample Time Based Expressions"
+msgstr "Espressioni temporali di esempio"
+
+#. Tag: title
+#, no-c-format
+msgid "True if now is any time in the year 2005"
+msgstr "Vero se \"now\" è un qualsiasi momento nell'anno 2005"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule1&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr1&#34; start=&#34;2005-001&#34; operation=&#34;in_range&#34;&#62;\n"
+"    &#60;duration years=&#34;1&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule1&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr1&#34; start=&#34;2005-001&#34; operation=&#34;in_range&#34;&#62;\n"
+"    &#60;duration years=&#34;1&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "Equivalent expression."
+msgstr "Espressione equivalente."
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule2&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec years=&#34;2005&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule2&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec years=&#34;2005&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "9am-5pm, Mon-Friday"
+msgstr "9:00-17:00, lunedì-venerdì"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule3&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr3&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec hours=&#34;9-16&#34; days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule3&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr3&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec hours=&#34;9-16&#34; days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "9am-6pm, Mon-Friday, or all day saturday"
+msgstr "9:00-18:00, lunedì-venerdì, o qualsiasi ora di sabato"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule4&#34; boolean_op=&#34;or&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr4-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec hours=&#34;9-16&#34; days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"   &#60;date_expression id=&#34;date_expr4-2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec days=&#34;6&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule4&#34; boolean_op=&#34;or&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr4-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec hours=&#34;9-16&#34; days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"   &#60;date_expression id=&#34;date_expr4-2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec days=&#34;6&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "9am-5pm or 9pm-12pm, Mon-Friday"
+msgstr "9:00-17:00 o 21:00-24:00, lunedì-venerdì"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule5&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;rule id=&#34;rule5-nested1&#34; boolean_op=&#34;or&#34;&#62;\n"
+"    &#60;date_expression id=&#34;date_expr5-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"     &#60;date_spec hours=&#34;9-16&#34;/&#62;\n"
+"    &#60;/date_expression&#62;\n"
+"    &#60;date_expression id=&#34;date_expr5-2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"     &#60;date_spec hours=&#34;21-23&#34;/&#62;\n"
+"    &#60;/date_expression&#62;\n"
+"   &#60;/rule&#62;\n"
+"   &#60;date_expression id=&#34;date_expr5-3&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule5&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;rule id=&#34;rule5-nested1&#34; boolean_op=&#34;or&#34;&#62;\n"
+"    &#60;date_expression id=&#34;date_expr5-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"     &#60;date_spec hours=&#34;9-16&#34;/&#62;\n"
+"    &#60;/date_expression&#62;\n"
+"    &#60;date_expression id=&#34;date_expr5-2&#34; operation=&#34;date_spec&#34;&#62;\n"
+"     &#60;date_spec hours=&#34;21-23&#34;/&#62;\n"
+"    &#60;/date_expression&#62;\n"
+"   &#60;/rule&#62;\n"
+"   &#60;date_expression id=&#34;date_expr5-3&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec days=&#34;1-5&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "Mondays in March 2005"
+msgstr "Tutti i lunedì  del mese di marzo 2005"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule6&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr6-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec weekdays=&#34;1&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"   &#60;date_expression id=&#34;date_expr6-2&#34; operation=&#34;in_range&#34; start=&#34;2005-03-01&#34; end=&#34;2005-04-01&#34;/&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule6&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr6-1&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec weekdays=&#34;1&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"   &#60;date_expression id=&#34;date_expr6-2&#34; operation=&#34;in_range&#34; start=&#34;2005-03-01&#34; end=&#34;2005-04-01&#34;/&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: Because no time is specified, 00:00:00 is implied."
+msgstr "NOTA: visto che non è stato specificato un orario, 00:00:00 è implicito."
+
+#. Tag: para
+#, no-c-format
+msgid "This means that the range includes all of 2005-03-01 but none of 2005-04-01."
+msgstr "Questo significa che il range include tutto il 03/01/2005 ma nulla del 04/01/2005"
+
+#. Tag: para
+#, no-c-format
+msgid "You may wish to write end=&#34;2005-03-31T23:59:59&#34; to avoid confusion."
+msgstr "portrebbe essere necessario inserire end=&#34;2005-03-31T23:59:59&#34; per non creare confusione."
+
+#. Tag: title
+#, no-c-format
+msgid "A full moon on Friday the 13th"
+msgstr "In luna piena di venerdì 13"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule7&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr7&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec weekdays=&#34;5&#34; monthdays=&#34;13&#34; moon=&#34;4&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;rule7&#34; boolean_op=&#34;and&#34;&#62;\n"
+"   &#60;date_expression id=&#34;date_expr7&#34; operation=&#34;date_spec&#34;&#62;\n"
+"    &#60;date_spec weekdays=&#34;5&#34; monthdays=&#34;13&#34; moon=&#34;4&#34;/&#62;\n"
+"   &#60;/date_expression&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"\t    "
+
+#. Tag: title
+#, no-c-format
+msgid "Using Rules to Determine Resource Location"
+msgstr "Utilizzare regole per determinare il posizionamento delle risorse"
+
+#. Tag: para
+#, no-c-format
+msgid "If the constraint&#39;s outer-most rule evaluates to false, the cluster treats the constraint as if it was not there. When the rule evaluates to true, the node&#39;s preference for running the resource is updated with the score associated with the rule."
+msgstr "Se il valore della regola constraint è falso il cluster tratta la constraint come non ci fosse.Quando la regola viene valorizzata a vero la preferenza per l'erogazione della risorsa da parte del nodo viene aggiornata con il valore associato alla regola."
+
+#. Tag: para
+#, no-c-format
+msgid "If this sounds familiar, its because you have been using a simplified syntax for location constraint rules already. Consider the following location constraint:"
+msgstr "Se questo suona familiare è perché sono state già utilizzate sintassi semplificate per le constraint di tipo location. Considerata la seguente location constraint:"
+
+#. Tag: title
+#, no-c-format
+msgid "Prevent myApacheRsc from running on c001n03"
+msgstr "Impedisci a myApacheRsc di essere eseguita su c001n03"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  &#60;rsc_location id=&#34;dont-run-apache-on-c001n03&#34; rsc=&#34;myApacheRsc&#34; score=&#34;-INFINITY&#34; node=&#34;c001n03&#34;/&#62;\n"
+"\t"
+msgstr ""
+"\n"
+"  &#60;rsc_location id=&#34;dont-run-apache-on-c001n03&#34; rsc=&#34;myApacheRsc&#34; score=&#34;-INFINITY&#34; node=&#34;c001n03&#34;/&#62;\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "This constraint can be more verbosely written as:"
+msgstr "Questa constraint potrebbe essere scritta più verbosamente come:"
+
+#. Tag: title
+#, no-c-format
+msgid "Prevent myApacheRsc from running on c001n03 - expanded version"
+msgstr "Impedisci a myApacheRsc di essere eseguita su c001n03 - versione estesa"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rsc_location id=&#34;dont-run-apache-on-c001n03&#34; rsc=&#34;myApacheRsc&#34;&#62;\n"
+"    &#60;rule id=&#34;dont-run-apache-rule&#34; score=&#34;-INFINITY&#34;&#62;\n"
+"       &#60;expression id=&#34;dont-run-apache-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;c00n03&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"  &#60;/rsc_location&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"  &#60;rsc_location id=&#34;dont-run-apache-on-c001n03&#34; rsc=&#34;myApacheRsc&#34;&#62;\n"
+"    &#60;rule id=&#34;dont-run-apache-rule&#34; score=&#34;-INFINITY&#34;&#62;\n"
+"       &#60;expression id=&#34;dont-run-apache-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;c00n03&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"  &#60;/rsc_location&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "The advantage of using the expanded form is that one can then add extra clauses to the rule, such as limiting the rule such that it only applies during certain times of the day or days of the week (this is discussed in subsequent sections)."
+msgstr "Il vantaggio di usare la versione estesa risiede nel fatto che è possibile aggiungere clausole extra nella regola, come limitarla affinché venga applicata solo in determinati orari del giorno o giorni sella settimana (il tema viene affrontato nelle sezioni sottostanti)."
+
+#. Tag: para
+#, no-c-format
+msgid "It also allows us to match on node properties other than its name. If we rated each machine&#39;s CPU power such that the cluster had the following nodes section:"
+msgstr "Ciò permette di identificare proprietà del nodo diverse dal suo nome. Se per ogni macchina viene quantificata una potenza di CPU così che il cluster abbia la seguente sezione nodi:"
+
+#. Tag: title
+#, no-c-format
+msgid "A sample nodes section for use with score-attribute"
+msgstr "Una sezione nodi di esempio da utilizzare con score-attribute"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"   &#60;nodes&#62;\n"
+"     &#60;node id=&#34;uuid1&#34; uname=&#34;c001n01&#34; type=&#34;normal&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;uuid1-custom_attrs&#34;&#62;\n"
+"        &#60;nvpair id=&#34;uuid1-cpu_mips&#34; name=&#34;cpu_mips&#34; value=&#34;1234&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/node&#62;\n"
+"     &#60;node id=&#34;uuid2&#34; uname=&#34;c001n02&#34; type=&#34;normal&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;uuid2-custom_attrs&#34;&#62;\n"
+"        &#60;nvpair id=&#34;uuid2-cpu_mips&#34; name=&#34;cpu_mips&#34; value=&#34;5678&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/node&#62;\n"
+"    &#60;/nodes&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"   &#60;nodes&#62;\n"
+"     &#60;node id=&#34;uuid1&#34; uname=&#34;c001n01&#34; type=&#34;normal&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;uuid1-custom_attrs&#34;&#62;\n"
+"        &#60;nvpair id=&#34;uuid1-cpu_mips&#34; name=&#34;cpu_mips&#34; value=&#34;1234&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/node&#62;\n"
+"     &#60;node id=&#34;uuid2&#34; uname=&#34;c001n02&#34; type=&#34;normal&#34;&#62;\n"
+"      &#60;instance_attributes id=&#34;uuid2-custom_attrs&#34;&#62;\n"
+"        &#60;nvpair id=&#34;uuid2-cpu_mips&#34; name=&#34;cpu_mips&#34; value=&#34;5678&#34;/&#62;\n"
+"      &#60;/instance_attributes&#62;\n"
+"     &#60;/node&#62;\n"
+"    &#60;/nodes&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "then we could prevent resources from running on underpowered machines with the rule"
+msgstr "allora è possibile prevenire le risorse dall'essere eseguite in macchine meno potenti, mediante la regola"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;need-more-power-rule&#34; score=&#34;-INFINITY&#34;&#62;\n"
+"       &#60;expression id=&#34; need-more-power-expr&#34; attribute=&#34;cpu_mips&#34; operation=&#34;lt&#34; value=&#34;3000&#34;/&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"      "
+msgstr ""
+"\n"
+"\n"
+"  &#60;rule id=&#34;need-more-power-rule&#34; score=&#34;-INFINITY&#34;&#62;\n"
+"       &#60;expression id=&#34; need-more-power-expr&#34; attribute=&#34;cpu_mips&#34; operation=&#34;lt&#34; value=&#34;3000&#34;/&#62;\n"
+"  &#60;/rule&#62;\n"
+"\n"
+"      "
+
+#. Tag: title
+#, no-c-format
+msgid "Using <literal>score-attribute</literal> Instead of <literal>score</literal>"
+msgstr "Utilizzo di <literal>score-attribute</literal> invece di <literal>score</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "When using score-attribute instead of score, each node matched by the rule has its score adjusted differently, according to its value for the named node attribute. Thus in the previous example, if a rule used <literal>score-attribute=&#34;cpu_mips&#34;</literal>, c001n01 would have its preference to run the resource increased by 1234 whereas c001n02 would have its preference increased by 5678."
+msgstr "Quando viene utilizzato score-attribute anziché score, per ogni nodo identificato dalla regola viene calcolato il punteggio in maniera differente, in base al valore dell'attributo definito nel nodo. Quindi nell'esempio precedente, nella regola <literal>score-attribute=&#34;cpu_mips&#34;</literal>, la possibilità di erogare la risorsa per il nodo c001n01 verrà incrementata di 1234 mentre per il nodo c001n02 verrà incrementata di 5678."
+
+#. Tag: title
+#, no-c-format
+msgid "Using Rules to Control Resource Options"
+msgstr "Utilizzare regole per controllare le opzioni delle risorse"
+
+#. Tag: para
+#, no-c-format
+msgid "Often some cluster nodes will be different from their peers, sometimes these differences (the location of a binary or the names of network interfaces) require resources be configured differently depending on the machine they&#39;re hosted on."
+msgstr "Può capitare che alcuni nodi del cluster siano differenti fra loro, tali differenze (la posizione di alcuni file o i nomi delle interfacce di rete) a volte impongono configurazioni differenti, dipendenti dalla macchina su cui risiedono."
+
+#. Tag: para
+#, no-c-format
+msgid "By defining multiple <literal>instance_attributes</literal> objects for the resource and adding a rule to each, we can easily handle these special cases."
+msgstr "E' possibile gestire facilmente questi casi speciali definendo oggetti <literal>instance_attributes</literal>  multipli  per le risorse ed aggiungendo una regola per ognuno."
+
+#. Tag: para
+#, no-c-format
+msgid "In the example below, mySpecialRsc will use eth1 and port 9999 when run on node1, eth2 and port 8888 on node2 and default to eth0 and port 9999 for all other nodes."
+msgstr "Nell'esempio sottostante mySpecialRsc utilizzerà eth1 e la porta 9999 per funzionare su node1, mentre eth2 e la porta 8888 su node2. Per tutti gli altri nodi i valori di default saranno eth0 con porta 9999."
+
+#. Tag: title
+#, no-c-format
+msgid "Defining different resource options based on the node name"
+msgstr "Definire opzioni per le risorse differenti in base al nome del nodo"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;primitive id=&#34;mySpecialRsc&#34; class=&#34;ocf&#34; type=&#34;Special&#34; provider=&#34;me&#34;&#62;\n"
+"   &#60;instance_attributes id=&#34;special-node1&#34; score=&#34;3&#34;&#62;\n"
+"    &#60;rule id=&#34;node1-special-case&#34; score=&#34;INFINITY&#34; &#62;\n"
+"     &#60;expression id=&#34;node1-special-case-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;node1&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;node1-interface&#34; name=&#34;interface&#34; value=&#34;eth1&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"   &#60;instance_attributes id=&#34;special-node2&#34; score=&#34;2&#34; &#62;\n"
+"    &#60;rule id=&#34;node2-special-case&#34; score=&#34;INFINITY&#34;&#62;\n"
+"     &#60;expression id=&#34;node2-special-case-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;node2&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;node2-interface&#34; name=&#34;interface&#34; value=&#34;eth2&#34;/&#62;\n"
+"    &#60;nvpair id=&#34;node2-port&#34; name=&#34;port&#34; value=&#34;8888&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"   &#60;instance_attributes id=&#34;defaults&#34; score=&#34;1&#34; &#62;\n"
+"    &#60;nvpair id=&#34;default-interface&#34; name=&#34;interface&#34; value=&#34;eth0&#34;/&#62;\n"
+"    &#60;nvpair id=&#34;default-port&#34; name=&#34;port&#34; value=&#34;9999&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"  &#60;/primitive&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"  &#60;primitive id=&#34;mySpecialRsc&#34; class=&#34;ocf&#34; type=&#34;Special&#34; provider=&#34;me&#34;&#62;\n"
+"   &#60;instance_attributes id=&#34;special-node1&#34; score=&#34;3&#34;&#62;\n"
+"    &#60;rule id=&#34;node1-special-case&#34; score=&#34;INFINITY&#34; &#62;\n"
+"     &#60;expression id=&#34;node1-special-case-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;node1&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;node1-interface&#34; name=&#34;interface&#34; value=&#34;eth1&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"   &#60;instance_attributes id=&#34;special-node2&#34; score=&#34;2&#34; &#62;\n"
+"    &#60;rule id=&#34;node2-special-case&#34; score=&#34;INFINITY&#34;&#62;\n"
+"     &#60;expression id=&#34;node2-special-case-expr&#34; attribute=&#34;#uname&#34; operation=&#34;eq&#34; value=&#34;node2&#34;/&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;node2-interface&#34; name=&#34;interface&#34; value=&#34;eth2&#34;/&#62;\n"
+"    &#60;nvpair id=&#34;node2-port&#34; name=&#34;port&#34; value=&#34;8888&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"   &#60;instance_attributes id=&#34;defaults&#34; score=&#34;1&#34; &#62;\n"
+"    &#60;nvpair id=&#34;default-interface&#34; name=&#34;interface&#34; value=&#34;eth0&#34;/&#62;\n"
+"    &#60;nvpair id=&#34;default-port&#34; name=&#34;port&#34; value=&#34;9999&#34;/&#62;\n"
+"   &#60;/instance_attributes&#62;\n"
+"  &#60;/primitive&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "The order in which <literal>instance_attributes</literal> objects are evaluated is determined by their score (highest to lowest). If not supplied, score defaults to zero and objects with an equal score are processed in listed order. If the <literal>instance_attributes</literal> object does not have a <literal>rule</literal> or has a <literal>rule</literal> that evaluates to <literal>true</literal>, then for any parameter the resource does not yet have a value for, the resource will use the parameter values defined by the <literal>instance_attributes</literal> object."
+msgstr "L'ordine in cui gli oggetti <literal>instance_attributes</literal> sono valutati è determinato dal loro peso (dal più alto al più basso). Se non è fornito il punteggio di default è zero e gli oggetti con lo stesso punteggio vengono processati nell'ordine della lista. Se l'oggetto  <literal>instance_attributes</literal> non ha una <literal>rule</literal>  o ha una <literal>rule</literal> che risulta in <literal>true</literal>, allora la risorsa non avrà ancora un valore per qualsiasi parametro ed utilizzerà quindi il valore fornito dall'oggetto <literal>instance_attributes</literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "Using Rules to Control Cluster Options"
+msgstr "Utilizzare le regole per controllare le opzioni del cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Controlling cluster options is achieved in much the same manner as specifying different resource options on different nodes."
+msgstr "E' possibile controllare le opzioni del cluster mediante le stesse modalità utilizzate per specificare opzioni differenti per le risorse in nodi differenti."
+
+#. Tag: para
+#, no-c-format
+msgid "The difference is that because they are cluster options, one cannot (or should not because they wont work) use attribute based expressions. The following example illustrates how to set a different <literal>resource-stickiness</literal> value during and outside of work hours. This allows resources to automatically move back to their most preferred hosts, but at a time that (in theory) does not interfere with business activities."
+msgstr "La differenza è che queste sono opzioni del cluster e non è possibile (o non dovrebbe esserlo, visto che non funzionerebbe) utilizzare espressioni basate sugli attributi. L'esempio seguente illustra come settare un valore differente di <literal>resource-stickiness</literal> in un periodo di tempo lontano dalle ore lavorative. Ciò permette alle risorse di tornare sugli host preferiti in orari che (in teoria) non interferiscono con le attività produttive."
+
+#. Tag: title
+#, no-c-format
+msgid "Set resource-stickiness=INFINITY Mon-Fri between 9am and 6pm, and resource-stickiness=0 all other times"
+msgstr "Imposta resource-stickiness=INFINITY dal lunedì al venerdì tra le 9:00 e le 18:00 e resource-stickiness=0 per tutti gli altri orari"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;rsc_defaults&#62;\n"
+"   &#60;meta_attributes id=&#34;core-hours&#34; score=&#34;2&#34;&#62;\n"
+"    &#60;rule id=&#34;core-hour-rule&#34; score=&#34;0&#34;&#62;\n"
+"      &#60;date_expression id=&#34;nine-to-five-Mon-to-Fri&#34; operation=&#34;date_spec&#34;&#62;\n"
+"        &#60;date_spec id=&#34;nine-to-five-Mon-to-Fri-spec&#34; hours=&#34;9-17&#34; weekdays=&#34;1-5&#34;/&#62;\n"
+"      &#60;/date_expression&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;core-stickiness&#34; name=&#34;resource-stickiness&#34; value=&#34;INFINITY&#34;/&#62;\n"
+"   &#60;/meta_attributes&#62;\n"
+"   &#60;meta_attributes id=&#34;after-hours&#34; score=&#34;1&#34; &#62;\n"
+"    &#60;nvpair id=&#34;after-stickiness&#34; name=&#34;resource-stickiness&#34; value=&#34;0&#34;/&#62;\n"
+"   &#60;/meta_attributes&#62;\n"
+"  &#60;/rsc_defaults&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"  &#60;rsc_defaults&#62;\n"
+"   &#60;meta_attributes id=&#34;core-hours&#34; score=&#34;2&#34;&#62;\n"
+"    &#60;rule id=&#34;core-hour-rule&#34; score=&#34;0&#34;&#62;\n"
+"      &#60;date_expression id=&#34;nine-to-five-Mon-to-Fri&#34; operation=&#34;date_spec&#34;&#62;\n"
+"        &#60;date_spec id=&#34;nine-to-five-Mon-to-Fri-spec&#34; hours=&#34;9-17&#34; weekdays=&#34;1-5&#34;/&#62;\n"
+"      &#60;/date_expression&#62;\n"
+"    &#60;/rule&#62;\n"
+"    &#60;nvpair id=&#34;core-stickiness&#34; name=&#34;resource-stickiness&#34; value=&#34;INFINITY&#34;/&#62;\n"
+"   &#60;/meta_attributes&#62;\n"
+"   &#60;meta_attributes id=&#34;after-hours&#34; score=&#34;1&#34; &#62;\n"
+"    &#60;nvpair id=&#34;after-stickiness&#34; name=&#34;resource-stickiness&#34; value=&#34;0&#34;/&#62;\n"
+"   &#60;/meta_attributes&#62;\n"
+"  &#60;/rsc_defaults&#62;\n"
+"\n"
+"\t"
+
+#. Tag: title
+#, no-c-format
+msgid "Ensuring Time Based Rules Take Effect"
+msgstr "Assicurarsi che le regole basate sugli orari abbiano effetto"
+
+#. Tag: para
+#, no-c-format
+msgid "A Pacemaker cluster is an event driven system. As such, it wont recalculate the best place for resources to run in unless something (like a resource failure or configuration change) happens. This can mean that a location constraint that only allows resource X to run between 9am and 5pm is not enforced."
+msgstr "Un cluster Pacemaker è un sistema guidato dagli eventi. Per via di questo, non ricalcolerà il posto migliore per una risorsa a meno che non succeda qualcosa (come un problema o una variazione nella configurazione). Questo può significare che una location constraint che permetta il funzionamento tra le 9:00 e le 17:00 della risorsa X possa non essere forzata."
+
+#. Tag: para
+#, no-c-format
+msgid "If you rely on time based rules, it is essential that you set the <literal>cluster-recheck-interval</literal> option. This tells the cluster to periodically recalculate the ideal state of the cluster. For example, if you set <literal>cluster-recheck-interval=5m</literal>, then sometime between 9:00 and 9:05 the cluster would notice that it needs to start resource X, and between 17:00 and 17:05 it would realize it needed to be stopped."
+msgstr "Se ci si basa sulle regole orarie, è essenziale impostare l'opzione <literal>cluster-recheck-interval</literal>. Questo comunica al cluster di ricalcolare periodicamente il suo stato. Ad esempio, se viene impostato <literal>cluster-recheck-interval=5m</literal>, allora in qualche momento tra le 9:00 e le 9:05 il cluster rileverà la necessità di avviare la risorsa X e tra le 17:00 e le 17:05 rileverà di doverla fermare."
+
+#. Tag: para
+#, no-c-format
+msgid "Note that the timing of the actual start and stop actions depends on what else needs to be performed first."
+msgstr "E' da notare come le tempistiche delle azioni di start e stop dipendono da quanto altro necessita di essere eseguito prima."
+

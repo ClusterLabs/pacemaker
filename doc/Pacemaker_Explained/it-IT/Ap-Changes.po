@@ -1,0 +1,179 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:05\n"
+"PO-Revision-Date: 2011-05-04 10:28+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "What Changed in 1.0"
+msgstr "Cosa è cambiato nella versione 1.0"
+
+#. Tag: title
+#, no-c-format
+msgid "New"
+msgstr "Nuovo"
+
+#. Tag: para
+#, no-c-format
+msgid "Failure timeouts. See <xref linkend=\"s-failure-migration\" />"
+msgstr "Failure timeouts. Vedere <xref linkend=\"s-failure-migration\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "New section for resource and operation defaults. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" />"
+msgstr "Nuova sezione per le risorse e le operazioni di default. Vedere <xref linkend=\"s-resource-defaults\" /> e <xref linkend=\"s-operation-defaults\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "Tool for making offline configuration changes. See <xref linkend=\"s-config-sandboxes\" />"
+msgstr "Strumento per effettuare modifiche alla configurazione offline. Vedere <xref linkend=\"s-config-sandboxes\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>Rules, instance_attributes, meta_attributes</literal> and sets of operations can be defined once and referenced in multiple places. See <xref linkend=\"s-reusing-config-elements\" />"
+msgstr "<literal>Rules, instance_attributes, meta_attributes</literal> ed i set di operazioni possono essere definiti inizialmente e referenziati in diversi posti. Vedere <xref linkend=\"s-reusing-config-elements\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB now accepts XPath-based create/modify/delete operations. See the <command>cibadmin</command> help text."
+msgstr "Il CIB ora accetta le operazioni create/modify/delete basate su XPath. Vedere il testo di aiuto di <command>cibadmin</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-dimensional colocation and ordering constraints. See <xref linkend=\"s-resource-sets-ordering\" /> and <xref linkend=\"s-resource-sets-collocation\" />"
+msgstr "Vincoli multi dimensionali di colocation e ordering. Vedere <xref linkend=\"s-resource-sets-ordering\" /> e <xref linkend=\"s-resource-sets-collocation\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "The ability to connect to the CIB from non-cluster machines. See <xref linkend=\"s-remote-connection\" />"
+msgstr "Possibilità di connessione al CIB da macchine non appartenenti al cluster. Vedere <xref linkend=\"s-remote-connection\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "Allow recurring actions to be triggered at known times. See <xref linkend=\"s-recurring-start\" />"
+msgstr "Possibilità di innescare azioni ricorrenti in determinate tempistiche. Vedere <xref linkend=\"s-recurring-start\" />"
+
+#. Tag: title
+#, no-c-format
+msgid "Changed"
+msgstr "Modifiche"
+
+#. Tag: para
+#, no-c-format
+msgid "Syntax"
+msgstr "Sintassi"
+
+#. Tag: para
+#, no-c-format
+msgid "All resource and cluster options now use dashes (-) instead of underscores (_)"
+msgstr "Tutte le risorse e le opzioni del cluster ora utilizzano trattini (-) invece di underscore (_)"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>master_slave</literal> was renamed to <literal>master</literal>"
+msgstr "<literal>master_slave</literal> è stato rinominato in <literal>master</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>attributes</literal> container tag was removed"
+msgstr "Il tag contenitore <literal>attributes</literal> è stato rimosso"
+
+#. Tag: para
+#, no-c-format
+msgid "The operation field <literal>pre-req</literal> has been renamed <literal>requires</literal>"
+msgstr "Il campo operazione <literal>pre-req</literal> è stato rinominato in <literal>requires</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "All operations must have an <literal>interval</literal>, start/stop must have it set to zero"
+msgstr "Tutte le operazioni devono avere un intervallo <literal>interval</literal> e le operazioni start/stop devono averlo valorizzato a zero"
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>stonith-enabled</literal> option now defaults to true."
+msgstr "L'opzione <literal>stonith-enabled</literal> ora per default è true"
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster will refuse to start resources if <literal>stonith-enabled</literal> is true (or unset) and no STONITH resources have been defined"
+msgstr "Il cluster rifiuterà di avviare risorse se <literal>stonith-enabled</literal> è true (o non valorizzato) e non è stata definita nessuna risorsa STONITH"
+
+#. Tag: para
+#, no-c-format
+msgid "The attributes of colocation and ordering constraints were renamed for clarity. See <xref linkend=\"s-resource-ordering\" /> and <xref linkend=\"s-resource-colocation\" />"
+msgstr "Gli attributi dei vincoli colocation e ordering sono stati rinominati per chiarezza. Vedere <xref linkend=\"s-resource-ordering\" /> e <xref linkend=\"s-resource-colocation\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>resource-failure-stickiness</literal> has been replaced by <literal>migration-threshold</literal>. See <xref linkend=\"s-failure-migration\" />"
+msgstr "<literal>resource-failure-stickiness</literal> è stata rimpiazzata da <literal>migration-threshold</literal>. Vedere <xref linkend=\"s-failure-migration\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "The arguments for command-line tools has been made consistent"
+msgstr "Gli argomenti degli strumenti a linea di comando sono stati resi consistenti"
+
+#. Tag: para
+#, no-c-format
+msgid "Switched to RelaxNG schema validation and libxml2 parser."
+msgstr "Passaggio allo schema di validazione RelaxNG ed al parser libxml2."
+
+#. Tag: para
+#, no-c-format
+msgid "id fields are now XML IDs which have the following limitations"
+msgstr "I campi id ora sono XML ID con le seguenti limitazioni"
+
+#. Tag: para
+#, no-c-format
+msgid "id&#39;s cannot contain colons (:)"
+msgstr "gli id non possonoo contenere due punti (:)"
+
+#. Tag: para
+#, no-c-format
+msgid "id&#39;s cannot begin with a number"
+msgstr "gli id non possono iniziare con numeri"
+
+#. Tag: para
+#, no-c-format
+msgid "id&#39;s must be globally unique (not just unique for that tag)"
+msgstr "gli id devono essere globalmente univoci (non solamente univoci per il tag relativo)"
+
+#. Tag: para
+#, no-c-format
+msgid "Some fields (such as those in constraints that refer to resources) are IDREFs. This means that they must reference existing resources or objects in order for the configuration to be valid. Removing an object which is referenced elsewhere will therefor fail."
+msgstr "Alcuni campi (come quelli presenti nei vincoli riferiti alle risorse) sono IDREF. Questo significa che essi devono riferirsi a risorse esistenti o oggetti affinché la configurazione venga ritenuta valida. Rimuovere un oggetto che è referenziato alltrove quindi fallirà."
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB representation from which the MD5 digest used to verify CIBs has changed. This means that every CIB update will require a full refresh on any upgraded nodes until the cluster is fully upgraded to 1.0. This will result in significant performance degradation and it is therefor highly inadvisable to run a mixed 1.0/0.6 cluster for any longer than absolutely necessary."
+msgstr "La rappresentazione del CIB da cui è ricavato l'hash MD5 utilizzato per verificare il CIB è stata modificata. Questo significa che ogni variazione del CIB richiederà un completo refresh su ogni nodo aggiornato finché il cluster non verrà totalmente passato alla versione 1.0. Questo provocherà significative perdite di performance ed è assolutamente sconsigliato utilizzare versioni mixate del cluster 1.0/0.6 a meno che non sia strettamente necessario."
+
+#. Tag: para
+#, no-c-format
+msgid "Ping node information no longer needs to be added to <filename>ha.cf</filename> Simply include the lists of hosts in your ping resource(s)."
+msgstr "Le informazioni sui ping node non necessitano più di essere aggiunte al file <filename>ha.cf</filename>. Sarà sufficiente includere gli host nella lista delle risorse ping definite."
+
+#. Tag: title
+#, no-c-format
+msgid "Removed"
+msgstr "Rimozioni"
+
+#. Tag: para
+#, no-c-format
+msgid "It is no longer possible to set resource meta options as top-level attributes. Use meta attributes instead."
+msgstr "Non è più possibile valorizzare un'opzione meta della risorsa come attributo di livello superiore. Sarà necessario utilizzare invece gli attributi meta."
+
+#. Tag: para
+#, no-c-format
+msgid "Resource and operation defaults are no longer read from <literal>crm_config</literal>. See <xref linkend=\"s-resource-defaults\" /> and <xref linkend=\"s-operation-defaults\" /> instead."
+msgstr "I valori di default per le risorse e le operazioni non sono più letti da <literal>crm_config</literal>. Vedere invece <xref linkend=\"s-resource-defaults\" /> e <xref linkend=\"s-operation-defaults\" />."

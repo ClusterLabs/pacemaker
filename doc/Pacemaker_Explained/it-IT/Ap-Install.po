@@ -1,0 +1,250 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2011-05-03 16:30+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Installation"
+msgstr "Installazione"
+
+#. Tag: title
+#, no-c-format
+msgid "Choosing a Cluster Stack"
+msgstr "Scegliere lo stack del cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Ultimately the choice of cluster stack is a personal decision that must be made in the context of you or your company&#39;s needs and strategic direction. Pacemaker currently functions equally well with both stacks."
+msgstr "Ultimamente la scelta dello stack del cluster da utilizzare è una decisione personale che va presa nel contesto delle proprie (e della propria azienda) esigenze e strategie direzionali. Pacemaker attualmente funziona in maniera identica con entrambi gli stack."
+
+#. Tag: para
+#, no-c-format
+msgid "Here are some factors that may influence the decision"
+msgstr "Alcuni fattori che potrebbero influenzare la decisione"
+
+#. Tag: para
+#, no-c-format
+msgid "SUSE/Novell, Red Hat and Oracle are all putting their collective weight behind the Corosync cluster stack."
+msgstr "SUSE/Novell, Red Hat ed Oracle stanno ponendo il proprio peso sulle spalle dello stack Corosync."
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync is an OSI Certified implementation of an industry standard (the Service Availability Forum Application Interface Specification)."
+msgstr "Corosync è un'implementazione di uno standard industriale (il Service Availability Forum Application Interface Specification) certificato OSI."
+
+#. Tag: para
+#, no-c-format
+msgid "Using Corosync gives your applications access to the following additional cluster services"
+msgstr "Utilizzare Corosync da accesso alle proprie applicazioni a questi servizi aggiuntivi"
+
+#. Tag: para
+#, no-c-format
+msgid "checkpoint service"
+msgstr "servizio checkpoint"
+
+#. Tag: para
+#, no-c-format
+msgid "distributed locking service"
+msgstr "distributed locking service"
+
+#. Tag: para
+#, no-c-format
+msgid "extended virtual synchrony service"
+msgstr "servizio extended virtual synchrony"
+
+#. Tag: para
+#, no-c-format
+msgid "cluster closed process group service"
+msgstr "servizio cluster closed process group"
+
+#. Tag: para
+#, no-c-format
+msgid "It is likely that Pacemaker, at some point in the future, will make use of some of these additional services not provided by Heartbeat"
+msgstr "E' verosimile pensare che Pacemaker, in futuro, possa utilizzare qualcuno di questi servizi aggiuntivi non forniti da Heartbeat"
+
+#. Tag: para
+#, no-c-format
+msgid "To date, Pacemaker has received less real-world testing on Corosync than it has on Heartbeat."
+msgstr "Fino ad oggi, Pacemaker ha ricevuto minori test su soluzioni in produzione con Corosync rispetto ad Heartbeat"
+
+#. Tag: title
+#, no-c-format
+msgid "Enabling Pacemaker"
+msgstr "Abilitare Pacemaker"
+
+#. Tag: title
+#, no-c-format
+msgid "For Corosync"
+msgstr "Per Corosync"
+
+#. Tag: para
+#, no-c-format
+msgid "The Corosync configuration is normally located in <filename>/etc/corosync/corosync.conf</filename> and an example for a machine with an address of 1.2.3.4 in a cluster communicating on port 1234 (without peer authentication and message encryption) is shown below."
+msgstr "La configurazione di Corosync è normalmente posizionata in <filename>/etc/corosync/corosync.conf</filename>. Viene mostrato sotto un esempio per una macchina con indirizzo 1.2.3.4 comunicante in un cluster alla porta 1234 (senza autenticazione e crittazione dei messaggi)."
+
+#. Tag: title
+#, no-c-format
+msgid "An example Corosync configuration file"
+msgstr "Un esempio di un file di configurazione di Corosync"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  totem {\n"
+"      version: 2\n"
+"      secauth: off\n"
+"      threads: 0\n"
+"      interface {\n"
+"          ringnumber: 0\n"
+"          bindnetaddr: 1.2.3.4\n"
+"          mcastaddr: 226.94.1.1\n"
+"          mcastport: 1234\n"
+"      }\n"
+"  }\n"
+"  logging {\n"
+"      fileline: off\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"  amf {\n"
+"      mode: disabled\n"
+"  }\n"
+"\t"
+msgstr ""
+"\n"
+"  totem {\n"
+"      version: 2\n"
+"      secauth: off\n"
+"      threads: 0\n"
+"      interface {\n"
+"          ringnumber: 0\n"
+"          bindnetaddr: 1.2.3.4\n"
+"          mcastaddr: 226.94.1.1\n"
+"          mcastport: 1234\n"
+"      }\n"
+"  }\n"
+"  logging {\n"
+"      fileline: off\n"
+"      to_syslog: yes\n"
+"      syslog_facility: daemon\n"
+"  }\n"
+"  amf {\n"
+"      mode: disabled\n"
+"  }\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "The logging should be mostly obvious and the amf section refers to the Availability Management Framework and is not covered in this document."
+msgstr "La sezione logging risulta piuttosto ovvia e la sezione amf si riferisce all'Availability Management Framework  e non è affrontata in questo documento."
+
+#. Tag: para
+#, no-c-format
+msgid "The interesting part of the configuration is the totem section. This is where we define the how the node can communicate with the rest of the cluster and what protocol version and options (including encryption<footnote> <para>Please consult the <ulink url=\"http://www.corosync.org/\">Corosync website</ulink> and documentation for details on enabling encryption and peer authentication for the cluster.</para> </footnote>) it should use. Beginners are encouraged to use the values shown and modify the interface section based on their network."
+msgstr "La parte interessante è la sezione totem. Qui è dove viene definito come un nodo comunica con il resto del cluster e quale versione di protocollo ed opzioni (inclusa la crittazione <footnote> <para>Consultare <ulink url=\"http://www.corosync.org/\">il sito di Corosync</ulink>  e la documentazione per dettagli su come abilitare la crittazione e l'autenticazione dei componenti nel cluster.</para> </footnote>) esso debba utilizzare. I principianti sono incoraggiati ad utilizzare quanto indicato e modificare la sezione dell'interfaccia in base alla propria rete."
+
+#. Tag: para
+#, no-c-format
+msgid "It is also possible to configure Corosync for an IPv6 based environment. Simply configure bindnetaddr and mcastaddr with their IPv6 equivalents. Eg"
+msgstr "E' inoltre possibile configurare Corosync per un ambiente basato su IPv6. E' sufficiente configurare i parametri bindnetaddr e mcastaddr con l'equivalente IPV6. Ad esempio"
+
+#. Tag: title
+#, no-c-format
+msgid "Example options for an IPv6 environment"
+msgstr "Esempio di opzioni per un ambiente IPV6"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+"  mcastaddr: ff05::1\n"
+"\t  "
+msgstr ""
+"\n"
+"  bindnetaddr: fec0::1:a800:4ff:fe00:20 \n"
+"  mcastaddr: ff05::1\n"
+"\t  "
+
+#. Tag: para
+#, no-c-format
+msgid "To tell Corosync to use the Pacemaker cluster manager, add the following fragment to a functional Corosync configuration and restart the cluster."
+msgstr "Per indicare a Corosync di utilizzare il cluster manager Pacemaker è necessario aggiungere il seguente frammento ad una configurazione Corosync funzionante e riavviare il cluster."
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration fragment for enabling Pacemaker under Corosync"
+msgstr "Frammento di configurazione per abilitare Pacemaker in Corosync"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  aisexec {\n"
+"    user:  root\n"
+"    group: root\n"
+"  }\n"
+"  service {\n"
+"    name: pacemaker\n"
+"    ver: 0\n"
+"  }\n"
+"\t  "
+msgstr ""
+"\n"
+"  aisexec {\n"
+"    user:  root\n"
+"    group: root\n"
+"  }\n"
+"  service {\n"
+"    name: pacemaker\n"
+"    ver: 0\n"
+"  }\n"
+"\t  "
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster needs to be run as root so that its child processes (the lrmd in particular) have sufficient privileges to perform the actions requested of it. After-all, a cluster manager that can&#39;t add an IP address or start apache is of little use."
+msgstr "Il cluster necessità di funzionare come root in modo che i processi figlio (lrmd in particolare) abbiano sufficienti privilegi per effettuare le azioni richieste da esso. Dopo tutto, un cluster manager che non potesse aggiungere un indirizzo IP o avviare apache risulterebbe piuttosto inutile."
+
+#. Tag: para
+#, no-c-format
+msgid "The second directive is the one that actually instructs the cluster to run Pacemaker."
+msgstr "La seconda direttiva istruisce il cluster nell'utilizzare Pacemaker."
+
+#. Tag: title
+#, no-c-format
+msgid "For Heartbeat"
+msgstr "Per Heartbeat"
+
+#. Tag: para
+#, no-c-format
+msgid "Add the following to a functional <filename>ha.cf</filename> configuration file and restart Heartbeat"
+msgstr "Aggiungere quanto segue al file <filename>ha.cf</filename> in una configurazione funzionante e riavviando Heartbeat"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration fragment for enabling Pacemaker under Heartbeat"
+msgstr "Frammento di configurazione per abilitare Pacemaker in Heartbeat"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  crm respawn\n"
+"\t  "
+msgstr ""
+"\n"
+"  crm respawn\n"
+"\t  "

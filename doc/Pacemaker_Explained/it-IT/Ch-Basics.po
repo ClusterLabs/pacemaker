@@ -1,0 +1,690 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2011-04-19 12:07+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration Basics"
+msgstr "Nozioni di base sulla configurazione"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuration Layout"
+msgstr "Layout della configurazione"
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster is written using XML notation and divided into two main sections; configuration and status."
+msgstr "Il cluster viene scritto utilizzando la notazione XML e diviso in due sezioni principali; configuration e status."
+
+#. Tag: para
+#, no-c-format
+msgid "The status section contains the history of each resource on each node and based on this data, the cluster can construct the complete current state of the cluster. The authoritative source for the status section is the local resource manager (lrmd) process on each cluster node and the cluster will occasionally repopulate the entire section. For this reason it is never written to disk and admin&#39;s are advised against modifying it in any way."
+msgstr "La sezione status coniente lo storico di ciascuna risorsa in ciascun nodo e, sulla base di questi dati, il cluster può risalire al suo stato attuale. La sorgente autoritativa della sezione status è il processo local resource manager (lrmd) su ciascun nodo del cluster ed il cluster potrà occasionalmente ripopolare l'intera sezione. Per questa ragione essa non è mai scritta sul disco e gli amministratori sono allertati di non modificarla in alcuna maniera."
+
+#. Tag: para
+#, no-c-format
+msgid "The configuration section contains the more traditional information like cluster options, lists of resources and indications of where they should be placed. The configuration section is the primary focus of this document."
+msgstr "La sezione configuration contiene le informazioni più tradizionali come le opzioni del cluster, la lista delle risorse ed indicazioni su dove queste dovranno essere poste. La comprensione della sezione configuration è l'obiettivo primario di questo documento."
+
+#. Tag: para
+#, no-c-format
+msgid "The configuration section itself is divided into four parts:"
+msgstr "La sezione configuration è a sua volta divisa in quattro parti:"
+
+#. Tag: para
+#, no-c-format
+msgid "Configuration options (called <literal>crm_config</literal>)"
+msgstr "Opzioni di configurazione (chiamata <literal>crm_config</literal>)"
+
+#. Tag: para
+#, no-c-format
+msgid "Nodes"
+msgstr "Nodi"
+
+#. Tag: para
+#, no-c-format
+msgid "Resources"
+msgstr "Risorse"
+
+#. Tag: para
+#, no-c-format
+msgid "Resource relationships (called <literal>constraints</literal>)"
+msgstr "Relazioni delle risorse (chiamate <literal>constraints</literal>)"
+
+#. Tag: title
+#, no-c-format
+msgid "An empty configuration"
+msgstr "Una configurazione vuota"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"\n"
+"  &#60;cib generated=&#34;true&#34; admin_epoch=&#34;0&#34; epoch=&#34;0&#34; num_updates=&#34;0&#34; have-quorum=&#34;false&#34;&#62;\n"
+"     &#60;configuration&#62;\n"
+"        &#60;crm_config/&#62;\n"
+"        &#60;nodes/&#62;\n"
+"        &#60;resources/&#62;\n"
+"        &#60;constraints/&#62;\n"
+"     &#60;/configuration&#62;\n"
+"     &#60;status/&#62;\n"
+"  &#60;/cib&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+"\n"
+"  &#60;cib generated=&#34;true&#34; admin_epoch=&#34;0&#34; epoch=&#34;0&#34; num_updates=&#34;0&#34; have-quorum=&#34;false&#34;&#62;\n"
+"     &#60;configuration&#62;\n"
+"        &#60;crm_config/&#62;\n"
+"        &#60;nodes/&#62;\n"
+"        &#60;resources/&#62;\n"
+"        &#60;constraints/&#62;\n"
+"     &#60;/configuration&#62;\n"
+"     &#60;status/&#62;\n"
+"  &#60;/cib&#62;\n"
+"\n"
+"\t"
+
+#. Tag: title
+#, no-c-format
+msgid "The Current State of the Cluster"
+msgstr "Lo stato attuale del Cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Before one starts to configure a cluster, it is worth explaining how to view the finished product. For this purpose we have created the <command>crm_mon</command> utility that will display the current state of an active cluster. It can show the cluster status by node or by resource and can be used in either single-shot or dynamically-updating mode. There are also modes for displaying a list of the operations performed (grouped by node and resource) as well as information about failures."
+msgstr "Prima di iniziare a configurare il cluster, vale la pena spiegare come sia possibile visionare lo stato del prodotto finito. Per questo scopo è stato creato il comando <command>crm_mon</command>, una utility che visualizzerà lo stato attuale di un Cluster attivo. Questo comando può visualizzare lo stato del cluster in base ai nodi o alle risorse e può essere utilizzato in modalità comando singolo o aggiornamento dinamico. Esistono poi modi per visualizzare una lista di operazioni eseguite (raggruppate per nodo o risorsa) così come informazioni in merito ai fallimenti."
+
+#. Tag: para
+#, no-c-format
+msgid "Using this tool, you can examine the state of the cluster for irregularities and see how it responds when you cause or simulate failures."
+msgstr "Utilizzando questo strumento è possibile esaminare le irregolarità presenti nello stato del Cluster e vedere come questo risponda una volta che tali problemi si verificano o vengono simulati."
+
+#. Tag: para
+#, no-c-format
+msgid "Details on all the available options can be obtained using the <command>crm_mon --help</command> command."
+msgstr "Dettagli su tutte le opzioni disponibili possono essere ottenuti utilizzando il comando <command>crm_mon --help</command>."
+
+#. Tag: title
+#, no-c-format
+msgid "Sample output from crm_mon"
+msgstr "Esempio dell'output di crm_mon"
+
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"  <command># crm_mon</command>\n"
+"  ============\n"
+"  Last updated: Fri Nov 23 15:26:13 2007\n"
+"  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
+"  3 Nodes configured.\n"
+"  5 Resources configured.\n"
+"  ============\n"
+"\n"
+"  Node: sles-1 (1186dc9a-324d-425a-966e-d757e693dc86): online\n"
+"      192.168.100.181    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      192.168.100.182    (heartbeat:IPaddr):        Started sles-1\n"
+"      192.168.100.183    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      rsc_sles-1    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      child_DoFencing:2    (stonith:external/vmware):    Started sles-1\n"
+"  Node: sles-2 (02fb99a8-e30e-482f-b3ad-0fb3ce27d088): standby\n"
+"  Node: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec): online\n"
+"      rsc_sles-2    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"      rsc_sles-3    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"      child_DoFencing:0    (stonith:external/vmware):    Started sles-3"
+msgstr ""
+"\n"
+"  <command># crm_mon</command>\n"
+"  ============\n"
+"  Last updated: Fri Nov 23 15:26:13 2007\n"
+"  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
+"  3 Nodes configured.\n"
+"  5 Resources configured.\n"
+"  ============\n"
+"\n"
+"  Node: sles-1 (1186dc9a-324d-425a-966e-d757e693dc86): online\n"
+"      192.168.100.181    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      192.168.100.182    (heartbeat:IPaddr):        Started sles-1\n"
+"      192.168.100.183    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      rsc_sles-1    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"      child_DoFencing:2    (stonith:external/vmware):    Started sles-1\n"
+"  Node: sles-2 (02fb99a8-e30e-482f-b3ad-0fb3ce27d088): standby\n"
+"  Node: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec): online\n"
+"      rsc_sles-2    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"      rsc_sles-3    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"      child_DoFencing:0    (stonith:external/vmware):    Started sles-3"
+
+#. Tag: title
+#, no-c-format
+msgid "Sample output from crm_mon -n"
+msgstr "Esempio dell'output di crm_mon -n"
+
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"  <command># crm_mon -n</command>\n"
+"  ============\n"
+"  Last updated: Fri Nov 23 15:26:13 2007\n"
+"  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
+"  3 Nodes configured.\n"
+"  5 Resources configured.\n"
+"  ============\n"
+"\n"
+"  Node: sles-1 (1186dc9a-324d-425a-966e-d757e693dc86): online\n"
+"  Node: sles-2 (02fb99a8-e30e-482f-b3ad-0fb3ce27d088): standby\n"
+"  Node: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec): online\n"
+"\n"
+"  Resource Group: group-1\n"
+"    192.168.100.181    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"    192.168.100.182    (heartbeat:IPaddr):        Started sles-1\n"
+"    192.168.100.183    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"  rsc_sles-1    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"  rsc_sles-2    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"  rsc_sles-3    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"  Clone Set: DoFencing\n"
+"    child_DoFencing:0    (stonith:external/vmware):    Started sles-3\n"
+"    child_DoFencing:1    (stonith:external/vmware):    Stopped\n"
+"    child_DoFencing:2    (stonith:external/vmware):    Started sles-1"
+msgstr ""
+"\n"
+"  <command># crm_mon -n</command>\n"
+"  ============\n"
+"  Last updated: Fri Nov 23 15:26:13 2007\n"
+"  Current DC: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec)\n"
+"  3 Nodes configured.\n"
+"  5 Resources configured.\n"
+"  ============\n"
+"\n"
+"  Node: sles-1 (1186dc9a-324d-425a-966e-d757e693dc86): online\n"
+"  Node: sles-2 (02fb99a8-e30e-482f-b3ad-0fb3ce27d088): standby\n"
+"  Node: sles-3 (2298606a-6a8c-499a-9d25-76242f7006ec): online\n"
+"\n"
+"  Resource Group: group-1\n"
+"    192.168.100.181    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"    192.168.100.182    (heartbeat:IPaddr):        Started sles-1\n"
+"    192.168.100.183    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"  rsc_sles-1    (heartbeat::ocf:IPaddr):    Started sles-1\n"
+"  rsc_sles-2    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"  rsc_sles-3    (heartbeat::ocf:IPaddr):    Started sles-3\n"
+"  Clone Set: DoFencing\n"
+"    child_DoFencing:0    (stonith:external/vmware):    Started sles-3\n"
+"    child_DoFencing:1    (stonith:external/vmware):    Stopped\n"
+"    child_DoFencing:2    (stonith:external/vmware):    Started sles-1"
+
+#. Tag: para
+#, no-c-format
+msgid "The DC (Designated Controller) node is where all the decisions are made and if the current DC fails a new one is elected from the remaining cluster nodes. The choice of DC is of no significance to an administrator beyond the fact that its logs will generally be more interesting."
+msgstr "Sul nodo DC (Designated Controller) vengono prese tutte le decisioni e se l'attuale DC fallisce, uno nuovo viene eletto partendo dai nodi rimanenti. La scelta del DC non è di competenza dell'amministratore, mentre lo sono i log generati dallo stesso."
+
+#. Tag: title
+#, no-c-format
+msgid "How Should the Configuration be Updated?"
+msgstr "Come dovrebbe essere aggiornata la configurazione?"
+
+#. Tag: para
+#, no-c-format
+msgid "There are three basic rules for updating the cluster configuration:"
+msgstr "Ci sono tre regole base per aggiornare la configurazione del cluster:"
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 1 - Never edit the cib.xml file manually. Ever. I&#39;m not making this up."
+msgstr "Regola 1 - Non modificare MAI il file cib.xml manualmente. Mai. Non è un semplice suggerimento, ma una regola da rispettare."
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 2 - Read Rule 1 again."
+msgstr "Regola 2 - Leggere nuovamente la regola 1."
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration."
+msgstr "Regola 3 - Il cluster noterà se sono state ignorate le regole 1 e 2 e si rifiuterà di utilizzare la configurazione."
+
+#. Tag: para
+#, no-c-format
+msgid "Now that it is clear how NOT to update the configuration, we can begin to explain how you should."
+msgstr "Ora che è chiaro com NON modificare la configurazione, è possibile spiegare come invece si debba fare."
+
+#. Tag: para
+#, no-c-format
+msgid "The most powerful tool for modifying the configuration is the cibadmin command which talks to a running cluster. With cibadmin, the user can query, add, remove, update or replace any part of the configuration and all changes take effect immediately so there is no need to perform a reload-like operation."
+msgstr "Lo strumento più potente per modificare la configurazione è il comando cibadmin che comunica direttamente con un cluster attivo. Con cibadmin l'utente può interrogare, aggiungere, rimuovere, aggiornare o rimpiazzare qualsiasi parte della configurazione. Tutti i cambiamenti avvengono istantaneamente, quindi non è necessario effettuare operazioni come reload."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "The simplest way of using cibadmin is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor and then upload the revised configuration."
+msgstr "La via pià semplice per utilizzare cibadmin è quella di salvare l'attuale configurazione in un file temporaneo, modificare questo file con il proprio editor di testo (o XML) preferito e quindi caricare la nuova configurazione."
+
+#. Tag: title
+#, no-c-format
+msgid "Safely using an editor to modify the cluster configuration"
+msgstr "Utilizzare un editor per modificare la configurazione del cluster in sicurezza"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  <command>cibadmin --query &#62; tmp.xml</command>\n"
+"  <command>vi tmp.xml</command>\n"
+"  <command>cibadmin --replace --xml-file tmp.xml</command>\n"
+"\t"
+msgstr ""
+"\n"
+"  <command>cibadmin --query &#62; tmp.xml</command>\n"
+"  <command>vi tmp.xml</command>\n"
+"  <command>cibadmin --replace --xml-file tmp.xml</command>\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "Some of the better XML editors can make use of a Relax NG schema to help make sure any changes you make are valid. The schema describing the configuration can normally be found in /usr/lib/heartbeat/pacemaker.rng on most systems."
+msgstr "Alcuni dei migliori editor XML possono utilizzare uno schema Relax NG per avere la certezza che ogni cambiamento effettuato sia valido. Lo schema che descrive la configurazione può essere normalmente trovato nel file /usr/lib/heartbeat/pacemaker.rng presente sulla maggior parte dei sistemi."
+
+#. Tag: para
+#, no-c-format
+msgid "If you only wanted to modify the resources section, you could instead do"
+msgstr "Se invece la necessità è quella di modificare unicamente la sezione risores, allora è possibile fare"
+
+#. Tag: title
+#, no-c-format
+msgid "Safely using an editor to modify a subsection of the cluster configuration"
+msgstr "Utilizzare in sicurezza un editor per modificare una sotto sezione della configurazione del cluster"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+"  <command>cibadmin --query --obj_type resources &#62; tmp.xml</command>\n"
+"  <command>vi tmp.xml</command>\n"
+"  <command>cibadmin --replace --obj_type resources --xml-file tmp.xml</command>\n"
+"\t"
+msgstr ""
+"\n"
+"  <command>cibadmin --query --obj_type resources &#62; tmp.xml</command>\n"
+"  <command>vi tmp.xml</command>\n"
+"  <command>cibadmin --replace --obj_type resources --xml-file tmp.xml</command>\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "to avoid modifying any other part of the configuration."
+msgstr "per consentire la modifica di qualsiasi altra parte della configurazione."
+
+#. Tag: title
+#, no-c-format
+msgid "Quickly Deleting Part of the Configuration"
+msgstr "Eliminare velocemente parte della configurazione"
+
+#. Tag: para
+#, no-c-format
+msgid "Identify the object you wish to delete. eg."
+msgstr "Identificare l'oggetto da rimuovere, ad esempio"
+
+#. Tag: title
+#, no-c-format
+msgid "Searching for STONITH related configuration items"
+msgstr "Ricerca di oggetti relativi alla configurazione di STONITH"
+
+#. Tag: screen
+#, no-c-format
+msgid ""
+"\n"
+"  <command># cibadmin -Q | grep stonith</command>\n"
+"\n"
+"   &#60;nvpair id=&#34;cib-bootstrap-options-stonith-action&#34; name=&#34;stonith-action&#34; value=&#34;reboot&#34;/&#62;\n"
+"   &#60;nvpair id=&#34;cib-bootstrap-options-stonith-enabled&#34; name=&#34;stonith-enabled&#34; value=&#34;1&#34;/&#62;\n"
+"  &#60;primitive id=&#34;child_DoFencing&#34; class=&#34;stonith&#34; type=&#34;external/vmware&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:1&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:2&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:3&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+msgstr ""
+"\n"
+"  <command># cibadmin -Q | grep stonith</command>\n"
+"\n"
+"   &#60;nvpair id=&#34;cib-bootstrap-options-stonith-action&#34; name=&#34;stonith-action&#34; value=&#34;reboot&#34;/&#62;\n"
+"   &#60;nvpair id=&#34;cib-bootstrap-options-stonith-enabled&#34; name=&#34;stonith-enabled&#34; value=&#34;1&#34;/&#62;\n"
+"  &#60;primitive id=&#34;child_DoFencing&#34; class=&#34;stonith&#34; type=&#34;external/vmware&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:1&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:2&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:0&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+"   &#60;lrm_resource id=&#34;child_DoFencing:3&#34; type=&#34;external/vmware&#34; class=&#34;stonith&#34;&#62;\n"
+
+#. Tag: para
+#, no-c-format
+msgid "Next identify the resource&#39;s tag name and id (in this case we&#39;ll chose <literal>primitive</literal> and <literal>child_DoFencing</literal>). Then simply execute:"
+msgstr "Quindi identificare il tag delle risorse e l'id (in questo caso verranno selezionati <literal>primitive</literal> e <literal>child_DoFencing</literal>). Quindi eseguire semplicemente:"
+
+#. Tag: para
+#, no-c-format
+msgid "<command>cibadmin --delete --crm_xml ‘&#60;primitive id=&#34;child_DoFencing&#34;/&#62;&#39;</command>"
+msgstr "<command>cibadmin --delete --crm_xml ‘&#60;primitive id=&#34;child_DoFencing&#34;/&#62;&#39;</command>"
+
+#. Tag: title
+#, no-c-format
+msgid "Updating the Configuration Without Using XML"
+msgstr "Aggiornare la configurazione senza utilizzare XML"
+
+#. Tag: para
+#, no-c-format
+msgid "Some common tasks can also be performed with one of the higher level tools that avoid the need to read or edit XML."
+msgstr "Alcune operazioni comuni possono essere eseguite con uno dei tanti strumenti ad alto livello, per ovviare alla necessità di leggere o modificare XML."
+
+#. Tag: para
+#, no-c-format
+msgid "To enable stonith for example, one could run:"
+msgstr "Per abilitare stonith, ad esempio, è possibile lanciare:"
+
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_attribute --attr-name stonith-enabled --attr-value true</command>"
+msgstr "<command>crm_attribute --attr-name stonith-enabled --attr-value true</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Or to see if somenode is allowed to run resources, there is:"
+msgstr "O per vedere se qualche nodo è abilitato ad erogare risorse, esiste:"
+
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_standby --get-value --node-uname somenode</command>"
+msgstr "<command>crm_standby --get-value --node-uname somenode</command>"
+
+#. Tag: para
+#, no-c-format
+msgid "Or to find the current location of my-test-rsc one can use:"
+msgstr "O per trovare la posizione attuale di my-test-rsc è possibile lanciare:"
+
+#. Tag: para
+#, no-c-format
+msgid "<command>crm_resource --locate --resource my-test-rsc</command>"
+msgstr "<command>crm_resource --locate --resource my-test-rsc</command>"
+
+#. Tag: title
+#, no-c-format
+msgid "Making Configuration Changes in a Sandbox"
+msgstr "Effettuare modifiche alla configurazione in un ambiente di prova"
+
+#. Tag: para
+#, no-c-format
+msgid "Often it is desirable to preview the effects of a series of changes before updating the configuration atomically. For this purpose we have created <command>crm_shadow</command> which creates a &#34;shadow&#34; copy of the configuration and arranges for all the command line tools to use it."
+msgstr "A volte esiste la necessità di prevedere gli effetti di una serie di modifiche prima di aggiornare automaticamente la configurazione. A questo scopo è stato creato <command>crm_shadow</command> che crea una copia &#34;shadow&#34; della configurazione e la organizza affinché tutti gli strumenti da linea di comando possano utilizzarla."
+
+#. Tag: para
+#, no-c-format
+msgid "To begin, simply invoke <command>crm_shadow</command> and give it the name of a configuration to create <footnote> <para>Shadow copies are identified with a name, making it possible to have more than one</para> </footnote> and be sure to follow the simple on-screen instructions."
+msgstr "Per iniziare è sufficiente lanciare <command>crm_shadow</command> passando come parametro il nome della configurazione da creare <footnote> <para>Tutte le copie Shadow sono identificate da un nome, rendendo così possibile l'esistenza di più copie contemporaneamente</para> </footnote> ed essendo sicuri di segure le semplici istruzioni che appaiono."
+
+#. Tag: para
+#, no-c-format
+msgid "Read the above carefully, failure to do so could result in you destroying the cluster&#39;s active configuration"
+msgstr "Leggere quanto segue attentamente, tale mancanza potrebbe portare alla distruzione della configurazione attiva del cluster"
+
+#. Tag: title
+#, no-c-format
+msgid "Creating and displaying the active sandbox"
+msgstr "Creazione e visualizzazione dell'ambiente di test"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+" # <command>crm_shadow --create test</command>\n"
+" Setting up shadow instance\n"
+" Type Ctrl-D to exit the crm_shadow shell\n"
+" shadow[test]: \n"
+" shadow[test] # <command>crm_shadow --which</command>\n"
+" test"
+msgstr ""
+"\n"
+" # <command>crm_shadow --create test</command>\n"
+" Setting up shadow instance\n"
+" Type Ctrl-D to exit the crm_shadow shell\n"
+" shadow[test]: \n"
+" shadow[test] # <command>crm_shadow --which</command>\n"
+" test"
+
+#. Tag: para
+#, no-c-format
+msgid "From this point on, all cluster commands will automatically use the shadow copy instead of talking to the cluster&#39;s active configuration. Once you have finished experimenting, you can either commit the changes, or discard them as shown below. Again, be sure to follow the on-screen instructions carefully."
+msgstr "Da questo punto in poi, tutti i comandi cluster utilizzeranno automaticamente la copia shadow anziché la copia attiva della configurazione del cluster. Una volta terminate le sperimentazione, è possibile effettuare la registrazione delle modifiche oppure scartare le stesse come mostrato sotto. Di nuovo, porre estrema attenzione alle istruzioni da seguire che appaiono a schermo."
+
+#. Tag: para
+#, no-c-format
+msgid "For a full list of <command>crm_shadow</command> options and commands, invoke it with the <parameter>--help</parameter> option."
+msgstr "Per una lista competa delle opzioni e comandi di <command>crm_shadow</command> è possibile lanciare il comando con il parametro <parameter>--help</parameter>."
+
+#. Tag: title
+#, no-c-format
+msgid "Using a sandbox to make multiple changes atomically"
+msgstr "Utilizzare un ambiente di test per effettuare più cambiamenti contemporaneamente"
+
+#. Tag: programlisting
+#, no-c-format
+msgid ""
+"\n"
+" shadow[test] # <command>crm_failcount -G -r rsc_c001n01</command>\n"
+"  name=fail-count-rsc_c001n01 value=0\n"
+" shadow[test] # <command>crm_standby -v on -n c001n02</command>\n"
+" shadow[test] # <command>crm_standby -G -n c001n02</command>\n"
+" name=c001n02 scope=nodes value=on\n"
+" shadow[test] # <command>cibadmin --erase --force</command>\n"
+" shadow[test] # <command>cibadmin --query</command>\n"
+"\n"
+" &#60;cib cib_feature_revision=&#34;1&#34; validate-with=&#34;pacemaker-1.0&#34; admin_epoch=&#34;0&#34; crm_feature_set=&#34;3.0&#34; have-quorum=&#34;1&#34; epoch=&#34;112&#34;\n"
+"      dc-uuid=&#34;c001n01&#34; num_updates=&#34;1&#34; cib-last-written=&#34;Fri Jun 27 12:17:10 2008&#34;&#62;\n"
+"    &#60;configuration&#62;\n"
+"       &#60;crm_config/&#62;\n"
+"       &#60;nodes/&#62;\n"
+"       &#60;resources/&#62;\n"
+"       &#60;constraints/&#62;\n"
+"    &#60;/configuration&#62;\n"
+"    &#60;status/&#62;\n"
+" &#60;/cib&#62;\n"
+"\n"
+"  shadow[test] # <command>crm_shadow --delete test --force</command>\n"
+"  Now type Ctrl-D to exit the crm_shadow shell\n"
+"  shadow[test] # <command>exit</command>\n"
+"  # <command>crm_shadow --which</command>\n"
+"  No shadow instance provided\n"
+"  # <command>cibadmin -Q</command>\n"
+"\n"
+" &#60;cib cib_feature_revision=&#34;1&#34; validate-with=&#34;pacemaker-1.0&#34; admin_epoch=&#34;0&#34; crm_feature_set=&#34;3.0&#34; have-quorum=&#34;1&#34; epoch=&#34;110&#34;\n"
+"       dc-uuid=&#34;c001n01&#34; num_updates=&#34;551&#34;&#62;\n"
+"    &#60;configuration&#62;\n"
+"       &#60;crm_config&#62;\n"
+"          &#60;cluster_property_set id=&#34;cib-bootstrap-options&#34;&#62;\n"
+"             &#60;nvpair id=&#34;cib-bootstrap-1&#34; name=&#34;stonith-enabled&#34; value=&#34;1&#34;/&#62;\n"
+"             &#60;nvpair id=&#34;cib-bootstrap-2&#34; name=&#34;pe-input-series-max&#34; value=&#34;30000&#34;/&#62;\n"
+"\n"
+"\t"
+msgstr ""
+"\n"
+" shadow[test] # <command>crm_failcount -G -r rsc_c001n01</command>\n"
+"  name=fail-count-rsc_c001n01 value=0\n"
+" shadow[test] # <command>crm_standby -v on -n c001n02</command>\n"
+" shadow[test] # <command>crm_standby -G -n c001n02</command>\n"
+" name=c001n02 scope=nodes value=on\n"
+" shadow[test] # <command>cibadmin --erase --force</command>\n"
+" shadow[test] # <command>cibadmin --query</command>\n"
+"\n"
+" &#60;cib cib_feature_revision=&#34;1&#34; validate-with=&#34;pacemaker-1.0&#34; admin_epoch=&#34;0&#34; crm_feature_set=&#34;3.0&#34; have-quorum=&#34;1&#34; epoch=&#34;112&#34;\n"
+"      dc-uuid=&#34;c001n01&#34; num_updates=&#34;1&#34; cib-last-written=&#34;Fri Jun 27 12:17:10 2008&#34;&#62;\n"
+"    &#60;configuration&#62;\n"
+"       &#60;crm_config/&#62;\n"
+"       &#60;nodes/&#62;\n"
+"       &#60;resources/&#62;\n"
+"       &#60;constraints/&#62;\n"
+"    &#60;/configuration&#62;\n"
+"    &#60;status/&#62;\n"
+" &#60;/cib&#62;\n"
+"\n"
+"  shadow[test] # <command>crm_shadow --delete test --force</command>\n"
+"  Now type Ctrl-D to exit the crm_shadow shell\n"
+"  shadow[test] # <command>exit</command>\n"
+"  # <command>crm_shadow --which</command>\n"
+"  No shadow instance provided\n"
+"  # <command>cibadmin -Q</command>\n"
+"\n"
+" &#60;cib cib_feature_revision=&#34;1&#34; validate-with=&#34;pacemaker-1.0&#34; admin_epoch=&#34;0&#34; crm_feature_set=&#34;3.0&#34; have-quorum=&#34;1&#34; epoch=&#34;110&#34;\n"
+"       dc-uuid=&#34;c001n01&#34; num_updates=&#34;551&#34;&#62;\n"
+"    &#60;configuration&#62;\n"
+"       &#60;crm_config&#62;\n"
+"          &#60;cluster_property_set id=&#34;cib-bootstrap-options&#34;&#62;\n"
+"             &#60;nvpair id=&#34;cib-bootstrap-1&#34; name=&#34;stonith-enabled&#34; value=&#34;1&#34;/&#62;\n"
+"             &#60;nvpair id=&#34;cib-bootstrap-2&#34; name=&#34;pe-input-series-max&#34; value=&#34;30000&#34;/&#62;\n"
+"\n"
+"\t"
+
+#. Tag: para
+#, no-c-format
+msgid "Making changes in a sandbox and verifying the real configuration is untouched"
+msgstr "Effettuare i cambiamenti nell'ambiente di test e verificare che la configurazione reale sia intonsa"
+
+#. Tag: title
+#, no-c-format
+msgid "Testing Your Configuration Changes"
+msgstr "Testare le proprie modifiche"
+
+#. Tag: para
+#, no-c-format
+msgid "We saw previously how to make a series of changes to a &#34;shadow&#34; copy of the configuration. Before loading the changes back into the cluster (eg. <command>crm_shadow --commit mytest --force</command>), it is often advisable to simulate the effect of the changes with ptest. Eg."
+msgstr "E' stato mostrato in precedenza come effettuare seie di cambiamente alle copie &#34;shadow&#34; della configurazione. Prima di caricare tali modifiche nel cluster (ad esempio con <command>crm_shadow --commit mytest --force</command>), a olte può essere necessario simulare l'effetto dei cambiamenti con ptest. Ad esempio."
+
+#. Tag: para
+#, no-c-format
+msgid "<command>ptest --live-check -VVVVV --save-graph tmp.graph --save-dotfile <filename>tmp.dot</filename></command>"
+msgstr "<command>ptest --live-check -VVVVV --save-graph tmp.graph --save-dotfile <filename>tmp.dot</filename></command>"
+
+#. Tag: para
+#, no-c-format
+msgid "The tool uses the same library as the live cluster to show what it would have done given the supplied input. It&#39;s output, in addition to a significant amount of logging, is stored in two files <filename>tmp.graph</filename> and <filename>tmp.dot</filename>, both are representations of the same thing -- the cluster&#39;s response to your changes. In the graph file is stored the complete transition, containing a list of all the actions, their parameters and their pre-requisites. Because the transition graph is not terribly easy to read, the tool also generates a Graphviz dot-file representing the same information."
+msgstr "Lo strumento utilizza la stessa libreria del cluster attivo per mostrare cosa succederebbe con l'input definito. L'output del programma, insieme a parecchi messaggi di log, è registrato in due files <filename>tmp.graph</filename> e <filename>tmp.dot</filename>. Entrambi sono rappresentazioni della stessa cosa: la risposta del cluster ai cambiamenti effettuati. Nel file grafico è registrata la transizione completa, contenente una lista di tutte le azioni, i parametri ed i pre-requisiti. A causa del fatto che il grafico di transizione non è propriamente semplice da leggere, il tool genera anche un dot-file Graphviz, rappresentante le stesse informazioni."
+
+#. Tag: title
+#, no-c-format
+msgid "Small Cluster Transition"
+msgstr "Una piccola transizione del cluster"
+
+#. Tag: caption
+#, no-c-format
+msgid "An example transition graph as represented by Graphviz"
+msgstr "Un esempio di grafico di transizione come rappresentato da Graphviz"
+
+#. Tag: para
+#, no-c-format
+msgid "Interpreting the Graphviz output"
+msgstr "Interpretare l'output di Graphviz"
+
+#. Tag: para
+#, no-c-format
+msgid "Arrows indicate ordering dependencies"
+msgstr "Le frecce indicano le dipendenze relative all'ordine"
+
+#. Tag: para
+#, no-c-format
+msgid "Dashed-arrows indicate dependencies that are not present in the transition graph"
+msgstr "Le frecce tratteggiate indicano dipendenze che non sono presenti nel grafico di transizione"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a dashed border of any color do not form part of the transition graph"
+msgstr "Azioni con un bordo tratteggiato di qualsiasi colore non fanno parte del grafico di transizione"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a green border form part of the transition graph"
+msgstr "Azioni con un bordo verde sono parte del grafico di transizione"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a red border are ones the cluster would like to execute but are unrunnable"
+msgstr "Azioni con un bordo rosso sono azioni che il cluster vorrebbe eseguire, ma non è possibile farlo"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a blue border are ones the cluster does not feel need to be executed"
+msgstr "Azioni con un bordo blu sono azioni che il cluster non sente il bisogno di eseguire"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph"
+msgstr "Azioni con un testo arancione sono pseudo azioni che il cluster utilizza per semplificare il grafico"
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with black text are sent to the LRM"
+msgstr "Azioni con un testo nero sono inviate a LRM"
+
+#. Tag: para
+#, no-c-format
+msgid "Resource actions have text of the form <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable> <replaceable>node</replaceable>"
+msgstr "Azioni relative alle risorse hanno un testo nella forma <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable> <replaceable>node</replaceable>"
+
+#. Tag: para
+#, no-c-format
+msgid "Any action depending on an action with a red border will not be able to execute."
+msgstr "Ogni azione dipendente da un'azione con un bordo rosso non avrà la possibilità di essere eseguita"
+
+#. Tag: para
+#, no-c-format
+msgid "Loops are <emphasis>really</emphasis> bad. Please report them to the development team."
+msgstr "I loop sono qualcosa di <emphasis>veramente</emphasis> negativo. Essi vanno riportati al team di sviluppo."
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, it appears that a new node, <literal>node2</literal>, has come online and that the cluster is checking to make sure <literal>rsc1</literal>, <literal>rsc2</literal> and <literal>rsc3</literal> are not already running there (Indicated by the <literal>*_monitor_0</literal> entries). Once it did that, and assuming the resources were not active there, it would have liked to stop <literal>rsc1</literal> and <literal>rsc2</literal> on <literal>node1</literal> and move them to <literal>node2</literal>. However, there appears to be some problem and the cluster cannot or is not permitted to perform the stop actions which implies it also cannot perform the start actions. For some reason the cluster does not want to start <literal>rsc3</literal> anywhere."
+msgstr "Nell'esempio soprastante appare come un nuovo nodo, <literal>node2</literal>, è giunto online e che il cluster sta controllando che <literal>rsc1</literal>, <literal>rsc2</literal> e <literal>rsc3</literal> non stiano già funzionando su di esso (indicato dalle entry <literal>*_monitor_0</literal>). Una volta completato il controllo ed assunto che le risorse non sono attive qui, il cluster vorrebbe stoppare <literal>rsc1</literal> ed <literal>rsc2</literal> su <literal>node1</literal> e muovere tali risorse su <literal>node2</literal>. Tuttavia, sembrano esserci problemi ed il cluster non può o non riesce ad effettuare lo azioni di stop, che implicano quindi l'impossibilità di eseguire le azioni di start. Per qualche ragione il cluster non vuole avviare <literal>rsc3</literal> da nessuna parte."
+
+#. Tag: para
+#, no-c-format
+msgid "For information on the options supported by ptest, use <command>ptest --help</command>"
+msgstr "Per informazioni sulle opzioni supportate da ptest, utilizzare <command>ptest --help</command>"
+
+#. Tag: title
+#, no-c-format
+msgid "Complex Cluster Transition"
+msgstr "Una complessa transizione del cluster"
+
+#. Tag: caption
+#, no-c-format
+msgid "Another, slightly more complex, transition graph that you&#39;re not expected to be able to read"
+msgstr "Un altro grafico di transizione leggermente più complesso, (particolarmente complicato da leggere)"
+
+#. Tag: title
+#, no-c-format
+msgid "Do I Need to Update the Configuration on all Cluster Nodes?"
+msgstr "Esiste l'esigenza di aggiornare la configurazione su tutti i nodi del cluster?"
+
+#. Tag: para
+#, no-c-format
+msgid "No. Any changes are immediately synchronized to the other active members of the cluster."
+msgstr "No. Ogni modifica è immediatamente sincronizzata con gli altri membri attivi del cluster."
+
+#. Tag: para
+#, no-c-format
+msgid "To reduce bandwidth, the cluster only broadcasts the incremental updates that result from your changes and uses MD5 sums to ensure that each copy is completely consistent."
+msgstr "Per ridurre la banda utilizzata il cluster effettua il broadcast incrementale degli aggiornamenti risultanti i cambiamenti effettuati ed utilizza sum MD5 per assicurare che ciascuna copia sia completamente consistente."

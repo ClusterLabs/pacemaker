@@ -1,0 +1,509 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2011-05-04 09:58+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "More About OCF Resource Agents"
+msgstr "Maggiori informazioni sui Resource Agent OCF"
+
+#. Tag: title
+#, no-c-format
+msgid "Location of Custom Scripts"
+msgstr "Dove si trovano gli script personalizzati"
+
+#. Tag: para
+#, no-c-format
+msgid "OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
+msgstr "Gli OCF Resource Agent si troviano nel path <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>."
+
+#. Tag: para
+#, no-c-format
+msgid "When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat. So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:"
+msgstr "In fase di creazione dei propri Agent l'utente è incoraggiato a creare una nuova cartella sotto <filename>/usr/lib/ocf/resource.d/</filename> in modo che questi non vengano confusi (o sovrascritti) con gli agenti forniti con Heartbeat. Quindi, ad esempio, se viene scelto come nome provider bigCorp ed il nome della nuova risorsa sarà bigApp, andrà creato uno script chiamato <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> e definita una risorsa:"
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&#60;primitive id=&#34;custom-app&#34; class=&#34;ocf&#34; provider=&#34;bigCorp&#34; type=&#34;bigApp&#34;/&#62;"
+msgstr "&#60;primitive id=&#34;custom-app&#34; class=&#34;ocf&#34; provider=&#34;bigCorp&#34; type=&#34;bigApp&#34;/&#62;"
+
+#. Tag: title
+#, no-c-format
+msgid "Actions"
+msgstr "Azioni"
+
+#. Tag: para
+#, no-c-format
+msgid "All OCF Resource Agents are required to implement the following actions"
+msgstr "Tutti i Resource Agent OCF devono implementare le seguenti azioni"
+
+#. Tag: title
+#, no-c-format
+msgid "Required Actions for OCF Agents"
+msgstr "Azioni richieste per gli agenti OCF"
+
+#. Tag: entry
+#, no-c-format
+msgid "Action"
+msgstr "Azione"
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr "Descrizione"
+
+#. Tag: entry
+#, no-c-format
+msgid "Instructions"
+msgstr "Istruzioni"
+
+#. Tag: entry
+#, no-c-format
+msgid "start"
+msgstr "start"
+
+#. Tag: entry
+#, no-c-format
+msgid "Start the resource"
+msgstr "Avvia la risorsa"
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active."
+msgstr "Restituisce 0 in caso di successo oppure un appropriato codice di errore. Non deve riportare successo finché la risorsa non è totalmente attiva."
+
+#. Tag: entry
+#, no-c-format
+msgid "stop"
+msgstr "stop"
+
+#. Tag: entry
+#, no-c-format
+msgid "Stop the resource"
+msgstr "Ferma la risorsa"
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped."
+msgstr "Restituisce 0 in caso di successo oppure un appropriato codice di errore. Non deve riportare successo finché la risorsa non è completamente stoppata."
+
+#. Tag: entry
+#, no-c-format
+msgid "monitor"
+msgstr "monitor"
+
+#. Tag: entry
+#, no-c-format
+msgid "Check the resource&#39;s state"
+msgstr "Controlla lo stato della risorsa"
+
+#. Tag: para
+#, no-c-format
+msgid "Exit 0 if the resource is running, 7 if it is stopped and anything else if it is failed."
+msgstr "Restituisce 0 se la risorsa sta funzionando, 7 se è stoppata e qualsiasi altro valore se è fallita."
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: The monitor script should test the state of the resource on the local machine only."
+msgstr "NOTA: Lo script di monitor dovrebbe controllare lo stato della risorsa solo sulla macchina locale."
+
+#. Tag: entry
+#, no-c-format
+msgid "meta-data"
+msgstr "meta-data"
+
+#. Tag: entry
+#, no-c-format
+msgid "Describe the resource"
+msgstr "Descrive la risorsa"
+
+#. Tag: para
+#, no-c-format
+msgid "Provide information about this resource as an XML snippet. Exit with 0."
+msgstr "Fornisce informazioni in merito a questa risorsa in forma di estr atto di XML. Restituisce 0."
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: This is <emphasis>not</emphasis> performed as root."
+msgstr "NOTA: <emphasis>non</emphasis> viene eseguito come root."
+
+#. Tag: entry
+#, no-c-format
+msgid "validate-all"
+msgstr "validate-all"
+
+#. Tag: entry
+#, no-c-format
+msgid "Verify the supplied parameters are correct"
+msgstr "Verifica che i parametri passati siano corretti"
+
+#. Tag: entry
+#, no-c-format
+msgid "Exit with 0 if parameters are valid, 2 if not valid, 6 if resource is not configured."
+msgstr "Restituisce 0 se i parametri sono validi, 2 se non sono validi, 6 se la risorsa non è configurata."
+
+#. Tag: para
+#, no-c-format
+msgid "Additional requirements (not part of the OCF specs) are placed on agents that will be used for advanced concepts like <link linkend=\"s-resource-clone\">clones</link> and <link linkend=\"s-resource-multistate\">multi-state</link> resources."
+msgstr "Requisiti aggiuntivi (che non fanno parte delle specifiche OCF) sono associati ad agenti che vengono utilizzati nell'ambito delle risorse <link linkend=\"s-resource-clone\">clone</link> e <link linkend=\"s-resource-multistate\">multi-state</link>."
+
+#. Tag: title
+#, no-c-format
+msgid "Optional Actions for OCF Agents"
+msgstr "Azioni  facoltative per gli agent OCF"
+
+#. Tag: entry
+#, no-c-format
+msgid "promote"
+msgstr "promote"
+
+#. Tag: entry
+#, no-c-format
+msgid "Promote the local instance of a multi-state resource to the master/primary state"
+msgstr "Promuove l'istanza locale di una risorsa multi-state allo stato master/primary"
+
+#. Tag: entry
+#, no-c-format
+msgid "Return 0 on success"
+msgstr "Restituisce 0 in caso di successo"
+
+#. Tag: entry
+#, no-c-format
+msgid "demote"
+msgstr "demote"
+
+#. Tag: entry
+#, no-c-format
+msgid "Demote the local instance of a multi-state resource to the slave/secondary state"
+msgstr "Degrada l'istanza locale di una risorsa multi-state allo stato slave/secondary"
+
+#. Tag: entry
+#, no-c-format
+msgid "notify"
+msgstr "notify"
+
+#. Tag: entry
+#, no-c-format
+msgid "Used by the cluster to send the agent pre and post notification events telling the resource what is or did just take place"
+msgstr "Utilizzato dal cluster per inviare pre e post notifiche di eventi all'agente indicando cosa sta accadendo o cosa è accaduto alla risorsa"
+
+#. Tag: entry
+#, no-c-format
+msgid "Must not fail. Must exit 0"
+msgstr "Non può fallire. Deve restituire 0"
+
+#. Tag: para
+#, no-c-format
+msgid "One action specified in the OCF specs is not currently used by the cluster"
+msgstr "Un'azione definita nelle specifiche OCF non è attalmente utilizzata dal cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "recover - a variant of the start action, this should try to recover a resource locally."
+msgstr "rescover - una variante dell'azione start, dovrebbe cercare di ripristinare localmente una risorsa."
+
+#. Tag: para
+#, no-c-format
+msgid "Remember to use ocf-tester to verify that your new agent complies with the OCF standard properly."
+msgstr "E' necessario ricordare l'utilizzo di ocf-tester per verificare che i nuovi agenti creati siano propriamente compatibili con lo standard OCF."
+
+#. Tag: title
+#, no-c-format
+msgid "How Does the Cluster Interpret the OCF Return Codes?"
+msgstr "Il cluster come interpreta i codici di ritorno OCF?"
+
+#. Tag: para
+#, no-c-format
+msgid "The first thing the cluster does is check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed and recovery action is initiated."
+msgstr "La prima cosa che il cluster fa è controllare il codice di ritorno rispetto ai risultati attesi. Se il risultato non combacia con i valori attesi, allora l'operazione viene considerata fallita e viene avviata un'azione di ripristino."
+
+#. Tag: para
+#, no-c-format
+msgid "There are three types of failure recovery:"
+msgstr "Esistono tre tipi di ripristino da fallimenti:"
+
+#. Tag: title
+#, no-c-format
+msgid "Types of recovery performed by the cluster"
+msgstr "Tipi di ripristino effettuati dal cluster"
+
+#. Tag: entry
+#, no-c-format
+msgid "Recovery Type"
+msgstr "Tipo di ripristino"
+
+#. Tag: entry
+#, no-c-format
+msgid "Action Taken by the Cluster"
+msgstr "Azione intrapresa dal cluster"
+
+#. Tag: entry
+#, no-c-format
+msgid "soft"
+msgstr "soft"
+
+#. Tag: entry
+#, no-c-format
+msgid "A transient error occurred"
+msgstr "Si è verificato un errore transitorio"
+
+#. Tag: entry
+#, no-c-format
+msgid "Restart the resource or move it to a new location"
+msgstr "Riavvia la risora o la sposta in una nuova posizione"
+
+#. Tag: entry
+#, no-c-format
+msgid "hard"
+msgstr "hard"
+
+#. Tag: entry
+#, no-c-format
+msgid "A non-transient error that may be specific to the current node occurred"
+msgstr "Si è verificato un errore non transitorio che potrebbe essere specificamente correlato al nodo attuale"
+
+#. Tag: entry
+#, no-c-format
+msgid "Move the resource elsewhere and prevent it from being retried on the current node"
+msgstr "Sposta altrove la risorsa e previene che questa venga riavviata sul nodo attuale"
+
+#. Tag: entry
+#, no-c-format
+msgid "fatal"
+msgstr "fatal"
+
+#. Tag: entry
+#, no-c-format
+msgid "A non-transient error that will be common to all cluster nodes (I.e. a bad configuration was specified)"
+msgstr "Si è verificato un errore non transitorio che sarà associato a tutti i nodi del cluster (ad esempio una configurazione sbagliata)"
+
+#. Tag: entry
+#, no-c-format
+msgid "Stop the resource and prevent it from being started on any cluster node"
+msgstr "Ferma la risorsa ed evita che venga avviata da qualsiasi nodo del cluster"
+
+#. Tag: para
+#, no-c-format
+msgid "Assuming an action is considered to have failed, the following table outlines the different OCF return codes and the type of recovery the cluster will initiate when it is received."
+msgstr "Assumendo che l'azione sia considerata fallita, la seguente tabella evidenzia i diversi codici di ritorno OCF ed i tipi di ripristino che il cluster avvierà di conseguenza."
+
+#. Tag: title
+#, no-c-format
+msgid "OCF Return Codes and How They are Handled"
+msgstr "Codici di ritorno OCF e come sono gestiti"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF Return Code"
+msgstr "OCF Return Code"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF Alias"
+msgstr "OCF Alias"
+
+#. Tag: entry
+#, no-c-format
+msgid "0"
+msgstr "0"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_SUCCESS"
+msgstr "OCF_SUCCESS"
+
+#. Tag: entry
+#, no-c-format
+msgid "Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands."
+msgstr "Successo. Il comando è stato completato con successo. E' il risultato atteso per tutte le operazioni di start, stop, promote e demote."
+
+#. Tag: entry
+#, no-c-format
+msgid "1"
+msgstr "1"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_GENERIC"
+msgstr "OCF_ERR_GENERIC"
+
+#. Tag: entry
+#, no-c-format
+msgid "Generic &#34;there was a problem&#34; error code."
+msgstr "Codice di errore generico &#34;c'è stato un problema&#34;"
+
+#. Tag: entry
+#, no-c-format
+msgid "2"
+msgstr "2"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_ARGS"
+msgstr "OCF_ERR_ARGS"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource&#39;s configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node."
+msgstr "La configurazione della risorsa su questa macchina è invalida. Ad esempio riferisce ad uno strumento/posizione non trovato all'interno del nodo."
+
+#. Tag: entry
+#, no-c-format
+msgid "3"
+msgstr "3"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_UNIMPLEMENTED"
+msgstr "OCF_ERR_UNIMPLEMENTED"
+
+#. Tag: entry
+#, no-c-format
+msgid "The requested action is not implemented."
+msgstr "L'azione richiesta non è implementata."
+
+#. Tag: entry
+#, no-c-format
+msgid "4"
+msgstr "4"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_PERM"
+msgstr "OCF_ERR_PERM"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource agent does not have sufficient privileges to complete the task."
+msgstr "L'agente della risorsa non ha privilegi sufficienti per completare l'operazione."
+
+#. Tag: entry
+#, no-c-format
+msgid "5"
+msgstr "5"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_INSTALLED"
+msgstr "OCF_ERR_INSTALLED"
+
+#. Tag: entry
+#, no-c-format
+msgid "The tools required by the resource are not installed on this machine."
+msgstr "I tool richiesti dalla risorsa non sono installati su questa macchina."
+
+#. Tag: entry
+#, no-c-format
+msgid "6"
+msgstr "6"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_ERR_CONFIGURED"
+msgstr "OCF_ERR_CONFIGURED"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource&#39;s configuration is invalid. Eg. A required parameters are missing."
+msgstr "La configurazione della risorsa è invalida. Ad esempio manca un parametro richiesto."
+
+#. Tag: entry
+#, no-c-format
+msgid "7"
+msgstr "7"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_NOT_RUNNING"
+msgstr "OCF_NOT_RUNNING"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action."
+msgstr "La risosra è ferma in sicurezza. Il cluster non cercherà di fermare una risorsa con questo codice di ritorno per qualsiasi azione."
+
+#. Tag: entry
+#, no-c-format
+msgid "N/A"
+msgstr "N/A"
+
+#. Tag: entry
+#, no-c-format
+msgid "8"
+msgstr "8"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_RUNNING_MASTER"
+msgstr "OCF_RUNNING_MASTER"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is running in Master mode."
+msgstr "La risorsa sta funzionando in modalità Master."
+
+#. Tag: entry
+#, no-c-format
+msgid "9"
+msgstr "9"
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF_FAILED_MASTER"
+msgstr "OCF_FAILED_MASTER"
+
+#. Tag: entry
+#, no-c-format
+msgid "The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again."
+msgstr "La risorsa è in modalità Master, ma ha fallito. La risorsa verrà degradata, fermata e quindi avviata (e possibilmente promossa) di nuovo."
+
+#. Tag: entry
+#, no-c-format
+msgid "other"
+msgstr "other"
+
+#. Tag: entry
+#, no-c-format
+msgid "NA"
+msgstr "NA"
+
+#. Tag: entry
+#, no-c-format
+msgid "Custom error code."
+msgstr "Codice di errore personalizzato."
+
+#. Tag: para
+#, no-c-format
+msgid "Although counter intuitive, even actions that return 0 (aka. <envar>OCF_SUCCESS</envar>) can be considered to have failed. This can happen when a resource that is expected to be in the Master state is found running as a Slave, or when a resource is found active on multiple machines.."
+msgstr "E' facilmente intuibile come anche le azioni che restituiscono 0 (quindi <envar>OCF_SUCCESS</envar>) possono essere considerate fallite. Questo può succedere quando una risorsa attesa in stato Master venga trovata in realtà attiva ma in stato Slave, oppure quando una risorsa viene trovata attiva su più macchine."
+
+#. Tag: title
+#, no-c-format
+msgid "Exceptions"
+msgstr "Eccezioni"
+
+#. Tag: para
+#, no-c-format
+msgid "Non-recurring monitor actions (probes) that find a resource active (or in Master mode) will not result in recovery action unless it is also found active elsewhere"
+msgstr "Azioni di monitor non ricorrenti (probes) che trovano una risorsa attiva (o in modalità Master) non forzeranno un ripristino a meno che non trovino la risorsa attiva altrove"
+
+#. Tag: para
+#, no-c-format
+msgid "The recovery action taken when a resource is found active more than once is determined by the <literal>multiple-active</literal> property of the resource"
+msgstr "L'azione di ripristino intrapresa quando una risorsa viene trovata attiva più di una volta è determinata dalla proprietà <literal>multiple-active</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "Recurring actions that return <envar>OCF_ERR_UNIMPLEMENTED</envar> do not cause any type of recovery"
+msgstr "Azioni ricorrenti che restituiscono <envar>OCF_ERR_UNIMPLEMENTED</envar> non forzano alcun tipo di ripristino"

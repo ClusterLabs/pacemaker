@@ -1,0 +1,165 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2011-10-05T10:46:06\n"
+"PO-Revision-Date: 2011-10-12 10:18+0100\n"
+"Last-Translator: RaSca <rasca@miamammausalinux.org>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "FAQ"
+msgstr "FAQ"
+
+#. Tag: title
+#, no-c-format
+msgid "History"
+msgstr "Storia"
+
+#. Tag: para
+#, no-c-format
+msgid "Why is the Project Called Pacemaker?"
+msgstr "Perché il progetto è chiamato Pacemaker?"
+
+#. Tag: para
+#, no-c-format
+msgid "First of all, the reason its not called the CRM is because of the abundance of <ulink url=\"http://en.wikipedia.org/wiki/CRM\">terms</ulink> that are commonly abbreviated to those three letters."
+msgstr "Prima di tutto non è chiamato CRM per via dell'abbondanza di <ulink url=\"http://en.wikipedia.org/wiki/CRM\">termini</ulink> a cui l'acronimo corrisponde."
+
+#. Tag: para
+#, no-c-format
+msgid "The Pacemaker name came from <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, a good friend of mine, and was originally used by a Java GUI that I was prototyping in early 2007. Alas other commitments have prevented the GUI from progressing much and, when it came time to choose a name for this project, Lars suggested it was an even better fit for an independent CRM."
+msgstr "Il nome Pacemaker deriva da <ulink url=\"http://khamsouk.souvanlasy.com/\">Kham</ulink>, un caro amico, e venne originariamente usato per una GUI Java che stavo costruendo all'inizio del 2007. Purtroppo altri impegni hanno portato la GUI a non progredire a sufficienza e quando venne il momento di scegliere un nome per questo progetto, Lars suggerì che calzava ancora meglio su un CRM indipendente."
+
+#. Tag: para
+#, no-c-format
+msgid "The idea stems from the analogy between the role of this software and that of the little device that keeps the human heart pumping. Pacemaker monitors the cluster and intervenes when necessary to ensure the smooth operation of the services it provides."
+msgstr "L'idea su basa sull'analogia del ruolo di questo software con il piccolo dispositivo che mantiene il cuore umano in grado di pompare. Pacemaker controlla il cluster ed interviene quando necessario per assicurare il buon funzionamento dei servizi che fornisce."
+
+#. Tag: para
+#, no-c-format
+msgid "There were a number of other names (and acronyms) tossed around, but suffice to say &#34;Pacemaker&#34; was the best"
+msgstr "Ci furono diversi altri nomi (ed acronimi) proposti, ma è sufficiente affermare che &#34;Pacemaker&#34; era il migliore"
+
+#. Tag: para
+#, no-c-format
+msgid "Why was the Pacemaker Project Created?"
+msgstr "Perché è stato creato il progetto Pacemaker?"
+
+#. Tag: para
+#, no-c-format
+msgid "The decision was made to spin-off the CRM into its own project after the 2.1.3 Heartbeat release in order to"
+msgstr "La decisione venne presa per slacciare il CRM in un progetto a se stante dopo la versione 2.1.3 di Heartbeat in modo da"
+
+#. Tag: para
+#, no-c-format
+msgid "support both the Corosync and Heartbeat cluster stacks equally"
+msgstr "supportare gli stack Corosync ed Heartbeat equamente"
+
+#. Tag: para
+#, no-c-format
+msgid "decouple the release cycles of two projects at very different stages of their life-cycles"
+msgstr "disaccoppiare i cicli di rilascio di due progetti in fasi molto diverse della loro crescita"
+
+#. Tag: para
+#, no-c-format
+msgid "foster the clearer package boundaries, thus leading to"
+msgstr "definire meglio gli ambiti del progetto, in modo da avere"
+
+#. Tag: para
+#, no-c-format
+msgid "better and more stable interfaces"
+msgstr "interfacci più stabili e migliori"
+
+#. Tag: title
+#, no-c-format
+msgid "Setup"
+msgstr "Setup"
+
+#. Tag: para
+#, no-c-format
+msgid "What Messaging Layers are Supported?"
+msgstr "Quali Messaging Layers sono supportati?"
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync (<ulink url=\"http://www.corosync.org/\" />)"
+msgstr "Corosync (<ulink url=\"http://www.corosync.org/\" />)"
+
+#. Tag: para
+#, no-c-format
+msgid "Heartbeat (<ulink url=\"http://linux-ha.org/\" />)"
+msgstr "Heartbeat (<ulink url=\"http://linux-ha.org/\" />)"
+
+#. Tag: para
+#, no-c-format
+msgid "Can I Choose which Messaging Layer to use at Run Time?"
+msgstr "E' possibile scegliere a runtime il Message Layer da usare?"
+
+#. Tag: para
+#, no-c-format
+msgid "Yes. The CRM will automatically detect who started it and behave accordingly."
+msgstr "Sì. Il CRM identificherà da chi è stato avviato, comportandosi di conseguenza."
+
+#. Tag: para
+#, no-c-format
+msgid "Can I Have a Mixed Heartbeat-Corosync Cluster?"
+msgstr "E' possibile avere un cluster mixato Heartbeat-Corosync?"
+
+#. Tag: para
+#, no-c-format
+msgid "No."
+msgstr "No."
+
+#. Tag: para
+#, no-c-format
+msgid "Which Messaging Layer Should I Choose?"
+msgstr "Quale Message Layer si dovrebbe scegliere?"
+
+#. Tag: para
+#, no-c-format
+msgid "This is discussed in <xref linkend=\"ap-install\" />."
+msgstr "Questo viene discusso qui <xref linkend=\"ap-install\" />."
+
+#. Tag: para
+#, no-c-format
+msgid "Where Can I Get Pre-built Packages?"
+msgstr "Dove si possono reperire pacchetti pre compilati?"
+
+#. Tag: para
+#, no-c-format
+msgid "Official packages for most major .rpm and based distributions are available from:"
+msgstr "I pacchetti ufficiali per le distribuzioni basate su rpm sono disponibili presso:"
+
+#. Tag: para
+#, no-c-format
+msgid "<ulink url=\"http://www.clusterlabs.org/rpm\" />"
+msgstr "<ulink url=\"http://www.clusterlabs.org/rpm\" />"
+
+#. Tag: para
+#, no-c-format
+msgid "For Debian packages, building from source and details on using the above repositories, see our <ulink url=\"http://clusterlabs.org/wiki/Install\">installation page</ulink>."
+msgstr "Per i pacchetti Debian, compilare dai sorgenti e dettagli sull'utilizzo dei repository indicati sopra, vedere la nostra <ulink url=\"http://clusterlabs.org/wiki/Install\">Pagina di installazione</ulink>."
+
+#. Tag: para
+#, no-c-format
+msgid "What Versions of Pacemaker Are Supported?"
+msgstr "Quali versioni di Pacemaker sono supportate?"
+
+#. Tag: para
+#, no-c-format
+msgid "Please refer to the <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> page for an up-to-date list of versions supported directly by the project."
+msgstr "Riferirsi alla pagina <ulink url=\"http://clusterlabs.org/wiki/Releases\">Releases</ulink> per una lista aggiornata delle versioni supportate direttamente dal progetto."
+
+#. Tag: para
+#, no-c-format
+msgid "When seeking assistance, please try to ensure you have one of these versions."
+msgstr "Quando si necessita di assistenza è ideale utilizzare una di queste versioni."
+
