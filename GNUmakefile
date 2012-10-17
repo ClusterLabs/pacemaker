@@ -165,16 +165,28 @@ dirty:
 	make TAG=dirty mock
 
 COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
-COVHOST		?= coverity.example.com
+COVFILE          = pacemaker-coverity-$(TAG).tgz
+COVHOST		?= scan5.coverity.com
 COVPASS		?= password
 
+# Public coverity
 coverity:
 	test -e configure || ./autogen.sh
 	test -e Makefile || ./configure
 	make core-clean
 	rm -rf $(COVERITY_DIR)
 	cov-build --dir $(COVERITY_DIR) make core
-	@echo "Waiting for a Coverity license..."
+	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
+	@echo "Uploading to public Coverity instance..."
+	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
+
+coverity-corp:
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
+	make core-clean
+	rm -rf $(COVERITY_DIR)
+	cov-build --dir $(COVERITY_DIR) make core
+	@echo "Waiting for a corporate Coverity license..."
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
