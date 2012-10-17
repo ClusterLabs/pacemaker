@@ -1128,11 +1128,18 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     crm_trace("looking for %s", rsc_id);
 
     rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+
     /* no match */
     if (rsc == NULL) {
         /* Even when clone-max=0, we still create a single :0 orphan to match against */
         char *tmp = clone_zero(alt_rsc_id);
         resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
+
+        if(clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
+            rsc = clone0;
+        } else {
+            crm_trace("%s is not known as %s either", alt_rsc_id, tmp);
+        }
 
         parent = uber_parent(clone0);
         free(tmp);
