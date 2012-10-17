@@ -1123,28 +1123,26 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 {
     resource_t *rsc = NULL;
     resource_t *parent = NULL;
-    char *alt_rsc_id = strdup(rsc_id);
 
     crm_trace("looking for %s", rsc_id);
-
-    rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+    rsc = pe_find_resource(data_set->resources, rsc_id);
 
     /* no match */
     if (rsc == NULL) {
         /* Even when clone-max=0, we still create a single :0 orphan to match against */
-        char *tmp = clone_zero(alt_rsc_id);
+        char *tmp = clone_zero(rsc_id);
         resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
 
         if(clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
         } else {
-            crm_trace("%s is not known as %s either", alt_rsc_id, tmp);
+            crm_trace("%s is not known as %s either", rsc_id, tmp);
         }
 
         parent = uber_parent(clone0);
         free(tmp);
 
-        crm_trace("%s not found: %s", alt_rsc_id, parent ? parent->id : "orphan");
+        crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
 
     } else {
         parent = uber_parent(rsc);
@@ -1165,7 +1163,6 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         }
     }
 
-    free(alt_rsc_id);
     return rsc;
 }
 
