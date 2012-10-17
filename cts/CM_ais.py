@@ -317,7 +317,17 @@ class crm_cs_v0(crm_ais):
             r"error: cib_ais_destroy: Corosync connection lost!  Exiting.",
             r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated...",
             r"error: send_ais_text: Sending message .* via cpg: FAILED",
+
+            r"error: crm_ipc_read: Connection to stonith-ng failed",
+            r"crit: tengine_stonith_connection_destroy: Fencing daemon connection failed",
+            r"error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            r"error: stonith_connection_failed: STONITH connection failed",
+            r"error: te_connect_stonith: Sign-in failed: triggered a retry",
+            r"error: process_lrm_event: LRM operation Fencing.*",
+            r"error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy() received in state",
+            r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
             ]
+
 
         corosync_ignore.extend(self.common_ignore)
 
