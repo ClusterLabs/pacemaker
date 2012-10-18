@@ -152,12 +152,13 @@ log_cib_diff(int log_level, xmlNode * diff, const char *function)
     int del_epoch = 0;
     int del_admin_epoch = 0;
 
-    const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
+    const char *digest = NULL;
 
     if (diff == NULL) {
         return;
     }
 
+    digest = crm_element_value(diff, XML_ATTR_DIGEST);
     cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
                              &del_admin_epoch, &del_epoch, &del_updates);
 
@@ -336,13 +337,37 @@ createEmptyCib(void)
 static unsigned int dtd_throttle = 0;
 
 void
+cib_add_digest(xmlNode *source, xmlNode *target)
+{
+    if(target && crm_element_value(target, XML_ATTR_DIGEST) == NULL) {
+        char *digest = NULL;
+        const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+
+        digest = calculate_xml_versioned_digest(source, FALSE, TRUE, version);
+
+        crm_trace("Adding digest %s to target %p", digest, target);
+        crm_xml_add(target, XML_ATTR_DIGEST, digest);
+        free(digest);
+
+    } else if(target) {
+        crm_err("Digest already exists for target %p", target);
+    }
+}
+
+void
 fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
 {
     xmlNode *cib = NULL;
     xmlNode *diff_child = NULL;
+
     const char *tag = NULL;
     const char *value = NULL;
 
+    if(local_diff == NULL) {
+        crm_trace("Nothing to do");
+        return;
+    }
+    
     tag = "diff-removed";
     diff_child = find_xml_node(local_diff, tag, FALSE);
     if (diff_child == NULL) {

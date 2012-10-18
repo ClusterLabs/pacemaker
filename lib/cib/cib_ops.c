@@ -769,9 +769,10 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 
     CRM_ASSERT(diff != NULL);
 
-    if (last != NULL && next != NULL) {
+    if (*diff == NULL && last != NULL && next != NULL) {
         *diff = diff_xml_object(last, next, FALSE);
     }
+
     if (*diff == NULL) {
         goto done;
     }
@@ -835,17 +836,10 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 xmlNode *
 diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
 {
-    char *digest = NULL;
     xmlNode *diff = NULL;
-    const char *version = crm_element_value(new_cib, XML_ATTR_CRM_VERSION);
     gboolean changed = cib_config_changed(old_cib, new_cib, &diff);
 
     fix_cib_diff(old_cib, new_cib, diff, changed);
-
-    digest = calculate_xml_versioned_digest(new_cib, FALSE, TRUE, version);
-    crm_xml_add(diff, XML_ATTR_DIGEST, digest);
-
-    free(digest);
 
     return diff;
 }

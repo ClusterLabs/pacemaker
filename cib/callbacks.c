@@ -592,27 +592,22 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int diff_del_epoch = 0;
         int diff_del_admin_epoch = 0;
 
-        char *digest = NULL;
+        const char *digest = NULL;
 
+        digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
                                  &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
-        crm_trace("Sending update diff %d.%d.%d -> %d.%d.%d",
+        crm_trace("Sending update diff %d.%d.%d -> %d.%d.%d %s",
                     diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                    diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
+                  diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         crm_xml_add(msg, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
         crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
 
-        /* Its safe to always use the latest version since the election
-         * ensures the software on this node is the oldest node in the cluster
-         */
-        digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
-        crm_xml_add(result_diff, XML_ATTR_DIGEST, digest);
-        crm_log_xml_trace(the_cib, digest);
-        free(digest);
+        CRM_ASSERT(digest != NULL);
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_trace(msg, "copy");
@@ -1013,6 +1008,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             config_changed = TRUE;
         }
     }
+
+    cib_add_digest(result_cib, *cib_diff);
 
     if (rc == pcmk_ok && (call_options & cib_dryrun) == 0) {
         rc = activateCibXml(result_cib, config_changed, op);

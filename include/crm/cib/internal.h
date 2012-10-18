@@ -76,6 +76,7 @@
 #  define cib_channel_rw		"cib_rw"
 #  define cib_channel_shm		"cib_shm"
 
+void cib_add_digest(xmlNode *source, xmlNode *target);
 void fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed);
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
