@@ -1474,6 +1474,14 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     name = crm_element_name(left);
     CRM_CHECK(name != NULL, return NULL);
 
+    /* check for XML_DIFF_MARKER in a child */ 
+    value = crm_element_value(right, XML_DIFF_MARKER);
+    if(value != NULL && safe_str_eq(value, "removed:top")) {
+        crm_trace("We are the root of the deletion: %s.id=%s", name, id);
+	free_xml(diff);
+	return NULL;
+    }
+
     /* Avoiding creating the full heirarchy would save even more work here */
     diff = create_xml_node(parent, name);
 	
@@ -1493,22 +1501,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     }
 
     if(differences == FALSE) {
-	/* check for XML_DIFF_MARKER in a child */ 
-	for(right_child = __xml_first_child(right); right_child != NULL; right_child = __xml_next(right_child)) {
-	    value = crm_element_value(right_child, XML_DIFF_MARKER);
-	    if(value != NULL && safe_str_eq(value, "removed:top")) {
-                xmlAttrPtr pIter = NULL;
-
-		crm_trace("Found the root of the deletion: %s", name);
-                for(pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
-                    const char *p_name = (const char *)pIter->name;
-                    const char *p_value = crm_attr_value(pIter);
-                    xmlSetProp(diff, (const xmlChar*)p_name, (const xmlChar*)p_value);
-                }
-		differences = TRUE;
-		goto done;
-	    }
-	}
+        /* Nothing to do */
 
     } else if(full) {
         xmlAttrPtr pIter = NULL;
