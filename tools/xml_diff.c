@@ -199,10 +199,11 @@ main(int argc, char **argv)
     } else {
         if (as_cib == FALSE) {
             output = diff_xml_object(object_1, object_2, filter);
+            log_xml_diff(LOG_NOTICE, output, NULL);
         } else {
             output = diff_cib_object(object_1, object_2, filter);
+            log_cib_diff(LOG_NOTICE, output, NULL);
         }
-        log_xml_diff(LOG_NOTICE, output, " ");
     }
 
     if (output != NULL) {

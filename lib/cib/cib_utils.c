@@ -152,6 +152,8 @@ log_cib_diff(int log_level, xmlNode * diff, const char *function)
     int del_epoch = 0;
     int del_admin_epoch = 0;
 
+    const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
+
     if (diff == NULL) {
         return;
     }
@@ -160,13 +162,16 @@ log_cib_diff(int log_level, xmlNode * diff, const char *function)
                              &del_admin_epoch, &del_epoch, &del_updates);
 
     if (add_updates != del_updates) {
-        do_crm_log(log_level, "%s: Diff: --- %d.%d.%d", function,
-                   del_admin_epoch, del_epoch, del_updates);
-        do_crm_log(log_level, "%s: Diff: +++ %d.%d.%d", function,
-                   add_admin_epoch, add_epoch, add_updates);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
+                         "Diff: --- %d.%d.%d",
+                         del_admin_epoch, del_epoch, del_updates);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
+                         "Diff: +++ %d.%d.%d %s",
+                         add_admin_epoch, add_epoch, add_updates, digest);
+
     } else if (diff != NULL) {
         do_crm_log(log_level,
-                   "%s: Local-only Change: %d.%d.%d", function,
+                   "%s: Local-only Change: %d.%d.%d", function?function:"",
                    add_admin_epoch, add_epoch, add_updates);
     }
 

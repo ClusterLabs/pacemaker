@@ -1172,7 +1172,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
         return;
     }
 
-    if(log_level < LOG_DEBUG) {
+    if(log_level < LOG_DEBUG || function == NULL) {
         options |= xml_log_option_diff_short;
     }
     for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
