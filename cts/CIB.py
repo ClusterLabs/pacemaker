@@ -365,11 +365,6 @@ class CIB11(CibBase):
                 stf_nodes = []
                 stt_nodes = []
 
-                # Cheat to create a second copy of the real device
-                st.name = "FencingDup"
-                st.colocate("Fencing", "-INFINITY")
-                st.commit()
-
                 # Create the levels
                 stl = FencingTopology(self.Factory)
                 for node in self.CM.Env["nodes"]:

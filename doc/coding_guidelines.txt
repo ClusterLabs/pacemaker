@@ -1,0 +1,130 @@
+= Pacemaker Coding Guidelines =
+
+== Table of Contents ==
+
+1. Introduction
+2. Formatting Guidelines
+3. Naming Conventions
+4. vim Settings
+
+== Introduction ==
+
+The purpose of this document is to discuss guidelines about how to write
+code that will be a part of the Pacemaker project.
+
+== Formatting Guidelines ==
+
+=== Whitespace ===
+
+- Indentation must be 4 spaces, no tabs.
+- Do not leave trailing whitespace.
+
+=== Line Length ===
+
+- Lines should be no longer than 80 characters unless limiting line length significantly impacts readability.
+
+=== Pointers ===
+
+- The '*' goes by the variable name, not the type:
+
+```
+    char *foo;
+```
+
+- Use a space before the '*' and after the closing parenthesis in a cast:
+
+```
+    char *foo = (char *) bar;
+```
+
+=== Functions ===
+
+- Put the return type on its own line:
+- Place the opening brace for a function on the next line:
+
+```
+    static int
+    foo(void)
+    {
+```
+
+- For functions with enough arguments that they must break to the next line, align arguments with the first argument:
+
+```
+    static int
+    function_name(int bar, const char *a, const char *b,
+                  const char *c, const char *d)
+    {
+```
+
+- If a function name gets really long, start the arguments on their own line with 8 spaces of indentation:
+
+```
+    static int
+    really_really_long_function_name_this_is_getting_silly_now(
+            int bar, const char *a, const char *b,
+            const char *c, const char *d)
+    {
+```
+
+=== Control statements (if, else, while, for, switch) ===
+
+- Keyword is followed by one space, then left parenthesis witout space,
+  condition, right parenthesis, space, opening bracket on the same line.
+
+- "else" and "else if" are on the same line with ending brace and opening
+  brace, separated by space
+
+```
+    if (condition1) {
+        statement1;
+    } else if (condition2) {
+        statement2;
+    } else {
+        statement3;
+    }
+```
+
+- Cases in switch statement have same indentation as switch. Body of cases
+  is indented by one level. Opening brace is on the same line as switch.
+
+```
+    switch (expression)
+    {
+        case 0:
+            command0;
+            break;
+        case 1:
+            command1;
+            break;
+        default:
+            command;
+    }
+```
+
+=== Operators ===
+
+- Operators have spaces from both sides. Do not rely on operator precedence,
+  use brackets when mixing operators with different priority.
+- No space after opening bracked and before closing bracket.
+
+```
+    x = a + b - (c * d);
+```
+
+== Naming Conventions ==
+
+- Public C API calls and type names must begin with an API specific prefix, eg. "crm_", "pe_", "st_", "lrm_".
+
+== vim Settings ==
+
+```vim
+    " This section contains settings that can be placed in the vimrc file that are
+    " compatible with the Pacemaker coding guidelines.
+
+    " Whitespace
+    set ts=4
+    set sw=4
+    set expandtab
+    let c_space_error=1
+```

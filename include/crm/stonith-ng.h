@@ -15,6 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+/**
+ * \file
+ * \brief Fencing aka. STONITH
+ * \ingroup fencing
+ */
+
 #ifndef STONITH_NG__H
 #  define STONITH_NG__H
 

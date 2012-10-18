@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * \file
+ * \brief Local Resource Manager 
+ * \ingroup lrm
+ */
+
 #ifndef LRMD__H
 #define LRMD__H
 

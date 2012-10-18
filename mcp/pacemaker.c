@@ -631,6 +631,16 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+mcp_chown(const char *path, uid_t uid, gid_t gid)
+{
+    int rc = chown(path, uid, gid);
+    if(rc < 0) {
+        crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
+                 path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -775,20 +785,30 @@ main(int argc, char **argv)
     }
 
     mkdir(CRM_STATE_DIR, 0750);
-    rc = chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
-    if(rc < 0) {
-        crm_warn("Cannot change the ownership of %s to user %s and gid %d",
-                 CRM_STATE_DIR, CRM_DAEMON_USER, pcmk_gid);
-    }
+    mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used by stonithd */
     build_path(HA_STATE_DIR "/heartbeat", 0755);
+    mcp_chown(HA_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used by RAs - Leave owned by root */
     build_path(CRM_RSCTMP_DIR, 0755);
 
     /* Used to store core files in */
     build_path(CRM_CORE_DIR, 0755);
+    mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
+
+    /* Used to store blackbox dumps in */
+    build_path(CRM_BLACKBOX_DIR, 0755);
+    mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
+
+    /* Used to store policy engine inputs in */
+    build_path(PE_STATE_DIR, 0755);
+    mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
+
+    /* Used to store the cluster configuration */
+    build_path(CRM_CONFIG_DIR, 0755);
+    mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
     /* Per-user core directories */
     if (mkdir(CRM_CORE_DIR"/root", 0700) < 0 && errno != EEXIST) {
@@ -798,9 +818,7 @@ main(int argc, char **argv)
     if (mkdir(CRM_CORE_DIR"/"CRM_DAEMON_USER, 0700) < 0 && errno != EEXIST) {
         crm_perror(LOG_INFO, "Could not create %s", CRM_CORE_DIR"/"CRM_DAEMON_USER);
     } else {
-        if(chown(CRM_CORE_DIR"/"CRM_DAEMON_USER, pcmk_uid, pcmk_gid) < 0) {
-            crm_perror(LOG_ERR, "Could not change the ownership of %s to %s", CRM_CORE_DIR"/"CRM_DAEMON_USER, CRM_DAEMON_USER);
-        }
+        mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
     }
 
     client_list = g_hash_table_new(g_direct_hash, g_direct_equal);

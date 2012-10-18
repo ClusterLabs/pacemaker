@@ -48,8 +48,26 @@ GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
 static int active_children = 0;
+
+struct device_search_s
+{
+    char *host;
+    char *action;
+    int per_device_timeout;
+    int replies_needed;
+    int replies_received;
+
+    void *user_data;
+    void (*callback) (GList *devices, void *user_data);
+    GListPtr capable;
+};
+
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
+static void
+stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer, const char *client_id);
+
+static void search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence);
 
 typedef struct async_command_s {
 
@@ -74,7 +92,8 @@ typedef struct async_command_s {
     GListPtr device_list;
     GListPtr device_next;
 
-    void (*done)(GPid pid, int rc, const char *output, gpointer user_data);
+    void *internal_user_data;
+    void (*done_cb)(GPid pid, int rc, const char *output, gpointer user_data);
     guint timer_sigterm;
     guint timer_sigkill;
     /*! If the operation timed out, this is the last signal
@@ -114,7 +133,7 @@ static void free_async_command(async_command_t *cmd)
     }
     cmd_list = g_list_remove(cmd_list, cmd);
 
-    g_list_free(cmd->device_list);
+    g_list_free_full(cmd->device_list, free);
     free(cmd->device);
     free(cmd->action);
     free(cmd->victim);
@@ -154,6 +173,7 @@ static async_command_t *create_async_command(xmlNode *msg)
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
     CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
 
+    cmd->done_cb = st_child_done;
     cmd_list = g_list_append(cmd_list, cmd);
     return cmd;
 }
@@ -173,7 +193,7 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
     crm_notice("Injecting manual confirmation that %s is safely off/down",
                crm_element_value(dev, F_STONITH_TARGET));
 
-    st_child_done(0, 0, NULL, cmd);
+    cmd->done_cb(0, 0, NULL, cmd);
     return pcmk_ok;
 }
 
@@ -209,7 +229,8 @@ static gboolean stonith_device_execute(stonith_device_t *device)
         device->params,
         device->aliases);
 
-    exec_rc = stonith_action_execute_async(action, (void *) cmd, st_child_done);
+    /* for async exec, exec_rc is pid if positive and error code if negative/zero */
+    exec_rc = stonith_action_execute_async(action, (void *) cmd, cmd->done_cb);
 
     if(exec_rc > 0) {
         crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%dms",
@@ -221,7 +242,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
         crm_warn("Operation %s%s%s on %s failed (%d/%d)",
             cmd->action, cmd->victim?" for node ":"", cmd->victim?cmd->victim:"",
             device->id, exec_rc, rc);
-        st_child_done(0, rc<0?rc:exec_rc, NULL, cmd);
+        cmd->done_cb(0, rc<0?rc:exec_rc, NULL, cmd);
     }
     return TRUE;
 }
@@ -244,14 +265,14 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling %s on %s for remote peer %s with op id (%s) (timeout=%dms)",
+        crm_debug("Scheduling %s on %s for remote peer %s with op id (%s) (timeout=%ds)",
            cmd->action,
            device->id,
            cmd->origin,
            cmd->remote_op_id,
            cmd->timeout);
     } else {
-        crm_debug("Scheduling %s on %s for %s (timeout=%dms)",
+        crm_debug("Scheduling %s on %s for %s (timeout=%ds)",
             cmd->action,
             device->id,
             cmd->client,
@@ -274,7 +295,7 @@ void free_device(gpointer data)
         async_command_t *cmd = gIter->data;
 
         crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
-        st_child_done(0, -ENODEV, NULL, cmd);
+        cmd->done_cb(0, -ENODEV, NULL, cmd);
         free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
@@ -469,73 +490,131 @@ target_list_type(stonith_device_t *dev)
         }
     }
 
-	return check_type;
+    return check_type;
 }
 
 static void
-update_dynamic_list(stonith_device_t *dev)
+schedule_internal_command(stonith_device_t *device,
+                          const char *action,
+                          const char *victim,
+                          int timeout,
+                          void *internal_user_data,
+                          void (*done_cb)(GPid pid, int rc, const char *output, gpointer user_data))
 {
-    time_t now = time(NULL);
+    async_command_t *cmd = NULL;
+
+    cmd = calloc(1, sizeof(async_command_t));
+
+    cmd->id = -1;
+    cmd->default_timeout = timeout ? timeout : 60;
+    cmd->timeout = cmd->default_timeout;
+    cmd->action = strdup(action);
+    cmd->victim = victim ? strdup(victim) : NULL;
+    cmd->device = strdup(device->id);
+    cmd->origin = strdup("st_internal_cmd");
+    cmd->client = strdup("st_internal_client");
+    cmd->client_name = strdup("st_internal_client_name");
+
+    cmd->internal_user_data = internal_user_data;
+    cmd->done_cb = done_cb;
+
+    schedule_stonith_command(cmd, device);
+}
+
+static gboolean string_in_list(GListPtr list, const char *item)
+{
+    int lpc = 0;
+    int max = g_list_length(list);
+    for(lpc = 0; lpc < max; lpc ++) {
+        const char *value = g_list_nth_data(list, lpc);
+        if(safe_str_eq(item, value)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void
+status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
+{
+    async_command_t *cmd = user_data;
+    struct device_search_s *search = cmd->internal_user_data;
+    stonith_device_t *dev = cmd->device ?
+            g_hash_table_lookup(device_list, cmd->device) : NULL;
+    gboolean can = FALSE;
+
+    if (!dev) {
+        search_devices_record_result(search, NULL, FALSE);
+        return;
+    }
+
+    dev->active_pid = 0;
+    mainloop_set_trigger(dev->work);
+
+    if (rc != 0) {
+        crm_err("Could not invoke %s: rc=%d", dev->id, rc);
+
+    } else if(rc == 1 /* unkown */) {
+        crm_trace("Host %s is not known by %s", search->host, dev->id);
+
+    } else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
+        can = TRUE;
+
+    } else {
+        crm_notice("Unkown result when testing if %s can fence %s: rc=%d", dev->id, search->host, rc);
+    }
+    search_devices_record_result(search, dev->id, can);
+}
+
+static void
+dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
+{
+    async_command_t *cmd = user_data;
+    struct device_search_s *search = cmd->internal_user_data;
+    stonith_device_t *dev = cmd->device ?
+            g_hash_table_lookup(device_list, cmd->device) : NULL;
+    gboolean can_fence = FALSE;
 
     /* Host/alias must be in the list output to be eligable to be fenced
      *
      * Will cause problems if down'd nodes aren't listed or (for virtual nodes)
      *  if the guest is still listed despite being moved to another machine
      */
-
-    if(dev->targets_age < 0) {
-        crm_trace("Port list queries disabled for %s", dev->id);
-
-    } else if(dev->targets == NULL || dev->targets_age + 60 < now) {
-        stonith_action_t *action = NULL;
-        char *output = NULL;
-        int rc = pcmk_ok;
-        int exec_rc = pcmk_ok;
-
-        if(dev->active_pid != 0) {
-            crm_notice("Port list query can not execute because device is busy, using cache: %s",
-                    dev->targets ? "YES" : "NO");
-            return;
-        }
-
-        action = stonith_action_create(dev->agent, "list", NULL, 10, dev->params, NULL);
-        exec_rc = stonith_action_execute(action, &rc, &output);
-
-        if(rc != 0 && dev->active_pid == 0) {
-            /* This device probably only supports a single
-             * connection, which appears to already be in use,
-             * likely involved in a montior or (less likely)
-             * metadata operation.
-             *
-             * Avoid disabling port list queries in the hope that
-             * the op would succeed next time
-             */
-            crm_info("Couldn't query ports for %s. Call failed with rc=%d and active_pid=%d: %s",
-                     dev->agent, rc, dev->active_pid, output);
-
-        } else if(exec_rc < 0 || rc != 0) {
-            /* If we successfully got the targets earlier, don't disable. */
-            if (dev->targets) {
-                return;
-            }
-            crm_notice("Disabling port list queries for %s (%d/%d): %s",
-                           dev->id, exec_rc, rc, output);
-            dev->targets_age = -1;
-
-            /* Fall back to status */
-            g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
-
-            g_list_free_full(dev->targets, free);
-            dev->targets = NULL;
-        } else {
-            crm_info("Refreshing port list for %s", dev->id);
-            g_list_free_full(dev->targets, free);
-            dev->targets = parse_host_list(output);
-            dev->targets_age = now;
-        }
-
-        free(output);
+    if (!dev) {
+        search_devices_record_result(search, NULL, FALSE);
+        return;
     }
+
+    dev->active_pid = 0;
+    mainloop_set_trigger(dev->work);
+
+    /* If we successfully got the targets earlier, don't disable. */
+    if (rc != 0 && !dev->targets) {
+        crm_notice("Disabling port list queries for %s (%d): %s",
+                       dev->id, rc, output);
+        /* Fall back to status */
+        g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
+
+        g_list_free_full(dev->targets, free);
+        dev->targets = NULL;
+    } else if (!rc) {
+        crm_info("Refreshing port list for %s", dev->id);
+        g_list_free_full(dev->targets, free);
+        dev->targets = parse_host_list(output);
+        dev->targets_age = time(NULL);
+    }
+
+    if (dev->targets) {
+        const char *alias = g_hash_table_lookup(dev->aliases, search->host);
+
+        if (!alias) {
+            alias = search->host;
+        }
+        if (string_in_list(dev->targets, alias)) {
+            can_fence = TRUE;
+        }
+    }
+    search_devices_record_result(search, dev->id, can_fence);
 }
 
 /*!
@@ -634,13 +713,6 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
 
     value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
     device->aliases = build_port_aliases(value, &(device->targets));
-
-    value = target_list_type(device);
-    if (safe_str_eq(value, "dynamic-list")) {
-        /* set the dynamic list during the register to guarantee we have
-         * targets cached */
-        update_dynamic_list(device);
-    }
 
     if ((dup = device_has_duplicate(device))) {
         crm_notice("Device '%s' already existed in device list (%d active devices)", device->id, g_hash_table_size(device_list));
@@ -806,19 +878,6 @@ int stonith_level_remove(xmlNode *msg, char **desc)
     return pcmk_ok;
 }
 
-static gboolean string_in_list(GListPtr list, const char *item)
-{
-    int lpc = 0;
-    int max = g_list_length(list);
-    for(lpc = 0; lpc < max; lpc ++) {
-        const char *value = g_list_nth_data(list, lpc);
-        if(safe_str_eq(item, value)) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 static int stonith_device_action(xmlNode *msg, char **output) 
 {
     int rc = pcmk_ok;
@@ -850,25 +909,50 @@ static int stonith_device_action(xmlNode *msg, char **output)
     return rc;
 }
 
-static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host, const char *action)
+static void
+search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence)
+{
+    search->replies_received++;
+
+    if (can_fence) {
+        search->capable = g_list_append(search->capable, strdup(device));
+    }
+
+    if (search->replies_needed == search->replies_received) {
+
+        crm_debug("Finished Search. %d devices can perform action (%s) on node %s",
+            g_list_length(search->capable),
+            search->action ? search->action : "<unknown>",
+            search->host ? search->host : "<anyone>");
+
+        search->callback(search->capable, search->user_data);
+        free(search->host);
+        free(search->action);
+        free(search);
+    }
+}
+
+static void
+can_fence_host_with_device(stonith_device_t *dev, struct device_search_s *search)
 {
     gboolean can = FALSE;
-    const char *alias = host;
     const char *check_type = NULL;
+    const char *host = search->host;
+    const char *alias = host;
 
     if(dev == NULL) {
-        return FALSE;
-
+        goto search_report_results;
     } else if(host == NULL) {
-        return TRUE;
+        can = TRUE;
+        goto search_report_results;
     }
 
     if (dev->on_target_actions &&
-        action &&
-        strstr(dev->on_target_actions, action) &&
+        search->action &&
+        strstr(dev->on_target_actions, search->action) &&
         safe_str_neq(host, stonith_our_uname)) {
         /* this device can only execute this action on the target node */
-        return FALSE;
+        goto search_report_results;
     }
 
     if(g_hash_table_lookup(dev->aliases, host)) {
@@ -894,38 +978,32 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
         }
 
     } else if(safe_str_eq(check_type, "dynamic-list")) {
-        update_dynamic_list(dev);
+        time_t now = time(NULL);
+        if (dev->targets == NULL || dev->targets_age + 60 < now) {
+            schedule_internal_command(dev,
+                "list",
+                NULL,
+                search->per_device_timeout,
+                search,
+                dynamic_list_search_cb);
 
-        if(string_in_list(dev->targets, alias)) {
+            /* we'll respond to this search request async in the cb */
+            return;
+        }
+
+        if (string_in_list(dev->targets, alias)) {
             can = TRUE;
         }
 
     } else if(safe_str_eq(check_type, "status")) {
-        int rc = 0;
-        int exec_rc = 0;
-        stonith_action_t *action = NULL;
-        /* Run the status operation for the device/target combination
-         * Will cause problems if the device doesn't return 2 for down'd nodes or
-         *  (for virtual nodes) if the device doesn't return 1 for guests that
-         *  have been moved to another host
-         */
-
-        action = stonith_action_create(dev->agent, "status", host, 5, dev->params, dev->aliases);
-        exec_rc = stonith_action_execute(action, &rc, NULL);
-
-        if(exec_rc != 0) {
-            crm_err("Could not invoke %s: rc=%d", dev->id, exec_rc);
-
-        } else if(rc == 1 /* unkown */) {
-            crm_trace("Host %s is not known by %s", host, dev->id);
-
-        } else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
-            can = TRUE;
-
-        } else {
-            crm_notice("Unkown result when testing if %s can fence %s: rc=%d", dev->id, host, rc);
-        }
-
+        schedule_internal_command(dev,
+            "status",
+            search->host,
+            search->per_device_timeout,
+            search,
+            status_search_cb);
+        /* we'll respond to this search request async in the cb */
+        return;
     } else {
         crm_err("Unknown check type: %s", check_type);
     }
@@ -935,91 +1013,188 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
     } else {
         crm_info("%s can%s fence %s (aka. '%s'): %s", dev->id, can?"":" not", host, alias, check_type);
     }
-    return can;
+
+search_report_results:
+    search_devices_record_result(search, dev->id, can);
 }
 
-
-struct device_search_s 
-{
-    const char *host;
-    const char *action;
-    GListPtr capable;
-};
-
-static void search_devices(
-    gpointer key, gpointer value, gpointer user_data) 
+static void
+search_devices(gpointer key, gpointer value, gpointer user_data)
 {
     stonith_device_t *dev = value;
     struct device_search_s *search = user_data;
-    if(can_fence_host_with_device(dev, search->host, search->action)) {
-        search->capable = g_list_append(search->capable, value);
-    }
+
+    can_fence_host_with_device(dev, search);
 }
 
-static int stonith_query(xmlNode *msg, xmlNode **list) 
+#define DEFAULT_QUERY_TIMEOUT 20
+static void
+get_capable_devices(const char *host, const char *action, int timeout, void *user_data, void (*callback)(GList *devices, void *user_data))
 {
-    struct device_search_s search;
-    int available_devices = 0;
-    const char *action = NULL;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_ACTION, msg, LOG_DEBUG_3);
+    struct device_search_s *search;
+    int per_device_timeout = DEFAULT_QUERY_TIMEOUT;
+    int devices_needing_async_query = 0;
+    char *key = NULL;
+    const char *check_type = NULL;
+    GHashTableIter gIter;
+    stonith_device_t *device = NULL;
 
-    search.host = NULL;
-    search.capable = NULL;
-
-    if(dev) {
-        const char *device = crm_element_value(dev, F_STONITH_DEVICE);
-        search.host = crm_element_value(dev, F_STONITH_TARGET);
-        search.action = crm_element_value(dev, F_STONITH_ACTION);
-        if(device && safe_str_eq(device, "manual_ack")) {
-            /* No query necessary */
-            if(list) {
-                *list = NULL;
-            }
-            return pcmk_ok;
-        }
-
-        action = search.action;
+    if (!g_hash_table_size(device_list)) {
+        callback(NULL, user_data);
+        return;
     }
 
-    crm_log_xml_debug(msg, "Query");
+    search = calloc(1, sizeof(struct device_search_s));
+    if (!search) {
+        callback(NULL, user_data);
+        return;
+    }
 
-    g_hash_table_foreach(device_list, search_devices, &search);
-    available_devices = g_list_length(search.capable);
-    if(search.host) {
+    g_hash_table_iter_init(&gIter, device_list);
+    while (g_hash_table_iter_next(&gIter, (void **) &key, (void **) &device)) {
+        check_type = target_list_type(device);
+        if (safe_str_eq(check_type, "status") || safe_str_eq(check_type, "dynamic-list")) {
+            devices_needing_async_query++;
+        }
+    }
+
+    /* If we have devices that require an async event in order to know what
+     * nodes they can fence, we have to give the events a timeout. The total
+     * query timeout is divided among those events. */
+    if (devices_needing_async_query) {
+        per_device_timeout = timeout / devices_needing_async_query;
+        if (!per_device_timeout) {
+            crm_err("stonith-timeout duration %d is too low, raise the duration to %d seconds",
+                    timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
+            per_device_timeout = DEFAULT_QUERY_TIMEOUT;
+        } else if (per_device_timeout < DEFAULT_QUERY_TIMEOUT) {
+            crm_notice("stonith-timeout duration %d is low for the current configuration. Consider raising it to %d seconds",
+                       timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
+        }
+    }
+
+    search->host = host ? strdup(host) : NULL;
+    search->action = action ? strdup(action) : NULL;
+    search->per_device_timeout = per_device_timeout;
+    /* We are guaranteed this many replies. Even if a device gets
+     * unregistered some how during the async search, we will get
+     * the correct number of replies. */
+    search->replies_needed = g_hash_table_size(device_list);
+    search->callback = callback;
+    search->user_data = user_data;
+    /* kick off the search */
+
+    crm_debug("Searching through %d devices to see what is capable of action (%s) for target %s",
+        search->replies_needed,
+        search->action ? search->action : "<unknown>",
+        search->host ? search->host : "<anyone>");
+    g_hash_table_foreach(device_list, search_devices, search);
+}
+
+struct st_query_data {
+    xmlNode *reply;
+    char *remote_peer;
+    char *client_id;
+    char *target;
+    char *action;
+    int call_options;
+};
+
+static void
+stonith_query_capable_device_cb(GList *devices, void *user_data)
+{
+    struct st_query_data *query = user_data;
+    int available_devices = 0;
+    xmlNode *dev = NULL;
+    xmlNode *list = NULL;
+    GListPtr lpc = NULL;
+
+    /* Pack the results into data */
+    list = create_xml_node(NULL, __FUNCTION__);
+    crm_xml_add(list, F_STONITH_TARGET, query->target);
+    for(lpc = devices; lpc != NULL; lpc = lpc->next) {
+        stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
+        int action_specific_timeout;
+
+        if (!device) {
+            /* It is possible the device got unregistered while
+             * determining who can fence the target */
+            continue;
+        }
+
+        available_devices++;
+
+        action_specific_timeout = get_action_timeout(device, query->action, 0);
+        dev = create_xml_node(list, F_STONITH_DEVICE);
+        crm_xml_add(dev, XML_ATTR_ID, device->id);
+        crm_xml_add(dev, "namespace", device->namespace);
+        crm_xml_add(dev, "agent", device->agent);
+        crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+        if (action_specific_timeout) {
+            crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
+        }
+        if (query->target == NULL) {
+            xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
+            g_hash_table_foreach(device->params, hash2field, attrs);
+        }
+    }
+
+    crm_xml_add_int(list, "st-available-devices", available_devices);
+    if (query->target) {
         crm_debug("Found %d matching devices for '%s'",
-                 available_devices, search.host);
+                 available_devices, query->target);
     } else {
         crm_debug("%d devices installed", available_devices);
     }
 
-    /* Pack the results into data */
-    if(list) {
-        GListPtr lpc = NULL;
-        *list = create_xml_node(NULL, __FUNCTION__);
-        crm_xml_add(*list, F_STONITH_TARGET, search.host);
-        crm_xml_add_int(*list, "st-available-devices", available_devices);
-        for(lpc = search.capable; lpc != NULL; lpc = lpc->next) {
-            stonith_device_t *device = (stonith_device_t*)lpc->data;
-            int action_specific_timeout = get_action_timeout(device, action, 0);
 
-            dev = create_xml_node(*list, F_STONITH_DEVICE);
-            crm_xml_add(dev, XML_ATTR_ID, device->id);
-            crm_xml_add(dev, "namespace", device->namespace);
-            crm_xml_add(dev, "agent", device->agent);
-            crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
-            if (action_specific_timeout) {
-                crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
-            }
-            if(search.host == NULL) {
-                xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
-                g_hash_table_foreach(device->params, hash2field, attrs);
-            }
+    if (list != NULL) {
+        crm_trace("Attaching query list output");
+        add_message_xml(query->reply, F_STONITH_CALLDATA, list);
+    }
+    stonith_send_reply(query->reply, query->call_options, query->remote_peer, query->client_id);
+
+    free_xml(query->reply);
+    free(query->remote_peer);
+    free(query->client_id);
+    free(query->target);
+    free(query->action);
+    free(query);
+    free_xml(list);
+    g_list_free_full(devices, free);
+}
+
+static void
+stonith_query(xmlNode *msg, const char *remote_peer, const char *client_id, int call_options)
+{
+    struct st_query_data *query = NULL;
+    const char *action = NULL;
+    const char *target = NULL;
+    int timeout = 0;
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_ACTION, msg, LOG_DEBUG_3);
+
+    if(dev) {
+        const char *device = crm_element_value(dev, F_STONITH_DEVICE);
+        target = crm_element_value(dev, F_STONITH_TARGET);
+        action = crm_element_value(dev, F_STONITH_ACTION);
+        crm_element_value_int(dev, F_STONITH_TIMEOUT, &timeout);
+        if(device && safe_str_eq(device, "manual_ack")) {
+            /* No query or reply necessary */
+            return;
         }
     }
 
-    g_list_free(search.capable);
+    crm_log_xml_debug(msg, "Query");
+    query = calloc(1, sizeof(struct st_query_data));
 
-    return available_devices;
+    query->reply = stonith_construct_reply(msg, NULL, NULL, pcmk_ok);
+    query->remote_peer = remote_peer ? strdup(remote_peer) : NULL;
+    query->client_id = client_id ? strdup(client_id) : NULL;
+    query->target = target ? strdup(target) : NULL;
+    query->action = action ? strdup(action) : NULL;
+    query->call_options = call_options;
+
+    get_capable_devices(target, action, timeout, query, stonith_query_capable_device_cb);
 }
 
 #define ST_LOG_OUTPUT_MAX 512
@@ -1169,15 +1344,17 @@ static void st_child_done(GPid pid, int rc, const char *output, gpointer user_da
               cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if(rc != 0 && cmd->device_next) {
-        stonith_device_t *dev = cmd->device_next->data;
+        stonith_device_t *dev = g_hash_table_lookup(device_list, cmd->device_next->data);
 
-        log_operation(cmd, rc, pid, dev->id, output);
+        if (dev) {
+            log_operation(cmd, rc, pid, dev->id, output);
 
-        cmd->device_next = cmd->device_next->next;
-        schedule_stonith_command(cmd, dev);
-        /* Prevent cmd from being freed */
-        cmd = NULL;
-        goto done;
+            cmd->device_next = cmd->device_next->next;
+            schedule_stonith_command(cmd, dev);
+            /* Prevent cmd from being freed */
+            cmd = NULL;
+            goto done;
+        }
     }
 
     if(rc > 0) {
@@ -1247,10 +1424,45 @@ static gint sort_device_priority(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-static int stonith_fence(xmlNode *msg)
+static void
+stonith_fence_get_devices_cb(GList *devices, void *user_data)
 {
-    int options = 0;
+    async_command_t *cmd = user_data;
+    stonith_device_t *device = NULL;
+
+    crm_info("Found %d matching devices for '%s'", g_list_length(devices), cmd->victim);
+
+    if (g_list_length(devices) > 0) {
+        /* Order based on priority */
+        devices = g_list_sort(devices, sort_device_priority);
+        device = g_hash_table_lookup(device_list, devices->data);
+
+        if (device) {
+            cmd->device_list = devices;
+            cmd->device_next = devices->next;
+            devices = NULL; /* list owned by cmd now */
+        }
+    }
+
+    /* we have a device, schedule it for fencing. */
+    if (device) {
+        schedule_stonith_command(cmd, device);
+        /* in progress */
+        return;
+    }
+
+    /* no device found! */
+    stonith_send_async_reply(cmd, NULL, -EHOSTUNREACH, 0);
+
+    free_async_command(cmd);
+    g_list_free_full(devices, free);
+}
+
+static int
+stonith_fence(xmlNode *msg)
+{
     const char *device_id = NULL;
+    int rc = -EHOSTUNREACH;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
@@ -1264,52 +1476,28 @@ static int stonith_fence(xmlNode *msg)
         device = g_hash_table_lookup(device_list, device_id);
         if(device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
+        } else {
+            schedule_stonith_command(cmd, device);
+            rc = -EINPROGRESS;
         }
-
     } else {
-        struct device_search_s search;
+        const char *host = crm_element_value(dev, F_STONITH_TARGET);
 
-        search.capable = NULL;
-        search.host = crm_element_value(dev, F_STONITH_TARGET);
-        search.action = crm_element_value(dev, F_STONITH_ACTION);
-
-        crm_element_value_int(msg, F_STONITH_CALLOPTS, &options);
-        if(options & st_opt_cs_nodeid) {
-            int nodeid = crm_atoi(search.host, NULL);
+        if(cmd->options & st_opt_cs_nodeid) {
+            int nodeid = crm_atoi(host, NULL);
             crm_node_t *node = crm_get_peer(nodeid, NULL);
             if(node) {
-                search.host = node->uname;
+                host = node->uname;
             }
         }
-
-        g_hash_table_foreach(device_list, search_devices, &search);
-        crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
-
-        if(g_list_length(search.capable) > 0) {
-            /* Order based on priority */
-            search.capable = g_list_sort(search.capable, sort_device_priority);
-
-            device = search.capable->data;
-
-            if(g_list_length(search.capable) > 1) {
-                cmd->device_list = search.capable;
-                cmd->device_next = cmd->device_list->next;
-            } else {
-                g_list_free(search.capable);
-            }
-        }
+        get_capable_devices(host, cmd->action, cmd->default_timeout, cmd, stonith_fence_get_devices_cb);
+        rc = -EINPROGRESS;
     }
 
-    if(device) {
-        schedule_stonith_command(cmd, device);
-        return -EINPROGRESS;
-    }
-
-    free_async_command(cmd);
-    return -EHOSTUNREACH;
+    return rc;
 }
 
-xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 
+xmlNode *stonith_construct_reply(xmlNode *request, const char *output, xmlNode *data, int rc) 
 {
     int lpc = 0;
     xmlNode *reply = NULL;
@@ -1422,16 +1610,24 @@ check_alternate_host(const char *target)
     return alternate_host;
 }
 
+static void
+stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer, const char *client_id)
+{
+    if (remote_peer) {
+        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng, reply, FALSE);
+    } else {
+        do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote_peer!=NULL);
+    }
+}
+
 static int
 handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
 
-    gboolean always_reply = FALSE;
-
-    xmlNode *reply = NULL;
     xmlNode *data = NULL;
+    xmlNode *reply = NULL;
 
     char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
@@ -1470,11 +1666,8 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
         if (remote_peer) {
             create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
         }
-        rc = stonith_query(request, &data);
-        always_reply = TRUE;
-        if(!data) {
-            return 0;
-        }
+        stonith_query(request, remote_peer, client_id, call_options);
+        return 0;
 
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
         const char *flag_name = NULL;
@@ -1562,7 +1755,6 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
 
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
         rc = stonith_fence_history(request, &data);
-        always_reply = TRUE;
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *id = NULL;
@@ -1627,22 +1819,18 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
     }
 
   done:
-    if (rc == -EINPROGRESS) {
-        /* Nothing (yet) */
 
-    } else if(remote_peer) {
+    /* Always reply unles the request is in process still.
+     * If in progress, a reply will happen async after the request
+     * processing is finished */
+    if (rc != -EINPROGRESS) {
         reply = stonith_construct_reply(request, output, data, rc);
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng, reply, FALSE);
-        free_xml(reply);
-
-    } else if(rc <= pcmk_ok || always_reply) {
-        reply = stonith_construct_reply(request, output, data, rc);
-        do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote_peer!=NULL);
-        free_xml(reply);
+        stonith_send_reply(reply, call_options, remote_peer, client_id);
     }
 
     free(output);
     free_xml(data);
+    free_xml(reply);
 
     return rc;
 }

@@ -46,7 +46,7 @@ ifdef::pcs[]
 . Set stonith-enable to true. +pcs -f stonith_cfg property set stonith-enabled=true+
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 . Find the correct driver: +stonith_admin --list-installed+
 
 . Since every device is different, the parameters needed to configure
@@ -76,7 +76,7 @@ endif::[]
   port parameter, you may also need to set the special
   +pcmk_host_argument+ parameter. See +man stonithd+ for details.
 
-ifdef::crm[]
+ifdef::crmsh[]
 . Upload it into the CIB from the shell: +cib commit stonith+
 endif::[]
 
@@ -118,7 +118,7 @@ Stonith options for: fence_ipmilan
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # stonith_admin --metadata -a fence_ipmilan
@@ -230,7 +230,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm crm(live)# cib new stonith
@@ -265,7 +265,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 crm(stonith)# configure property stonith-enabled="true"

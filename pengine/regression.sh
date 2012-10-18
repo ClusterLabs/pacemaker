@@ -63,6 +63,7 @@ do_test bug-1573 "Partial stop of a group with two children"
 do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 do_test bug-lf-2613 "Move group on failure"
 do_test bug-lf-2619 "Move group on clone failure"
+do_test group-fail "Ensure stop order is preserved for partially active groups"
 
 echo ""
 do_test rsc_dep1 "Must not     "

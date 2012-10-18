@@ -18,6 +18,12 @@
 #ifndef CRM__H
 #  define CRM__H
 
+/**
+ * \file
+ * \brief A dumping ground
+ * \ingroup core
+ */
+
 #  include <crm_config.h>
 #  include <stdlib.h>
 #  include <glib.h>

@@ -20,6 +20,12 @@
 #  include <crm_config.h>
 #  include <assert.h>
 
+/**
+ * \file
+ * \brief Error codes and asserts
+ * \ingroup core
+ */
+
 /*
   System error codes
   - /usr/include/asm-generic/errno.h

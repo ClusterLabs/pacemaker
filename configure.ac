@@ -839,6 +839,17 @@ if test x$ac_cv_header_bzlib_h != xyes; then
    AC_MSG_ERROR(BZ2 Development headers not found)
 fi
 
+dnl ========================================================================
+dnl sighandler_t is missing from Illumos, Solaris11 systems
+dnl ========================================================================
+
+AC_MSG_CHECKING([for sighandler_t])
+AC_TRY_COMPILE([#include <signal.h>],[sighandler_t *f;],
+has_sighandler_t=yes,has_sighandler_t=no)
+AC_MSG_RESULT($has_sighandler_t)
+if test "$has_sighandler_t" = "yes" ; then
+    AC_DEFINE( HAVE_SIGHANDLER_T, 1, [Define if sighandler_t available] )
+fi
 
 dnl ========================================================================
 dnl   ncurses
@@ -900,10 +911,12 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
     AC_LINK_IFELSE(
 	    [AC_LANG_PROGRAM(
 	      [
-#if defined(HAVE_CURSES_H)
-#  include <curses.h>
-#elif defined(HAVE_NCURSES_H)
+#if defined(HAVE_NCURSES_H)
 #  include <ncurses.h>
+#elif defined(HAVE_NCURSES_NCURSES_H)
+#  include <ncurses/ncurses.h>
+#elif defined(HAVE_CURSES_H)
+#  include <curses.h>
 #endif
 	      ],
 	      [printw((const char *)"Test");]
@@ -1476,6 +1489,14 @@ case $SUPPORT_ACL in
      *)		 SUPPORT_ACL=no;;
 esac
 
+HAVE_QB_IPCC_READY=1
+AC_CHECK_LIB(qb, qb_ipcc_ready)
+if test $ac_cv_lib_qb_qb_ipcc_ready != yes; then
+    HAVE_QB_IPCC_READY=0
+fi
+
+AC_DEFINE_UNQUOTED(HAVE_QB_IPCC_READY, $HAVE_QB_IPCC_READY, Do we need to perform nanosleep() when looking for synchronous replies)
+
 AC_MSG_CHECKING(for acl support)
 if test $SUPPORT_ACL = no; then
     AC_MSG_RESULT(no (disabled))
@@ -1483,11 +1504,10 @@ if test $SUPPORT_ACL = no; then
 else
     AC_MSG_RESULT($SUPPORT_ACL)
 
+    SUPPORT_ACL=1
     AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
     if test $ac_cv_lib_qb_qb_ipcs_connection_auth_set != yes; then
         SUPPORT_ACL=0
-    else
-        SUPPORT_ACL=1
     fi
 
     if test $SUPPORT_ACL = 0; then
@@ -1705,6 +1725,7 @@ AC_SUBST(PCMK_FEATURES)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
+Doxyfile							\
 coverage.sh							\
 cts/Makefile					        	\
 	cts/CTSvars.py						\

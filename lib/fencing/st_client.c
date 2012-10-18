@@ -50,6 +50,7 @@ static void *lha_agents_lib = NULL;
 CRM_TRACE_INIT_DATA(stonith);
 
 struct stonith_action_s {
+    /*! user defined data */
     char *agent;
     char *action;
     char *victim;
@@ -59,13 +60,18 @@ struct stonith_action_s {
     void *userdata;
     void (*done_cb)(GPid pid, gint status, const char *output, gpointer user_data);
 
-    /* async track data */
+    /*! internal async track data */
     int fd_stdout;
     int last_timeout_signo;
+
+    /*! internal timing information */
+    time_t initial_start_time;
+    int tries;
+    int remaining_timeout;
     guint timer_sigterm;
     guint timer_sigkill;
 
-    /* output data */
+    /* device output data */
     GPid pid;
     int rc;
     char *output;
@@ -145,6 +151,7 @@ int stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data,
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
+static int internal_stonith_action_execute(stonith_action_t *action);
 
 static void
 stonith_connection_destroy(gpointer user_data)
@@ -500,22 +507,33 @@ st_child_kill(gpointer data)
 }
 
 static void
-stonith_action_destroy(stonith_action_t *action)
+stonith_action_clear_tracking_data(stonith_action_t *action)
 {
-
     if (action->timer_sigterm > 0) {
         g_source_remove(action->timer_sigterm);
+        action->timer_sigterm = 0;
     }
     if (action->timer_sigkill > 0) {
         g_source_remove(action->timer_sigkill);
+        action->timer_sigkill = 0;
     }
-
     if (action->fd_stdout) {
         close(action->fd_stdout);
+        action->fd_stdout = 0;
     }
+    free(action->output);
+    action->output = NULL;
+    action->rc = 0;
+    action->pid = 0;
+    action->last_timeout_signo = 0;
+}
+
+static void
+stonith_action_destroy(stonith_action_t *action)
+{
+    stonith_action_clear_tracking_data(action);
     free(action->agent);
     free(action->args);
-    free(action->output);
     free(action->action);
     free(action->victim);
     free(action);
@@ -539,7 +557,7 @@ stonith_action_create(const char *agent,
     if (victim) {
         action->victim = strdup(victim);
     }
-    action->timeout = timeout;
+    action->timeout = action->remaining_timeout = timeout;
 
     return action;
 }
@@ -574,6 +592,26 @@ read_output(int fd)
     return output;
 }
 
+#define FAILURE_MAX_RETRIES 10
+static gboolean
+update_remaining_timeout(stonith_action_t *action)
+{
+    int diff = time(NULL) - action->initial_start_time;
+
+    if (action->tries >= FAILURE_MAX_RETRIES) {
+        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
+            action->agent, action->action, FAILURE_MAX_RETRIES);
+        action->remaining_timeout = 0;
+    } else if ((action->rc != -ETIME) && diff < (action->timeout * 0.7)) {
+    /* only set remaining timeout period if there is 30%
+     * or greater of the original timeout period left */
+        action->remaining_timeout = action->timeout - diff;
+    } else {
+        action->remaining_timeout = 0;
+    }
+    return action->remaining_timeout ? TRUE : FALSE;
+}
+
 static void
 stonith_action_async_done(GPid pid, gint status, gpointer user_data)
 {
@@ -605,6 +643,13 @@ stonith_action_async_done(GPid pid, gint status, gpointer user_data)
     action->rc = rc;
     action->output = read_output(action->fd_stdout);
 
+    if (action->rc != pcmk_ok && update_remaining_timeout(action)) {
+        rc = internal_stonith_action_execute(action);
+        if (rc == pcmk_ok) {
+            return;
+        }
+    }
+
     if (action->done_cb) {
         action->done_cb(pid, action->rc, action->output, action->userdata);
     }
@@ -622,6 +667,21 @@ internal_stonith_action_execute(stonith_action_t *action)
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
     int fd1[2];
     int fd2[2];
+    int is_retry = 0;
+
+    /* clear any previous tracking data */
+    stonith_action_clear_tracking_data(action);
+
+    if (!action->tries) {
+        action->initial_start_time = time(NULL);
+    }
+    action->tries++;
+
+    if (action->tries > 1) {
+        crm_info("Attempt %d to execute %s (%s). remaining timeout is %d",
+            action->tries, action->agent, action->action, action->remaining_timeout);
+        is_retry = 1;
+    }
 
     c_read_fd = c_write_fd = p_read_fd = p_write_fd = -1;
 
@@ -667,6 +727,10 @@ internal_stonith_action_execute(stonith_action_t *action)
         close(p_read_fd);
         close(p_write_fd);
 
+        /* keep retries from executing out of control */
+        if (is_retry) {
+            sleep(1);
+        }
         execlp(action->agent, action->agent, NULL);
         exit(EXIT_FAILURE);
     }
@@ -701,11 +765,11 @@ internal_stonith_action_execute(stonith_action_t *action)
     if (action->async) {
         action->fd_stdout = p_read_fd;
         g_child_watch_add(pid, stonith_action_async_done, action);
-        crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action->action, action->agent, pid, action->timeout);
+        crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action->action, action->agent, pid, action->remaining_timeout);
         action->last_timeout_signo = 0;
-        if (action->timeout) {
-            action->timer_sigterm = g_timeout_add(1000*action->timeout, st_child_term, action);
-            action->timer_sigkill = g_timeout_add(1000*(action->timeout+5), st_child_kill, action);
+        if (action->remaining_timeout) {
+            action->timer_sigterm = g_timeout_add(1000*action->remaining_timeout, st_child_term, action);
+            action->timer_sigkill = g_timeout_add(1000*(action->remaining_timeout+5), st_child_kill, action);
         } else {
             crm_err("No timeout set for stonith operation %s with device %s",
                 action->action, action->agent);
@@ -717,10 +781,10 @@ internal_stonith_action_execute(stonith_action_t *action)
 
     } else {
         /* sync */
-        int timeout = action->timeout + 1;
+        int timeout = action->remaining_timeout + 1;
         pid_t p = 0;
 
-        while (action->timeout < 0 || timeout > 0) {
+        while (action->remaining_timeout < 0 || timeout > 0) {
             p = waitpid(pid, &status, WNOHANG);
             if (p > 0) {
                 break;
@@ -816,7 +880,15 @@ stonith_action_execute(stonith_action_t *action,
         return -1;
     }
 
-    rc = internal_stonith_action_execute(action);
+    do {
+        rc = internal_stonith_action_execute(action);
+        if (rc == pcmk_ok) {
+            /* success! */
+            break;
+        }
+    /* keep retrying while we have time left */
+    } while (update_remaining_timeout(action));
+
     if (rc) {
         /* error */
         return rc;
@@ -2274,3 +2346,15 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     free(name);
     return when;
 }
+
+#if HAVE_STONITH_STONITH_H
+#include <pils/plugin.h>
+
+const char *i_hate_pils(int rc);
+
+const char *
+i_hate_pils(int rc)
+{
+    return PIL_strerror(rc);    
+}
+#endif

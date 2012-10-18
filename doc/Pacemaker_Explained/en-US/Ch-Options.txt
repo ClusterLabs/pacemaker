@@ -96,7 +96,7 @@ admin with the "correct" ones.  To change the +admin_epoch+, for
 example, one would use:
 
 [source,C]
-# cibadmin --modify --crm_xml ‘&lt;cib admin_epoch="42"/>'
+# cibadmin --modify --crm_xml '<cib admin_epoch="42"/>'
 
 A complete set of fields will look something like this:
 

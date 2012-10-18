@@ -26,7 +26,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm configure show
@@ -93,7 +93,7 @@ configuration and status by using the +pcs cluster cib+ command.
 ======
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 For those that are not of afraid of XML, you can see the raw configuration by appending "xml" to the previous command.
 
 .The last XML you'll see in this document
@@ -165,7 +165,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm configure property stonith-enabled=false
@@ -211,7 +211,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 ----
 # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
      params ip=192.168.122.120 cidr_netmask=32 \
@@ -280,7 +280,7 @@ vmware
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 
 To obtain a list of the available resource classes, run
 
@@ -347,7 +347,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm configure show
@@ -405,7 +405,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm resource status ClusterIP
@@ -446,7 +446,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # ssh pcmk-1 -- service pacemaker stop
@@ -514,7 +514,7 @@ no-quorum-policy: ignore
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm configure property no-quorum-policy=ignore
@@ -556,7 +556,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm_mon -1
@@ -605,7 +605,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # service corosync start
@@ -662,7 +662,7 @@ resource-stickiness: 100
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 ----
 # crm configure rsc_defaults resource-stickiness=100

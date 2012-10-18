@@ -18,6 +18,12 @@
 #ifndef CRM_COMMON_IPC__H
 #  define CRM_COMMON_IPC__H
 
+/**
+ * \file
+ * \brief Wrappers for and extensions to libqb IPC
+ * \ingroup core
+ */
+
 #  include <crm/common/xml.h>
 
 /* clplumbing based IPC */

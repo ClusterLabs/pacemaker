@@ -18,6 +18,12 @@
 #ifndef CRM_COMMON_UTIL__H
 #  define CRM_COMMON_UTIL__H
 
+/**
+ * \file
+ * \brief Utility functions
+ * \ingroup core
+ */
+
 #  include <sys/types.h>
 #  include <stdlib.h>
 #  include <limits.h>

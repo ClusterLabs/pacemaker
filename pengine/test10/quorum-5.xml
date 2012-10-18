@@ -28,7 +28,7 @@
         </primitive>
         <primitive id="child_DoFencing_2" class="stonith" type="ssh">
           <operations>
-            <op name="start" interval="0" id="op.auto-1" requires="nothing"/>
+            <op name="start" interval="0" id="op.auto-4" requires="nothing"/>
             <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id21997">

@@ -561,7 +561,8 @@ remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNod
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
 
     if(!manual_ack) {
-        op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
+        int query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
+        op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
 
     } else {
         crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");
@@ -1081,8 +1082,14 @@ int process_remote_stonith_exec(xmlNode *msg)
         }
         remote_op_done(op, msg, rc, FALSE);
         return pcmk_ok;
+    } else if(safe_str_neq(op->originator, stonith_our_uname)) {
+        /* If this isn't a remote level broadcast, and we are not the
+         * originator of the operation, we should not be receiving this msg. */
+        crm_err("%s received non-broadcast fencing result for operation it does not own (device %s targeting %s)",
+            stonith_our_uname, device, op->target);
+        return rc;
     }
-    
+
     if(is_set(op->call_options, st_opt_topology)) {
         const char *device = crm_element_value(msg, F_STONITH_DEVICE);
 
@@ -1090,33 +1097,38 @@ int process_remote_stonith_exec(xmlNode *msg)
                    device, op->target, op->client_name, op->originator,
                    rc == pcmk_ok?"passed":"failed", rc);
 
-        if(safe_str_eq(op->originator, stonith_our_uname)) {
-            if(op->state == st_done) {
-                remote_op_done(op, msg, rc, FALSE);
-                return rc;
+        /* We own the op, and it is complete. broadcast the result to all nodes
+         * and notify our local clients. */
+        if(op->state == st_done) {
+            remote_op_done(op, msg, rc, FALSE);
+            return rc;
 
-            } else if(rc == pcmk_ok && op->devices) {
+        }
+
+        /* An operation completed succesfully but has not yet been marked as done.
+         * Continue the topology if more devices exist at the current level, otherwise
+         * mark as done. */
+        if(rc == pcmk_ok) {
+            if (op->devices) {
                 /* Success, are there any more? */
                 op->devices = op->devices->next;
             }
-
+            /* if no more devices at this fencing level, we are done,
+             * else we need to contine with executing the next device in the list */
             if(op->devices == NULL) {
                 crm_trace("Marking complex fencing op for %s as complete", op->target);
-                if(rc == pcmk_ok) {
-                    op->state = st_done;
-                } else {
-                    op->state = st_failed;
-                }
+                op->state = st_done;
                 remote_op_done(op, msg, rc, FALSE);
                 return rc;
             }
-
         } else {
-            op->state = st_done;
-            remote_op_done(op, msg, rc, FALSE);
-            return rc;
+            /* This device failed, time to try another topology level. If no other
+             * levels are available, mark this operation as failed and report results. */
+            if (stonith_topology_next(op) != pcmk_ok) {
+                op->state = st_failed;
+                remote_op_done(op, msg, rc, FALSE);
+            }
         }
-
     } else if(rc == pcmk_ok && op->devices == NULL) {
         crm_trace("All done for %s", op->target);
 

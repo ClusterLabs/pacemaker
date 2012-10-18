@@ -91,7 +91,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm resource stop WebFS
@@ -153,7 +153,7 @@ open up /etc/corosync/corosync.conf, or execute the command
 name will be in the +totem+ block.
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Lastly, we use -t to specify the lock table name. The format for this
 field is +clustername:fsname+. For the +fsname+, we need to use the same
 value as specified in 'corosync.conf' for +cluster_name+.  Just pick
@@ -249,7 +249,7 @@ Full list of resources:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm
@@ -370,7 +370,7 @@ CIB updated
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # crm
@@ -468,7 +468,7 @@ local cib file.
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 This will involve a number of changes, so we'll again use interactive
 mode.
 
@@ -515,7 +515,7 @@ Colocation Constraints:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 # configure clone WebIP ClusterIP \
@@ -534,7 +534,7 @@ ifdef::pcs[]
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Open the ClusterIP resource
 
 [source,C]
@@ -623,7 +623,7 @@ Colocation Constraints:
 ----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 Again, the shell will automatically update any relevant
 constraints.
 
@@ -644,7 +644,7 @@ ifdef::pcs[]
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 crm(active) # configure edit WebDataClone
@@ -719,7 +719,7 @@ similar to this.
 -----
 endif::[]
 
-ifdef::crm[]
+ifdef::crmsh[]
 [source,C]
 -----
 crm(active) # cib commit active

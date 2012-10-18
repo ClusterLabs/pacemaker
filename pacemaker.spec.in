@@ -244,7 +244,7 @@ Group:        Development/Libraries
 Requires:     %{name}-cts = %{version}-%{release}
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:     %{name}-cluster-libs = %{version}-%{release}
-Requires:     libtool-ltdl-devel libqb-devel libuuid-devel libuuid-devel
+Requires:     libtool-ltdl-devel libqb-devel libuuid-devel
 Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with corosync}
 Requires:     corosynclib-devel
