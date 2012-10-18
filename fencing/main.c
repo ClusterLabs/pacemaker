@@ -1005,6 +1005,7 @@ main(int argc, char ** argv)
 
     if(stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT
+        cluster.hb_conn = NULL;
         cluster.hb_dispatch = stonith_peer_hb_callback;
         cluster.destroy = stonith_peer_hb_destroy;
 #endif

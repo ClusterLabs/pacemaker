@@ -575,6 +575,7 @@ main(int argc, char **argv)
 
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
+            cluster.hb_conn = NULL;
             cluster.hb_dispatch = attrd_ha_callback;
             cluster.destroy = attrd_ha_connection_destroy;
         }
