@@ -1,0 +1,17 @@
+sub=fencing
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@/@PACKAGE_TARNAME@
+
+build=@BUILD_VERSION@
+
+Name:         @PACKAGE_NAME@-${sub}
+URL:	      @PACKAGE_URL@
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
+Requires:     
+Conflicts:    
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -lstonithd
+Libs.private:
+

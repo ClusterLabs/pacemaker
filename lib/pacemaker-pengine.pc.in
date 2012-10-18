@@ -1,0 +1,38 @@
+sub=cib
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@/@PACKAGE_TARNAME@
+
+build=@BUILD_VERSION@
+
+daemon_group=@CRM_DAEMON_GROUP@
+daemon_user=@CRM_DAEMON_USER@
+
+daemondir=@CRM_DAEMON_DIR@
+blackboxdir=@CRM_BLACKBOX_DIR@
+configdir=@CRM_CONFIG_DIR@
+penginedir=@PE_STATE_DIR@
+coredir=@CRM_CORE_DIR@
+statedir=@CRM_STATE_DIR@
+schemadir=@CRM_DTD_DIRECTORY@
+ocfdir=@OCF_RA_DIR@
+
+features=@PCMK_FEATURES@
+with_heartbeat=@SUPPORT_HEARTBEAT@
+with_corosync=@SUPPORT_CS@
+with_plugin=@SUPPORT_PLUGIN@
+with_cman=@SUPPORT_CMAN@
+
+with_upstart=@SUPPORT_UPSTART@
+with_systemd=@SUPPORT_SYSTEMD@
+
+Name:         @PACKAGE_NAME@-${sub}
+URL:	      @PACKAGE_URL@
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
+Requires:     
+Conflicts:    
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -l${sub}
+Libs.private:
+

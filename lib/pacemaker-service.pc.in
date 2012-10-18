@@ -1,0 +1,21 @@
+sub=service
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@/@PACKAGE_TARNAME@
+
+build=@BUILD_VERSION@
+
+ocfdir=@OCF_RA_DIR@
+with_upstart=@SUPPORT_UPSTART@
+with_systemd=@SUPPORT_SYSTEMD@
+
+Name:         @PACKAGE_NAME@-${sub}
+URL:	      @PACKAGE_URL@
+Version:      @PACKAGE_VERSION@
+Description:  Pacemaker cluster manager v@PACKAGE_SERIES@
+Requires:     
+Conflicts:    
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -lcrm${sub}
+Libs.private:
+

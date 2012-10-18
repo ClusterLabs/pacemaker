@@ -17,13 +17,13 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST		= pcmk.pc.in pcmk-cib.pc.in pcmk-pe.pc.in
+EXTRA_DIST		= pacemaker.pc.in $(target_LIBS:%=%.in)
 
-LIBS			= cib pe
+LIBS			= cib lrmd service pengine fencing cluster
 
-target_LIBS		= $(LIBS:%=pcmk-%.pc)
+target_LIBS		= $(LIBS:%=pacemaker-%.pc)
 
-target_PACKAGE		= pcmk.pc
+target_PACKAGE		= pacemaker.pc
 
 all-local: $(target_LIBS) $(target_PACKAGE)
 

@@ -19,7 +19,7 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.1.8, pacemaker@oss.clusterlabs.org)
+AC_INIT(pacemaker, 1.1.8, pacemaker@oss.clusterlabs.org,,http://www.clusterlabs.org)
 CRM_DTD_VERSION="1.2"
 
 PCMK_FEATURES=""
@@ -1748,9 +1748,13 @@ include/Makefile						\
 		include/crm/pengine/Makefile			\
 replace/Makefile						\
 lib/Makefile							\
-	lib/pcmk.pc						\
-	lib/pcmk-pe.pc						\
-	lib/pcmk-cib.pc						\
+	lib/pacemaker.pc					\
+	lib/pacemaker-cib.pc					\
+	lib/pacemaker-lrmd.pc					\
+	lib/pacemaker-service.pc				\
+	lib/pacemaker-pengine.pc				\
+	lib/pacemaker-fencing.pc				\
+	lib/pacemaker-cluster.pc				\
 	lib/ais/Makefile					\
 	lib/common/Makefile					\
 	lib/cluster/Makefile					\
@@ -1764,7 +1768,7 @@ mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
 fencing/Makefile                                                \
-        fencing/regression.py                                      \
+        fencing/regression.py                                   \
 lrmd/Makefile                                                   \
         lrmd/regression.py                                      \
 extra/Makefile							\
