@@ -142,7 +142,6 @@ void diff_filter_context(int context, int upper_bound, int lower_bound,
 			 xmlNode *xml_node, xmlNode *parent);
 int in_upper_context(int depth, int context, xmlNode *xml_node);
 int write_file(const char *string, const char *filename);
-xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean full, const char *marker);
 int add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_diff);
 
 static inline const char *
@@ -1259,11 +1258,11 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
     for(child_diff = __xml_first_child(removed); child_diff != NULL; child_diff = __xml_next(child_diff)) {
 	CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 	if(root_nodes_seen == 0) {
-	    *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL);
+	    *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL, NULL);
 	}
 	root_nodes_seen++;
     }
-    
+
     if(root_nodes_seen == 0) {
 	*new = copy_xml(old);
 		
@@ -1328,12 +1327,12 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 
     crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	
-    tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
+    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
     if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
 	free_xml(tmp1);
     }
 	
-    tmp1 = subtract_xml_object(added, new, old, TRUE, "added:top");
+    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
     if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
 	free_xml(tmp1);
     }
@@ -1435,14 +1434,13 @@ in_upper_context(int depth, int context, xmlNode *xml_node)
     return 0;       
 }
 
-
 xmlNode *
-subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean full, const char *marker)
+subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                    gboolean full, gboolean *changed, const char *marker)
 {
+    gboolean dummy = FALSE;
     gboolean skip = FALSE;
-    gboolean differences = FALSE;
     xmlNode *diff = NULL;
-    xmlNode *child_diff = NULL;
     xmlNode *right_child = NULL;
     xmlNode *left_child = NULL;
     xmlAttrPtr xIter = NULL;
@@ -1454,7 +1452,11 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 
     int lpc = 0;
     static int filter_len = DIMOF(filter);
-	
+
+    if(changed == NULL) {
+        changed = &dummy;
+    }
+
     if(left == NULL) {
 	return NULL;
     }
@@ -1468,6 +1470,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 	deleted = add_node_copy(parent, left);
 	crm_xml_add(deleted, XML_DIFF_MARKER, marker);
 
+        *changed = TRUE;
 	return deleted;
     }
 
@@ -1478,6 +1481,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     value = crm_element_value(right, XML_DIFF_MARKER);
     if(value != NULL && safe_str_eq(value, "removed:top")) {
         crm_trace("We are the root of the deletion: %s.id=%s", name, id);
+        *changed = TRUE;
 	free_xml(diff);
 	return NULL;
     }
@@ -1492,15 +1496,18 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 
     /* changes to child objects */
     for(left_child = __xml_first_child(left); left_child != NULL; left_child = __xml_next(left_child)) {
+        gboolean child_changed = FALSE;
+
 	right_child = find_entity(
 	    right, crm_element_name(left_child), ID(left_child));
-	child_diff = subtract_xml_object(diff, left_child, right_child, full, marker);
-	if(child_diff != NULL) {
-	    differences = TRUE;
+	subtract_xml_object(diff, left_child, right_child,
+                            full, &child_changed, marker);
+	if(child_changed) {
+            *changed = TRUE;
 	}
     }
 
-    if(differences == FALSE) {
+    if(*changed == FALSE) {
         /* Nothing to do */
 
     } else if(full) {
@@ -1540,7 +1547,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 	right_val = crm_element_value(right, prop_name);
 	if(right_val == NULL) {
 	    /* new */
-	    differences = TRUE;
+	    *changed = TRUE;
 	    if(full) {
                 xmlAttrPtr pIter = NULL;
                 for(pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
@@ -1563,8 +1570,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 		/* unchanged */
 
 	    } else {
-		/* changed */
-		differences = TRUE;
+		*changed = TRUE;
 		if(full) {
                     xmlAttrPtr pIter = NULL;
                     for(pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
@@ -1582,7 +1588,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 	}
     }
 
-    if(differences == FALSE) {
+    if(*changed == FALSE) {
 	free_xml(diff);
 	crm_trace("\tNo changes to <%s id=%s>", crm_str(name), id);
 	return NULL;

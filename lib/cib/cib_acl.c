@@ -238,7 +238,7 @@ diff_xml_object_orig(xmlNode * old, xmlNode * new, gboolean suppress, xmlNode * 
     } else {
         removed = create_xml_node(diff, "diff-removed");
 
-        tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
+        tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
         if (suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
             free_xml(tmp1);
         }
@@ -246,7 +246,7 @@ diff_xml_object_orig(xmlNode * old, xmlNode * new, gboolean suppress, xmlNode * 
 
     added = create_xml_node(diff, "diff-added");
 
-    tmp1 = subtract_xml_object(added, new, old, FALSE, "added:top");
+    tmp1 = subtract_xml_object(added, new, old, FALSE, NULL, "added:top");
     if (suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
         free_xml(tmp1);
     }

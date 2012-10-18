@@ -148,7 +148,7 @@ char *dump_xml_unformatted(xmlNode * msg);
 xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
 
 xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
-                                    gboolean full, const char *marker);
+                             gboolean full, gboolean *changed, const char *marker);
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
