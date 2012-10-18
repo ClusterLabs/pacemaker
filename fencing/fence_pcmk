@@ -37,6 +37,42 @@ sub usage
     exit 0;
 }
 
+sub print_metadata
+{
+print '<?xml version="1.0" ?>
+<resource-agent name="fence_pcmk" shortdesc="Helper that presents a RHCS-style interface to stonith-ng for CMAN based clusters" >
+<longdesc>
+Should never need to use invoked by the user directly and should only
+be configured in cluster.conf, not directly in Pacemaker.
+</longdesc>
+<vendor-url>http://www.clusterlabs.org</vendor-url>
+<parameters>
+        <parameter name="action" unique="1" required="1">
+                <getopt mixed="-o &lt;action&gt;" />
+                <content type="string" default="disable" />
+                <shortdesc lang="en">Fencing Action</shortdesc>
+        </parameter>
+        <parameter name="port" unique="1" required="1">
+                <getopt mixed="-n &lt;id&gt;" />
+                <content type="string"  />
+                <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>
+        </parameter>
+        <parameter name="help" unique="1" required="0">
+                <getopt mixed="-h" />
+                <content type="string"  />
+                <shortdesc lang="en">Display help and exit</shortdesc>
+        </parameter>
+</parameters>
+<actions>
+        <action name="enable" />
+        <action name="disable" />
+        <action name="status" />
+        <action name="metadata" />
+</actions>
+</resource-agent>
+';
+}
+
 sub fail
 {
   ($msg) = @_;
@@ -135,6 +171,11 @@ if (@ARGV > 0) {
 
 } else {
     get_options_stdin();
+}
+
+if ((defined $opt_o) && ($opt_o =~ /metadata/i)) {
+    print_metadata();
+    exit 0;
 }
 
 $opt_o=lc($opt_o);
