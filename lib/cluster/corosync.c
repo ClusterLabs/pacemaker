@@ -666,7 +666,7 @@ init_cpg_connection(gboolean(*dispatch) (int kind, const char *from, const char 
         .destroy = destroy,
     };
     
-    strcpy(pcmk_cpg_group.value, crm_system_name);
+    strncpy(pcmk_cpg_group.value, crm_system_name, 128);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
 
     cs_repeat(retries, 30, rc = cpg_initialize(&pcmk_cpg_handle, &cpg_callbacks));
