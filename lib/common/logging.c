@@ -569,6 +569,8 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     const char *facility = daemon_option("logfacility");
     const char *f_copy = facility;
 
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+
     /* Redirect messages from glib functions to our handler */
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);

@@ -81,8 +81,6 @@ extern void cib_cleanup(void);
 static gboolean
 validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 {
-    int s_res = -1;
-    struct stat buf;
     char *digest = NULL;
     char *expected = NULL;
     gboolean passed = FALSE;
@@ -90,21 +88,19 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
     int start = 0, length = 0, read_len = 0;
 
     CRM_ASSERT(sigfile != NULL);
-    s_res = stat(sigfile, &buf);
 
-    if (s_res != 0) {
+    expected_strm = fopen(sigfile, "r");
+    if (expected_strm == NULL && errno == ENOENT) {
         crm_warn("No on-disk digest present");
         return TRUE;
+
+    } else if(expected_strm == NULL) {
+        crm_perror(LOG_ERR, "Could not open signature file %s for reading", sigfile);
+        goto bail;
     }
 
     if (local_cib != NULL) {
         digest = calculate_on_disk_digest(local_cib);
-    }
-
-    expected_strm = fopen(sigfile, "r");
-    if (expected_strm == NULL) {
-        crm_perror(LOG_ERR, "Could not open signature file %s for reading", sigfile);
-        goto bail;
     }
 
     start = ftell(expected_strm);
@@ -562,9 +558,8 @@ static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
 int
 write_cib_contents(gpointer p)
 {
+    int fd = 0;
     int exit_rc = EX_OK;
-    gboolean need_archive = FALSE;
-    struct stat buf;
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
 
@@ -639,8 +634,8 @@ write_cib_contents(gpointer p)
     /* Always write out with num_updates=0 */
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
-    need_archive = (stat(primary_file, &buf) == 0);
-    if (need_archive) {
+    fd = open(primary_file, O_NOFOLLOW);
+    if (fd >= 0) {
         int rc = 0;
         int seq = get_last_sequence(cib_root, CIB_SERIES);
 
@@ -656,6 +651,7 @@ write_cib_contents(gpointer p)
 
         unlink(backup_file);
         unlink(backup_digest);
+
         rc = link(primary_file, backup_file);
         if(rc < 0) {
             exit_rc = 4;
@@ -663,14 +659,11 @@ write_cib_contents(gpointer p)
             goto cleanup;
         }
 
-        rc = stat(digest_file, &buf);
-        if (rc == 0) {
-            rc = link(digest_file, backup_digest);
-            if(rc < 0) {
-                exit_rc = 5;
-                crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
-                goto cleanup;
-            }
+        rc = link(digest_file, backup_digest);
+        if(rc < 0 && errno != ENOENT) {
+            exit_rc = 5;
+            crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
+            goto cleanup;
         }
         write_last_sequence(cib_root, CIB_SERIES, seq + 1, cib_wrap);
         sync_directory(cib_root);
@@ -738,6 +731,10 @@ write_cib_contents(gpointer p)
 
     free_xml(cib_tmp);
     free_xml(cib_local);
+
+    if(fd > 0) {
+        close(fd);
+    }
 
     if (p == NULL) {
         /* exit() could potentially affect the parent by closing things it shouldn't
