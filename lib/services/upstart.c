@@ -215,12 +215,12 @@ upstart_job_exists(const char *name)
 
     pass = upstart_job_by_name (upstart_proxy, name, &path, NULL, &error);
 
-    if (error || pass == FALSE) {
+    if (error) {
         crm_trace("Call to ListUnits failed: %s", error->message);
         g_error_free(error);
         pass = FALSE;
 
-    } else {
+    } else if(pass) {
         crm_trace("Got %s", path);
     }
     /* free(path) */
@@ -427,8 +427,11 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     }
 
     pass = upstart_job_by_name (upstart_proxy, op->agent, &job, NULL, &error);
-    if (error || pass == FALSE) {
+    if (error) {
         crm_debug("Could not obtain job named '%s': %s", op->agent, error->message);
+        pass = FALSE;
+    }
+    if(pass == FALSE) {
         if (!g_strcmp0(action, "stop")) {
             op->rc = PCMK_EXECRA_OK;
         } else {
