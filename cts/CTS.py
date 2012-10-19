@@ -464,7 +464,7 @@ class RemoteExec:
         return rc
 
 has_log_watcher = {}
-log_watcher_bin = "/tmp/cts_log_watcher.py"
+log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_watcher.py"
 log_watcher = """
 import sys, os, fcntl
 
