@@ -314,7 +314,7 @@ send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service, xmlNode *
 #endif
 #if SUPPORT_HEARTBEAT
     if (is_heartbeat_cluster()) {
-        return send_ha_message(heartbeat_cluster, data, node->uname, ordered);
+        return send_ha_message(heartbeat_cluster, data, node ? node->uname : NULL, ordered);
     }
 #endif
     return FALSE;
@@ -400,9 +400,11 @@ get_node_name(uint32_t nodeid)
             name = classic_node_name(nodeid);
             break;
 #else
+#if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, nodeid);
             break;
+#endif
 #endif
 
 #if SUPPORT_CMAN
