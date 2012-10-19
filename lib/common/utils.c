@@ -1385,7 +1385,8 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         }
     }
 
-    umask(022);
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+
     close(STDIN_FILENO);
     (void)open(devnull, O_RDONLY);      /* Stdin:  fd 0 */
     close(STDOUT_FILENO);

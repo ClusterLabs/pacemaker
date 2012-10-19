@@ -788,33 +788,27 @@ filename2xml(const char *filename)
     return xml;
 }
 
-int
-write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress) 
+static int
+write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream, gboolean compress) 
 {
     int res = 0;
     time_t now;
     char *buffer = NULL;
     char *now_str = NULL;
     unsigned int out = 0;
-    FILE *file_output_strm = NULL;
     static mode_t cib_mode = S_IRUSR|S_IWUSR;
 	
-    CRM_CHECK(filename != NULL, return -1);
+    CRM_CHECK(stream != NULL, return -1);    
 
     crm_trace("Writing XML out to %s", filename);
     if (xml_node == NULL) {
 	crm_err("Cannot write NULL to %s", filename);
+        fclose(stream);
 	return -1;
     }
 
-    file_output_strm = fopen(filename, "w");
-    if(file_output_strm == NULL) {
-	crm_perror(LOG_ERR,"Cannot open %s for writing", filename);
-	return -1;
-    } 
-
     /* establish the correct permissions */
-    fchmod(fileno(file_output_strm), cib_mode);
+    fchmod(fileno(stream), cib_mode);
 	
     crm_log_xml_trace(xml_node, "Writing out");
 	
@@ -833,7 +827,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	int rc = BZ_OK;
 	unsigned int in = 0;
 	BZFILE *bz_file = NULL;
-	bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5, 0, 30);
+	bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
 	if(rc != BZ_OK) {
 	    crm_err("bzWriteOpen failed: %d", rc);
 	} else {
@@ -859,7 +853,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
     }
 	
     if(out <= 0) {
-	res = fprintf(file_output_strm, "%s", buffer);
+	res = fprintf(stream, "%s", buffer);
 	if(res < 0) {
 	    crm_perror(LOG_ERR,"Cannot write output to %s", filename);
 	    goto bail;
@@ -868,22 +862,39 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	
   bail:
 	
-    if(fflush(file_output_strm) != 0) {
+    if(fflush(stream) != 0) {
 	crm_perror(LOG_ERR,"fflush for %s failed:", filename);
 	res = -1;
     }
 	
-    if(fsync(fileno(file_output_strm)) < 0) {
+    if(fsync(fileno(stream)) < 0) {
 	crm_perror(LOG_ERR,"fsync for %s failed:", filename);
 	res = -1;
     }
 	    
-    fclose(file_output_strm);
+    fclose(stream);
 	
     crm_trace("Saved %d bytes to the Cib as XML", res);
     free(buffer);
 
     return res;
+}
+
+int
+write_xml_fd(xmlNode *xml_node, const char *filename, int fd, gboolean compress) 
+{
+    FILE *stream = NULL;
+
+    CRM_CHECK(fd > 0, return -1);
+    stream = fdopen(fd, "w");
+    return write_xml_stream(xml_node, filename, stream, compress);
+}
+
+int
+write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress) 
+{
+    FILE *stream = fopen(filename, "w");
+    return write_xml_stream(xml_node, filename, stream, compress);
 }
 
 xmlNode *
@@ -2466,15 +2477,10 @@ gboolean validate_xml_verbose(xmlNode *xml_blob)
     xmlDoc *doc = NULL;
     xmlNode *xml = NULL;
     gboolean rc = FALSE;
-
-    char *filename = NULL;
-    static char *template = NULL;
-    if(template == NULL) {
-	template = strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
-    }
+    char *filename = strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
+    int fd = mkstemp(filename);
     
-    filename = mktemp(template);
-    write_xml_file(xml_blob, filename, FALSE);
+    write_xml_fd(xml_blob, filename, fd, FALSE);
     
     dump_file(filename);
     
@@ -2482,7 +2488,9 @@ gboolean validate_xml_verbose(xmlNode *xml_blob)
     xml = xmlDocGetRootElement(doc);
     rc = validate_xml(xml, NULL, FALSE);
     free_xml(xml);
-    
+
+    unlink(filename);
+
     return rc;
 }
 

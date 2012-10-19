@@ -142,11 +142,12 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 }
 
 static int
-write_cib_digest(xmlNode * local_cib, const char *digest_file, char *digest)
+write_cib_digest(
+    xmlNode * local_cib, const char *digest_file, int fd, char *digest)
 {
     int rc = 0;
     char *local_digest = NULL;
-    FILE *digest_strm = fopen(digest_file, "w");
+    FILE *digest_strm = fdopen(fd, "w");
 
     if (digest_strm == NULL) {
         crm_perror(LOG_ERR, "Cannot open signature file %s for writing", digest_file);
@@ -220,11 +221,14 @@ static int
 cib_rename(const char *old, const char *new)
 {
     int rc = 0;
+    int automatic_fd = 0;
     char *automatic = NULL;
 
     if (new == NULL) {
-        automatic = crm_concat(cib_root, "cib.auto.XXXXXX", '/');
-        automatic = mktemp(automatic);
+        umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+        automatic = g_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
+        automatic_fd = mkstemp(automatic);
         new = automatic;
 
         crm_err("Archiving corrupt or unusable file %s as %s", old, automatic);
@@ -235,6 +239,9 @@ cib_rename(const char *old, const char *new)
         crm_perror(LOG_ERR, "Couldn't rename %s as %s - Disabling disk writes and continuing", old,
                    new);
         cib_writes_enabled = FALSE;
+    }
+    if(automatic_fd > 0) {
+        close(automatic_fd);
     }
     free(automatic);
     return rc;
@@ -561,11 +568,14 @@ write_cib_contents(gpointer p)
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
 
-    xmlNode *local_cib = NULL;
-    xmlNode *tmp_cib = NULL;
+    xmlNode *cib_local = NULL;
+    xmlNode *cib_tmp = NULL;
 
-    char *tmp1 = NULL;
-    char *tmp2 = NULL;
+    int tmp_cib_fd = 0;
+    int tmp_digest_fd = 0;
+    char *tmp_cib = NULL;
+    char *tmp_digest = NULL;
+
     char *digest_file = NULL;
     char *primary_file = NULL;
 
@@ -577,7 +587,7 @@ write_cib_contents(gpointer p)
 
     if (p) {
         /* Synchronous write out */
-        local_cib = copy_xml(p);
+        cib_local = copy_xml(p);
 
     } else {
         int pid = 0;
@@ -617,20 +627,17 @@ write_cib_contents(gpointer p)
         /* In theory we can scribble on "the_cib" here and not affect the parent
          * But lets be safe anyway
          */
-        local_cib = copy_xml(the_cib);
+        cib_local = copy_xml(the_cib);
     }
 
-    epoch = crm_element_value(local_cib, XML_ATTR_GENERATION);
-    admin_epoch = crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN);
-
-    tmp1 = crm_concat(cib_root, "cib.XXXXXX", '/');
-    tmp2 = crm_concat(cib_root, "cib.XXXXXX", '/');
+    epoch = crm_element_value(cib_local, XML_ATTR_GENERATION);
+    admin_epoch = crm_element_value(cib_local, XML_ATTR_GENERATION_ADMIN);
 
     primary_file = crm_concat(cib_root, "cib.xml", '/');
     digest_file = crm_concat(primary_file, "sig", '.');
 
     /* Always write out with num_updates=0 */
-    crm_xml_add(local_cib, XML_ATTR_NUMUPDATES, "0");
+    crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
     need_archive = (stat(primary_file, &buf) == 0);
     if (need_archive) {
@@ -679,7 +686,7 @@ write_cib_contents(gpointer p)
      */
     crm_debug("Writing CIB to disk");
     if (p == NULL) {
-        cib_status_root = find_xml_node(local_cib, XML_CIB_TAG_STATUS, TRUE);
+        cib_status_root = find_xml_node(cib_local, XML_CIB_TAG_STATUS, TRUE);
         CRM_LOG_ASSERT(cib_status_root != NULL);
 
         if (cib_status_root != NULL) {
@@ -687,33 +694,37 @@ write_cib_contents(gpointer p)
         }
     }
 
-    tmp1 = mktemp(tmp1);        /* cib    */
-    tmp2 = mktemp(tmp2);        /* digest */
+    tmp_cib = g_strdup_printf("%s/cib.XXXXXX", cib_root);
+    tmp_digest = g_strdup_printf("%s/cib.XXXXXX", cib_root);
 
-    if (write_xml_file(local_cib, tmp1, FALSE) <= 0) {
-        crm_err("Changes couldn't be written to %s", tmp1);
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+    tmp_cib_fd = mkstemp(tmp_cib);
+    if (write_xml_fd(cib_local, tmp_cib, tmp_cib_fd, FALSE) <= 0) {
+        crm_err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = 2;
         goto cleanup;
     }
 
     /* Must calculate the digest after writing as write_xml_file() updates the last-written field */
-    digest = calculate_on_disk_digest(local_cib);
+    digest = calculate_on_disk_digest(cib_local);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              admin_epoch ? admin_epoch : "0", epoch ? epoch : "0", digest);
 
-    if (write_cib_digest(local_cib, tmp2, digest) <= 0) {
-        crm_err("Digest couldn't be written to %s", tmp2);
+    tmp_digest_fd = mkstemp(tmp_digest);
+    if (write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
+        crm_err("Digest couldn't be written to %s", tmp_digest);
         exit_rc = 3;
         goto cleanup;
     }
     crm_debug("Wrote digest %s to disk", digest);
-    tmp_cib = retrieveCib(tmp1, tmp2, FALSE);
-    CRM_ASSERT(tmp_cib != NULL);
+    cib_tmp = retrieveCib(tmp_cib, tmp_digest, FALSE);
+    CRM_ASSERT(cib_tmp != NULL);
     sync_directory(cib_root);
 
-    crm_debug("Activating %s", tmp1);
-    cib_rename(tmp1, primary_file);
-    cib_rename(tmp2, digest_file);
+    crm_debug("Activating %s", tmp_cib);
+    cib_rename(tmp_cib, primary_file);
+    cib_rename(tmp_digest, digest_file);
     sync_directory(cib_root);
 
   cleanup:
@@ -722,11 +733,11 @@ write_cib_contents(gpointer p)
     free(backup_file);
     free(digest_file);
     free(digest);
-    free(tmp2);
-    free(tmp1);
+    free(tmp_digest);
+    free(tmp_cib);
 
-    free_xml(tmp_cib);
-    free_xml(local_cib);
+    free_xml(cib_tmp);
+    free_xml(cib_local);
 
     if (p == NULL) {
         /* exit() could potentially affect the parent by closing things it shouldn't
