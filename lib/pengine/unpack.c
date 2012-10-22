@@ -42,7 +42,7 @@ CRM_TRACE_INIT_DATA(pe_status);
 	}								\
     } while(0)
 
-gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
+gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 
 static void
@@ -1500,7 +1500,7 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
             migrate_op = rsc_op;
         }
 
-        unpack_rsc_op(rsc, node, rsc_op, gIter->next, &on_fail, data_set);
+        unpack_rsc_op(rsc, node, rsc_op, &on_fail, data_set);
     }
 
     /* create active recurring operations as optional */
@@ -1605,7 +1605,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 }
 
 gboolean
-unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
+unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
               enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
     int task_id = 0;
@@ -2153,11 +2153,21 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListPtr next,
             if (action->fail_role == RSC_ROLE_STOPPED) {
                 int score = -INFINITY;
 
-                crm_err("Making sure %s doesn't come up again", rsc->id);
+                resource_t *fail_rsc = rsc;
+                if (fail_rsc->parent) {
+                    resource_t *parent = uber_parent(fail_rsc);
+                    if ((parent->variant == pe_clone ||  parent->variant == pe_master) && is_not_set(parent->flags, pe_rsc_unique)) {
+                        /* for clone and master resources, if a child fails on an operation
+                         * with on-fail = stop, all the resources fail.  Do this by preventing
+                         * the parent from coming up again. */
+                        fail_rsc = parent;
+                    }
+                }
+                crm_err("Making sure %s doesn't come up again", fail_rsc->id);
                 /* make sure it doesnt come up again */
-                g_hash_table_destroy(rsc->allowed_nodes);
-                rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
-                g_hash_table_foreach(rsc->allowed_nodes, set_node_score, &score);
+                g_hash_table_destroy(fail_rsc->allowed_nodes);
+                fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+                g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
             }
 
             pe_free_action(action);
