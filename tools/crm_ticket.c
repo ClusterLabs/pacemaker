@@ -963,8 +963,6 @@ main(int argc, char **argv)
         cib_delete(cib_conn);
     }
 
-    crm_xml_cleanup();
-
     if (rc == -pcmk_err_no_quorum) {
         CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
         CMD_ERR("Try using -f\n");
@@ -973,6 +971,5 @@ main(int argc, char **argv)
         CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
     }
 
-    qb_log_fini();
-    return rc;
+    return crm_exit(rc);
 }

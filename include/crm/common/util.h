@@ -107,4 +107,6 @@ char *crm_md5sum(const char *buffer);
 char *crm_generate_uuid(void);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
+int crm_exit(int rc);
+
 #endif

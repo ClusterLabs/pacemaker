@@ -78,6 +78,19 @@ int node_score_green = 0;
 int node_score_yellow = 0;
 int node_score_infinity = INFINITY;
 
+int
+crm_exit(int rc)
+{
+#if HAVE_LIBXML2
+    crm_xml_cleanup();
+#endif
+    qb_log_fini();
+    exit(rc);
+    return rc; /* Can never happen, but allows return crm_exit(rc)
+                * where "return rc" was used previously
+                * - which keeps compilers happy.
+                */
+}
 
 gboolean
 check_time(const char *value)
@@ -1371,17 +1384,17 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        exit(EX_USAGE);
+        crm_exit(EX_USAGE);
 
     } else if (pid > 0) {
-        exit(EX_OK);
+        crm_exit(EX_OK);
     }
 
     if (crm_lock_pidfile(pidfile) < 0) {
         pid = crm_read_pidfile(pidfile);
         if (crm_pid_active(pid) > 0) {
             crm_warn("%s: already running [pid %ld] (%s).\n", name, pid, pidfile);
-            exit(EX_OK);
+            crm_exit(EX_OK);
         }
     }
 
@@ -1735,7 +1748,7 @@ crm_help(char cmd, int exit_code)
 
   out:
     if (exit_code >= 0) {
-        exit(exit_code);
+        crm_exit(exit_code);
     }
 }
 
@@ -2134,7 +2147,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if (!(*handle)) {
         crm_err("%sCould not open %s: %s", fatal?"Fatal: ":"", lib, dlerror());
         if(fatal) {
-            exit(100);
+            crm_exit(100);
         }
         return NULL;
     }
@@ -2143,7 +2156,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if ((error = dlerror()) != NULL) {
         crm_err("%sCould not find %s in %s: %s", fatal?"Fatal: ":"", fn, lib, error);
         if(fatal) {
-            exit(100);
+            crm_exit(100);
         }
     }
 

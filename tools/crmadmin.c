@@ -315,7 +315,7 @@ do_work(void)
 
         free_xml(output);
         the_cib->cmds->signoff(the_cib);
-        exit(rc);
+        crm_exit(rc);
 
     } else if (DO_RESET) {
         /* tell dest_node to initiate the shutdown proceedure
@@ -392,7 +392,7 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
     if (mainloop) {
         g_main_quit(mainloop);
     } else {
-        exit(1);
+        crm_exit(1);
     }
 }
 
@@ -533,7 +533,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
             if (BE_SILENT && dc != NULL) {
                 fprintf(stderr, "%s\n", dc);
             }
-            exit(0);
+            crm_exit(0);
         }
     }
     
@@ -542,7 +542,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     if (received_responses >= expected_responses) {
         crm_trace("Received expected number (%d) of messages from Heartbeat."
                     "  Exiting normally.", expected_responses);
-        exit(0);
+        crm_exit(0);
     }
 
     message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);

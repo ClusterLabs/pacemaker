@@ -298,7 +298,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
 	CRM_CHECK(used == orig, ;);
 	crm_debug("rc=%d, used=%d", rc, used);
 	if(rc != BZ_OK) {
-	    exit(100);
+	    crm_exit(100);
 	}
 	crm_debug("Original %s, decompressed %s", buffer, uncompressed);
 	free(uncompressed);

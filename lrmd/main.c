@@ -206,7 +206,7 @@ lrmd_shutdown(int nsig)
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
-    exit(0);
+    crm_exit(0);
 }
 
 static int
@@ -301,7 +301,7 @@ main(int argc, char **argv)
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
     if (try_server_create()) {
         crm_err("Failed to allocate lrmd server.  shutting down");
-        exit(-1);
+        crm_exit(-1);
     }
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);

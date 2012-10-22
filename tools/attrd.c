@@ -211,7 +211,7 @@ attrd_shutdown(int nsig)
     if (mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
     } else {
-        exit(0);
+        crm_exit(0);
     }
 }
 
@@ -230,7 +230,7 @@ usage(const char *cmd, int exit_status)
 /* 	fprintf(stream, "\t-h\thelp message\n"); */
     fflush(stream);
 
-    exit(exit_status);
+    crm_exit(exit_status);
 }
 
 static void
@@ -328,7 +328,7 @@ attrd_ha_connection_destroy(gpointer user_data)
         g_main_quit(mainloop);
         return;
     }
-    exit(EX_OK);
+    crm_exit(EX_OK);
 }
 
 static void
@@ -409,7 +409,7 @@ attrd_ais_destroy(gpointer unused)
         g_main_quit(mainloop);
         return;
     }
-    exit(EX_USAGE);
+    crm_exit(EX_USAGE);
 }
 #endif
 
@@ -425,7 +425,7 @@ attrd_cib_connection_destroy(gpointer user_data)
     } else {
         /* eventually this will trigger a reconnect, not a shutdown */
         crm_err("Connection to the CIB terminated...");
-        exit(1);
+        crm_exit(1);
     }
 
     return;
@@ -514,7 +514,7 @@ cib_connect(void *user_data)
 
     if (was_err) {
         crm_err("Aborting startup");
-        exit(100);
+        crm_exit(100);
     }
 
     cib_conn = local_conn;
@@ -650,8 +650,7 @@ main(int argc, char **argv)
     free(attrd_uuid);
     empty_uuid_cache();
 
-    qb_log_fini();
-    return 0;
+    return crm_exit(0);
 }
 
 struct attrd_callback_s {

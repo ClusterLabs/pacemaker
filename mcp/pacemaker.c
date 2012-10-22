@@ -310,7 +310,7 @@ start_child(pcmk_child_t * child)
             (void)execvp(child->command, opts_default);
         }
         crm_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
-        exit(100);
+        crm_exit(100);
     }
     return TRUE;                /* never reached */
 }
@@ -384,7 +384,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if(fatal_error) {
         crm_notice("Attempting to inhibit respawning after fatal error");
-        exit(100);
+        crm_exit(100);
     }
     
     return TRUE;
@@ -695,7 +695,7 @@ main(int argc, char **argv)
             case 'F':
                 printf("Pacemaker %s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION,
                        CRM_FEATURES);
-                exit(0);
+                crm_exit(0);
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
                 ++argerr;
@@ -730,13 +730,13 @@ main(int argc, char **argv)
         }
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        exit(0);
+        crm_exit(0);
 
     } else if(crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
-        exit(100);
+        crm_exit(100);
     }
 
     crm_ipc_close(old_instance);

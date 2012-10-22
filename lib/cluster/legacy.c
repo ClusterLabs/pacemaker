@@ -629,7 +629,7 @@ ais_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
     ais_fd_sync = -1;
-    exit(1);
+    crm_exit(1);
 }
 
 
@@ -763,7 +763,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
     }
 #  else
     crm_err("cman qorum is not supported in this build");
-    exit(100);
+    crm_exit(100);
 #  endif
     return TRUE;
 }
@@ -908,7 +908,7 @@ init_cpg_connection(crm_cluster_t *cluster)
 
 #  else
     crm_err("The Corosync CPG API is not supported in this build");
-    exit(100);
+    crm_exit(100);
 #  endif
     return TRUE;
 }
@@ -918,7 +918,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
                        void (*destroy) (gpointer))
 {
     crm_err("The Corosync quorum API is not supported in this build");
-    exit(100);
+    crm_exit(100);
     return TRUE;
 }
 
@@ -972,7 +972,7 @@ init_cs_connection_classic(crm_cluster_t *cluster)
 
     if (uname(&name) < 0) {
         crm_perror(LOG_ERR, "Could not determin the current host");
-        exit(100);
+        crm_exit(100);
     }
 
     get_ais_nodeid(&pcmk_nodeid, &pcmk_uname);

@@ -1238,7 +1238,7 @@ cib_ccm_dispatch(gpointer user_data)
 
     /* eventually it might be nice to recover and reconnect... but until then... */
     crm_err("Exiting to recover from CCM connection failure");
-    exit(2);
+    crm_exit(2);
 
     return -1;
 }
@@ -1443,12 +1443,11 @@ terminate_cib(const char *caller, gboolean fast)
         qb_ipcs_destroy(ipcs_ro);
         qb_ipcs_destroy(ipcs_rw);
         qb_ipcs_destroy(ipcs_shm);
-        qb_log_fini();
 
         if (fast) {
-            exit(EX_USAGE);
+            crm_exit(EX_USAGE);
         } else {
-            exit(EX_OK);
+            crm_exit(EX_OK);
         }
     }
 }

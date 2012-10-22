@@ -212,6 +212,5 @@ main(int argc, char **argv)
         free(interval);
     }
 
-    qb_log_fini();
-    return rc;
+    return crm_exit(rc);
 }

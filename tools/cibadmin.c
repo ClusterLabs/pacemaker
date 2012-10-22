@@ -487,10 +487,8 @@ main(int argc, char **argv)
     free(admin_input_file);
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
-    crm_xml_cleanup();
   bail:
-    qb_log_fini();
-    return -exit_code;
+    return crm_exit(-exit_code);
 }
 
 int

@@ -207,8 +207,8 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
     crm_err("%s is still connected at exit", client->table_key);
 }
 
-static void
-free_mem(fsa_data_t * msg_data)
+int
+crmd_exit(int rc) 
 {
     GListPtr gIter = NULL;
 
@@ -237,7 +237,6 @@ free_mem(fsa_data_t * msg_data)
         delete_fsa_input(fsa_data);
     }
     g_list_free(fsa_message_queue);
-    delete_fsa_input(msg_data);
 
     if (ipc_clients) {
         crm_debug("Number of connected clients: %d", g_hash_table_size(ipc_clients));
@@ -307,7 +306,7 @@ free_mem(fsa_data_t * msg_data)
     free(max_generation_from);
     free_xml(max_generation_xml);
 
-    crm_xml_cleanup();
+    return crm_exit(rc);
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -340,8 +339,8 @@ do_exit(long long action,
     }
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-    free_mem(msg_data);
-    exit(exit_code);
+    delete_fsa_input(msg_data);
+    crmd_exit(exit_code);
 }
 
 /*	 A_STARTUP	*/
@@ -898,7 +897,6 @@ crm_shutdown(int nsig)
 
     } else {
         crm_info("exit from shutdown");
-        exit(EX_OK);
-
+        crmd_exit(EX_OK);
     }
 }

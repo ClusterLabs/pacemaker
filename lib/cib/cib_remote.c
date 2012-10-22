@@ -240,7 +240,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection)
 
     if (!res->ai_addr) {
         fprintf(stderr, "getaddrinfo failed");
-        exit(1);
+        crm_exit(1);
     }
 #if 1
     memcpy(&addr, res->ai_addr, res->ai_addrlen);

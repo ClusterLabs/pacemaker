@@ -380,7 +380,7 @@ get_local_node_name(void)
 
     if(name == NULL) {
         crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
-        exit(100);
+        crm_exit(100);
     }
     return name;
 }
@@ -600,7 +600,7 @@ get_cluster_type(void)
             crm_notice
                 ("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
                  cluster);
-            exit(100);
+            crm_exit(100);
         }
     }
     return cluster_type;

@@ -2284,7 +2284,7 @@ clean_up(int rc)
     free(pid_file);
 
     if (rc >= 0) {
-        exit(rc);
+        crm_exit(rc);
     }
     return;
 }

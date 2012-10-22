@@ -275,9 +275,6 @@ cib_cleanup(void)
     g_hash_table_destroy(config_hash);
     g_hash_table_destroy(client_list);
     free(cib_our_uname);
-#if HAVE_LIBXML2
-    crm_xml_cleanup();
-#endif
     free(channel1);
     free(channel2);
     free(channel3);
@@ -491,13 +488,13 @@ cib_init(void)
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");
-        exit(1);
+        crm_exit(1);
     }
 
     if (stand_alone == FALSE) {
         if (crm_cluster_connect(&crm_cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            exit(100);
+            crm_exit(100);
         }
         cib_our_uname = crm_cluster.uname;
         if (is_openais_cluster()) {
@@ -558,9 +555,8 @@ cib_init(void)
     qb_ipcs_destroy(ipcs_ro);
     qb_ipcs_destroy(ipcs_rw);
     qb_ipcs_destroy(ipcs_shm);
-    qb_log_fini();
 
-    return 0;
+    return crm_exit(0);
 }
 
 void
@@ -581,7 +577,7 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\t--%s (-%c)\t\tAdvanced use only\n", "cib-root", 'r');
     fflush(stream);
 
-    exit(exit_status);
+    crm_exit(exit_status);
 }
 
 gboolean

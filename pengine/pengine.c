@@ -198,7 +198,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
 
     } else if (strcasecmp(op, CRM_OP_QUIT) == 0) {
         crm_warn("Received quit message, terminating");
-        exit(0);
+        crm_exit(0);
     }
 
     return TRUE;

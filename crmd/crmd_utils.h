@@ -69,6 +69,7 @@ xmlNode *create_node_state(const char *uname, const char *in_cluster,
                            const char *is_peer, const char *join_state,
                            const char *exp_state, gboolean clear_shutdown, const char *src);
 
+int crmd_exit(int rc);
 gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
 gboolean start_subsystem(struct crm_subsystem_s *centry);
 

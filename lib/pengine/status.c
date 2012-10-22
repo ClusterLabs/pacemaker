@@ -37,7 +37,7 @@ extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\
 	crm_mem_stats(NULL);						\
 	crm_err("Exiting: stage %d", stage);				\
-	exit(1);
+	crm_exit(1);
 
 /*
  * Unpack everything

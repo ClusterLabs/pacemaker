@@ -462,11 +462,9 @@ main(int argc, char **argv)
         free_xml(input);
     }
   done:
-    crm_xml_cleanup();
-    qb_log_fini();
     free(shadow_file);
     free(shadow);
-    return rc;
+    return crm_exit(rc);
 }
 
 #define bhead(buffer, offset) ((*buffer) + (*offset))

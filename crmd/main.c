@@ -138,7 +138,7 @@ crmd_init(void)
 #endif
         g_main_run(crmd_mainloop);
         if (is_set(fsa_input_register, R_STAYDOWN)) {
-            crm_info("Inhibiting respawn by Heartbeat");
+            crm_info("Inhibiting automated respawn");
             exit_code = 100;
         }
 
@@ -149,9 +149,7 @@ crmd_init(void)
     }
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-    qb_log_fini();
-
-    return exit_code;
+    return crmd_exit(exit_code);
 }
 
 void
@@ -168,5 +166,5 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\tversion\t\t: show version information and quit\n");
     fflush(stream);
 
-    exit(exit_status);
+    crm_exit(exit_status);
 }

@@ -527,7 +527,7 @@ read_config(void)
                 } else {
                     crm_err("We can only start Pacemaker from init if using version 1"
                             " of the Pacemaker plugin for Corosync.  Terminating.");
-                    exit(100);
+                    crm_exit(100);
                 }
                 break;
             }

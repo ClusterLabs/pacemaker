@@ -181,7 +181,7 @@ usage(const char *cmd, int exit_status)
     stream = exit_status != 0 ? stderr : stdout;
     fflush(stream);
 
-    exit(exit_status);
+    crm_exit(exit_status);
 }
 
 void
@@ -250,5 +250,5 @@ cibmon_diff(const char *event, xmlNode * msg)
 void
 cibmon_shutdown(int nsig)
 {
-    exit(EX_OK);
+    crm_exit(EX_OK);
 }

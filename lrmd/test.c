@@ -94,7 +94,7 @@ static void
 test_exit(int rc)
 {
     lrmd_api_delete(lrmd_conn);
-    exit(rc);
+    crm_exit(rc);
 }
 
 #define print_result(result) \

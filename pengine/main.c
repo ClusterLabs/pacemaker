@@ -176,13 +176,8 @@ main(int argc, char **argv)
     mainloop = g_main_new(FALSE);
     g_main_run(mainloop);
 
-#if HAVE_LIBXML2
-    crm_xml_cleanup();
-#endif
-
     crm_info("Exiting %s", crm_system_name);
-    qb_log_fini();
-    return 0;
+    return crm_exit(0);
 }
 
 void
@@ -200,12 +195,12 @@ usage(const char *cmd, int exit_status)
 /* 	fprintf(stream, "\t-h\thelp message\n"); */
     fflush(stream);
 
-    exit(exit_status);
+    crm_exit(exit_status);
 }
 
 void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    exit(EX_OK);
+    crm_exit(EX_OK);
 }

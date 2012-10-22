@@ -132,7 +132,7 @@ inject_node_state(cib_t * cib_conn, char *node)
     if(cib_object && ID(cib_object) == NULL) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
-        exit(1);
+        crm_exit(1);
     }
 
     if (rc == -ENXIO) {
@@ -1055,7 +1055,7 @@ setup_input(const char *input, const char *output)
 
         if (cib_object == NULL) {
             fprintf(stderr, "Live CIB query failed: empty result\n");
-            exit(3);
+            crm_exit(3);
         }
 
     } else if (safe_str_eq(input, "-")) {
@@ -1071,12 +1071,12 @@ setup_input(const char *input, const char *output)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        exit(-ENOKEY);
+        crm_exit(-ENOKEY);
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        exit(-pcmk_err_dtd_validation);
+        crm_exit(-pcmk_err_dtd_validation);
     }
 
     if (output == NULL) {
@@ -1093,7 +1093,7 @@ setup_input(const char *input, const char *output)
 
     if (rc < 0) {
         fprintf(stderr, "Could not create '%s': %s\n", output, strerror(errno));
-        exit(rc);
+        crm_exit(rc);
     }
     setenv("CIB_file", output, 1);
     free(local_output);
@@ -1504,8 +1504,6 @@ main(int argc, char **argv)
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     free(use_date);
-    crm_xml_cleanup();
     fflush(stderr);
-    qb_log_fini();
-    return rc;
+    return crm_exit(rc);
 }

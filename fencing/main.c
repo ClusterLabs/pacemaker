@@ -778,7 +778,7 @@ stonith_shutdown(int nsig)
         g_main_quit(mainloop);
     } else {
         stonith_cleanup();
-        exit(EX_OK);
+        crm_exit(EX_OK);
     }
 }
 
@@ -797,9 +797,6 @@ stonith_cleanup(void)
     crm_peer_destroy();
     g_hash_table_destroy(client_list);
     free(stonith_our_uname);
-#if HAVE_LIBXML2
-    crm_xml_cleanup();
-#endif
 }
 
 /* *INDENT-OFF* */
@@ -1019,7 +1016,7 @@ main(int argc, char ** argv)
 
         if(crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            exit(100);
+            crm_exit(100);
         } else {
             stonith_our_uname = cluster.uname;
         }
@@ -1069,8 +1066,7 @@ main(int argc, char ** argv)
 #endif
 
     crm_info("Done");
-    qb_log_fini();
 
-    return rc;
+    return crm_exit(rc);
 }
 

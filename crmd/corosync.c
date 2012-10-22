@@ -138,7 +138,7 @@ crmd_quorum_destroy(gpointer user_data)
 {
     if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        exit(1);
+        crmd_exit(1);
 
     } else {
         crm_info("connection closed");
@@ -150,7 +150,7 @@ crmd_ais_destroy(gpointer user_data)
 {
     if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        exit(1);
+        crmd_exit(1);
 
     } else {
         crm_info("connection closed");
@@ -163,7 +163,7 @@ crmd_cman_destroy(gpointer user_data)
 {
     if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        exit(1);
+        crmd_exit(1);
 
     } else {
         crm_info("connection closed");

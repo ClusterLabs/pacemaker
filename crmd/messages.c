@@ -150,7 +150,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_STARTUP:
                 crm_err("Copying %s data (from %s)"
                         " not yet implemented", fsa_cause2string(cause), raised_from);
-                exit(1);
+                crmd_exit(1);
                 break;
         }
         crm_trace("%s data copied", fsa_cause2string(fsa_data->fsa_cause));
@@ -246,7 +246,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
                 if (fsa_data->data != NULL) {
                     crm_err("Dont know how to free %s data from %s",
                             fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-                    exit(1);
+                    crmd_exit(1);
                 }
                 break;
         }
