@@ -1262,7 +1262,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 
     CRM_CHECK(new != NULL, return FALSE);
     if(digest_cs == NULL) {
-        digest_cs = qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__, 0);
+        digest_cs = qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__, crm_trace_nonlog);
     }
 
     crm_trace("Substraction Phase");
@@ -2138,7 +2138,9 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     crm_trace("Digest %s\n", digest);
 
         if(digest_cs == NULL) {
-            digest_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", LOG_TRACE, __LINE__, 0);
+            digest_cs = qb_log_callsite_get(
+                __func__, __FILE__, "cib-digest", LOG_TRACE, __LINE__,
+                crm_trace_nonlog);
         }
         if (digest_cs && digest_cs->targets) {
             char *trace_file = crm_concat("/tmp/cib-digest", digest, '-');

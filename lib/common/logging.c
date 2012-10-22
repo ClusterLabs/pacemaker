@@ -43,6 +43,7 @@
 
 unsigned int crm_log_level = LOG_INFO;
 static gboolean crm_tracing_enabled(void);
+unsigned int crm_trace_nonlog = 0;
 
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
@@ -423,7 +424,8 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
 {
     if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         return;
-    } else if(source == QB_LOG_BLACKBOX) { /* Blackbox gets everything if enabled */
+    } else if(cs->tags != crm_trace_nonlog && source == QB_LOG_BLACKBOX) {
+        /* Blackbox gets everything if enabled */
         qb_bit_set(cs->targets, source);
 
     } else if(source == blackbox_trigger && blackbox_trigger > 0) {
@@ -452,7 +454,10 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
         qb_bit_set(cs->targets, source);
     } else if(trace_fmts && strstr(trace_fmts, cs->format) != NULL) {
         qb_bit_set(cs->targets, source);
-    } else if(trace_tags && cs->tags != 0 && g_quark_to_string(cs->tags) != NULL) {
+    } else if(trace_tags
+              && cs->tags != 0
+              && cs->tags != crm_trace_nonlog
+              && g_quark_to_string(cs->tags) != NULL) {
         qb_bit_set(cs->targets, source);
     }
 }
@@ -568,6 +573,10 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     const char *logfile = daemon_option("debugfile");
     const char *facility = daemon_option("logfacility");
     const char *f_copy = facility;
+
+    if(crm_trace_nonlog == 0) {
+        crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
+    }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 

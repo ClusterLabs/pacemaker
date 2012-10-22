@@ -37,6 +37,7 @@
 extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
+extern unsigned int crm_trace_nonlog;
 
 void crm_enable_blackbox(int nsig);
 void crm_enable_blackbox_tracing(int nsig);
