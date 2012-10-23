@@ -1293,81 +1293,71 @@ crm_read_pidfile(const char *filename)
 }
 
 static int
-crm_lock_pidfile(const char *filename)
+crm_pidfile_inuse(const char *filename, long mypid) 
 {
+    long pid = 0;
     struct stat sbuf;
-    int fd = 0, rc = 0;
-    long pid = 0, mypid = 0;
-    char lf_name[256], tf_name[256], buf[LOCKSTRLEN + 1];
+    char buf[LOCKSTRLEN + 1];
+    int rc = -ENOENT, fd = 0;
 
-    mypid = (unsigned long)getpid();
-    snprintf(lf_name, sizeof(lf_name), "%s", filename);
-    snprintf(tf_name, sizeof(tf_name), "%s.%lu", filename, mypid);
-
-    if ((fd = open(lf_name, O_RDONLY)) >= 0) {
+    if ((fd = open(filename, O_RDONLY)) >= 0) {
         if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
-            sleep(1);           /* if someone was about to create one,
+            sleep(2);           /* if someone was about to create one,
                                  * give'm a sec to do so
-                                 * Though if they follow our protocol,
-                                 * this won't happen.  They should really
-                                 * put the pid in, then link, not the
-                                 * other way around.
                                  */
         }
         if (read(fd, buf, sizeof(buf)) > 0) {
             if (sscanf(buf, "%lu", &pid) > 0) {
-                if (pid > 1 && pid != getpid() && crm_pid_active(pid)) {
+                if(pid <= 1) {
+                    /* Invalid pid */
+                    rc = -ENOENT;
+
+                } else if (mypid && pid == mypid) {
+                    /* In use by us */
+                    rc = pcmk_ok;
+
+                } else if (mypid && pid != mypid && crm_pid_active(pid)) {
                     /* locked by existing process - give up */
-                    close(fd);
-                    return -1;
+                    rc = -EEXIST;
                 }
             }
         }
-        unlink(lf_name);
         close(fd);
     }
+    return rc;
+}
 
-    if ((fd = open(tf_name, O_CREAT | O_WRONLY | O_EXCL, 0644)) < 0) {
+static int
+crm_lock_pidfile(const char *filename)
+{
+    long mypid = 0;
+    int fd = 0, rc = 0;
+    char buf[LOCKSTRLEN + 1];
+
+    mypid = (unsigned long)getpid();
+
+    rc = crm_pidfile_inuse(filename, 0);
+    if(rc != pcmk_ok && rc != ENOENT) {
+        /* locked by existing process - give up */
+        return -1;
+    }
+
+    if ((fd = open(filename, O_CREAT | O_WRONLY | O_EXCL, 0644)) < 0) {
         /* Hmmh, why did we fail? Anyway, nothing we can do about it */
-        return -3;
+        return -errno;
     }
 
-    /* Slight overkill with the %*d format ;-) */
     snprintf(buf, sizeof(buf), "%*lu\n", LOCKSTRLEN - 1, mypid);
-
-    if (write(fd, buf, LOCKSTRLEN) != LOCKSTRLEN) {
-        /* Again, nothing we can do about this */
-        rc = -3;
-        close(fd);
-        goto out;
-    }
+    rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
-    switch (link(tf_name, lf_name)) {
-        case 0:
-            if (stat(tf_name, &sbuf) < 0) {
-                /* something weird happened */
-                rc = -3;
+    if(rc != LOCKSTRLEN) {
+        crm_perror(LOG_ERR, "Incomplete write to %s", filename);
+        return -errno;
 
-            } else if (sbuf.st_nlink < 2) {
-                /* somehow, it didn't get through - NFS trouble? */
-                rc = -2;
-
-            } else {
-                rc = 0;
-            }
-            break;
-
-        case EEXIST:
-            rc = -1;
-            break;
-
-        default:
-            rc = -3;
     }
-  out:
-    unlink(tf_name);
-    return rc;
+
+    return crm_pidfile_inuse(filename, mypid);
 }
 
 void
