@@ -688,7 +688,7 @@ parse_date(const char *date_str)
         time_s = strstr(date_str, "T");
     }
     
-    if(time_s) {
+    if(dt && time_s) {
         time_s++;
         crm_time_parse(time_s, dt);
     }
