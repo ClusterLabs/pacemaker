@@ -559,12 +559,13 @@ crm_time_parse(const char *time_str, crm_time_t * a_time)
     
     if(time_str) {
         dt->seconds = crm_time_parse_sec(time_str);
+
+        offset_s = strstr(time_str, "Z");
+        if(offset_s == NULL) {
+            offset_s = strstr(time_str, " ");
+        }
     }
 
-    offset_s = strstr(time_str, "Z");
-    if(offset_s == NULL) {
-        offset_s = strstr(time_str, " ");
-    }
     if(offset_s) {
         while (isspace(offset_s[0])) {
             offset_s++;
@@ -866,8 +867,7 @@ crm_time_parse_period(const char *period_str)
 
     } else {
         invalid = TRUE;
-        CRM_CHECK(period_str[0] == '/', goto bail);
-        goto bail;
+        CRM_CHECK(period_str != NULL, goto bail);
     }
 
     /* sanity checks */
