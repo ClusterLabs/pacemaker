@@ -5,7 +5,7 @@ clone_color: group:1 allocation score on dl380g5a: 0
 clone_color: group:1 allocation score on dl380g5b: 0
 clone_color: ms-sf allocation score on dl380g5a: 0
 clone_color: ms-sf allocation score on dl380g5b: 0
-clone_color: stateful-1:0 allocation score on dl380g5a: 0
+clone_color: stateful-1:0 allocation score on dl380g5a: -INFINITY
 clone_color: stateful-1:0 allocation score on dl380g5b: -INFINITY
 clone_color: stateful-1:1 allocation score on dl380g5a: 1
 clone_color: stateful-1:1 allocation score on dl380g5b: 0

@@ -367,6 +367,10 @@ can_run_instance(resource_t * rsc, node_t * node)
         crm_warn("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
         goto bail;
 
+    } else if (local_node->weight < 0) {
+        common_update_score(rsc, node->details->id, local_node->weight);
+        pe_rsc_trace(rsc, "%s cannot run on %s: Parent node weight doesn't allow it.",
+                    rsc->id, node->details->uname);
     } else if (local_node->count < clone_data->clone_node_max) {
         pe_rsc_trace(rsc, "%s can run on %s: %d", rsc->id, node->details->uname, local_node->count);
         return local_node;

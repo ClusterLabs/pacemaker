@@ -514,6 +514,55 @@ custom_action(resource_t * rsc, char *key, const char *task,
     return action;
 }
 
+static const char *
+unpack_operation_on_fail(action_t *action)
+{
+
+    const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+
+    if (safe_str_eq(action->task, CRMD_ACTION_STOP) && safe_str_eq(value, "standby")) {
+        crm_config_err("on-fail=standby is not allowed for stop actions: %s", action->rsc->id);
+        return NULL;
+    } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
+        /* demote on_fail defaults to master monitor value if present */
+        xmlNode *operation = NULL;
+        const char *name = NULL;
+        const char *role = NULL;
+        const char *on_fail = NULL;
+        const char *interval = NULL;
+        const char *enabled = NULL;
+
+        CRM_CHECK(action->rsc != NULL, return NULL);
+
+        for (operation = __xml_first_child(action->rsc->ops_xml);
+             operation && !value;
+             operation = __xml_next(operation)) {
+
+            if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
+                continue;
+            }
+            name = crm_element_value(operation, "name");
+            role = crm_element_value(operation, "role");
+            on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            enabled = crm_element_value(operation, "enabled");
+            interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            if (!on_fail) {
+                continue;
+            } else if (enabled && !crm_is_true(enabled)) {
+                continue;
+            } else if (safe_str_neq(name, "monitor") || safe_str_neq(role, "Master")) {
+                continue;
+            } else if (crm_get_interval(interval) <= 0) {
+                continue;
+            }
+
+            value = on_fail;
+        }
+    }
+
+    return value;
+}
+
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -593,12 +642,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
 
     pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->task, value);
 
-    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
-    if (safe_str_eq(action->task, CRMD_ACTION_STOP)
-        && safe_str_eq(value, "standby")) {
-        crm_config_err("on-fail=standby is not allowed for stop actions: %s", action->rsc->id);
-        value = NULL;
-    }
+    value = unpack_operation_on_fail(action);
 
     if (value == NULL) {
 
