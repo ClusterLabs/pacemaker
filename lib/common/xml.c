@@ -2476,12 +2476,14 @@ static void dump_file(const char *filename)
 
 gboolean validate_xml_verbose(xmlNode *xml_blob) 
 {
+    int fd = 0;
     xmlDoc *doc = NULL;
     xmlNode *xml = NULL;
     gboolean rc = FALSE;
     char *filename = strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
-    int fd = mkstemp(filename);
     
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+    fd = mkstemp(filename);
     write_xml_fd(xml_blob, filename, fd, FALSE);
     
     dump_file(filename);
