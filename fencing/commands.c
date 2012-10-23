@@ -551,10 +551,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     dev->active_pid = 0;
     mainloop_set_trigger(dev->work);
 
-    if (rc != 0) {
-        crm_err("Could not invoke %s: rc=%d", dev->id, rc);
-
-    } else if(rc == 1 /* unkown */) {
+    if(rc == 1 /* unkown */) {
         crm_trace("Host %s is not known by %s", search->host, dev->id);
 
     } else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
