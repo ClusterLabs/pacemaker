@@ -866,7 +866,7 @@ stonith_action_execute_async(stonith_action_t *action,
 
     rc = internal_stonith_action_execute(action);
 
-    return rc ? rc : action->pid;
+    return rc < 0 ? rc : action->pid;
 }
 
 int

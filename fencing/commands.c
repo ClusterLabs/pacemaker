@@ -199,7 +199,6 @@ static int stonith_manual_ack(xmlNode *msg, remote_fencing_op_t *op)
 
 static gboolean stonith_device_execute(stonith_device_t *device)
 {
-    int rc = 0;
     int exec_rc = 0;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
@@ -239,10 +238,10 @@ static gboolean stonith_device_execute(stonith_device_t *device)
         device->active_pid = exec_rc;
 
     } else {
-        crm_warn("Operation %s%s%s on %s failed (%d/%d)",
+        crm_warn("Operation %s%s%s on %s failed: %s (%d)",
             cmd->action, cmd->victim?" for node ":"", cmd->victim?cmd->victim:"",
-            device->id, exec_rc, rc);
-        cmd->done_cb(0, rc<0?rc:exec_rc, NULL, cmd);
+            device->id, pcmk_strerror(exec_rc), exec_rc);
+        cmd->done_cb(0, exec_rc, NULL, cmd);
     }
     return TRUE;
 }
