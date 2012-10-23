@@ -531,7 +531,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
         }
 #endif
 
-        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 500);
+        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
         if(rc > 0) {
             struct qb_ipc_response_header *hdr = (struct qb_ipc_response_header *)client->buffer;
 
