@@ -175,6 +175,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
 
     {
         char *opts[] = { strdup(the_subsystem->command), NULL };
+        /* coverity[toctou] The call to stat() is a fail-fast, not a race */
         (void)execvp(the_subsystem->command, opts);
     }
 
