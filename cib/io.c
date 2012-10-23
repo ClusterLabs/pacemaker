@@ -558,7 +558,7 @@ static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
 int
 write_cib_contents(gpointer p)
 {
-    int fd = 0;
+    int fd = -1;
     int exit_rc = EX_OK;
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
@@ -732,7 +732,7 @@ write_cib_contents(gpointer p)
     free_xml(cib_tmp);
     free_xml(cib_local);
 
-    if(fd > 0) {
+    if(fd >= 0) {
         close(fd);
     }
 
