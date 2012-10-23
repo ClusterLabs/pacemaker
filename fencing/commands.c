@@ -910,7 +910,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
 {
     search->replies_received++;
 
-    if (can_fence) {
+    if (can_fence && device) {
         search->capable = g_list_append(search->capable, strdup(device));
     }
 
@@ -935,6 +935,8 @@ can_fence_host_with_device(stonith_device_t *dev, struct device_search_s *search
     const char *check_type = NULL;
     const char *host = search->host;
     const char *alias = host;
+
+    CRM_LOG_ASSERT(dev != NULL);
 
     if(dev == NULL) {
         goto search_report_results;
@@ -1011,7 +1013,7 @@ can_fence_host_with_device(stonith_device_t *dev, struct device_search_s *search
     }
 
 search_report_results:
-    search_devices_record_result(search, dev->id, can);
+    search_devices_record_result(search, dev?dev->id:NULL, can);
 }
 
 static void
@@ -1737,7 +1739,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
 
             alternate_host = check_alternate_host(target);
 
-            if(alternate_host) {
+            if(alternate_host && client) {
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
                 crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
                 crm_xml_add(request, F_STONITH_CLIENTID, client->id);
