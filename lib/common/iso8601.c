@@ -388,7 +388,10 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
 
-    if (date_time->offset && (flags & crm_time_log_with_timezone) == 0) {
+    if (date_time == NULL) {
+        return strdup("");
+
+    } else if (date_time->offset && (flags & crm_time_log_with_timezone) == 0) {
         crm_trace("UTC conversion");
         utc = crm_get_utc_time(date_time);
         dt = utc;
