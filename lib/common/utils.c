@@ -1206,7 +1206,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
 
 #define	LOCKSTRLEN	11
 
-static int
+int
 crm_pid_active(long pid)
 {
     if (pid <= 0) {

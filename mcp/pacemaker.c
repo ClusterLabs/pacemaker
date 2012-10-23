@@ -30,10 +30,14 @@
 #include <crm/common/mainloop.h>
 #include <crm/cluster.h>
 
+#include <dirent.h>
+#include <ctype.h>
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
+
+#define PCMK_PROCESS_CHECK_INTERVAL 60
 
 char *local_name = NULL;
 uint32_t local_nodeid = 0;
@@ -66,6 +70,7 @@ typedef struct pcmk_child_s {
     const char *uid;
     const char *command;
 
+    gboolean active_before_startup;
 } pcmk_child_t;
 
 /* Index into the array below */
@@ -73,16 +78,16 @@ typedef struct pcmk_child_s {
 #define pcmk_child_mgmtd 8
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
-    { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
-    { 0, crm_proc_plugin,        0, 0, FALSE, "ais",        NULL,		  NULL },
-    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL, CRM_DAEMON_DIR"/lrmd" },
+    { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
+    { 0, crm_proc_plugin,     0, 0, FALSE, "ais",        NULL,            NULL },
+    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,            CRM_DAEMON_DIR"/lrmd" },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
-    { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,		  NULL },
+    { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
     { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,		  HB_DAEMON_DIR"/mgmtd" },
-    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
+    { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,            HB_DAEMON_DIR"/mgmtd" },
+    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
 
@@ -122,32 +127,11 @@ get_process_list(void)
     return procs;
 }
 
-static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
+static void
+pcmk_process_exit(pcmk_child_t *child)
 {
-    int exitcode = 0;
-    pcmk_child_t *child = user_data;
-
-    if(WIFSIGNALED(status)) {
-        int signo = WTERMSIG(status);
-        int core = WCOREDUMP(status);
-        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
-                   child->name, signo, child->pid, core);
-
-    } else if(WIFEXITED(status)) {
-        exitcode = WEXITSTATUS(status);
-        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
-    }
-
-    
     child->pid = 0;
-    if (exitcode == 100) {
-        crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
-                 "Shutting ourselves down.", child->name);
-        child->respawn = FALSE;
-        fatal_error = TRUE;
-        pcmk_shutdown(15);
-    }
+    child->active_before_startup = FALSE;
 
     /* Broadcast the fact that one of our processes died ASAP
      * 
@@ -173,6 +157,34 @@ static void pcmk_child_exit(GPid pid, gint status, gpointer user_data)
         crm_notice("Respawning failed child process: %s", child->name);
         start_child(child);
     }
+}
+
+static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
+{
+    int exitcode = 0;
+    pcmk_child_t *child = user_data;
+
+    if(WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        int core = WCOREDUMP(status);
+        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
+                   child->name, signo, child->pid, core);
+
+    } else if(WIFEXITED(status)) {
+        exitcode = WEXITSTATUS(status);
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
+                   "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
+    }
+
+    if (exitcode == 100) {
+        crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
+                 "Shutting ourselves down.", child->name);
+        child->respawn = FALSE;
+        fatal_error = TRUE;
+        pcmk_shutdown(15);
+    }
+
+    pcmk_process_exit(child);
 }
 
 static gboolean
@@ -219,6 +231,8 @@ start_child(pcmk_child_t * child)
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
+    child->active_before_startup = FALSE;
+
     if (child->command == NULL) {
         crm_info("Nothing to do for child \"%s\"", child->name);
         return TRUE;
@@ -251,7 +265,7 @@ start_child(pcmk_child_t * child)
     if (child->pid > 0) {
         /* parent */
         g_child_watch_add(child->pid, pcmk_child_exit, child);
-        
+
         crm_info("Forked child %d for process %s%s", child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
         update_node_processes(local_nodeid, NULL, get_process_list());
@@ -641,6 +655,137 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
+static gboolean
+check_active_before_startup_processes(gpointer user_data)
+{
+    int start_seq = 1, lpc = 0;
+    static int max = SIZEOF(pcmk_children);
+    gboolean keep_tracking = FALSE;
+
+    for (start_seq = 1; start_seq < max; start_seq++) {
+        for (lpc = 0; lpc < max; lpc++) {
+            if (pcmk_children[lpc].active_before_startup == FALSE) {
+                /* we are already tracking it as a child process. */
+                continue;
+            } else if (start_seq != pcmk_children[lpc].start_seq) {
+                continue;
+            } else if (crm_pid_active(pcmk_children[lpc].pid) != 1) {
+                crm_notice("Process %s terminated (pid=%d)",
+                    pcmk_children[lpc].name,
+                    pcmk_children[lpc].pid);
+                pcmk_process_exit(&(pcmk_children[lpc]));
+                continue;
+            }
+            /* at least one of the processes found at startup
+             * is still going, so keep this recurring timer around */
+            keep_tracking = TRUE;
+        }
+    }
+
+    return keep_tracking;
+}
+
+static void
+find_and_track_existing_processes(void)
+{
+    DIR *dp;
+    struct dirent *entry;
+    struct stat statbuf;
+    int start_tracker = 0;
+
+    dp = opendir("/proc");
+    if (!dp) {
+        /* no proc directory to search through */
+        crm_notice("Can not read /proc directory to track existing components");
+        return;
+    }
+
+    while ((entry = readdir(dp)) != NULL) {
+        char procpath[128];
+        char value[64];
+        char key[16];
+        FILE *file;
+        int pid;
+        int max = SIZEOF(pcmk_children);
+        int i;
+
+        strcpy(procpath, "/proc/");
+        /* strlen("/proc/") + strlen("/status") + 1 = 14
+         * 128 - 14 = 114 */
+        strncat(procpath, entry->d_name, 114);
+
+        if (lstat(procpath, &statbuf)) {
+            continue;
+        }
+        if (!S_ISDIR(statbuf.st_mode) || !isdigit(entry->d_name[0])) {
+            continue;
+        }
+
+        strcat(procpath, "/status");
+
+        file = fopen(procpath, "r");
+        if (!file) {
+            continue;
+        }
+        if (fscanf(file, "%15s%63s", key, value) != 2) {
+            fclose(file);
+            continue;
+        }
+        fclose(file);
+
+        pid = atoi(entry->d_name);
+        if (pid <= 0) {
+            continue;
+        }
+
+        for (i = 0; i < max; i++) {
+            const char *name = pcmk_children[i].name;
+            if (pcmk_children[i].start_seq == 0) {
+                continue;
+            }
+            if (pcmk_children[i].flag == crm_proc_stonith_ng) {
+                name = "stonithd";
+            }
+            if (safe_str_eq(name, value)) {
+                if (crm_pid_active(pid) != 1) {
+                    continue;
+                }
+                crm_notice("Tracking existing pid (%d) for process %s",
+                    pid, value);
+                pcmk_children[i].pid = pid;
+                pcmk_children[i].active_before_startup = TRUE;
+                start_tracker = 1;
+            }
+        }
+    }
+
+    if (start_tracker) {
+        g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_active_before_startup_processes, NULL);
+    }
+    closedir(dp);
+}
+
+static void
+init_children_processes(void) {
+    int start_seq = 1, lpc = 0;
+    static int max = SIZEOF(pcmk_children);
+
+    /* start any children that have not been detected */
+    for (start_seq = 1; start_seq < max; start_seq++) {
+        /* dont start anything with start_seq < 1 */
+        for (lpc = 0; lpc < max; lpc++) {
+            if (pcmk_children[lpc].pid) {
+                /* we are already tracking it */
+                continue;
+            }
+
+            if (start_seq == pcmk_children[lpc].start_seq) {
+                start_child(&(pcmk_children[lpc]));
+            }
+        }
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -650,9 +795,6 @@ main(int argc, char **argv)
 
     int option_index = 0;
     gboolean shutdown = FALSE;
-    
-    int start_seq = 1, lpc = 0;
-    static int max = SIZEOF(pcmk_children);
 
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
@@ -846,14 +988,8 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
-    for (start_seq = 1; start_seq < max; start_seq++) {
-        /* dont start anything with start_seq < 1 */
-        for (lpc = 0; lpc < max; lpc++) {
-            if (start_seq == pcmk_children[lpc].start_seq) {
-                start_child(&(pcmk_children[lpc]));
-            }
-        }
-    }
+    find_and_track_existing_processes();
+    init_children_processes();
 
     crm_info("Starting mainloop");
 
