@@ -149,6 +149,7 @@ char *generate_series_filename(const char *directory, const char *series, int se
 int get_last_sequence(const char *directory, const char *series);
 void write_last_sequence(const char *directory, const char *series, int sequence, int max);
 
+int crm_pid_active(long pid);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group, gboolean need_both);
 
