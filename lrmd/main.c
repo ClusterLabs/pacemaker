@@ -234,7 +234,7 @@ try_server_create(void)
                 crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_QUIT);
                 crm_xml_add(hello, F_LRMD_CLIENTNAME, "new_lrmd");
 
-                crm_ipc_send(ipc, hello, 0, 0, &reply);
+                crm_ipc_send(ipc, hello, crm_ipc_client_response, 500, &reply);
 
                 crm_ipc_close(ipc);
                 crm_ipc_destroy(ipc);
