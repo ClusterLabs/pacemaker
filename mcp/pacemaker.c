@@ -750,8 +750,8 @@ find_and_track_existing_processes(void)
                 if (crm_pid_active(pid) != 1) {
                     continue;
                 }
-                crm_notice("Tracking existing pid (%d) for process %s",
-                    pid, value);
+                crm_notice("Tracking existing %s process (pid=%d)",
+                           value, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;
                 start_tracker = 1;
