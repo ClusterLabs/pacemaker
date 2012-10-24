@@ -209,49 +209,6 @@ lrmd_shutdown(int nsig)
     crm_exit(0);
 }
 
-static int
-try_server_create(void)
-{
-    int tries = 10;
-
-    /*
-     * This should complete on the first iteration. The only
-     * known reason for why this would fail is if another lrmd process
-     * already exists on the system.  To avoid this situation
-     * we attempt to connect to the old lrmd process and shut it down
-     * using the client library.
-     */
-    do {
-        ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
-
-        if (ipcs == NULL) {
-            xmlNode *reply = NULL;
-            xmlNode *hello = create_xml_node(NULL, "lrmd_command");
-            crm_ipc_t *ipc = crm_ipc_new("lrmd", 0);
-
-            if (ipc && crm_ipc_connect(ipc)) {
-                crm_xml_add(hello, F_TYPE, T_LRMD);
-                crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_QUIT);
-                crm_xml_add(hello, F_LRMD_CLIENTNAME, "new_lrmd");
-
-                crm_ipc_send(ipc, hello, crm_ipc_client_response, 500, &reply);
-
-                crm_ipc_close(ipc);
-                crm_ipc_destroy(ipc);
-            }
-            free_xml(reply);
-            free_xml(hello);
-
-            crm_err
-                ("New IPC server could not be created because another lrmd process exists, sending shutdown command to old lrmd process.");
-        }
-
-        tries--;
-    } while (!ipcs && tries);
-
-    return ipcs ? 0 : -1;
-}
-
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -299,9 +256,10 @@ main(int argc, char **argv)
 
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
-    if (try_server_create()) {
-        crm_err("Failed to allocate lrmd server.  shutting down");
-        crm_exit(-1);
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
+    if (ipcs == NULL) {
+        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        crm_exit(100);
     }
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);

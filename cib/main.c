@@ -548,8 +548,8 @@ cib_init(void)
         g_main_run(mainloop);
 
     } else {
-        crm_err("Couldnt start all IPC channels, exiting.");
-        return -1;
+        crm_err("Failed to create IPC servers: shutting down and inhibiting respawn");
+        crm_exit(100);
     }
 
     qb_ipcs_destroy(ipcs_ro);

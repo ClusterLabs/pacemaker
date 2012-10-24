@@ -1039,6 +1039,10 @@ main(int argc, char ** argv)
         crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
     ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, &ipc_callbacks);
+    if(ipcs == NULL) {
+        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        crm_exit(100);
+    }
 
 #if SUPPORT_STONITH_CONFIG
     if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
@@ -1046,17 +1050,11 @@ main(int argc, char ** argv)
     }
 #endif
 
-    if(ipcs != NULL) {
-        /* Create the mainloop and run it... */
-        mainloop = g_main_new(FALSE);
-        crm_info("Starting %s mainloop", crm_system_name);
+    /* Create the mainloop and run it... */
+    mainloop = g_main_new(FALSE);
+    crm_info("Starting %s mainloop", crm_system_name);
 
-        g_main_run(mainloop);
-
-    } else {
-        crm_err("Couldnt start all communication channels, exiting.");
-    }
-
+    g_main_run(mainloop);
     stonith_cleanup();
 
 #if SUPPORT_HEARTBEAT

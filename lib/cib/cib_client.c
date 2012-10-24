@@ -189,13 +189,6 @@ cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
     return cib_internal_op(cib, CIB_OP_ERASE, NULL, NULL, NULL, output_data, call_options, NULL);
 }
 
-static int
-cib_client_quit(cib_t * cib, int call_options)
-{
-    op_common(cib);
-    return cib_internal_op(cib, CRM_OP_QUIT, NULL, NULL, NULL, NULL, call_options, NULL);
-}
-
 static void
 cib_destroy_op_callback(gpointer data)
 {
@@ -394,7 +387,6 @@ cib_new_variant(void)
     new_cib->cmds->replace = cib_client_replace;
     new_cib->cmds->delete = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
-    new_cib->cmds->quit = cib_client_quit;
 
     new_cib->cmds->delete_absolute = cib_client_delete_absolute;
 

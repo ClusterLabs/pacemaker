@@ -105,7 +105,6 @@ main(int argc, char **argv)
 {
     int flag;
     int argerr = 0;
-    crm_ipc_t *old_instance = NULL;
 
     crm_system_name = CRM_SYSTEM_PENGINE;
     mainloop_add_signal(SIGTERM, pengine_shutdown);
@@ -146,28 +145,11 @@ main(int argc, char **argv)
         return 100;
     }
 
-    /* find any previous instances and shut them down */
-    crm_debug("Checking for old instances of %s", CRM_SYSTEM_PENGINE);
-    old_instance = crm_ipc_new(CRM_SYSTEM_PENGINE, 0);
-    crm_ipc_connect(old_instance);
-    
-    crm_debug("Terminating previous instance");
-    while (crm_ipc_connected(old_instance)) {
-        xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
-        crm_debug(".");
-        crm_ipc_send(old_instance, cmd, 0, 0, NULL);
-        free_xml(cmd);
-        
-        sleep(2);
-    }
-    crm_ipc_close(old_instance);
-    crm_ipc_destroy(old_instance);
-
     crm_debug("Init server comms");
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
     if (ipcs == NULL) {
-        crm_err("Couldn't start IPC server");
-        return 1;
+        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        crm_exit(100);
     }
 
     /* Create the mainloop and run it... */

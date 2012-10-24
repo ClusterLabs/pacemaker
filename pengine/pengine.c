@@ -195,10 +195,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
 
         free_xml(converted);
         free(filename);
-
-    } else if (strcasecmp(op, CRM_OP_QUIT) == 0) {
-        crm_warn("Received quit message, terminating");
-        crm_exit(0);
     }
 
     return TRUE;

@@ -598,8 +598,8 @@ main(int argc, char **argv)
     if (was_err == FALSE) {
         ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, &ipc_callbacks);
         if (ipcs == NULL) {
-            crm_err("Could not start IPC server");
-            was_err = TRUE;
+            crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+            crm_exit(100);
         }
     }
 
