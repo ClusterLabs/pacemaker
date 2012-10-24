@@ -148,12 +148,12 @@ group_color: clnUMdummy01:1 allocation score on srv02: -INFINITY
 group_color: clnUMdummy01:1 allocation score on srv03: -INFINITY
 group_color: clnUMdummy01:1 allocation score on srv04: -INFINITY
 group_color: clnUMdummy02:0 allocation score on srv01: -INFINITY
-group_color: clnUMdummy02:0 allocation score on srv02: 0
-group_color: clnUMdummy02:0 allocation score on srv03: 0
+group_color: clnUMdummy02:0 allocation score on srv02: -INFINITY
+group_color: clnUMdummy02:0 allocation score on srv03: -INFINITY
 group_color: clnUMdummy02:0 allocation score on srv04: 100
 group_color: clnUMdummy02:1 allocation score on srv01: -INFINITY
-group_color: clnUMdummy02:1 allocation score on srv02: 0
-group_color: clnUMdummy02:1 allocation score on srv03: 0
+group_color: clnUMdummy02:1 allocation score on srv02: -INFINITY
+group_color: clnUMdummy02:1 allocation score on srv03: -INFINITY
 group_color: clnUMdummy02:1 allocation score on srv04: -INFINITY
 group_color: clnUmResource:0 allocation score on srv01: -INFINITY
 group_color: clnUmResource:0 allocation score on srv02: -INFINITY

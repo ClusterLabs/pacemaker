@@ -785,6 +785,18 @@ stonith_shutdown(int nsig)
 cib_t *cib = NULL;
 
 static void
+cib_connection_destroy(gpointer user_data)
+{
+    crm_err("Connection to the CIB terminated. Shutting down.\n");
+    if (cib) {
+        cib->cmds->signoff(cib);
+    }
+    stonith_shutdown(0);
+    return;
+}
+
+
+static void
 stonith_cleanup(void) 
 {
     if(cib) {
@@ -853,6 +865,7 @@ setup_cib(void)
     } else {
         rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
         add_cib_op_callback(cib, rc, FALSE, NULL, init_cib_cache_cb);
+        cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
         crm_notice("Watching for stonith topology changes");
     }
 }
