@@ -15,9 +15,27 @@ EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
 
 ExecStart=@sbindir@/pacemakerd -f
 
+# If pacemakerd doesn't stop, its probably waiting on a cluster
+# resource.  Sending -KILL will just get the node fenced
+SendSIGKILL=no
+
+# If we ever hit the StartLimitInterval/StartLimitBurst limit and the
+# admin wants to stop the cluster while pacemakerd is not running, it
+# might be a good idea to enable the ExecStopPost directive below.
+#
+# Although the node will likely end up being fenced as a result so its
+# not on by default
+#
+# ExecStopPost=killall -TERM crmd attrd fenced cib pengine lrmd
+
+# Uncomment this for older versions of systemd that didn't support
+# TimeoutStopSec
+# TimeoutSec=30min
+
 # Pacemaker can only exit after all managed services have shut down
 # A HA database could conceivably take even longer than this 
-TimeoutSec=30min
+TimeoutStopSec=30min
+TimeoutStartSec=60s
 
 # Restart options include: no, on-success, on-failure, on-abort or always
 Restart=on-failure
