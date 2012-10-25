@@ -92,6 +92,7 @@ static pcmk_child_t pcmk_children[] = {
 /* *INDENT-ON* */
 
 static gboolean start_child(pcmk_child_t * child);
+static gboolean check_active_before_startup_processes(gpointer user_data);
 
 void
 enable_crmd_as_root(gboolean enable)
@@ -355,6 +356,9 @@ pcmk_shutdown_worker(gpointer user_data)
     if (phase == 0) {
         crm_notice("Shuting down Pacemaker");
         phase = max;
+
+        /* Add a second, more frequent, check to speed up shutdown */
+        g_timeout_add_seconds(5, check_active_before_startup_processes, NULL);
     }
 
     for (; phase > 0; phase--) {
