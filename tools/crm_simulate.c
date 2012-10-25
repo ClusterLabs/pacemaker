@@ -1120,8 +1120,13 @@ static struct crm_option long_options[] = {
     {"node-up",      1, 0, 'u', "\tBring a node online"},
     {"node-down",    1, 0, 'd', "\tTake a node offline"},
     {"node-fail",    1, 0, 'f', "\tMark a node as failed"},
-    {"op-inject",    1, 0, 'i', "\t$rsc_$task_$interval@$node=$rc - Inject the specified task before running the simulation"},
-    {"op-fail",      1, 0, 'F', "\t$rsc_$task_$interval@$node=$rc - Fail the specified task while running the simulation"},
+    {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@m1.fbsdata.com=7"},
+    {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@m1.fbsdata.com=1\n"},
+    {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
     {"set-datetime", 1, 0, 't', "Set date/time"},
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
     {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
@@ -1141,6 +1146,12 @@ static struct crm_option long_options[] = {
     {"live-check",  0, 0, 'L', "\tConnect to the CIB and use the current contents as input"},
     {"xml-file",    1, 0, 'x', "\tRetrieve XML from the named file"},
     {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin"},
+
+    {"-spacer-",    0, 0, '-', "\nExamples:\n"},
+    {"-spacer-",    0, 0, '-', "Pretend the recurring memcached monitor failed on node m1.fbsdata.com and, during recovery, that the memcached stop action did too", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " crm_simulate -LS --op-inject memcached:0_monitor_20000@m1.fbsdata.com=7 --op-fail memcached:0_stop_0@m1.fbsdata.com=1 --save-output /tmp/memcached-test.xml", pcmk_option_example},
+    {"-spacer-",    0, 0, '-', "Now see what the reaction to the stop failure would be", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " crm_simulate -S --xml-file /tmp/memcached-test.xml", pcmk_option_example},
     
     {0, 0, 0, 0}
 };
