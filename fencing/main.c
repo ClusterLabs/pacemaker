@@ -787,12 +787,15 @@ cib_t *cib = NULL;
 static void
 cib_connection_destroy(gpointer user_data)
 {
-    crm_err("Connection to the CIB terminated. Shutting down.\n");
+    if(stonith_shutdown_flag) {
+        crm_info("Connection to the CIB closed.");
+    }
+
+    crm_err("Connection to the CIB terminated. Shutting down.");
     if (cib) {
         cib->cmds->signoff(cib);
     }
     stonith_shutdown(0);
-    return;
 }
 
 
