@@ -583,7 +583,7 @@ read_output(int fd)
         if (more > 0) {
             crm_trace("Got %d more bytes: %s", more, buffer);
             output = realloc(output, len + more + 1);
-            snprintf(output+len, more, "%s", buffer);
+            snprintf(output+len, more+1, "%s", buffer);
             len += more;
         }
 
