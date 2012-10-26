@@ -300,13 +300,13 @@ cfg_register_device(struct device *dev)
 
 	/* create the parameter list */
 	if (dev->hostlist) {
-		stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, dev->hostlist);
+		params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, dev->hostlist);
 	}
 	if (dev->hostmap) {
-		stonith_key_value_add(params, STONITH_ATTR_HOSTMAP, dev->hostmap);
+		params = stonith_key_value_add(params, STONITH_ATTR_HOSTMAP, dev->hostmap);
 	}
 	for (i = 0; i < dev->key_vals_count; i++) {
-		stonith_key_value_add(params, dev->key_vals[i].key, dev->key_vals[i].val);
+		params stonith_key_value_add(params, dev->key_vals[i].key, dev->key_vals[i].val);
 	}
 
 	/* generate xml */
