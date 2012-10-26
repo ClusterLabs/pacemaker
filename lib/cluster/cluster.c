@@ -347,9 +347,7 @@ get_uuid(const char *uname)
 char *
 get_local_node_name(void)
 {
-    int rc;
     char *name = NULL;
-    struct utsname res;
     enum cluster_type_e stack = get_cluster_type();
 
     switch(stack) {
@@ -369,13 +367,19 @@ get_local_node_name(void)
 #endif
         case pcmk_cluster_heartbeat:
         case pcmk_cluster_classic_ais:
-            rc = uname(&res);
-            if(rc == 0) {
-                name = strdup(res.nodename);
-            }
             break;
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+    }
+
+    if(name == NULL) {
+        struct utsname res;
+        int rc = uname(&res);
+
+        if(rc == 0) {
+            crm_notice("Defaulting to uname(2).nodename for the local %s node name", name_for_cluster_type(stack));
+            name = strdup(res.nodename);
+        }
     }
 
     if(name == NULL) {
