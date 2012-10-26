@@ -44,6 +44,8 @@ char *target_uname = NULL;
 const char *standby_value = NULL;
 const char *standby_scope = NULL;
 
+int crmd_remove_node_cache(const char *id);
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -71,7 +73,8 @@ static struct crm_option long_options[] = {
     {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster (Not available for heartbeat clusters)"},
     {"partition",     0, 0, 'p', "Display the members of this partition"},
     {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
-    {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},
+    {"remove",        1, 0, 'R', "(Advanced) Remove the (stopped) node with the specified name from Pacemaker's configuration and caches"},
+    {"-spacer-",      1, 0, '-', "In the case of Heartbeat, CMAN and Corosync 2.0, requires that the node has already been removed from the underlying cluster"},
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"force",	 0, 0, 'f'},
@@ -79,6 +82,111 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
+static int
+cib_remove_node(uint32_t id, const char *name) 
+{
+    int rc;
+    cib_t *cib = NULL;
+    xmlNode *node = NULL;
+    xmlNode *node_state = NULL;
+
+    crm_trace("Removing %s from the CIB", name);
+
+    node = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+    crm_xml_add(node, XML_ATTR_UNAME, name);
+    crm_xml_add(node_state, XML_ATTR_UNAME, name);
+
+    cib = cib_new();
+    cib->cmds->signon(cib, crm_system_name, cib_command);
+
+    rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
+    if(rc != pcmk_ok) {
+        printf("Could not remove %s from "XML_CIB_TAG_NODES": %s", name, pcmk_strerror(rc));
+    }
+    rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
+    if(rc != pcmk_ok) {
+        printf("Could not remove %s from "XML_CIB_TAG_STATUS": %s", name, pcmk_strerror(rc));
+    }
+
+    cib->cmds->signoff(cib);
+    cib_delete(cib);
+    return rc;
+}
+
+int
+crmd_remove_node_cache(const char *id)
+{
+    int n = 0;
+    int rc = -1;
+    char *name = NULL;
+    char *admin_uuid = NULL;
+    crm_ipc_t *conn = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    xmlNode *cmd = NULL;
+    xmlNode *hello = NULL;
+    xmlNode *msg_data = NULL;
+    char *endptr = NULL;
+
+    if (!conn) {
+        goto rm_node_cleanup;
+    }
+
+    if (!crm_ipc_connect(conn)) {
+        goto rm_node_cleanup;
+    }
+
+    admin_uuid = calloc(1, 11);
+    snprintf(admin_uuid, 10, "%d", getpid());
+    admin_uuid[10] = '\0';
+
+    hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
+    rc = crm_ipc_send(conn, hello, 0, 0, NULL);
+    if (rc < 0) {
+        goto rm_node_cleanup;
+    }
+
+    errno = 0;
+    n = strtol(id, &endptr, 10);
+    if(errno != 0 || endptr == id || *endptr != '\0') {
+        /* Argument was not a nodeid */
+        n = 0;
+        name = strdup(id);
+    } else {
+        name = get_node_name(n);
+    }
+
+    crm_trace("Removing %s aka. %s from the membership cache", name, id);
+
+    msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
+    if(n) {
+        crm_xml_add_int(msg_data, XML_ATTR_ID, n);
+    }
+    crm_xml_add(msg_data, XML_ATTR_UNAME, name);
+
+    cmd = create_request(CRM_OP_RM_NODE_CACHE,
+        msg_data,
+        NULL,
+        CRM_SYSTEM_CRMD,
+        "crm_node",
+        admin_uuid);
+
+    rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
+    if(rc > 0) {
+        rc = cib_remove_node(n, name);
+    }
+
+rm_node_cleanup:
+    if (conn) {
+        crm_ipc_close(conn);
+        crm_ipc_destroy(conn);
+    }
+    free_xml(cmd);
+    free_xml(hello);
+    free(admin_uuid);
+    return rc > 0 ? 0 : rc;
+}
 
 #if SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
@@ -252,6 +360,13 @@ try_heartbeat(int command, enum cluster_type_e stack)
             crm_exit(0);
         }
 
+    } else if (command == 'R') {
+        if (crmd_remove_node_cache(target_uname)) {
+            crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+            crm_exit(-pcmk_err_generic);
+        }
+        crm_exit(0);
+
     } else if (ccm_age_connect(&ccm_fd)) {
         int rc = 0;
         fd_set rset;
@@ -304,8 +419,9 @@ try_cman(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            fprintf(stderr, "Node removal not supported for cman based clusters\n");
-            crm_exit(-EPROTONOSUPPORT);
+            if (crmd_remove_node_cache(target_uname)) {
+                crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+            }
             break;
 
         case 'e':
@@ -484,97 +600,6 @@ node_mcp_destroy(gpointer user_data)
     crm_exit(1);
 }
 
-static int
-crmd_remove_node_cache(const char *id)
-{
-    int n = 0;
-    int rc = -1;
-    char *name = NULL;
-    char *admin_uuid = NULL;
-    crm_ipc_t *conn = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
-    xmlNode *cmd = NULL;
-    xmlNode *hello = NULL;
-    xmlNode *msg_data = NULL;
-    char *endptr = NULL;
-
-    if (!conn) {
-        goto rm_node_cleanup;
-    }
-
-    if (!crm_ipc_connect(conn)) {
-        goto rm_node_cleanup;
-    }
-
-    admin_uuid = calloc(1, 11);
-    snprintf(admin_uuid, 10, "%d", getpid());
-    admin_uuid[10] = '\0';
-
-    hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
-    rc = crm_ipc_send(conn, hello, 0, 0, NULL);
-    if (rc < 0) {
-        goto rm_node_cleanup;
-    }
-
-    errno = 0;
-    n = strtol(id, &endptr, 10);
-    if(errno != 0 || endptr == id || *endptr != '\0') {
-        /* Argument was not a nodeid */
-        n = 0;
-        name = strdup(id);
-    } else {
-        name = get_node_name(n);
-    }
-
-    crm_trace("Removing %s aka. %s from the membership cache", name, id);
-
-    msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if(n) {
-        crm_xml_add_int(msg_data, XML_ATTR_ID, n);
-    }
-    crm_xml_add(msg_data, XML_ATTR_UNAME, name);
-
-    cmd = create_request(CRM_OP_RM_NODE_CACHE,
-        msg_data,
-        NULL,
-        CRM_SYSTEM_CRMD,
-        "crm_node",
-        admin_uuid);
-
-    rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
-    if(rc > 0) {
-        cib_t *cib = NULL;
-        xmlNode *node = NULL;
-        xmlNode *node_state = NULL;
-
-        crm_trace("Removing %s from the CIB", name);
-
-        node = create_xml_node(NULL, XML_CIB_TAG_NODE);
-        node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-        crm_xml_add(node, XML_ATTR_UNAME, name);
-        crm_xml_add(node_state, XML_ATTR_UNAME, name);
-
-        cib = cib_new();
-        cib->cmds->signon(cib, crm_system_name, cib_command);
-
-        rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
-        rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
-
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-    }
-
-rm_node_cleanup:
-    if (conn) {
-        crm_ipc_close(conn);
-        crm_ipc_destroy(conn);
-    }
-    free_xml(cmd);
-    free_xml(hello);
-    free(admin_uuid);
-    return rc > 0 ? 0 : rc;
-}
-
 static gboolean
 try_corosync(int command, enum cluster_type_e stack)
 {
@@ -677,6 +702,7 @@ try_openais(int command, enum cluster_type_e stack)
         switch (command) {
             case 'R':
                 send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
+                cib_remove_node(atoi(target_uname), NULL);
                 crm_exit(0);
 
             case 'e':
