@@ -789,6 +789,7 @@ cib_connection_destroy(gpointer user_data)
 {
     if(stonith_shutdown_flag) {
         crm_info("Connection to the CIB closed.");
+        return;
     }
 
     crm_err("Connection to the CIB terminated. Shutting down.");
