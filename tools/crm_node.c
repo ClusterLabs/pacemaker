@@ -541,6 +541,28 @@ crmd_remove_node_cache(const char *id)
         admin_uuid);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
+    if(rc > 0) {
+        cib_t *cib = NULL;
+        xmlNode *node = NULL;
+        xmlNode *node_state = NULL;
+
+        crm_trace("Removing %s from the CIB", name);
+
+        node = create_xml_node(NULL, XML_CIB_TAG_NODE);
+        node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+        crm_xml_add(node, XML_ATTR_UNAME, name);
+        crm_xml_add(node_state, XML_ATTR_UNAME, name);
+
+        cib = cib_new();
+        cib->cmds->signon(cib, crm_system_name, cib_command);
+
+        rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
+        rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
+
+        cib->cmds->signoff(cib);
+        cib_delete(cib);
+    }
 
 rm_node_cleanup:
     if (conn) {
