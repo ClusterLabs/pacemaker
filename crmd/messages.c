@@ -809,15 +809,16 @@ handle_request(xmlNode * stored_msg)
         free_xml(msg);
 
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
-        xmlNode *options = get_xpath_object("//"XML_TAG_OPTIONS, stored_msg, LOG_ERR);
         int id = 0;
+        const char *name = NULL;
+        xmlNode *options = get_xpath_object("//"XML_TAG_OPTIONS, stored_msg, LOG_ERR);
 
         if (options) {
            crm_element_value_int(options, XML_ATTR_ID, &id);
+           name = crm_element_value(options, XML_ATTR_UNAME);
         }
-        if (id) {
-            reap_crm_member(id);
-        }
+
+        reap_crm_member(id, name);
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");

@@ -60,7 +60,13 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
     crm_node_t *search = user_data;
 
-    if (search != NULL && node->id != search->id) {
+    if (search == NULL) {
+        return FALSE;
+
+    } else if(search->id && node->id != search->id) {
+        return FALSE;
+
+    } else if(search->id == 0 && safe_str_neq(node->uname, search->uname)) {
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
@@ -71,28 +77,42 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
 }
 
 guint
-reap_crm_member(uint32_t id)
+reap_crm_member(uint32_t id, const char *name)
 {
     int matches = 0;
-    crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+    crm_node_t *node = NULL;
+
+    if(crm_peer_cache == NULL || crm_peer_id_cache == NULL) {
+        crm_trace("Nothing to do, cache not initialized");
+        return 0;
+    }
+
+    if (name) {
+        node = g_hash_table_lookup(crm_peer_cache, name);
+    }
+
+    if (node == NULL && id > 0) {
+        node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+    }
 
     if (node == NULL) {
-        crm_info("Peer %u is unknown", id);
+        crm_info("Peer %u/%s cannot be purged: does not exist", id, name);
+        return 0;
+    }
 
-    } else if (crm_is_peer_active(node)) {
-        crm_warn("Peer %u/%s is still active", id, node->uname);
+    if (crm_is_peer_active(node)) {
+        crm_warn("Peer %u/%s cannot be purged: still active", id, name);
 
     } else {
         if (g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(id))) {
-            crm_notice("Removed dead peer %u from the uuid cache", id);
+            crm_notice("Purged dead peer %u/%s from the uuid cache", id, name);
 
-        } else {
-            crm_warn("Peer %u/%s was not removed", id, node->uname);
+        } else if(id) {
+            crm_warn("Peer %u/%s was not found in the ID cache", id, name);
         }
 
         matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, node);
-
-        crm_notice("Removed %d dead peers with id=%u from the membership list", matches, id);
+        crm_notice("Purged %d dead peers with id=%u from the membership cache", matches, id);
     }
 
     return matches;

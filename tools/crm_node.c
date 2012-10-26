@@ -485,14 +485,17 @@ node_mcp_destroy(gpointer user_data)
 }
 
 static int
-crmd_remove_node_cache(int id)
+crmd_remove_node_cache(const char *id)
 {
+    int n = 0;
     int rc = -1;
+    char *name = NULL;
     char *admin_uuid = NULL;
     crm_ipc_t *conn = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
     xmlNode *cmd = NULL;
     xmlNode *hello = NULL;
     xmlNode *msg_data = NULL;
+    char *endptr = NULL;
 
     if (!conn) {
         goto rm_node_cleanup;
@@ -512,8 +515,24 @@ crmd_remove_node_cache(int id)
         goto rm_node_cleanup;
     }
 
+    errno = 0;
+    n = strtol(id, &endptr, 10);
+    if(errno != 0 || endptr == id || *endptr != '\0') {
+        /* Argument was not a nodeid */
+        n = 0;
+        name = strdup(id);
+    } else {
+        name = get_node_name(n);
+    }
+
+    crm_trace("Removing %s aka. %s from the membership cache", name, id);
+
     msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
-    crm_xml_add_int(msg_data, XML_ATTR_ID, id);
+    if(n) {
+        crm_xml_add_int(msg_data, XML_ATTR_ID, n);
+    }
+    crm_xml_add(msg_data, XML_ATTR_UNAME, name);
+
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
         msg_data,
         NULL,
@@ -555,7 +574,7 @@ try_corosync(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            if (crmd_remove_node_cache(atoi(target_uname))) {
+            if (crmd_remove_node_cache(target_uname)) {
                 crm_err("Failed to connect to crmd to remove node id %s", target_uname);
             }
             break;

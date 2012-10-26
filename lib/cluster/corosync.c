@@ -530,7 +530,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (int kind, const cha
         uint32_t id = crm_int_helper(data, NULL);
 
         crm_info("Removing peer %s/%u", data, id);
-        reap_crm_member(id);
+        reap_crm_member(id, NULL);
         goto done;
     }
 
