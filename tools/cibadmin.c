@@ -43,6 +43,7 @@ int message_timeout_ms = 30;
 GMainLoop *mainloop = NULL;
 
 const char *host = NULL;
+char *xml_search_element = NULL;
 void usage(const char *cmd, int exit_status);
 int do_init(void);
 int do_work(xmlNode * input, int command_options, xmlNode ** output);
@@ -114,6 +115,7 @@ static struct crm_option long_options[] = {
     {"xml-pipe",    0, 0, 'p', "Retrieve XML from stdin\n"},
 
     {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
+    {"element-path",1, 0, 'e', "Modify xml output to list all xml node paths for a given node element name."},
     {"scope",       1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
@@ -177,6 +179,81 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+static void
+print_search_element_result(xmlNode *xml, const char *prefix, const char *search_element)
+{
+    xmlNode *cur_node;
+
+    for (cur_node = xml; cur_node; cur_node = cur_node->next) {
+        xmlAttr *attribute = cur_node->properties;
+        int prefix_len = 0;
+        int num_written = 0;
+        char *new_prefix = NULL;
+
+        if (cur_node->type != XML_ELEMENT_NODE) {
+            continue;
+        }
+
+        if (safe_str_eq((const char *) cur_node->name, search_element)) {
+            printf("%s/%s", prefix, cur_node->name);
+            while(attribute && attribute->name && attribute->children) {
+                xmlChar* value = xmlNodeListGetString(NULL, attribute->children, 1);
+                printf("[@%s='%s']", attribute->name, value);
+                xmlFree(value);
+                attribute = attribute->next;
+            }
+            printf("\n");
+            continue;
+        }
+
+        if (!cur_node->children) {
+           continue;
+        }
+
+        prefix_len = strlen(prefix) + strlen((const char *) cur_node->name) + 2;
+        prefix_len += attribute ? 1024 : 0;
+
+        if (!(new_prefix = calloc(1, prefix_len))) {
+            return;
+        }
+
+        num_written += snprintf(new_prefix, prefix_len, "%s/%s", prefix, cur_node->name);
+        while(attribute && attribute->name && attribute->children) {
+            xmlChar* value = xmlNodeListGetString(NULL, attribute->children, 1);
+
+            if ((num_written + strlen((char *) value)) > (prefix_len-1)) {
+                prefix_len = prefix_len + strlen((char *) value) + 1024;
+                new_prefix = realloc(new_prefix, prefix_len);
+            }
+
+            num_written += snprintf(new_prefix+num_written, prefix_len, "[@%s='%s']", attribute->name, value);
+
+            xmlFree(value);
+            attribute = attribute->next;
+        }
+
+        print_search_element_result(cur_node->children, new_prefix, search_element);
+        free(new_prefix);
+    }
+}
+
+static void
+print_xml_output(xmlNode *xml)
+{
+    char *buffer;
+    if (!xml) {
+        return;
+    }
+
+    if (xml_search_element) {
+        print_search_element_result(xml,"/", xml_search_element);
+    } else {
+        buffer = dump_xml_formatted(xml);
+        fprintf(stdout, "%s\n", crm_str(buffer));
+        free(buffer);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -217,6 +294,9 @@ main(int argc, char **argv)
             case 'A':
                 obj_type = strdup(optarg);
                 command_options |= cib_xpath;
+                break;
+            case 'e':
+                xml_search_element = strdup(optarg);
                 break;
             case 'u':
                 cib_action = CIB_OP_UPGRADE;
@@ -473,10 +553,7 @@ main(int argc, char **argv)
     }
 
     if (output != NULL) {
-        char *buffer = dump_xml_formatted(output);
-
-        fprintf(stdout, "%s\n", crm_str(buffer));
-        free(buffer);
+        print_xml_output(output);
         free_xml(output);
     }
 
@@ -553,13 +630,7 @@ cib_connection_destroy(gpointer user_data)
 void
 cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    char *admin_input_xml = NULL;
-
     exit_code = rc;
-
-    if (output != NULL) {
-        admin_input_xml = dump_xml_formatted(output);
-    }
 
     if (safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != pcmk_ok) {
         crm_info("CIB on %s is _not_ the master instance", host ? host : "localhost");
@@ -572,7 +643,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
     } else if (rc != 0) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
-        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        print_xml_output(output);
 
     } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {
         crm_err("Output expected in query response");
@@ -583,9 +654,8 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 
     } else {
         crm_info("Call passed");
-        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        print_xml_output(output);
     }
-    free(admin_input_xml);
 
     if (call_id == request_id) {
         g_main_quit(mainloop);
