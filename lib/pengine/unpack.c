@@ -1144,6 +1144,10 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 
         crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
 
+    } else if (rsc->variant > pe_native) {
+        crm_trace("%s is no longer a primitve resource, the lrm_resource entry is obsolete", rsc_id);
+        return NULL;
+
     } else {
         parent = uber_parent(rsc);
     }
