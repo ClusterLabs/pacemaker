@@ -5,10 +5,16 @@
 Each node in the cluster will have an entry in the nodes section
 containing its UUID, uname, and type.
 
-.Example cluster node entry
+.Example Heartbeat cluster node entry
 ======
 [source,XML]
 <node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="pcmk-1" type="normal"/>
+======
+
+.Example Corosync cluster node entry
+======
+[source,XML]
+<node id="101" uname="pcmk-1" type="normal"/>
 ======
 
 In normal circumstances, the admin should let the cluster populate
@@ -40,9 +46,9 @@ Below is what the node's definition would look like if the admin ran the command
 -------
 [source,XML]
 -------
-<node uname="pcmk-1" type="normal" id="1186dc9a-324d-425a-966e-d757e693dc86">
-   <instance_attributes id="nodes-1186dc9a-324d-425a-966e-d757e693dc86">
-     <nvpair id="kernel-1186dc9a-324d-425a-966e-d757e693dc86" name="kernel" value="2.6.16.46-0.4-default"/>
+<node uname="pcmk-1" type="normal" id="101">
+   <instance_attributes id="nodes-101">
+     <nvpair id="kernel-101" name="kernel" value="2.6.16.46-0.4-default"/>
    </instance_attributes>
 </node>
 -------
@@ -59,12 +65,13 @@ rejoins the cluster.  The cluster uses this area to store a record of
 how many times a resource has failed on that node but administrators
 can also read and write to this section by specifying `--type status`.
 
-== Adding a New Cluster Node ==
+== Corosync ==
 
-=== Corosync ===
+=== Adding a New Corosync Node ===
 
 indexterm:[Corosync,Add Cluster Node]
 indexterm:[Add Cluster Node,Corosync]
+
 Adding a new node is as simple as installing Corosync and Pacemaker,
 and copying '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if
 it exists) from an existing node.  You may need to modify the
@@ -73,78 +80,39 @@ it exists) from an existing node.  You may need to modify the
 If a log message containing "Invalid digest" appears from Corosync,
 the keys are not consistent between the machines.
 
-=== Heartbeat ===
-
-indexterm:[Heartbeat,Add Cluster Node]
-indexterm:[Add Cluster Node,Heartbeat]
-Provided you specified +autojoin any+ in 'ha.cf', adding a new node is
-as simple as installing heartbeat and copying 'ha.cf' and 'authkeys'
-from an existing node.
-
-If you don't want to use +autojoin+, then after setting up 'ha.cf' and
-'authkeys', you must use the `hb_addnode`
-command before starting the new node.
-
-
-== Removing a Cluster Node ==
-
-=== Corosync ===
+=== Removing a Corosync Node ===
 
 indexterm:[Corosync,Remove Cluster Node]
 indexterm:[Remove Cluster Node,Corosync]
+
 Because the messaging and membership layers are the authoritative
 source for cluster nodes, deleting them from the CIB is not a reliable
-solution.  First one must arrange for heartbeat to forget about the
+solution.  First one must arrange for corosync to forget about the
 node (_pcmk-1_ in the example below).
 
 On the host to be removed:
 
-. Find and record the node's Corosync id: `crm_node -i`
 . Stop the cluster: `/etc/init.d/corosync stop`
 
 Next, from one of the remaining active cluster nodes:
 
-. Tell the cluster to forget about the removed host:
+. Tell Pacemaker to forget about the removed host:
 +
 [source,C]
-# crm_node -R $COROSYNC_ID
+# crm_node -R pcmk-1
 +
-. Only now is it safe to delete the node from the CIB with:
-+
-[source,C]
-# cibadmin --delete --obj_type nodes --crm_xml '<node uname="_pcmk-1_"/>'
-# cibadmin --delete --obj_type status --crm_xml '<node_state uname="_pcmk-1_"/>'
+This includes deleting the node from the CIB
 
+[NOTE]
+======
+This proceedure only works for versions after 1.1.8
+======
 
-=== Heartbeat ===
-
-indexterm:[Heartbeat,Remove Cluster Node]
-indexterm:[Remove Cluster Node,Heartbeat]
-Because the messaging and membership layers are the authoritative
-source for cluster nodes, deleting them from the CIB is not a reliable
-solution.
-
-First one must arrange for heartbeat to forget about the node (pcmk-1
-in the example below).  To do this, shut down heartbeat on the node
-and then, from one of the remaining active cluster nodes, run:
-
-[source,C]
-# hb_delnode pcmk-1
-
-Only then is it safe to delete the node from the CIB with:
-
-[source,C]
------
-# cibadmin --delete --obj_type nodes --crm_xml '<node uname="pcmk-1"/>'
-# cibadmin --delete --obj_type status --crm_xml '<node_state uname="pcmk-1"/>'
------
-
-== Replacing a Cluster Node ==
-
-=== Corosync ===
+=== Replacing a Corosync Node ===
 
 indexterm:[Corosync,Replace Cluster Node]
 indexterm:[Replace Cluster Node,Corosync]
+
 The five-step guide to replacing an existing cluster node:
 
 . Make sure the old node is completely stopped
@@ -156,7 +124,66 @@ The five-step guide to replacing an existing cluster node:
 If a log message containing "Invalid digest" appears from Corosync,
 the keys are not consistent between the machines.
 
-=== Heartbeat ===
+== CMAN ==
+
+=== Adding a New CMAN Node ===
+
+indexterm:[CMAN,Add Cluster Node]
+indexterm:[Add Cluster Node,CMAN]
+
+=== Removing a CMAN Node ===
+
+indexterm:[CMAN,Remove Cluster Node]
+indexterm:[Remove Cluster Node,CMAN]
+
+== Heartbeat ==
+
+=== Adding a New Heartbeat Node ===
+
+indexterm:[Heartbeat,Add Cluster Node]
+indexterm:[Add Cluster Node,Heartbeat]
+
+Provided you specified +autojoin any+ in 'ha.cf', adding a new node is
+as simple as installing heartbeat and copying 'ha.cf' and 'authkeys'
+from an existing node.
+
+If you don't want to use +autojoin+, then after setting up 'ha.cf' and
+'authkeys', you must use `hb_addnode` before starting the new node.
+
+=== Removing a Heartbeat Node ===
+
+indexterm:[Heartbeat,Remove Cluster Node]
+indexterm:[Remove Cluster Node,Heartbeat]
+
+Because the messaging and membership layers are the authoritative
+source for cluster nodes, deleting them from the CIB is not a reliable
+solution.
+
+First one must arrange for Heartbeat to forget about the node (pcmk-1
+in the example below).
+
+On the host to be removed:
+
+. Stop the cluster: `/etc/init.d/corosync stop`
+
+Next, from one of the remaining active cluster nodes:
+
+. Tell Heartbeat the node should be removed
+
+[source,C]
+# hb_delnode pcmk-1
+
+. Tell Pacemaker to forget about the removed host:
+
+[source,C]
+# crm_node -R pcmk-1
+
+[NOTE]
+======
+This proceedure only works for versions after 1.1.8
+======
+
+=== Replacing a Heartbeat Node ===
 
 indexterm:[Heartbeat,Replace Cluster Node]
 indexterm:[Replace Cluster Node,Heartbeat]
