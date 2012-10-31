@@ -1,0 +1,23 @@
+
+Current cluster status:
+Online: [ yingying.site ]
+
+ Clone Set: rsc1 [rsc1_child]
+     Stopped: [ rsc1_child:0 ]
+
+Transition Summary:
+ * Start   rsc1_child:0	(yingying.site)
+
+Executing cluster transition:
+ * Resource action: rsc1_child:0    monitor on yingying.site
+ * Pseudo action:   rsc1_start_0
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1_child:0    start on yingying.site
+ * Pseudo action:   rsc1_running_0
+
+Revised cluster status:
+Online: [ yingying.site ]
+
+ Clone Set: rsc1 [rsc1_child]
+     Started: [ yingying.site ]
+

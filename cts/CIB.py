@@ -86,7 +86,7 @@ class FencingTopology(CibXml):
         CibXml.__init__(self, Factory, "fencing-topology", None)
 
     def level(self, index, node, devices):
-        self.add_child(CibXml(self.Factory, "fencing-level", "%s.%d" % (node, index), target=node, index=index, devices=devices))
+        self.add_child(CibXml(self.Factory, "fencing-level", "cts-%s.%d" % (node, index), target=node, index=index, devices=devices))
 
     def commit(self):
         self._run("create", self.show(), "configuration", "--allow-create")

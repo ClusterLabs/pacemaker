@@ -37,7 +37,6 @@
 
 #include <glib.h>
 #include <pengine.h>
-#include <lib/pengine/utils.h>
 #include <allocate.h>
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
@@ -334,10 +333,10 @@ main(int argc, char **argv)
     }
 
     if (use_date != NULL) {
-        a_date = parse_date(&use_date);
-        log_date(LOG_WARNING, "Set fake 'now' to", a_date, crm_time_log_date | crm_time_log_timeofday);
-        log_date(LOG_WARNING, "Set fake 'now' to (localtime)",
-                 a_date, crm_time_log_date | crm_time_log_timeofday | ha_log_local);
+        a_date = crm_time_new(use_date);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to", a_date, crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to (localtime)",
+                 a_date, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     }
 
     set_working_set_defaults(&data_set);
