@@ -1116,6 +1116,7 @@ char *classic_node_name(uint32_t nodeid)
 
                 if(node_name_is_valid("DNS", buf)) {
                     name = strdup(buf);
+                    strip_domain(name);
                 }
             }
         } else {

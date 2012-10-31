@@ -210,6 +210,7 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
 
                 if(node_name_is_valid("DNS", buf)) {
                     name = strdup(buf);
+                    strip_domain(name);
                 }
             }
         } else {
@@ -1037,6 +1038,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
         return FALSE;
     }
 
+    crm_peer_init();
     crm_trace("Initializing corosync nodelist");
     for(lpc = 0; ; lpc++) {
         uint32_t nodeid = 0;
