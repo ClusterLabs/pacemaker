@@ -1459,14 +1459,16 @@ class Component:
         None
         
 class Process(Component):
-    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], triggersreboot=0):
+    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], common_ignore=[], triggersreboot=0):
         self.name = str(name)
         self.dc_only = dc_only
         self.pats = pats
         self.dc_pats = dc_pats
         self.CM = cm
         self.badnews_ignore = badnews_ignore
+        self.badnews_ignore.extend(common_ignore)
 	self.triggersreboot = triggersreboot
+
         if process:
             self.proc = str(process)
         else:

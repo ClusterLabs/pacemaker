@@ -141,8 +141,16 @@ class crm_ais(crm_lha):
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "error: attrd_connection_destroy: Lost connection to attrd",
                     "info: te_fence_node: Executing .* fencing operation",
+
 #                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
 #                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
+            ]
+
+        cib_ignore = [
+            "lrmd.*error: crm_ipc_read: Connection to stonith-ng failed",
+            "lrmd.*error: mainloop_gio_callback: Connection to stonith-ng.* closed",
+            "lrmd.*error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            "lrmd.*error: stonith_connection_failed: STONITH connection failed, finalizing .* pending operations",
             ]
 
         fullcomplist["cib"] = Process(self, "cib", pats = [
@@ -157,7 +165,7 @@ class crm_ais(crm_lha):
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd.*do_exit: Could not recover from internal error",
-                    ], badnews_ignore = self.common_ignore)
+                    ], badnews_ignore = cib_ignore, common_ignore = self.common_ignore)
 
         fullcomplist["lrmd"] = Process(self, "lrmd", pats = [
                     "State transition .* S_RECOVERY",
@@ -324,12 +332,14 @@ class crm_cs_v0(crm_ais):
             r"error: stonith_connection_failed: STONITH connection failed",
             r"error: te_connect_stonith: Sign-in failed: triggered a retry",
             r"error: process_lrm_event: LRM operation Fencing.*",
-            r"error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy() received in state",
+            r"error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy.* received in state",
+            r"error: do_log: FSA: Input I_ERROR from do_shutdown_req.* received in state",
             r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
+            r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=do_shutdown_req",
+
+            r"crmd.*error: cib_native_perform_op_delegate: Couldn't perform cib_slave operation.*: Transport endpoint is not connected",
+            r"crmd.*error: cib_native_perform_op_delegate: CIB disconnected",
             ]
-
-
-        corosync_ignore.extend(self.common_ignore)
 
         self.complist.append(Process(self, "corosync", pats = [
                     r"pacemakerd.*error: cfg_connection_destroy: Connection destroyed",
@@ -341,7 +351,7 @@ class crm_cs_v0(crm_ais):
                     r"pengine.*Scheduling Node .* for STONITH",
                     r"log_operation: Operation .* for host .* with device .* returned: 0",
                     r"tengine_stonith_notify: Peer .* was terminated .*: OK",
-                    ], badnews_ignore = corosync_ignore))
+                    ], badnews_ignore = corosync_ignore, common_ignore = self.common_ignore))
     
         return self.complist
 
