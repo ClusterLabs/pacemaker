@@ -921,6 +921,43 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                     *answer = shallow;
                 }
 
+            } else if(options & cib_xpath_address) {
+
+                int path_len = 0;
+                char *path = NULL;
+                xmlNode *parent = match;
+
+                while(parent && parent->type == XML_ELEMENT_NODE) {
+                    int extra = 1;
+                    char *new_path = NULL;
+                    const char *id = crm_element_value(parent, XML_ATTR_ID);
+
+                    extra += strlen((const char *)parent->name);
+                    if(id) {
+                        extra += 8; /* [@id=""] */
+                        extra += strlen(id);
+                    }
+
+                    path_len += extra;
+                    new_path = malloc(path_len + 1);
+                    if(id) {
+                        snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id, path?path:"");
+                    } else {
+                        snprintf(new_path, path_len + 1, "/%s%s", parent->name, path?path:"");
+                    }
+                    free(path);
+                    path = new_path;
+                    parent = parent->parent;
+                }
+                crm_trace("Got: %s\n", path);
+
+                if (*answer == NULL) {
+                    *answer = create_xml_node(NULL, "xpath-query");
+                }
+                parent = create_xml_node(*answer, "xpath-query-path");
+                crm_xml_add(parent, XML_ATTR_ID, path);
+                free(path);
+
             } else if (*answer) {
                 add_node_copy(*answer, match);
 

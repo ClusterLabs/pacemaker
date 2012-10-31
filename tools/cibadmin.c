@@ -88,7 +88,7 @@ static struct crm_option long_options[] = {
     {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (See also: crm_diff)"},
     {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
-    {"-spacer-",    0, 0, '-', "\n\t\t\tThe tagname and all attributes must match in order for the element to be deleted"},
+    {"-spacer-",    0, 0, '-', "\n\tThe tagname and all attributes must match in order for the element to be deleted"},
     {"delete-all",  0, 0, 'd', "\tWhen used with --xpath, remove all matching objects in the configuration instead of just the first one"},
     {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},    
     {"md5-sum-versioned",  0, 0, '6', "\tCalculate an on-the-wire versioned CIB digest"},    
@@ -104,7 +104,7 @@ static struct crm_option long_options[] = {
     {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
     {"sync-call",   0, 0, 's', "Wait for call to complete before returning"},
     {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
-    {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a -M operation to be created if they do not exist"},
+    {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a --modify,-M operation to be created if they do not exist"},
     {"no-children", 0, 0, 'n', "(Advanced) When querying an object, do not return include its children in the result\n"},
     {"no-bcast",    0, 0, 'b', NULL, 1},
     
@@ -113,9 +113,12 @@ static struct crm_option long_options[] = {
     {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
     {"xml-pipe",    0, 0, 'p', "Retrieve XML from stdin\n"},
 
-    {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
     {"scope",       1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
-    {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
+    {"-spacer-",    0, 0, '-', "\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
+
+    {"xpath",       1, 0, 'A', "A valid XPath to use instead of --scope,-o"},
+    {"node-path",   0, 0, 'e',  "When performing XPath queries, return the address of any matches found."},
+    {"-spacer-",    0, 0, '-', " Eg: /cib/configuration/resources/master[@id='ms_RH1_SCS']/primitive[@id='prm_RH1_SCS']", pcmk_option_paragraph},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
     {"-space-",	    0, 0, '!', NULL, 1},
 
@@ -153,7 +156,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " cibadmin --replace --xml-file $HOME/local.xml", pcmk_option_example},
 
     {"-spacer-",    0, 0, '-', "SEE ALSO:"},
-    {"-spacer-",    0, 0, '-', " CRM shell, crm(8), crm_shadow(8)"},
+    {"-spacer-",    0, 0, '-', " crm(8), pcs(8), crm_shadow(8)"},
 
     /* Legacy options */
     {"host",	     1, 0, 'h', NULL, 1},
@@ -176,6 +179,37 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
+static void
+print_xml_output(xmlNode *xml)
+{
+    char *buffer;
+    if (!xml) {
+        return;
+    } else if (xml->type != XML_ELEMENT_NODE) {
+        return;
+    }
+
+    if(command_options & cib_xpath_address) {
+        const char *id = crm_element_value(xml, XML_ATTR_ID);
+
+        if(safe_str_eq((const char *)xml->name, "xpath-query")) {
+            xmlNode *child = NULL;
+
+            for (child = xml->children; child; child = child->next) {
+                print_xml_output(child);
+            }
+
+        } else {
+            printf("%s\n", id);
+        }
+
+    } else {
+        buffer = dump_xml_formatted(xml);
+        fprintf(stdout, "%s\n", crm_str(buffer));
+        free(buffer);
+    }
+}
 
 int
 main(int argc, char **argv)
@@ -217,6 +251,9 @@ main(int argc, char **argv)
             case 'A':
                 obj_type = strdup(optarg);
                 command_options |= cib_xpath;
+                break;
+            case 'e':
+                command_options |= cib_xpath_address;
                 break;
             case 'u':
                 cib_action = CIB_OP_UPGRADE;
@@ -473,10 +510,7 @@ main(int argc, char **argv)
     }
 
     if (output != NULL) {
-        char *buffer = dump_xml_formatted(output);
-
-        fprintf(stdout, "%s\n", crm_str(buffer));
-        free(buffer);
+        print_xml_output(output);
         free_xml(output);
     }
 
@@ -553,13 +587,7 @@ cib_connection_destroy(gpointer user_data)
 void
 cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    char *admin_input_xml = NULL;
-
     exit_code = rc;
-
-    if (output != NULL) {
-        admin_input_xml = dump_xml_formatted(output);
-    }
 
     if (safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != pcmk_ok) {
         crm_info("CIB on %s is _not_ the master instance", host ? host : "localhost");
@@ -572,7 +600,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
     } else if (rc != 0) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
-        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        print_xml_output(output);
 
     } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {
         crm_err("Output expected in query response");
@@ -583,9 +611,8 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 
     } else {
         crm_info("Call passed");
-        fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+        print_xml_output(output);
     }
-    free(admin_input_xml);
 
     if (call_id == request_id) {
         g_main_quit(mainloop);
