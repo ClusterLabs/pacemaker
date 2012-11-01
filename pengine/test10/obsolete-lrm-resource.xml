@@ -22,6 +22,7 @@
         <lrm_resources>
           <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="21:45:0:825d4691-4c1a-4430-a149-38d019920607" transition-magic="0:0;21:45:0:825d4691-4c1a-4430-a149-38d019920607" call-id="79" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1351581664" last-rc-change="0" exec-time="23" queue-time="0" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
