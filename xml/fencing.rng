@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" 
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
@@ -20,7 +20,7 @@
       <attribute name="index"><data type="positiveInteger"/></attribute>
       <attribute name="devices">
 	<data type="string">
-          <param name="pattern">([a-zA-Z0-9_.-]+)(,[a-zA-Z0-9_.-]+)*</param>
+          <param name="pattern">([a-zA-Z0-9_\.\-]+)(,[a-zA-Z0-9_\.\-]+)*</param>
 	</data>
       </attribute>
     </element>

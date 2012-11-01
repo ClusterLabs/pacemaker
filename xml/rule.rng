@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" 
 	 xmlns:ann="http://relaxng.org/ns/compatibility/annotations/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
@@ -105,35 +105,33 @@
 
   <define name="date-common">
     <attribute name="id"><data type="ID"/></attribute>
-    <oneOrMore>
-      <optional>
-	<attribute name="hours"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="monthdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weekdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="yearsdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="months"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weeks"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="years"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weekyears"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="moon"><text/></attribute>
-      </optional>
-    </oneOrMore>
+    <optional>
+      <attribute name="hours"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="monthdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="yearsdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="months"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weeks"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="years"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekyears"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="moon"><text/></attribute>
+    </optional>
   </define>
 
 </grammar>
