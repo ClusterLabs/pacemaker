@@ -105,35 +105,33 @@
 
   <define name="date-common">
     <attribute name="id"><data type="ID"/></attribute>
-    <oneOrMore>
-      <optional>
-	<attribute name="hours"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="monthdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weekdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="yearsdays"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="months"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weeks"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="years"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="weekyears"><text/></attribute>
-      </optional>
-      <optional>
-	<attribute name="moon"><text/></attribute>
-      </optional>
-    </oneOrMore>
+    <optional>
+      <attribute name="hours"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="monthdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="yearsdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="months"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weeks"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="years"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekyears"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="moon"><text/></attribute>
+    </optional>
   </define>
 
 </grammar>
