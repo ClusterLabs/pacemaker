@@ -325,7 +325,6 @@ createEmptyCib(void)
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
-/* 	crm_xml_add(cib_root, "version", "1"); */
     create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
     create_xml_node(config, XML_CIB_TAG_NODES);
     create_xml_node(config, XML_CIB_TAG_RESOURCES);
