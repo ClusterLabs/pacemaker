@@ -1337,7 +1337,7 @@ crm_lock_pidfile(const char *filename)
     mypid = (unsigned long)getpid();
 
     rc = crm_pidfile_inuse(filename, 0);
-    if(rc != pcmk_ok && rc != ENOENT) {
+    if(rc != pcmk_ok && rc != -ENOENT) {
         /* locked by existing process - give up */
         return -1;
     }
