@@ -550,7 +550,6 @@ stonith_action_create(const char *agent,
         GHashTable * port_map)
 {
     stonith_action_t *action;
-    char *value = NULL;
 
     action = calloc(1, sizeof(stonith_action_t));
     crm_info("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
@@ -561,13 +560,18 @@ stonith_action_create(const char *agent,
         action->victim = strdup(victim);
     }
     action->timeout = action->remaining_timeout = timeout;
+    action->max_retries = FAILURE_MAX_RETRIES;
 
-    value = g_hash_table_lookup(device_args, "pcmk_fencing_max_retries");
-    if (value && (safe_str_eq(action->action, "on") || safe_str_eq(action->action, "off")
-        || safe_str_eq(action->action, "reboot"))) {
-        action->max_retries = atoi(value);
-    } else {
-        action->max_retries = FAILURE_MAX_RETRIES;
+    if (device_args) {
+        const char *value = g_hash_table_lookup(device_args, "pcmk_fencing_max_retries");
+
+        if (value &&
+            (safe_str_eq(action->action, "on") ||
+            safe_str_eq(action->action, "off") ||
+            safe_str_eq(action->action, "reboot"))) {
+
+            action->max_retries = atoi(value);
+        }
     }
 
     return action;
