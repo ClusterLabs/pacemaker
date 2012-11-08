@@ -1341,6 +1341,10 @@ find_corosync_variant(void)
     free(value);
 
     confdb_finalize(config);
+    if (found == pcmk_cluster_unknown) {
+        crm_err("Corosync is running, but Pacemaker could not find the CMAN or Pacemaker plugin loaded");
+        found = pcmk_cluster_invalid;
+    }
     return found;
 }
 
