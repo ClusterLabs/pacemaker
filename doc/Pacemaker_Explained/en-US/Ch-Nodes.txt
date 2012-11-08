@@ -19,8 +19,30 @@ containing its UUID, uname, and type.
 
 In normal circumstances, the admin should let the cluster populate
 this information automatically from the communications and membership
-data.  However one can use the `crm_uuid` tool
+data.  However for Heartbeat, one can use the `crm_uuid` tool
 to read an existing UUID or define a value before the cluster starts.
+
+[[s-node-name]]
+== Where Pacemaker Gets the Node Name ==
+
+Traditionally, Pacemaker required nodes to be referred to by the value
+returned by `uname -n`.  This can be problematic for services that
+require the `uname -n` to be a specific value (ie. for a licence
+file).
+
+Since version 2.0.0 of Pacemaker, this requirement has been relaxed
+for clusters using Corosync 2.0 or later.  The name Pacemaker uses is:
+
+. The value stored in 'corosync.conf' under +ring0_addr+ in the +nodelist+, if it does not contain an IP address; otherwise
+. The value stored in 'corosync.conf' under +name+ in the +nodelist+; otherwise
+. The value of `uname -n`
+
+Pacemaker provides the `crm_node -n` command which displays the name
+used by a running cluster.
+
+If a Corosync nodelist is used, `crm_node -N $number` is also
+available to display the name used by the node with the corosync
++nodeid+ of '$number'.
 
 [[s-node-attributes]]
 == Describing a Cluster Node ==
