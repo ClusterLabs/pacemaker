@@ -540,7 +540,7 @@ stonith_action_destroy(stonith_action_t *action)
     free(action);
 }
 
-#define FAILURE_MAX_RETRIES 10
+#define FAILURE_MAX_RETRIES 2
 stonith_action_t *
 stonith_action_create(const char *agent,
         const char *_action,
@@ -563,13 +563,13 @@ stonith_action_create(const char *agent,
     action->max_retries = FAILURE_MAX_RETRIES;
 
     if (device_args) {
-        const char *value = g_hash_table_lookup(device_args, "pcmk_fencing_max_retries");
+        char buffer[512];
+        const char *value = NULL;
 
-        if (value &&
-            (safe_str_eq(action->action, "on") ||
-            safe_str_eq(action->action, "off") ||
-            safe_str_eq(action->action, "reboot"))) {
+        snprintf(buffer, 511, "pcmk_%s_retries", _action);
+        value = g_hash_table_lookup(device_args, buffer);
 
+        if (value) {
             action->max_retries = atoi(value);
         }
     }

@@ -997,6 +997,15 @@ main(int argc, char ** argv)
                    "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n", actions[lpc]);
             printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
             printf("  </parameter>\n");
+
+            printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
+            printf("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n", actions[lpc]);
+            printf("    <longdesc lang=\"en\">Some devices do not support multiple connections."
+                   " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining."
+                   " Use this option to alter the number of times Pacemaker retries '%s' actions before giving up."
+                   "</longdesc>\n", actions[lpc]);
+            printf("    <content type=\"integer\" default=\"2\"/>\n");
+            printf("  </parameter>\n");
         }
 
         printf(" </parameters>\n");
