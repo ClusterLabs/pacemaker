@@ -78,8 +78,6 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
     char *name = NULL;
 
     cmap_handle_t local_handle = 0;
-    corosync_cfg_handle_t cfg_handle = 0;
-    static corosync_cfg_callbacks_t cfg_callbacks = {};
 
     /* nodeid == 0 == CMAN_NODEID_US */
     if(nodeid == 0 && pcmk_nodeid) {
@@ -166,61 +164,7 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
     }
 
     if(name == NULL) {
-        retries = 0;
-        crm_trace("Initializing CFG connection");
-        do {
-            rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
-            if(rc != CS_OK) {
-                retries++;
-                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
-                sleep(retries);
-            }
-
-        } while(retries < 5 && rc != CS_OK);
-
-        if (rc != CS_OK) {
-            crm_warn("Could not connect to the Corosync CFG API, error %d", cs_strerror(rc));
-            cfg_handle = 0;
-        }
-    }
-
-    if(name == NULL && cfg_handle != 0) {
-        int numaddrs;
-        char buf[INET6_ADDRSTRLEN];
-
-        socklen_t addrlen;
-        struct sockaddr_storage *ss;
-        corosync_cfg_node_address_t addrs[INTERFACE_MAX];
-
-        rc = corosync_cfg_get_node_addrs(cfg_handle, nodeid, INTERFACE_MAX, &numaddrs, addrs);
-        if (rc == CS_OK) {
-            ss = (struct sockaddr_storage *)addrs[0].address;
-            if (ss->ss_family == AF_INET6) {
-                addrlen = sizeof(struct sockaddr_in6);
-            } else {
-                addrlen = sizeof(struct sockaddr_in);
-            }
-
-            if (getnameinfo((struct sockaddr *)addrs[0].address, addrlen, buf, sizeof(buf), NULL, 0, 0) == 0) {
-                crm_notice("Inferred node name '%s' for nodeid %u from DNS", buf, nodeid);
-
-                if(node_name_is_valid("DNS", buf)) {
-                    name = strdup(buf);
-                    strip_domain(name);
-                }
-            }
-        } else {
-            crm_debug("Unable to get node address for nodeid %u: %s", nodeid, cs_strerror(rc));
-        }
-        corosync_cfg_finalize(cfg_handle); 
-    }
-
-    if(local_handle) {
-        cmap_finalize(local_handle); 
-    }
-
-    if(name == NULL) {
-        crm_err("Unable to get node name for nodeid %u", nodeid);
+        crm_notice("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
 }
