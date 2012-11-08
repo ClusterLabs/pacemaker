@@ -344,29 +344,6 @@ get_uuid(const char *uname)
     return get_node_uuid(0, uname);
 }
 
-void
-strip_domain(char *fqdn) 
-{
-    static bool strip = TRUE;
-    static bool need_init = TRUE;
-
-    if(need_init) {
-        const char *option = daemon_option("allow_fqdn");
-
-        need_init = FALSE;
-        if(crm_is_true(option)) {
-            strip = FALSE;
-        }
-    }
-
-    if(strip) {
-        char *match = strchr(fqdn, '.');
-        if(match) {
-            match[0] = 0;
-        }
-    }
-}
-
 char *
 get_local_node_name(void)
 {
@@ -402,7 +379,6 @@ get_local_node_name(void)
         if(rc == 0) {
             crm_notice("Defaulting to uname(2).nodename for the local %s node name", name_for_cluster_type(stack));
             name = strdup(res.nodename);
-            strip_domain(name);
         }
     }
 

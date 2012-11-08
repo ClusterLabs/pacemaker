@@ -397,6 +397,5 @@ gboolean init_quorum_connection(
 void set_node_uuid(const char *uname, const char *uuid);
 
 gboolean node_name_is_valid(const char *key, const char *name);
-void strip_domain(char *fqdn);
 
 #endif
