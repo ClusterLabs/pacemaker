@@ -78,7 +78,7 @@ crm_config
 
 Used to specify cluster-wide options.
 
-The use of multiple cluster_property_set sections and time-based rule expressions allows the the cluster to behave differently (for example) during buisness hours than it does overnight.
+The use of multiple cluster_property_set sections and time-based rule expressions allows the the cluster to behave differently (for example) during business hours than it does overnight.
 -->
 <!ELEMENT crm_config (cluster_property_set)*>
 

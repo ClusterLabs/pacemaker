@@ -70,6 +70,7 @@ struct stonith_action_s {
     int remaining_timeout;
     guint timer_sigterm;
     guint timer_sigkill;
+    int max_retries;
 
     /* device output data */
     GPid pid;
@@ -539,6 +540,7 @@ stonith_action_destroy(stonith_action_t *action)
     free(action);
 }
 
+#define FAILURE_MAX_RETRIES 10
 stonith_action_t *
 stonith_action_create(const char *agent,
         const char *_action,
@@ -558,6 +560,19 @@ stonith_action_create(const char *agent,
         action->victim = strdup(victim);
     }
     action->timeout = action->remaining_timeout = timeout;
+    action->max_retries = FAILURE_MAX_RETRIES;
+
+    if (device_args) {
+        const char *value = g_hash_table_lookup(device_args, "pcmk_fencing_max_retries");
+
+        if (value &&
+            (safe_str_eq(action->action, "on") ||
+            safe_str_eq(action->action, "off") ||
+            safe_str_eq(action->action, "reboot"))) {
+
+            action->max_retries = atoi(value);
+        }
+    }
 
     return action;
 }
@@ -592,15 +607,14 @@ read_output(int fd)
     return output;
 }
 
-#define FAILURE_MAX_RETRIES 10
 static gboolean
 update_remaining_timeout(stonith_action_t *action)
 {
     int diff = time(NULL) - action->initial_start_time;
 
-    if (action->tries >= FAILURE_MAX_RETRIES) {
+    if (action->tries >= action->max_retries) {
         crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-            action->agent, action->action, FAILURE_MAX_RETRIES);
+            action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
     } else if ((action->rc != -ETIME) && diff < (action->timeout * 0.7)) {
     /* only set remaining timeout period if there is 30%

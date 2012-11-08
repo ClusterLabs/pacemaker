@@ -65,7 +65,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* send
 
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
-    const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+    const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
 
     crm_trace("Processing %s op (ref=%s)...", op, ref);
 

@@ -300,7 +300,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     const char *from = crm_element_value(msg, F_ORIG);
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+    const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *type = crm_element_value(msg, F_CRM_MSG_TYPE);
 
@@ -321,7 +321,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         xmlXPathObject *xpathObj = NULL;
 
         crm_log_xml_trace(msg, "Processing (N)ACK");
-        crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, XML_ATTR_REFERENCE), from);
+        crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, F_CRM_REFERENCE), from);
 
         xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
         if (xpathObj) {
