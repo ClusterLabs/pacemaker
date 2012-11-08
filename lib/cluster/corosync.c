@@ -157,10 +157,6 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
                 key = g_strdup_printf("nodelist.node.%d.name", lpc);
                 rc = cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s %d", key, name, rc);
-
-                if(node_name_is_valid(key, name) == FALSE) {
-                    free(name); name = NULL;
-                }
                 g_free(key);
             }
             break;
