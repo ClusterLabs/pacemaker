@@ -675,7 +675,7 @@ get_on_target_actions(const char *agent)
         on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
 
-        if (action && safe_str_eq(on_target, "true")) {
+        if (action && (safe_str_eq(on_target, "true") || safe_str_eq(on_target, "1"))) {
             if (strlen(actions)) {
                 g_strlcat(actions, " ", 512);
             }

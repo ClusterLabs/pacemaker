@@ -844,7 +844,7 @@ def main():
             print '    </parameter>'
             print '  </parameters>'
             print '  <actions>'
-            print '    <action name="on" on_target="true"/>'
+            print '    <action name="on" on_target="1"/>'
             print '    <action name="off"/>'
             print '    <action name="monitor"/>'
             print '    <action name="metadata"/>'
