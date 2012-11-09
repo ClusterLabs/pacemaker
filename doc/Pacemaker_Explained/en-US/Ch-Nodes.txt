@@ -40,9 +40,9 @@ for clusters using Corosync 2.0 or later.  The name Pacemaker uses is:
 Pacemaker provides the `crm_node -n` command which displays the name
 used by a running cluster.
 
-If a Corosync nodelist is used, `crm_node -N $number` is also
+If a Corosync nodelist is used, `crm_node --name-for-id $number` is also
 available to display the name used by the node with the corosync
-+nodeid+ of '$number'.
++nodeid+ of '$number', for example: `crm_node --name-for-id 2`.
 
 [[s-node-attributes]]
 == Describing a Cluster Node ==
