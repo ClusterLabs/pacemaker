@@ -24,6 +24,8 @@ typedef struct stonith_device_s {
     GListPtr targets;
     time_t targets_age;
     gboolean has_attr_map;
+    /* should nodeid parameter for victim be included in agent arguments */
+    gboolean include_nodeid;
     guint priority;
     guint active_pid;
 

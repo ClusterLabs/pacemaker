@@ -85,6 +85,7 @@ typedef struct async_command_s {
     char *remote_op_id;
 
     char *victim;
+    uint32_t victim_nodeid;
     char *action;
     char *device;
     char *mode;
@@ -224,6 +225,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
     action = stonith_action_create(device->agent,
         cmd->action,
         cmd->victim,
+        cmd->victim_nodeid,
         cmd->timeout,
         device->params,
         device->aliases);
@@ -258,6 +260,11 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
 
     if (cmd->device) {
         free(cmd->device);
+    }
+
+    if (device->include_nodeid && cmd->victim) {
+        crm_node_t *node = crm_get_peer(0, cmd->victim);
+        cmd->victim_nodeid = node->id;
     }
 
     cmd->device = strdup(device->id);
@@ -465,6 +472,7 @@ static xmlNode *get_agent_metadata(const char *agent)
 
     rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
     if (rc || !buffer) {
+        crm_err("Could not retrieve metadata for fencing agent %s", agent);
         return NULL;
     }
     xml = string2xml(buffer);
@@ -472,6 +480,26 @@ static xmlNode *get_agent_metadata(const char *agent)
     stonith_api_delete(st);
 
     return xml;
+}
+
+static gboolean
+is_nodeid_required(xmlNode *xml)
+{
+    xmlXPathObjectPtr xpath = NULL;
+
+    if (stand_alone) {
+        return FALSE;
+    }
+
+    if (!xml) {
+        return FALSE;
+    }
+    xpath = xpath_search(xml, "//parameter[@name='nodeid']");
+    if (!xpath || xpath->nodesetval->nodeNr <= 0) {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static char *
@@ -543,8 +571,14 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     device->agent_metadata = get_agent_metadata(device->agent);
+    device->on_target_actions = get_on_target_actions(device->agent_metadata);
 
-    if ((device->on_target_actions = get_on_target_actions(device->agent_metadata))) {
+    value = g_hash_table_lookup(device->params, "nodeid");
+    if (!value) {
+        device->include_nodeid = is_nodeid_required(device->agent_metadata);
+    }
+
+    if (device->on_target_actions) {
         crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
             device->id,
             device->on_target_actions);
