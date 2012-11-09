@@ -28,6 +28,7 @@ stonith_action_t *
 stonith_action_create(const char *agent,
         const char *_action,
         const char *victim,
+        uint32_t victim_nodeid,
         int timeout,
         GHashTable * device_args,
         GHashTable * port_map);

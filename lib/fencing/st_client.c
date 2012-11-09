@@ -396,7 +396,7 @@ append_host_specific_args(const char *victim, const char *map, GHashTable * para
 }
 
 static char *
-make_args(const char *action, const char *victim, GHashTable * device_args, GHashTable * port_map)
+make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args, GHashTable * port_map)
 {
     char buffer[512];
     char *arg_list = NULL;
@@ -443,6 +443,14 @@ make_args(const char *action, const char *victim, GHashTable * device_args, GHas
          *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
          */
         append_const_arg("nodename", victim, &arg_list);
+        if (victim_nodeid) {
+            char nodeid_str[33] = { 0, };
+            if (snprintf(nodeid_str, 33, "%u", (unsigned int) victim_nodeid)) {
+                crm_info("For stonith action (%s) for victim %s, adding nodeid (%d) to parameters",
+                    action, victim, nodeid_str);
+                append_const_arg("nodeid", nodeid_str, &arg_list);
+            }
+        }
 
         /* Check if we need to supply the victim in any other form */
         if (param == NULL) {
@@ -545,6 +553,7 @@ stonith_action_t *
 stonith_action_create(const char *agent,
         const char *_action,
         const char *victim,
+        uint32_t victim_nodeid,
         int timeout,
         GHashTable * device_args,
         GHashTable * port_map)
@@ -553,7 +562,7 @@ stonith_action_create(const char *agent,
 
     action = calloc(1, sizeof(stonith_action_t));
     crm_info("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
-    action->args = make_args(_action, victim, device_args, port_map);
+    action->args = make_args(_action, victim, victim_nodeid, device_args, port_map);
     action->agent = strdup(agent);
     action->action = strdup(_action);
     if (victim) {
@@ -1017,7 +1026,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
      */
 
     if (safe_str_eq(provider, "redhat")) {
-        stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 5, NULL, NULL);
+        stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
         int exec_rc = stonith_action_execute(action, &rc, &buffer);
 
         if (exec_rc < 0 || rc != 0 || buffer == NULL) {
