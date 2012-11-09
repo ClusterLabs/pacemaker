@@ -31,6 +31,7 @@ typedef struct stonith_device_s {
     GHashTable *aliases;
     GList *pending_ops;
     crm_trigger_t *work;
+    xmlNode *agent_metadata;
 
     /*! A verified device is one that has contacted the
      * agent successfully to perform a monitor operation */
