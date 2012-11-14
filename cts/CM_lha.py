@@ -76,6 +76,8 @@ class crm_lha(ClusterManager):
             "QuorumCmd"      : "crm_node -H -q",
             "ParitionCmd"    : "crm_node -H -p",
             "CibQuery"       : "cibadmin -Ql",
+            "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
+            "CibDelXpath"    : "cibadmin --delete --xpath %s",
             # 300,000 == 5 minutes
             "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/lrmd_test -R -r %s",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
@@ -94,6 +96,10 @@ class crm_lha(ClusterManager):
             "LogFileName"    : Environment["LogFileName"],
 
             "UUIDQueryCmd"    : "crmadmin -N",
+
+            "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
+            "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
+
             "StandbyCmd"      : "crm_attribute -VQ  -U %s -n standby -l forever -v %s 2>/dev/null",
             "StandbyQueryCmd" : "crm_attribute -QG -U %s -n standby -l forever -d off 2>/dev/null",
 
@@ -587,6 +593,30 @@ class crm_lha(ClusterManager):
         cmd = self["StandbyCmd"] % (node, status)
         ret = self.rsh(node, cmd)
         return True
+
+    def AddDummyRsc(self, node, rid):
+        rsc_xml = """ '<resources>
+                <primitive class=\"ocf\" id=\"%s\" provider=\"pacemaker\" type=\"Dummy\">
+                    <operations>
+                        <op id=\"%s-interval-10s\" interval=\"10s\" name=\"monitor\"/
+                    </operations>
+                </primitive>
+            </resources>'""" % (rid, rid)
+        constraint_xml = """ '<constraints>
+                <rsc_location id=\"location-%s-%s\" node=\"%s\" rsc=\"%s\" score=\"INFINITY\"/>
+            </constraints>'
+            """ % (rid, node, node, rid)
+
+        self.rsh(node, self['CibAddXml'] % (rsc_xml))
+        self.rsh(node, self['CibAddXml'] % (constraint_xml))
+
+    def RemoveDummyRsc(self, node, rid):
+        constraint = "\"//rsc_location[@rsc='%s']\"" % (rid)
+        rsc = "\"//primitive[@id='%s']\"" % (rid)
+
+        self.rsh(node, self['CibDelXpath'] % constraint)
+        self.rsh(node, self['CibDelXpath'] % rsc)
+
 
 #######################################################################
 #
