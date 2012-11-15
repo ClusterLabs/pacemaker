@@ -387,6 +387,7 @@ class CIB11(CibBase):
                     stt["pcmk_host_list"] = string.join(stt_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stt["power_timeout"] = "20"
+                    stt["random_sleep_range"] = "10"
                     stt.commit()
 
                 # Create a Dummy agent that always fails for levels-or
@@ -397,6 +398,7 @@ class CIB11(CibBase):
                     stf["pcmk_host_list"] = string.join(stf_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stf["power_timeout"] = "20"
+                    stf["random_sleep_range"] = "30"
                     stf.commit()
                   
                 # Now commit the levels themselves
