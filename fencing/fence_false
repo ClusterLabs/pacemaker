@@ -5,9 +5,10 @@
 # Virsh 0.3.3 on RHEL 5.2 with xen-3.0.3-51
 #
 
-import sys, time
+import sys, time, random
 sys.path.append("/usr/share/fence")
 from fencing import *
+
 
 #BEGIN_VERSION_GENERATION
 RELEASE_VERSION="3.1.6"
@@ -51,8 +52,15 @@ def set_power_status(conn, options):
         plug_status = "off"
 
 def main():
+    global all_opt
     device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
-            "no_password", "power_wait", "power_timeout", ]
+            "no_password", "power_wait", "power_timeout", "random_sleep_range"]
+
+    all_opt["random_sleep_range"] = {
+        "getopt" : "R:",
+        "longopt" : "random_sleep_range",
+        "help" : "--random_sleep_range=<seconds>Issue a sleep between 1 and <seconds>. Used for testing.",
+        "order" : 1 }
 
     atexit.register(atexit_handler)
 
@@ -64,6 +72,14 @@ def main():
     pinput["-C"] = ","
 
     options = check_input(device_opt, pinput)
+
+    # random sleep for testing
+    if options.has_key("-R"):
+        val = int(options["-R"])
+        ran = random.randint(1, val)
+        print "random sleep for %d seconds" % ran
+        time.sleep(ran)
+
     if options.has_key("-o") and (options["-o"] == "monitor"):
         sys.exit(0)
 
