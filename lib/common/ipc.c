@@ -513,23 +513,11 @@ static int
 internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
 {
     time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
-    struct timespec waitsleep = {
-        .tv_sec = 0,
-        .tv_nsec = 500000000
-    };
     int rc = 0;
 
     /* get the reply */
     crm_trace("client %s waiting on reply to msg id %d", client->name, request_id);
     do {
-
-#if HAVE_QB_IPCC_READY
-        qb_ipcc_ready(client->ipc, ms_timeout);
-#else
-        if(rc <= 0) {
-            nanosleep(&waitsleep, 0);
-        }
-#endif
 
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
         if(rc > 0) {

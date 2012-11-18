@@ -1489,14 +1489,6 @@ case $SUPPORT_ACL in
      *)		 SUPPORT_ACL=no;;
 esac
 
-HAVE_QB_IPCC_READY=1
-AC_CHECK_LIB(qb, qb_ipcc_ready)
-if test $ac_cv_lib_qb_qb_ipcc_ready != yes; then
-    HAVE_QB_IPCC_READY=0
-fi
-
-AC_DEFINE_UNQUOTED(HAVE_QB_IPCC_READY, $HAVE_QB_IPCC_READY, Do we need to perform nanosleep() when looking for synchronous replies)
-
 AC_MSG_CHECKING(for acl support)
 if test $SUPPORT_ACL = no; then
     AC_MSG_RESULT(no (disabled))
