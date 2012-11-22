@@ -177,7 +177,7 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
     }
 	
     for(a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
-	if(crm_str_eq((const char *)a_child->name, search_path, TRUE)) {
+	if(strcmp((const char *)a_child->name, search_path) == 0) {
 /* 		crm_trace("returning node (%s).", crm_element_name(a_child)); */
 	    return a_child;
 	}
@@ -201,8 +201,8 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
     xmlNode *a_child = NULL;
     for(a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
 	/* Uncertain if node_name == NULL check is strictly necessary here */
-	if(node_name == NULL || crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
-	    if(id == NULL || crm_str_eq(id, ID(a_child), TRUE)) {
+	if(node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
+	    if(id == NULL || strcmp(id, ID(a_child)) == 0) {
 		crm_trace("returning node (%s).", 
 			    crm_element_name(a_child));
 		return a_child;
@@ -1060,11 +1060,11 @@ log_data_element(
         const char *p_name = (const char *)pIter->name;
         const char *p_value = crm_attr_value(pIter);
             
-	if(p_name == NULL || safe_str_eq(F_XML_TAGNAME, p_name)) {
+	if(p_name == NULL || strcmp(F_XML_TAGNAME, p_name) == 0) {
 	    continue;
 
         } else if((is_set(options, xml_log_option_diff_plus) || is_set(options, xml_log_option_diff_minus))
-                  && safe_str_eq(XML_DIFF_MARKER, p_name)) {
+                  && strcmp(XML_DIFF_MARKER, p_name) == 0) {
             continue;
 
 	} else if(hidden != NULL
@@ -1365,7 +1365,7 @@ can_prune_leaf(xmlNode *xml_node)
 
     for(pIter = crm_first_attr(xml_node); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
-        if(safe_str_eq(p_name, XML_ATTR_ID)) {
+        if(strcmp(p_name, XML_ATTR_ID) == 0) {
             continue;
         }		      
         can_prune = FALSE;
@@ -1490,7 +1490,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
     /* check for XML_DIFF_MARKER in a child */ 
     value = crm_element_value(right, XML_DIFF_MARKER);
-    if(value != NULL && safe_str_eq(value, "removed:top")) {
+    if(value != NULL && strcmp(value, "removed:top") == 0) {
         crm_trace("We are the root of the deletion: %s.id=%s", name, id);
         *changed = TRUE;
 	free_xml(diff);
@@ -1540,13 +1540,13 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     for(xIter = crm_first_attr(left); xIter != NULL; xIter = xIter->next) {
         const char *prop_name = (const char *)xIter->name;
 
-	if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+	if(strcmp(prop_name, XML_ATTR_ID) == 0) {
 	    continue;
 	}
 
 	skip = FALSE;
 	for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
-	    if(filter[lpc].found == FALSE && crm_str_eq(prop_name, filter[lpc].string, TRUE)) {
+	    if(filter[lpc].found == FALSE && strcmp(prop_name, filter[lpc].string) == 0) {
 		filter[lpc].found = TRUE;
 		skip = TRUE;
 		break;
@@ -1768,7 +1768,7 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
     up_id = ID(update);
     child_id = ID(child);
 	
-    if(up_id == NULL || safe_str_eq(child_id, up_id)) {
+    if(up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
 	can_delete = TRUE;
     } 
     if(safe_str_neq(crm_element_name(update), crm_element_name(child))) {
@@ -1930,7 +1930,7 @@ xml2list(xmlNode *parent)
     }
 
     for(child = __xml_first_child(nvpair_list); child != NULL; child = __xml_next(child)) {
-	if(crm_str_eq((const char *)child->name, XML_TAG_PARAM, TRUE)) {
+	if(strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
 	    const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
 	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
 	    crm_trace("Added %s=%s", key, value);
@@ -2256,7 +2256,7 @@ xmlNode *first_named_child(xmlNode *parent, const char *name)
 	 * semantically incorrect in this funciton, but may be necessary
 	 * due to prior use of xml_child_iter_filter
 	 */
-	if(name == NULL || crm_str_eq((const char*)match->name, name, TRUE)) {
+	if(name == NULL || strcmp((const char*)match->name, name) == 0) {
 		return match;
 	}
     }
@@ -2515,12 +2515,13 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	}
     }
     
-    if(safe_str_eq(validation, "none")) {
+    if(strcmp(validation, "none") == 0) {
 	return TRUE;
     }
     
     for(; lpc < all_schemas; lpc++) {
-	if(safe_str_eq(validation, known_schemas[lpc].name)) {
+	if(known_schemas[lpc].name
+           && strcmp(validation, known_schemas[lpc].name) == 0) {
 	    return validate_with(xml_blob, lpc, to_logs);
 	}
     }
