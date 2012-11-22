@@ -28,7 +28,7 @@
 : ${OCF_RESKEY_sysfs:="/sys/fs"}
 : ${OCF_RESKEY_configfs:="/sys/kernel/config"}
 : ${OCF_RESKEY_daemon_timeout:="10"} # How long to wait for things to start
-: ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 DAEMON="/usr/sbin/ocfs2_controld.${OCF_RESKEY_stack}"
 CLUSTER_STACK_FILE="${OCF_RESKEY_sysfs}/ocfs2/cluster_stack"
@@ -363,9 +363,9 @@ o2cb_usage() {
 o2cb_validate() {
     check_binary ${DAEMON}
 
-    case ${OCF_RESKEY_CRM_meta_gloablly_unique} in
+    case ${OCF_RESKEY_CRM_meta_globally_unique} in
 	yes|Yes|true|True|1) 
-	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the gloablly_unique=false meta attribute"
+	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
 	    exit $OCF_ERR_CONFIGURED
 	    ;;
     esac
