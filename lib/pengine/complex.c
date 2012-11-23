@@ -679,15 +679,17 @@ common_free(resource_t * rsc)
     if (rsc->utilization != NULL) {
         g_hash_table_destroy(rsc->utilization);
     }
-    if (rsc->orig_xml) {
-        free_xml(rsc->xml);
-    }
+
     if (rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
-        if (rsc->orig_xml) {
-            free_xml(rsc->orig_xml);
-        } else {
-            free_xml(rsc->xml);
-        }
+        free_xml(rsc->xml);
+        rsc->xml = NULL;
+        free_xml(rsc->orig_xml);
+        rsc->orig_xml = NULL;
+
+    /* if rsc->orig_xml, then rsc->xml is an expanded xml from a template */
+    } else if (rsc->orig_xml) {
+        free_xml(rsc->xml);
+        rsc->xml = NULL;
     }
     if (rsc->running_on) {
         g_list_free(rsc->running_on);
