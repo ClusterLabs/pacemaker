@@ -1981,18 +1981,19 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 
                     } else if (migrate_from) {  /* Failed */
-                        pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                                  target->details->online);
                         if (target && target->details->online) {
+                            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                                  target->details->online);
                             native_add_running(rsc, target, data_set);
                         }
 
                     } else {    /* Pending or complete but erased */
                         node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
 
-                        pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                                  target->details->online);
                         if (target && target->details->online) {
+                            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                                  target->details->online);
+
                             native_add_running(rsc, target, data_set);
                             if (source && source->details->online) {
                                 /* If we make it here we have a partial migration.  The migrate_to
