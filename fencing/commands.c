@@ -85,6 +85,7 @@ typedef struct async_command_s {
     char *remote_op_id;
 
     char *victim;
+    uint32_t victim_nodeid;
     char *action;
     char *device;
     char *mode;
@@ -224,6 +225,7 @@ static gboolean stonith_device_execute(stonith_device_t *device)
     action = stonith_action_create(device->agent,
         cmd->action,
         cmd->victim,
+        cmd->victim_nodeid,
         cmd->timeout,
         device->params,
         device->aliases);
@@ -258,6 +260,11 @@ static void schedule_stonith_command(async_command_t *cmd, stonith_device_t *dev
 
     if (cmd->device) {
         free(cmd->device);
+    }
+
+    if (device->include_nodeid && cmd->victim) {
+        crm_node_t *node = crm_get_peer(0, cmd->victim);
+        cmd->victim_nodeid = node->id;
     }
 
     cmd->device = strdup(device->id);
@@ -300,6 +307,7 @@ void free_device(gpointer data)
     g_list_free(device->pending_ops);
 
     g_list_free_full(device->targets, free);
+    free_xml(device->agent_metadata);
     free(device->namespace);
     free(device->on_target_actions);
     free(device->agent);
@@ -455,8 +463,96 @@ static GListPtr parse_host_list(const char *hosts)
     return output;
 }
 
+static xmlNode *get_agent_metadata(const char *agent)
+{
+    stonith_t *st = stonith_api_new();
+    xmlNode *xml = NULL;
+    char *buffer = NULL;
+    int rc = 0;
+
+    rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+    if (rc || !buffer) {
+        crm_err("Could not retrieve metadata for fencing agent %s", agent);
+        return NULL;
+    }
+    xml = string2xml(buffer);
+    free(buffer);
+    stonith_api_delete(st);
+
+    return xml;
+}
+
+static gboolean
+is_nodeid_required(xmlNode *xml)
+{
+    xmlXPathObjectPtr xpath = NULL;
+
+    if (stand_alone) {
+        return FALSE;
+    }
+
+    if (!xml) {
+        return FALSE;
+    }
+    xpath = xpath_search(xml, "//parameter[@name='nodeid']");
+    if (!xpath || xpath->nodesetval->nodeNr <= 0) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static char *
+get_on_target_actions(xmlNode *xml)
+{
+    char *actions = NULL;
+    xmlXPathObjectPtr xpath = NULL;
+    int max = 0;
+    int lpc = 0;
+
+    if (!xml) {
+        return NULL;
+    }
+
+    xpath = xpath_search(xml, "//action");
+
+    if (!xpath || !xpath->nodesetval) {
+        return NULL;
+    }
+
+    max = xpath->nodesetval->nodeNr;
+
+    actions = calloc(1, 512);
+
+    for (lpc = 0; lpc < max; lpc++) {
+        const char *on_target = NULL;
+        const char *action = NULL;
+        xmlNode *match = getXpathResult(xpath, lpc);
+
+        CRM_CHECK(match != NULL, continue);
+
+        on_target = crm_element_value(match, "on_target");
+        action = crm_element_value(match, "name");
+
+        if (action && crm_is_true(on_target)) {
+            if (strlen(actions)) {
+                g_strlcat(actions, " ", 512);
+            }
+            g_strlcat(actions, action, 512);
+        }
+    }
+
+    if (!strlen(actions)) {
+        free(actions);
+        actions = NULL;
+    }
+
+    return actions;
+}
+
 static stonith_device_t *build_device_from_xml(xmlNode *msg) 
 {
+    const char *value = NULL;
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
 
@@ -465,6 +561,29 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     device->agent = crm_element_value_copy(dev, "agent");
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2list(dev);
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
+    if(value) {
+        device->targets = parse_host_list(value);
+    }
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
+    device->aliases = build_port_aliases(value, &(device->targets));
+
+    device->agent_metadata = get_agent_metadata(device->agent);
+    device->on_target_actions = get_on_target_actions(device->agent_metadata);
+
+    value = g_hash_table_lookup(device->params, "nodeid");
+    if (!value) {
+        device->include_nodeid = is_nodeid_required(device->agent_metadata);
+    }
+
+    if (device->on_target_actions) {
+        crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
+            device->id,
+            device->on_target_actions);
+    }
+
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
     /* TODO: Hook up priority */
 
@@ -639,76 +758,10 @@ device_has_duplicate(stonith_device_t *device)
     return dup;
 }
 
-static char *
-get_on_target_actions(const char *agent)
-{
-    stonith_t *st = stonith_api_new();
-    char *actions = NULL;
-    char *buffer = NULL;
-    xmlNode *xml = NULL;
-    xmlXPathObjectPtr xpath = NULL;
-    int rc = 0, max = 0, lpc = 0;
-
-    rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
-    if (rc || !buffer) {
-        goto on_target_actions_cleanup;
-    }
-    xml = string2xml(buffer);
-
-    xpath = xpath_search(xml, "//action");
-
-    if (!xpath || !xpath->nodesetval) {
-        goto on_target_actions_cleanup;
-    }
-
-    max = xpath->nodesetval->nodeNr;
-
-    actions = calloc(1, 512);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *on_target = NULL;
-        const char *action = NULL;
-        xmlNode *match = getXpathResult(xpath, lpc);
-
-        CRM_CHECK(match != NULL, continue);
-
-        on_target = crm_element_value(match, "on_target");
-        action = crm_element_value(match, "name");
-
-        if (action && crm_is_true(on_target)) {
-            if (strlen(actions)) {
-                g_strlcat(actions, " ", 512);
-            }
-            g_strlcat(actions, action, 512);
-        }
-    }
-
-    if (!strlen(actions)) {
-        free(actions);
-        actions = NULL;
-    }
-
-on_target_actions_cleanup:
-    free(buffer);
-    stonith_api_delete(st);
-    free_xml(xml);
-
-    return actions;
-}
-
 int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
 {
-    const char *value = NULL;
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
-
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
-    if(value) {
-        device->targets = parse_host_list(value);
-    }
-
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
-    device->aliases = build_port_aliases(value, &(device->targets));
 
     if ((dup = device_has_duplicate(device))) {
         crm_notice("Device '%s' already existed in device list (%d active devices)", device->id, g_hash_table_size(device_list));
@@ -730,11 +783,6 @@ int stonith_device_register(xmlNode *msg, const char **desc, gboolean from_cib)
         g_hash_table_replace(device_list, device->id, device);
 
         crm_notice("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
-        if ((device->on_target_actions = get_on_target_actions(device->agent))) {
-            crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
-                device->id,
-                device->on_target_actions);
-        }
     }
     if(desc) {
         *desc = device->id;
