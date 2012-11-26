@@ -517,6 +517,10 @@ clone_free(resource_t * rsc)
 
         pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         free_xml(child_rsc->xml);
+        child_rsc->xml = NULL;
+        /* There could be a saved unexpanded xml */
+        free_xml(child_rsc->orig_xml);
+        child_rsc->orig_xml = NULL;
         child_rsc->fns->free(child_rsc);
     }
 
