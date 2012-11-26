@@ -654,6 +654,9 @@ do_test template-rsc-sets-2  "Template - Resource Sets 2"
 do_test template-rsc-sets-3  "Template - Resource Sets 3"
 do_test template-rsc-sets-4  "Template - Resource Sets 4"
 
+do_test template-clone-primitive "Cloned primitive from template"
+do_test template-clone-group     "Cloned group from template"
+
 echo ""
 
 test_results
