@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Clone Set: clone1 [group1]
+     Stopped: [ group1:0 group1:1 ]
+
+Transition Summary:
+ * Start   rsc1:0	(node1)
+ * Start   rsc2:0	(node1)
+ * Start   rsc1:1	(node2)
+ * Start   rsc2:1	(node2)
+
+Executing cluster transition:
+ * Resource action: rsc1:0          monitor on node1
+ * Resource action: rsc2:0          monitor on node1
+ * Resource action: rsc1:1          monitor on node2
+ * Resource action: rsc2:1          monitor on node2
+ * Pseudo action:   clone1_start_0
+ * Pseudo action:   probe_complete
+ * Pseudo action:   group1:0_start_0
+ * Resource action: rsc1:0          start on node1
+ * Resource action: rsc2:0          start on node1
+ * Pseudo action:   group1:1_start_0
+ * Resource action: rsc1:1          start on node2
+ * Resource action: rsc2:1          start on node2
+ * Pseudo action:   group1:0_running_0
+ * Pseudo action:   group1:1_running_0
+ * Pseudo action:   clone1_running_0
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Clone Set: clone1 [group1]
+     Started: [ node1 node2 ]
+
