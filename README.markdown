@@ -35,6 +35,7 @@ This change was made at the author's request as it is now maintained as a separa
 * bzip2-devel
 * gnutls-devel
 * pam-devel
+* libqb-devel
 
 ## Cluster Stack Dependencies (Pick at least one)
 * clusterlib-devel (CMAN)
