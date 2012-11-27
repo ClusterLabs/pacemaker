@@ -241,10 +241,9 @@ operation_finalize(svc_action_t *op)
 static void
 operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 {
-    char *next = NULL;
-    char *offset = NULL;
     svc_action_t *op = mainloop_get_child_userdata(p);
     pid_t pid = mainloop_get_child_pid(p);
+    char *prefix = g_strdup_printf("%s:%d", op->id, op->pid);
 
     mainloop_clear_child_userdata(p);
     op->status = PCMK_LRM_OP_DONE;
@@ -266,13 +265,13 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 
     if (signo) {
         if (mainloop_get_child_timeout(p)) {
-            crm_warn("%s:%d - timed out after %dms", op->id, op->pid,
+            crm_warn("%s - timed out after %dms", prefix,
                     op->timeout);
             op->status = PCMK_LRM_OP_TIMEOUT;
             op->rc = PCMK_OCF_TIMEOUT;
 
         } else {
-            crm_warn("%s:%d - terminated with signal %d", op->id, op->pid,
+            crm_warn("%s - terminated with signal %d", prefix,
                     signo);
             op->status = PCMK_LRM_OP_ERROR;
             op->rc = PCMK_OCF_SIGNAL;
@@ -280,38 +279,14 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 
     } else {
         op->rc = exitcode;
-        crm_debug("%s:%d - exited with rc=%d", op->id, op->pid, exitcode);
-
-        if (op->stdout_data) {
-            next = op->stdout_data;
-            do {
-                offset = next;
-                next = strchrnul(offset, '\n');
-                crm_debug("%s:%d [ %.*s ]", op->id, op->pid,
-                         (int) (next - offset), offset);
-                if (next[0] != 0) {
-                    next++;
-                }
-
-            } while (next != NULL && next[0] != 0);
-        }
-
-        if (op->stderr_data) {
-            next = op->stderr_data;
-            do {
-                offset = next;
-                next = strchrnul(offset, '\n');
-                crm_notice("%s:%d [ %.*s ]", op->id, op->pid,
-                          (int) (next - offset), offset);
-                if (next[0] != 0) {
-                    next++;
-                }
-
-            } while (next != NULL && next[0] != 0);
-        }
+        crm_debug("%s - exited with rc=%d", prefix, exitcode);
     }
 
+    crm_log_output(LOG_NOTICE, prefix, op->stderr_data);
+    crm_log_output(LOG_DEBUG, prefix, op->stdout_data);
+
     op->pid = 0;
+    g_free(prefix);
     operation_finalize(op);
 }
 

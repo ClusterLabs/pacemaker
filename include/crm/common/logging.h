@@ -53,6 +53,8 @@ gboolean crm_log_init(const char *entity, int level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
 void crm_log_args(int argc, char **argv);
+void crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix, const char *output);
+#define crm_log_output(level, prefix, output) crm_log_output_fn(__FILE__, __FUNCTION__, __LINE__, level, prefix, output)
 
 gboolean crm_add_logfile(const char *filename);
 

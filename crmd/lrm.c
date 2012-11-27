@@ -1969,10 +1969,15 @@ process_lrm_event(lrmd_event_data_t * op)
                    services_lrm_status_str(op->op_status));
     }
 
-    if (op->rc != 0 && op->output != NULL) {
-        crm_info("Result: %s", op->output);
-    } else if (op->output != NULL) {
-        crm_debug("Result: %s", op->output);
+    if (op->output) {
+        char *prefix = g_strdup_printf("%s_%s_%d:%d", op->rsc_id, op->op_type, op->interval, op->call_id);
+
+        if (op->rc) {
+            crm_log_output(LOG_NOTICE, prefix, op->output);
+        } else {
+            crm_log_output(LOG_DEBUG, prefix, op->output);
+        }
+        g_free(prefix);
     }
 
     if (op->rsc_deleted) {
