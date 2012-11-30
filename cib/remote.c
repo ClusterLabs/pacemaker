@@ -100,7 +100,7 @@ int
 init_remote_listener(int port, gboolean encrypted)
 {
     int rc;
-    int ssock;
+    int *ssock = NULL;
     struct sockaddr_in saddr;
     int optval;
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = 
@@ -136,15 +136,17 @@ init_remote_listener(int port, gboolean encrypted)
 #endif
 
     /* create server socket */
-    ssock = socket(AF_INET, SOCK_STREAM, 0);
-    if (ssock == -1) {
+    ssock = malloc(sizeof(int));
+    *ssock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*ssock == -1) {
         crm_perror(LOG_ERR, "Can not create server socket." ERROR_SUFFIX);
+        free(ssock);
         return -1;
     }
 
     /* reuse address */
     optval = 1;
-    rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if(rc < 0) {
         crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
     }
@@ -154,20 +156,22 @@ init_remote_listener(int port, gboolean encrypted)
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
-    if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
+    if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
         crm_perror(LOG_ERR, "Can not bind server socket." ERROR_SUFFIX);
-        close(ssock);
+        close(*ssock);
+        free(ssock);
         return -2;
     }
-    if (listen(ssock, 10) == -1) {
+    if (listen(*ssock, 10) == -1) {
         crm_perror(LOG_ERR, "Can not start listen." ERROR_SUFFIX);
-        close(ssock);
+        close(*ssock);
+        free(ssock);
         return -3;
     }
 
-    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, ssock, &ssock, &remote_listen_fd_callbacks);
+    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
 
-    return ssock;
+    return *ssock;
 }
 
 static int
