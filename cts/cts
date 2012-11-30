@@ -1,0 +1,206 @@
+#!/bin/bash
+
+cts_root=`basename $0`
+stonith=rhcs
+schema=1.1
+stack=mcp
+
+logfile=0
+summary=0
+verbose=0
+pengine=0
+watch=0
+saved=0
+tests=""
+
+install=0
+clean=0
+build=0
+kill=0
+run=0
+
+custom_log=""
+patterns="-e CTS:"
+
+# Note the quotes around `$TEMP': they are essential!
+#TEMP=`getopt -o t:ac:sSvpe:lwf:d  --long run,clean -n 'cts' -- "$@"`
+#eval set -- "$TEMP"
+
+while true; do
+    case $1 in
+	-a) 
+	screen -ls | grep cts
+	exit 0;;
+	-c) cluster_name=$2; shift; shift;;
+	-S) summary=1; saved=1; shift;;
+	-s) summary=1; shift;;
+	-v) verbose=`expr $verbose + 1`; shift;;
+	-p) pengine=1; shift;;
+	-e) patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
+	-l) logfile=1; shift;;
+	-w) watch=1; shift;;
+	-f) summary=1; custom_log=$2; shift; shift;;
+	-t) tests="$tests $2"; shift; shift;;
+	[0-9]*) tests="$tests $1"; shift;;
+	--build|build) build=1; shift;;
+	--kill|kill) kill=1; shift; break;;
+	--run|run) run=1; shift; break;;
+	--clean|clean) clean=1; shift;;
+	--inst|--install|install) install=1; clean=1; shift;;
+	--wget)
+	    files="cluster-helper cluster-clean"
+	    for f in $files; do
+		rm -f $f
+		echo "Downloading helper script $f from GitHub"
+		wget https://raw.github.com/ClusterLabs/pacemaker/master/extra/$f
+	    done
+	    shift
+	    ;;
+	--) shift; tests="$tests $*"; break;;
+	"") break;;
+	*) echo "Unknown argument: $1"; exit 1;;
+    esac
+done
+
+# Add the location of this script
+export PATH="$PATH:$cts_root"
+which cluster-helper &>/dev/null
+if [ $? != 0 ]; then
+    echo $0 needs the cluster-helper script to be in your path
+    echo You can obtain it from: https://raw.github.com/ClusterLabs/pacemaker/master/extra/cluster-helper
+    exit 1
+fi
+
+which cluster-clean &>/dev/null
+if [ $? != 0 ]; then
+    echo $0 needs the cluster-clean script to be in your path
+    echo You can obtain it from: https://raw.github.com/ClusterLabs/pacemaker/master/extra/cluster-clean
+    exit 1
+fi
+
+if [ -z $cluster_name ]; then
+    #echo "Defaulting to virt1, use '-c $name' to select another or '-c pick' to select from a list"
+    cluster_name=virt1
+fi
+
+if [ "x$cluster_name" = x -o "x$cluster_name" = xpick ]; then
+    clusters=`ls -1 ~/.dsh/group/[a-z]+[0-9] | sed s/.*group.// | tr '\n' ' ' `
+    
+    echo "custom) interactively define a cluster"
+    for i in $clusters; do
+	echo "$i) `cluster-helper --list short -g $i`"
+    done
+
+    read -p "Choose a cluster [custom]: " cluster_name
+    echo
+fi
+
+if [ -z $cluster_name ]; then
+    cluster_name=custom
+fi
+
+
+case $cluster_name in
+  *) 
+    cluster_hosts=`cluster-helper --list short -g $cluster_name`
+    cluster_log=~/cluster-$cluster_name.log;
+    ;;
+  custom) 
+    read -p "Cluster name: " cluster_name
+    read -p "Cluster hosts: " cluster_hosts
+    read -p "Cluster log file: " cluster_log
+    ;;
+esac
+
+if [ $build = 1 -a $run = 1 ]; then
+    install=1
+    clean=1
+fi
+
+if [ $build = 1 ]; then
+    which build-pcmk
+    if [ $? != 0 ]; then
+	echo "You'll need to write/obtain build-pcmk in order to build pacemaker from here.  Skipping"
+    else
+	build-pcmk -18
+	rc=$?
+	if [ $rc != 0 ]; then
+	    echo "Build failed: $rc"
+	    exit $rc
+	fi
+    fi
+fi
+
+if [ $clean = 1 ]; then
+    rm -f $cluster_log; cluster-clean -g $cluster_name --kill
+elif [ $kill = 1 ]; then
+    cluster-clean -g $cluster_name --kill-only
+fi
+
+if [ $install = 1 ]; then
+    cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
+fi
+
+if [ $run = 1 ]; then
+    $cts_root/cts/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
+    exit $?
+
+elif [ $clean = 1 ]; then
+    exit 0
+fi
+
+screen -ls | grep cts-$cluster_name &>/dev/null
+active=$?
+
+if [ ! -z $custom_log ]; then
+    cluster_log=$custom_log
+fi
+
+if [ "x$tests" != x -a "x$tests" != "x " ]; then
+    for t in $tests; do
+	echo "crm_report --cts-log $cluster_log -d -T $t"
+	crm_report --cts-log $cluster_log -d -T $t
+    done
+
+elif [ $logfile = 1 ]; then
+    echo $cluster_log
+
+elif [ $summary = 1 ]; then
+    files=$cluster_log
+    if [ $saved = 1 ]; then
+	files=`ls -1tr ~/CTS-*/cluster-log.txt`
+    fi
+    for f in $files; do 
+	echo $f
+	case $verbose in
+	    0) cat -n $f | grep $patterns | grep -v "CTS: debug:"
+    		;;
+	    1) cat -n $f | grep $patterns | grep -v "CTS:.* cmd:"
+    		;;
+	    *) cat -n $f | grep $patterns
+		;;
+	esac
+	echo ""
+    done
+
+elif [ $watch = 1 ]; then
+    case $verbose in
+	0) tail -F $cluster_log | grep $patterns | grep -v "CTS: debug:"
+    		;;
+	1) tail -F $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
+    		;;
+	*) tail -F $cluster_log | grep $patterns
+		;;
+    esac
+
+elif [ $active = 0 ]; then
+    screen -x cts-$cluster_name
+
+else
+    touch $cluster_log
+
+#    . ~/.bashrc
+#    . $BASH_FILES/.heartbeat
+    export cluster_name cluster_hosts cluster_log
+    screen -S cts-$cluster_name bash
+fi
