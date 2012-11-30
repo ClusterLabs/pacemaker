@@ -41,7 +41,6 @@
 GMainLoop *mainloop = NULL;
 qb_ipcs_service_t *ipcs = NULL;
 
-void usage(const char *cmd, int exit_status);
 void pengine_shutdown(int nsig);
 
 static int32_t
@@ -100,22 +99,40 @@ struct qb_ipcs_service_handlers ipc_callbacks =
     .connection_destroyed = pe_ipc_destroy
 };
 
+/* *INDENT-OFF* */
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
+
+    {0, 0, 0, 0}
+};
+/* *INDENT-ON* */
+
 int
 main(int argc, char **argv)
 {
     int flag;
+    int index = 0;
     int argerr = 0;
 
-    crm_system_name = CRM_SYSTEM_PENGINE;
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_set_options(NULL, "[options]",
+                    long_options, "Daemon for calculating the cluster's response to events");
+
     mainloop_add_signal(SIGTERM, pengine_shutdown);
 
-    while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
+    while (1) {
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1)
+            break;
+
         switch (flag) {
             case 'V':
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                usage(crm_system_name, EX_OK);
+                crm_help('?', EX_OK);
                 break;
             default:
                 ++argerr;
@@ -133,7 +150,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, EX_USAGE);
+        crm_help('?', EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
@@ -160,24 +177,6 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
     return crm_exit(0);
-}
-
-void
-usage(const char *cmd, int exit_status)
-{
-    FILE *stream;
-
-    stream = exit_status ? stderr : stdout;
-
-    fprintf(stream, "usage: %s [-srkh]" "[-c configure file]\n", cmd);
-/* 	fprintf(stream, "\t-d\tsets debug level\n"); */
-/* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
-/* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
-/* 	fprintf(stream, "\t-k\tstops daemon\n"); */
-/* 	fprintf(stream, "\t-h\thelp message\n"); */
-    fflush(stream);
-
-    crm_exit(exit_status);
 }
 
 void

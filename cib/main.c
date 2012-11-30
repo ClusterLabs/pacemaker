@@ -82,7 +82,6 @@ gboolean cib_writes_enabled = TRUE;
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
-void usage(const char *cmd, int exit_status);
 int cib_init(void);
 void cib_shutdown(int nsig);
 gboolean startCib(const char *filename);
@@ -116,33 +115,34 @@ log_cib_client(gpointer key, gpointer value, gpointer user_data)
     crm_info("Client %s", crm_str(a_client->name));
 }
 
+/* *INDENT-OFF* */
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
+
+    {"per-action-cib", 0, 0, 'a', "\tAdvanced use only"},
+    {"stand-alone",    0, 0, 's', "\tAdvanced use only"},
+    {"disk-writes",    0, 0, 'w', "\tAdvanced use only"},
+    {"cib-root",       1, 0, 'r', "\tAdvanced use only"},
+
+    {0, 0, 0, 0}
+};
+/* *INDENT-ON* */
+
 int
 main(int argc, char **argv)
 {
     int flag;
     int rc = 0;
+    int index = 0;
     int argerr = 0;
-
-#ifdef HAVE_GETOPT_H
-    int option_index = 0;
-/* *INDENT-OFF* */
-	static struct option long_options[] = {
-		{"per-action-cib", 0, 0, 'a'},
-		{"stand-alone",    0, 0, 's'},
-		{"disk-writes",    0, 0, 'w'},
-
-		{"cib-root",    1, 0, 'r'},
-
-		{"verbose",     0, 0, 'V'},
-		{"help",        0, 0, '?'},
-		{"metadata",    0, 0, 'm'},
-
-		{0, 0, 0, 0}
-	};
-/* *INDENT-ON* */
-#endif
-
     struct passwd *pwentry = NULL;
+
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_set_options(NULL, "[options]",
+                    long_options, "Daemon for storing and replicating the cluster configuration");
+    
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, cib_shutdown);
@@ -154,11 +154,7 @@ main(int argc, char **argv)
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 
     while (1) {
-#ifdef HAVE_GETOPT_H
-        flag = getopt_long(argc, argv, OPTARGS, long_options, &option_index);
-#else
-        flag = getopt(argc, argv, OPTARGS);
-#endif
+        flag = crm_get_option(argc, argv, &index);
         if (flag == -1)
             break;
 
@@ -189,7 +185,7 @@ main(int argc, char **argv)
                 }
                 break;
             case '?':          /* Help message */
-                usage(crm_system_name, EX_OK);
+                crm_help(flag, EX_OK);
                 break;
             case 'w':
                 cib_writes_enabled = TRUE;
@@ -215,7 +211,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, EX_USAGE);
+        crm_help('?', EX_USAGE);
     }
 
     if(cib_root == NULL) {
@@ -557,27 +553,6 @@ cib_init(void)
     qb_ipcs_destroy(ipcs_shm);
 
     return crm_exit(0);
-}
-
-void
-usage(const char *cmd, int exit_status)
-{
-    FILE *stream;
-
-    stream = exit_status ? stderr : stdout;
-
-    fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
-    fprintf(stream, "\t--%s (-%c)\t\tTurn on debug info."
-            "  Additional instances increase verbosity\n", "verbose", 'V');
-    fprintf(stream, "\t--%s (-%c)\t\tThis help message\n", "help", '?');
-    fprintf(stream, "\t--%s (-%c)\t\tShow configurable cib options\n", "metadata", 'm');
-    fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "per-action-cib", 'a');
-    fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "stand-alone", 's');
-    fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "disk-writes", 'w');
-    fprintf(stream, "\t--%s (-%c)\t\tAdvanced use only\n", "cib-root", 'r');
-    fflush(stream);
-
-    crm_exit(exit_status);
 }
 
 gboolean

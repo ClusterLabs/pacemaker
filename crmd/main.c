@@ -45,21 +45,38 @@ extern void init_dotfile(void);
 
 GMainLoop *crmd_mainloop = NULL;
 
+/* *INDENT-OFF* */
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
+
+    {0, 0, 0, 0}
+};
+/* *INDENT-ON* */
+
 int
 main(int argc, char **argv)
 {
     int flag;
+    int index = 0;
     int argerr = 0;
 
-    crm_system_name = CRM_SYSTEM_CRMD;
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_set_options(NULL, "[options]", long_options,
+                    "Daemon for aggregating resource and node failures as well as co-ordinating the cluster's response");
 
-    while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
+    while (1) {
+        flag = crm_get_option(argc, argv, &index);
+        if (flag == -1)
+            break;
+
         switch (flag) {
             case 'V':
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                usage(crm_system_name, EX_OK);
+                crm_help(flag, EX_OK);
                 break;
             default:
                 ++argerr;
@@ -76,8 +93,6 @@ main(int argc, char **argv)
         return 0;
     }
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-
     crm_notice("CRM Git Version: %s\n", BUILD_VERSION);
 
     if (optind > argc) {
@@ -85,7 +100,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, EX_USAGE);
+        crm_help('?', EX_USAGE);
     }
 
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
@@ -150,21 +165,4 @@ crmd_init(void)
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
     return crmd_exit(exit_code);
-}
-
-void
-usage(const char *cmd, int exit_status)
-{
-    FILE *stream;
-
-    stream = exit_status ? stderr : stdout;
-
-    fprintf(stream, "usage: %s [-V] [-h|version|metadata]\n", cmd);
-    fprintf(stream, "\t-h\t: this help message\n");
-    fprintf(stream, "\t-V\t: increase verbosity\n");
-    fprintf(stream, "\tmetadata\t: show configurable crmd options\n");
-    fprintf(stream, "\tversion\t\t: show version information and quit\n");
-    fflush(stream);
-
-    crm_exit(exit_status);
 }
