@@ -8,10 +8,13 @@ plugin_ver=-1
 pcmk_ver=11
 nodelist=0
 
-INSTALL=No
-cs_conf=/etc/corosync/corosync.conf
+pkgs="corosync xinetd nmap abrt-cli fence-agents perl-TimeDate gdb"
+
+INSTALL=
+cs_conf=
+fence_conf=
 rpm_repo=
-distro=fedora-15
+distro=
 
 dsh_group=0
 cluster=dummy0
@@ -70,6 +73,8 @@ function helptext() {
     echo ""
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
+    echo "-e, --extra package-list"
+    echo "                    Extra packages to install"  
     exit $1
 }
 
@@ -95,15 +100,19 @@ while true; do
 	-R|--repo) rpm_repo=$2; shift; shift;;
 	-I|--install) INSTALL=Yes; shift;;
 
-	cman|--cman) CMAN=1; cs_conf=/etc/cluster/cluster.conf; shift;;
-	-h|--heartbeat) do_heartbeat=1; shift;;
-	-c|--corosync) cs_conf=/etc/corosync/corosync.conf; shift;;
-	-C|--nodelist) cs_conf=/etc/corosync/corosync.conf; nodelist=1; shift;;
-	-o|--openais) cs_conf=/etc/ais/openais.conf; shift;;
-	--plugin|-p) plugin_ver=$2; shift; shift;;
+	cman|--cman) CTYPE=cman; shift;;
+	-h|--heartbeat) CTYPE=heartbeat; shift;;
+	-c|--corosync) CTYPE=corosync; shift;;
+	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
+	-o|--openais) CTYPE=openais; shift;;
+	--plugin|-p) CTYPE=plugin; plugin_ver=$2; shift; shift;;
+	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
+#	-t|--test) pkgs="$pkgs qarsh-server valgrind"; shift; shift;;
 
-	rhel) CMAN=1; rpm_repo=rpm-test-rhel; distro=rhel-6; shift;;
-	-10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
+	r6) CTYPE=cman; rpm_repo=rpm-test-rhel; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	r7) CTYPE=corosync; rpm_repo=rpm-test-rhel; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	f18) CTYPE=corosync; rpm_repo=rpm-test-next; distro=fedora-18; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	p0|10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
 
 	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
@@ -113,14 +122,26 @@ while true; do
     esac
 done
 
-if [ -z "$host_input" ]; then
-    if [ ! -z $CTS_GROUP ]; then
-	host_input="-g $CTS_GROUP"
-	dsh_group=`echo $CTS_GROUP | sed s/[a-zA-Z]*//`
+if [ x = "x$host_input" -a x = "x$CTS_GROUP" ]; then
+    if [ -d $HOME/.dsh/group ]; then
+        read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 CTS_GROUP
     else
-	echo "You didn't specify any nodes to configure"
-	exit 1
+        read -p "Please specify a whitespace delimetered list of nodes you'd like to configure as a cluster? [] " -t 60 host_list
+	
+        for h in $2; do
+	    host_input="$host_input -w $h";
+	done
     fi
+fi
+
+if [ ! -z $CTS_GROUP ]; then
+    host_input="-g $CTS_GROUP"
+    dsh_group=`echo $CTS_GROUP | sed s/[a-zA-Z]*//`
+fi
+
+if [ -z "$host_input" ]; then
+    echo "You didn't specify any nodes or groups to configure"
+    exit 1
 fi
 
 host_list=`cluster-helper --list short $host_input`
@@ -129,30 +150,28 @@ if [ -z $dsh_group ]; then
     dsh_group=1
 fi
 
-if [ $accept_defaults = 0 ]; then
+if [ -z $CTYPE ]; then
     echo ""
-    read -p "Shall I install an ssh key to cluster nodes? [No] " -t 60 SSH
-    echo ""
-    echo "SELinux prevent many things, including password-less ssh logins"
-    read -p "Shall I disable selinux? [Yes] " -t 60 SELINUX
-    echo ""
-    echo "Incorrectly configured firewalls will prevent corosync from starting up"
-    read -p "Shall I disable iptables? [Yes] " -t 60 IPTABLES
-    if [ $CMAN = 1 ]; then
-	echo ""
-	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
-	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
-    elif [ $pcmk_ver = 10 ]; then
-	echo ""
-	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
-	read -p "Shall I set one? [No] (domain) " -t 60 DOMAIN
-    fi
-    echo ""
-    if [ -z $INSTALL ]; then
-	read -p "Shall I install/update the relevant packages? [No] "  -t 60 INSTALL
-    fi
-    read -p "Shall I sync the date/time? [Yes] "  -t 60 DATE
+    read -p "Where should Pacemaker obtain membership and quorum from? [corosync] (corosync, cman, plugin, openais, heartbeat) " -t 60 CTYPE
 fi
+
+case $CTYPE in
+    cman) CMAN=1; cs_conf=/etc/cluster/cluster.conf;;
+    corosync) cs_conf=/etc/corosync/corosync.conf;;
+    heartbeat) do_heartbeat=1;;
+    openais) cs_conf=/etc/ais/openais.conf;;
+    plugin) 
+	cs_conf=/etc/corosync/corosync.conf
+	if [ -z $plugin_ver ]; then
+	    echo ""
+	    read -p "Should corosync start Pacemaker? [No]" -t 60 PTYPE
+	    case $PTYPE in
+		[Yy][Ee][Ss]|[Yy]) plugin_ver=0;;
+		*) plugin_ver=1;;
+	    esac
+	fi
+	;;
+esac
 
 if [ -z $SSH ]; then
     SSH="No"
@@ -170,17 +189,79 @@ if [ -z $DOMAIN ]; then
     DOMAIN="No"
 fi
 if [ -z $INSTALL ]; then
-    INSTALL="No"
+    INSTALL="Yes"
 fi
 if [ -z $DATE ]; then
     DATE="Yes"
 fi
+
+if [ $accept_defaults = 0 ]; then
+    echo ""
+    read -p "Shall I install an ssh key to cluster nodes? [$SSH] " -t 60 SSH
+    echo ""
+    echo "SELinux prevent many things, including password-less ssh logins"
+    read -p "Shall I disable selinux? [$SELINUX] " -t 60 SELINUX
+    echo ""
+    echo "Incorrectly configured firewalls will prevent corosync from starting up"
+    read -p "Shall I disable iptables? [$IPTABLES] " -t 60 IPTABLES
+    if [ $CMAN = 1 ]; then
+	echo ""
+	echo "Without a default domain, cman probably wont start because it can't look up the IP for hosts"
+	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
+    elif [ $pcmk_ver = 10 ]; then
+	echo ""
+	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
+	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
+    fi
+
+    echo ""
+    read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
+
+    case $INSTALL in
+	[Yy][Ee][Ss]|[Yy]|"") 
+	    if [ -z $rpm_repo ]; then
+		echo ""
+		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next, rpm-test-rhel) "  -t 60 rpm_repo
+	    fi
+	    
+	    if [ ! -z $rpm_repo ]; then
+		if [ -z $distro ]; then
+		    distro=fedora-18
+		    echo ""
+		    read -p "Which distro are you installing for? [$distro] (eg. fedora-17, rhel-6) "  -t 60 distro
+		fi
+	    fi
+	    ;;
+    esac
+
+    echo ""
+    read -p "Shall I sync the date/time? [$DATE] "  -t 60 DATE
+fi
+
+echo ""
+echo "Detecting possible fencing options"
+if [ -e /etc/cluster/fence_xvm.key ]; then
+    echo "* Found fence_xvm"
+    fence_conf=/etc/cluster/fence_xvm.key
+    pkgs="$pkgs fence-virt"
+fi
+
+if [ ! -z ${OS_AUTH_URL} ]; then
+    echo "* Found openstack credentials"
+    fence_conf=/sbin/fence_openstack
+    pkgs="$pkgs python-novaclient"
+fi
+echo ""
+echo "Beginning cluster configuration"
+echo ""
 
 case $SSH in
     [Yy][Ee][Ss]|[Yy]) 
 	for host in $host_list; do
 	    echo "Installing our ssh key on ${host}"
 	    ssh-copy-id root@${host} >/dev/null 2>&1 
+	    # Fix selinux labeling
+	    ssh -l root ${host} -- restorecon -R -v .
 	done
 	;;
 esac
@@ -202,7 +283,6 @@ if [ ! -z $rpm_repo ]; then
     REPO=$rpm_repo/$distro
 fi
 
-pkgs="corosync fence-virt qarsh-server xinetd nmap abrt-cli gdb fence-agents perl-TimeDate"
 if [ $do_heartbeat = 1 ]; then
     pkgs="$pkgs heartbeat"
 fi
@@ -657,8 +737,8 @@ for host in $host_list; do
 	cat $init | ssh -l root -T $host -- "cat > $init; bash $init"
     fi
 
-    if [ -e /etc/cluster/fence_xvm.key ]; then
-	scp /etc/cluster/fence_xvm.key root@${host}:/etc/cluster/fence_xvm.key
+    if [ "x$fence_conf" != x -a -e $fence_conf ]; then
+	scp $fence_conf root@${host}:$fence_conf
     fi
 
     if [ $pcmk_ver = 10 ]; then
