@@ -139,7 +139,7 @@ def usage(arg, status=1):
     print "\t [--xmit-loss lost-rate(0.0-1.0)]" 
     print "\t [--recv-loss lost-rate(0.0-1.0)]" 
     print "\t [--standby (1 | 0 | yes | no)]" 
-    print "\t [--fencing (1 | 0 | yes | no)]" 
+    print "\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]" 
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
@@ -230,16 +230,7 @@ if __name__ == '__main__':
            Environment.rsh.enable_qarsh()
            rsh.enable_qarsh()
 
-       elif args[i] == "--fencing":
-           skipthis=1
-           if args[i+1] == "1" or args[i+1] == "yes":
-               Environment["DoFencing"] = 1
-           elif args[i+1] == "0" or args[i+1] == "no":
-               Environment["DoFencing"] = 0
-           else:
-               usage(args[i+1])
-
-       elif args[i] == "--stonith":
+       elif args[i] == "--stonith" or args[i] == "--fencing":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
                Environment["DoFencing"]=1
@@ -269,6 +260,19 @@ if __name__ == '__main__':
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=west-apc,login=apc,passwd=apc,pcmk_host_map=west-01:2;west-02:3;west-03:4;west-04:5;west-05:6;west-06:7;west-07:9;west-08:10;west-09:11;west-10:12;west-11:13;west-12:14;west-13:15;west-14:18;west-15:17;west-16:19;"
+           elif args[i+1] == "openstack":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_openstack"
+
+               print "Obtaining OpenStack credentials from the current environment"
+               Environment["stonith-params"] = "region=%s,tenant=%s,auth=%s,user=%s,password=%s" % (
+                   os.environ['OS_REGION_NAME'],
+                   os.environ['OS_TENANT_NAME'],
+                   os.environ['OS_AUTH_URL'],
+                   os.environ['OS_USERNAME'],
+                   os.environ['OS_PASSWORD']
+                   )
+
            else:
                usage(args[i+1])
 
