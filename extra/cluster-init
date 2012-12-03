@@ -10,6 +10,8 @@ nodelist=0
 
 pkgs="corosync xinetd nmap abrt-cli fence-agents perl-TimeDate gdb"
 
+transport="multicast"
+
 INSTALL=
 cs_conf=
 fence_conf=
@@ -65,6 +67,7 @@ function helptext() {
     echo "-o, --openais       configure for openais"
     echo "--cman              configure for cman"
     echo "-p, --plugin version"
+    echo "-u, --unicast       configure point-to-point communication instead of multicast (corosync only)"
     echo ""
     echo "-I, --install       Install packages"
     echo "-R, --repo name     Setup and update/install Pacemaker from the named clusterlabs.org repo"
@@ -106,13 +109,18 @@ while true; do
 	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
 	-o|--openais) CTYPE=openais; shift;;
 	--plugin|-p) CTYPE=plugin; plugin_ver=$2; shift; shift;;
+	-u|--unicast) nodelist=1; transport=udpu; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
 #	-t|--test) pkgs="$pkgs qarsh-server valgrind"; shift; shift;;
 
-	r6) CTYPE=cman; rpm_repo=rpm-test-rhel; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
-	r7) CTYPE=corosync; rpm_repo=rpm-test-rhel; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
-	f18) CTYPE=corosync; rpm_repo=rpm-test-next; distro=fedora-18; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	r6)  CTYPE=cman; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	r7)  CTYPE=corosync; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	f*[0-9][0-9]) 
+	    distro="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`";
+	    CTYPE=corosync; 
+	    shift;;
 	p0|10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
+
 
 	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
@@ -515,6 +523,8 @@ totem {
 
         # Disable encryption
         secauth:        off
+
+	transport:      $transport
 
         # interface: define at least one interface to communicate
         # over. If you define more than one interface stanza, you must
