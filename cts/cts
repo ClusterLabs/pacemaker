@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cts_root=`basename $0`
+cts_root=`dirname $0`
 stonith=rhcs
 schema=1.1
 stack=mcp
@@ -28,6 +28,7 @@ patterns="-e CTS:"
 
 while true; do
     case $1 in
+	-x) set -x; shift;;
 	-a) 
 	screen -ls | grep cts
 	exit 0;;
@@ -142,7 +143,7 @@ if [ $install = 1 ]; then
 fi
 
 if [ $run = 1 ]; then
-    $cts_root/cts/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
+    $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
     exit $?
 
 elif [ $clean = 1 ]; then
