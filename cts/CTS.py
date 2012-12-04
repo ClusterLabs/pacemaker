@@ -950,8 +950,10 @@ class ClusterManager(UserDict):
             count=count+1
         return count
 
-    def install_helper(self, filename, destdir=None, nodes=None):
-        file_with_path="%s/%s" % (CTSvars.CTS_home, filename)
+    def install_helper(self, filename, destdir=None, nodes=None, sourcedir=None):
+        if sourcedir == None:
+            sourcedir = CTSvars.CTS_home
+        file_with_path="%s/%s" % (sourcedir, filename)
         if not nodes:
             nodes = self.Env["nodes"]
 

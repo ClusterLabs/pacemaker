@@ -48,6 +48,28 @@ while true; do
 	--run|run) run=1; shift; break;;
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
+	local-init)
+	    local_root=
+	    case $cts_root in
+		/*) local_root=`dirname $cts_root`;;
+		*)  local_root=`dirname /$cts_root`;;
+	    esac
+	    
+	    cat << EOF > $cts_root/CTSvars.py
+class CTSvars:
+        CTS_home="$local_root/cts"
+        Fencing_home="$local_root/fencing"
+        CRM_CONFIG_DIR="/var/lib/pacemaker/cib"
+        CRM_DAEMON_USER="hacluster"
+        CRM_DAEMON_DIR="/usr/libexec/pacemaker"
+        OCF_ROOT_DIR="/usr/lib/ocf"
+EOF
+
+	    cp $cts_root/LSBDummy.in $cts_root/LSBDummy;
+	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy;
+	    exit 0
+	    ;;
+
 	--wget)
 	    files="cluster-helper cluster-clean"
 	    for f in $files; do

@@ -1,5 +1,6 @@
 class CTSvars:
     CTS_home="@datadir@/@PACKAGE@/tests/cts"
+    Fencing_home="@datadir@/@PACKAGE@/tests/cts"
     CRM_CONFIG_DIR="@CRM_CONFIG_DIR@"
     CRM_DAEMON_USER="@CRM_DAEMON_USER@"
     CRM_DAEMON_DIR="@CRM_DAEMON_DIR@"
