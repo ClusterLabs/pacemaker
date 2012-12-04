@@ -462,14 +462,7 @@ do_dc_takeover(long long action,
     int rc = pcmk_ok;
     xmlNode *cib = NULL;
     GListPtr gIter = NULL;
-    static const char *cluster_type = NULL;
-
-    if (cluster_type == NULL) {
-        cluster_type = getenv("HA_cluster_type");
-    }
-    if (cluster_type == NULL) {
-        cluster_type = "Heartbeat";
-    }
+    const char *cluster_type = name_for_cluster_type(get_cluster_type());
 
     crm_info("Taking over DC status for this partition");
     set_bit(fsa_input_register, R_THE_DC);
