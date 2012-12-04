@@ -246,8 +246,8 @@ class crm_whitetank(crm_ais):
 
         self.update({
             "Name"           : "crm-whitetank",
-            "StartCmd"       : CTSvars.INITDIR+"/openais start",
-            "StopCmd"        : CTSvars.INITDIR+"/openais stop",
+            "StartCmd"       : "service openais start",
+            "StopCmd"        : "service openais stop",
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",

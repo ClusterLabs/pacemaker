@@ -69,8 +69,8 @@ class crm_lha(ClusterManager):
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
-            "StartCmd"       : CTSvars.INITDIR+"/heartbeat start > /dev/null 2>&1",
-            "StopCmd"        : CTSvars.INITDIR+"/heartbeat stop  > /dev/null 2>&1",
+            "StartCmd"       : "service heartbeat start > /dev/null 2>&1",
+            "StopCmd"        : "service heartbeat stop  > /dev/null 2>&1",
             "StatusCmd"      : "crmadmin -t 60000 -S %s 2>/dev/null",
             "EpocheCmd"      : "crm_node -H -e",
             "QuorumCmd"      : "crm_node -H -q",
