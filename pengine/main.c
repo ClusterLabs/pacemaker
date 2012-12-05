@@ -153,8 +153,6 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
-
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
         crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");
         fprintf(stderr, "ERROR: Bad permissions on " PE_STATE_DIR ". See logs for details\n");

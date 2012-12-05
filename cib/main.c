@@ -143,8 +143,6 @@ main(int argc, char **argv)
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
     
-
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
