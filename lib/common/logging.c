@@ -869,7 +869,7 @@ void crm_log_output_fn(const char *file, const char *function, int line, int lev
         do {
             offset = next;
             next = strchrnul(offset, '\n');
-            do_crm_log_alias(level, file, function, line, "%s [ %.*s ]", (int) (next - offset), offset);
+            do_crm_log_alias(level, file, function, line, "%s [ %.*s ]", prefix, (int) (next - offset), offset);
             if (next[0] != 0) {
                 next++;
             }
