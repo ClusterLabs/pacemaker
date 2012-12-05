@@ -263,8 +263,13 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         crm_err("Signal %d is out of range", sig);
         return FALSE;
 
+    } else if (crm_signals[sig] != NULL
+               && crm_signals[sig]->handler == dispatch) {
+        crm_trace("Signal handler for %d is already installed", sig);
+        return TRUE;
+
     } else if (crm_signals[sig] != NULL) {
-        crm_err("Signal handler for %d is already installed", sig);
+        crm_err("Different signal handler for %d is already installed", sig);
         return FALSE;
     }
 
