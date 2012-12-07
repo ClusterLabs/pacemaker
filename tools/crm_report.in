@@ -105,7 +105,7 @@ while true; do
 	-f|--from) start_time=`get_time "$2"`; shift; shift;;
 	-t|--to) end_time=`get_time "$2"`; shift; shift;;
 	-n|--node|--nodes) nodes="$nodes $2"; shift; shift;;
-	-S|--single-node) nodes="$nodes $host"; shift;;
+	-S|--single-node) nodes="$host"; shift;;
 	-E|-l|--logfile) extra_logs="$extra_logs $2"; shift; shift;;
 	-p) sanitize_patterns="$sanitize_patterns $2"; shift; shift;;
 	-L) log_patterns="$log_patterns `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
