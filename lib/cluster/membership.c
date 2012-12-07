@@ -367,16 +367,16 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
 
     if (changed) {
         if(status == NULL && flag <= crm_proc_none) {
-            crm_info("%s: Node %s[%d] - all processes are now offline", source, node->uname, node->id);
+            crm_info("%s: Node %s[%u] - all processes are now offline", source, node->uname, node->id);
         } else {
-            crm_info("%s: Node %s[%d] - %s is now %s", source, node->uname, node->id, peer2text(flag), status);
+            crm_info("%s: Node %s[%u] - %s is now %s", source, node->uname, node->id, peer2text(flag), status);
         }
 
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
     } else {
-        crm_trace("%s: Node %s[%d] - %s is unchanged (%s)", source, node->uname, node->id, peer2text(flag), status);
+        crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id, peer2text(flag), status);
     }
 }
 
@@ -394,10 +394,10 @@ void crm_update_peer_expected(const char *source, crm_node_t *node, const char *
     }
 
     if (changed) {
-        crm_info("%s: Node %s[%d] - expected state is now %s", source, node->uname, node->id, expected);
+        crm_info("%s: Node %s[%u] - expected state is now %s", source, node->uname, node->id, expected);
         free(last);
     } else {
-        crm_trace("%s: Node %s[%d] - expected state is unchanged (%s)", source, node->uname, node->id, expected);
+        crm_trace("%s: Node %s[%u] - expected state is unchanged (%s)", source, node->uname, node->id, expected);
     }
 }
 

@@ -564,17 +564,17 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
-        crm_info("Left[%d.%d] %s.%d ", counter, i, groupName->value, left_list[i].nodeid);
+        crm_info("Left[%d.%d] %s.%u ", counter, i, groupName->value, left_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
 
     for (i = 0; i < joined_list_entries; i++) {
-        crm_info("Joined[%d.%d] %s.%d ", counter, i, groupName->value, joined_list[i].nodeid);
+        crm_info("Joined[%d.%d] %s.%u ", counter, i, groupName->value, joined_list[i].nodeid);
     }
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
-        crm_info("Member[%d.%d] %s.%d ", counter, i, groupName->value, member_list[i].nodeid);
+        crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
         if(pcmk_nodeid == member_list[i].nodeid) {
             found = TRUE;
@@ -903,14 +903,14 @@ check_message_sanity(const AIS_Message * msg, const char *data)
     }
 
     if (sane == FALSE) {
-        crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+        crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
                 msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
                 ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
                 msg->sender.pid, msg->is_compressed, ais_data_len(msg), msg->header.size);
 
     } else {
         crm_trace
-            ("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+            ("Verfied message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
              ais_data_len(msg), msg->header.size);
