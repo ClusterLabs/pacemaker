@@ -203,7 +203,7 @@ if __name__ == '__main__':
            skipthis=1
            Environment["OutputFile"] = args[i+1]
 
-       elif args[i] == "--test-ip-base":
+       elif args[i] == "--ip" or args[i] == "--test-ip-base":
            skipthis=1
            Environment["IPBase"] = args[i+1]
            Environment["CIBResource"] = 1
