@@ -1713,7 +1713,9 @@ send_snmp_trap(const char *node, const char *rsc, const char *task, int target_r
     }
 
     /* Add extries to the trap */
-    add_snmp_field(trap_pdu, snmp_crm_oid_rsc, rsc);
+    if (rsc) {
+        add_snmp_field(trap_pdu, snmp_crm_oid_rsc, rsc);
+    }
     add_snmp_field(trap_pdu, snmp_crm_oid_node, node);
     add_snmp_field(trap_pdu, snmp_crm_oid_task, task);
     add_snmp_field(trap_pdu, snmp_crm_oid_desc, desc);
