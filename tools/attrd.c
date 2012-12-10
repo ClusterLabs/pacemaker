@@ -664,12 +664,12 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     attr_hash_entry_t *hash_entry = NULL;
     struct attrd_callback_s *data = user_data;
 
-    if(call_id < 0) {
+    if (data->value == NULL && rc == -ENXIO) {
+        rc = pcmk_ok;
+
+    } else if(call_id < 0) {
         crm_warn("Update %s=%s failed: %s", data->attr, data->value, pcmk_strerror(call_id));
         goto cleanup;
-
-    } else if (data->value == NULL && rc == -ENXIO) {
-        rc = pcmk_ok;
     }
 
     switch (rc) {
