@@ -1262,23 +1262,10 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     }
 
     if(output) {
-        /* Logging the whole string confuses syslog when the string is xml */ 
-        char *local_copy = strdup(output);
-        int lpc = 0, last = 0, more = strlen(local_copy);
-
-        /* Give the log output some reasonable boundary */
-        more = more > ST_LOG_OUTPUT_MAX ? ST_LOG_OUTPUT_MAX : more;
-
-        for(lpc = 0; lpc < more; lpc++) {
-            if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                local_copy[lpc] = 0;
-                do_crm_log(rc==0?LOG_INFO:LOG_WARNING, "%s: %s",
-                           cmd->device, local_copy+last);
-                last = lpc+1;
-            }
-        }
-        crm_debug("%s: %s (total %d bytes)", cmd->device, local_copy+last, more);
-        free(local_copy);
+        /* Logging the whole string confuses syslog when the string is xml */
+        char *prefix = g_strdup_printf("%s:%d", cmd->device, pid);
+        crm_log_output(rc==0?LOG_INFO:LOG_WARNING, prefix, output);
+        g_free(prefix);
     }
 }
 
