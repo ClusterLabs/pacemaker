@@ -1069,6 +1069,186 @@ class BandwidthTest(CTSTest):
 
 AllTestClasses.append(BandwidthTest)
 
+
+###################################################################
+class MaintenanceMode(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="MaintenanceMode"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.max=30
+        #self.is_unsafe = 1
+        self.benchmark = 1
+        self.action = "asyncmon"
+        self.interval = 0
+        self.rid="maintenanceDummy"
+
+    def toggleMaintenanceMode(self, node, action):
+        pats = []
+        pats.append(self.CM["Pat:DC_IDLE"])
+
+        # fail the resource right after turning Maintenance mode on
+        # verify it is not recovered until maintenance mode is turned off
+        if action == "On":
+            pats.append("Updating failcount for %s on .* after .* %s" % (self.rid, self.action))
+        else:
+            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
+            pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % self.rid)
+
+        watch = self.create_watch(pats, 60)
+        watch.setwatch()
+
+        self.CM.debug("Turning maintenance mode %s" % action)
+        self.CM.rsh(node, self.CM["MaintenanceMode%s" % (action)])
+        if (action == "On"):
+            self.CM.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
+
+        self.set_timer("recover%s" % (action))
+        watch.lookforall()
+        self.log_timer("recover%s" % (action))
+        if watch.unmatched:
+            self.CM.debug("Failed to find patterns when turning maintenance mode %s" % action)
+            return repr(watch.unmatched)
+
+        return ""
+
+    def insertMaintenanceDummy(self, node):
+        pats = []
+        pats.append(".*%s.*process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % (node, self.rid))
+
+        watch = self.create_watch(pats, 60)
+        watch.setwatch()
+
+        self.CM.AddDummyRsc(node, self.rid)
+
+        self.set_timer("addDummy")
+        watch.lookforall()
+        self.log_timer("addDummy")
+
+        if watch.unmatched:
+            self.CM.debug("Failed to find patterns when adding maintenance dummy resource")
+            return repr(watch.unmatched)
+        return ""
+
+    def removeMaintenanceDummy(self, node):
+        pats = []
+        pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
+
+        watch = self.create_watch(pats, 60)
+        watch.setwatch()
+        self.CM.RemoveDummyRsc(node, self.rid)
+
+        self.set_timer("removeDummy")
+        watch.lookforall()
+        self.log_timer("removeDummy")
+
+        if watch.unmatched:
+            self.CM.debug("Failed to find patterns when removing maintenance dummy resource")
+            return repr(watch.unmatched)
+        return ""
+
+    def managedRscList(self, node):
+        rscList = []
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                tmp = AuditResource(self.CM, line)
+                if tmp.managed():
+                    rscList.append(tmp.id)
+
+        return rscList
+
+    def verifyResources(self, node, rscList, managed):
+        managedList = list(rscList)
+        managed_str = "managed"
+        if not managed:
+            managed_str = "unmanaged"
+
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                tmp = AuditResource(self.CM, line)
+                if managed and not tmp.managed():
+                    continue
+                elif not managed and tmp.managed():
+                    continue
+                elif managedList.count(tmp.id):
+                    managedList.remove(tmp.id)
+
+        if len(managedList) == 0:
+            self.CM.debug("Found all %s resources on %s" % (managed_str, node))
+            return True
+
+        self.CM.log("Could not find all %s resources on %s. %s" % (managed_str, node, managedList))
+        return False
+
+    def __call__(self, node):
+        '''Perform the 'MaintenanceMode' test. '''
+        self.incr("calls")
+        verify_managed = False
+        verify_unmanaged = False
+        failPat = ""
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed")
+
+        # get a list of all the managed resources. We use this list
+        # after enabling maintenance mode to verify all managed resources
+        # become un-managed.  After maintenance mode is turned off, we use
+        # this list to verify all the resources become managed again.
+        managedResources = self.managedRscList(node)
+        if len(managedResources) == 0:
+            self.CM.log("No managed resources on %s" % node)
+            return self.skipped()
+
+        # insert a fake resource we can fail during maintenance mode
+        # so we can verify recovery does not take place until after maintenance
+        # mode is disabled.
+        failPat = failPat + self.insertMaintenanceDummy(node)
+
+        # toggle maintenance mode ON, then fail dummy resource.
+        failPat = failPat + self.toggleMaintenanceMode(node, "On")
+
+        # verify all the resources are now unmanaged
+        if self.verifyResources(node, managedResources, False):
+            verify_unmanaged = True
+
+        # Toggle maintenance mode  OFF, verify dummy is recovered.
+        failPat = failPat + self.toggleMaintenanceMode(node, "Off")
+
+        # verify all the resources are now managed again
+        if self.verifyResources(node, managedResources, True):
+            verify_managed = True
+
+        # Remove our maintenance dummy resource.
+        failPat = failPat + self.removeMaintenanceDummy(node)
+
+        self.CM.cluster_stable()
+
+        if failPat != "":
+            return self.failure("Unmatched patterns: %s" % (failPat))
+        elif verify_unmanaged is False:
+            return self.failure("Failed to verify resources became unmanaged during maintenance mode")
+        elif verify_managed is False:
+            return self.failure("Failed to verify resources switched back to managed after disabling maintenance mode")
+
+        return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ """Updating failcount for %s""" % self.rid,
+                 """LogActions: Recover %s""" % self.rid,
+                 """Unknown operation: fail""",
+                 """(ERROR|error): sending stonithRA op to stonithd failed.""",
+                 """(ERROR|error): process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
+                 """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
+                ]
+
+AllTestClasses.append(MaintenanceMode)
+
 ###################################################################
 class ResourceRecover(CTSTest):
 ###################################################################
