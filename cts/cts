@@ -52,7 +52,7 @@ while true; do
 	    local_root=
 	    case $cts_root in
 		/*) local_root=`dirname $cts_root`;;
-		*)  local_root=`dirname /$cts_root`;;
+		*)  local_root=`dirname $PWD/$cts_root`;;
 	    esac
 	    
 	    cat << EOF > $cts_root/CTSvars.py
@@ -99,11 +99,6 @@ if [ $? != 0 ]; then
     echo $0 needs the cluster-clean script to be in your path
     echo You can obtain it from: https://raw.github.com/ClusterLabs/pacemaker/master/extra/cluster-clean
     exit 1
-fi
-
-if [ -z $cluster_name ]; then
-    #echo "Defaulting to virt1, use '-c $name' to select another or '-c pick' to select from a list"
-    cluster_name=virt1
 fi
 
 if [ "x$cluster_name" = x -o "x$cluster_name" = xpick ]; then
