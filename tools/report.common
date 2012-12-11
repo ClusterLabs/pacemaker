@@ -737,6 +737,6 @@ find_cluster_cf() {
 #
 t=`get_time "12:00"`
 if [ "$t" = "" ]; then
-	fatal "please install the perl Date::Parse module"
+	fatal "please install the perl Date::Parse module (perl-DateTime-Format-DateParse on Fedora/Red Hat)"
 fi
 

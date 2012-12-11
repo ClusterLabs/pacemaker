@@ -115,8 +115,6 @@ while true; do
 	-H|--heartbeat) cluster="heartbeat"; shift;;
 	-c|--cluster)   cluster="$2"; shift; shift;;
 	-u|--user)      ssh_user="$2"; shift; shift;;
-	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
-	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0; shift;;
 	-M) search_logs=0; shift;;
 	--dest) DESTDIR=$2; shift; shift;;
 	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
