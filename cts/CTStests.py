@@ -506,8 +506,8 @@ class StonithdTest(CTSTest):
 
     def errorstoignore(self):
         return [ 
-            self.CM["Pat:We_fenced"] % ".*", 
-            self.CM["Pat:They_fenced"] % ".*",
+            self.CM["Pat:Fencing_start"] % ".*", 
+            self.CM["Pat:Fencing_ok"] % ".*",
             "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
             "error: remote_op_done: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
             ]
@@ -1244,7 +1244,7 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
-        stonithPats.append(self.CM["Pat:They_fenced"] % node)
+        stonithPats.append(self.CM["Pat:Fencing_ok"] % node)
         stonith = self.create_watch(stonithPats, 0)
         stonith.setwatch()
 
@@ -1269,7 +1269,7 @@ class ComponentFail(CTSTest):
         shot = stonith.look(60)
         if shot:
             self.CM.debug("Found: "+ repr(shot))
-            self.okerrpatterns.append(self.CM["Pat:We_fenced"] % node)
+            self.okerrpatterns.append(self.CM["Pat:Fencing_start"] % node)
 
             if self.CM.Env["at-boot"] == 0:
                 self.CM.ShouldBeStatus[node]="down"

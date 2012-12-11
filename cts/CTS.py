@@ -984,17 +984,21 @@ class ClusterManager(UserDict):
         if self.HasQuorum(None):
             return None
 
-        if not self.has_key("Pat:They_fenced"):
+        if not self.has_key("Pat:Fencing_start"):
             return None
 
-        if not self.has_key("Pat:They_fenced_offset"):
+        if not self.has_key("Pat:Fencing_ok"):
+            return None
+
+        if not self.has_key("Pat:Fencing_ok_offset"):
             return None
 
         stonith = None
         stonithPats = []
         for peer in self.Env["nodes"]:
             if peer != node and self.ShouldBeStatus[peer] != "up":
-                stonithPats.append(self["Pat:They_fenced"] % peer)
+                stonithPats.append(self["Pat:Fencing_ok"] % peer)
+                stonithPats.append(self["Pat:Fencing_start"] % peer)
 
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
@@ -1004,6 +1008,8 @@ class ClusterManager(UserDict):
 
     def fencing_cleanup(self, node, stonith):
         peer_list = []
+        peer_state = {}
+
         self.debug("Looking for nodes that were fenced as a result of %s starting" % node)
 
         # If we just started a node, we may now have quorum (and permission to fence)
@@ -1025,17 +1031,33 @@ class ClusterManager(UserDict):
             self.debug("Found: "+ line)
 
             # Extract node name
-            start = line.find(self["Pat:They_fenced_offset"]) + len(self["Pat:They_fenced_offset"])
-            peer = line[start:].split("' ")[0]
+            if re.search(self["Pat:Fencing_ok"], line):
+                start = line.find(self["Pat:Fencing_ok_offset"]) + len(self["Pat:Fencing_ok_offset"])
+                peer = line[start:].split("' ")[0]
+                peer_state[peer] = "complete"
+
+            elif re.search(self["Pat:Fencing_start"], line):
+                start = line.find(self["Pat:Fencing_start_offset"]) + len(self["Pat:Fencing_start_offset"])
+                peer = line[start:].split("' ")[0]
+                peer_state[peer] = "in-progress"
+
+            else:
+                self.log("ERROR: Unknown stonith match: %s" % line)
 
             self.debug("Found peer: "+ peer)
 
-            peer_list.append(peer)
-            self.ShouldBeStatus[peer]="down"
-            self.debug("   Peer %s was fenced as a result of %s starting" % (peer, node))
+            if not peer in peer_list:
+                peer_list.append(peer)
                 
             # Get the next one
-            shot = stonith.look(60)
+            shot = stonith.look(self["DeadTime"])
+
+        for peer in peer_list:
+            self.__instance_errorstoignore.append(self["Pat:Fencing_ok"] % peer)
+            self.__instance_errorstoignore.append(self["Pat:Fencing_start"] % peer)
+
+            self.ShouldBeStatus[peer]="down"
+            self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
 
             # Poll until it comes up
             if self.Env["at-boot"]:
@@ -1047,10 +1069,6 @@ class ClusterManager(UserDict):
                     return None
 
                 self.ShouldBeStatus[peer]="up"
-
-        for peer in peer_list:
-            self.__instance_errorstoignore.append(self["Pat:They_fenced"] % peer)
-            self.__instance_errorstoignore.append(self["Pat:We_fenced"] % peer)
 
         return peer_list
 
