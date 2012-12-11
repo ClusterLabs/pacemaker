@@ -1010,6 +1010,16 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
     return count;
 }
 
+#if HAVE_STONITH_STONITH_H
+static inline char *strdup_null(const char *val)
+{
+    if(val) {
+        return strdup(val);
+    }
+    return NULL;
+}
+#endif
+
 static int
 stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
                             const char *namespace, char **output, int timeout)
@@ -1107,19 +1117,19 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
             stonith_obj = (*st_new_fn) (agent);
             if(stonith_obj) {
-                meta_longdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
+                meta_longdesc = strdup_null((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
                 if (meta_longdesc == NULL) {
                     crm_warn("no long description in %s's metadata.", agent);
                     meta_longdesc = strdup(no_parameter_info);
                 }
 
-                meta_shortdesc = strdup((*st_info_fn)(stonith_obj, ST_DEVICEID));
+                meta_shortdesc = strdup_null((*st_info_fn)(stonith_obj, ST_DEVICEID));
                 if (meta_shortdesc == NULL) {
                     crm_warn("no short description in %s's metadata.", agent);
                     meta_shortdesc = strdup(no_parameter_info);
                 }
 
-                meta_param = strdup((*st_info_fn)(stonith_obj, ST_CONF_XML));
+                meta_param = strdup_null((*st_info_fn)(stonith_obj, ST_CONF_XML));
                 if (meta_param == NULL) {
                     crm_warn("no list of parameters in %s's metadata.", agent);
                     meta_param = strdup(no_parameter_info);
