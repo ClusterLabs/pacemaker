@@ -1219,11 +1219,11 @@ stonith_query(xmlNode *msg, const char *remote_peer, const char *client_id, int 
     int timeout = 0;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_ACTION, msg, LOG_DEBUG_3);
 
+    crm_element_value_int(msg, F_STONITH_TIMEOUT, &timeout);
     if(dev) {
         const char *device = crm_element_value(dev, F_STONITH_DEVICE);
         target = crm_element_value(dev, F_STONITH_TARGET);
         action = crm_element_value(dev, F_STONITH_ACTION);
-        crm_element_value_int(dev, F_STONITH_TIMEOUT, &timeout);
         if(device && safe_str_eq(device, "manual_ack")) {
             /* No query or reply necessary */
             return;
