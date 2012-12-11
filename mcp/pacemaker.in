@@ -94,21 +94,30 @@ start()
 
 stop()
 {
-	! status $prog > /dev/null 2>&1 && return
+	shutdown_prog = $prog
+	if ! status $prog > /dev/null 2>&1; then
+	    shutdown_prog = "crmd"
+	fi
 
-	echo -n "Signaling $desc to terminate: "
-	kill -TERM $(pidof $prog) > /dev/null 2>&1
-	success
-	echo
+	if status $shutdown_prog > /dev/null 2>&1; then
+	    echo -n "Signaling $desc to terminate: "
+	    kill -TERM $(pidof $prog) > /dev/null 2>&1
+	    success
+	    echo
 
-	echo -n "Waiting for cluster services to unload:"
-	while status $prog > /dev/null 2>&1; do
+	    echo -n "Waiting for cluster services to unload:"
+	    while status $prog > /dev/null 2>&1; do
 		sleep 1
 		echo -n "."
-	done
+	    done
+	else
+	    echo -n "$desc is already stopped, cleaning up any stale processes and files"
+	fi
+
 
 	rm -f $LOCK_FILE
 	rm -f @localstatedir@/run/$prog.pid
+	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd'
 	success
 	echo
 }
