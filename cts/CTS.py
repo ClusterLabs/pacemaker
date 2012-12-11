@@ -708,6 +708,10 @@ class LogWatcher(RemoteExec):
         end=begin+timeout+1
         if self.debug_level > 2: self.debug("starting single search: timeout=%d, begin=%d, end=%d" % (timeout, begin, end))
 
+        if not self.regexes:
+            self.debug("Nothing to look for")
+            return None
+
         self.__get_lines()
         while True:
 
@@ -1029,6 +1033,7 @@ class ClusterManager(UserDict):
         while shot:
             line = repr(shot)
             self.debug("Found: "+ line)
+            del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
             # Order is important here
@@ -1050,7 +1055,7 @@ class ClusterManager(UserDict):
                 peer_list.append(peer)
                 
             # Get the next one
-            shot = stonith.look(self["DeadTime"])
+            shot = stonith.look(60)
 
         for peer in peer_list:
             self.__instance_errorstoignore.append(self["Pat:Fencing_ok"] % peer)
