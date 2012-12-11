@@ -11,11 +11,7 @@
   <xi:include href="Ch-Nodes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Constraints.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <chapter id="ch-notification">
-    <title>Receiving Notification for Cluster Events</title>
-    <section id="s-notify-email"><title>Configuring Email Notifications</title><para/></section>
-    <section id="s-notify-snmp"><title>Configuring SNMP Notifications</title><para/></section>
-  </chapter>
+  <xi:include href="Ch-Notifications.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Rules.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Advanced-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Advanced-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>

@@ -1,0 +1,138 @@
+= Receiving Notification for Cluster Events =
+
+//// 
+We prefer [[ch-notifications]], but older versions of asciidoc dont deal well
+with that construct for chapter headings
+////
+anchor:ch-notifications[Chapter 7, Receiving Notification for Cluster Events]
+indexterm:[Resource,Notification]
+
+A Pacemaker cluster is an event driven system. In this context, an event is a
+resource failure or configuration change (not exhaustive).
+
+The +ocf:pacemaker:ClusterMon+ resource can monitor the cluster status and
+triggers alerts on each cluster event. This resource runs +crm_mon+ in the
+background at regular intervals (configurable) and uses +crm_mon+ capabilities
+to send emails (SMTP), SNMP traps or to execute an external program via the
++extra_options+ parameter.
+
+[NOTE]
+=====
+Depending on your system settings and compilation settings, SNMP or email
+alerts might be unavailable. Check +crm_mon --help+ output to see if these
+options are available to you. In any case, executing an external agent will
+always be available, and you can have this agent to send emails, SNMP traps,
+or whatever action you develop.
+=====
+
+[[s-notification-snmp]]
+== Configuring SNMP Notifications ==
+indexterm:[Resource,Notification,SNMP]
+
+Requires an IP to send SNMP traps to, and a SNMP community.
+Pacemaker MIB is found in _/usr/share/snmp/mibs/PCMK-MIB.txt_
+
+.Configuring ClusterMon to send SNMP traps
+=====
+[source,XML]
+-----
+<clone id="ClusterMon-clone">
+    <primitive class="ocf" id="ClusterMon-SNMP" provider="pacemaker" type="ClusterMon">
+	<instance_attributes id="ClusterMon-instance_attributes">
+	    <nvpair id="ClusterMon-instance_attributes-user" name="user" value="root"/>
+	    <nvpair id="ClusterMon-instance_attributes-update" name="update" value="30"/>
+	    <nvpair id="ClusterMon-instance_attributes-extra_options" name="extra_options" value="-S snmphost.example.com -C public"/>
+	</instance_attributes>
+    </primitive>
+</clone>
+-----
+=====
+
+[[s-notification-email]]
+== Configuring Email Notifications ==
+indexterm:[Resource,Notification,SMTP,Email]
+
+Requires a user to send mail alerts to. "Mail-From", SMTP relay and Subject prefix can also be configured.
+
+.Configuring ClusterMon to send email alerts
+=====
+[source,XML]
+-----
+<clone id="ClusterMon-clone">
+    <primitive class="ocf" id="ClusterMon-SMTP" provider="pacemaker" type="ClusterMon">
+	<instance_attributes id="ClusterMon-instance_attributes">
+	    <nvpair id="ClusterMon-instance_attributes-user" name="user" value="root"/>
+	    <nvpair id="ClusterMon-instance_attributes-update" name="update" value="30"/>
+	    <nvpair id="ClusterMon-instance_attributes-extra_options" name="extra_options" value="-T pacemaker@example.com -F pacemaker@node2.example.com -P PACEMAKER -H mail.example.com"/>
+	</instance_attributes>
+    </primitive>
+</clone>
+-----
+=====
+
+[[s-notification-external]]
+== Configuring Notifications via External-Agent ==
+
+Requires a program (external-agent) to run when resource operations take
+place, and an external-recipient (IP address, Email address, URI). When
+triggered, the external-agent is fed with dynamically filled environnement
+variables describing precisely the cluster event that occurred. By making
+smart usage of these variables in your external-agent code, you can trigger
+any action.
+
+.Configuring ClusterMon to execute an external-agent
+=====
+[source,XML]
+-----
+<clone id="ClusterMon-clone">
+    <primitive class="ocf" id="ClusterMon" provider="pacemaker" type="ClusterMon">
+	<instance_attributes id="ClusterMon-instance_attributes">
+	    <nvpair id="ClusterMon-instance_attributes-user" name="user" value="root"/>
+	    <nvpair id="ClusterMon-instance_attributes-update" name="update" value="30"/>
+	    <nvpair id="ClusterMon-instance_attributes-extra_options" name="extra_options" value="-E /usr/local/bin/example.sh -e 192.168.12.1"/>
+	</instance_attributes>
+    </primitive>
+</clone>
+-----
+=====
+
+.Environment Variables Passed to the External Agent
+[width="95%",cols="1m,2<",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Description
+
+|CRM_notify_recipient
+| The static external-recipient from the resource definition.
+ indexterm:[Environment Variable,CRM_notify_recipient]
+
+|CRM_notify_node
+| The node on which the status change happened.
+ indexterm:[Environment Variable,CRM_notify_node]
+
+|CRM_notify_rsc
+| The name of the resource that changed the status.
+ indexterm:[Environment Variable,CRM_notify_rsc]
+
+|CRM_notify_task
+| The operation that caused the status change.
+ indexterm:[Environment Variable,CRM_notify_task]
+
+|CRM_notify_desc
+| The textual output relevant error code of the operation (if any) that caused the status change.
+ indexterm:[Environment Variable,CRM_notify_desc]
+
+|CRM_notify_rc
+| The return code of the operation.
+ indexterm:[Environment Variable,CRM_notify_rc]
+
+|CRM_notify_target_rc
+| The expected return code of the operation.
+ indexterm:[Environment Variable,CRM_notify_target_rc]
+
+|CRM_notify_status
+| The numerical representation of the status of the operation.
+ indexterm:[Environment Variable,CRM_notify_target_rc]
+
+|=========================================================
