@@ -747,8 +747,10 @@ for host in $host_list; do
 	cat $init | ssh -l root -T $host -- "cat > $init; bash $init"
     fi
 
-    if [ "x$fence_conf" != x -a -e $fence_conf ]; then
-	scp $fence_conf root@${host}:$fence_conf
+    if [ "x$fence_conf" != x ]; then
+	if [ -e $fence_conf ]; then
+	    scp $fence_conf root@${host}:$fence_conf
+	fi
     fi
 
     if [ $pcmk_ver = 10 ]; then
