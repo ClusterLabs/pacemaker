@@ -1031,22 +1031,22 @@ class ClusterManager(UserDict):
             self.debug("Found: "+ line)
 
             # Extract node name
-            if re.search(self["Pat:Fencing_ok"], line):
+            # Order is important here
+            if re.search(self["Pat:Fencing_ok_offset"], shot):
                 start = line.find(self["Pat:Fencing_ok_offset"]) + len(self["Pat:Fencing_ok_offset"])
                 peer = line[start:].split("' ")[0]
                 peer_state[peer] = "complete"
 
-            elif re.search(self["Pat:Fencing_start"], line):
+            elif re.search(self["Pat:Fencing_start_offset"], shot):
                 start = line.find(self["Pat:Fencing_start_offset"]) + len(self["Pat:Fencing_start_offset"])
-                peer = line[start:].split("' ")[0]
+                peer = line[start:].split(": ")[0]
                 peer_state[peer] = "in-progress"
 
             else:
                 self.log("ERROR: Unknown stonith match: %s" % line)
 
-            self.debug("Found peer: "+ peer)
-
             if not peer in peer_list:
+                self.debug("Found peer: "+ peer)
                 peer_list.append(peer)
                 
             # Get the next one
