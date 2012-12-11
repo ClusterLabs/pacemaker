@@ -65,7 +65,12 @@ class CTSvars:
         OCF_ROOT_DIR="/usr/lib/ocf"
 EOF
 
-	    cp $local_root/tools/crm_report.in $cts_root/crm_report
+	    files="extra/cluster-init extra/cluster-helper extra/cluster-clean tools/crm_report.in"
+	    for f in $files; do
+		cp $local_root/$f $cts_root/
+	    done
+
+	    cp $cts_root/crm_report.in $cts_root/crm_report
 	    sed -i.sed s:@datadir@/@PACKAGE@:$local_root/tools: $cts_root/crm_report
 	    chmod +x $cts_root/crm_report
 
