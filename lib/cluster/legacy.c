@@ -642,6 +642,7 @@ pcmk_cman_dispatch(gpointer user_data)
 
     if (rc < 0) {
         crm_err("Connection to cman failed: %d", rc);
+        pcmk_cman_handle = 0;
         return FALSE;
     }
     return TRUE;
@@ -780,6 +781,7 @@ pcmk_cpg_dispatch(gpointer user_data)
     rc = cpg_dispatch(pcmk_cpg_handle, CS_DISPATCH_ALL);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
+        pcmk_cpg_handle = 0;
         return -1;
     }
     return 0;

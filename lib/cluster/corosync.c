@@ -506,6 +506,7 @@ pcmk_cpg_dispatch(gpointer user_data)
     rc = cpg_dispatch(pcmk_cpg_handle, CS_DISPATCH_ALL);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
+        pcmk_cpg_handle = 0;
         return -1;
     }
     return 0;
@@ -657,6 +658,7 @@ pcmk_quorum_dispatch(gpointer user_data)
     rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
     if (rc < 0) {
         crm_err("Connection to the Quorum API failed: %d", rc);
+        pcmk_quorum_handle = 0;
         return -1;
     }
     return 0;
