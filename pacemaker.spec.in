@@ -119,6 +119,10 @@ BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
 BuildRequires: glib2-devel libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
 
+# We need reasonably recent versions of libqb
+BuildRequires: libqb-devel > 0.11.0
+Requires:      libqb-devel > 0.11.0
+
 %if 0%{?suse_version} >= 1100
 # Renamed since opensuse-11.0
 BuildRequires:  libgnutls-devel
@@ -128,7 +132,7 @@ BuildRequires:  gnutls-devel
 
 
 # Enables optional functionality
-BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl libqb-devel
+BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
 BuildRequires: bison byacc flex help2man
 
 %if %{with cman}
@@ -203,6 +207,7 @@ License:      GPLv2+ and LGPLv2+
 Summary:      Command line tools for controlling Pacemaker clusters
 Group:        System Environment/Daemons
 Requires:     %{name}-libs = %{version}-%{release}
+Requires:     perl-TimeDate
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
