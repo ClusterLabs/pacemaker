@@ -341,10 +341,7 @@ if __name__ == '__main__':
 
        elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
            skipthis=1
-           if os.environ['USER'] == 'root':
-               Environment["OutputFile"] = "/var/log/cluster-%s.log" % args[i+1]
-           else:
-               Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
+           Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
 
            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
            if os.path.isfile(dsh_file):
