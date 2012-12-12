@@ -935,7 +935,7 @@ main(int argc, char **argv)
 
     /* Used by stonithd */
     build_path(HA_STATE_DIR "/heartbeat", 0755);
-    mcp_chown(HA_STATE_DIR, pcmk_uid, pcmk_gid);
+    mcp_chown(HA_STATE_DIR "/heartbeat", pcmk_uid, pcmk_gid);
 
     /* Used by RAs - Leave owned by root */
     build_path(CRM_RSCTMP_DIR, 0755);
