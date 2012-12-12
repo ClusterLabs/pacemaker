@@ -273,6 +273,18 @@ if __name__ == '__main__':
                    os.environ['OS_PASSWORD']
                    )
 
+           elif args[i+1] == "rhevm":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_rhevm"
+
+               print "Obtaining RHEV-M credentials from the current environment"
+               Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1" % (
+                   os.environ['RHEVM_USERNAME'],
+                   os.environ['RHEVM_PASSWORD'],
+                   os.environ['RHEVM_SERVER'],
+                   os.environ['RHEVM_PORT'],
+                   )
+
            else:
                usage(args[i+1])
 
