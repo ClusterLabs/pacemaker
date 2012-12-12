@@ -1064,6 +1064,8 @@ class ClusterManager(UserDict):
             self.ShouldBeStatus[peer]="down"
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
 
+            self.ns.WaitForNodeToComeUp(peer, self["DeadTime"])
+
             # Poll until it comes up
             if self.Env["at-boot"]:
                 if not self.StataCM(peer):
@@ -1102,8 +1104,6 @@ class ClusterManager(UserDict):
         watch = LogWatcher(
             self.Env, self["LogFileName"], patterns, "StartaCM", self["StartTime"]+10)
         
-        watch.setwatch()
-
         self.install_config(node)
 
         self.ShouldBeStatus[node] = "any"
@@ -1129,6 +1129,8 @@ class ClusterManager(UserDict):
 
         stonith = self.prepare_fencing_watcher(node)
 
+        watch.setwatch()
+
         if self.rsh(node, startCmd) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
             return None
@@ -1139,7 +1141,6 @@ class ClusterManager(UserDict):
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
-
 
         if watch_result and self.cluster_stable(self["DeadTime"]):
             #self.debug("Found match: "+ repr(watch_result))
