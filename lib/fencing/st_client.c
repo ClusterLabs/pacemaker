@@ -1018,6 +1018,22 @@ static inline char *strdup_null(const char *val)
     }
     return NULL;
 }
+
+static void stonith_plugin(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
+
+static void stonith_plugin(int priority, const char * fmt, ...)
+{
+    va_list args;
+    char *str;
+    int	err = errno;
+    
+    va_start (args, fmt);
+    str = g_strdup_vprintf(fmt, args);
+    va_end (args);
+    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", str);
+    g_free(str);
+    errno = err;
+}
 #endif
 
 static int
@@ -1099,15 +1115,17 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
         static Stonith *(*st_new_fn) (const char *) = NULL;
         static const char *(*st_info_fn) (Stonith *, int) = NULL;
         static void (*st_del_fn) (Stonith *) = NULL;
+        static void (*st_log_fn)(Stonith*, PILLogFun) = NULL;
 
         if(need_init) {
             need_init = FALSE;
             st_new_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
             st_del_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete", FALSE);
+            st_log_fn  = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_set_log", FALSE);
             st_info_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_get_info", FALSE);
         }
 
-        if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn) {
+        if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
             char *xml_meta_longdesc = NULL;
             char *xml_meta_shortdesc = NULL;
 
@@ -1117,6 +1135,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
             stonith_obj = (*st_new_fn) (agent);
             if(stonith_obj) {
+                (*st_log_fn)(stonith_obj, (PILLogFun)&stonith_plugin);
                 meta_longdesc = strdup_null((*st_info_fn)(stonith_obj, ST_DEVICEDESCR));
                 if (meta_longdesc == NULL) {
                     crm_warn("no long description in %s's metadata.", agent);
