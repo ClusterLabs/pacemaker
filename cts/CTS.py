@@ -1036,19 +1036,19 @@ class ClusterManager(UserDict):
             del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
-            # Order is important here
-            if re.search(self["Pat:Fencing_ok_offset"], shot):
-                start = line.find(self["Pat:Fencing_ok_offset"]) + len(self["Pat:Fencing_ok_offset"])
-                peer = line[start:].split("' ")[0]
-                peer_state[peer] = "complete"
+            for n in self.Env["nodes"]:
+                if re.search(self["Pat:Fencing_ok"] % n, shot):
+                    peer = n
+                    peer_state[peer] = "complete"
+                    self.__instance_errorstoignore.append(self["Pat:Fencing_ok"] % peer)
 
-            elif re.search(self["Pat:Fencing_start_offset"], shot):
-                start = line.find(self["Pat:Fencing_start_offset"]) + len(self["Pat:Fencing_start_offset"])
-                peer = line[start:].split(": ")[0]
-                peer_state[peer] = "in-progress"
+                elif re.search(self["Pat:Fencing_start"] % n, shot):
+                    peer = n
+                    peer_state[peer] = "in-progress"
+                    self.__instance_errorstoignore.append(self["Pat:Fencing_start"] % peer)
 
-            else:
-                self.log("ERROR: Unknown stonith match: %s" % line)
+                else:
+                    self.log("ERROR: Unknown stonith match: %s" % line)
 
             if not peer in peer_list:
                 self.debug("Found peer: "+ peer)
@@ -1058,8 +1058,6 @@ class ClusterManager(UserDict):
             shot = stonith.look(60)
 
         for peer in peer_list:
-            self.__instance_errorstoignore.append(self["Pat:Fencing_ok"] % peer)
-            self.__instance_errorstoignore.append(self["Pat:Fencing_start"] % peer)
 
             self.ShouldBeStatus[peer]="down"
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
