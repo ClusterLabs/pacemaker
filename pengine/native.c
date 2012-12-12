@@ -1229,6 +1229,18 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             free(load_stopped_task);
         }
     }
+
+    if (rsc->container) {
+        custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
+                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                            pe_order_implies_then | pe_order_runnable_left, data_set);
+
+        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                            rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
+                            pe_order_implies_first, data_set);
+
+        rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL, NULL, data_set);
+    }
 }
 
 void
@@ -2309,6 +2321,10 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
 
         return any_created;
+
+    } else if (rsc->container) {
+        pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
+        return FALSE;
     }
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {

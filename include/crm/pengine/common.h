@@ -33,7 +33,8 @@ enum action_fail_response {
     action_fail_block,
     action_fail_stop,
     action_fail_standby,
-    action_fail_fence
+    action_fail_fence,
+    action_fail_restart_container
 };
 
 /* the "done" action must be the "pre" action +1 */
