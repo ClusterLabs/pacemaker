@@ -1021,10 +1021,13 @@ class ClusterManager(UserDict):
         self.ns.WaitForAllNodesToComeUp(self.Env["nodes"])
 
         if not stonith:
+            self.debug("Nothing to do")
             return peer_list
 
-        if not self.HasQuorum(None) and len(self.Env["nodes"]) > 2:
+        q = self.HasQuorum(None)
+        if not q and len(self.Env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
+            self.debug("Quorum: %d Len: %d" % (q, len(self.Env["nodes"])))
             return peer_list
 
         # Now see if any states need to be updated
