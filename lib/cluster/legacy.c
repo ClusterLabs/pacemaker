@@ -423,9 +423,10 @@ terminate_cs_connection(void)
 
     } else {
         if(pcmk_cpg_handle) {
-            crm_trace("Disconnecting CPG");
-            cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
-            cpg_finalize(pcmk_cpg_handle);
+            crm_info("Disconnecting CPG");
+            if(cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group) == CS_OK) {
+                cpg_finalize(pcmk_cpg_handle);
+            }
             pcmk_cpg_handle = 0;
 
         } else {
@@ -436,9 +437,10 @@ terminate_cs_connection(void)
 #  if SUPPORT_CMAN
     if (is_cman_cluster()) {
         if(pcmk_cman_handle) {
-            crm_trace("Disconnecting cman");
-            cman_stop_notification(pcmk_cman_handle);
-            cman_finish(pcmk_cman_handle);
+            crm_info("Disconnecting cman");
+            if(cman_stop_notification(pcmk_cman_handle) >= 0) {
+                cman_finish(pcmk_cman_handle);
+            }
 
         } else {
             crm_info("No cman connection");
