@@ -994,9 +994,6 @@ class ClusterManager(UserDict):
         if not self.has_key("Pat:Fencing_ok"):
             return None
 
-        if not self.has_key("Pat:Fencing_ok_offset"):
-            return None
-
         stonith = None
         stonithPats = []
         for peer in self.Env["nodes"]:
@@ -1050,10 +1047,10 @@ class ClusterManager(UserDict):
                     peer_state[peer] = "in-progress"
                     self.__instance_errorstoignore.append(self["Pat:Fencing_start"] % peer)
 
-                else:
-                    self.log("ERROR: Unknown stonith match: %s" % line)
+            if not peer:
+                self.log("ERROR: Unknown stonith match: %s" % line)
 
-            if not peer in peer_list:
+            elif not peer in peer_list:
                 self.debug("Found peer: "+ peer)
                 peer_list.append(peer)
                 
@@ -1200,7 +1197,7 @@ class ClusterManager(UserDict):
             self.cluster_stable(self["DeadTime"])
             return 1
         else:
-            self.log ("Could not stop %s on node %s" %(self["Name"], node))
+            self.log ("ERROR: Could not stop %s on node %s" %(self["Name"], node))
 
         return None
 
