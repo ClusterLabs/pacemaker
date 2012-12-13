@@ -94,9 +94,9 @@ start()
 
 stop()
 {
-	shutdown_prog = $prog
+	shutdown_prog=$prog
 	if ! status $prog > /dev/null 2>&1; then
-	    shutdown_prog = "crmd"
+	    shutdown_prog="crmd"
 	fi
 
 	if status $shutdown_prog > /dev/null 2>&1; then
