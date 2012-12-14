@@ -1,0 +1,30 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ shoot1	(stonith:fence_xvm):	Started 18node1
+ shoot2	(stonith:fence_xvm):	Started 18node2
+ dummystateful	(ocf::pacemaker:Stateful):	Master [ 18node2 18node1 18node3 ]
+
+Transition Summary:
+ * Demote  dummystateful	(Master -> Started 18node2)
+ * Restart dummystateful	(Master 18node3)
+ * Move    dummystateful	(Started 18node2 -> 18node3)
+
+Executing cluster transition:
+ * Resource action: dummystateful   demote on 18node3
+ * Resource action: dummystateful   demote on 18node1
+ * Resource action: dummystateful   demote on 18node2
+ * Resource action: dummystateful   stop on 18node3
+ * Resource action: dummystateful   stop on 18node1
+ * Resource action: dummystateful   stop on 18node2
+ * Pseudo action:   all_stopped
+ * Resource action: dummystateful   start on 18node3
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ shoot1	(stonith:fence_xvm):	Started 18node1
+ shoot2	(stonith:fence_xvm):	Started 18node2
+ dummystateful	(ocf::pacemaker:Stateful):	Started 18node3
+

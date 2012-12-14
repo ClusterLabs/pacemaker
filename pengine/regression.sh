@@ -348,6 +348,7 @@ do_test colocation_constraint_stops_slave  "cl#5054 - Ensure slave is not demote
 do_test order_constraint_stops_master      "cl#5054 - Ensure master is demoted when stopped by order constraint"
 do_test order_constraint_stops_slave       "cl#5054 - Ensure slave is not demoted when stopped by order constraint"
 do_test master_monitor_restart "cl#5072 - Ensure master monitor operation will start after promotion."
+do_test bug-rh-880249 "Handle replacement of an m/s resource with a primitive"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"

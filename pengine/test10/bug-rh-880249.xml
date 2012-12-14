@@ -1,0 +1,93 @@
+<cib epoch="14" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2" update-origin="18node1" update-client="cibadmin" cib-last-written="Thu Dec 13 12:33:32 2012" crm_feature_set="3.0.6" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.9-1.fc18-a88521c"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1355423612"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="18node1"/>
+      <node id="2" uname="18node2"/>
+      <node id="3" uname="18node3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shoot1" type="fence_xvm">
+        <instance_attributes id="shoot1-instance_attributes"/>
+      </primitive>
+      <primitive class="stonith" id="shoot2" type="fence_xvm">
+        <instance_attributes id="shoot2-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummystateful" provider="pacemaker" type="Stateful">
+        <instance_attributes id="dummystateful-instance_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="2" uname="18node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-master-dummystateful" name="master-dummystateful" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shoot1" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot1_last_0" operation_key="shoot1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:2:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:7;6:2:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1355423562" last-rc-change="0" exec-time="996" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="shoot2" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot2_last_0" operation_key="shoot2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="11:3:0:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:0;11:3:0:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1355423572" last-rc-change="0" exec-time="1947" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummystateful" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummystateful_last_failure_0" operation_key="dummystateful_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:8;6:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="31" rc-code="8" op-status="0" interval="0" last-run="1355423612" last-rc-change="1355423612" exec-time="53" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="18node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-master-dummystateful" name="master-dummystateful" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shoot1" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot1_last_0" operation_key="shoot1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:0:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:0;9:2:0:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1355423564" last-rc-change="0" exec-time="1008" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="shoot2" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot2_last_0" operation_key="shoot2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="4:3:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:7;4:3:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1355423572" last-rc-change="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummystateful" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummystateful_last_failure_0" operation_key="dummystateful_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="4:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:0;4:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1355423612" last-rc-change="0" exec-time="87" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="18node3" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="shoot1" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot1_last_0" operation_key="shoot1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="8:2:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:7;8:2:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1355423562" last-rc-change="0" exec-time="997" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="shoot2" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shoot2_last_0" operation_key="shoot2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="8:3:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:7;8:3:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1355423572" last-rc-change="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummystateful" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummystateful_last_failure_0" operation_key="dummystateful_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="8:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" transition-magic="0:0;8:14:7:37da933c-ab0c-41da-8f3e-4a9fced143a4" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1355423612" last-rc-change="0" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3-master-dummystateful" name="master-dummystateful" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
