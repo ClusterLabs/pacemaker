@@ -32,7 +32,7 @@ while true; do
 	-a) 
 	screen -ls | grep cts
 	exit 0;;
-	-c) cluster_name=$2; shift; shift;;
+	-c|-g) cluster_name=$2; shift; shift;;
 	-S) summary=1; saved=1; shift;;
 	-s) summary=1; shift;;
 	-v) verbose=`expr $verbose + 1`; shift;;
