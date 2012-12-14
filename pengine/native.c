@@ -1166,7 +1166,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
 
-    if (top->variant == pe_master) {
+    if (top->variant == pe_master || is_set(rsc->flags, pe_rsc_orphan)) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
