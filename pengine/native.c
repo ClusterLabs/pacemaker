@@ -62,8 +62,8 @@ enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
     /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
     /* Started */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Slave */	  { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Slave */	  { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+    /* Master */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
 gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gboolean,pe_working_set_t*) = {
@@ -72,8 +72,8 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
     /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
     /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
     /* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,		PromoteRsc, },
-    /* Slave */	        { RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
-    /* Master */	{ RoleError,	DemoteRsc,	RoleError,	DemoteRsc,	NullOp,     },
+    /* Slave */	        { RoleError,	StopRsc,	StopRsc, 	NullOp,		PromoteRsc, },
+    /* Master */	{ RoleError,	DemoteRsc,	DemoteRsc,	DemoteRsc,	NullOp,     },
 };
 /* *INDENT-ON* */
 
@@ -1029,7 +1029,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Fixed next_role: unknown -> %s", role2text(rsc->next_role));
     }
 
-    pe_rsc_trace(rsc, "Processing state transition for %s: %s->%s", rsc->id,
+    pe_rsc_trace(rsc, "Processing state transition for %s %p: %s->%s", rsc->id, rsc,
               role2text(rsc->role), role2text(rsc->next_role));
 
     if(rsc->running_on) {
@@ -1139,7 +1139,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     /* Required steps from this role to the next */
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
-        pe_rsc_trace(rsc, "Role: Executing: %s->%s (%s)", role2text(role), role2text(next_role), rsc->id);
+        pe_rsc_trace(rsc, "Role: Executing: %s->%s = (%s)", role2text(role), role2text(rsc->next_role), role2text(next_role), rsc->id);
         if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
             break;
         }
@@ -1166,7 +1166,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
 
-    if (top->variant == pe_master || is_set(rsc->flags, pe_rsc_orphan)) {
+    if (top->variant == pe_master || rsc->role > RSC_ROLE_SLAVE) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
