@@ -1920,7 +1920,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
                 } else {
                     log_change("Restart %s\t(%s %s)",
-                               rsc->id, role2text(rsc->role), next->details->uname);
+                               rsc->id, role2text(rsc->next_role), next->details->uname);
                 }
             }
         }
