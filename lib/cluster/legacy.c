@@ -691,7 +691,8 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
             for (lpc = 0; lpc < node_count; lpc++) {
                 if (cman_nodes[lpc].cn_nodeid == 0) {
                     /* Never allow node ID 0 to be considered a member #315711 */
-                    cman_nodes[lpc].cn_member = 0;
+                    /* Skip entirely, its a qdisk */
+                    continue;
                 }
                 crm_update_peer(__FUNCTION__, cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation,
                                 cman_nodes[lpc].cn_member ? crm_peer_seq : 0, 0, 0,
