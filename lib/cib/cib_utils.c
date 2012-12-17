@@ -501,6 +501,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     if (rc == pcmk_ok) {
+        strip_text_nodes(scratch);
         fix_plus_plus_recursive(scratch);
         current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
