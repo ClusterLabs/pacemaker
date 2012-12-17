@@ -2002,7 +2002,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     if (op->user_data == NULL) {
         crm_debug("Generating fake transition key for:"
                   " %s_%s_%d %d from %s",
-                  op->rsc_id, op->op_type, op->interval, op->call_id);
+                  op->rsc_id, op->op_type, op->interval, op->call_id, origin);
         local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
         op->user_data = local_user_data;
     }
