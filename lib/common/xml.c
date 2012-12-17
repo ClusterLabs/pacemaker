@@ -696,7 +696,7 @@ decompress_file(const char *filename)
     return buffer;
 }
 
-static void strip_text_nodes(xmlNode *xml) 
+void strip_text_nodes(xmlNode *xml) 
 {
     xmlNode *iter = xml->children;
 
