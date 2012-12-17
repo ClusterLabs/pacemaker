@@ -205,6 +205,7 @@ void crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
 const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
+void strip_text_nodes(xmlNode *xml);
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
