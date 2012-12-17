@@ -559,9 +559,15 @@ stonith_action_create(const char *agent,
         GHashTable * port_map)
 {
     stonith_action_t *action;
+    int log_level = LOG_INFO;
+
+    if (safe_str_eq(_action, "monitor") ||
+        safe_str_eq(_action, "status")) {
+        log_level = LOG_DEBUG;
+    }
 
     action = calloc(1, sizeof(stonith_action_t));
-    crm_info("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
+    do_crm_log(log_level, "Initiating action %s for agent %s (target=%s)", _action, agent, victim);
     action->args = make_args(_action, victim, victim_nodeid, device_args, port_map);
     action->agent = strdup(agent);
     action->action = strdup(_action);
