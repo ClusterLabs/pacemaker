@@ -1264,7 +1264,13 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     if(output) {
         /* Logging the whole string confuses syslog when the string is xml */
         char *prefix = g_strdup_printf("%s:%d", cmd->device, pid);
-        crm_log_output(rc==0?LOG_INFO:LOG_WARNING, prefix, output);
+        int success_log_level = LOG_INFO;
+
+        if (safe_str_eq(cmd->action, "monitor") ||
+            safe_str_eq(cmd->action, "status")) {
+            success_log_level = LOG_DEBUG;
+        }
+        crm_log_output(rc==0?success_log_level:LOG_WARNING, prefix, output);
         g_free(prefix);
     }
 }
@@ -1893,6 +1899,7 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     int rc = 0;
     gboolean is_reply = FALSE;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
+    int error_log_level = LOG_INFO;
 
     if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
         is_reply = TRUE;
@@ -1912,7 +1919,16 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
         rc = handle_request(client, id, flags, request, remote_peer);
     }
 
-    do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
+    if (rc == -EINPROGRESS) {
+        xmlNode *op = get_xpath_object("//@"F_STONITH_ACTION, request, LOG_DEBUG_3);
+        const char *action = crm_element_value(op, F_STONITH_ACTION);
+
+        if (safe_str_eq(action, "monitor") ||
+            safe_str_eq(action, "status")) {
+            error_log_level = LOG_DEBUG;
+        }
+    }
+    do_crm_log_unlikely(rc>0?LOG_DEBUG:error_log_level,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
                client?client->name:remote_peer, rc>0?"":pcmk_strerror(rc), rc);
 
 }
