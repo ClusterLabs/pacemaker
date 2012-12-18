@@ -1775,7 +1775,18 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
             alternate_host = check_alternate_host(target);
 
             if(alternate_host && client) {
+                const char *client_id = NULL;
+
                 crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
+
+                if(client) {
+                    client_id = client->id;
+                } else {
+                    client_id = crm_element_value(request, F_STONITH_CLIENTID);
+                }
+                /* Create a record of it, otherwise call_id will be 0 if we need to notify of failures */
+                create_remote_stonith_op(client_id, request, FALSE);
+
                 crm_xml_add(request, F_STONITH_OPERATION, STONITH_OP_RELAY);
                 crm_xml_add(request, F_STONITH_CLIENTID, client->id);
                 send_cluster_message(crm_get_peer(0, alternate_host), crm_msg_stonith_ng, request, FALSE);
