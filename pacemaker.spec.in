@@ -121,7 +121,7 @@ BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
 
 # We need reasonably recent versions of libqb
 BuildRequires: libqb-devel > 0.11.0
-Requires:      libqb-devel > 0.11.0
+Requires:      libqb > 0.11.0
 
 %if 0%{?suse_version} >= 1100
 # Renamed since opensuse-11.0
@@ -371,8 +371,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %pre -n %{name}-libs
+
 getent group %{gname} >/dev/null || groupadd -r %{gname}
-getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -s /sbin/nologin -c "heartbeat user" %{uname}
+getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
 
 %post -n %{name}-libs -p /sbin/ldconfig
