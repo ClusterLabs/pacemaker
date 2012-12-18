@@ -458,7 +458,7 @@ crm_ipc_read(crm_ipc_t *client)
         struct qb_ipc_response_header *header = (struct qb_ipc_response_header *)client->buffer;
         client->buffer[client->msg_size] = 0;
 
-        crm_trace("Recieved %s event %d, size=%d, rc=%d, text: %.200s",
+        crm_trace("Recieved %s event %d, size=%d, rc=%d, text: %.100s",
                   client->name, header->id, header->size, client->msg_size,
                   client->buffer+sizeof(struct qb_ipc_response_header));
     } else {

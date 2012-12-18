@@ -475,7 +475,7 @@ ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (int kind, const cha
         goto done;
     }
 
-    crm_trace("Payload: %s", data);
+    crm_trace("Payload: %.200s", data);
     if (dispatch != NULL) {
         dispatch(msg->header.id, msg->sender.uname, data);
     }
