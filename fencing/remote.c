@@ -1102,7 +1102,6 @@ int process_remote_stonith_exec(xmlNode *msg)
         if(op->state == st_done) {
             remote_op_done(op, msg, rc, FALSE);
             return rc;
-
         }
 
         /* An operation completed succesfully but has not yet been marked as done.
@@ -1127,6 +1126,7 @@ int process_remote_stonith_exec(xmlNode *msg)
             if (stonith_topology_next(op) != pcmk_ok) {
                 op->state = st_failed;
                 remote_op_done(op, msg, rc, FALSE);
+                return rc;
             }
         }
     } else if(rc == pcmk_ok && op->devices == NULL) {
