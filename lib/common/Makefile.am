@@ -34,7 +34,7 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c remote.c mainloop.c logging.c
 
-libcrmcommon_la_LDFLAGS	= -version-info 3:0:0
+libcrmcommon_la_LDFLAGS	= -version-info 4:0:1
 libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
 libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
