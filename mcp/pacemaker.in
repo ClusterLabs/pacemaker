@@ -23,9 +23,18 @@
 
 desc="Pacemaker Cluster Manager"
 prog="pacemakerd"
+cman=0
 
 # set secure PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
+
+confirm() {
+    if [ $? = 0 ]; then
+	success
+    else
+	failure
+    fi
+}
 
 success()
 {
@@ -92,6 +101,30 @@ start()
 	echo
 }
 
+cman_pre_stop() 
+{
+    cname=`crm_node --name`
+    crm_attribute -N $cname -n standby -v true -l reboot
+    echo -n "Waiting for resource shutdown on $cname"
+
+    while [ 1 = 1 ]; do	
+	active=`crm_resource -c | grep Resource: | awk '{print $9}' | grep $cname | wc -l`
+	if [ $active = 0 ]; then 
+	    break;
+	fi
+	sleep 1
+	echo -n "."
+    done
+
+    echo -n "Leaving fence domain"
+    fence_tool leave -w 10
+    confirm
+
+    echo -n "Stopping fenced"
+    kill -TERM $(pidof fenced) > /dev/null 2>&1
+    confirm
+}
+
 stop()
 {
 	shutdown_prog=$prog
@@ -114,7 +147,6 @@ stop()
 	    echo -n "$desc is already stopped, cleaning up any stale processes and files"
 	fi
 
-
 	rm -f $LOCK_FILE
 	rm -f @localstatedir@/run/$prog.pid
 	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd'
@@ -122,24 +154,22 @@ stop()
 	echo
 }
 
-restart()
-{
-	stop
-	start
-}
-
 rtrn=0
 
 case "$1" in
 start)
+	# For consistency with stop
+	[ -f @INITDIR@/cman ] && service cman start
 	start
 ;;
 restart|reload|force-reload)
-	restart
+	stop
+	start
 ;;
 condrestart|try-restart)
 	if status $prog > /dev/null 2>&1; then
-		restart
+	    stop
+	    start
 	fi
 ;;
 status)
@@ -147,7 +177,20 @@ status)
 	rtrn=$?
 ;;
 stop)
+	#
+	# stonithd needs to be around until fenced is stopped
+	# fenced can't be stopped until any cluster filesystems are unmounted
+	# 
+	# So:
+	# 1. put the node into standby
+	# 2. wait for all resources to be stopped
+	# 3. stop fenced and anything that needs it (borrowed from the cman script)
+	# 4. stop pacemaker
+	# 5. stop the rest of cman (so it doesn't end up half up/down)
+	#
+	[ -f @INITDIR@/cman ] && cman_pre_stop
 	stop
+	[ -f @INITDIR@/cman ] && service cman stop
 ;;
 *)
 	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
