@@ -4,11 +4,11 @@ declare -A headers
 headers[crmcommon]="include/crm/common include/crm/crm.h"
 headers[crmcluster]="include/crm/cluster.h"
 headers[transitioner]="include/crm/transition.h"
-headers[cib]="include/crm/cib*"
+headers[cib]="include/crm/cib.h include/crm/cib/util.h"
 headers[pe_rules]="include/crm/pengine/rules.h"
-headers[pe_status]="include/crm/pengine"
+headers[pe_status]="include/crm/pengine/common.h  include/crm/pengine/complex.h  include/crm/pengine/rules.h  include/crm/pengine/status.h"
+headers[pengine]="include/crm/pengine/common.h  include/crm/pengine/complex.h  include/crm/pengine/rules.h  include/crm/pengine/status.h"
 headers[stonithd]="include/crm/stonith-ng.h"
-headers[pengine]="include/crm/pengine pengine/*.h"
 headers[lrmd]="include/crm/lrmd.h"
 
 LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1`
@@ -46,7 +46,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	echo "- Changed Sources since $LAST_RELEASE:"
 	git diff $LAST_RELEASE..HEAD --stat $full_sources
 	echo ""
-	read -p "Are the changes to lib$lib: [A]dditions, [R]emovals or [F]ixes? [None]: " CHANGE
+	read -p "Are the changes to lib$lib: [a]dditions, [r]emovals or [f]ixes? [None]: " CHANGE
 
 	git show $LAST_RELEASE:$am | grep version-info 
 	VER=`git show $LAST_RELEASE:$am | grep "lib.*${lib}_la.*version-info" | sed s/.*version-info// | awk '{print $1}'`
