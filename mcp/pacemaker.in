@@ -105,16 +105,19 @@ cman_pre_stop()
 {
     cname=`crm_node --name`
     crm_attribute -N $cname -n standby -v true -l reboot
-    echo -n "Waiting for resource shutdown on $cname"
+    echo -n "Waiting for shutdown of managed resources"
 
     while [ 1 = 1 ]; do	
-	active=`crm_resource -c | grep Resource: | awk '{print $9}' | grep $cname | wc -l`
+	# 0x0000000000000002 means managed
+	active=`crm_resource -c | grep Resource: | grep 0x...............[2367] | awk '{print $9}' | grep $cname | wc -l`
 	if [ $active = 0 ]; then 
 	    break;
 	fi
 	sleep 1
 	echo -n "."
     done
+    success
+    echo
 
     echo -n "Leaving fence domain"
     fence_tool leave -w 10
