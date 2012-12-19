@@ -233,8 +233,16 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if (id > 0 && node->id != id) {
+        crm_node_t *old = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+
         node->id = id;
         crm_info("Node %s now has id: %u", crm_str(uname), id);
+        if(old && old->state) {
+            /* Only corosync clusters use nodeid's
+             * The functions that set ->state all know nodeid so old->state is authorative when merging
+             */
+            crm_update_peer_state(__FUNCTION__, node, old->state, 0);
+        }
         g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
     }
 
