@@ -28,7 +28,7 @@ cman=0
 # set secure PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
 
-confirm() {
+checkrc() {
     if [ $? = 0 ]; then
 	success
     else
@@ -118,11 +118,11 @@ cman_pre_stop()
 
     echo -n "Leaving fence domain"
     fence_tool leave -w 10
-    confirm
+    checkrc
 
     echo -n "Stopping fenced"
     kill -TERM $(pidof fenced) > /dev/null 2>&1
-    confirm
+    checkrc
 }
 
 stop()
