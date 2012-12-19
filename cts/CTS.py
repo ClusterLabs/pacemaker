@@ -1236,7 +1236,7 @@ class ClusterManager(UserDict):
 
         '''Report the status of the cluster manager on a given node'''
 
-        out=self.rsh(node, self["StatusCmd"], 1)
+        out=self.rsh(node, self["StatusCmd"] % node, 1)
         ret= (string.find(out, 'stopped') == -1)
 
         try:
