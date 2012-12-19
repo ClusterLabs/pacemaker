@@ -26,10 +26,14 @@ Licensed under the GNU GPL.
 import types, string, select, sys, time, re, os, struct, signal
 import time, syslog, random, traceback, base64, pickle, binascii, fcntl
 
+
 from socket import gethostbyname_ex
 from UserDict import UserDict
 from subprocess import Popen,PIPE
 from cts.CTSvars import *
+
+trace_rsh=None
+trace_lw=None
 
 class CtsLab(UserDict):
     '''This class defines the Lab Environment for the Cluster Test System.
@@ -350,6 +354,9 @@ class RemoteExec:
         self.Env = Env
         self.silent = silent
 
+        if trace_rsh:
+            self.silent = False
+
         #   -n: no stdin, -x: no X11,
         #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding 
         self.Command = "ssh -l root -n -x -o ServerAliveInterval=5 -o ConnectTimeout=10 -o TCPKeepAlive=yes -o ServerAliveCountMax=3 "
@@ -407,6 +414,9 @@ class RemoteExec:
         run it on.
         '''
 
+        if trace_rsh:
+            silent = False
+
         rc = 0
         result = None
         if not synchronous:
@@ -459,6 +469,8 @@ class RemoteExec:
         '''Perform a remote copy'''
         cpstring = self.CpCommand  + " \'" + source + "\'"  + " \'" + target + "\'"
         rc = os.system(cpstring)
+        if trace_rsh:
+            silent = False
         if not silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
         return rc
@@ -648,6 +660,10 @@ class LogWatcher(RemoteExec):
         self.file_list = []
         self.line_cache = []
 
+        if trace_lw:
+            self.debug_level = 3
+            silent = False
+
         if not silent:
             for regex in self.regexes:
                 self.debug("Looking for regex: "+regex)
@@ -703,6 +719,9 @@ class LogWatcher(RemoteExec):
         '''
         if timeout == None: timeout = self.Timeout
 
+        if trace_lw:
+            silent = False
+
         lines=0
         begin=time.time()
         end=begin+timeout+1
@@ -726,7 +745,7 @@ class LogWatcher(RemoteExec):
                 if self.debug_level > 2: self.debug("Processing: "+ line)
                 for regex in self.regexes:
                     which=which+1
-                    if self.debug_level > 2: self.debug("Comparing line to: "+ regex)
+                    if self.debug_level > 3: self.debug("Comparing line to: "+ regex)
                     #matchobj = re.search(string.lower(regex), string.lower(line))
                     matchobj = re.search(regex, line)
                     if matchobj:
@@ -768,6 +787,9 @@ class LogWatcher(RemoteExec):
         if timeout == None: timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
+
+        if trace_lw:
+            silent = False
 
         if not silent: 
             self.debug("starting search: timeout=%d" % timeout)
