@@ -223,7 +223,7 @@ class crm_lha(ClusterManager):
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self["Pat:Slave_started"]%node)
         watchpats.append(self["Pat:Master_started"]%node)
-        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterIdle")
+        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterIdle", hosts=[node])
         idle_watch.setwatch()
 
         out = self.rsh(node, self["StatusCmd"]%node, 1)
@@ -287,24 +287,21 @@ class crm_lha(ClusterManager):
         if timeout == None:
             timeout = self["DeadTime"]
 
-        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterStable", timeout)
-        idle_watch.setwatch()
-
-        any_up = 0
-        for node in self.Env["nodes"]:
-            # have each node dump its current state
-            if self.ShouldBeStatus[node] == "up":
-                self.rsh(node, self["StatusCmd"] %node, 1)
-                any_up = 1
-
-        if any_up == 0:
+        if len(nodes) < 3:
             self.debug("Cluster is inactive") 
             return 1
+
+        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterStable", timeout, hosts=nodes.split())
+        idle_watch.setwatch()
+
+        for node in nodes.split():
+            # have each node dump its current state
+            self.rsh(node, self["StatusCmd"] %node, 1)
 
         ret = idle_watch.look()
         while ret:
             self.debug(ret) 
-            for node in nodes:
+            for node in nodes.split():
                 if re.search(node, ret):
                     return 1
             ret = idle_watch.look()

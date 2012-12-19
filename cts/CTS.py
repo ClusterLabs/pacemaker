@@ -640,7 +640,7 @@ class LogWatcher(RemoteExec):
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False):
+    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False, hosts=None):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
@@ -659,6 +659,11 @@ class LogWatcher(RemoteExec):
 
         self.file_list = []
         self.line_cache = []
+
+        if hosts:
+            self.hosts = hosts
+        else:
+            self.hosts = self.Env["nodes"]
 
         if trace_lw:
             self.debug_level = 3
@@ -683,7 +688,7 @@ class LogWatcher(RemoteExec):
         '''
 
         if self.Env["LogWatcher"] == "remote":
-            for node in self.Env["nodes"]:
+            for node in self.hosts:
                 self.file_list.append(SearchObj(self.Env, self.filename, node, self.name))
     
         else:
@@ -723,6 +728,7 @@ class LogWatcher(RemoteExec):
             silent = False
 
         lines=0
+        needlines=True
         begin=time.time()
         end=begin+timeout+1
         if self.debug_level > 2: self.debug("starting single search: timeout=%d, begin=%d, end=%d" % (timeout, begin, end))
@@ -731,7 +737,6 @@ class LogWatcher(RemoteExec):
             self.debug("Nothing to look for")
             return None
 
-        self.__get_lines()
         while True:
 
             if len(self.line_cache):
@@ -758,16 +763,18 @@ class LogWatcher(RemoteExec):
                             return line
 
             elif timeout > 0 and end > time.time(): 
+                if self.debug_level > 1: self.debug("lines during timeout")
                 time.sleep(1)
                 self.__get_lines()
 
-            elif timeout > 0:
+            elif needlines:
                 # Grab any relevant messages that might have arrived since
                 # the last time the buffer was populated
+                if self.debug_level > 1: self.debug("lines without timeout")
                 self.__get_lines()
 
                 # Don't come back here again
-                timeout = 0
+                needlines = False
 
             else:
                 self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
@@ -1007,6 +1014,7 @@ class ClusterManager(UserDict):
     def prepare_fencing_watcher(self, node):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
+        upnode=None
         if self.HasQuorum(None):
             return None
 
@@ -1022,10 +1030,14 @@ class ClusterManager(UserDict):
             if peer != node and self.ShouldBeStatus[peer] != "up":
                 stonithPats.append(self["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self["Pat:Fencing_start"] % peer)
-
+            elif peer != node and not upnode and self.ShouldBeStatus[peer] == "up":
+                upnode = peer
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
-        stonith = LogWatcher(self.Env, self["LogFileName"], stonithPats, "StartaCM", 0)
+        if not upnode:
+            return None
+
+        stonith = LogWatcher(self.Env, self["LogFileName"], stonithPats, "StartupFencing", 0, hosts=[upnode])
         stonith.setwatch()
         return stonith
 
@@ -1036,9 +1048,6 @@ class ClusterManager(UserDict):
         self.debug("Looking for nodes that were fenced as a result of %s starting" % node)
 
         # If we just started a node, we may now have quorum (and permission to fence)
-        # Make sure everyone is online before continuing
-        self.ns.WaitForAllNodesToComeUp(self.Env["nodes"])
-
         if not stonith:
             self.debug("Nothing to do")
             return peer_list
