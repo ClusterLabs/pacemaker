@@ -378,7 +378,7 @@ getnodes() {
     then
 	debug "Querying CIB for nodes"
 	cibadmin -Ql -o nodes | awk '
-	  /type="normal"/ {
+	  /uname/ {
 		for( i=1; i<=NF; i++ )
 			if( $i~/^uname=/ ) {
 				sub("uname=.","",$i);
@@ -391,8 +391,8 @@ getnodes() {
     # 2. Saved
     elif [ -f @CRM_CONFIG_DIR@/cib.xml ]; then
 	debug "Querying on-disk CIB for nodes"
-	CIB_file=@CRM_CONFIG_DIR@/cib.xml cibadmin -Ql -o nodes | awk '
-	  /type="normal"/ {
+	grep "node " @CRM_CONFIG_DIR@/cib.xml | awk '
+	  /uname/ {
 		for( i=1; i<=NF; i++ )
 			if( $i~/^uname=/ ) {
 				sub("uname=.","",$i);
