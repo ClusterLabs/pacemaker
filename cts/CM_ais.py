@@ -100,6 +100,7 @@ class crm_ais(crm_lha):
                 #r"fence_pcmk.* Call to fence",
                 #r"fence_pcmk",
                 r"cman killed by node",
+                r"Election storm",
             ),
         })
 

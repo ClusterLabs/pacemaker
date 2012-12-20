@@ -30,6 +30,9 @@
 #include <crmd_callbacks.h>
 #include <tengine.h>
 
+#define STORM_INTERVAL   2      /* in seconds */
+#define STORM_MULTIPLIER 5      /* multiplied by the number of nodes */
+
 GHashTable *voted = NULL;
 uint highest_born_on = -1;
 static int current_election_id = 1;
@@ -37,20 +40,30 @@ static int current_election_id = 1;
 static int
 crm_uptime(struct timeval *output)
 {
-    struct rusage info;
-    int rc = getrusage(RUSAGE_SELF, &info);
+    static time_t expires = 0;
+    static struct rusage info;
 
-    output->tv_sec = 0;
-    output->tv_usec = 0;
+    time_t tm_now = time(NULL);
 
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Could not calculate the current uptime");
-        return -1;
+    if(expires < tm_now) {
+        int rc = getrusage(RUSAGE_SELF, &info);
+
+        output->tv_sec = 0;
+        output->tv_usec = 0;
+
+        if (rc < 0) {
+            crm_perror(LOG_ERR, "Could not calculate the current uptime");
+            expires = 0;
+            return -1;
+        }
+
+        crm_debug("Current CPU usage is: %lds, %ldus", (long)info.ru_utime.tv_sec,
+                  (long)info.ru_utime.tv_usec);
     }
+
+    expires = tm_now + STORM_INTERVAL; /* N seconds after the last _access_ */
     output->tv_sec = info.ru_utime.tv_sec;
     output->tv_usec = info.ru_utime.tv_usec;
-    crm_debug("Current CPU usage is: %lds, %ldus", (long)info.ru_utime.tv_sec,
-              (long)info.ru_utime.tv_usec);
     return 1;
 }
 
@@ -228,7 +241,6 @@ do_election_check(long long action,
     return;
 }
 
-#define win_dampen  1           /* in seconds */
 #define loss_dampen 2           /* in seconds */
 
 /*	A_ELECTION_COUNT	*/
@@ -239,7 +251,7 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     struct timeval your_age;
-    int age;
+    int age = 0;
     int election_id = -1;
     int log_level = LOG_INFO;
     gboolean use_born_on = FALSE;
@@ -253,6 +265,10 @@ do_election_count_vote(long long action,
     crm_node_t *our_node = NULL, *your_node = NULL;
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
+    static int election_count = 0;
+
+    time_t tm_now = time(NULL);
+    static time_t expires = 0;
     static time_t last_election_loss = 0;
 
     /* if the membership copy is NULL we REALLY shouldnt be voting
@@ -290,6 +306,22 @@ do_election_count_vote(long long action,
         use_born_on = TRUE;
     } else if (is_classic_ais_cluster()) {
         use_born_on = TRUE;
+    }
+
+    if(expires < tm_now) {
+        election_count = 1;
+        expires = tm_now + STORM_INTERVAL;
+
+    } else if (FALSE == crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
+        int peers = 1 + g_hash_table_size(crm_peer_cache);
+        election_count++;
+
+        /* If every node has to vote down every other node, thats N*(N-1) total elections
+         * Allow some leway before _really_ complaining
+         */
+        if(election_count > (peers * peers)) {
+            crm_err("Election storm detected: %d elections in %d seconds", election_count, STORM_INTERVAL);
+        }
     }
 
     age = crm_compare_age(your_age);
@@ -408,14 +440,13 @@ do_election_count_vote(long long action,
 
         fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
-        last_election_loss = time(NULL);
+        last_election_loss = tm_now;
 
     } else {
         do_crm_log(log_level, "Election %d (owner: %s) pass: %s from %s (%s)",
                    election_id, election_owner, op, vote_from, reason);
 
         if (last_election_loss) {
-            time_t tm_now = time(NULL);
 
             if (tm_now - last_election_loss < (time_t) loss_dampen) {
                 crm_info("Election %d ignore: We already lost an election less than %ds ago (%s)",
