@@ -982,7 +982,7 @@ can_fence_host_with_device(stonith_device_t *dev, struct device_search_s *search
     gboolean can = FALSE;
     const char *check_type = NULL;
     const char *host = search->host;
-    const char *alias = host;
+    const char *alias = NULL;
 
     CRM_LOG_ASSERT(dev != NULL);
 
@@ -1001,8 +1001,9 @@ can_fence_host_with_device(stonith_device_t *dev, struct device_search_s *search
         goto search_report_results;
     }
 
-    if(g_hash_table_lookup(dev->aliases, host)) {
-        alias = g_hash_table_lookup(dev->aliases, host);
+    alias = g_hash_table_lookup(dev->aliases, host);
+    if(alias == NULL) {
+        alias = host;
     }
 
     check_type = target_list_type(dev);
