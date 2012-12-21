@@ -556,7 +556,11 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
     struct crm_ipc_request_header header;
     char *buffer = NULL;
 
-    if(crm_ipc_connected(client) == FALSE) {
+    if(client == NULL) {
+        crm_notice("Invalid connection");
+        return -ENOTCONN;
+
+    } else if(crm_ipc_connected(client) == FALSE) {
         /* Don't even bother */
         crm_notice("Connection to %s closed", client->name);
         return -ENOTCONN;
