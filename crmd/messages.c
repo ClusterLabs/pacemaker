@@ -166,7 +166,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     crm_trace("Queue len: %d", g_list_length(fsa_message_queue));
 
-    fsa_dump_queue(LOG_DEBUG_2);
+    /* fsa_dump_queue(LOG_DEBUG_2); */
 
     if (old_len == g_list_length(fsa_message_queue)) {
         crm_err("Couldnt add message to the queue");
