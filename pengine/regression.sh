@@ -447,6 +447,7 @@ do_test honor_stonith_rsc_order1 "cl#5056- Honor order constraint, stonith clone
 do_test honor_stonith_rsc_order2 "cl#5056- Honor order constraint, stonith clone and pure stonith group(multiple rsc)"
 do_test honor_stonith_rsc_order3 "cl#5056- Honor order constraint, stonith clones with nested pure stonith group."
 do_test honor_stonith_rsc_order4 "cl#5056- Honor order constraint, between two native stonith rscs."
+do_test probe-timeout "cl#5099 - Default probe timeout"
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
