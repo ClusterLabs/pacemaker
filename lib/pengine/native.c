@@ -51,6 +51,10 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         node->details->running_rsc = g_list_append(node->details->running_rsc, rsc);
     }
 
+    if (rsc->variant == pe_native && node->details->maintenance) {
+        clear_bit(rsc->flags, pe_rsc_managed);
+    }
+
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
         resource_t *p = rsc->parent;
 

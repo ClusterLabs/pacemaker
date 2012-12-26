@@ -931,6 +931,11 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 this_node->details->standby = TRUE;
             }
 
+            if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+                crm_info("Node %s is in maintenance-mode", this_node->details->uname);
+                this_node->details->maintenance = TRUE;
+            }
+
             crm_trace("determining node state");
             determine_online_status(state, this_node, data_set);
 
@@ -1282,7 +1287,8 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         crm_info("Node %s is %s", this_node->details->uname,
                  this_node->details->shutdown ? "shutting down" :
                  this_node->details->pending ? "pending" :
-                 this_node->details->standby ? "standby" : "online");
+                 this_node->details->standby ? "standby" :
+                 this_node->details->maintenance ? "maintenance" : "online");
 
     } else {
         crm_trace("Node %s is offline", this_node->details->uname);

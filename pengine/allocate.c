@@ -375,7 +375,8 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             is_probe = TRUE;
         }
 
-        if (interval > 0 && is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        if (interval > 0 &&
+            (is_set(data_set->flags, pe_flag_maintenance_mode) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
         } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0
@@ -477,7 +478,8 @@ check_actions(pe_working_set_t * data_set)
             if (node == NULL) {
                 continue;
 
-            } else if (can_run_resources(node) == FALSE) {
+            /* Still need to check actions for a maintenance node to cancel existing monitor operations */
+            } else if (can_run_resources(node) == FALSE && node->details->maintenance == FALSE) {
                 crm_trace("Skipping param check for %s: cant run resources", node->details->uname);
                 continue;
             }

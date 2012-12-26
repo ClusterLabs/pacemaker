@@ -106,10 +106,11 @@ can_run_resources(const node_t * node)
 #endif
 
     if (node->details->online == FALSE
-        || node->details->shutdown || node->details->unclean || node->details->standby) {
-        crm_trace("%s: online=%d, unclean=%d, standby=%d",
+        || node->details->shutdown || node->details->unclean
+        || node->details->standby || node->details->maintenance) {
+        crm_trace("%s: online=%d, unclean=%d, standby=%d, maintenance=%d",
                   node->details->uname, node->details->online,
-                  node->details->unclean, node->details->standby);
+                  node->details->unclean, node->details->standby, node->details->maintenance);
         return FALSE;
     }
     return TRUE;
