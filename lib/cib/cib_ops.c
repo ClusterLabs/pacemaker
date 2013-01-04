@@ -60,6 +60,13 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     if (obj_root == NULL) {
         result = -ENXIO;
 
+    } else if (options & cib_no_children) {
+        const char *tag = TYPE(obj_root);
+        xmlNode *shallow = create_xml_node(*answer, tag);
+
+        copy_in_properties(shallow, obj_root);
+        *answer = shallow;
+
     } else {
         *answer = obj_root;
     }
