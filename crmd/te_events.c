@@ -127,7 +127,6 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
     }
 
     CRM_CHECK(on_uname != NULL, return TRUE);
-
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval), crm_err("Couldn't parse: %s", ID(event));
               goto bail);
     CRM_CHECK(task != NULL, goto bail);
@@ -428,6 +427,7 @@ process_graph_event(xmlNode * event, const char *event_node)
 {
     int rc = -1;
     int status = -1;
+    int callid = -1;
 
     int action = -1;
     int target_rc = -1;
@@ -437,21 +437,29 @@ process_graph_event(xmlNode * event, const char *event_node)
     gboolean stop_early = FALSE;
     gboolean passed = FALSE;
     const char *id = NULL;
+    const char *desc = NULL;
     const char *magic = NULL;
 
     CRM_ASSERT(event != NULL);
 
-    id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
-    magic = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
+/*
+<lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1355361636" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
+*/
 
+    id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
+    crm_element_value_int(event, XML_LRM_ATTR_RC, &rc);
+    crm_element_value_int(event, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(event, XML_LRM_ATTR_CALLID, &callid);
+
+    magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
         return FALSE;
     }
 
-    if(decode_transition_magic(magic, &update_te_uuid, &transition_num, &action,
-                               &status, &rc, &target_rc) == FALSE) {
-        crm_err("Invalid event %s detected: %s", id, magic);
+    
+    if(decode_transition_key(magic, &update_te_uuid, &transition_num, &action, &target_rc) == FALSE) {
+        crm_err("Invalid event %s.%d detected: %s", id, callid, magic);
         abort_transition(INFINITY, tg_restart, "Bad event", event);
         return FALSE;
     }
@@ -461,29 +469,28 @@ process_graph_event(xmlNode * event, const char *event_node)
     }
 
     if (transition_num == -1) {
-        crm_err("Action %s (%s) initiated outside of a transition", id, magic);
+        desc = "initiated outside of the cluster";
         abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 
     } else if (action < 0 || crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE) {
-        crm_info("Action %s/%d (%s) initiated by a different transitioner", id, action, magic);
+        desc = "initiated by a different node";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
         stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->id != transition_num) {
-        crm_info("Detected action %s from a different transition:"
-                 " %d vs. %d", id, transition_num, transition_graph->id);
+        desc = "arrived really late";
         abort_transition(INFINITY, tg_restart, "Old event", event);
         stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->complete) {
-        crm_info("Action %s arrived after a completed transition", id);
+        desc = "arrived late";
         abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
     } else if (match_graph_event(action, event, event_node, status, rc, target_rc) < 0) {
-        crm_err("Unknown graph action %s", id);
+        desc = "unknown";
         abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
-    } else {
+    } else if(rc == target_rc) {
         passed = TRUE;
         crm_trace("Processed update to %s: %s", id, magic);
     }
@@ -492,9 +499,12 @@ process_graph_event(xmlNode * event, const char *event_node)
         if (update_failcount(event, event_node, rc, target_rc, transition_num == -1)) {
             /* Turns out this wasn't an lrm status refresh update aferall */
             stop_early = FALSE;
+            desc = "failed";
         }
+        crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num, action, id, callid, lrmd_event_rc2str(rc), desc);
     }
 
+    
   bail:
     free(update_te_uuid);
     return stop_early;
