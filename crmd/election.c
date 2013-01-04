@@ -308,22 +308,6 @@ do_election_count_vote(long long action,
         use_born_on = TRUE;
     }
 
-    if(expires < tm_now) {
-        election_count = 1;
-        expires = tm_now + STORM_INTERVAL;
-
-    } else if (FALSE == crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-        int peers = 1 + g_hash_table_size(crm_peer_cache);
-        election_count++;
-
-        /* If every node has to vote down every other node, thats N*(N-1) total elections
-         * Allow some leway before _really_ complaining
-         */
-        if(election_count > (peers * peers)) {
-            crm_err("Election storm detected: %d elections in %d seconds", election_count, STORM_INTERVAL);
-        }
-    }
-
     age = crm_compare_age(your_age);
 
     if (cur_state == S_STARTING) {
@@ -408,6 +392,21 @@ do_election_count_vote(long long action,
  *	} else { // strcasecmp(fsa_our_uname, vote_from) < 0
  *		we win
  */
+    }
+
+    if(expires < tm_now) {
+        election_count = current_election_id;
+        expires = tm_now + STORM_INTERVAL;
+
+    } else {
+        int peers = 1 + g_hash_table_size(crm_peer_cache);
+
+        /* If every node has to vote down every other node, thats N*(N-1) total elections
+         * Allow some leway before _really_ complaining
+         */
+        if((current_election_id - election_count) > (peers * peers)) {
+            crm_err("Election storm detected: %d elections in %d seconds", election_count, STORM_INTERVAL);
+        }
     }
 
     if (done) {
