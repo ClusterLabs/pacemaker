@@ -194,7 +194,7 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
 {
     int rc;
     int lpc = 0;
-    int retries = 40;
+    int retries = 20;
     int level = LOG_CRIT;
     struct iovec iov[2];
     static uint32_t id = 1;
@@ -220,11 +220,11 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
     header.size = iov[0].iov_len + iov[1].iov_len;
 
     if(flags & crm_ipc_server_error) {
-        retries = 20;
+        retries = 10;
         level = LOG_ERR;
 
     } else if(flags & crm_ipc_server_info) {
-        retries = 10;
+        retries = 5;
         level = LOG_INFO;
     }
 
@@ -254,8 +254,8 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
     if(rc < header.size) {
         struct qb_ipcs_connection_stats_2 *stats = qb_ipcs_connection_stats_get_2(c, 0);
         do_crm_log(level,
-                   "%s %d failed, size=%d, to=%p[%d], queue=%d, rc=%d: %.120s",
-                   type, header.id, header.size, c, stats->client_pid, stats->event_q_length, rc, buffer);
+                   "%s %d failed, size=%d, to=%p[%d], queue=%d, retries=%d, rc=%d: %.120s",
+                   type, header.id, header.size, c, stats->client_pid, stats->event_q_length, lpc, rc, buffer);
         free(stats);
 
     } else {
