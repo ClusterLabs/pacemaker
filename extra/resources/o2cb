@@ -323,7 +323,7 @@ o2cb_monitor() {
 
     driver_filesystem configfs; rc=$?
     if [ $rc != 0 ]; then
-	ocf_log info "configfs not laoded"
+	ocf_log info "configfs not loaded"
 	return $OCF_NOT_RUNNING
     fi
 
