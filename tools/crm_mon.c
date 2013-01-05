@@ -275,7 +275,7 @@ cib_connect(gboolean full)
             if (rc == pcmk_ok) {
                 rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
                 if (rc == -EPROTONOSUPPORT) {
-                    print_as("Notification setup failed, won't be able to reconnect after failure");
+                    print_as("Notification setup not supported, won't be able to reconnect after failure");
                     if (as_console) {
                         sleep(2);
                     }
