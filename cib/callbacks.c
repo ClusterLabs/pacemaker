@@ -347,13 +347,18 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         int rid = 0;
 
         if(sync_reply) {
-            CRM_LOG_ASSERT(client_obj->request_id);
+            if (client_obj->ipc) {
+                CRM_LOG_ASSERT(client_obj->request_id);
 
-            rid = client_obj->request_id;
-            client_obj->request_id = 0;
+                rid = client_obj->request_id;
+                client_obj->request_id = 0;
 
-            crm_trace("Sending response %d to %s %s",
+                crm_trace("Sending response %d to %s %s",
                       rid, client_obj->name, from_peer?"(originator of delegated request)":"");
+            } else {
+                crm_trace("Sending response to %s %s",
+                      client_obj->name, from_peer?"(originator of delegated request)":"");
+            }
 
         } else {
             crm_trace("Sending an event to %s %s",
