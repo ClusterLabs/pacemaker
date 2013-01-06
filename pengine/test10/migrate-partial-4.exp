@@ -84,7 +84,11 @@
         <attributes CRM_meta_migrate_source="lustre02-left" CRM_meta_migrate_target="lustre03-left" CRM_meta_timeout="20000" crm_feature_set="3.0.7" name="testfs-operational"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="8">
     <action_set>

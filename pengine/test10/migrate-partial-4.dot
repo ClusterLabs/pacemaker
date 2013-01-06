@@ -46,6 +46,7 @@ digraph "g" {
 "testfs_migrate_to_0 lustre02-left" [ style=bold color="green" fontcolor="black"]
 "testfs_start_0 lustre03-left" [ style=bold color="green" fontcolor="orange"]
 "testfs_stop_0 lustre01-left" -> "all_stopped" [ style = bold]
+"testfs_stop_0 lustre01-left" -> "testfs_migrate_to_0 lustre02-left" [ style = bold]
 "testfs_stop_0 lustre01-left" -> "testfs_start_0 lustre03-left" [ style = bold]
 "testfs_stop_0 lustre01-left" [ style=bold color="green" fontcolor="black"]
 "testfs_stop_0 lustre02-left" -> "all_stopped" [ style = bold]

@@ -57,21 +57,21 @@ Executing cluster transition:
  * Resource action: drbd-stacked    start on lustre02-left
  * Resource action: drbd-testfs-local start on lustre03-left
  * Resource action: lustre          migrate_to on lustre03-left
- * Resource action: testfs          migrate_to on lustre02-left
  * Resource action: testfs          stop on lustre01-left
  * Pseudo action:   ms-drbd-mgs_pre_notify_start_0
  * Resource action: lustre          migrate_from on lustre04-left
  * Resource action: lustre          stop on lustre03-left
- * Resource action: testfs          migrate_from on lustre03-left
- * Resource action: testfs          stop on lustre02-left
+ * Resource action: testfs          migrate_to on lustre02-left
  * Pseudo action:   ms-drbd-mgs_confirmed-pre_notify_start_0
  * Pseudo action:   ms-drbd-mgs_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   lustre_start_0
- * Pseudo action:   testfs_start_0
+ * Resource action: testfs          migrate_from on lustre03-left
+ * Resource action: testfs          stop on lustre02-left
  * Resource action: drbd-mgs:0      start on lustre01-left
  * Resource action: drbd-mgs:1      start on lustre02-left
  * Pseudo action:   ms-drbd-mgs_running_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   testfs_start_0
  * Pseudo action:   ms-drbd-mgs_post_notify_running_0
  * Resource action: drbd-mgs:0      notify on lustre01-left
  * Resource action: drbd-mgs:1      notify on lustre02-left

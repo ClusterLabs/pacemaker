@@ -2883,6 +2883,14 @@ MigrateRsc(resource_t * rsc, action_t *stop, action_t *start, pe_working_set_t *
     if (!partial) {
        to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node,
                        FALSE, TRUE, data_set);
+
+       for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
+           node_t *current = (node_t *) gIter->data;
+           action_t *stop = stop_action(rsc, current, FALSE);
+
+           order_actions(stop, to, pe_order_optional);
+           pe_rsc_trace(rsc, "Ordering migration after cleanup of %s on %s", rsc->id, current->details->uname);
+       }
     }
     from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, start->node,
                       FALSE, TRUE, data_set);
