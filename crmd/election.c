@@ -265,7 +265,7 @@ do_election_count_vote(long long action,
     crm_node_t *our_node = NULL, *your_node = NULL;
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
-    static int election_count = 0;
+    static int election_wins = 0;
 
     time_t tm_now = time(NULL);
     static time_t expires = 0;
@@ -395,17 +395,18 @@ do_election_count_vote(long long action,
     }
 
     if(expires < tm_now) {
-        election_count = current_election_id;
+        election_wins = 0;
         expires = tm_now + STORM_INTERVAL;
 
-    } else {
+    } else if(we_loose == FALSE) {
         int peers = 1 + g_hash_table_size(crm_peer_cache);
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leway before _really_ complaining
          */
-        if((current_election_id - election_count) > (peers * peers)) {
-            crm_err("Election storm detected: %d elections in %d seconds", election_count, STORM_INTERVAL);
+        election_wins++;
+        if(election_wins > (peers * peers)) {
+            crm_err("Election storm detected: %d elections in %d seconds", election_wins, STORM_INTERVAL);
         }
     }
 
