@@ -792,6 +792,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     const char *device = NULL;
     int timeout = op->base_timeout;
 
+    crm_trace("State for %s.%.8s: %d", op->target, op->client_name, op->id, op->state);
     if(peer == NULL && !is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
     }
@@ -849,14 +850,13 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         free_xml(query);
         return;
 
-    } else if(!op->owner) {
+    } else if(op->owner == FALSE) {
         crm_err("The termination of %s for %s is not ours to control", op->target, op->client_name);
 
-    } else if(!op->query_timer) {
-        CRM_LOG_ASSERT(op->state < st_done);
-
+    } else if(op->query_timer == 0) {
         /* We've exhausted all available peers */
-        crm_info("No remaining peers capable of terminating %s for %s", op->target, op->client_name, op->state);
+        crm_info("No remaining peers capable of terminating %s for %s (%d)", op->target, op->client_name, op->state);
+        CRM_LOG_ASSERT(op->state < st_done);
         remote_op_timeout(op);
 
     } else if(device) {
