@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="11" operation="start" operation_key="Dummy_start_0" on_node="puma2" on_node_uuid="puma2">
         <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma4" on_node_uuid="puma4">
         <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma3" on_node_uuid="puma3">
         <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma2" on_node_uuid="puma2">
         <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -43,7 +43,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="Dummy_monitor_0" on_node="puma1" on_node_uuid="puma1">
         <primitive id="Dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -51,7 +51,7 @@
   <synapse id="5" priority="1000000">
     <action_set>
       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="puma4" on_node_uuid="puma4">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -63,7 +63,7 @@
   <synapse id="6" priority="1000000">
     <action_set>
       <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="puma3">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -75,7 +75,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma2" on_node_uuid="puma2">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -87,7 +87,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="puma1">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -99,7 +99,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

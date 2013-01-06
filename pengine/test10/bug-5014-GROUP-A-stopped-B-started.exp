@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="10" operation="stopped" operation_key="group1_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -17,7 +17,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="9" operation="stop" operation_key="group1_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="6" operation="stop" operation_key="ClusterIP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

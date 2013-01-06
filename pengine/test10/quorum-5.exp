@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <pseudo_event id="11" operation="running" operation_key="group1_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -20,7 +20,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="10" operation="start" operation_key="group1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -29,7 +29,7 @@
      <action_set>
       <rsc_op id="7" operation="monitor" operation_key="child_DoFencing_1_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -42,7 +42,7 @@
      <action_set>
       <rsc_op id="6" operation="start" operation_key="child_DoFencing_1_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_name="start" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_name="start" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -58,7 +58,7 @@
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="child_DoFencing_1_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
     <inputs/>
@@ -67,7 +67,7 @@
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="child_DoFencing_2_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -80,7 +80,7 @@
      <action_set>
       <rsc_op id="8" operation="start" operation_key="child_DoFencing_2_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_name="start" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_name="start" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -99,7 +99,7 @@
      <action_set>
       <rsc_op id="5" operation="monitor" operation_key="child_DoFencing_2_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing_2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="hadev1 hadev2 hadev3 "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -107,7 +107,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -122,7 +122,7 @@
   <synapse id="9">
      <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>

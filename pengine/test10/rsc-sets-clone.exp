@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="10" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -47,7 +47,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="rsc:0_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc" long-id="rsc:0" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -59,7 +59,7 @@
   <synapse id="5" priority="1000000">
     <action_set>
       <pseudo_event id="17" operation="stopped" operation_key="clone-rsc_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -74,7 +74,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="16" operation="stop" operation_key="clone-rsc_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -89,7 +89,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -97,7 +97,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -105,7 +105,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

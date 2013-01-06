@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="19" operation="stopped" operation_key="group_fUN_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -20,7 +20,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -29,7 +29,7 @@
      <action_set>
       <rsc_op id="12" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="resource_IP3" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" broadcast="10.0.0.255" cidr_netmask="255.255.255.0" crm_feature_set="3.0.6" ip="10.0.0.68" target_role="started"/>
+        <attributes CRM_meta_timeout="20000" broadcast="10.0.0.255" cidr_netmask="255.255.255.0" crm_feature_set="3.0.7" ip="10.0.0.68" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -45,7 +45,7 @@
      <action_set>
       <rsc_op id="14" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="resource_dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" target_role="started"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -57,7 +57,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>

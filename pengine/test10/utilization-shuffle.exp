@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="127" operation="running" operation_key="grpPostgreSQLDB1_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -32,7 +32,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="126" operation="start" operation_key="grpPostgreSQLDB1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="115" operation="monitor" operation_key="prmExPostgreSQLDB1_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -54,7 +54,7 @@
     <action_set>
       <rsc_op id="114" operation="start" operation_key="prmExPostgreSQLDB1_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmExPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -70,7 +70,7 @@
     <action_set>
       <rsc_op id="117" operation="monitor" operation_key="prmFsPostgreSQLDB1-1_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -83,7 +83,7 @@
     <action_set>
       <rsc_op id="116" operation="start" operation_key="prmFsPostgreSQLDB1-1_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="119" operation="monitor" operation_key="prmFsPostgreSQLDB1-2_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -112,7 +112,7 @@
     <action_set>
       <rsc_op id="118" operation="start" operation_key="prmFsPostgreSQLDB1-2_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -128,7 +128,7 @@
     <action_set>
       <rsc_op id="121" operation="monitor" operation_key="prmFsPostgreSQLDB1-3_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -141,7 +141,7 @@
     <action_set>
       <rsc_op id="120" operation="start" operation_key="prmFsPostgreSQLDB1-3_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmFsPostgreSQLDB1-3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -157,7 +157,7 @@
     <action_set>
       <rsc_op id="123" operation="monitor" operation_key="prmIpPostgreSQLDB1_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -170,7 +170,7 @@
     <action_set>
       <rsc_op id="122" operation="start" operation_key="prmIpPostgreSQLDB1_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmIpPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -186,7 +186,7 @@
     <action_set>
       <rsc_op id="125" operation="monitor" operation_key="prmApPostgreSQLDB1_monitor_5000" on_node="act3" on_node_uuid="act3">
         <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -199,7 +199,7 @@
     <action_set>
       <rsc_op id="124" operation="start" operation_key="prmApPostgreSQLDB1_start_0" on_node="act3" on_node_uuid="act3">
         <primitive id="prmApPostgreSQLDB1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -214,7 +214,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="33" operation="load_stopped_sby2" operation_key="load_stopped_sby2">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -222,7 +222,7 @@
   <synapse id="15">
     <action_set>
       <pseudo_event id="32" operation="load_stopped_sby1" operation_key="load_stopped_sby1">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -230,7 +230,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="31" operation="load_stopped_act3" operation_key="load_stopped_act3">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -238,7 +238,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="30" operation="load_stopped_act2" operation_key="load_stopped_act2">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -246,7 +246,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="29" operation="load_stopped_act1" operation_key="load_stopped_act1">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>

@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="3" operation="load_stopped_hex-14" operation_key="load_stopped_hex-14">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -10,7 +10,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="2" operation="load_stopped_hex-13" operation_key="load_stopped_hex-13">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>

@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="6" operation="stop" operation_key="rsc1:1_stop_0" internal_operation_key="rsc1:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -17,7 +17,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="7" operation="stop" operation_key="rsc1:0_stop_0" internal_operation_key="rsc1:1_stop_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -32,7 +32,7 @@
   <synapse id="2" priority="1000000">
     <action_set>
       <pseudo_event id="11" operation="stopped" operation_key="clone1_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -50,7 +50,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="10" operation="stop" operation_key="clone1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -65,7 +65,7 @@
   <synapse id="4">
     <action_set>
       <crm_event id="14" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="node2">
-        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs>
@@ -77,7 +77,7 @@
   <synapse id="5">
     <action_set>
       <crm_event id="13" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="node1">
-        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs/>
@@ -85,7 +85,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="12" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -97,7 +97,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="78" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.6" target_role="stopped" xmfile="/etc/xen/vm/sles10"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.7" target_role="stopped" xmfile="/etc/xen/vm/sles10"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -11,7 +11,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>

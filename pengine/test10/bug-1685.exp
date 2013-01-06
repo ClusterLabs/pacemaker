@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="53" operation="notify" operation_key="prim_shared_storage:0_post_notify_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="52" operation="notify" operation_key="prim_shared_storage:0_pre_notify_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
       <rsc_op id="7" operation="promote" operation_key="prim_shared_storage:0_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -42,7 +42,7 @@
      <action_set>
       <rsc_op id="55" operation="notify" operation_key="prim_shared_storage:1_post_notify_promote_0" on_node="redun1" on_node_uuid="cd34ed93-fa5d-4092-a618-ac6349351d13">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -55,7 +55,7 @@
      <action_set>
       <rsc_op id="54" operation="notify" operation_key="prim_shared_storage:1_pre_notify_promote_0" on_node="redun1" on_node_uuid="cd34ed93-fa5d-4092-a618-ac6349351d13">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="prim_shared_storage:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="prim_shared_storage:0 " CRM_meta_notify_promote_uname="redun2 " CRM_meta_notify_slave_resource="prim_shared_storage:0 prim_shared_storage:1 " CRM_meta_notify_slave_uname="redun2 redun1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -68,7 +68,7 @@
      <action_set>
       <rsc_op id="10" operation="monitor" operation_key="prim_shared_storage:1_monitor_120000" on_node="redun1" on_node_uuid="cd34ed93-fa5d-4092-a618-ac6349351d13">
         <primitive id="prim_shared_storage" long-id="prim_shared_storage:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="60000" crm_feature_set="3.0.6" drbd_resource="sip-shared"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="60000" crm_feature_set="3.0.7" drbd_resource="sip-shared"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -80,7 +80,7 @@
   <synapse id="6" priority="1000000">
      <action_set>
       <pseudo_event id="28" operation="notified" operation_key="shared_storage_confirmed-post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -98,7 +98,7 @@
    <synapse id="7" priority="1000000">
      <action_set>
       <pseudo_event id="27" operation="notify" operation_key="shared_storage_post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -113,7 +113,7 @@
    <synapse id="8">
      <action_set>
       <pseudo_event id="26" operation="notified" operation_key="shared_storage_confirmed-pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -131,7 +131,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="25" operation="notify" operation_key="shared_storage_pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -139,7 +139,7 @@
    <synapse id="10" priority="1000000">
      <action_set>
       <pseudo_event id="24" operation="promoted" operation_key="shared_storage_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -151,7 +151,7 @@
   <synapse id="11">
      <action_set>
       <pseudo_event id="23" operation="promote" operation_key="shared_storage_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -164,7 +164,7 @@
      <action_set>
       <rsc_op id="36" operation="monitor" operation_key="shared_filesystem_monitor_120000" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
         <primitive id="shared_filesystem" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/shared" fstype="reiserfs"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.7" device="/dev/drbd0" directory="/shared" fstype="reiserfs"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -177,7 +177,7 @@
      <action_set>
       <rsc_op id="35" operation="start" operation_key="shared_filesystem_start_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
         <primitive id="shared_filesystem" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" device="/dev/drbd0" directory="/shared" fstype="reiserfs"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/drbd0" directory="/shared" fstype="reiserfs"/>
        </rsc_op>
      </action_set>
      <inputs>

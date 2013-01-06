@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <crm_event id="15" operation="do_shutdown" operation_key="do_shutdown" on_node="bl460g6a" on_node_uuid="11111111-1111-1111-1111-111111111111">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs/>

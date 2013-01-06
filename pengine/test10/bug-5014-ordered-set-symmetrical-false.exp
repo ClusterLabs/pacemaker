@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="8" operation="stop" operation_key="C_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="C" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -11,7 +11,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

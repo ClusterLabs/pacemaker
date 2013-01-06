@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="stonith-1_start_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc03" on_node_uuid="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
         <primitive id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="stonith-1_monitor_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="stonith-1" class="stonith" type="dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -42,7 +42,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="34" operation="stopped" operation_key="group_webservice:2_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -57,7 +57,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="33" operation="stop" operation_key="group_webservice:2_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -70,7 +70,7 @@
     <action_set>
       <rsc_op id="30" operation="stop" operation_key="apache2:0_stop_0" internal_operation_key="apache2:2_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="apache2:0" long-id="apache2:2" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" clone-max="2" clone-node-max="1" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.6" envfiles="/etc/apache2/envvars" httpd="/usr/sbin/apache2" options="-k start" statusurl="http://localhost/server-status/"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" clone-max="2" clone-node-max="1" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.7" envfiles="/etc/apache2/envvars" httpd="/usr/sbin/apache2" options="-k start" statusurl="http://localhost/server-status/"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -85,7 +85,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <pseudo_event id="42" operation="stopped" operation_key="clone_webservice_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -100,7 +100,7 @@
   <synapse id="8">
     <action_set>
       <pseudo_event id="41" operation="stop" operation_key="clone_webservice_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -108,7 +108,7 @@
   <synapse id="9" priority="1000000">
     <action_set>
       <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="wc03" on_node_uuid="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -120,7 +120,7 @@
   <synapse id="10" priority="1000000">
     <action_set>
       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -132,7 +132,7 @@
   <synapse id="11" priority="1000000">
     <action_set>
       <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -144,7 +144,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -162,7 +162,7 @@
   <synapse id="13">
     <action_set>
       <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

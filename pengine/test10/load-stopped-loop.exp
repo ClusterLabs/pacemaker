@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="111" operation="reload" operation_key="vds-ok-pool-0-iscsi:1_reload_0" internal_operation_key="vds-ok-pool-0-iscsi:0_reload_0" on_node="mgmt01" on_node_uuid="mgmt01">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:1" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="vds-ok-pool-0-iscsi:1_monitor_30000" internal_operation_key="vds-ok-pool-0-iscsi:0_monitor_30000" on_node="mgmt01" on_node_uuid="mgmt01">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:1" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="114" operation="reload" operation_key="vds-ok-pool-0-iscsi:0_reload_0" internal_operation_key="vds-ok-pool-0-iscsi:1_reload_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="46" operation="monitor" operation_key="vds-ok-pool-0-iscsi:0_monitor_30000" internal_operation_key="vds-ok-pool-0-iscsi:1_monitor_30000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -47,7 +47,7 @@
     <action_set>
       <rsc_op id="117" operation="reload" operation_key="vds-ok-pool-0-iscsi:2_reload_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -56,7 +56,7 @@
     <action_set>
       <rsc_op id="94" operation="monitor" operation_key="vds-ok-pool-0-iscsi:2_monitor_30000" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -69,7 +69,7 @@
     <action_set>
       <rsc_op id="110" operation="reload" operation_key="vds-ok-pool-1-iscsi:1_reload_0" internal_operation_key="vds-ok-pool-1-iscsi:0_reload_0" on_node="mgmt01" on_node_uuid="mgmt01">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:1" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -78,7 +78,7 @@
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="vds-ok-pool-1-iscsi:1_monitor_30000" internal_operation_key="vds-ok-pool-1-iscsi:0_monitor_30000" on_node="mgmt01" on_node_uuid="mgmt01">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:1" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -91,7 +91,7 @@
     <action_set>
       <rsc_op id="112" operation="reload" operation_key="vds-ok-pool-1-iscsi:0_reload_0" internal_operation_key="vds-ok-pool-1-iscsi:1_reload_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -100,7 +100,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="vds-ok-pool-1-iscsi:0_monitor_30000" internal_operation_key="vds-ok-pool-1-iscsi:1_monitor_30000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -113,7 +113,7 @@
     <action_set>
       <rsc_op id="115" operation="reload" operation_key="vds-ok-pool-1-iscsi:2_reload_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="240000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -122,7 +122,7 @@
     <action_set>
       <rsc_op id="61" operation="monitor" operation_key="vds-ok-pool-1-iscsi:2_monitor_30000" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.6" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="30000" backing_iosched="noop" cmds_max="128" crm_feature_set="3.0.7" discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="218" operation="stop" operation_key="stonith-v03-b_stop_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="stonith-v03-b" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -144,7 +144,7 @@
     <action_set>
       <rsc_op id="116" operation="start" operation_key="stonith-v03-b_start_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="stonith-v03-b" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -157,7 +157,7 @@
     <action_set>
       <rsc_op id="92" operation="monitor" operation_key="stonith-v03-b_monitor_60000" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="stonith-v03-b" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -170,7 +170,7 @@
     <action_set>
       <rsc_op id="219" operation="stop" operation_key="stonith-v03-a_stop_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="stonith-v03-a" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -179,7 +179,7 @@
     <action_set>
       <rsc_op id="113" operation="start" operation_key="stonith-v03-a_start_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="stonith-v03-a" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -192,7 +192,7 @@
     <action_set>
       <rsc_op id="45" operation="monitor" operation_key="stonith-v03-a_monitor_60000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="stonith-v03-a" class="stonith" type="fence_ipmilan"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.6" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" auth="md5" crm_feature_set="3.0.7" ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -205,7 +205,7 @@
     <action_set>
       <rsc_op id="612" operation="migrate_from" operation_key="license.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -218,7 +218,7 @@
     <action_set>
       <rsc_op id="611" operation="migrate_to" operation_key="license.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_migrate_source="v03-b" CRM_meta_migrate_target="v03-a" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -227,7 +227,7 @@
     <action_set>
       <rsc_op id="400" operation="monitor" operation_key="license.anbriz.vds-ok.com-vm_monitor_10000" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -239,7 +239,7 @@
   <synapse id="21">
     <action_set>
       <pseudo_event id="399" operation="start" operation_key="license.anbriz.vds-ok.com-vm_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -255,7 +255,7 @@
     <action_set>
       <rsc_op id="398" operation="stop" operation_key="license.anbriz.vds-ok.com-vm_stop_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="license.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="100" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-0,license.anbriz.vds-ok.com_disk0,50016;netif:0,mcast,mcast-anbriz,00:16:3e:2b:d1:85,192.168.155.4;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;ide_controller:0;floppy:0,libvirt-images,;fdc_controller:0;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="license.anbriz.vds-ok.com" domain_uuid="61962a4c-0e0c-4502-95ca-4401bfad5553" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="1024" migration_transport="tls" run_mode="run" schedinfo_weight="250" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -268,7 +268,7 @@
     <action_set>
       <rsc_op id="614" operation="migrate_from" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_from_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
+        <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_from" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -281,7 +281,7 @@
     <action_set>
       <rsc_op id="613" operation="migrate_to" operation_key="terminal0.anbriz.vds-ok.com-vm_migrate_to_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
+        <attributes CRM_meta_migrate_source="v03-a" CRM_meta_migrate_target="v03-b" CRM_meta_name="migrate_to" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -290,7 +290,7 @@
     <action_set>
       <rsc_op id="417" operation="monitor" operation_key="terminal0.anbriz.vds-ok.com-vm_monitor_10000" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -302,7 +302,7 @@
   <synapse id="26">
     <action_set>
       <pseudo_event id="416" operation="start" operation_key="terminal0.anbriz.vds-ok.com-vm_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -318,7 +318,7 @@
     <action_set>
       <rsc_op id="415" operation="stop" operation_key="terminal0.anbriz.vds-ok.com-vm_stop_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="terminal0.anbriz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="600000" arch="x86_64" blkio_weight="166" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="disk:0,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk0,50016;disk:1,vds-ok-pool-1,terminal0.anbriz.vds-ok.com_disk1,20000;netif:0,mcast,mcast-anbriz,00:16:3e:87:f9:21,192.168.155.3;ide_controller:0;cdrom:0,libvirt-images,/virtio-win-0.1-22.iso;console;mouse;tablet;graphics;watchdog:i6300esb:poweroff;" domain_name="terminal0.anbriz.vds-ok.com" domain_uuid="46bd3282-56ef-44a1-98e3-dcb93387f921" force_stop="0" host_role_needed="" hypervisor="qemu:///system" mem_mb="4096" migration_transport="tls" run_mode="run" schedinfo_weight="1000" vcpu_num="2" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -331,7 +331,7 @@
     <action_set>
       <rsc_op id="427" operation="monitor" operation_key="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_monitor_10000" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" bootdev="network" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="netif:0,bridge,vlan1,00:16:3e:ef:13:04,10.5.4.67;memballon;console;graphics;mouse;tablet;watchdog:i6300esb:poweroff;" domain_name="vd01-d.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="570d45ea-24e0-46d9-b63c-6a398bef1304" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" arch="x86_64" blkio_weight="100" bootdev="network" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="netif:0,bridge,vlan1,00:16:3e:ef:13:04,10.5.4.67;memballon;console;graphics;mouse;tablet;watchdog:i6300esb:poweroff;" domain_name="vd01-d.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="570d45ea-24e0-46d9-b63c-6a398bef1304" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -344,7 +344,7 @@
     <action_set>
       <rsc_op id="426" operation="start" operation_key="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm_start_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="100" bootdev="network" cpu_model="VDS_OK" crm_feature_set="3.0.6" devices="netif:0,bridge,vlan1,00:16:3e:ef:13:04,10.5.4.67;memballon;console;graphics;mouse;tablet;watchdog:i6300esb:poweroff;" domain_name="vd01-d.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="570d45ea-24e0-46d9-b63c-6a398bef1304" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="120000" arch="x86_64" blkio_weight="100" bootdev="network" cpu_model="VDS_OK" crm_feature_set="3.0.7" devices="netif:0,bridge,vlan1,00:16:3e:ef:13:04,10.5.4.67;memballon;console;graphics;mouse;tablet;watchdog:i6300esb:poweroff;" domain_name="vd01-d.cdev.ttc.prague.cz.vds-ok.com" domain_uuid="570d45ea-24e0-46d9-b63c-6a398bef1304" fencing_method="qpid" force_stop="1" host_role_needed="" hypervisor="qemu:///system" mem_mb="2048" migration_transport="tls" schedinfo_weight="20" vcpu_num="1" vcpu_policy="share"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -356,7 +356,7 @@
   <synapse id="30">
     <action_set>
       <pseudo_event id="109" operation="load_stopped_mgmt01" operation_key="load_stopped_mgmt01">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -364,7 +364,7 @@
   <synapse id="31">
     <action_set>
       <pseudo_event id="108" operation="load_stopped_v03-b" operation_key="load_stopped_v03-b">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -376,7 +376,7 @@
   <synapse id="32">
     <action_set>
       <pseudo_event id="107" operation="load_stopped_v03-a" operation_key="load_stopped_v03-a">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -388,7 +388,7 @@
   <synapse id="33">
     <action_set>
       <pseudo_event id="106" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

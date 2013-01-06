@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="19" operation="migrate_from" operation_key="test-vm_migrate_from_0" on_node="hex-13" on_node_uuid="hex-13">
         <primitive id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="hex-14" CRM_meta_migrate_target="hex-13" CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.6" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_migrate_source="hex-14" CRM_meta_migrate_target="hex-13" CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="18" operation="migrate_to" operation_key="test-vm_migrate_to_0" on_node="hex-14" on_node_uuid="hex-14">
         <primitive id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="hex-14" CRM_meta_migrate_target="hex-13" CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.6" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_migrate_source="hex-14" CRM_meta_migrate_target="hex-13" CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="16" operation="start" operation_key="test-vm_start_0">
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.6" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -40,7 +40,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="test-vm_stop_0" on_node="hex-14" on_node_uuid="hex-14">
         <primitive id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.6" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -52,7 +52,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="3" operation="load_stopped_hex-13" operation_key="load_stopped_hex-13">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -60,7 +60,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="2" operation="load_stopped_hex-14" operation_key="load_stopped_hex-14">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -72,7 +72,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

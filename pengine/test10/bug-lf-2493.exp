@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="p_dummy2_start_0" on_node="hpn08" on_node_uuid="hpn08">
         <primitive id="p_dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="8" operation="start" operation_key="p_dummy4_start_0" on_node="hpn07" on_node_uuid="hpn07">
         <primitive id="p_dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="p_dummy3_start_0" on_node="hpn08" on_node_uuid="hpn08">
         <primitive id="p_dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>

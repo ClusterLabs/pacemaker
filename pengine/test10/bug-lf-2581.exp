@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="36" operation="running" operation_key="AZ-group:1_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -20,7 +20,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="35" operation="start" operation_key="AZ-group:1_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -33,7 +33,7 @@
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="A:1_monitor_120000" on_node="queen" on_node_uuid="queen">
         <primitive id="A" long-id="A:1" class="ocf" provider="rgk" type="typeA"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -46,7 +46,7 @@
     <action_set>
       <rsc_op id="31" operation="start" operation_key="A:1_start_0" on_node="queen" on_node_uuid="queen">
         <primitive id="A" long-id="A:1" class="ocf" provider="rgk" type="typeA"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -62,7 +62,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="A:1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="A" long-id="A:1" class="ocf" provider="rgk" type="typeA"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -71,7 +71,7 @@
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="Z:1_monitor_120000" on_node="queen" on_node_uuid="queen">
         <primitive id="Z" long-id="Z:1" class="ocf" provider="rgk" type="typeZ"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="33" operation="start" operation_key="Z:1_start_0" on_node="queen" on_node_uuid="queen">
         <primitive id="Z" long-id="Z:1" class="ocf" provider="rgk" type="typeZ"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_requires="fencing" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -103,7 +103,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="Z:1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="Z" long-id="Z:1" class="ocf" provider="rgk" type="typeZ"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -111,7 +111,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <pseudo_event id="40" operation="running" operation_key="AZ-clone_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -126,7 +126,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="39" operation="start" operation_key="AZ-clone_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="B-1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="B-1" class="ocf" provider="rgk" type="typeB"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" daemon="typeBdaemon-1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeBdaemon-1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -144,7 +144,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="C-1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="C-1" class="ocf" provider="rgk" type="typeC"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" daemon="typeCdaemon-1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeCdaemon-1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -153,7 +153,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="B-2_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="B-2" class="ocf" provider="rgk" type="typeB"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" daemon="typeBdaemon-2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeBdaemon-2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -162,7 +162,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="C-2_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="C-2" class="ocf" provider="rgk" type="typeC"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" daemon="typeCdaemon-2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeCdaemon-2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -171,7 +171,7 @@
     <action_set>
       <rsc_op id="62" operation="monitor" operation_key="stonith-l2network:1_monitor_300000" on_node="queen" on_node_uuid="queen">
         <primitive id="stonith-l2network" long-id="stonith-l2network:1" class="stonith" type="l2network"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="300000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="15000" crm_feature_set="3.0.6" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="300000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="15000" crm_feature_set="3.0.7" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -184,7 +184,7 @@
     <action_set>
       <rsc_op id="61" operation="start" operation_key="stonith-l2network:1_start_0" on_node="queen" on_node_uuid="queen">
         <primitive id="stonith-l2network" long-id="stonith-l2network:1" class="stonith" type="l2network"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="15000" crm_feature_set="3.0.6" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_timeout="15000" crm_feature_set="3.0.7" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -200,7 +200,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="stonith-l2network:1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="stonith-l2network" long-id="stonith-l2network:1" class="stonith" type="l2network"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" crm_feature_set="3.0.6" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" crm_feature_set="3.0.7" nodelist="elvis;128.162.245.170;;1 queen;128.162.245.170;;2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -208,7 +208,7 @@
   <synapse id="17" priority="1000000">
     <action_set>
       <pseudo_event id="64" operation="running" operation_key="stonith-l2network-set_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -223,7 +223,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="63" operation="start" operation_key="stonith-l2network-set_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -231,7 +231,7 @@
   <synapse id="19" priority="1000000">
     <action_set>
       <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="queen" on_node_uuid="queen">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -261,7 +261,7 @@
   <synapse id="20">
     <action_set>
       <pseudo_event id="13" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

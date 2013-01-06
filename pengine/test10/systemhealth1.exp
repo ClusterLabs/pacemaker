@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-hs21d" on_node="hs21d" on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7">
-        <attributes CRM_meta_on_node="hs21d" CRM_meta_on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="hs21d" CRM_meta_on_node_uuid="737318c6-0f92-4592-9754-45967d45aff7" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs/>
@@ -10,7 +10,7 @@
   <synapse id="1">
     <action_set>
       <crm_event id="3" operation="stonith" operation_key="stonith-hs21c" on_node="hs21c" on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549">
-        <attributes CRM_meta_on_node="hs21c" CRM_meta_on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="hs21c" CRM_meta_on_node_uuid="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs>
@@ -22,7 +22,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="2" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -34,7 +34,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

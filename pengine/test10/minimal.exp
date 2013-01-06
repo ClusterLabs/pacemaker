@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="11" operation="start" operation_key="rsc1_start_0" on_node="host1" on_node_uuid="host1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="rsc1_monitor_0" on_node="host2" on_node_uuid="host2">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="rsc1_monitor_0" on_node="host1" on_node_uuid="host1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -37,7 +37,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="rsc2_start_0" on_node="host1" on_node_uuid="host1">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="rsc2_monitor_0" on_node="host2" on_node_uuid="host2">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -62,7 +62,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="rsc2_monitor_0" on_node="host1" on_node_uuid="host1">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -70,7 +70,7 @@
   <synapse id="6" priority="1000000">
     <action_set>
       <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="host2" on_node_uuid="host2">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -85,7 +85,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="host1" on_node_uuid="host1">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -100,7 +100,7 @@
   <synapse id="8">
     <action_set>
       <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -115,7 +115,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="3" operation="load_stopped_host2" operation_key="load_stopped_host2">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -123,7 +123,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="2" operation="load_stopped_host1" operation_key="load_stopped_host1">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="57" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_from" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_from" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="56" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_record_pending="false" CRM_meta_timeout="1800000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="degllx62-vm_monitor_30000" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -37,7 +37,7 @@
   <synapse id="3" priority="4">
     <action_set>
       <pseudo_event id="18" operation="start" operation_key="degllx62-vm_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_record_pending="false" CRM_meta_timeout="300000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_name="start" CRM_meta_record_pending="false" CRM_meta_timeout="300000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx62"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
     <action_set>
       <rsc_op id="17" operation="stop" operation_key="degllx62-vm_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_name="stop" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx61-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.6" xmfile="/etc/xen/vm/degllx61"/>
+        <attributes CRM_meta_name="stop" CRM_meta_record_pending="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7" xmfile="/etc/xen/vm/degllx61"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -74,7 +74,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="39" operation="stopped" operation_key="grp-nfs:1_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -95,7 +95,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -108,7 +108,7 @@
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_config" long-id="nfs-xen_config:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap098nfs:/vol/xen_config" directory="/etc/xen/vm" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.7" device="deglnap098nfs:/vol/xen_config" directory="/etc/xen/vm" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -124,7 +124,7 @@
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_swapfiles" long-id="nfs-xen_swapfiles:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap098nfs:/vol/xen_swapfiles" directory="/var/lib/xen/deglnap098_swapfiles" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.7" device="deglnap098nfs:/vol/xen_swapfiles" directory="/var/lib/xen/deglnap098_swapfiles" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -140,7 +140,7 @@
     <action_set>
       <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_images" long-id="nfs-xen_images:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" device="deglnap099nfs:/vol/xen_images" directory="/var/lib/xen/deglnap099_images" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.7" device="deglnap099nfs:/vol/xen_images" directory="/var/lib/xen/deglnap099_images" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -152,7 +152,7 @@
   <synapse id="11" priority="1000000">
     <action_set>
       <pseudo_event id="43" operation="stopped" operation_key="clone-nfs_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -167,7 +167,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="42" operation="stop" operation_key="clone-nfs_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -183,7 +183,7 @@
     <action_set>
       <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="prim-ping" long-id="prim-ping:0" class="ocf" provider="pacemaker" type="ping"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.6" host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.7" host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -198,7 +198,7 @@
   <synapse id="14" priority="1000000">
     <action_set>
       <pseudo_event id="50" operation="stopped" operation_key="clone-ping_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -213,7 +213,7 @@
   <synapse id="15">
     <action_set>
       <pseudo_event id="49" operation="stop" operation_key="clone-ping_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -225,7 +225,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="13" operation="load_stopped_deglxen001" operation_key="load_stopped_deglxen001">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -237,7 +237,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="12" operation="load_stopped_deglxen002" operation_key="load_stopped_deglxen002">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -249,7 +249,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

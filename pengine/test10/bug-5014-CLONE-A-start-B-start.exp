@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="ClusterIP:0_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" long-id="ClusterIP:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="6" operation="start" operation_key="ClusterIP:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" long-id="ClusterIP:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -32,7 +32,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="ClusterIP:0_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP" long-id="ClusterIP:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.101"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.101"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -40,7 +40,7 @@
   <synapse id="3" priority="1000000">
     <action_set>
       <pseudo_event id="9" operation="running" operation_key="clone1_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -55,7 +55,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="8" operation="start" operation_key="clone1_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="ClusterIP2:0_monitor_30000" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP2" long-id="ClusterIP2:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.102"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -77,7 +77,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="ClusterIP2:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP2" long-id="ClusterIP2:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.102"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -93,7 +93,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="ClusterIP2:0_monitor_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <primitive id="ClusterIP2" long-id="ClusterIP2:0" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.6" ip="192.168.122.102"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.102"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -101,7 +101,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <pseudo_event id="15" operation="running" operation_key="clone2_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -116,7 +116,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="14" operation="start" operation_key="clone2_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -128,7 +128,7 @@
   <synapse id="10" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -143,7 +143,7 @@
   <synapse id="11">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

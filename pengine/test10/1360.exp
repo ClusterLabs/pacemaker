@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="12" operation="start" operation_key="dollies:0_start_0" on_node="ssgtest1b" on_node_uuid="c728b2aa-1e73-491f-a03c-8f0598bab169">
         <primitive id="dollies" long-id="dollies:0" class="ocf" provider="gn1" type="clone_server"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -19,7 +19,7 @@
      <action_set>
       <rsc_op id="11" operation="stop" operation_key="dollies:0_stop_0" on_node="ssgtest1a" on_node_uuid="94ef659b-5fd8-4d6b-b0ed-3b40339f8132">
         <primitive id="dollies" long-id="dollies:0" class="ocf" provider="gn1" type="clone_server"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -31,7 +31,7 @@
   <synapse id="2" priority="1000000">
      <action_set>
       <pseudo_event id="16" operation="stopped" operation_key="dolly_stopped_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -46,7 +46,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="15" operation="stop" operation_key="dolly_stop_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -54,7 +54,7 @@
   <synapse id="4" priority="1000000">
      <action_set>
        <pseudo_event id="14" operation="running" operation_key="dolly_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -69,7 +69,7 @@
   <synapse id="5">
      <action_set>
       <pseudo_event id="13" operation="start" operation_key="dolly_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -81,7 +81,7 @@
    <synapse id="6">
      <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>

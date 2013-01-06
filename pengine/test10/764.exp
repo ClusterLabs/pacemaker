@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="16" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.10"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="7" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.10"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -25,7 +25,7 @@
      <action_set>
       <rsc_op id="18" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -38,7 +38,7 @@
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.11"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -47,7 +47,7 @@
      <action_set>
       <rsc_op id="20" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -60,7 +60,7 @@
      <action_set>
       <rsc_op id="13" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.12"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -69,7 +69,7 @@
      <action_set>
       <rsc_op id="23" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -82,7 +82,7 @@
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.13"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -91,7 +91,7 @@
      <action_set>
       <rsc_op id="26" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="rsc_posic044" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.14"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -104,7 +104,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="rsc_posic044" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="127.0.0.14"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="127.0.0.14"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -113,7 +113,7 @@
      <action_set>
       <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="posic041 posic042 posic043 posic044 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -122,7 +122,7 @@
      <action_set>
       <rsc_op id="33" operation="monitor" operation_key="child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="posic041 posic042 posic043 posic044 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -131,7 +131,7 @@
      <action_set>
       <rsc_op id="15" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="posic041 posic042 posic043 posic044 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -140,7 +140,7 @@
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="posic041 posic042 posic043 posic044 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -149,7 +149,7 @@
      <action_set>
       <rsc_op id="10" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" hostlist="posic041 posic042 posic043 posic044 "/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -157,7 +157,7 @@
   <synapse id="15" priority="1000000">
      <action_set>
       <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
      </action_set>
      <inputs>
@@ -178,7 +178,7 @@
   <synapse id="16" priority="1000000">
      <action_set>
       <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -199,7 +199,7 @@
   <synapse id="17">
      <action_set>
       <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
      </action_set>
      <inputs>
@@ -214,7 +214,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

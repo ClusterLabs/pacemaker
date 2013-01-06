@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="7" operation="start" operation_key="drbd0:0_start_0" on_node="mysql-01" on_node_uuid="3f3eb909-e719-4bc4-a700-d7aa91a65098">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -19,7 +19,7 @@
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="drbd0:0_monitor_0" on_node="mysql-01" on_node_uuid="3f3eb909-e719-4bc4-a700-d7aa91a65098">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -28,7 +28,7 @@
      <action_set>
       <rsc_op id="8" operation="start" operation_key="drbd0:1_start_0" on_node="mysql-02" on_node_uuid="06f7483d-273b-4c51-95a6-bccde94d7fdb">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -44,7 +44,7 @@
      <action_set>
       <rsc_op id="6" operation="monitor" operation_key="drbd0:1_monitor_0" on_node="mysql-02" on_node_uuid="06f7483d-273b-4c51-95a6-bccde94d7fdb">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.6" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="r0"/>
       </rsc_op>
      </action_set>
     <inputs/>
@@ -52,7 +52,7 @@
   <synapse id="4" priority="1000000">
      <action_set>
        <pseudo_event id="10" operation="running" operation_key="ms-drbd0_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -70,7 +70,7 @@
   <synapse id="5">
      <action_set>
       <pseudo_event id="9" operation="start" operation_key="ms-drbd0_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
     <inputs/>
@@ -78,7 +78,7 @@
   <synapse id="6" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="mysql-02" on_node_uuid="06f7483d-273b-4c51-95a6-bccde94d7fdb">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
      <inputs>
@@ -90,7 +90,7 @@
   <synapse id="7" priority="1000000">
      <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="mysql-01" on_node_uuid="3f3eb909-e719-4bc4-a700-d7aa91a65098">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -102,7 +102,7 @@
   <synapse id="8">
      <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
      </action_set>
      <inputs>

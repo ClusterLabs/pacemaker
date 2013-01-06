@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <pseudo_event id="19" operation="stopped" operation_key="group_1_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -17,7 +17,7 @@
    <synapse id="1">
      <action_set>
       <pseudo_event id="18" operation="stop" operation_key="group_1_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
    <synapse id="2">
      <action_set>
       <pseudo_event id="17" operation="running" operation_key="group_1_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -44,7 +44,7 @@
    <synapse id="3">
      <action_set>
       <pseudo_event id="16" operation="start" operation_key="group_1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -57,7 +57,7 @@
      <action_set>
       <rsc_op id="15" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -73,7 +73,7 @@
      <action_set>
        <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -86,7 +86,7 @@
      <action_set>
       <rsc_op id="2" operation="monitor" operation_key="postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="postfix_9" class="lsb" type="postfix"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -99,7 +99,7 @@
      <action_set>
       <rsc_op id="21" operation="start" operation_key="depends_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="depends" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -115,7 +115,7 @@
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="depends_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
         <primitive id="depends" class="lsb" type="postfix"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -123,7 +123,7 @@
    <synapse id="9">
      <action_set>
        <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>

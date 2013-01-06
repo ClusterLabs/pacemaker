@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="45" operation="stopped" operation_key="group-1_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="44" operation="stop" operation_key="group-1_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -44,7 +44,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="43" operation="running" operation_key="group-1_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -65,7 +65,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="42" operation="start" operation_key="group-1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -78,7 +78,7 @@
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="ocf_192.168.100.181_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.181"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.181"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -91,7 +91,7 @@
     <action_set>
       <rsc_op id="33" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.181"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.181"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -112,7 +112,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="32" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.181"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.181"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -130,7 +130,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="31" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.181"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.181"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -149,7 +149,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="heartbeat_192.168.100.182_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6">
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7">
           <param name="1" value="192.168.100.182"/>
         </attributes>
       </rsc_op>
@@ -164,7 +164,7 @@
     <action_set>
       <rsc_op id="36" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7">
           <param name="1" value="192.168.100.182"/>
         </attributes>
       </rsc_op>
@@ -187,7 +187,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="35" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6">
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7">
           <param name="1" value="192.168.100.182"/>
         </attributes>
       </pseudo_event>
@@ -211,7 +211,7 @@
     <action_set>
       <rsc_op id="41" operation="monitor" operation_key="ocf_192.168.100.183_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.183"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.183"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -224,7 +224,7 @@
     <action_set>
       <rsc_op id="40" operation="start" operation_key="ocf_192.168.100.183_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <primitive id="ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.183"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.183"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -248,7 +248,7 @@
   <synapse id="13">
     <action_set>
       <pseudo_event id="39" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.183"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.183"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -263,7 +263,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="38" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.183"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.183"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -279,7 +279,7 @@
     <action_set>
       <rsc_op id="56" operation="monitor" operation_key="rsc_c001n05_monitor_5000" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.187"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.187"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -292,7 +292,7 @@
     <action_set>
       <rsc_op id="55" operation="start" operation_key="rsc_c001n05_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="3.0.6" ip="192.168.100.187"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="3.0.7" ip="192.168.100.187"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -307,7 +307,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="54" operation="stop" operation_key="rsc_c001n05_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.187"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.187"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -320,7 +320,7 @@
     <action_set>
       <rsc_op id="61" operation="monitor" operation_key="rsc_c001n07_monitor_5000" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.189"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.189"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -333,7 +333,7 @@
     <action_set>
       <rsc_op id="60" operation="start" operation_key="rsc_c001n07_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="3.0.6" ip="192.168.100.189"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="3.0.7" ip="192.168.100.189"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -348,7 +348,7 @@
   <synapse id="20">
     <action_set>
       <pseudo_event id="59" operation="stop" operation_key="rsc_c001n07_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.100.189"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.189"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -361,7 +361,7 @@
     <action_set>
       <rsc_op id="74" operation="monitor" operation_key="child_DoFencing:4_monitor_20000" on_node="c001n08" on_node_uuid="f3dcc75c-12da-4949-b01c-1988f7df5238">
         <primitive id="child_DoFencing" long-id="child_DoFencing:4" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="40000" crm_feature_set="3.0.6" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_requires="nothing" CRM_meta_timeout="40000" crm_feature_set="3.0.7" hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -369,7 +369,7 @@
   <synapse id="22">
     <action_set>
       <crm_event id="111" operation="stonith" operation_key="stonith-c001n05" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
-        <attributes CRM_meta_on_node="c001n05" CRM_meta_on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="c001n05" CRM_meta_on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs/>
@@ -377,7 +377,7 @@
   <synapse id="23">
     <action_set>
       <crm_event id="110" operation="stonith" operation_key="stonith-c001n03" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
-        <attributes CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
       </crm_event>
     </action_set>
     <inputs>
@@ -389,7 +389,7 @@
   <synapse id="24">
     <action_set>
       <pseudo_event id="109" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -401,7 +401,7 @@
   <synapse id="25">
     <action_set>
       <pseudo_event id="24" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.6"/>
+        <attributes crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>

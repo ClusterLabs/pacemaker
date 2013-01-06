@@ -2,7 +2,7 @@
   <synapse id="0">
     <action_set>
       <pseudo_event id="28" operation="running" operation_key="GRP_Web_Server_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -17,7 +17,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="27" operation="start" operation_key="GRP_Web_Server_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="PRIM_Web_IP1_monitor_5000" on_node="sles11-ha2" on_node_uuid="sles11-ha2">
         <primitive id="PRIM_Web_IP1" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="6000" crm_feature_set="3.0.6" ip="192.168.2.45"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_start_delay="1000" CRM_meta_timeout="6000" crm_feature_set="3.0.7" ip="192.168.2.45"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -39,7 +39,7 @@
     <action_set>
       <rsc_op id="25" operation="start" operation_key="PRIM_Web_IP1_start_0" on_node="sles11-ha2" on_node_uuid="sles11-ha2">
         <primitive id="PRIM_Web_IP1" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.6" ip="192.168.2.45"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.2.45"/>
       </rsc_op>
     </action_set>
     <inputs>
