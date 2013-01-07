@@ -1077,6 +1077,8 @@ crm_abort(const char *file, const char *function, int line,
         default:               /* Parent */
             crm_err("%s: Forked child %d to record non-fatal assert at %s:%d : %s",
                     function, pid, file, line, assert_condition);
+            crm_write_blackbox(SIGABRT, NULL);
+
             do {
                 rc = waitpid(pid, &status, 0);
                 if (rc < 0 && errno != EINTR) {

@@ -364,6 +364,7 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
 
     switch(nsig) {
         case 0:
+        case SIGABRT:
         case SIGTRAP:
             /* The graceful case - such as assertion failure or user request */
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
