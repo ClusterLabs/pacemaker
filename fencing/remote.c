@@ -49,6 +49,8 @@ typedef struct st_query_result_s
 {
     char *host;
     int devices;
+    /* only try peers for non-topology based operations once */
+    gboolean tried;
     GListPtr device_list;
     GHashTable *custom_action_timeouts;
     /* Subset of devices that peer has verified connectivity on */
@@ -629,7 +631,7 @@ find_best_peer(const char *device, remote_fencing_op_t *op, enum find_best_peer_
                 return peer;
             }
 
-        } else if(peer->devices > 0) {
+        } else if(peer->devices > 0 && peer->tried == FALSE) {
             if (verified_devices_only && !g_hash_table_size(peer->verified_devices)) {
                 continue;
             }
@@ -847,6 +849,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         op->op_timer_one = g_timeout_add((1000 * t), remote_op_timeout_one, op);
 
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, query, FALSE);
+        peer->tried = TRUE;
         free_xml(query);
         return;
 
@@ -866,8 +869,6 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_info("Waiting for additional peers capable of terminating %s for %s%.8s",
                  op->target, op->client_name, op->id);
     }
-
-    free_remote_query(peer);
 }
 
 static gint sort_peers(gconstpointer a, gconstpointer b)
