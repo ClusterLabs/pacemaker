@@ -407,6 +407,8 @@ do_election_count_vote(long long action,
         election_wins++;
         if(election_wins > (peers * peers)) {
             crm_err("Election storm detected: %d elections in %d seconds", election_wins, STORM_INTERVAL);
+            election_wins = 0;
+            expires = tm_now + STORM_INTERVAL;
         }
     }
 
