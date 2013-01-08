@@ -101,6 +101,7 @@ class crm_ais(crm_lha):
                 #r"fence_pcmk",
                 r"cman killed by node",
                 r"Election storm",
+                r"stalled the FSA with pending inputs",
             ),
         })
 
