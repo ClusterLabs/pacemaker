@@ -398,7 +398,7 @@ do_election_count_vote(long long action,
         election_wins = 0;
         expires = tm_now + STORM_INTERVAL;
 
-    } else if(we_loose == FALSE) {
+    } else if(done == FALSE && we_loose == FALSE) {
         int peers = 1 + g_hash_table_size(crm_peer_cache);
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
