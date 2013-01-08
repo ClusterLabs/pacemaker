@@ -563,6 +563,47 @@ unpack_operation_on_fail(action_t *action)
     return value;
 }
 
+static xmlNode *
+find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
+{
+    int number = 0;
+    int min_interval = -1;
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *interval = NULL;
+    xmlNode *op = NULL;
+    xmlNode *operation = NULL;
+
+    for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
+         operation = __xml_next(operation)) {
+
+        if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            name = crm_element_value(operation, "name");
+            interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            value = crm_element_value(operation, "enabled");
+            if (!include_disabled && value && crm_is_true(value) == FALSE) {
+                continue;
+            }
+
+            if (safe_str_neq(name, RSC_STATUS)) {
+                continue;
+            }
+
+            number = crm_get_interval(interval);
+            if (number < 0) {
+                continue;
+            }
+
+            if (min_interval < 0 || number < min_interval) {
+                min_interval = number;
+                op = operation;
+            }
+        }
+    }
+
+    return op;
+}
+
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -779,6 +820,16 @@ unpack_operation(action_t * action, xmlNode * xml_obj, pe_working_set_t * data_s
 
     field = XML_ATTR_TIMEOUT;
     value = g_hash_table_lookup(action->meta, field);
+    if (value == NULL && xml_obj == NULL &&
+        safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
+        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+        if (min_interval_mon) {
+            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+            pe_rsc_trace(action->rsc, "\t%s uses the timeout value '%s' from the minimum interval monitor",
+                         action->uuid, value);
+        }
+    }
     if (value == NULL) {
         value = pe_pref(data_set->config_hash, "default-action-timeout");
     }
