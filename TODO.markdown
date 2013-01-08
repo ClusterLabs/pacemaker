@@ -1,8 +1,18 @@
 # Semi-random collection of tasks we'd like to get done
 
-## Targeted for 1.2
+## Targeted for 2.0
  
-## Targeted for 1.2.x
+## Targeted for 2.0.x
+
+- Figure out why libqb blackboxes contain garbage:
+trace   Jan 06 10:42:41 print_synapse(190):0: [Action   18]: Completed rsc op FencingPass_start_0               on ne (priority: 1918989871, waiting: /lib/pac
+trace   Jan 06 10:42:41 print_synapse(190):0: [Action   17]: Completed rsc op FencingPass_stop_0                on e (priority: 1635135232, waiting: r/lib/pa
+
+- Test and merge fsa-stall-with-data.patch
+- Test and merge join-offer-one.patch 
+- Test and merge ipc-dispatch.patch
+- Process election votes as soon as they happen
+  notice: do_election_count_vote: Election 6 (current: 6, owner: 101): Processed no-vote from east-04 (Peer is not part of our cluster)
 
 - Support
   http://cgit.freedesktop.org/systemd/systemd/commit/?id=96342de68d0d6de71a062d984dafd2a0905ed9fe
@@ -11,9 +21,8 @@
 - Show an english version of the config with crm_resource --rules
 - Convert cts/CIB.py into a supported Python API for the CIB
 - Re-implement no-quorum filter for cib updates?
-- Allow stonith_admin to optionally route fencing requests via the CIB (terminate=true)?
 
-## Targeted for 1.4
+## Targeted for 2.1
 
 - Support A colocated with (B || C || D)
 - Implement a truely atomic version of attrd
