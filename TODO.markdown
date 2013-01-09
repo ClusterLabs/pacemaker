@@ -8,6 +8,8 @@
 trace   Jan 06 10:42:41 print_synapse(190):0: [Action   18]: Completed rsc op FencingPass_start_0               on ne (priority: 1918989871, waiting: /lib/pac
 trace   Jan 06 10:42:41 print_synapse(190):0: [Action   17]: Completed rsc op FencingPass_stop_0                on e (priority: 1635135232, waiting: r/lib/pa
 
+- Make sure fail counts etc are removed on resource deletion
+
 - Test and merge fsa-stall-with-data.patch
 - Test and merge join-offer-one.patch 
 - Test and merge ipc-dispatch.patch

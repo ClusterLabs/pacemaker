@@ -656,7 +656,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         return -EINVAL;
     }
 
-    key = generate_transition_key(0, our_pid, 0, __FILE__);
+    key = generate_transition_key(0, getpid(), 0, __FILE__);
 
     msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
     crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);

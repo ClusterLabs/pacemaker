@@ -292,7 +292,7 @@ manager for Linux-HA (Heartbeat) and/or Corosync.
 
 # Force the local time
 #
-# 'hg archive' sets the file date to the date of the last commit.
+# 'git' sets the file date to the date of the last commit.
 # This can result in files having been created in the future
 # when building on machines in timezones 'behind' the one the 
 # commit occurred in - which seriously confuses 'make'
