@@ -32,7 +32,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="prmIpPostgreSQLDB_monitor_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6">
         <primitive id="prmIpPostgreSQLDB" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.7" ip="172.16.91.120" nic="eth0"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="60000" cidr_netmask="24" crm_feature_set="3.0.7" ip="172.16.91.120" nic="eth0"/>
       </rsc_op>
     </action_set>
     <inputs/>

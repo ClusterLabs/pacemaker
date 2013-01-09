@@ -1095,7 +1095,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="SymlinkEtcLibvirt:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="SymlinkEtcLibvirt" long-id="SymlinkEtcLibvirt:0" class="ocf" provider="heartbeat" type="symlink"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/libvirt" target="/var/nevis/etc/libvirt"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/libvirt" target="/var/nevis/etc/libvirt"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1340,7 +1340,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="SymlinkTftp:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="SymlinkTftp" long-id="SymlinkTftp:0" class="ocf" provider="heartbeat" type="symlink"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/xinetd.d/tftp" target="/var/nevis/etc/xinetd.d/tftp"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/xinetd.d/tftp" target="/var/nevis/etc/xinetd.d/tftp"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1439,7 +1439,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="SymlinkTftp:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="SymlinkTftp" long-id="SymlinkTftp:1" class="ocf" provider="heartbeat" type="symlink"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/xinetd.d/tftp" target="/var/nevis/etc/xinetd.d/tftp"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" backup_suffix=".original" crm_feature_set="3.0.7" link="/etc/xinetd.d/tftp" target="/var/nevis/etc/xinetd.d/tftp"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2154,7 +2154,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="AdminLvm:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="AdminLvm" long-id="AdminLvm:0" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" volgrpname="ADMIN"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="100000" crm_feature_set="3.0.7" volgrpname="ADMIN"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2195,7 +2195,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="FSUsrNevis:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="FSUsrNevis" long-id="FSUsrNevis:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-usr" directory="/usr/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-usr" directory="/usr/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2236,7 +2236,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="FSVarNevis:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="FSVarNevis" long-id="FSVarNevis:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-var" directory="/var/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-var" directory="/var/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2277,7 +2277,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="FSVirtualMachines:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="FSVirtualMachines" long-id="FSVirtualMachines:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-xen" directory="/xen" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-xen" directory="/xen" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2318,7 +2318,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="FSMail:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="FSMail" long-id="FSMail:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-mail" directory="/mail" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-mail" directory="/mail" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2359,7 +2359,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="FSWork:0_monitor_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu">
         <primitive id="FSWork" long-id="FSWork:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-work" directory="/work" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-work" directory="/work" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2442,7 +2442,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="AdminLvm:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="AdminLvm" long-id="AdminLvm:1" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" volgrpname="ADMIN"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="100000" crm_feature_set="3.0.7" volgrpname="ADMIN"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2483,7 +2483,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="FSUsrNevis:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="FSUsrNevis" long-id="FSUsrNevis:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-usr" directory="/usr/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-usr" directory="/usr/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2524,7 +2524,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="FSVarNevis:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="FSVarNevis" long-id="FSVarNevis:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-var" directory="/var/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-var" directory="/var/nevis" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2565,7 +2565,7 @@
     <action_set>
       <rsc_op id="39" operation="monitor" operation_key="FSVirtualMachines:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="FSVirtualMachines" long-id="FSVirtualMachines:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-xen" directory="/xen" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-xen" directory="/xen" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2606,7 +2606,7 @@
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="FSMail:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="FSMail" long-id="FSMail:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-mail" directory="/mail" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-mail" directory="/mail" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -2647,7 +2647,7 @@
     <action_set>
       <rsc_op id="41" operation="monitor" operation_key="FSWork:1_monitor_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu">
         <primitive id="FSWork" long-id="FSWork:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-work" directory="/work" fstype="gfs2" options="defaults,noatime,nodiratime"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" device="/dev/mapper/ADMIN-work" directory="/work" fstype="gfs2" options="defaults,noatime,nodiratime"/>
       </rsc_op>
     </action_set>
     <inputs/>

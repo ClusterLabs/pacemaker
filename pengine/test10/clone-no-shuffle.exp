@@ -150,7 +150,7 @@
      <action_set>
       <rsc_op id="7" operation="monitor" operation_key="drbd1:1_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
         <primitive id="drbd1" long-id="drbd1:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" drbd_resource="drbd1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="15000" crm_feature_set="3.0.7" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
     <inputs/>
@@ -429,7 +429,7 @@
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="testip_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
         <primitive id="testip" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" broadcast="10.200.200.255" cidr_netmask="24" crm_feature_set="3.0.7" ip="10.200.200.222" nic="eth1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="5000" broadcast="10.200.200.255" cidr_netmask="24" crm_feature_set="3.0.7" ip="10.200.200.222" nic="eth1"/>
       </rsc_op>
     </action_set>
     <inputs/>

@@ -135,7 +135,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="B-1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="B-1" class="ocf" provider="rgk" type="typeB"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeBdaemon-1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7" daemon="typeBdaemon-1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -144,7 +144,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="C-1_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="C-1" class="ocf" provider="rgk" type="typeC"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeCdaemon-1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7" daemon="typeCdaemon-1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -153,7 +153,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="B-2_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="B-2" class="ocf" provider="rgk" type="typeB"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeBdaemon-2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7" daemon="typeBdaemon-2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -162,7 +162,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="C-2_monitor_0" on_node="queen" on_node_uuid="queen">
         <primitive id="C-2" class="ocf" provider="rgk" type="typeC"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.7" daemon="typeCdaemon-2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7" daemon="typeCdaemon-2"/>
       </rsc_op>
     </action_set>
     <inputs/>
