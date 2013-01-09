@@ -369,7 +369,7 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
             /* The graceful case - such as assertion failure or user request */
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
 
-            if(nsig == 0 && (now - last) < 2) {
+            if(nsig == 0 && now == last) {
                 /* Prevent over-dumping */
                 return;
 
