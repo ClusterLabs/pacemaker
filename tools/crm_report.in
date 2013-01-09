@@ -181,7 +181,7 @@ EOF
 	    bash $l_base/collector
 	else
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector \
-		| ssh -l $ssh_user -T $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar xf -)
+		| ssh -l $ssh_user -T $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar mxf -)
 	fi
     done
 
