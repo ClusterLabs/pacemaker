@@ -89,6 +89,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         if (old_len > 0) {
             crm_warn("%s stalled the FSA with pending inputs", raised_from);
             fsa_dump_queue(LOG_DEBUG);
+            crm_write_blackbox(0, NULL);
         }
         if (data == NULL) {
             set_bit(fsa_actions, with_actions);
@@ -189,9 +190,10 @@ fsa_dump_queue(int log_level)
         fsa_data_t *data = (fsa_data_t *) lpc->data;
 
         do_crm_log_unlikely(log_level,
-                   "queue[%d(%d)]: input %s raised by %s()\t(cause=%s)",
+                   "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
                    offset++, data->id, fsa_input2string(data->fsa_input),
-                   data->origin, fsa_cause2string(data->fsa_cause));
+                   data->origin, data->data, data->data_type,
+                   fsa_cause2string(data->fsa_cause));
     }
 }
 
