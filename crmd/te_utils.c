@@ -330,7 +330,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                                      &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
                                      &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
             if (crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR, TRUE)) {
-                crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
+                crm_notice("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
                          fn, line, transition_graph->complete, TYPE(reason), ID(reason),
                          NAME(reason), VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch,
                          diff_add_epoch, diff_add_updates, abort_text);

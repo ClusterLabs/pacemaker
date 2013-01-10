@@ -396,7 +396,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         no_wait = TRUE;
     }
 
-    crm_info("Initiating action %d: %s %s on %s%s%s",
+    crm_notice("Initiating action %d: %s %s on %s%s%s",
              action->id, task, task_uuid, on_node,
              is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 

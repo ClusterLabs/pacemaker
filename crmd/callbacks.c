@@ -125,7 +125,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             crm_info("%s is now %s", node->uname, node->state);
             return;
         case crm_status_nstate:
-            crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
+            crm_notice("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
             if(safe_str_neq(data, node->state)) {
                 /* State did not change */
                 return;
@@ -138,7 +138,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             /* crmd_proc_update(node, proc_flags); */
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
-            crm_info("Client %s/%s now has status [%s] (DC=%s)",
+            crm_notice("Client %s/%s now has status [%s] (DC=%s)",
                      node->uname, peer2text(proc_flags), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
 
             if (((node->processes ^ old) & proc_flags) == 0) {

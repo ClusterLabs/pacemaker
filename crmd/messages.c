@@ -885,7 +885,7 @@ handle_shutdown_request(xmlNode * stored_msg)
         host_from = fsa_our_uname;
     }
 
-    crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
+    crm_notice("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = crm_itoa(now);
