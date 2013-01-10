@@ -41,18 +41,21 @@ typedef struct cib_client_s {
     char *name;
     char *callback_id;
     char *user;
+    char *recv_buf;
     int request_id;
 
     qb_ipcs_connection_t *ipc;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session *session;
+    gboolean handshake_complete;
 #else
     void *session;
 #endif
     gboolean encrypted;
+    gboolean remote_auth;
     mainloop_io_t *remote;
-        
+
     unsigned long num_calls;
 
     int pre_notify;
@@ -60,6 +63,7 @@ typedef struct cib_client_s {
     int confirmations;
     int replace;
     int diffs;
+    int remote_auth_timeout;
 
     GList *delegated_calls;
 } cib_client_t;
