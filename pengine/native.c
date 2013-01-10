@@ -1814,7 +1814,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     if (is_not_set(rsc->flags, pe_rsc_managed)
         || (current == NULL && next == NULL)) {
-        pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
+        pe_rsc_notice(rsc, "Leave   %s\t(%s%s)",
                    rsc->id, role2text(rsc->role), is_not_set(rsc->flags,
                                                              pe_rsc_managed) ? " unmanaged" : "");
         return;
@@ -1873,7 +1873,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
-            pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            pe_rsc_notice(rsc, "Leave   %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
             log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);

@@ -913,7 +913,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         pe_proc_warn("Node %s is unclean", this_node->details->uname);
 
     } else if (this_node->details->online) {
-        crm_info("Node %s is %s", this_node->details->uname,
+        crm_notice("Node %s is %s", this_node->details->uname,
                  this_node->details->shutdown ? "shutting down" :
                  this_node->details->pending ? "pending" :
                  this_node->details->standby ? "standby" : "online");

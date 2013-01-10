@@ -173,7 +173,7 @@ static void pcmk_child_exit(GPid pid, gint status, gpointer user_data)
 
     } else if(WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
-        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
+        do_crm_log(exitcode == 0 ? LOG_NOTICE : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
     }
 
@@ -267,7 +267,7 @@ start_child(pcmk_child_t * child)
         /* parent */
         g_child_watch_add(child->pid, pcmk_child_exit, child);
 
-        crm_info("Forked child %d for process %s%s", child->pid, child->name,
+        crm_notice("Forked child %d for process %s%s", child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
         update_node_processes(local_nodeid, NULL, get_process_list());
         return TRUE;

@@ -1666,7 +1666,7 @@ do_lrm_rsc_op(lrmd_rsc_info_t * rsc, const char *operation, xmlNode * msg, xmlNo
     }
 
     /* now do the op */
-    crm_debug("Performing key=%s op=%s_%s_%d", transition, rsc->id, operation, op->interval);
+    crm_notice("Performing key=%s op=%s_%s_%d", transition, rsc->id, operation, op->interval);
 
     if (fsa_state != S_NOT_DC && fsa_state != S_POLICY_ENGINE && fsa_state != S_TRANSITION_ENGINE) {
         if (safe_str_neq(operation, "fail")
