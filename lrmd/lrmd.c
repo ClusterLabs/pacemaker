@@ -72,6 +72,7 @@ typedef struct lrmd_cmd_s {
     int first_notify_sent;
     int last_notify_rc;
     int last_notify_op_status;
+    int last_pid;
 
     GHashTable *params;
 } lrmd_cmd_t;
@@ -79,6 +80,55 @@ typedef struct lrmd_cmd_s {
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean lrmd_rsc_dispatch(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t *rsc, const char *client_id);
+
+static void
+log_finished(lrmd_cmd_t *cmd, int exec_time, int queue_time)
+{
+    char pid_str[32] = { 0, };
+    int log_level = LOG_NOTICE;
+
+    if (cmd->last_pid) {
+       snprintf(pid_str, 32, "%d", cmd->last_pid);
+    }
+
+    if (safe_str_eq(cmd->action, "monitor")) {
+        log_level = LOG_DEBUG;
+    }
+
+#ifdef HAVE_SYS_TIMEB_H
+    do_crm_log(log_level, "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d exec-time:%dms queue-time:%dms",
+            cmd->rsc_id,
+            cmd->action,
+            cmd->call_id,
+            cmd->last_pid ? "pid:" : "",
+            pid_str,
+            cmd->exec_rc,
+            exec_time,
+            queue_time);
+#else
+    do_crm_log(log_level, "finished - rsc:%s action:%s call_id:%d %s%s exit-code:%d",
+            cmd->rsc_id,
+            cmd->action,
+            cmd->call_id,
+            cmd->last_pid ? "pid:" : "",
+            pid_str,
+            cmd->exec_rc);
+#endif
+}
+
+static void
+log_execute(lrmd_cmd_t *cmd)
+{
+    int log_level = LOG_NOTICE;
+
+    if (safe_str_eq(cmd->action, "monitor")) {
+        log_level = LOG_DEBUG;
+    }
+
+    do_crm_log(log_level, "executing - rsc:%s action:%s call_id:%d",
+        cmd->rsc_id, cmd->action, cmd->call_id);
+}
+
 static lrmd_rsc_t *
 build_rsc_from_xml(xmlNode * msg)
 {
@@ -267,10 +317,18 @@ time_diff_ms(struct timeb *now, struct timeb *old)
 static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
+    int exec_time = 0;
+    int queue_time = 0;
+    xmlNode *notify = NULL;
 #ifdef HAVE_SYS_TIMEB_H
     struct timeb now = { 0, };
+
+    ftime(&now);
+    exec_time = time_diff_ms(&now, &cmd->t_run);
+    queue_time = time_diff_ms(&cmd->t_run, &cmd->t_queue);
 #endif
-    xmlNode *notify = NULL;
+
+    log_finished(cmd, exec_time, queue_time);
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
@@ -301,11 +359,10 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
 #ifdef HAVE_SYS_TIMEB_H
-    ftime(&now);
     crm_xml_add_int(notify, F_LRMD_RSC_RUN_TIME, cmd->t_run.time);
     crm_xml_add_int(notify, F_LRMD_RSC_RCCHANGE_TIME, cmd->t_rcchange.time);
-    crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, time_diff_ms(&now, &cmd->t_run));
-    crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, time_diff_ms(&cmd->t_run, &cmd->t_queue));
+    crm_xml_add_int(notify, F_LRMD_RSC_EXEC_TIME, exec_time);
+    crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
 
     crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_RSC_EXEC);
@@ -398,6 +455,7 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     } else {
         /* Clear all the values pertaining just to the last iteration of a recurring op. */
         cmd->lrmd_op_status = 0;
+        cmd->last_pid = 0;
         memset(&cmd->t_run, 0, sizeof(cmd->t_run));
         memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
         free(cmd->output);
@@ -512,6 +570,7 @@ action_complete(svc_action_t * action)
     }
 #endif
 
+    cmd->last_pid = action->pid;
     cmd->exec_rc = get_uniform_rc(action->standard, cmd->action, action->rc);
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
@@ -798,6 +857,8 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
     if (cmd->interval) {
         rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
     }
+
+    log_execute(cmd);
 
     if (safe_str_eq(rsc->class, "stonith")) {
         lrmd_rsc_execute_stonith(rsc, cmd);

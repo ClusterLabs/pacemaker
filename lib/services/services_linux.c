@@ -229,6 +229,8 @@ operation_finalize(svc_action_t *op)
         op->opaque->callback(op);
     }
 
+    op->pid = 0;
+
     if (!recurring) {
         /*
          * If this is a recurring action, do not free explicitly.
@@ -285,7 +287,6 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     crm_log_output(LOG_NOTICE, prefix, op->stderr_data);
     crm_log_output(LOG_DEBUG, prefix, op->stdout_data);
 
-    op->pid = 0;
     g_free(prefix);
     operation_finalize(op);
 }
