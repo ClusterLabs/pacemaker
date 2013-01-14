@@ -85,7 +85,7 @@ static void
 log_finished(lrmd_cmd_t *cmd, int exec_time, int queue_time)
 {
     char pid_str[32] = { 0, };
-    int log_level = LOG_NOTICE;
+    int log_level = LOG_INFO;
 
     if (cmd->last_pid) {
        snprintf(pid_str, 32, "%d", cmd->last_pid);
@@ -119,7 +119,7 @@ log_finished(lrmd_cmd_t *cmd, int exec_time, int queue_time)
 static void
 log_execute(lrmd_cmd_t *cmd)
 {
-    int log_level = LOG_NOTICE;
+    int log_level = LOG_INFO;
 
     if (safe_str_eq(cmd->action, "monitor")) {
         log_level = LOG_DEBUG;
