@@ -392,7 +392,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
 
-            print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
+            print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
 
         } else {
             crm_config_err("Failed unpacking %s %s",

@@ -91,7 +91,7 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 group_data->first_child = new_rsc;
             }
             group_data->last_child = new_rsc;
-            print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
+            print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
         }
     }
 
