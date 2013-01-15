@@ -300,13 +300,12 @@ do_lrm_control(long long action,
             }
         }
 
-        if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
+        if (fsa_lrm_conn) {
             clear_bit(fsa_input_register, R_LRM_CONNECTED);
-
             fsa_lrm_conn->cmds->disconnect(fsa_lrm_conn);
-            crm_info("Disconnected from the LRM");
         }
 
+        crm_notice("Disconnected from the LRM");
         if(resource_history) {
             g_hash_table_destroy(resource_history);
             resource_history = NULL;
@@ -409,6 +408,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 {
     int counter = 0;
     gboolean rc = TRUE;
+    const char *when = "lrm disconnect";
 
     GHashTableIter gIter;
     rsc_history_t *entry = NULL;
@@ -417,6 +417,10 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 
     if (cur_state == S_TERMINATE) {
         log_level = LOG_ERR;
+        when = "shutdown";
+
+    } else if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        when = "shutdown... waiting";
     }
 
     if (pending_ops) {
@@ -428,13 +432,12 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
     }
 
     if (counter > 0) {
-        rc = FALSE;
-        do_crm_log(log_level,
-                   "%d pending LRM operations at shutdown%s",
-                   counter, cur_state == S_TERMINATE ? "" : "... waiting");
+        do_crm_log(log_level, "%d pending LRM operations at %s%s", counter, when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_foreach(pending_ops, ghash_print_pending, &log_level);
+        } else {
+            rc = FALSE;
         }
         goto bail;
     }
@@ -443,25 +446,23 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
         goto bail;
     }
 
+    counter = 0;
     g_hash_table_iter_init(&gIter, resource_history);
     while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
         if (is_rsc_active(entry->id) == FALSE) {
             continue;
         }
 
-        crm_err("Resource %s was active at shutdown."
-                "  You may ignore this error if it is unmanaged.", entry->id);
-
+        counter++;
         g_hash_table_foreach(pending_ops, ghash_print_pending_for_rsc, entry->id);
     }
 
+    if(counter) {
+        crm_err("%d resources were active at %s.", counter, when);
+    }
+    
   bail:
     set_bit(fsa_input_register, R_SENT_RSC_STOP);
-
-    if (cur_state == S_TERMINATE) {
-        rc = TRUE;
-    }
-
     return rc;
 }
 
