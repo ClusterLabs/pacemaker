@@ -113,8 +113,8 @@ while true; do
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
 #	-t|--test) pkgs="$pkgs qarsh-server valgrind"; shift; shift;;
 
-	r6)  CTYPE=cman; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
-	r7)  CTYPE=corosync; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	r6)  CTYPE=cman; rpm_repo=rpm-test-next; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
+	r7)  CTYPE=corosync; rpm_repo=rpm-test-next; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
 	f*[0-9][0-9]) 
 	    distro="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`";
 	    CTYPE=corosync; 
@@ -181,28 +181,32 @@ case $CTYPE in
 	;;
 esac
 
-if [ -z $SSH ]; then
-    SSH="No"
-fi
+function get_defaults() 
+{
+    if [ -z $SSH ]; then
+	SSH="No"
+    fi
+    
+    if [ -z $SELINUX ]; then
+	SELINUX="Yes"
+    fi
+    
+    if [ -z $IPTABLES ]; then
+	IPTABLES="Yes"
+    fi
+    
+    if [ -z $DOMAIN ]; then
+	DOMAIN="No"
+    fi
+    if [ -z $INSTALL ]; then
+	INSTALL="Yes"
+    fi
+    if [ -z $DATE ]; then
+	DATE="Yes"
+    fi
+}
 
-if [ -z $SELINUX ]; then
-    SELINUX="Yes"
-fi
-
-if [ -z $IPTABLES ]; then
-    IPTABLES="Yes"
-fi
-
-if [ -z $DOMAIN ]; then
-    DOMAIN="No"
-fi
-if [ -z $INSTALL ]; then
-    INSTALL="Yes"
-fi
-if [ -z $DATE ]; then
-    DATE="Yes"
-fi
-
+get_defaults
 if [ $accept_defaults = 0 ]; then
     echo ""
     read -p "Shall I install an ssh key to cluster nodes? [$SSH] " -t 60 SSH
@@ -229,7 +233,7 @@ if [ $accept_defaults = 0 ]; then
 	[Yy][Ee][Ss]|[Yy]|"") 
 	    if [ -z $rpm_repo ]; then
 		echo ""
-		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next, rpm-test-rhel) "  -t 60 rpm_repo
+		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next) "  -t 60 rpm_repo
 	    fi
 	    
 	    if [ ! -z $rpm_repo ]; then
@@ -245,6 +249,7 @@ if [ $accept_defaults = 0 ]; then
     echo ""
     read -p "Shall I sync the date/time? [$DATE] "  -t 60 DATE
 fi
+get_defaults
 
 echo ""
 echo "Detecting possible fencing options"
@@ -340,6 +345,8 @@ case $IPTABLES in
     [Yy][Ee][Ss]|[Yy]|"") 
 	service iptables stop
 	chkconfig iptables off
+	service firewalld stop
+	chkconfig firewalld off
 	;;
 esac
 
