@@ -570,12 +570,12 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
         crm_trace("Trying again to obtain pending reply from %s", client->name);
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if(rc < 0) {
-            crm_warn("Sending to %s is disabled until pending reply is recieved", client->name);
+            crm_warn("Sending to %s (%p) is disabled until pending reply is recieved", client->name, client->ipc);
             free(buffer);
             return -EREMOTEIO;
 
         } else {
-            crm_notice("Lost reply from %s finally arrived, sending re-enabled", client->name);
+            crm_notice("Lost reply from %s (%p) finally arrived, sending re-enabled", client->name, client->ipc);
             client->need_reply = FALSE;
         }
     }
@@ -645,7 +645,7 @@ send_cleanup:
         crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
     } else if(rc <= 0) {
-        crm_warn("Request %d to %s failed: %s (%ld)", header.qb.id, client->name, pcmk_strerror(rc), rc);
+        crm_warn("Request %d to %s (%p) failed: %s (%ld)", header.qb.id, client->name, client->ipc, pcmk_strerror(rc), rc);
         crm_info("Request was %.120s", buffer);
     }
 

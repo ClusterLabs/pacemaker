@@ -377,7 +377,7 @@ get_local_node_name(void)
         int rc = uname(&res);
 
         if(rc == 0) {
-            crm_notice("Defaulting to uname(2).nodename for the local %s node name", name_for_cluster_type(stack));
+            crm_notice("Defaulting to uname -n for the local %s node name", name_for_cluster_type(stack));
             name = strdup(res.nodename);
         }
     }
