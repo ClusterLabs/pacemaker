@@ -44,6 +44,10 @@
 #endif
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+const int psk_tls_kx_order[] = {
+    GNUTLS_KX_DHE_PSK,
+    GNUTLS_KX_PSK,
+};
 const int anon_tls_kx_order[] = {
     GNUTLS_KX_ANON_DH,
     GNUTLS_KX_DHE_RSA,
@@ -101,6 +105,32 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
 
     return session;
 }
+
+void *
+create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, void *credentials)
+{
+    gnutls_session *session = gnutls_malloc(sizeof(gnutls_session));
+
+    gnutls_init(session, type);
+#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
+    gnutls_priority_set_direct(*session, "NORMAL:+DHE-PSK:+PSK", NULL);
+#  else
+    gnutls_set_default_priority(*session);
+    gnutls_kx_set_priority(*session, psk_tls_kx_order);
+#  endif
+    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr) GINT_TO_POINTER(csock));
+    switch (type) {
+    case GNUTLS_SERVER:
+        gnutls_credentials_set(*session, GNUTLS_CRD_PSK, (gnutls_psk_server_credentials_t) credentials);
+        break;
+    case GNUTLS_CLIENT:
+        gnutls_credentials_set(*session, GNUTLS_CRD_PSK, (gnutls_psk_client_credentials_t) credentials);
+        break;
+    }
+
+    return session;
+}
+
 
 static int
 crm_send_tls(gnutls_session * session, const char *buf, size_t len)

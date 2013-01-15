@@ -230,6 +230,17 @@ int crm_initiate_client_tls_handshake(void *session_data, int timeout_ms);
  * \retval NULL on failure
  */
 void *crm_create_anon_tls_session(int sock, int type, void *credentials);
+/*!
+ * \internal
+ * \brief Create client or server session for PSK credentials
+ * \param sock, the socket the session will use for transport
+ * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
+ * \param credentials, gnutls_psk_server_credentials_t or gnutls_osk_client_credentials_t
+ *
+ * \retval gnutls_session * on success
+ * \retval NULL on failure
+ */
+void *create_psk_tls_session(int csock, int type, void *credentials);
 #endif
 
 #define REMOTE_MSG_TERMINATOR "\r\n\r\n"
