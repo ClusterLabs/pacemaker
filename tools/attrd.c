@@ -770,8 +770,8 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     if (hash_entry->value != NULL) {
         data->value = strdup(hash_entry->value);
     }
-    add_cib_op_callback(cib_conn, rc, FALSE, data, attrd_cib_callback);
-
+    cib_conn->cmds->register_callback(
+        cib_conn, rc, 120, FALSE, data, "attrd_cib_callback", attrd_cib_callback);
     return;
 }
 

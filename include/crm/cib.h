@@ -170,8 +170,10 @@ void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
 void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
-#  define add_cib_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
-
+/* Deprecated */
+#  define add_cib_op_callback(cib, id, flag, data, fn) do {             \
+        cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
+    } while(0)
 #  include <crm/cib/util.h>
 
 #  define CIB_LIBRARY "libcib.so.2"

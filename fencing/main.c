@@ -868,7 +868,8 @@ setup_cib(void)
 
     } else {
         rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
-        add_cib_op_callback(cib, rc, FALSE, NULL, init_cib_cache_cb);
+        cib->cmds->register_callback(
+            cib, rc, 120, FALSE, NULL, "init_cib_cache_cb", init_cib_cache_cb);
         cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
         crm_notice("Watching for stonith topology changes");
     }
