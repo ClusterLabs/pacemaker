@@ -435,6 +435,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
 
     } else if (no_wait) {
+        crm_info("Action %d confirmed - no wait", action->id);
         action->confirmed = TRUE;
         update_graph(transition_graph, action);
         trigger_graph();
