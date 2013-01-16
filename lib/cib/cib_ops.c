@@ -675,6 +675,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         if (result == pcmk_ok) {
             result = -pcmk_err_diff_failed;
         }
+        crm_write_blackbox(0, NULL);
 
     } else if (apply_diff) {
         crm_trace("Diff %d.%d.%d -> %d.%d.%d from %s was applied to %d.%d.%d",
