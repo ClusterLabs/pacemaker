@@ -429,6 +429,7 @@ do_election_count_vote(long long action,
         if (fsa_input_register & R_THE_DC) {
             crm_trace("Give up the DC to %s", vote_from);
             register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
+            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
         } else if (cur_state != S_STARTING) {
             crm_trace("We werent the DC anyway");
@@ -440,8 +441,6 @@ do_election_count_vote(long long action,
 
         send_cluster_message(crm_get_peer(0, vote_from), crm_msg_crmd, novote, TRUE);
         free_xml(novote);
-
-        fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
         last_election_loss = tm_now;
 
