@@ -136,7 +136,7 @@ do_ccm_control(long long action,
                              " %d times (%d max)", num_ccm_register_fails, max_ccm_register_fails);
 
                     crm_timer_start(wait_timer);
-                    crmd_fsa_stall(NULL);
+                    crmd_fsa_stall(FALSE);
                     return;
 
                 } else {

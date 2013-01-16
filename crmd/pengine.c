@@ -204,7 +204,7 @@ do_pe_invoke(long long action,
 
         } else {
             crm_info("Waiting for the PE to connect");
-            crmd_fsa_stall(NULL);
+            crmd_fsa_stall(FALSE);
             register_fsa_action(A_PE_START);
         }
         return;

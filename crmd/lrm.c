@@ -295,7 +295,7 @@ do_lrm_control(long long action,
     if (action & A_LRM_DISCONNECT) {
         if (verify_stopped(cur_state, LOG_INFO) == FALSE) {
             if(action == A_LRM_DISCONNECT) {
-                crmd_fsa_stall(NULL);
+                crmd_fsa_stall(FALSE);
                 return;
             }
         }
@@ -341,7 +341,7 @@ do_lrm_control(long long action,
                          " (%d max) times", num_lrm_register_fails, max_lrm_register_fails);
 
                 crm_timer_start(wait_timer);
-                crmd_fsa_stall(NULL);
+                crmd_fsa_stall(FALSE);
                 return;
             }
         }

@@ -156,7 +156,7 @@ do_shutdown(long long action,
                 clear_bit(fsa_input_register, pe_subsystem->flag_connected);
             } else {
                 crm_info("Waiting for subsystems to exit");
-                crmd_fsa_stall(NULL);
+                crmd_fsa_stall(FALSE);
             }
         }
         crm_info("All subsystems stopped, continuing");
@@ -666,25 +666,25 @@ do_started(long long action,
     } else if (is_set(fsa_input_register, R_MEMBERSHIP) == FALSE) {
         crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
 
-        crmd_fsa_stall(NULL);
+        crmd_fsa_stall(TRUE);
         return;
 
     } else if (is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
         crm_info("Delaying start, LRM not connected (%.16llx)", R_LRM_CONNECTED);
 
-        crmd_fsa_stall(NULL);
+        crmd_fsa_stall(TRUE);
         return;
 
     } else if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
         crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
-        crmd_fsa_stall(NULL);
+        crmd_fsa_stall(TRUE);
         return;
 
     } else if (is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
         crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
-        crmd_fsa_stall(NULL);
+        crmd_fsa_stall(TRUE);
         return;
 
     } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
@@ -703,7 +703,7 @@ do_started(long long action,
             }
         }
 #endif
-        crmd_fsa_stall(NULL);
+        crmd_fsa_stall(TRUE);
         return;
     }
 

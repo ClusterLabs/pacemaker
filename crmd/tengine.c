@@ -155,14 +155,14 @@ do_te_invoke(long long action,
                   transition_graph->complete ? "inactive" : "active");
         abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
         if (transition_graph->complete == FALSE) {
-            crmd_fsa_stall(NULL);
+            crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_HALT) {
         crm_debug("Halting the transition: %s", transition_graph->complete ? "inactive" : "active");
         abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
         if (transition_graph->complete == FALSE) {
-            crmd_fsa_stall(NULL);
+            crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_INVOKE) {

@@ -90,13 +90,14 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             crm_warn("%s stalled the FSA with pending inputs", raised_from);
             fsa_dump_queue(LOG_DEBUG);
             crm_write_blackbox(0, NULL);
+            prepend = FALSE;
         }
         if (data == NULL) {
             set_bit(fsa_actions, with_actions);
             with_actions = A_NOTHING;
             return 0;
         }
-        crm_err("%s stalled the FSA with data - this may be broken", raised_from);
+        crm_debug("%s stalled the FSA with data - this may be broken", raised_from);
     }
 
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {

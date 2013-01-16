@@ -138,7 +138,7 @@ do_cib_control(long long action,
 
         if (fsa_cib_conn->state != cib_disconnected && last_resource_update != 0) {
             crm_info("Waiting for resource update %d to complete", last_resource_update);
-            crmd_fsa_stall(NULL);
+            crmd_fsa_stall(FALSE);
             return;
         }
 
@@ -202,7 +202,7 @@ do_cib_control(long long action,
 
             if (cib_retries < 30) {
                 crm_timer_start(wait_timer);
-                crmd_fsa_stall(NULL);
+                crmd_fsa_stall(FALSE);
 
             } else {
                 crm_err("Could not complete CIB"
