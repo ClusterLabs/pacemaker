@@ -207,29 +207,33 @@ crm_add_logfile(const char *filename)
     int fd = 0, rc = 0;
     FILE *logfile = NULL;
     char *parent_dir = NULL;
+    char *filename_cp;
 
     static gboolean have_logfile = FALSE;
 
-    if(filename == NULL && have_logfile == FALSE) {
+    if (filename == NULL && have_logfile == FALSE) {
         filename = "/var/log/pacemaker.log";
     }
-    
+
     if (filename == NULL) {
         return FALSE; /* Nothing to do */
     }
 
+    filename_cp = strdup(filename);
+
     /* Check the parent directory and attempt to open */
-    parent_dir = dirname(strdup(filename));
+    parent_dir = dirname(filename_cp);
     rc = stat(parent_dir, &parent);
 
     if (rc != 0) {
         crm_err("Directory '%s' does not exist: logging to '%s' is disabled", parent_dir, filename);
+        free(filename_cp);
         return FALSE;
-        
+
     } else if (parent.st_uid == geteuid() && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
         /* all good - user */
         logfile = fopen(filename, "a");
-        
+
     } else if (parent.st_gid == getegid() && (parent.st_mode & S_IXGRP)) {
         /* all good - group */
         logfile = fopen(filename, "a");
@@ -237,8 +241,12 @@ crm_add_logfile(const char *filename)
     } else {
         crm_err("We (uid=%u, gid=%u) do not have permission to access '%s': logging to '%s' is disabled",
                 geteuid(), getegid(), parent_dir, filename);
+        free(filename_cp);
         return FALSE;
     }
+    free(filename_cp);
+    filename_cp = NULL;
+
 
     /* Check/Set permissions if we're root */
     if(logfile && geteuid() == 0) {
