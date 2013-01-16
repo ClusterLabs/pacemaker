@@ -411,9 +411,7 @@ do_dc_join_finalize(long long action,
              current_join_id, sync_from);
 
     rc = fsa_cib_conn->cmds->sync_from(fsa_cib_conn, sync_from, NULL, cib_quorum_override);
-
-    fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 60, FALSE, sync_from,
-                                          "finalize_sync_callback", finalize_sync_callback);
+    fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
 }
 
 void
@@ -529,7 +527,7 @@ do_dc_join_ack(long long action,
     erase_status_tag(join_from, XML_CIB_TAG_LRM, cib_scope_local);
     fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
                    cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, join_update_complete_callback);
+    fsa_register_cib_callback(call_id, FALSE, NULL, join_update_complete_callback);
     crm_debug("join-%d: Registered callback for LRM update %d", join_id, call_id);
 }
 

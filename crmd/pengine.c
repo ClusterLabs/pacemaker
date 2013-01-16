@@ -103,8 +103,7 @@ pe_ipc_destroy(gpointer user_data)
          *
          */
         rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-        fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 5, FALSE, uuid_str,
-                                              "save_cib_contents", save_cib_contents);
+        fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
         crm_info("Connection to the Policy Engine released");
@@ -230,8 +229,7 @@ do_pe_invoke(long long action,
     free(fsa_pe_ref);
     fsa_pe_ref = NULL;
 
-    fsa_cib_conn->cmds->register_callback(fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
-                                          "do_pe_invoke_callback", do_pe_invoke_callback);
+    fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
 }
 
 void

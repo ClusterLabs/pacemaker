@@ -1851,8 +1851,7 @@ do_update_resource(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
     /* the return code is a call number, not an error code */
     crm_trace("Sent resource state update message: %d for %s=%d on %s", rc,
               op->op_type, op->interval, op->rsc_id);
-    fsa_cib_conn->cmds->register_callback(fsa_cib_conn, rc, 60, FALSE, NULL, "cib_rsc_callback",
-                                          cib_rsc_callback);
+    fsa_register_cib_callback(rc, FALSE, NULL, cib_rsc_callback);
 
   cleanup:
     free_xml(update);

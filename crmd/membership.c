@@ -259,7 +259,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
 
     fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id, NULL);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, node_list_update_callback);
+    fsa_register_cib_callback(call_id, FALSE, NULL, node_list_update_callback);
 
     free_xml(node_list);
 
@@ -278,7 +278,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
-        add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, crmd_node_update_complete);
+        fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
         last_peer_update = call_id;
 
         free_xml(node_list);
@@ -315,7 +315,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
         crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
-        add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
+        fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
         free_xml(update);
     }
     fsa_has_quorum = quorum;

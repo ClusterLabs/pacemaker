@@ -855,7 +855,7 @@ crm_read_options(gpointer user_data)
     int call_id =
         fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
+    fsa_register_cib_callback(call_id, FALSE, NULL, config_query_callback);
     crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }

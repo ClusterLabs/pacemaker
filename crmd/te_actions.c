@@ -94,7 +94,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
 
     /* Delay processing the trigger until the update completes */
     crm_debug("Sending fencing update %d for %s", rc, target);
-    add_cib_op_callback(fsa_cib_conn, rc, FALSE, strdup(target), cib_fencing_updated);
+    fsa_register_cib_callback(rc, FALSE, strdup(target), cib_fencing_updated);
 
     /* Make sure it sticks */
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
@@ -334,7 +334,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     crm_trace("Updating CIB with %s action %d: %s on %s (call_id=%d)",
                 services_lrm_status_str(status), action->id, task_uuid, target, rc);
 
-    add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);
+    fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
 
     action->sent_update = TRUE;

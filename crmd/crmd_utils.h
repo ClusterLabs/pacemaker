@@ -88,6 +88,12 @@ void update_attrd(const char *host, const char *name, const char *value,
 const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);
 
+#define fsa_register_cib_callback(id, flag, data, fn) do {              \
+        fsa_cib_conn->cmds->register_callback(                          \
+            fsa_cib_conn, id, 10 * (1 + crm_active_peers()),            \
+            flag, data, #fn, fn);                                       \
+    } while(0)
+
 #  define start_transition(state) do {					\
 	switch(state) {							\
 	    case S_TRANSITION_ENGINE:					\

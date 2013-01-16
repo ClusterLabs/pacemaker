@@ -216,7 +216,7 @@ do_cib_control(long long action,
 
             call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
 
-            add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, revision_check_callback);
+            fsa_register_cib_callback(call_id, FALSE, NULL, revision_check_callback);
             cib_retries = 0;
         }
     }
