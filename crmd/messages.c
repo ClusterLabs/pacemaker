@@ -174,7 +174,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         crm_err("Couldnt add message to the queue");
     }
 
-    if (fsa_source) {
+    if (fsa_source && input != I_WAIT_FOR_EVENT) {
         crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
     }
