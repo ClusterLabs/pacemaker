@@ -435,7 +435,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     gboolean check_dtd = TRUE;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
-    const char *current_dtd = "unknown";
+
+    crm_trace("Begin %s%s op", is_query?"read-only":"", op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
@@ -501,11 +502,20 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     if (rc == pcmk_ok) {
+        crm_trace("Massaging CIB contents");
         strip_text_nodes(scratch);
         fix_plus_plus_recursive(scratch);
-        current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        if (manage_counters) {
+        crm_trace("Updating version tuple: %s", manage_counters?"true":"false");
+        if (manage_counters == FALSE) {
+            if (dtd_throttle++ % 20) {
+                /* Throttle the amount of costly validation we perform due to slave updates.
+                 * The master already validated it...
+                 */
+                check_dtd = FALSE;
+            }
+
+        } else {
             if (is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
                 /* Fast-track changes connections which wont be broadcasting anywhere */
                 cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
@@ -526,7 +536,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             } else {
                 /* Previously we only did this if the diff detected a change
                  *
-                 * But we replies are still sent, even if nothing changes so we
+                 * But replies are still sent, even if nothing changes so we
                  *   don't save any network traffic and means we need to jump
                  *   through expensive hoops to detect ordering changes - see below
                  */
@@ -565,19 +575,23 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     if (diff != NULL && local_diff != NULL) {
         /* Only fix the diff if we'll return it... */
+        crm_trace("Ensuring the diff is accurate");
         fix_cib_diff(current_cib, scratch, local_diff, *config_changed);
         *diff = local_diff;
         local_diff = NULL;
     }
 
   done:
+    crm_trace("Perform validation: %s", check_dtd?"true":"false");
     if (rc == pcmk_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
+        const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
         crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
         rc = -pcmk_err_dtd_validation;
     }
 
     *result_cib = scratch;
     free_xml(local_diff);
+    crm_trace("Done");
     return rc;
 }
 
