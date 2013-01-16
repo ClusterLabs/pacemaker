@@ -367,13 +367,14 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
         case SIGABRT:
         case SIGTRAP:
             /* The graceful case - such as assertion failure or user request */
-            snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
 
             if(nsig == 0 && now == last) {
                 /* Prevent over-dumping */
                 return;
+            }
 
-            } else if(nsig == SIGTRAP) {
+            snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
+            if(nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
             } else if(cs) {
