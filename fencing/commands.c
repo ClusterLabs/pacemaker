@@ -1904,7 +1904,15 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     int call_options = 0;
     int rc = 0;
     gboolean is_reply = FALSE;
-    const char *op = crm_element_value(request, F_STONITH_OPERATION);
+    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
+    /* F_STONITH_OPERATION can be overwritten in remote_op_done() with crm_xml_add()
+     *
+     * by 0x4C2E934: crm_xml_add (xml.c:377)
+     * by 0x40C5E9: remote_op_done (remote.c:178)
+     * by 0x40F1D3: process_remote_stonith_exec (remote.c:1084)
+     * by 0x40AD4F: stonith_command (commands.c:1891)
+     *
+     */
 
     if(get_xpath_object("//"T_STONITH_REPLY, request, LOG_DEBUG_3)) {
         is_reply = TRUE;
@@ -1927,4 +1935,5 @@ stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *
     do_crm_log_unlikely(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: %s (%d)", op, is_reply?" reply":"",
                client?client->name:remote_peer, rc>0?"":pcmk_strerror(rc), rc);
 
+    free(op);
 }
