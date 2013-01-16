@@ -646,8 +646,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
 
-    crm_trace("%s Processing msg %s", cib_our_uname, crm_element_value(request, F_SEQ));
-
     cib_num_ops++;
     if (cib_num_ops == 0) {
         cib_num_fail = 0;
@@ -676,11 +674,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         return;
     }
 
-    is_update = cib_op_modifies(call_type);
-    if (is_update) {
-        cib_num_updates++;
-    }
-
     if (from_peer == FALSE) {
         parse_local_options(cib_client, call_type, call_options, host, op,
                             &local_notify, &needs_reply, &process, &needs_forward);
@@ -689,7 +682,11 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                                   &needs_reply, &process, &needs_forward) == FALSE) {
         return;
     }
-    crm_trace("Finished determining processing actions");
+
+    is_update = cib_op_modifies(call_type);
+    if (is_update) {
+        cib_num_updates++;
+    }
 
     if (call_options & cib_discard_reply) {
         needs_reply = is_update;
@@ -720,35 +717,39 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                 case -pcmk_err_old_data:
                 case -pcmk_err_diff_resync:
                 case -pcmk_err_diff_failed:
-                    level = LOG_DEBUG_2;
+                    level = LOG_TRACE;
                     break;
                 default:
                     level = LOG_ERR;
             }
 
-        } else if (safe_str_eq(op, CIB_OP_QUERY)) {
-            level = LOG_DEBUG_2;
-
         } else if (rc != pcmk_ok) {
             cib_num_fail++;
             level = LOG_WARNING;
+/*
+        } else if (safe_str_eq(op, CIB_OP_QUERY)) {
+            level = LOG_TRACE;
 
         } else if (safe_str_eq(op, CIB_OP_SLAVE)) {
-            level = LOG_DEBUG_2;
+            level = LOG_TRACE;
 
         } else if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-            level = LOG_DEBUG_2;
+            level = LOG_TRACE;
+*/
         }
 
-        do_crm_log_unlikely(level,
-                       "Operation complete: op %s for section %s (origin=%s/%s/%s, version=%s.%s.%s): %s (rc=%d)",
-                       op, section ? section : "'all'", originator ? originator : "local",
-                       crm_element_value(request, F_CIB_CLIENTNAME), crm_element_value(request,
-                                                                                       F_CIB_CALLID),
-                       the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
-                       the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
-                       the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0",
-                       pcmk_strerror(rc), rc);
+        do_crm_log(level,
+                   "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
+                   op, section ? section : "'all'", pcmk_strerror(rc), rc,
+
+                   originator ? originator : "local",
+                   crm_element_value(request, F_CIB_CLIENTNAME),
+                   crm_element_value(request, F_CIB_CALLID),
+
+                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
+                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
+                   the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0"
+            );
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");
@@ -868,7 +869,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     int call_type = 0;
     int call_options = 0;
-    int log_level = LOG_DEBUG_4;
+    int log_level = LOG_TRACE;
 
     const char *op = NULL;
     const char *section = NULL;
@@ -974,7 +975,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
             if (validation) {
                 int current_version = get_schema_version(validation);
-                int support_version = get_schema_version("pacemaker-1.1");
+                int support_version = get_schema_version("pacemaker-"CRM_DTD_VERSION);
 
                 /* Once the later schemas support the "update-*" attributes, change "==" to ">=" -- Changed */
                 if (current_version >= support_version) {
@@ -1082,20 +1083,20 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if (rc != pcmk_ok) {
-        log_level = LOG_DEBUG_4;
+        log_level = LOG_TRACE;
         if (rc == -pcmk_err_dtd_validation && global_update) {
             log_level = LOG_WARNING;
             crm_log_xml_info(input, "cib:global_update");
         }
 
     } else if (config_changed) {
-        log_level = LOG_DEBUG_3;
+        log_level = LOG_TRACE;
         if (cib_is_master) {
             log_level = LOG_NOTICE;
         }
 
     } else if (cib_is_master) {
-        log_level = LOG_DEBUG_2;
+        log_level = LOG_TRACE;
     }
 
     log_cib_diff(log_level, *cib_diff, "cib:diff");
