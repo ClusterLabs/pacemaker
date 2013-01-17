@@ -203,8 +203,6 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 	/* Uncertain if node_name == NULL check is strictly necessary here */
 	if(node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
 	    if(id == NULL || strcmp(id, ID(a_child)) == 0) {
-		crm_trace("returning node (%s).", 
-			    crm_element_name(a_child));
 		return a_child;
 	    }
 	}
@@ -1584,6 +1582,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 		*changed = TRUE;
 		if(full) {
                     xmlAttrPtr pIter = NULL;
+                    crm_trace("Changes detected to %s in <%s id=%s>", prop_name, crm_element_name(left), id);
                     for(pIter = crm_first_attr(left); pIter != NULL; pIter = pIter->next) {
                         const char *p_name = (const char *)pIter->name;
                         const char *p_value = crm_attr_value(pIter);
@@ -1593,6 +1592,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     break;
 				  
 		} else {
+                    crm_trace("Changes detected to %s (%s -> %s) in <%s id=%s>",
+                              prop_name, left_value, right_val, crm_element_name(left), id);
 		    crm_xml_add(diff, prop_name, left_value);
 		}
 	    }
@@ -1601,7 +1602,6 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
     if(*changed == FALSE) {
 	free_xml(diff);
-	crm_trace("\tNo changes to <%s id=%s>", crm_str(name), id);
 	return NULL;
 
     } else if(full == FALSE && id) {

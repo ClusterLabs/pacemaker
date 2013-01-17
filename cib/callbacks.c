@@ -625,13 +625,14 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
 void
 cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean privileged,
-                    gboolean from_peer, cib_client_t * cib_client)
+                    gboolean unused, cib_client_t * cib_client)
 {
     int call_type = 0;
     int call_options = 0;
 
     gboolean process = TRUE;
     gboolean is_update = TRUE;
+    gboolean from_peer = TRUE;
     gboolean needs_reply = TRUE;
     gboolean local_notify = FALSE;
     gboolean needs_forward = FALSE;
@@ -644,7 +645,12 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *originator = crm_element_value(request, F_ORIG);
     const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *target = NULL;
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+
+    if(cib_client) {
+        from_peer = FALSE;
+    }
 
     cib_num_ops++;
     if (cib_num_ops == 0) {
@@ -654,18 +660,30 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         crm_info("Stats wrapped around");
     }
 
-    if (host != NULL && strlen(host) == 0) {
-        host = NULL;
-    }
-
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     if (force_synchronous) {
         call_options |= cib_sync_call;
     }
 
-    crm_trace("Processing %s message (%s) for %s...",
-                from_peer ? "peer" : "local",
-                from_peer ? originator : cib_our_uname, host ? host : "master");
+    if (host != NULL && strlen(host) == 0) {
+        host = NULL;
+    }
+
+    if(host) {
+        target = host;
+    } else if(call_options & cib_scope_local) {
+        target = "local host";
+    } else {
+        target = "master";
+    }
+
+    if(from_peer) {
+        crm_trace("Processing peer %s operation from %s on %s intended for %s",
+                  op, client_id, originator, target);
+    } else {
+        crm_trace("Processing local %s operation from %s intended for %s",
+                  op, client_id, target);
+    }
 
     rc = cib_get_operation_id(op, &call_type);
     if (rc != pcmk_ok) {
@@ -714,6 +732,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         if (global_update) {
             switch (rc) {
                 case pcmk_ok:
+                    level = LOG_DEBUG;
+                    break;
                 case -pcmk_err_old_data:
                 case -pcmk_err_diff_resync:
                 case -pcmk_err_diff_failed:
@@ -723,7 +743,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                     level = LOG_ERR;
             }
 
-        } else if (rc != pcmk_ok) {
+        } else if (rc != pcmk_ok && is_update) {
             cib_num_fail++;
             level = LOG_WARNING;
 /*
@@ -758,8 +778,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
             local_notify = FALSE;
         }
     }
-    crm_trace("processing response cases %.16x %.16x", call_options, cib_sync_call);
-
     /* from now on we are the server */
     if (needs_reply == FALSE || stand_alone) {
         /* nothing more to do...
@@ -783,6 +801,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
              * and a bcast msg has gone out, we queue the local notify
              * until we know the bcast message has been received */
             local_notify = FALSE;
+            crm_trace("Queuing local %ssync notification for %s", (call_options & cib_sync_call)?"":"a-", client_id);
+
             queue_local_notify(op_reply, client_id, (call_options & cib_sync_call), from_peer);
             op_reply = NULL; /* the reply is queued, so don't free here */
         }
@@ -807,6 +827,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     if (local_notify && client_id) {
+        crm_trace("Performing local %ssync notification for %s", (call_options & cib_sync_call)?"":"a-", client_id);
         if (process == FALSE) {
             do_local_notify(request, client_id, call_options & cib_sync_call, from_peer);
         } else {

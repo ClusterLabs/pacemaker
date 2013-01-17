@@ -439,12 +439,10 @@ compare_version(const char *version1, const char *version2)
 
         if (digit1 < digit2) {
             rc = -1;
-            crm_trace("%d < %d", digit1, digit2);
             break;
 
         } else if (digit1 > digit2) {
             rc = 1;
-            crm_trace("%d > %d", digit1, digit2);
             break;
         }
 
