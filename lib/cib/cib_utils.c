@@ -333,26 +333,6 @@ createEmptyCib(void)
     return cib_root;
 }
 
-static unsigned int dtd_throttle = 0;
-
-void
-cib_add_digest(xmlNode *source, xmlNode *target)
-{
-    if(target && crm_element_value(target, XML_ATTR_DIGEST) == NULL) {
-        char *digest = NULL;
-        const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-
-        digest = calculate_xml_versioned_digest(source, FALSE, TRUE, version);
-
-        crm_trace("Adding digest %s to target %p", digest, target);
-        crm_xml_add(target, XML_ATTR_DIGEST, digest);
-        free(digest);
-
-    } else if(target) {
-        crm_err("Digest already exists for target %p", target);
-    }
-}
-
 void
 fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
 {
@@ -436,6 +416,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
 
+    char *new_digest = NULL;
+    const char *new_version = NULL;
+
+    static char *last_digest = NULL;
+    static unsigned int dtd_throttle = 0;
+
     crm_trace("Begin %s%s op", is_query?"read-only":"", op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
@@ -462,19 +448,24 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     if (rc == pcmk_ok && scratch == NULL) {
         rc = -EINVAL;
+        goto done;
+
+    } else if(rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok && scratch) {
-        const char *new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
+    if (scratch) {
+        new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
 
         if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
             crm_err("Discarding update with feature set '%s' greater than our own '%s'",
                     new_version, CRM_FEATURE_SET);
             rc = -EPROTONOSUPPORT;
+            goto done;
         }
     }
 
-    if (rc == pcmk_ok && current_cib) {
+    if (current_cib) {
         int old = 0;
         int new = 0;
 
@@ -501,74 +492,140 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    if (rc == pcmk_ok) {
-        crm_trace("Massaging CIB contents");
-        strip_text_nodes(scratch);
-        fix_plus_plus_recursive(scratch);
+    crm_trace("Massaging CIB contents");
+    strip_text_nodes(scratch);
+    fix_plus_plus_recursive(scratch);
 
-        crm_trace("Updating version tuple: %s", manage_counters?"true":"false");
-        if (manage_counters == FALSE) {
-            if (dtd_throttle++ % 20) {
-                /* Throttle the amount of costly validation we perform due to slave updates.
-                 * The master already validated it...
-                 */
-                check_dtd = FALSE;
-            }
+    /* The diff calculation in cib_config_changed() accounts for 25% of the
+     * CIB's total CPU usage on the DC
+     *
+     * RNG validation on the otherhand, accounts for only 9%... 
+     */
+    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
+
+    crm_trace("Updating version tuple: %s", manage_counters?"true":"false");
+    if (manage_counters == FALSE) {
+        if (dtd_throttle++ % 20) {
+            /* Throttle the amount of costly validation we perform due to slave updates.
+             * The master already validated it...
+             */
+            check_dtd = FALSE;
+        }
+
+    } else if (is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+        /* Fast-track changes connections which wont be broadcasting anywhere */
+        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+        goto done;
+
+    } else if (*config_changed) {
+        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
+        cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
+
+    } else if (local_diff) {
+        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+        if (dtd_throttle++ % 20) {
+            /* Throttle the amount of costly validation we perform due to status updates
+             * a) we don't really care whats in the status section
+             * b) we don't validate any of it's contents at the moment anyway
+             */
+            check_dtd = FALSE;
+        }
+    }
+
+    new_digest = calculate_xml_versioned_digest(scratch, FALSE, TRUE, new_version);
+
+    /* === scratch must not be modified after this point ===
+     * Exceptions, anything in:
+
+     static filter_t filter[] = {
+         { 0, XML_ATTR_ORIGIN },
+         { 0, XML_CIB_ATTR_WRITTEN },		
+         { 0, XML_ATTR_UPDATE_ORIG },
+         { 0, XML_ATTR_UPDATE_CLIENT },
+         { 0, XML_ATTR_UPDATE_USER },
+     };
+    */
+
+    if(local_diff == NULL) {
+        /* 50-60% of updates will not result in a change
+         *
+         * We used to bump the version and pretend a change occurred,
+         * this saved 15% CPU on the DC but turned out to be a bad
+         * idea for the slaves which had to process hundreds of
+         * "empty" updates.
+         *
+         * Now we only do it if the digests don't match (ie. after an
+         * ordering change) and we at least cache the previous digest
+         *
+         */
+
+        check_dtd = FALSE; /* Nothing to check */
+
+        if(last_digest == NULL) {
+            crm_trace("No reference point for ordering test");
+
+        } else if(crm_str_eq(new_digest, last_digest, TRUE) == FALSE) {
+
+            crm_notice("Configuration ordering change detected");
+            cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
+
+            crm_trace("Old: %s, New: %s", last_digest, new_digest);
+            /*
+            crm_log_xml_trace(current_cib, "Old");
+            crm_log_xml_trace(scratch, "New");
+            crm_log_xml_trace(req, "Re-order");
+            crm_write_blackbox(0, NULL);
+            */
+            
+            crm_trace("Recalculating the digest now that we modified %s and %s",
+                      XML_ATTR_GENERATION, XML_ATTR_NUMUPDATES);
+            free(new_digest);
+            new_digest = calculate_xml_versioned_digest(scratch, FALSE, TRUE, new_version);
+
+            /* Create a fake diff so that notifications, which include a _digest_,
+             * will be sent to our peers
+             */
+            local_diff = create_xml_node(NULL, "diff");
+            crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+            create_xml_node(local_diff, "diff-removed");
+            create_xml_node(local_diff, "diff-added");
 
         } else {
-            if (is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-                /* Fast-track changes connections which wont be broadcasting anywhere */
-                cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-                goto done;
+            /* Usually these are attrd re-updates */
+            crm_log_xml_trace(req, "Non-change");
+        }
+    }
+
+    free(last_digest);
+    last_digest = new_digest;
+    
+    if(*config_changed && is_not_set(call_options, cib_no_mtime)) {
+        char *now_str = NULL;
+        time_t now = time(NULL);
+        const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
+
+        now_str = ctime(&now);
+        now_str[24] = EOS;  /* replace the newline */
+        crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN, now_str);
+
+        if (schema) {
+            static int minimum_schema = 0;
+            int current_schema = get_schema_version(schema);
+
+            if(minimum_schema == 0) {
+                minimum_schema = get_schema_version("pacemaker-1.1");
             }
 
-            /* The diff calculation in cib_config_changed() accounts for 25% of the
-             * CIB's total CPU usage on the DC
-             *
-             * RNG validation on the otherhand, accounts for only 9%... 
-             */
-            *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
+            /* Does the CIB support the "update-*" attributes... */
+            if (current_schema >= minimum_schema) {
+                const char *origin = crm_element_value(req, F_ORIG);
 
-            if (*config_changed) {
-                cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-                cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
-
-            } else {
-                /* Previously we only did this if the diff detected a change
-                 *
-                 * But replies are still sent, even if nothing changes so we
-                 *   don't save any network traffic and means we need to jump
-                 *   through expensive hoops to detect ordering changes - see below
-                 */
-                cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-
-                if (local_diff == NULL) {
-                    /* Nothing to check */
-                    check_dtd = FALSE;
-
-                    /* Create a fake diff so that notifications, which include a _digest_,
-                     * will be sent to our peers
-                     *
-                     * This is the cheapest way to detect changes to group/set ordering
-                     *
-                     * Previously we compared the old and new digest in cib_config_changed(),
-                     * but that accounted for 15% of the CIB's total CPU usage on the DC
-                     */
-                    local_diff = create_xml_node(NULL, "diff");
-                    crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-                    create_xml_node(local_diff, "diff-removed");
-                    create_xml_node(local_diff, "diff-added");
-
-                    /* Usually these are attrd re-updates */
-                    crm_log_xml_trace(req, "Non-change");
-
-                } else if (dtd_throttle++ % 20) {
-                    /* Throttle the amount of costly validation we perform due to status updates
-                     * a) we don't really care whats in the status section
-                     * b) we don't validate any of it's contents at the moment anyway
-                     */
-                    check_dtd = FALSE;
-                }
+                CRM_LOG_ASSERT(origin != NULL);
+                crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT, crm_element_value(req, F_CIB_CLIENTNAME));
+#if ENABLE_ACL
+                crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
+#endif
             }
         }
     }
@@ -577,6 +634,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         /* Only fix the diff if we'll return it... */
         crm_trace("Ensuring the diff is accurate");
         fix_cib_diff(current_cib, scratch, local_diff, *config_changed);
+
+        crm_trace("Adding digest %s to target %p", new_digest, scratch);
+        crm_xml_add(local_diff, XML_ATTR_DIGEST, new_digest);
+
         *diff = local_diff;
         local_diff = NULL;
     }

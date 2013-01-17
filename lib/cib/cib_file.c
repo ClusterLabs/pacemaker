@@ -290,7 +290,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     cib->call_id++;
-    rc = cib_perform_op(op, call_options | cib_inhibit_bcast, fn, query,
+    rc = cib_perform_op(op, call_options | cib_no_mtime | cib_inhibit_bcast, fn, query,
                         section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
 

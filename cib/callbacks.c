@@ -594,6 +594,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         const char *digest = NULL;
 
+        CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -671,8 +672,10 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
 
     if(host) {
         target = host;
+
     } else if(call_options & cib_scope_local) {
         target = "local host";
+
     } else {
         target = "master";
     }
@@ -681,6 +684,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         crm_trace("Processing peer %s operation from %s on %s intended for %s",
                   op, client_id, originator, target);
     } else {
+        crm_xml_add(request, F_ORIG, cib_our_uname);
         crm_trace("Processing local %s operation from %s intended for %s",
                   op, client_id, target);
     }
@@ -732,7 +736,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         if (global_update) {
             switch (rc) {
                 case pcmk_ok:
-                    level = LOG_DEBUG;
+                    level = LOG_INFO;
                     break;
                 case -pcmk_err_old_data:
                 case -pcmk_err_diff_resync:
@@ -978,6 +982,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             manage_counters = FALSE;
         }
 
+        /* result_cib must not be modified after cib_perform_op() returns */
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,
                             current_cib, &result_cib, cib_diff, &output);
@@ -989,49 +994,18 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 #endif
 
-        if (rc == pcmk_ok && config_changed) {
-            time_t now;
-            char *now_str = NULL;
-            const char *validation = crm_element_value(result_cib, XML_ATTR_VALIDATION);
-
-            if (validation) {
-                int current_version = get_schema_version(validation);
-                int support_version = get_schema_version("pacemaker-"CRM_DTD_VERSION);
-
-                /* Once the later schemas support the "update-*" attributes, change "==" to ">=" -- Changed */
-                if (current_version >= support_version) {
-                    const char *origin = crm_element_value(request, F_ORIG);
-
-                    crm_xml_replace(result_cib, XML_ATTR_UPDATE_ORIG,
-                                    origin ? origin : cib_our_uname);
-                    crm_xml_replace(result_cib, XML_ATTR_UPDATE_CLIENT,
-                                    crm_element_value(request, F_CIB_CLIENTNAME));
-#if ENABLE_ACL
-                    crm_xml_replace(result_cib, XML_ATTR_UPDATE_USER,
-                                    crm_element_value(request, F_CIB_USER));
-#endif
-                }
-            }
-
-            now = time(NULL);
-            now_str = ctime(&now);
-            now_str[24] = EOS;  /* replace the newline */
-            crm_xml_replace(result_cib, XML_CIB_ATTR_WRITTEN, now_str);
-        }
-
         if (manage_counters == FALSE) {
-            config_changed = cib_config_changed(current_cib, result_cib, cib_diff);
+            /* If the diff is NULL at this point, its because nothing changed */
+            config_changed = cib_config_changed(NULL, NULL, cib_diff);
         }
 
         /* Always write to disk for replace ops,
-         * this negates the need to detect ordering changes
+         * this also negates the need to detect ordering changes
          */
-        if (config_changed == FALSE && crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
+        if (crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
             config_changed = TRUE;
         }
     }
-
-    cib_add_digest(result_cib, *cib_diff);
 
     if (rc == pcmk_ok && (call_options & cib_dryrun) == 0) {
         rc = activateCibXml(result_cib, config_changed, op);
