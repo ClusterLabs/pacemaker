@@ -644,8 +644,15 @@ send_cleanup:
     if(crm_ipc_connected(client) == FALSE) {
         crm_notice("Connection to %s closed: %s (%ld)", client->name, pcmk_strerror(rc), rc);
 
+    } else if(rc == -ETIMEDOUT) {
+        crm_warn("Request %d to %s (%p) failed: %s (%ld) after %dms",
+                 header.qb.id, client->name, client->ipc, pcmk_strerror(rc), rc, ms_timeout);
+        crm_info("Request was %.120s", buffer);
+        crm_write_blackbox(0, NULL);
+
     } else if(rc <= 0) {
-        crm_warn("Request %d to %s (%p) failed: %s (%ld)", header.qb.id, client->name, client->ipc, pcmk_strerror(rc), rc);
+        crm_warn("Request %d to %s (%p) failed: %s (%ld)",
+                 header.qb.id, client->name, client->ipc, pcmk_strerror(rc), rc);
         crm_info("Request was %.120s", buffer);
     }
 
