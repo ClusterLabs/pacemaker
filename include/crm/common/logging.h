@@ -166,6 +166,16 @@ unsigned int get_crm_log_level(void);
 #  define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
 #  define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
 
+#  define crm_log_xml_explicit(xml, text)  do {                 \
+        static struct qb_log_callsite *digest_cs = NULL;        \
+        digest_cs = qb_log_callsite_get(                        \
+            __func__, __FILE__, text, LOG_TRACE, __LINE__,      \
+            crm_trace_nonlog);                                  \
+        if (digest_cs && digest_cs->targets) {                  \
+            do_crm_log_xml(LOG_TRACE,   text, xml);             \
+        }                                                       \
+    } while(0)
+
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
 #endif

@@ -401,7 +401,7 @@ fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean chan
         }
     }
 
-    crm_log_xml_trace(local_diff, "Repaired-diff");
+    crm_log_xml_explicit(local_diff, "Repaired-diff");
 }
 
 int
@@ -592,7 +592,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         } else {
             /* Usually these are attrd re-updates */
-            crm_log_xml_trace(req, "Non-change");
+            crm_log_xml_explicit(req, "Non-change");
         }
     }
 

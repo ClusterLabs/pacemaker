@@ -611,7 +611,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         CRM_ASSERT(digest != NULL);
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
-        crm_log_xml_trace(msg, "copy");
+        crm_log_xml_explicit(msg, "copy");
         return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
     } else if (originator != NULL) {
@@ -1110,7 +1110,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
   done:
     if ((call_options & cib_discard_reply) == 0) {
         *reply = cib_construct_reply(request, output, rc);
-        crm_log_xml_trace(*reply, "cib:reply");
+        crm_log_xml_explicit(*reply, "cib:reply");
     }
 #if ENABLE_ACL
     if (filtered_current_cib != NULL) {
