@@ -232,13 +232,14 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
         if(flags & crm_ipc_server_event) {
             type = "Event";
             rc = qb_ipcs_event_sendv(c, iov, 2);
-            if(rc == -EPIPE || rc == -ENOTCONN) {
-                crm_trace("Client %p disconnected", c);
-                level = LOG_INFO;
-            }
             
         } else {
             rc = qb_ipcs_response_sendv(c, iov, 2);
+        }
+
+        if(rc == -EPIPE || rc == -ENOTCONN) {
+            crm_trace("Client %p disconnected", c);
+            level = LOG_INFO;
         }
 
         if(rc != -EAGAIN) {
