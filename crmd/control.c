@@ -237,6 +237,7 @@ crmd_exit(int rc)
         delete_fsa_input(fsa_data);
     }
     g_list_free(fsa_message_queue);
+    fsa_message_queue = NULL;
 
     if (ipc_clients) {
         crm_debug("Number of connected clients: %d", g_hash_table_size(ipc_clients));
