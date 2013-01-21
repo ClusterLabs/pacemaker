@@ -2071,18 +2071,96 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     return digest;
 }
 
+#define CHUNK_SIZE 1024
+
+#define buffer_print(buffer, max, offset, fmt, args...) do {            \
+        int rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
+        if(rc < 0) {                                                    \
+            crm_perror(LOG_ERR,"snprintf failed");                      \
+            (buffer)[(offset)] = 0;                                     \
+            return;                                                     \
+        } else if(rc >= ((max) - (offset))) {                           \
+            max += CHUNK_SIZE;                                          \
+            (buffer) = realloc((buffer), (max) + 1);                    \
+        } else {                                                        \
+            offset += rc;                                               \
+            break;                                                      \
+        }                                                               \
+    } while(1);
+
+
+static void
+dump_xml_filtered(xmlNode *data, int options, char **buffer, int *offset, int *max)
+{
+    xmlNode *xChild = NULL;
+    xmlAttrPtr xIter = NULL;
+
+    int lpc;
+    const char *name = NULL;
+    static int filter_len = DIMOF(filter);
+
+    CRM_ASSERT(max != NULL);
+    CRM_ASSERT(offset != NULL);
+    CRM_ASSERT(buffer != NULL);
+    
+    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
+    if(data == NULL) {
+        crm_trace("Nothing to dump");
+        return;
+    }
+
+    if(*buffer == NULL) {
+        *buffer = malloc(CHUNK_SIZE+1);
+        *offset = 0;
+        *max = CHUNK_SIZE;
+    }
+    
+    name = crm_element_name(data);
+    CRM_ASSERT(name != NULL);
+	
+    buffer_print(*buffer, *max, *offset, "<%s", name);
+	
+    for(lpc = 0; options && lpc < filter_len; lpc++){
+	filter[lpc].found = FALSE;
+    }
+
+    for(xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
+	bool skip = FALSE;
+        const char *p_name = (const char *)xIter->name;
+
+	for(lpc = 0; options && skip == FALSE && lpc < filter_len; lpc++){
+	    if(filter[lpc].found == FALSE && strcmp(p_name, filter[lpc].string) == 0) {
+		filter[lpc].found = TRUE;
+		skip = TRUE;
+		break;
+	    }
+	}
+
+        if(skip == FALSE) {
+            const char *p_value = crm_attr_value(xIter);
+            buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
+        }
+    }
+
+    if(xml_has_children(data) == FALSE) {
+        buffer_print(*buffer, *max, *offset, "/>");
+
+    } else {
+        buffer_print(*buffer, *max, *offset, ">");
+        for(xChild = __xml_first_child(data); xChild != NULL; xChild = __xml_next(xChild)) {
+            dump_xml_filtered(xChild, options, buffer, offset, max);
+        }
+        buffer_print(*buffer, *max, *offset, "</%s>", name);
+    }
+}
+
 static char *
 calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
+    char *buffer = NULL;
+    int offset, max;
 
-    int buffer_len = 0;
-    int filter_size = DIMOF(filter);
-
-    xmlDoc *doc = NULL;
-    xmlNode *copy = NULL;
-    xmlNode *input = source;
-    xmlBuffer *xml_buffer = NULL;
     static struct qb_log_callsite *digest_cs = NULL;
 
     crm_trace("Begin digest");
@@ -2098,44 +2176,13 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 	 * Importantly, this reduces the amount of XML to copy+export as 
 	 * well as the amount of data for MD5 needs to operate on
 	 */
-	xmlNode *child = NULL;
-        xmlAttrPtr pIter = NULL;
-	copy = create_xml_node(NULL, XML_TAG_CIB);
-        for(pIter = crm_first_attr(input); pIter != NULL; pIter = pIter->next) {
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = crm_attr_value(pIter);
-
-            xmlSetProp(copy, (const xmlChar*)p_name, (const xmlChar*)p_value);
-        }
-
-	xml_remove_prop(copy, XML_ATTR_ORIGIN);
-	xml_remove_prop(copy, XML_CIB_ATTR_WRITTEN);
-
-	/* We just did all the filtering */
 	
-	for(child = __xml_first_child(input); child != NULL; child = __xml_next(child)) {
-	    if(safe_str_neq(crm_element_name(child), XML_CIB_TAG_STATUS)) {
-		add_node_copy(copy, child);
-	    }
-	}
-	
-    } else if(do_filter) {
-	copy = copy_xml(input);
-	filter_xml(copy, filter, filter_size, TRUE);
-	input = copy;
+    } else {
+        dump_xml_filtered(source, do_filter, &buffer, &offset, &max);
     }
 
-    crm_trace("Dumping");
-    doc = getDocPtr(input);
-    xml_buffer = xmlBufferCreate();
-
-    CRM_ASSERT(xml_buffer != NULL);
-    CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
-    
-    buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
-    CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, goto done);
-
-    digest = crm_md5sum((char *)xml_buffer->content);
+    CRM_ASSERT(buffer != NULL);
+    digest = crm_md5sum(buffer);
 
         if(digest_cs == NULL) {
             digest_cs = qb_log_callsite_get(
@@ -2145,18 +2192,15 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
         if (digest_cs && digest_cs->targets) {
             char *trace_file = crm_concat("/tmp/cib-digest", digest, '-');
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(input, XML_ATTR_GENERATION_ADMIN),
-                      crm_element_value(input, XML_ATTR_GENERATION),
-                      crm_element_value(input, XML_ATTR_NUMUPDATES),
+                      crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
+                      crm_element_value(source, XML_ATTR_GENERATION),
+                      crm_element_value(source, XML_ATTR_NUMUPDATES),
                       trace_file);
             save_xml_to_file(source, "digest input", trace_file);
             free(trace_file);
         }
 
-  done:
-    xmlBufferFree(xml_buffer);
-    free_xml(copy);
-
+    free(buffer);
     crm_trace("End digest");
     return digest;
 }
