@@ -738,6 +738,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         op_reply = cib_construct_reply(request, the_cib, cib_status);
 
     } else if (process) {
+        int now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
@@ -785,6 +786,10 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0"
             );
+
+        if((now + 1) < time(NULL)) {
+            crm_write_blackbox(0, NULL);
+        }
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");

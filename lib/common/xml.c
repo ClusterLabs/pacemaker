@@ -2064,7 +2064,6 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy); free(buffer); return NULL);
 
     digest = crm_md5sum(buffer);
-    crm_trace("Digest %s: %s\n", digest, buffer);
     crm_log_xml_trace(copy,  "digest:source");
 
     free(buffer);
@@ -2086,6 +2085,7 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     xmlBuffer *xml_buffer = NULL;
     static struct qb_log_callsite *digest_cs = NULL;
 
+    crm_trace("Begin digest");
     if(do_filter && BEST_EFFORT_STATUS) {
 	/* Exclude the status calculation from the digest
 	 *
@@ -2125,6 +2125,7 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 	input = copy;
     }
 
+    crm_trace("Dumping");
     doc = getDocPtr(input);
     xml_buffer = xmlBufferCreate();
 
@@ -2135,7 +2136,6 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, goto done);
 
     digest = crm_md5sum((char *)xml_buffer->content);
-    crm_trace("Digest %s\n", digest);
 
         if(digest_cs == NULL) {
             digest_cs = qb_log_callsite_get(
@@ -2157,6 +2157,7 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     xmlBufferFree(xml_buffer);
     free_xml(copy);
 
+    crm_trace("End digest");
     return digest;
 }
 
