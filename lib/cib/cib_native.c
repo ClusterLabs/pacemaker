@@ -114,7 +114,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
     /* do callbacks */
     type = crm_element_value(msg, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
-    crm_log_xml_trace(msg, "cib-reply");
+    crm_log_xml_explicit(msg, "cib-reply");
 
     if (safe_str_eq(type, T_CIB)) {
         cib_native_callback(cib, msg, 0, 0);
