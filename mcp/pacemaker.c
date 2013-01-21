@@ -890,7 +890,7 @@ main(int argc, char **argv)
 
     if (read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
-        return 1;
+        crm_exit(1);
     }
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s",
@@ -927,7 +927,7 @@ main(int argc, char **argv)
 
     if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
-        return TRUE;
+        crm_exit(1);
     }
 
     mkdir(CRM_STATE_DIR, 0750);
@@ -973,17 +973,17 @@ main(int argc, char **argv)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
-        return 1;
+        crm_exit(1);
     }
 
     if (cluster_connect_cfg(&local_nodeid) == FALSE) {
         crm_err("Couldn't connect to Corosync's CFG service");
-        return 1;
+        crm_exit(1);
     }
 
     if (cluster_connect_cpg() == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
-        return 1;
+        crm_exit(1);
     }
 
     local_name = get_local_node_name();
@@ -1012,5 +1012,5 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    return 0;
+    crm_exit(0);
 }
