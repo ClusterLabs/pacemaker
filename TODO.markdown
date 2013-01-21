@@ -4,6 +4,9 @@
  
 ## Targeted for 2.0.x
 
+- Make sure crm_attribute/crmd writes direct to cib if attrd is not around
+- See if anywhere should be using clock_gettime() instead of time(NULL)
+
 - Figure out why libqb blackboxes contain garbage:
 trace   Jan 06 10:42:41 print_synapse(190):0: [Action   18]: Completed rsc op FencingPass_start_0               on ne (priority: 1918989871, waiting: /lib/pac
 trace   Jan 06 10:42:41 print_synapse(190):0: [Action   17]: Completed rsc op FencingPass_stop_0                on e (priority: 1635135232, waiting: r/lib/pa
