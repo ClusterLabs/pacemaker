@@ -35,9 +35,16 @@ typedef struct lrmd_key_value_s {
 
 
 /* *INDENT-OFF* */
+#define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
+#define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
+#define DEFAULT_REMOTE_PORT 1984
+#define DEFAULT_REMOTE_USERNAME "lrmd"
+
 #define F_LRMD_OPERATION        "lrmd_op"
 #define F_LRMD_CLIENTNAME       "lrmd_clientname"
 #define F_LRMD_CLIENTID         "lrmd_clientid"
+#define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
+#define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
 #define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
 #define F_LRMD_CALLID           "lrmd_callid"
 #define F_LRMD_CANCEL_CALLID    "lrmd_cancel_callid"
@@ -80,8 +87,39 @@ typedef struct lrmd_key_value_s {
 #define T_LRMD_NOTIFY    "lrmd_notify"
 /* *INDENT-ON* */
 
+/*!
+ * \brief Create a new local lrmd connection
+ */
 lrmd_t *lrmd_api_new(void);
+
+/*!
+ * \brief Create a new remote lrmd connection using tls backend
+ */
+lrmd_t *lrmd_remote_api_new(const char *server, int port);
+
+/*!
+ * \brief Use after lrmd_poll returns 1.
+ *
+ * \param fd to poll on
+ * \param timeout in ms
+ *
+ * \retval true - connection is still up
+ * \retval false - disconnected
+ */
 bool lrmd_dispatch(lrmd_t *lrmd);
+
+/*!
+ * \brief Poll for a specified timeout period to determine if a message
+ *        is ready for dispatch.
+ * \retval 1 msg is ready
+ * \retval 0 timeout occured
+ * \retval negative error code
+ */
+int lrmd_poll(lrmd_t *lrmd, int timeout);
+
+/*!
+ * \brief Destroy lrmd object
+ */
 void lrmd_api_delete(lrmd_t * lrmd);
 lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t *kvp,
     const char *key,

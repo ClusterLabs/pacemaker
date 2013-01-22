@@ -199,13 +199,61 @@ void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
 char *crm_concat(const char *prefix, const char *suffix, char join);
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
-xmlNode *crm_recv_remote_msg(void *session, gboolean encrypted);
-void crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
+
+
+/*! remote tcp/tls helper functions */
+gboolean crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int total_timeout_ms, int *disconnected);
+char *crm_recv_remote_raw(void *data, gboolean encrypted, size_t max_recv, size_t *recv_len, int *disconnected);
+int crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
+int crm_recv_remote_ready(void *session, gboolean encrypted, int timeout_ms);
+xmlNode *crm_parse_remote_buffer(char **msg_buf);
+int crm_remote_tcp_connect(const char *host, int port);
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+/*!
+ * \internal
+ * \brief Initiate the client handshake after establishing the tcp socket.
+ * \note This is a blocking function, it will block until the entire handshake
+ *       is complete or until the timeout period is reached.
+ * \retval 0 success
+ * \retval negative, failure
+ */
+int crm_initiate_client_tls_handshake(void *session_data, int timeout_ms);
+/*!
+ * \internal
+ * \brief Create client or server session for anon DH encryption credentials
+ * \param sock, the socket the session will use for transport
+ * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
+ * \param credentials, gnutls_anon_server_credentials_t or gnutls_anon_client_credentials_t
+ *
+ * \retval gnutls_session * on success
+ * \retval NULL on failure
+ */
+void *crm_create_anon_tls_session(int sock, int type, void *credentials);
+/*!
+ * \internal
+ * \brief Create client or server session for PSK credentials
+ * \param sock, the socket the session will use for transport
+ * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
+ * \param credentials, gnutls_psk_server_credentials_t or gnutls_osk_client_credentials_t
+ *
+ * \retval gnutls_session * on success
+ * \retval NULL on failure
+ */
+void *create_psk_tls_session(int csock, int type, void *credentials);
+#endif
+
+#define REMOTE_MSG_TERMINATOR "\r\n\r\n"
 
 const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
 void strip_text_nodes(xmlNode *xml);
+
+enum lrmd_client_type {
+    LRMD_CLIENT_IPC,
+    LRMD_CLIENT_TLS,
+};
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
