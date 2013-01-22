@@ -41,6 +41,7 @@ typedef struct lrmd_cmd_s {
     int timeout;
     int interval;
     int start_delay;
+    int timeout_orig;
 
     int call_id;
     int exec_rc;
@@ -61,6 +62,8 @@ typedef struct lrmd_cmd_s {
     char *userdata_str;
 
 #ifdef HAVE_SYS_TIMEB_H
+    /* Timestamp of when op first ran */
+    struct timeb t_first_run;
     /* Timestamp of when op ran */
     struct timeb t_run;
     /* Timestamp of when op was queued */
@@ -164,6 +167,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval);
     crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
+    cmd->timeout_orig = cmd->timeout;
 
     cmd->origin = crm_element_value_copy(rsc_xml, F_LRMD_ORIGIN);
     cmd->action = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ACTION);
@@ -518,6 +522,33 @@ stonith2uniform_rc(const char *action, int rc)
     return rc;
 }
 
+#if SUPPORT_NAGIOS
+static int
+nagios2uniform_rc(const char *action, int rc)
+{
+    if (rc < 0) {
+        return PCMK_EXECRA_UNKNOWN_ERROR;
+    }
+
+    switch (rc) {
+        case NAGIOS_STATE_OK:
+            return PCMK_EXECRA_OK;
+        case NAGIOS_INSUFFICIENT_PRIV:
+            return PCMK_EXECRA_INSUFFICIENT_PRIV;
+        case NAGIOS_NOT_INSTALLED:
+            return PCMK_EXECRA_NOT_INSTALLED;
+        case NAGIOS_STATE_WARNING:
+        case NAGIOS_STATE_CRITICAL:
+        case NAGIOS_STATE_UNKNOWN:
+        case NAGIOS_STATE_DEPENDENT:
+        default:
+            return PCMK_EXECRA_UNKNOWN_ERROR;
+    }
+
+    return PCMK_EXECRA_UNKNOWN_ERROR;
+}
+#endif
+
 static int
 get_uniform_rc(const char *standard, const char *action, int rc)
 {
@@ -529,6 +560,10 @@ get_uniform_rc(const char *standard, const char *action, int rc)
         return rc;
     } else if (safe_str_eq(standard, "upstart")) {
         return rc;
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(standard, "nagios")) {
+        return nagios2uniform_rc(action, rc);
+#endif
     } else {
         return lsb2uniform_rc(action, rc);
     }
@@ -575,6 +610,48 @@ action_complete(svc_action_t * action)
     if (action->stdout_data) {
         cmd->output = strdup(action->stdout_data);
     }
+
+#if SUPPORT_NAGIOS
+    if (rsc && safe_str_eq(rsc->class, "nagios")) {
+        if (safe_str_eq(cmd->action, "monitor") &&
+            cmd->interval == 0 &&
+            cmd->exec_rc == PCMK_EXECRA_OK) {
+            /* Successfully executed --version for the nagios plugin */
+            cmd->exec_rc = PCMK_EXECRA_NOT_RUNNING;
+
+        } else if (safe_str_eq(cmd->action, "start") &&
+                   cmd->exec_rc != PCMK_EXECRA_OK) {
+            int time_sum = 0;
+            int timeout_left = 0;
+            int delay = cmd->timeout_orig / 10;
+#ifdef HAVE_SYS_TIMEB_H
+            struct timeb now = { 0, };
+
+            ftime(&now);
+            time_sum = time_diff_ms(&now, &cmd->t_first_run);
+            timeout_left = cmd->timeout_orig - time_sum;
+            if (delay < timeout_left) {
+                cmd->start_delay = delay;
+                cmd->timeout = timeout_left;
+
+                crm_notice("%s %s failed (rc=%d): re-scheduling (time_sum=%dms, start_delay=%dms, timeout=%dms)",
+                           cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, cmd->start_delay, cmd->timeout);
+
+                cmd->lrmd_op_status = 0;
+                cmd->last_pid = 0;
+                memset(&cmd->t_run, 0, sizeof(cmd->t_run));
+                memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
+                free(cmd->output);
+                cmd->output = NULL;
+
+                rsc->active = NULL;
+                schedule_lrmd_cmd(rsc, cmd);
+                return;
+            }
+#endif
+        }
+    }
+#endif
 
     cmd_finalize(cmd, rsc);
 }
@@ -772,6 +849,14 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
               rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
 
+#if SUPPORT_NAGIOS
+    /* Recurring operations are cancelled anyway for a stop operation */
+    if (safe_str_eq(rsc->class, "nagios") && safe_str_eq(cmd->action, "stop")) {
+        cmd->exec_rc = PCMK_EXECRA_OK;
+        goto exec_done;
+    }
+#endif
+
     if (cmd->params) {
         params_copy = g_hash_table_new_full(crm_str_hash,
                                             g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
@@ -841,9 +926,12 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
         g_list_free_1(first);
 
 #ifdef HAVE_SYS_TIMEB_H
+        if (cmd->t_first_run.time == 0) {
+            ftime(&cmd->t_first_run);
+        }
         ftime(&cmd->t_run);
-    }
 #endif
+    }
 
     if (!cmd) {
         crm_trace("Nothing further to do for %s", rsc->rsc_id);

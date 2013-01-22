@@ -1550,6 +1550,62 @@ lsb_get_metadata(const char *type, char **output)
     return pcmk_ok;
 }
 
+#if SUPPORT_NAGIOS
+static int
+nagios_get_metadata(const char *type, char **output)
+{
+    int rc = pcmk_ok;
+    FILE *file_strm = NULL;
+    int start = 0, length = 0, read_len = 0;
+    char *metadata_file = NULL;
+    int len = 36;
+
+    len += strlen(NAGIOS_METADATA_DIR);
+    len += strlen(type);
+    metadata_file = calloc(1, len);
+    CRM_CHECK(metadata_file != NULL, return -ENOMEM);
+
+    sprintf(metadata_file, "%s/%s.xml", NAGIOS_METADATA_DIR, type);
+    file_strm = fopen(metadata_file, "r");
+    if (file_strm == NULL) {
+        crm_err("Metadata file %s does not exist", metadata_file);
+        free(metadata_file);
+        return -EIO;
+    }
+
+    /* see how big the file is */
+    start = ftell(file_strm);
+    fseek(file_strm, 0L, SEEK_END);
+    length = ftell(file_strm);
+    fseek(file_strm, 0L, start);
+
+    CRM_ASSERT(length >= 0);
+    CRM_ASSERT(start == ftell(file_strm));
+
+    if (length <= 0) {
+        crm_info("%s was not valid", metadata_file);
+        free(*output);
+        *output = NULL;
+        rc = -EIO;
+
+    } else {
+        crm_trace("Reading %d bytes from file", length);
+        *output = calloc(1, (length + 1));
+        read_len = fread(*output, 1, length, file_strm);
+        if (read_len != length) {
+            crm_err("Calculated and read bytes differ: %d vs. %d", length, read_len);
+            free(*output);
+            *output = NULL;
+            rc = -EIO;
+        }
+    }
+
+    fclose(file_strm);
+    free(metadata_file);
+    return rc;
+}
+#endif
+
 static int
 generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
@@ -1594,6 +1650,10 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
         return stonith_get_metadata(provider, type, output);
     } else if (safe_str_eq(class, "lsb")) {
         return lsb_get_metadata(type, output);
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(class, "nagios")) {
+        return nagios_get_metadata(type, output);
+#endif
     }
     return generic_get_metadata(class, provider, type, output);
 }
