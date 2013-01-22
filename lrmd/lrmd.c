@@ -26,6 +26,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/msg_xml.h>
 
 #include <lrmd_private.h>
@@ -35,7 +36,6 @@
 #endif
 
 GHashTable *rsc_list = NULL;
-GHashTable *client_list = NULL;
 
 typedef struct lrmd_cmd_s {
     int timeout;
@@ -148,7 +148,7 @@ build_rsc_from_xml(xmlNode * msg)
 }
 
 static lrmd_cmd_t *
-create_lrmd_cmd(xmlNode * msg, lrmd_client_t * client)
+create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
 {
     int call_options = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, msg, LOG_ERR);
@@ -259,7 +259,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 }
 
 static void
-send_reply(lrmd_client_t * client, int rc, uint32_t id, int call_id)
+send_reply(crm_client_t * client, int rc, uint32_t id, int call_id)
 {
     int send_rc = 0;
     xmlNode *reply = NULL;
@@ -269,7 +269,7 @@ send_reply(lrmd_client_t * client, int rc, uint32_t id, int call_id)
     crm_xml_add_int(reply, F_LRMD_RC, rc);
     crm_xml_add_int(reply, F_LRMD_CALLID, call_id);
 
-    send_rc = crm_ipcs_send(client->channel, id, reply, FALSE);
+    send_rc = crm_ipcs_send(client, id, reply, FALSE);
 
     free_xml(reply);
     if (send_rc < 0) {
@@ -281,12 +281,12 @@ static void
 send_client_notify(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNode *update_msg = user_data;
-    lrmd_client_t *client = value;
+    crm_client_t *client = value;
 
     if (client == NULL) {
         crm_err("Asked to send event to  NULL client");
         return;
-    } else if (client->channel == NULL) {
+    } else if (client->ipcs == NULL) {
         crm_trace("Asked to send event to disconnected client");
         return;
     } else if (client->name == NULL) {
@@ -294,7 +294,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (crm_ipcs_send(client->channel, 0, update_msg, TRUE) <= 0) {
+    if (crm_ipcs_send(client, 0, update_msg, TRUE) <= 0) {
         crm_warn("Notification of client %s/%s failed", client->name, client->id);
     }
 }
@@ -385,13 +385,13 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     }
 
     if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
-        lrmd_client_t *client = g_hash_table_lookup(client_list, cmd->client_id);
+        crm_client_t *client = crm_client_get_by_id(cmd->client_id);
 
         if (client) {
             send_client_notify(client->id, client, notify);
         }
     } else {
-        g_hash_table_foreach(client_list, send_client_notify, notify);
+        g_hash_table_foreach(client_connections, send_client_notify, notify);
     }
 
     free_xml(notify);
@@ -415,7 +415,7 @@ send_generic_notify(int rc, xmlNode * request)
     crm_xml_add(notify, F_LRMD_OPERATION, op);
     crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
-    g_hash_table_foreach(client_list, send_client_notify, notify);
+    g_hash_table_foreach(client_connections, send_client_notify, notify);
 
     free_xml(notify);
 }
@@ -919,20 +919,20 @@ free_rsc(gpointer data)
 }
 
 static int
-process_lrmd_signon(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     xmlNode *reply = create_xml_node(NULL, "reply");
 
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
-    crm_ipcs_send(client->channel, id, reply, FALSE);
+    crm_ipcs_send(client, id, reply, FALSE);
 
     free_xml(reply);
     return pcmk_ok;
 }
 
 static int
-process_lrmd_rsc_register(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_register(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
@@ -957,7 +957,7 @@ process_lrmd_rsc_register(lrmd_client_t * client, uint32_t id, xmlNode * request
 }
 
 static void
-process_lrmd_get_rsc_info(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_get_rsc_info(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     int rc = pcmk_ok;
     int send_rc = 0;
@@ -995,7 +995,7 @@ process_lrmd_get_rsc_info(lrmd_client_t * client, uint32_t id, xmlNode * request
         crm_xml_add(reply, F_LRMD_TYPE, rsc->type);
     }
 
-    send_rc = crm_ipcs_send(client->channel, id, reply, FALSE);
+    send_rc = crm_ipcs_send(client, id, reply, FALSE);
 
     if (send_rc < 0) {
         crm_warn("LRMD reply to %s failed: %d", client->name, send_rc);
@@ -1005,7 +1005,7 @@ process_lrmd_get_rsc_info(lrmd_client_t * client, uint32_t id, xmlNode * request
 }
 
 static int
-process_lrmd_rsc_unregister(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_unregister(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     int rc = pcmk_ok;
     lrmd_rsc_t *rsc = NULL;
@@ -1034,7 +1034,7 @@ process_lrmd_rsc_unregister(lrmd_client_t * client, uint32_t id, xmlNode * reque
 }
 
 static int
-process_lrmd_rsc_exec(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
@@ -1151,7 +1151,7 @@ cancel_all_recurring(lrmd_rsc_t *rsc, const char *client_id)
 }
 
 static int
-process_lrmd_rsc_cancel(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_rsc_cancel(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
@@ -1168,7 +1168,7 @@ process_lrmd_rsc_cancel(lrmd_client_t * client, uint32_t id, xmlNode * request)
 }
 
 void
-process_lrmd_message(lrmd_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     int rc = pcmk_ok;
     int call_id = 0;

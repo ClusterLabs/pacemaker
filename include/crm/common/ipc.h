@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -40,27 +40,11 @@ xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *ho
 
 /* Libqb based IPC */
 
-#include <qb/qbipcs.h>
-
-enum crm_ipc_server_flags
-{
-    crm_ipc_server_none  = 0x0000,
-    crm_ipc_server_event = 0x0001, /* Send an Event instead of a Response */ 
-
-    crm_ipc_server_info  = 0x0010, /* Log failures as LOG_INFO */ 
-    crm_ipc_server_error = 0x0020, /* Log failures as LOG_ERR */
-};
-
 enum crm_ipc_flags
 {
     crm_ipc_client_none     = 0x0000,
     crm_ipc_client_response = 0x0001, /* A Response is expected in reply */ 
 };
-
-void crm_ipcs_send_ack(qb_ipcs_connection_t *c, uint32_t request, const char *tag, const char *function, int line);
-ssize_t crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags);
-xmlNode *crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size, uint32_t *id, uint32_t *flags);
-int crm_ipcs_client_pid(qb_ipcs_connection_t *c);
 
 #include <qb/qbipcc.h>
 typedef struct crm_ipc_s crm_ipc_t;

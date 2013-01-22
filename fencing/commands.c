@@ -34,6 +34,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
@@ -1655,7 +1656,7 @@ stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer, co
 }
 
 static int
-handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote_peer)
+handle_request(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = -EOPNOTSUPP;
@@ -1679,7 +1680,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID,  client->id);
-        crm_ipcs_send(client->channel, id, reply, FALSE);
+        crm_ipcs_send(client, id, reply, FALSE);
         client->request_id = 0;
         free_xml(reply);
         return 0;
@@ -1711,18 +1712,18 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
         if(flag_name) {
             crm_debug("Setting %s callbacks for %s (%s): ON",
                       flag_name, client->name, client->id);
-            client->flags |= get_stonith_flag(flag_name);
+            client->options |= get_stonith_flag(flag_name);
         }
 
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_DEACTIVATE);
         if(flag_name) {
             crm_debug("Setting %s callbacks for %s (%s): off",
                       flag_name, client->name, client->id);
-            client->flags |= get_stonith_flag(flag_name);
+            client->options |= get_stonith_flag(flag_name);
         }
 
         if(flags & crm_ipc_client_response) {
-            crm_ipcs_send_ack(client->channel, id, "ack", __FUNCTION__, __LINE__);
+            crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
             client->request_id = 0;
         }
         return 0;
@@ -1881,7 +1882,7 @@ handle_request(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *r
 }
 
 static void
-handle_reply(stonith_client_t *client, xmlNode *request, const char *remote_peer)
+handle_reply(crm_client_t *client, xmlNode *request, const char *remote_peer)
 {
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
 
@@ -1899,7 +1900,7 @@ handle_reply(stonith_client_t *client, xmlNode *request, const char *remote_peer
 }
 
 void
-stonith_command(stonith_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote_peer)
+stonith_command(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *request, const char *remote_peer)
 {
     int call_options = 0;
     int rc = 0;

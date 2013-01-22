@@ -31,6 +31,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 
 struct crm_ipc_request_header 
 {
@@ -166,17 +167,149 @@ create_reply_adv(xmlNode * original_request, xmlNode * xml_response_data, const 
 
 /* Server... */
 
+GHashTable *client_connections = NULL;
+
+crm_client_t *
+crm_client_get(qb_ipcs_connection_t *c) 
+{
+    if(client_connections) {
+        return g_hash_table_lookup(client_connections, c);
+    }
+
+    crm_trace("No client found for %p", c);
+    return NULL;
+}
+
+crm_client_t *
+crm_client_get_by_id(const char *id)
+{
+    gpointer key;
+    crm_client_t *client;
+    GHashTableIter iter;
+
+    if(client_connections) {
+        g_hash_table_iter_init(&iter, client_connections);
+        while (g_hash_table_iter_next(&iter, &key, (gpointer *) & client)) {
+            if(strcmp(client->id, id) == 0) {
+                return client;
+            }
+        }
+    }
+
+    crm_trace("No client found with id=%s", id);
+    return NULL;
+}
+
+const char *
+crm_client_name(crm_client_t *c) 
+{
+    if(c == NULL){
+        return "null";
+    } else if(c->name == NULL && c->id == NULL) {
+        return "unknown";
+    } else if(c->name == NULL) {
+        return c->id;
+    } else {
+        return c->name;
+    }
+}
+
+void
+crm_client_init(void) 
+{
+    if(client_connections == NULL) {
+        crm_trace("Creating client hash table");
+        client_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
+    }
+}
+
+void
+crm_client_cleanup(void) 
+{
+    if(client_connections == NULL) {
+        int active = g_hash_table_size(client_connections);
+        if(active) {
+            crm_err("Exiting with %d active connections", active);
+        }
+        g_hash_table_destroy(client_connections);
+    }
+}
+
+crm_client_t *
+crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid) 
+{
+    crm_client_t *client = NULL;
+
+    CRM_LOG_ASSERT(c);
+    if(c == NULL) {
+        return NULL;
+    }
+
+    crm_client_init();
+
+    client = calloc(1, sizeof(crm_client_t));
+
+    client->ipcs = c;
+    client->kind = client_type_ipc;
+    client->pid = crm_ipcs_client_pid(c);
+
+    client->id = crm_generate_uuid();
+
+    crm_info("Connecting %p for uid=%d gid=%d pid=%u id=%s",
+              c, uid, gid, client->pid, client->id);
+    
+#if ENABLE_ACL
+    {
+        struct group *crm_grp = NULL;
+        crm_grp = getgrnam(CRM_DAEMON_GROUP);
+        if (crm_grp) {
+            qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        }
+        client->user = uid2username(uid);
+    }
+#endif
+
+    g_hash_table_insert(client_connections, c, client);
+    return client;
+}
+
+void
+crm_client_destroy(crm_client_t *c) 
+{
+    if(c == NULL) {
+        return;
+    }
+
+    if(client_connections) {
+        if(c->ipcs) {
+            crm_trace("Destroying %p (%d remaining)",
+                      c->ipcs, crm_hash_table_size(client_connections));
+            g_hash_table_remove(client_connections, c->ipcs);
+        } else {
+            crm_trace("Destroying remote connection %p (%d remaining)",
+                      c, crm_hash_table_size(client_connections));
+            g_hash_table_remove(client_connections, c->id);
+        }
+    }
+
+    free(c->id);
+    free(c->name);
+    free(c->user);
+    free(c->callback_id);
+    free(c);
+}
+
 int
 crm_ipcs_client_pid(qb_ipcs_connection_t *c)
 {
-    struct qb_ipcs_connection_stats stats;
-    stats.client_pid = 0;
-    qb_ipcs_connection_stats_get(c, &stats, 0);
-    return stats.client_pid;
+     struct qb_ipcs_connection_stats stats;
+     stats.client_pid = 0;
+     qb_ipcs_connection_stats_get(c, &stats, 0);
+     return stats.client_pid;
 }
 
 xmlNode *
-crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size, uint32_t *id, uint32_t *flags)
+crm_ipcs_recv(crm_client_t *c, void *data, size_t size, uint32_t *id, uint32_t *flags)
 {
     char *text = ((char*)data) + sizeof(struct crm_ipc_request_header);
     crm_trace("Received %.200s", text);
@@ -190,7 +323,7 @@ crm_ipcs_recv(qb_ipcs_connection_t *c, void *data, size_t size, uint32_t *id, ui
 }
 
 ssize_t
-crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
+crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
 {
     int rc;
     int lpc = 0;
@@ -231,14 +364,14 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
     while(lpc < retries) {
         if(flags & crm_ipc_server_event) {
             type = "Event";
-            rc = qb_ipcs_event_sendv(c, iov, 2);
+            rc = qb_ipcs_event_sendv(c->ipcs, iov, 2);
             
         } else {
-            rc = qb_ipcs_response_sendv(c, iov, 2);
+            rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         }
 
         if(rc == -EPIPE || rc == -ENOTCONN) {
-            crm_trace("Client %p disconnected", c);
+            crm_trace("Client %p disconnected", c->ipcs);
             level = LOG_INFO;
         }
 
@@ -248,20 +381,20 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
 
         lpc++;
         crm_debug("Attempting resend %d of %s %d (%d bytes) to %p[%d]: %.120s",
-                  lpc, type, header.id, header.size, c, crm_ipcs_client_pid(c), buffer);
+                  lpc, type, header.id, header.size, c->ipcs, c->pid, buffer);
         nanosleep(&delay, NULL);
     }
 
     if(rc < header.size) {
-        struct qb_ipcs_connection_stats_2 *stats = qb_ipcs_connection_stats_get_2(c, 0);
+        struct qb_ipcs_connection_stats_2 *stats = qb_ipcs_connection_stats_get_2(c->ipcs, 0);
         do_crm_log(level,
                    "%s %d failed, size=%d, to=%p[%d], queue=%d, retries=%d, rc=%d: %.120s",
-                   type, header.id, header.size, c, stats->client_pid, stats->event_q_length, lpc, rc, buffer);
+                   type, header.id, header.size, c->ipcs, c->pid, stats->event_q_length, lpc, rc, buffer);
         free(stats);
 
     } else {
         crm_trace("%s %d sent, %d bytes to %p[%d]: %.120s", type, header.id, rc,
-                  c, crm_ipcs_client_pid(c), buffer);
+                  c->ipcs, c->pid, buffer);
     }
     free(buffer);
     return rc;
@@ -269,12 +402,12 @@ crm_ipcs_send(qb_ipcs_connection_t *c, uint32_t request, xmlNode *message, enum 
 
 void
 crm_ipcs_send_ack(
-    qb_ipcs_connection_t *c, uint32_t request, const char *tag, const char *function, int line)
+    crm_client_t *c, uint32_t request, const char *tag, const char *function, int line)
 {
     xmlNode *ack = create_xml_node(NULL, tag);
     crm_xml_add(ack, "function", function);
     crm_xml_add_int(ack, "line", line);
-    crm_ipcs_send(c, request, ack, FALSE);
+    crm_ipcs_send(c, request, ack, 0);
     free_xml(ack);
 }
 

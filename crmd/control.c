@@ -26,6 +26,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
+#include <crm/common/ipcs.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -48,7 +49,6 @@ void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
 
 gboolean fsa_has_quorum = FALSE;
-GHashTable *ipc_clients = NULL;
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
 
@@ -202,9 +202,9 @@ void log_connected_client(gpointer key, gpointer value, gpointer user_data);
 void
 log_connected_client(gpointer key, gpointer value, gpointer user_data)
 {
-    crmd_client_t *client = value;
+    crm_client_t *client = value;
 
-    crm_err("%s is still connected at exit", client->table_key);
+    crm_err("%s is still connected at exit", crm_client_name(client));
 }
 
 int
@@ -239,25 +239,20 @@ crmd_exit(int rc)
     g_list_free(fsa_message_queue);
     fsa_message_queue = NULL;
 
-    if (ipc_clients) {
-        crm_debug("Number of connected clients: %d", g_hash_table_size(ipc_clients));
-/* 		g_hash_table_foreach(ipc_clients, log_connected_client, NULL); */
-        g_hash_table_destroy(ipc_clients);
-    }
-
+    crm_client_cleanup();
     empty_uuid_cache();
     crm_peer_destroy();
     clear_bit(fsa_input_register, R_MEMBERSHIP);
 
-    if (te_subsystem->client && te_subsystem->client->ipc) {
+    if (te_subsystem->client && te_subsystem->client->ipcs) {
         crm_debug("Full destroy: TE");
-        qb_ipcs_disconnect(te_subsystem->client->ipc);
+        qb_ipcs_disconnect(te_subsystem->client->ipcs);
     }
     free(te_subsystem);
 
-    if (pe_subsystem->client && pe_subsystem->client->ipc) {
+    if (pe_subsystem->client && pe_subsystem->client->ipcs) {
         crm_debug("Full destroy: PE");
-        qb_ipcs_disconnect(pe_subsystem->client->ipc);
+        qb_ipcs_disconnect(pe_subsystem->client->ipcs);
     }
     free(pe_subsystem);
 
@@ -358,8 +353,6 @@ do_startup(long long action,
 
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
     config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
-
-    ipc_clients = g_hash_table_new(crm_str_hash, g_str_equal);
 
     crm_debug("Creating CIB and LRM objects");
     fsa_cib_conn = cib_new();
@@ -532,41 +525,17 @@ do_startup(long long action,
 static int32_t
 crmd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crmd_client_t *blank_client = NULL;
-#if ENABLE_ACL
-    struct group *crm_grp = NULL;
-#endif
-
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
-
-    blank_client = calloc(1, sizeof(crmd_client_t));
-    CRM_ASSERT(blank_client != NULL);
-
-    crm_trace("Created client: %p", blank_client);
-
-    blank_client->ipc = c;
-    blank_client->sub_sys = NULL;
-    blank_client->uuid = NULL;
-    blank_client->table_key = NULL;
-
-#if ENABLE_ACL
-    crm_grp = getgrnam(CRM_DAEMON_GROUP);
-    if (crm_grp) {
-        qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    crm_trace("Connection %p", c);
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
     }
-
-    blank_client->user = uid2username(uid);
-#endif
-
-    qb_ipcs_context_set(c, blank_client);
-
     return 0;
 }
 
 static void
 crmd_ipc_created(qb_ipcs_connection_t *c)
 {
-    crm_trace("Client %p connected", c);
+    crm_trace("Connection %p", c);
 }
 
 static int32_t
@@ -574,13 +543,13 @@ crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    crmd_client_t *client = qb_ipcs_context_get(c);
+    crm_client_t *client = crm_client_get(c);
 
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
-    crm_trace("Invoked: %s", client->table_key);
+    xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
+    crm_trace("Invoked: %s", crm_client_name(client));
 
     if(flags & crm_ipc_client_response) {
-        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+        crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
     }
 
     if (msg == NULL) {
@@ -591,9 +560,10 @@ crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     determine_request_user(client->user, msg, F_CRM_USER);
 #endif
 
-    crm_trace("Processing msg from %s", client->table_key);
+    crm_trace("Processing msg from %s", crm_client_name(client));
     crm_log_xml_trace(msg, "CRMd[inbound]");
 
+    crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
     if (crmd_authorize_message(msg, client)) {
         route_message(C_IPC_MESSAGE, msg);
     }
@@ -606,29 +576,46 @@ crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 crmd_ipc_closed(qb_ipcs_connection_t *c) 
 {
+    crm_client_t *client = crm_client_get(c);
+    struct crm_subsystem_s *the_subsystem = NULL;
+
+    crm_trace("Connection %p", c);
+
+    if (client->userdata == NULL) {
+        crm_trace("Client hadn't registered with us yet");
+
+    } else if (strcasecmp(CRM_SYSTEM_PENGINE, client->userdata) == 0) {
+        the_subsystem = pe_subsystem;
+
+    } else if (strcasecmp(CRM_SYSTEM_TENGINE, client->userdata) == 0) {
+        the_subsystem = te_subsystem;
+
+    } else if (strcasecmp(CRM_SYSTEM_CIB, client->userdata) == 0) {
+        the_subsystem = cib_subsystem;
+    }
+
+    if (the_subsystem != NULL) {
+        the_subsystem->source = NULL;
+        the_subsystem->client = NULL;
+        crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
+
+    } else {
+        /* else that was a transient client */
+        crm_trace("Received HUP from transient client");
+    }
+    
+    crm_trace("Disconnecting client %s (%p)", crm_client_name(client), client);
+    free(client->userdata);
+    crm_client_destroy(client);
+
+    trigger_fsa(fsa_source);    
     return 0;
 }
 
 static void
 crmd_ipc_destroy(qb_ipcs_connection_t *c) 
 {
-    crmd_client_t *client = qb_ipcs_context_get(c);
-
-    if (client == NULL) {
-        crm_trace("No client to delete");
-        return;
-    }
-
-    process_client_disconnect(client);
-    
-    crm_trace("Disconnecting client %s (%p)", client->table_key, client);
-    free(client->table_key);
-    free(client->sub_sys);
-    free(client->uuid);
-    free(client->user);
-    free(client);
-
-    trigger_fsa(fsa_source);    
+    crm_trace("Connection %p", c);
 }
 
 /*	 A_STOP	*/

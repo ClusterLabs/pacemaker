@@ -31,15 +31,6 @@
 extern ll_cluster_t *fsa_cluster_conn;
 #  endif
 
-typedef struct crmd_client_s {
-    char *sub_sys;
-    char *uuid;
-    char *table_key;
-    char *user;
-    qb_ipcs_connection_t *ipc;
-} crmd_client_t;
-
-
 /* copy from struct client_child in heartbeat.h
  *
  * Plus a couple of other things
@@ -50,7 +41,7 @@ struct crm_subsystem_s {
     const char *path;           /* Command location */
     const char *command;        /* Command with path */
     const char *args;           /* Command arguments */
-    crmd_client_t *client;      /* Client connection object */
+    crm_client_t *client;         /* Client connection object */
 
     gboolean sent_kill;
     mainloop_io_t *source;     /* How can we communicate with it */

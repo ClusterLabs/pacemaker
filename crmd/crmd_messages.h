@@ -100,7 +100,7 @@ extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
                                            const char *crm_msg_reference,
                                            const char *sys_to, const char *sys_from);
 
-extern gboolean crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client);
+extern gboolean crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client);
 
 extern gboolean send_request(xmlNode * msg, char **msg_reference);
 

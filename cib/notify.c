@@ -37,9 +37,9 @@
 #include <cibio.h>
 #include <callbacks.h>
 #include <notify.h>
+#include <crm/common/ipcs.h>
 
 int pending_updates = 0;
-extern GHashTable *client_list;
 
 gboolean cib_notify_client(gpointer key, gpointer value, gpointer user_data);
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
@@ -50,9 +50,9 @@ void do_cib_notify(int options, const char *op, xmlNode * update,
 static void
 need_pre_notify(gpointer key, gpointer value, gpointer user_data)
 {
-    cib_client_t *client = value;
+    crm_client_t *client = value;
 
-    if (client->pre_notify) {
+    if (is_set(client->options, cib_notify_pre)) {
         gboolean *needed = user_data;
 
         *needed = TRUE;
@@ -62,9 +62,9 @@ need_pre_notify(gpointer key, gpointer value, gpointer user_data)
 static void
 need_post_notify(gpointer key, gpointer value, gpointer user_data)
 {
-    cib_client_t *client = value;
+    crm_client_t *client = value;
 
-    if (client->post_notify) {
+    if (is_set(client->options, cib_notify_post)) {
         gboolean *needed = user_data;
 
         *needed = TRUE;
@@ -77,13 +77,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
     const char *type = NULL;
     gboolean do_send = FALSE;
 
-    cib_client_t *client = value;
+    crm_client_t *client = value;
     xmlNode *update_msg = user_data;
 
     CRM_CHECK(client != NULL, return TRUE);
     CRM_CHECK(update_msg != NULL, return TRUE);
 
-    if (client->ipc == NULL) {
+    if (client->ipcs == NULL) {
         crm_warn("Skipping client with NULL channel");
         return FALSE;
     }
@@ -91,36 +91,40 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
     type = crm_element_value(update_msg, F_SUBTYPE);
 
     CRM_LOG_ASSERT(type != NULL);
-    if (client->diffs && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+    if (is_set(client->options, cib_notify_diff) && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
         do_send = TRUE;
 
-    } else if (client->replace && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
+    } else if (is_set(client->options, cib_notify_replace) && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
         do_send = TRUE;
 
-    } else if (client->confirmations && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+    } else if (is_set(client->options, cib_notify_confirm) && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
         do_send = TRUE;
 
-    } else if (client->pre_notify && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
+    } else if (is_set(client->options, cib_notify_pre) && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
         do_send = TRUE;
 
-    } else if (client->post_notify && safe_str_eq(type, T_CIB_POST_NOTIFY)) {
+    } else if (is_set(client->options, cib_notify_post) && safe_str_eq(type, T_CIB_POST_NOTIFY)) {
         do_send = TRUE;
     }
 
     if (do_send) {
-        if (client->ipc) {
-            if(crm_ipcs_send(client->ipc, 0, update_msg, TRUE) == FALSE) {
-                crm_warn("Notification of client %s/%s failed", client->name, client->id);
-            }
-
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        } else if (client->session) {
-            crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-            crm_send_remote_msg(client->session, update_msg, client->encrypted);
-
-#endif
-        } else {
-            crm_err("Unknown transport for %s", client->name);
+        switch(client->kind) {
+            case client_type_ipc:
+                if(crm_ipcs_send(client, 0, update_msg, TRUE) == FALSE) {
+                    crm_warn("Notification of client %s/%s failed", client->name, client->id);
+                }
+                break;
+            case client_type_tls:
+            case client_type_tcp:
+                if(client->userdata) {
+                    crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
+                    crm_send_remote_msg(client->session, update_msg, client->kind == client_type_tls);
+                } else {
+                    crm_warn("Notification of remote client %s/%s failed", client->name, client->id);
+                }
+                break;
+            default:
+                crm_err("Unknown transport %d for %s", client->kind, client->name);
         }
     }
     return FALSE;
@@ -134,7 +138,7 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
     const char *id = NULL;
     gboolean needed = FALSE;
 
-    g_hash_table_foreach(client_list, need_pre_notify, &needed);
+    g_hash_table_foreach(client_connections, need_pre_notify, &needed);
     if (needed == FALSE) {
         return;
     }
@@ -170,7 +174,7 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
         add_message_xml(update_msg, F_CIB_UPDATE, update);
     }
 
-    g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
+    g_hash_table_foreach_remove(client_connections, cib_notify_client, update_msg);
 
     if (update == NULL) {
         crm_trace("Performing operation %s (on section=%s)", op, type);
@@ -188,7 +192,7 @@ cib_post_notify(int options, const char *op, xmlNode * update,
 {
     gboolean needed = FALSE;
 
-    g_hash_table_foreach(client_list, need_post_notify, &needed);
+    g_hash_table_foreach(client_connections, need_post_notify, &needed);
     if (needed == FALSE) {
         return;
     }
@@ -281,7 +285,7 @@ do_cib_notify(int options, const char *op, xmlNode * update,
     }
 
     crm_trace("Notifying clients");
-    g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
+    g_hash_table_foreach_remove(client_connections, cib_notify_client, update_msg);
     free_xml(update_msg);
     crm_trace("Notify complete");
 }
@@ -340,6 +344,6 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
 
     crm_log_xml_trace(replace_msg, "CIB Replaced");
 
-    g_hash_table_foreach_remove(client_list, cib_notify_client, replace_msg);
+    g_hash_table_foreach_remove(client_connections, cib_notify_client, replace_msg);
     free_xml(replace_msg);
 }

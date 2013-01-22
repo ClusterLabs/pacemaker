@@ -32,6 +32,7 @@
 #include <pengine.h>
 #include <allocate.h>
 #include <utils.h>
+#include <crm/common/ipcs.h>
 
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
@@ -56,10 +57,10 @@ series_t series[] = {
     {"pe-input", "pe-input-series-max", 400},
 };
 
-gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender);
+gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender);
 
 gboolean
-process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender)
+process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender)
 {
     static char *last_digest = NULL;
 

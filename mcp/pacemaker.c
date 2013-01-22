@@ -34,7 +34,6 @@
 #include <ctype.h>
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
-GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 5
@@ -443,28 +442,29 @@ build_path(const char *path_c, mode_t mode)
 static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    crm_trace("Connection %p", c);
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
+    }
     return 0;
 }
 
 static void
 pcmk_ipc_created(qb_ipcs_connection_t *c)
 {
-    g_hash_table_insert(client_list, c, c);
-    crm_debug("Channel %p connected: %d children", c, g_hash_table_size(client_list));
-    /* update_process_clients(); */
+    crm_trace("Connection %p", c);
 }
 
 /* Exit code means? */
 static int32_t
-pcmk_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     const char *task = NULL;
+    crm_client_t *c = crm_client_get(qbc);
     xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
-    crm_trace("Message from %p", c);
     if(flags & crm_ipc_client_response) {
         crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
     }
@@ -494,15 +494,16 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 pcmk_ipc_closed(qb_ipcs_connection_t *c) 
 {
-    crm_trace("%p closed", c);
+    crm_client_t *client = crm_client_get(c);
+    crm_trace("Connection %p", c);
+    crm_client_destroy(client);
     return 0;
 }
 
 static void
 pcmk_ipc_destroy(qb_ipcs_connection_t *c) 
 {
-    crm_trace("%p destroy", c);
-    g_hash_table_remove(client_list, c);
+    crm_trace("Connection %p", c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = 
@@ -515,14 +516,10 @@ struct qb_ipcs_service_handlers ipc_callbacks =
 };
 
 
-static gboolean
+static void
 ghash_send_proc_details(gpointer key, gpointer value, gpointer data)
 {
-    if (crm_ipcs_send(key, 0, data, TRUE) <= 0) {
-        /* remove it */
-        return TRUE;
-    }
-    return FALSE;
+    crm_ipcs_send(value, 0, data, TRUE);
 }
 
 static void
@@ -543,10 +540,10 @@ update_process_clients(void)
 {
     xmlNode *update = create_xml_node(NULL, "nodes");
 
-    crm_trace("Sending process list to %d children", g_hash_table_size(client_list));
+    crm_trace("Sending process list to %d children", crm_hash_table_size(client_connections));
 
     g_hash_table_foreach(peers, peer_loop_fn, update);
-    g_hash_table_foreach_remove(client_list, ghash_send_proc_details, update);
+    g_hash_table_foreach(client_connections, ghash_send_proc_details, update);
 
     free_xml(update);
 }

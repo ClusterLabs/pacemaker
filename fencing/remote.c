@@ -34,6 +34,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -524,7 +525,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     return op;
 }
 
-remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request, gboolean manual_ack)
+remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t *client, xmlNode *request, gboolean manual_ack)
 {
     xmlNode *query = NULL;
     const char *client_id = NULL;

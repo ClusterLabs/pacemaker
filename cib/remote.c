@@ -36,6 +36,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
 
@@ -229,7 +230,7 @@ cib_remote_listen(gpointer data)
 #ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session *session = NULL;
 #endif
-    cib_client_t *new_client = NULL;
+    crm_client_t *new_client = NULL;
 
     xmlNode *login = NULL;
     const char *user = NULL;
@@ -325,12 +326,15 @@ cib_remote_listen(gpointer data)
 
     /* send ACK */
     num_clients++;
-    new_client = calloc(1, sizeof(cib_client_t));
+
+    crm_client_init();
+    new_client = calloc(1, sizeof(crm_client_t));
+    
+    new_client->id = crm_generate_uuid();
     new_client->name = crm_element_value_copy(login, "name");
 
-    CRM_CHECK(new_client->id == NULL, free(new_client->id));
-    new_client->id = crm_generate_uuid();
-
+    g_hash_table_insert(client_connections, new_client->id/* Should work */, new_client);
+    
 #if ENABLE_ACL
     new_client->user = strdup(user);
 #endif
@@ -338,24 +342,23 @@ cib_remote_listen(gpointer data)
     new_client->callback_id = NULL;
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        new_client->encrypted = TRUE;
         new_client->session = session;
+        new_client->kind = client_type_tls;
 #endif
     } else {
+        new_client->kind = client_type_tcp;
         new_client->session = GINT_TO_POINTER(csock);
     }
-
+    
     free_xml(login);
     login = create_xml_node(NULL, "cib_result");
     crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(login, F_CIB_CLIENTID, new_client->id);
-    crm_send_remote_msg(new_client->session, login, new_client->encrypted);
+    crm_send_remote_msg(new_client->session, login, new_client->kind == client_type_tls);
     free_xml(login);
 
     new_client->remote = mainloop_add_fd(
         "cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &remote_client_fd_callbacks);
-
-    g_hash_table_insert(client_list, new_client->id, new_client);
 
     return TRUE;
 
@@ -375,7 +378,7 @@ cib_remote_listen(gpointer data)
 void
 cib_remote_connection_destroy(gpointer user_data)
 {
-    cib_client_t *client = user_data;
+    crm_client_t *client = user_data;
 
     if (client == NULL) {
         return;
@@ -384,20 +387,7 @@ cib_remote_connection_destroy(gpointer user_data)
     crm_trace("Cleaning up after client disconnect: %s/%s",
               crm_str(client->name), client->id);
 
-    if (client->id != NULL) {
-        if (!g_hash_table_remove(client_list, client->id)) {
-            crm_err("Client %s not found in the hashtable", client->name);
-        }
-    }
-
-    crm_trace("Destroying %s (%p)", client->name, user_data);
-    num_clients--;
-    crm_trace("Num unfree'd clients: %d", num_clients);
-    free(client->name);
-    free(client->callback_id);
-    free(client->id);
-    free(client->user);
-    free(client);
+    crm_client_destroy(client);
     crm_trace("Freed the cib client");
 
     if (cib_shutdown_flag) {
@@ -411,11 +401,11 @@ cib_remote_msg(gpointer data)
 {
     const char *value = NULL;
     xmlNode *command = NULL;
-    cib_client_t *client = data;
+    crm_client_t *client = data;
 
-    crm_trace("%s callback", client->encrypted ? "secure" : "clear-text");
+    crm_trace("%s callback", client->kind == client_type_tls ? "secure" : "clear-text");
 
-    command = crm_recv_remote_msg(client->session, client->encrypted);
+    command = crm_recv_remote_msg(client->session, client->kind == client_type_tls);
     if (command == NULL) {
         return -1;
     }

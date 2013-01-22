@@ -46,22 +46,27 @@ void pengine_shutdown(int nsig);
 static int32_t
 pe_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
+    crm_trace("Connection %p", c);
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
+    }
     return 0;
 }
 
 static void
 pe_ipc_created(qb_ipcs_connection_t *c)
 {
+    crm_trace("Connection %p", c);
 }
 
-gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, qb_ipcs_connection_t* sender);
+gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender);
 
 static int32_t
-pe_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+pe_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
+    crm_client_t *c = crm_client_get(qbc);
     xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
     if(flags & crm_ipc_client_response) {
@@ -81,13 +86,16 @@ pe_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 pe_ipc_closed(qb_ipcs_connection_t *c) 
 {
+    crm_client_t *client = crm_client_get(c);
+    crm_trace("Connection %p", c);
+    crm_client_destroy(client);
     return 0;
 }
 
 static void
 pe_ipc_destroy(qb_ipcs_connection_t *c) 
 {
-    crm_trace("Disconnecting %p", c);
+    crm_trace("Connection %p", c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = 

@@ -32,6 +32,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -49,7 +50,6 @@
 char *stonith_our_uname = NULL;
 
 GMainLoop *mainloop = NULL;
-GHashTable *client_list = NULL;
 
 gboolean stand_alone = FALSE;
 gboolean no_cib_connect = FALSE;
@@ -63,10 +63,13 @@ static void stonith_cleanup(void);
 static int32_t
 st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connecting %p for uid=%d gid=%d", c, uid, gid);
     if(stonith_shutdown_flag) {
         crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
         return -EPERM;
+    }
+
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
     }
     return 0;
 }
@@ -74,42 +77,19 @@ st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static void
 st_ipc_created(qb_ipcs_connection_t *c)
 {
-    stonith_client_t *new_client = NULL;
-
-#if 0
-    struct qb_ipcs_stats srv_stats;
-
-    qb_ipcs_stats_get(s1, &srv_stats, QB_FALSE);
-    qb_log(LOG_INFO, "Connection created (active:%d, closed:%d)",
-           srv_stats.active_connections,
-           srv_stats.closed_connections);
-#endif
-
-    new_client = calloc(1, sizeof(stonith_client_t));
-    new_client->channel = c;
-    new_client->pid = crm_ipcs_client_pid(c);
-    new_client->channel_name = strdup("ipc");
-
-    CRM_CHECK(new_client->id == NULL, free(new_client->id));
-    new_client->id = crm_generate_uuid();
-    crm_trace("Created channel %p for client %s", c, new_client->id);
-
-    /* make sure we can find ourselves later for sync calls
-     * redirected to the master instance
-     */
-    g_hash_table_insert(client_list, new_client->id, new_client);
-    qb_ipcs_context_set(c, new_client);
-    CRM_ASSERT(qb_ipcs_context_get(c) != NULL);
+    crm_trace("Connection created for %p", c);
 }
 
 /* Exit code means? */
 static int32_t
-st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     xmlNode *request = NULL;
-    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
+    crm_client_t *c = crm_client_get(qbc);
+
+    CRM_CHECK(c != NULL, goto cleanup);
 
     request = crm_ipcs_recv(c, data, size, &id, &flags);
     if (request == NULL) {
@@ -117,32 +97,28 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         return 0;
     }
     
-    CRM_CHECK(client != NULL, goto cleanup);
-
-    if(client->name == NULL) {
+    if(c->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
         if(value == NULL) {
             value = "unknown";
         }
-        client->name = g_strdup_printf("%s.%u", value, client->pid);
+        c->name = g_strdup_printf("%s.%u", value, c->pid);
     }
-
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p/%s", client, client->name); goto cleanup);
 
     if(flags & crm_ipc_client_response) {
-        CRM_LOG_ASSERT(client->request_id == 0); /* This means the client has two synchronous events in-flight */
-        client->request_id = id;                 /* Reply only to the last one */
+        CRM_LOG_ASSERT(c->request_id == 0); /* This means the client has two synchronous events in-flight */
+        c->request_id = id;                 /* Reply only to the last one */
     }
     
-    crm_xml_add(request, F_STONITH_CLIENTID, client->id);
-    crm_xml_add(request, F_STONITH_CLIENTNAME, client->name);
+    crm_xml_add(request, F_STONITH_CLIENTID, c->id);
+    crm_xml_add(request, F_STONITH_CLIENTNAME, crm_client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
     crm_log_xml_trace(request, "Client[inbound]");
-    stonith_command(client, id, flags, request, NULL);
+    stonith_command(c, id, flags, request, NULL);
 
   cleanup:
-    if(client == NULL || client->id == NULL) {
+    if(c == NULL) {
         crm_log_xml_notice(request, "Invalid client");
     }
 
@@ -154,34 +130,10 @@ st_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 st_ipc_closed(qb_ipcs_connection_t *c)
 {
-    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
+    crm_client_t *client = crm_client_get(c);
 
-#if 0
-    qb_ipcs_stats_get(s1, &srv_stats, QB_FALSE);
-    qb_ipcs_connection_stats_get(c, &stats, QB_FALSE);
-    qb_log(LOG_INFO, "Connection to pid:%d destroyed (active:%d, closed:%d)",
-           stats.client_pid,
-           srv_stats.active_connections,
-           srv_stats.closed_connections);
-
-    qb_log(LOG_DEBUG, " Requests %"PRIu64"", stats.requests);
-    qb_log(LOG_DEBUG, " Responses %"PRIu64"", stats.responses);
-    qb_log(LOG_DEBUG, " Events %"PRIu64"", stats.events);
-    qb_log(LOG_DEBUG, " Send retries %"PRIu64"", stats.send_retries);
-    qb_log(LOG_DEBUG, " Recv retries %"PRIu64"", stats.recv_retries);
-    qb_log(LOG_DEBUG, " FC state %d", stats.flow_control_state);
-    qb_log(LOG_DEBUG, " FC count %"PRIu64"", stats.flow_control_count);
-#endif
-
-    if (client == NULL) {
-        crm_err("No client");
-        return 0;
-    }
-
-    crm_trace("Cleaning up after client disconnect: %p/%s/%s", client, crm_str(client->name), client->id);
-    if(client->id != NULL) {
-        g_hash_table_remove(client_list, client->id);
-    }
+    crm_trace("Connection %p closed", c);
+    crm_client_destroy(client);
 
     /* 0 means: yes, go ahead and destroy the connection */
     return 0;
@@ -190,24 +142,7 @@ st_ipc_closed(qb_ipcs_connection_t *c)
 static void
 st_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    stonith_client_t *client = (stonith_client_t*)qb_ipcs_context_get(c);
-
-    /* Make sure the connection is fully cleaned up */
-    st_ipc_closed(c);
-
-    if(client == NULL) {
-        crm_trace("Nothing to destroy");
-        return;
-    }
-
-    crm_trace("Destroying %s (%p)", client->name, client);
-
-    free(client->name);
-    free(client->id);
-    free(client);
-    crm_trace("Done");
-
-    return;
+    crm_trace("Connection %p destroyed", c);
 }
 
 static void
@@ -281,21 +216,16 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
              gboolean sync_reply, gboolean from_peer)
 {
     /* send callback to originating child */
-    stonith_client_t *client_obj = NULL;
+    crm_client_t *client_obj = NULL;
     int local_rc = pcmk_ok;
 
     crm_trace("Sending response");
-
-    if(client_id != NULL) {
-        client_obj = g_hash_table_lookup(client_list, client_id);
-    } else {
-        crm_trace("No client to sent the response to."
-                    "  F_STONITH_CLIENTID not set.");
-    }
+    client_obj = crm_client_get_by_id(client_id);
 
     crm_trace("Sending callback to request originator");
     if(client_obj == NULL) {
         local_rc = -1;
+        crm_trace("No client to sent the response to.  F_STONITH_CLIENTID not set.");
 
     } else {
         int rid = 0;
@@ -314,7 +244,7 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
                       client_obj->name, from_peer?"(originator of delegated request)":"");
         }
 
-        local_rc = crm_ipcs_send(client_obj->channel, rid, notify_src, !sync_reply);
+        local_rc = crm_ipcs_send(client_obj, rid, notify_src, !sync_reply);
     }
 
     if(local_rc < pcmk_ok && client_obj != NULL) {
@@ -343,7 +273,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
     xmlNode *update_msg = user_data;
-    stonith_client_t *client = value;
+    crm_client_t *client = value;
     const char *type = NULL;
 
     CRM_CHECK(client != NULL, return);
@@ -352,22 +282,18 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     type = crm_element_value(update_msg, F_SUBTYPE);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
-    if(client->channel == NULL) {
+    if(client->ipcs == NULL) {
         crm_trace("Skipping client with NULL channel");
-        return;
-
-    } else if(client->name == NULL) {
-        crm_trace("Skipping unnammed client / comamnd channel");
         return;
     }
 
-    if(client->flags & get_stonith_flag(type)) {
-        int rc = crm_ipcs_send(client->channel, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error);
+    if(client->options & get_stonith_flag(type)) {
+        int rc = crm_ipcs_send(client, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error);
         if(rc <= 0) {
             crm_warn("%s notification of client %s.%.6s failed: %s (%d)",
-                     type, client->name, client->id, pcmk_strerror(rc), rc);
+                     type, crm_client_name(client), client->id, pcmk_strerror(rc), rc);
         } else {
-            crm_trace("Sent %s notification to client %s.%.6s", type, client->name, client->id);
+            crm_trace("Sent %s notification to client %s.%.6s", type, crm_client_name(client), client->id);
         }
     }
 }
@@ -375,14 +301,14 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 void
 do_stonith_async_timeout_update(const char *client_id, const char *call_id, int timeout)
 {
-    stonith_client_t *client = NULL;
+    crm_client_t *client = NULL;
     xmlNode *notify_data = NULL;
 
     if (!timeout || !call_id || !client_id) {
         return;
     }
 
-    client = g_hash_table_lookup(client_list, client_id);
+    client = crm_client_get_by_id(client_id);
     if (!client) {
         return;
     }
@@ -394,8 +320,8 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
 
     crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
 
-    if (client->channel) {
-        crm_ipcs_send(client->channel, 0, notify_data, crm_ipc_server_event);
+    if (client) {
+        crm_ipcs_send(client, 0, notify_data, crm_ipc_server_event);
     }
 
     free_xml(notify_data);
@@ -419,7 +345,7 @@ do_stonith_notify(int options, const char *type, int result, xmlNode *data)
     }
 
     crm_trace("Notifying clients");
-    g_hash_table_foreach(client_list, stonith_notify_client, update_msg);
+    g_hash_table_foreach(client_connections, stonith_notify_client, update_msg);
     free_xml(update_msg);
     crm_trace("Notify complete");
 }
@@ -773,7 +699,7 @@ static void
 stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
-    crm_info("Terminating with  %d clients", g_hash_table_size(client_list));
+    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
     if(mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
     } else {
@@ -811,7 +737,7 @@ stonith_cleanup(void)
         qb_ipcs_destroy(ipcs);
     }
     crm_peer_destroy();
-    g_hash_table_destroy(client_list);
+    crm_client_cleanup();
     free(stonith_our_uname);
 }
 
@@ -1025,7 +951,6 @@ main(int argc, char ** argv)
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
-    client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 
     if(stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT

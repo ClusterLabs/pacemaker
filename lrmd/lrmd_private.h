@@ -26,7 +26,6 @@
 #  include <crm/stonith-ng.h>
 
 GHashTable *rsc_list;
-GHashTable *client_list;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
@@ -53,17 +52,7 @@ typedef struct lrmd_rsc_s {
     crm_trigger_t *work;
 } lrmd_rsc_t;
 
-typedef struct lrmd_client_s {
-    char *id;
-    char *name;
-
-    qb_ipcs_connection_t *channel;
-
-    long long flags;
-
-} lrmd_client_t;
-
-void process_lrmd_message(lrmd_client_t * client, uint32_t id, xmlNode * request);
+void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request);
 
 void free_rsc(gpointer data);
 

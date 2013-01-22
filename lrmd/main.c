@@ -27,6 +27,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 
 #include <lrmd_private.h>
 
@@ -81,27 +82,17 @@ get_stonith_connection(void)
 static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    struct qb_ipcs_connection_stats stats = { 0, };
-
-    qb_ipcs_connection_stats_get(c, &stats, 1);
-    crm_info("Accepting client connection: %p pid=%d for uid=%d gid=%d",
-             c, stats.client_pid, uid, gid);
+    crm_trace("Connection %p", c);
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
+    }
     return 0;
 }
 
 static void
 lrmd_ipc_created(qb_ipcs_connection_t * c)
 {
-    lrmd_client_t *new_client = NULL;
-
-    new_client = calloc(1, sizeof(lrmd_client_t));
-    new_client->channel = c;
-
-    new_client->id = crm_generate_uuid();
-    crm_trace("LRMD client connection established. %p id: %s", c, new_client->id);
-
-    g_hash_table_insert(client_list, new_client->id, new_client);
-    qb_ipcs_context_set(c, new_client);
+    crm_trace("Connection %p", c);
 }
 
 static int32_t
@@ -109,8 +100,8 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    xmlNode *request = crm_ipcs_recv(c, data, size, &id, &flags);
-    lrmd_client_t *client = (lrmd_client_t *) qb_ipcs_context_get(c);
+    crm_client_t *client = crm_client_get(c);
+    xmlNode *request = crm_ipcs_recv(client, data, size, &id, &flags);
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);
@@ -152,43 +143,17 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 static int32_t
 lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
-    lrmd_client_t *client = (lrmd_client_t *) qb_ipcs_context_get(c);
-    int found = 0;
-
-    if (!client) {
-        crm_err("No client for ipc");
-        return 0;
-    }
-
-    if (client->id) {
-        found = g_hash_table_remove(client_list, client->id);
-    }
-
-    if (!found) {
-        crm_err("Asked to remove unknown client with id %d", client->id);
-    }
-
+    crm_client_t *client = crm_client_get(c);
+    crm_trace("Connection %p", c);
+    client_disconnect_cleanup(client->id);
+    crm_client_destroy(client);
     return 0;
 }
 
 static void
 lrmd_ipc_destroy(qb_ipcs_connection_t * c)
 {
-    lrmd_client_t *client = (lrmd_client_t *) qb_ipcs_context_get(c);
-
-    if (!client) {
-        crm_err("No client for ipc");
-        return;
-    }
-
-    crm_info("LRMD client disconnecting %p - name: %s id: %s", c, client->name, client->id);
-
-    client_disconnect_cleanup(client->id);
-
-    qb_ipcs_context_set(c, NULL);
-    free(client->name);
-    free(client->id);
-    free(client);
+    crm_trace("Connection %p", c);
 }
 
 static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
@@ -202,7 +167,7 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
 void
 lrmd_shutdown(int nsig)
 {
-    crm_info("Terminating with  %d clients", g_hash_table_size(client_list));
+    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
@@ -255,7 +220,6 @@ main(int argc, char **argv)
     }
 
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
-    client_list = g_hash_table_new(crm_str_hash, g_str_equal);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
@@ -268,7 +232,7 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     mainloop_del_ipc_server(ipcs);
-    g_hash_table_destroy(client_list);
+    crm_client_cleanup();
     g_hash_table_destroy(rsc_list);
 
     if (stonith_api) {

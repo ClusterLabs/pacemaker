@@ -32,37 +32,17 @@
 
 
 extern gboolean cib_is_master;
-extern GHashTable *client_list;
 extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 
-typedef struct cib_client_s {
-    char *id;
-    char *name;
-    char *callback_id;
-    char *user;
-    int request_id;
-
-    qb_ipcs_connection_t *ipc;
-
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    gnutls_session *session;
-#else
-    void *session;
-#endif
-    gboolean encrypted;
-    mainloop_io_t *remote;
-        
-    unsigned long num_calls;
-
-    int pre_notify;
-    int post_notify;
-    int confirmations;
-    int replace;
-    int diffs;
-
-    GList *delegated_calls;
-} cib_client_t;
+enum cib_notifications 
+{
+    cib_notify_pre     = 0x0001,
+    cib_notify_post    = 0x0002,
+    cib_notify_replace = 0x0004,
+    cib_notify_confirm = 0x0008,
+    cib_notify_diff    = 0x0010,
+};
 
 typedef struct cib_operation_s {
     const char *operation;
@@ -84,7 +64,7 @@ extern qb_ipcs_service_t *ipcs_shm;
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
 extern void cib_client_status_callback(const char *node, const char *client,
                                        const char *status, void *private);
-extern void cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, cib_client_t * cib_client, gboolean privileged);
+extern void cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, crm_client_t * cib_client, gboolean privileged);
 
 void cib_shutdown(int nsig);
 void initiate_exit(void);

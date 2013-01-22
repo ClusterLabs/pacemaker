@@ -44,6 +44,7 @@ gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 gboolean mainloop_destroy_signal(int sig);
 
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 
 struct ipc_client_callbacks 
 {

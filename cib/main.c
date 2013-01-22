@@ -87,7 +87,6 @@ void cib_shutdown(int nsig);
 gboolean startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 
-GHashTable *client_list = NULL;
 GHashTable *config_hash = NULL;
 GHashTable *local_notify_queue = NULL;
 
@@ -110,9 +109,7 @@ cib_enable_writes(int nsig)
 static void
 log_cib_client(gpointer key, gpointer value, gpointer user_data)
 {
-    cib_client_t *a_client = value;
-
-    crm_info("Client %s", crm_str(a_client->name));
+    crm_info("Client %s", crm_client_name(value));
 }
 
 /* *INDENT-OFF* */
@@ -149,7 +146,6 @@ main(int argc, char **argv)
     cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
     crm_peer_init();
-    client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 
     while (1) {
         flag = crm_get_option(argc, argv, &index);
@@ -245,8 +241,8 @@ main(int argc, char **argv)
     /* read local config file */
     rc = cib_init();
 
-    CRM_CHECK(g_hash_table_size(client_list) == 0, crm_warn("Not all clients gone at exit"));
-    g_hash_table_foreach(client_list, log_cib_client, NULL);
+    CRM_CHECK(crm_hash_table_size(client_connections) == 0, crm_warn("Not all clients gone at exit"));
+    g_hash_table_foreach(client_connections, log_cib_client, NULL);
     cib_cleanup();
 
 #if SUPPORT_HEARTBEAT
@@ -266,8 +262,8 @@ cib_cleanup(void)
     if (local_notify_queue) {
         g_hash_table_destroy(local_notify_queue);
     }
+    crm_client_cleanup();
     g_hash_table_destroy(config_hash);
-    g_hash_table_destroy(client_list);
     free(cib_our_uname);
     free(channel1);
     free(channel2);
@@ -442,7 +438,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         return;
     }
 #endif
-    if(cib_shutdown_flag && crm_active_peers() < 2 && g_hash_table_size(client_list) == 0) {
+    if(cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
     }

@@ -29,6 +29,7 @@
 
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
+#include <crm/common/ipcs.h>
 
 #include <crmd.h>
 #include <crmd_messages.h>
@@ -476,14 +477,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
 static gboolean
 process_hello_message(xmlNode * hello,
-                      char **uuid, char **client_name, char **major_version, char **minor_version)
+                      char **client_name, char **major_version, char **minor_version)
 {
-    const char *local_uuid;
     const char *local_client_name;
     const char *local_major_version;
     const char *local_minor_version;
 
-    *uuid = NULL;
     *client_name = NULL;
     *major_version = NULL;
     *minor_version = NULL;
@@ -492,16 +491,11 @@ process_hello_message(xmlNode * hello,
         return FALSE;
     }
 
-    local_uuid = crm_element_value(hello, "client_uuid");
     local_client_name = crm_element_value(hello, "client_name");
     local_major_version = crm_element_value(hello, "major_version");
     local_minor_version = crm_element_value(hello, "minor_version");
 
-    if (local_uuid == NULL || strlen(local_uuid) == 0) {
-        crm_err("Hello message was not valid (field %s not found)", "uuid");
-        return FALSE;
-
-    } else if (local_client_name == NULL || strlen(local_client_name) == 0) {
+    if (local_client_name == NULL || strlen(local_client_name) == 0) {
         crm_err("Hello message was not valid (field %s not found)", "client name");
         return FALSE;
 
@@ -514,7 +508,6 @@ process_hello_message(xmlNode * hello,
         return FALSE;
     }
 
-    *uuid = strdup(local_uuid);
     *client_name = strdup(local_client_name);
     *major_version = strdup(local_major_version);
     *minor_version = strdup(local_minor_version);
@@ -524,59 +517,34 @@ process_hello_message(xmlNode * hello,
 }
 
 gboolean
-crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
+crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
 {
-    /* check the best case first */
-    const char *sys_from = crm_element_value(client_msg, F_CRM_SYS_FROM);
-    char *uuid = NULL;
     char *client_name = NULL;
     char *major_version = NULL;
     char *minor_version = NULL;
-    const char *filtered_from;
-    gpointer table_key = NULL;
     gboolean auth_result = FALSE;
-    gboolean can_reply = FALSE; /* no-one has registered with this id */
 
     xmlNode *xml = NULL;
     const char *op = crm_element_value(client_msg, F_CRM_TASK);
 
-    if (safe_str_neq(CRM_OP_HELLO, op)) {
+    if(curr_client == NULL) {
+        crm_warn("Message [%s] not authorized", crm_element_value(client_msg, XML_ATTR_REFERENCE));
+        return FALSE;
 
-        if (sys_from == NULL) {
-            crm_warn("Message [%s] was had no value for %s... discarding",
-                     crm_element_value(client_msg, XML_ATTR_REFERENCE), F_CRM_SYS_FROM);
-            return FALSE;
-        }
-
-        filtered_from = sys_from;
-
-        /* The CIB can have two names on the DC */
-        if (strcasecmp(sys_from, CRM_SYSTEM_DCIB) == 0)
-            filtered_from = CRM_SYSTEM_CIB;
-
-        if (g_hash_table_lookup(ipc_clients, filtered_from) != NULL) {
-            can_reply = TRUE;   /* reply can be routed */
-        }
-
-        crm_trace("Message reply can%s be routed from %s.", can_reply ? "" : " not", sys_from);
-
-        if (can_reply == FALSE) {
-            crm_warn("Message [%s] not authorized",
-                     crm_element_value(client_msg, XML_ATTR_REFERENCE));
-        }
-
-        return can_reply;
+    } else if (safe_str_neq(CRM_OP_HELLO, op)) {
+        return TRUE;
     }
 
     crm_trace("received client join msg");
     crm_log_xml_trace(client_msg, "join");
     xml = get_message_xml(client_msg, F_CRM_DATA);
-    auth_result = process_hello_message(xml, &uuid, &client_name, &major_version, &minor_version);
+
+    auth_result = process_hello_message(xml, &client_name, &major_version, &minor_version);
 
     if (auth_result == TRUE) {
-        if (client_name == NULL || uuid == NULL) {
+        if (client_name == NULL) {
             crm_err("Bad client details (client_name=%s, uuid=%s)",
-                    crm_str(client_name), crm_str(uuid));
+                    crm_str(client_name), curr_client->id);
             auth_result = FALSE;
         }
     }
@@ -593,28 +561,18 @@ crmd_authorize_message(xmlNode * client_msg, crmd_client_t * curr_client)
         }
     }
 
-    table_key = (gpointer) generate_hash_key(client_name, uuid);
-
     if (auth_result == TRUE) {
-        crm_trace("Accepted client %s", crm_str(table_key));
-
-        curr_client->table_key = table_key;
-        curr_client->sub_sys = strdup(client_name);
-        curr_client->uuid = strdup(uuid);
-
-        g_hash_table_insert(ipc_clients, table_key, curr_client->ipc);
-        crm_trace("Updated client list with %s", crm_str(table_key));
+        crm_trace("Accepted client %s", crm_client_name(curr_client));
+        curr_client->userdata = strdup(client_name);
 
         crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
 
     } else {
-        free(table_key);
         crm_warn("Rejected client logon request");
-        qb_ipcs_disconnect(curr_client->ipc);
+        qb_ipcs_disconnect(curr_client->ipcs);
     }
 
-    free(uuid);
     free(minor_version);
     free(major_version);
     free(client_name);
@@ -910,9 +868,7 @@ gboolean
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
     gboolean send_ok = TRUE;
-    qb_ipcs_connection_t *client_channel;
-
-    client_channel = (qb_ipcs_connection_t *) g_hash_table_lookup(ipc_clients, sys);
+    crm_client_t *client_channel = crm_client_get_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
         crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);

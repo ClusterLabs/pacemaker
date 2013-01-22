@@ -33,6 +33,7 @@
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
@@ -52,10 +53,6 @@ gboolean need_shutdown = FALSE;
 
 GHashTable *attr_hash = NULL;
 cib_t *cib_conn = NULL;
-
-typedef struct attrd_client_s {
-    char *user;
-} attrd_client_t;
 
 typedef struct attr_hash_entry_s {
     char *uuid;
@@ -101,38 +98,22 @@ free_hash_entry(gpointer data)
 static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    attrd_client_t *new_client = NULL;
-#if ENABLE_ACL
-    struct group *crm_grp = NULL;
-#endif
-
-    crm_trace("Connecting %p for connection from %d by uid=%d gid=%d",
-              c, crm_ipcs_client_pid(c), uid, gid);
+    crm_trace("Connection %p", c);
     if (need_shutdown) {
-        crm_info("Ignoring connection request during shutdown");
-        return FALSE;
+        crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
+        return -EPERM;
     }
 
-    new_client = calloc(1, sizeof(attrd_client_t));
-
-#if ENABLE_ACL
-    crm_grp = getgrnam(CRM_DAEMON_GROUP);
-    if (crm_grp) {
-        qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    if(crm_client_new(c, uid, gid) == NULL) {
+        return -EIO;
     }
-
-    new_client->user = uid2username(uid);
-#endif
-
-    qb_ipcs_context_set(c, new_client);
-
     return 0;
 }
 
 static void
 attrd_ipc_created(qb_ipcs_connection_t *c)
 {
-    crm_trace("Client %p connected from %d", c, crm_ipcs_client_pid(c));
+    crm_trace("Connection %p", c);
 }
 
 /* Exit code means? */
@@ -141,14 +122,12 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-#if ENABLE_ACL
-    attrd_client_t *client = qb_ipcs_context_get(c);
-#endif
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
+    crm_client_t *client = crm_client_get(c);
+    xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
 
     if(flags & crm_ipc_client_response) {
         crm_trace("Ack'ing msg from %d (%p)", crm_ipcs_client_pid(c), c);
-        crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
+        crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
     }
 
     if (msg == NULL) {
@@ -173,25 +152,16 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t *c) 
 {
-    crm_trace("Connection %p from %d closed", c, crm_ipcs_client_pid(c));
+    crm_client_t *client = crm_client_get(c);
+    crm_trace("Connection %p", c);
+    crm_client_destroy(client);
     return 0;
 }
 
 static void
 attrd_ipc_destroy(qb_ipcs_connection_t *c) 
 {
-    attrd_client_t *client = qb_ipcs_context_get(c);
-
-    if (client == NULL) {
-        return;
-    }
-
-    crm_trace("Destroying %p", c);
-    free(client->user);
-    free(client);
-    crm_trace("Free'd the attrd client");
-
-    return;
+    crm_trace("Connection %p", c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = 

@@ -43,20 +43,6 @@ typedef struct stonith_device_s {
     gboolean api_registered;
 } stonith_device_t;
 
-typedef struct stonith_client_s {
-    char *id;
-    char *name;
-
-    int pid;
-    int request_id;
-
-    char *channel_name;
-    qb_ipcs_connection_t *channel;
-
-    long long flags;
-
-} stonith_client_t;
-
 typedef struct remote_fencing_op_s {
     /* The unique id associated with this operation */
     char *id;
@@ -130,7 +116,7 @@ typedef struct stonith_topology_s {
 
 extern long long get_stonith_flag(const char *name);
 
-extern void stonith_command(stonith_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote_peer);
+extern void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote_peer);
 
 extern int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
@@ -150,7 +136,7 @@ do_stonith_async_timeout_update(const char *client, const char *call_id, int tim
 
 extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
 
-extern remote_fencing_op_t *initiate_remote_stonith_op(stonith_client_t * client, xmlNode * request,
+extern remote_fencing_op_t *initiate_remote_stonith_op(crm_client_t * client, xmlNode * request,
                                                        gboolean manual_ack);
 
 extern int process_remote_stonith_exec(xmlNode * msg);
@@ -170,4 +156,3 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
-extern GHashTable *client_list;

@@ -953,52 +953,6 @@ fsa_dump_actions(long long action, const char *text)
     }
 }
 
-extern GHashTable *ipc_clients;
-
-void
-process_client_disconnect(crmd_client_t * curr_client)
-{
-    struct crm_subsystem_s *the_subsystem = NULL;
-
-    CRM_CHECK(curr_client != NULL, return);
-    crm_trace("received HUP from %s", curr_client->table_key);
-
-    if (curr_client->sub_sys == NULL) {
-        crm_trace("Client hadn't registered with us yet");
-
-    } else if (strcasecmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
-        the_subsystem = pe_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
-        the_subsystem = te_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0) {
-        the_subsystem = cib_subsystem;
-    }
-
-    if (the_subsystem != NULL) {
-        the_subsystem->source = NULL;
-        the_subsystem->client = NULL;
-        crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
-
-    } else {
-        /* else that was a transient client */
-        crm_trace("Received HUP from transient client");
-    }
-
-    if (curr_client->table_key != NULL) {
-        /*
-         * Key is destroyed below as:
-         *      curr_client->table_key
-         * Value is cleaned up by:
-         *      crmd_ipc_connection_destroy
-         *   which will also call:
-         *      G_main_del_IPC_Channel
-         */
-        g_hash_table_remove(ipc_clients, curr_client->table_key);
-    }
-}
-
 gboolean
 update_dc(xmlNode * msg)
 {
