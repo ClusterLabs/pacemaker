@@ -25,7 +25,6 @@
 #include <crm/crm.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipc.h>
 #include <crm/msg_xml.h>
 
 #include <lrmd_private.h>
@@ -269,7 +268,7 @@ send_reply(lrmd_client_t * client, int rc, uint32_t id, int call_id)
     crm_xml_add_int(reply, F_LRMD_RC, rc);
     crm_xml_add_int(reply, F_LRMD_CALLID, call_id);
 
-    send_rc = crm_ipcs_send(client->channel, id, reply, FALSE);
+    send_rc = lrmd_server_send_reply(client, id, reply);
 
     free_xml(reply);
     if (send_rc < 0) {
@@ -286,15 +285,12 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
     if (client == NULL) {
         crm_err("Asked to send event to  NULL client");
         return;
-    } else if (client->channel == NULL) {
-        crm_trace("Asked to send event to disconnected client");
-        return;
     } else if (client->name == NULL) {
         crm_trace("Asked to send event to client with no name");
         return;
     }
 
-    if (crm_ipcs_send(client->channel, 0, update_msg, TRUE) <= 0) {
+    if (lrmd_server_send_notify(client, update_msg) <= 0) {
         crm_warn("Notification of client %s/%s failed", client->name, client->id);
     }
 }
@@ -925,7 +921,7 @@ process_lrmd_signon(lrmd_client_t * client, uint32_t id, xmlNode * request)
 
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
-    crm_ipcs_send(client->channel, id, reply, FALSE);
+    lrmd_server_send_reply(client, id, reply);
 
     free_xml(reply);
     return pcmk_ok;
@@ -995,7 +991,7 @@ process_lrmd_get_rsc_info(lrmd_client_t * client, uint32_t id, xmlNode * request
         crm_xml_add(reply, F_LRMD_TYPE, rsc->type);
     }
 
-    send_rc = crm_ipcs_send(client->channel, id, reply, FALSE);
+    send_rc = lrmd_server_send_reply(client, id, reply);
 
     if (send_rc < 0) {
         crm_warn("LRMD reply to %s failed: %d", client->name, send_rc);

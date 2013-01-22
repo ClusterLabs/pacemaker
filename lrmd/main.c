@@ -33,7 +33,9 @@
 GMainLoop *mainloop = NULL;
 qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
-static int global_call_id = 0;
+static gboolean enable_remote = FALSE;
+static int remote_port = 0;
+int lrmd_call_id = 0;
 
 static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t *e)
@@ -95,6 +97,7 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
     lrmd_client_t *new_client = NULL;
 
     new_client = calloc(1, sizeof(lrmd_client_t));
+    new_client->type = LRMD_CLIENT_IPC;
     new_client->channel = c;
 
     new_client->id = crm_generate_uuid();
@@ -119,7 +122,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
               return FALSE);
-    
+
     if (!request) {
         return 0;
     }
@@ -134,14 +137,14 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         }
     }
 
-    global_call_id++;
-    if (global_call_id < 1) {
-        global_call_id = 1;
+    lrmd_call_id++;
+    if (lrmd_call_id < 1) {
+        lrmd_call_id = 1;
     }
 
     crm_xml_add(request, F_LRMD_CLIENTID, client->id);
     crm_xml_add(request, F_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, F_LRMD_CALLID, global_call_id);
+    crm_xml_add_int(request, F_LRMD_CALLID, lrmd_call_id);
 
     process_lrmd_message(client, id, request);
 
@@ -199,6 +202,47 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
     .connection_destroyed = lrmd_ipc_destroy
 };
 
+int lrmd_server_send_reply(lrmd_client_t *client, uint32_t id, xmlNode *reply)
+{
+
+    crm_trace("sending reply to client (%s) with msg id %d", client->id, id);
+    switch (client->type) {
+    case LRMD_CLIENT_IPC:
+        return crm_ipcs_send(client->channel, id, reply, FALSE);
+    case LRMD_CLIENT_TLS:
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        return lrmd_tls_send_msg(client->session, reply, id, "reply");
+#endif
+    default:
+        crm_err("Unknown lrmd client type %d" , client->type);
+    }
+    return -1;
+}
+
+int lrmd_server_send_notify(lrmd_client_t *client, xmlNode *msg)
+{
+    crm_trace("sending notify to client (%s)", client->id);
+    switch (client->type) {
+    case LRMD_CLIENT_IPC:
+        if (client->channel == NULL) {
+            crm_trace("Asked to send event to disconnected local client");
+            return -1;
+        }
+        return crm_ipcs_send(client->channel, 0, msg, TRUE);
+    case LRMD_CLIENT_TLS:
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (client->session == NULL) {
+            crm_trace("Asked to send event to disconnected remote client");
+            return -1;
+        }
+        return lrmd_tls_send_msg(client->session, msg, 0, "notify");
+#endif
+    default:
+        crm_err("Unknown lrmd client type %d" , client->type);
+    }
+    return -1;
+}
+
 void
 lrmd_shutdown(int nsig)
 {
@@ -212,11 +256,13 @@ lrmd_shutdown(int nsig)
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "\tThis text"},
-    {"version", 0, 0, '$', "\tVersion information"  },
-    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-    
-    {"logfile", 1, 0, 'l', "\tSend logs to the additional named logfile"},
+    {"help",    0, 0,    '?', "\tThis text"},
+    {"version", 0, 0,    '$', "\tVersion information"  },
+    {"verbose", 0, 0,    'V', "\tIncrease debug output"},
+    {"tls_enable", 0, 0, 't', "\tEnable TLS connection."},
+    {"tls_port", 1, 0,   'p', "\tTLS port to listen to, defaults to 1984"},
+
+    {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -241,6 +287,11 @@ main(int argc, char **argv)
             case 'l':
                 crm_add_logfile(optarg);
                 break;
+            case 't':
+                enable_remote = TRUE;
+                break;
+            case 'p':
+                remote_port = atoi(optarg);
             case 'V':
                 set_crm_log_level(crm_log_level+1);
                 break;
@@ -254,12 +305,29 @@ main(int argc, char **argv)
         }
     }
 
+    if (enable_remote && !remote_port) {
+        remote_port = DEFAULT_REMOTE_PORT;
+    }
+
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     client_list = g_hash_table_new(crm_str_hash, g_str_equal);
+
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         crm_exit(100);
+    }
+
+    if (enable_remote) {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (lrmd_init_remote_tls_server(remote_port) < 0) {
+            crm_err("Failed to create TLS server: shutting down and inhibiting respawn");
+            crm_exit(100);
+        }
+#else
+        crm_err("GNUTLS not enabled in this build, can not establish remote server");
+        crm_exit(100);
+#endif
     }
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
@@ -268,6 +336,12 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     mainloop_del_ipc_server(ipcs);
+    if (enable_remote) {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        lrmd_tls_server_destroy();
+#endif
+    }
+
     g_hash_table_destroy(client_list);
     g_hash_table_destroy(rsc_list);
 

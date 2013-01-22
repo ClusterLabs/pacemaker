@@ -25,6 +25,10 @@
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 
+#ifdef HAVE_GNUTLS_GNUTLS_H
+#  undef KEYFILE
+#  include <gnutls/gnutls.h>
+#endif
 GHashTable *rsc_list;
 GHashTable *client_list;
 
@@ -56,12 +60,35 @@ typedef struct lrmd_rsc_s {
 typedef struct lrmd_client_s {
     char *id;
     char *name;
+    enum lrmd_client_type type;
 
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    gnutls_session *session;
+    char *recv_buf;
+    gboolean tls_handshake_complete;
+    int remote_auth_timeout;
+    mainloop_io_t *remote;
+#endif
     qb_ipcs_connection_t *channel;
 
     long long flags;
 
 } lrmd_client_t;
+
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+/* in remote_tls.c */
+int lrmd_init_remote_tls_server(int port);
+void lrmd_tls_server_destroy(void);
+
+/* Hidden in lrmd client lib */
+extern int lrmd_tls_send_msg(gnutls_session *session, xmlNode *msg, uint32_t id, const char *msg_type);
+extern int lrmd_tls_set_key(gnutls_datum_t *key, const char *location);
+#endif
+
+int lrmd_server_send_reply(lrmd_client_t *client, uint32_t id, xmlNode *reply);
+
+int lrmd_server_send_notify(lrmd_client_t *client, xmlNode *msg);
 
 void process_lrmd_message(lrmd_client_t * client, uint32_t id, xmlNode * request);
 

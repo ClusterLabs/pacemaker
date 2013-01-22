@@ -35,6 +35,7 @@ static struct crm_option long_options[] = {
     {"help",             0, 0, '?'},
     {"verbose",          0, 0, 'V', "\t\tPrint out logs and events to screen"},
     {"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
+    {"tls",              0, 0, 'S', "\t\tUse tls backend for local connection"},
     {"listen",           1, 0, 'l', "\tListen for a specific event string"},
     {"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
     {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
@@ -432,6 +433,7 @@ main(int argc, char **argv)
     int flag;
     char *key = NULL;
     char *val = NULL;
+    gboolean use_tls = FALSE;
     crm_trigger_t *trig;
 
     crm_set_options(NULL, "mode [options]", long_options,
@@ -512,6 +514,9 @@ main(int argc, char **argv)
                     key = val = NULL;
                 }
                 break;
+            case 'S':
+                use_tls = TRUE;
+                break;
             default:
                 ++argerr;
                 break;
@@ -562,7 +567,11 @@ main(int argc, char **argv)
         return 0;
     }
 
-    lrmd_conn = lrmd_api_new();
+    if (use_tls) {
+        lrmd_conn = lrmd_remote_api_new("localhost", 0);
+    } else {
+        lrmd_conn = lrmd_api_new();
+    }
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, start_test, NULL);
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
