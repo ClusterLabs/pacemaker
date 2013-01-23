@@ -956,18 +956,6 @@ main(int argc, char **argv)
     build_path(CRM_CONFIG_DIR, 0755);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
-    /* Per-user core directories */
-    if (mkdir(CRM_CORE_DIR"/root", 0700) < 0 && errno != EEXIST) {
-        crm_perror(LOG_INFO, "Could not create %s", CRM_CORE_DIR"/root");
-    }
-
-    if (mkdir(CRM_CORE_DIR"/"CRM_DAEMON_USER, 0700) < 0 && errno != EEXIST) {
-        crm_perror(LOG_INFO, "Could not create %s", CRM_CORE_DIR"/"CRM_DAEMON_USER);
-    } else {
-        mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
-    }
-
-    client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);

@@ -705,8 +705,6 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         } else if (chdir(base) < 0) {
             crm_perror(LOG_INFO, "Cannot change active directory to %s", base);
 
-        } else if (chdir(pwent->pw_name) < 0) {
-            crm_perror(LOG_INFO, "Cannot change active directory to %s/%s", base, pwent->pw_name);
         } else {
             crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
 #if 0
