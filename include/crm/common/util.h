@@ -96,6 +96,15 @@ is_set_any(long long word, long long bit)
     return ((word & bit) != 0);
 }
 
+static inline guint
+crm_hash_table_size(GHashTable *hashtable)
+{
+    if(hashtable == NULL) {
+        return 0;
+    }
+    return g_hash_table_size(hashtable);
+}
+
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);
 
