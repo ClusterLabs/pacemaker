@@ -292,9 +292,15 @@ crm_client_destroy(crm_client_t *c)
         }
     }
 
+    if (c->remote_auth_timeout) {
+        g_source_remove(c->remote_auth_timeout);
+    }
+    
     free(c->id);
     free(c->name);
     free(c->user);
+    free(c->user);
+    free(c->recv_buf);
     free(c->callback_id);
     free(c);
 }

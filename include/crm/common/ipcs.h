@@ -30,7 +30,9 @@ enum client_type
 {
         client_type_ipc = 1,
         client_type_tcp = 2,
+#ifdef HAVE_GNUTLS_GNUTLS_H
         client_type_tls = 3,
+#endif
 };
 
 struct crm_client_s
@@ -63,13 +65,14 @@ struct crm_client_s
 
         /* TCP / TLS */
         char *recv_buf;
-        int remote_auth_timeout;
+        bool  remote_auth;
+        int   remote_auth_timeout;
         mainloop_io_t *remote;
 
         /* TLS */
 #ifdef HAVE_GNUTLS_GNUTLS_H
         gnutls_session *session;
-        gboolean tls_handshake_complete;
+        gboolean handshake_complete;
 #else
         void *session;
 #endif

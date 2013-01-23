@@ -61,10 +61,6 @@
 #  endif
 #endif
 
-#ifdef HAVE_DECL_NANOSLEEP
-#  include <time.h>
-#endif
-
 extern int remote_tls_fd;
 extern gboolean cib_shutdown_flag;
 
@@ -74,16 +70,15 @@ void cib_remote_connection_destroy(gpointer user_data);
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define DH_BITS 1024
 gnutls_dh_params dh_params;
-extern gnutls_anon_server_credentials anon_cred_s;
+gnutls_anon_server_credentials anon_cred_s;
 static void
 debug_log(int level, const char *str)
 {
     fputs(str, stderr);
 }
-
-extern gnutls_session *create_tls_session(int csock, int type);
-
 #endif
+
+#define REMOTE_AUTH_TIMEOUT 10000
 
 int num_clients;
 int authenticate_user(const char *user, const char *passwd);
@@ -122,7 +117,7 @@ init_remote_listener(int port, gboolean encrypted)
 #else
         crm_notice("Starting a tls listener on port %d.", port);
         gnutls_global_init();
-/* 	gnutls_global_set_log_level (10); */
+        /* gnutls_global_set_log_level (10); */
         gnutls_global_set_log_function(debug_log);
         gnutls_dh_params_init(&dh_params);
         gnutls_dh_params_generate2(dh_params, DH_BITS);
@@ -216,37 +211,89 @@ check_group_membership(const char *usr, const char *grp)
     return FALSE;
 }
 
+static gboolean
+cib_remote_auth(xmlNode *login)
+{
+    const char *user = NULL;
+    const char *pass = NULL;
+    const char *tmp = NULL;
+
+    crm_log_xml_info(login, "Login: ");
+    if (login == NULL) {
+        return FALSE;
+    }
+
+    tmp = crm_element_name(login);
+    if (safe_str_neq(tmp, "cib_command")) {
+        crm_err("Wrong tag: %s", tmp);
+        return FALSE;
+    }
+
+    tmp = crm_element_value(login, "op");
+    if (safe_str_neq(tmp, "authenticate")) {
+        crm_err("Wrong operation: %s", tmp);
+        return FALSE;
+    }
+
+    user = crm_element_value(login, "user");
+    pass = crm_element_value(login, "password");
+
+    if (!user || !pass) {
+        crm_err("missing auth credentials");
+        return FALSE;
+    }
+
+    /* Non-root daemons can only validate the password of the
+     * user they're running as
+     */
+    if (check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
+        crm_err("User is not a member of the required group");
+        return FALSE;
+
+    } else if (authenticate_user(user, pass) == FALSE) {
+        crm_err("PAM auth failed");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+remote_auth_timeout_cb(gpointer data)
+{
+    crm_client_t *client = data;
+
+    client->remote_auth_timeout = 0;
+
+    if (client->remote_auth == TRUE) {
+        return FALSE;
+    }
+
+    mainloop_del_fd(client->remote);
+    crm_err("Remote client authentication timed out");
+
+    return FALSE;
+}
 int
 cib_remote_listen(gpointer data)
 {
-    int lpc = 0;
     int csock = 0;
     unsigned laddr;
-    time_t now = 0;
-    time_t start = time(NULL);
     struct sockaddr_in addr;
     int ssock = *(int *)data;
+    int flag;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session *session = NULL;
 #endif
     crm_client_t *new_client = NULL;
 
-    xmlNode *login = NULL;
-    const char *user = NULL;
-    const char *pass = NULL;
-    const char *tmp = NULL;
-
-#ifdef HAVE_DECL_NANOSLEEP
-    const struct timespec sleepfast = { 0, 10000000 };  /* 10 millisec */
-#endif
-
     static struct mainloop_fd_callbacks remote_client_fd_callbacks = 
         {
             .dispatch = cib_remote_msg,
             .destroy = cib_remote_connection_destroy,
-        };    
-    
+        };
+
     /* accept the connection */
     laddr = sizeof(addr);
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
@@ -258,10 +305,22 @@ cib_remote_listen(gpointer data)
         return TRUE;
     }
 
+    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
+        if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {
+            crm_err( "fcntl() write failed");
+            close(csock);
+            return TRUE;
+        }
+    } else {
+        crm_err( "fcntl() read failed");
+        close(csock);
+        return TRUE;
+    }
+
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         /* create gnutls session for the server socket */
-        session = create_tls_session(csock, GNUTLS_SERVER);
+        session = crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
         if (session == NULL) {
             crm_err("TLS session creation failed");
             close(csock);
@@ -270,68 +329,12 @@ cib_remote_listen(gpointer data)
 #endif
     }
 
-    do {
-        crm_trace("Iter: %d", lpc++);
-        if (ssock == remote_tls_fd) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-            login = crm_recv_remote_msg(session, TRUE);
-#endif
-        } else {
-            login = crm_recv_remote_msg(GINT_TO_POINTER(csock), FALSE);
-        }
-        if (login != NULL) {
-            break;
-        }
-#ifdef HAVE_DECL_NANOSLEEP
-        nanosleep(&sleepfast, NULL);
-#else
-        sleep(1);
-#endif
-        now = time(NULL);
-
-        /* Peers have 3s to connect */
-    } while (login == NULL && (start - now) < 4);
-
-    crm_log_xml_info(login, "Login: ");
-    if (login == NULL) {
-        goto bail;
-    }
-
-    tmp = crm_element_name(login);
-    if (safe_str_neq(tmp, "cib_command")) {
-        crm_err("Wrong tag: %s", tmp);
-        goto bail;
-    }
-
-    tmp = crm_element_value(login, "op");
-    if (safe_str_neq(tmp, "authenticate")) {
-        crm_err("Wrong operation: %s", tmp);
-        goto bail;
-    }
-
-    user = crm_element_value(login, "user");
-    pass = crm_element_value(login, "password");
-
-    /* Non-root daemons can only validate the password of the
-     * user they're running as
-     */
-    if (check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
-        crm_err("User is not a member of the required group");
-        goto bail;
-
-    } else if (authenticate_user(user, pass) == FALSE) {
-        crm_err("PAM auth failed");
-        goto bail;
-    }
-
-    /* send ACK */
     num_clients++;
 
     crm_client_init();
     new_client = calloc(1, sizeof(crm_client_t));
     
     new_client->id = crm_generate_uuid();
-    new_client->name = crm_element_value_copy(login, "name");
 
     g_hash_table_insert(client_connections, new_client->id/* Should work */, new_client);
     
@@ -339,7 +342,9 @@ cib_remote_listen(gpointer data)
     new_client->user = strdup(user);
 #endif
 
-    new_client->callback_id = NULL;
+    /* clients have a few seconds to perform handshake. */
+    new_client->remote_auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
+
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         new_client->session = session;
@@ -349,29 +354,10 @@ cib_remote_listen(gpointer data)
         new_client->kind = client_type_tcp;
         new_client->session = GINT_TO_POINTER(csock);
     }
-    
-    free_xml(login);
-    login = create_xml_node(NULL, "cib_result");
-    crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(login, F_CIB_CLIENTID, new_client->id);
-    crm_send_remote_msg(new_client->session, login, new_client->kind == client_type_tls);
-    free_xml(login);
 
     new_client->remote = mainloop_add_fd(
         "cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &remote_client_fd_callbacks);
 
-    return TRUE;
-
-  bail:
-    if (ssock == remote_tls_fd) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        gnutls_bye(*session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(*session);
-        gnutls_free(session);
-#endif
-    }
-    close(csock);
-    free_xml(login);
     return TRUE;
 }
 
@@ -379,6 +365,7 @@ void
 cib_remote_connection_destroy(gpointer user_data)
 {
     crm_client_t *client = user_data;
+    int csock = 0;
 
     if (client == NULL) {
         return;
@@ -387,7 +374,32 @@ cib_remote_connection_destroy(gpointer user_data)
     crm_trace("Cleaning up after client disconnect: %s/%s",
               crm_str(client->name), client->id);
 
+    num_clients--;
+    crm_trace("Num unfree'd clients: %d", num_clients);
+
+    if (client->kind == client_type_tls) {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (client->session) {
+            void *sock_ptr = gnutls_transport_get_ptr(*client->session);
+            csock = GPOINTER_TO_INT(sock_ptr);
+            if (client->handshake_complete) {
+                gnutls_bye(*client->session, GNUTLS_SHUT_WR);
+            }
+            gnutls_deinit(*client->session);
+            gnutls_free(client->session);
+        }
+#endif
+    } else {
+        csock = GPOINTER_TO_INT(client->session);
+    }
+    client->session = NULL;
+
+    if (csock > 0) {
+        close(csock);
+    }
+
     crm_client_destroy(client);
+
     crm_trace("Freed the cib client");
 
     if (cib_shutdown_flag) {
@@ -396,24 +408,15 @@ cib_remote_connection_destroy(gpointer user_data)
     return;
 }
 
-int
-cib_remote_msg(gpointer data)
+static void
+cib_handle_remote_msg(crm_client_t *client, xmlNode *command)
 {
     const char *value = NULL;
-    xmlNode *command = NULL;
-    crm_client_t *client = data;
-
-    crm_trace("%s callback", client->kind == client_type_tls ? "secure" : "clear-text");
-
-    command = crm_recv_remote_msg(client->session, client->kind == client_type_tls);
-    if (command == NULL) {
-        return -1;
-    }
 
     value = crm_element_name(command);
     if (safe_str_neq(value, "cib_command")) {
         crm_log_xml_trace(command, "Bad command: ");
-        goto bail;
+        return;
     }
 
     if (client->name == NULL) {
@@ -462,9 +465,95 @@ cib_remote_msg(gpointer data)
 
     crm_log_xml_trace(command, "Remote command: ");
     cib_common_callback_worker(0, 0, command, client, TRUE);
-  bail:
-    free_xml(command);
-    command = NULL;
+}
+
+int
+cib_remote_msg(gpointer data)
+{
+    xmlNode *command = NULL;
+    crm_client_t *client = data;
+    int disconnected = 0;
+    int timeout = client->remote_auth ? -1 : 1000;
+
+    crm_trace("%s callback", client->kind == client_type_tls ? "secure" : "clear-text");
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    if (client->kind == client_type_tls && (client->handshake_complete == FALSE)) {
+        int rc = 0;
+
+        /* Muliple calls to handshake will be required, this callback
+         * will be invoked once the client sends more handshake data. */
+        do {
+            rc = gnutls_handshake(*client->session);
+
+            if (rc < 0 && rc != GNUTLS_E_AGAIN) {
+                crm_err("Remote cib tls handshake failed");
+                return -1;
+            }
+        } while (rc == GNUTLS_E_INTERRUPTED);
+
+        if (rc == 0) {
+            crm_debug("Remote cib tls handshake completed");
+            client->handshake_complete = TRUE;
+            if (client->remote_auth_timeout) {
+                g_source_remove(client->remote_auth_timeout);
+            }
+            /* after handshake, clients must send auth in a few seconds */
+            client->remote_auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, client);
+        }
+        return 0;
+    }
+#endif
+
+    crm_recv_remote_msg(client->session, &client->recv_buf, client->kind == client_type_tls, timeout, &disconnected);
+
+    /* must pass auth before we will process anything else */
+    if (client->remote_auth == FALSE) {
+        xmlNode *reg;
+#if ENABLE_ACL
+        const char *user = NULL;
+#endif
+        command = crm_parse_remote_buffer(&client->recv_buf);
+        if (cib_remote_auth(command) == FALSE) {
+            free_xml(command);
+            return -1;
+        }
+
+        crm_debug("remote connection authenticated successfully");
+        client->remote_auth = TRUE;
+        g_source_remove(client->remote_auth_timeout);
+        client->remote_auth_timeout = 0;
+        client->name = crm_element_value_copy(command, "name");
+
+#if ENABLE_ACL
+        user = crm_element_value(command, "user");
+        if (user) {
+           new_client->user = strdup(user);
+        }
+#endif
+
+        /* send ACK */
+        reg = create_xml_node(NULL, "cib_result");
+        crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
+        crm_xml_add(reg, F_CIB_CLIENTID, client->id);
+        crm_send_remote_msg(client->session, reg, client->kind == client_type_tls);
+        free_xml(reg);
+        free_xml(command);
+    }
+
+    command = crm_parse_remote_buffer(&client->recv_buf);
+    while (command) {
+        crm_trace("command received");
+        cib_handle_remote_msg(client, command);
+        free_xml(command);
+        command = crm_parse_remote_buffer(&client->recv_buf);
+    }
+
+    if (disconnected) {
+        crm_trace("disconnected while receiving remote cib msg.");
+        return -1;
+    }
+
     return 0;
 }
 

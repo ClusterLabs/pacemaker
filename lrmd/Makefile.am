@@ -25,7 +25,7 @@ lrmdlibdir	= $(CRM_DAEMON_DIR)
 ## binary progs
 lrmdlib_PROGRAMS = lrmd lrmd_test
 
-lrmd_SOURCES	= main.c lrmd.c
+lrmd_SOURCES	= main.c lrmd.c tls_backend.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
