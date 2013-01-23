@@ -1791,7 +1791,7 @@ class Reattach(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ 
-            "You may ignore this error if it is unmanaged.",
+            "resources were active at shutdown",
             "pingd: .*(ERROR|error): send_ipc_message:",
             "pingd: .*(ERROR|error): send_update:",
             "lrmd: .*(ERROR|error): notify_client:",
