@@ -62,6 +62,8 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     /* reset the action list */
+    crm_info("Resetting the current action list");
+    fsa_dump_actions(fsa_actions, "Drop");
     fsa_actions = A_NOTHING;
 
     /* register the error */
@@ -76,35 +78,39 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     unsigned old_len = g_list_length(fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
-    last_data_id++;
     CRM_CHECK(raised_from != NULL, raised_from = "<unknown>");
-
-    crm_trace("%s %s FSA input %d (%s) (cause=%s) %s data",
-                raised_from, prepend ? "prepended" : "appended", last_data_id,
-                fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
-
-    if (input == I_WAIT_FOR_EVENT) {
-        do_fsa_stall = TRUE;
-        crm_debug("Stalling the FSA pending further input: cause=%s", fsa_cause2string(cause));
-        if (old_len > 0) {
-            crm_warn("%s stalled the FSA with pending inputs", raised_from);
-            fsa_dump_queue(LOG_DEBUG);
-            crm_write_blackbox(0, NULL);
-            prepend = FALSE;
-        }
-        if (data == NULL) {
-            set_bit(fsa_actions, with_actions);
-            with_actions = A_NOTHING;
-            return 0;
-        }
-        crm_debug("%s stalled the FSA with data - this may be broken", raised_from);
-    }
 
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {
         /* no point doing anything */
         crm_err("Cannot add entry to queue: no input and no action");
         return 0;
     }
+
+    if (input == I_WAIT_FOR_EVENT) {
+        do_fsa_stall = TRUE;
+        crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
+                  raised_from, fsa_cause2string(cause), data, old_len);
+
+        if (old_len > 0) {
+            fsa_dump_queue(LOG_TRACE);
+            prepend = FALSE;
+        }
+
+        if (data == NULL) {
+            fsa_actions |= with_actions;
+            fsa_dump_actions(with_actions, "Restored");
+            return 0;
+        }
+
+        /* Store everything in the new event and reset fsa_actions */
+        with_actions |= fsa_actions;
+        fsa_actions = A_NOTHING;
+    }
+
+    last_data_id++;
+    crm_trace("%s %s FSA input %d (%s) (cause=%s) %s data",
+                raised_from, prepend ? "prepended" : "appended", last_data_id,
+                fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
 
     fsa_data = calloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;

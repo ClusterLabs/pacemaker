@@ -159,6 +159,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     crm_trace("FSA invoked with Cause: %s\tState: %s",
                 fsa_cause2string(cause), fsa_state2string(fsa_state));
 
+    fsa_dump_actions(fsa_actions, "Initial");
+
     do_fsa_stall = FALSE;
     if (is_message() == FALSE && fsa_actions != A_NOTHING) {
         /* fake the first message so we can get into the loop */
@@ -180,10 +182,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
         /* add any actions back to the queue */
         fsa_actions |= fsa_data->actions;
+        fsa_dump_actions(fsa_data->actions, "Restored actions");
 
         /* get the next batch of actions */
         new_actions = crmd_fsa_actions[fsa_data->fsa_input][fsa_state];
         fsa_actions |= new_actions;
+        fsa_dump_actions(new_actions, "New actions");
 
         if (fsa_data->fsa_input != I_NULL && fsa_data->fsa_input != I_ROUTER) {
             crm_debug("Processing %s: [ state=%s cause=%s origin=%s ]",
@@ -191,24 +195,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
                       fsa_state2string(fsa_state),
                       fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         }
-#ifdef FSA_TRACE
-        if (new_actions != A_NOTHING) {
-            crm_trace("Adding FSA actions %.16llx for %s/%s",
-                        new_actions, fsa_input2string(fsa_data->fsa_input),
-                        fsa_state2string(fsa_state));
-            fsa_dump_actions(new_actions, "\tFSA scheduled");
-
-        } else if (fsa_data->fsa_input != I_NULL && new_actions == A_NOTHING) {
-            crm_debug("No action specified for input,state (%s,%s)",
-                      fsa_input2string(fsa_data->fsa_input), fsa_state2string(fsa_state));
-        }
-        if (fsa_data->actions != A_NOTHING) {
-            crm_trace("Adding input actions %.16llx for %s/%s",
-                        new_actions, fsa_input2string(fsa_data->fsa_input),
-                        fsa_state2string(fsa_state));
-            fsa_dump_actions(fsa_data->actions, "\tInput scheduled");
-        }
-#endif
 
         /* logging : *before* the state is changed */
         if (is_set(fsa_actions, A_ERROR)) {
@@ -263,10 +249,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     if (register_copy != fsa_input_register) {
         long long same = register_copy & fsa_input_register;
 
-        fsa_dump_inputs(LOG_DEBUG, "Added input:", fsa_input_register ^ same);
-        fsa_dump_inputs(LOG_DEBUG, "Removed input:", register_copy ^ same);
+        fsa_dump_inputs(LOG_DEBUG, "Added", fsa_input_register ^ same);
+        fsa_dump_inputs(LOG_DEBUG, "Removed", register_copy ^ same);
     }
 
+    fsa_dump_actions(fsa_actions, "Remaining");
     fsa_dump_queue(LOG_DEBUG);
 
     return fsa_state;

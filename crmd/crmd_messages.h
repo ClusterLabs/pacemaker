@@ -54,8 +54,7 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
     if(suppress == FALSE && msg_data != NULL) {                         \
         register_fsa_input_adv(                                         \
             ((fsa_data_t*)msg_data)->fsa_cause, I_WAIT_FOR_EVENT,       \
-            ((fsa_data_t*)msg_data)->data, fsa_actions, TRUE, __FUNCTION__); \
-        fsa_actions = A_NOTHING;                                        \
+            ((fsa_data_t*)msg_data)->data, action, TRUE, __FUNCTION__); \
     } else {                                                            \
         register_fsa_input_adv(                                         \
             C_FSA_INTERNAL, I_WAIT_FOR_EVENT,                           \
