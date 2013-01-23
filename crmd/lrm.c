@@ -454,6 +454,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
         }
 
         counter++;
+        crm_trace("Found %s active", entry->id);
         g_hash_table_foreach(pending_ops, ghash_print_pending_for_rsc, entry->id);
     }
 
@@ -718,13 +719,13 @@ is_rsc_active(const char *rsc_id)
 {
     rsc_history_t *entry = NULL;
 
-    crm_trace("Processing lrmd_rsc_info_t entry %s", rsc_id);
-
     entry = g_hash_table_lookup(resource_history, rsc_id);
     if (entry == NULL || entry->last == NULL) {
         return FALSE;
     }
 
+    crm_trace("Processing %s: %s.%d=%d",
+              rsc_id, entry->last->op_type, entry->last->interval, entry->last->rc);
     if (entry->last->rc == PCMK_EXECRA_OK && safe_str_eq(entry->last->op_type, CRMD_ACTION_STOP)) {
         return FALSE;
 
