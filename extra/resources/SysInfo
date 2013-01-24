@@ -80,7 +80,7 @@ Units:
 
 <parameters>
 
-<parameter name="pidfile" unique="0">
+<parameter name="pidfile" unique="1">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
 <content type="string" default="$OCF_RESKEY_pidfile" />
@@ -92,17 +92,21 @@ Units:
 <content type="string" default="0s" />
 </parameter>
 
-<parameter name="disks" unique="1">
+<parameter name="disks" unique="0">
 <longdesc lang="en">
-Filesystems or Paths to be queried for free disk space as a SPACE separated list - e.g "/dev/sda1 /tmp".
-Results will be written to an attribute with leading slashes removed, and other slashes replaced with underscore, and the word 'free' appended - e.g /dev/sda1 -> dev_sda1_free
-Note: The root filesystem '/' is always queried to an attribute named 'root_free'
+Filesystems or Paths to be queried for free disk space as a SPACE
+separated list - e.g "/dev/sda1 /tmp".
+Results will be written to an attribute with leading slashes
+removed, and other slashes replaced with underscore, and the word
+'free' appended - e.g for /dev/sda1 it would be 'dev_sda1_free'.
+Note: The root filesystem '/' is always queried to an attribute
+named 'root_free'
 </longdesc>
 <shortdesc lang="en">List of Filesytems/Paths to query for free disk space</shortdesc>
 <content type="string" />
 </parameter>
 
-<parameter name="disk_unit" unique="1">
+<parameter name="disk_unit" unique="0">
 <longdesc lang="en">
 Unit to report disk free space in.
 Can be one of: B, K, M, G, T, P (case-insensitive)
@@ -114,8 +118,8 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 
 </parameters>
 <actions>
-<action name="start"   timeout="90" />
-<action name="stop"    timeout="100" />
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
 <action name="monitor" timeout="20s" interval="60s"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
