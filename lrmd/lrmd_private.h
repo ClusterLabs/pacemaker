@@ -62,7 +62,7 @@ int lrmd_init_remote_tls_server(int port);
 void lrmd_tls_server_destroy(void);
 
 /* Hidden in lrmd client lib */
-extern int lrmd_tls_send_msg(gnutls_session *session, xmlNode *msg, uint32_t id, const char *msg_type);
+extern int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id, const char *msg_type);
 extern int lrmd_tls_set_key(gnutls_datum_t *key, const char *location);
 #endif
 

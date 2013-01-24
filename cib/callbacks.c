@@ -312,20 +312,14 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         }
 
         switch(client_obj->kind) {
-            case client_type_ipc:
+            case CRM_CLIENT_IPC:
                 if (crm_ipcs_send(client_obj, rid, notify_src, !sync_reply) < 0) {
                     local_rc = -ENOMSG;
                 }
                 break;
-            case client_type_tls:
-            case client_type_tcp:
-                if(client_obj->userdata) {
-                    crm_send_remote_msg(
-                        client_obj->session, notify_src, client_obj->kind == client_type_tls);
-                } else {
-                    crm_warn("Notification of remote client %s/%s failed",
-                             client_obj->name, client_obj->id);
-                }
+            case CRM_CLIENT_TLS:
+            case CRM_CLIENT_TCP:
+                crm_remote_send(client_obj->remote, notify_src);
                 break;
             default:
                 crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);

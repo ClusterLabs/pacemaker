@@ -56,15 +56,6 @@ typedef void gnutls_session;
 
 #define DH_BITS 1024
 
-struct remote_connection_s {
-    int socket;
-    gboolean encrypted;
-    gnutls_session *session;
-    mainloop_io_t *source;
-    char *token;
-    char *recv_buf;
-};
-
 typedef struct cib_remote_opaque_s {
     int flags;
     int socket;
@@ -72,8 +63,9 @@ typedef struct cib_remote_opaque_s {
     char *server;
     char *user;
     char *passwd;
-    struct remote_connection_s command;
-    struct remote_connection_s callback;
+    gboolean encrypted;
+    crm_remote_t command;
+    crm_remote_t callback;
 
 } cib_remote_opaque_t;
 
@@ -92,7 +84,7 @@ cib_remote_inputfd(cib_t * cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    return private->callback.socket;
+    return private->callback.tcp_socket;
 }
 
 static int
@@ -110,7 +102,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
     crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-    crm_send_remote_msg(private->callback.session, notify_msg, private->callback.encrypted);
+    crm_remote_send(&private->callback, notify_msg);
     free_xml(notify_msg);
     return pcmk_ok;
 }
@@ -140,8 +132,7 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     }
 
     private->port = port;
-    private->command.encrypted = encrypted;
-    private->callback.encrypted = encrypted;
+    private->encrypted = encrypted;
 
     /* assign variant specific ops */
     cib->delegate_fn = cib_remote_perform_op;
@@ -162,20 +153,20 @@ cib_tls_close(cib_t * cib)
     cib_remote_opaque_t *private = cib->variant_opaque;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    if (private->command.encrypted) {
-        if (private->command.session) {
-            gnutls_bye(*(private->command.session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->command.session));
-            gnutls_free(private->command.session);
+    if (private->encrypted) {
+        if (private->command.tls_session) {
+            gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
+            gnutls_deinit(*(private->command.tls_session));
+            gnutls_free(private->command.tls_session);
         }
 
-        if (private->callback.session) {
-            gnutls_bye(*(private->callback.session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->callback.session));
-            gnutls_free(private->callback.session);
+        if (private->callback.tls_session) {
+            gnutls_bye(*(private->callback.tls_session), GNUTLS_SHUT_RDWR);
+            gnutls_deinit(*(private->callback.tls_session));
+            gnutls_free(private->callback.tls_session);
         }
-        private->command.session = NULL;
-        private->callback.session = NULL;
+        private->command.tls_session = NULL;
+        private->callback.tls_session = NULL;
         if (remote_gnutls_credentials_init) {
             gnutls_anon_free_client_credentials(anon_cred_c);
             gnutls_global_deinit();
@@ -184,27 +175,27 @@ cib_tls_close(cib_t * cib)
     }
 #endif
 
-    if (private->command.socket) {
-        shutdown(private->command.socket, SHUT_RDWR);       /* no more receptions */
-        close(private->command.socket);
+    if (private->command.tcp_socket) {
+        shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
+        close(private->command.tcp_socket);
     }
-    if (private->callback.socket) {
-        shutdown(private->callback.socket, SHUT_RDWR);      /* no more receptions */
-        close(private->callback.socket);
+    if (private->callback.tcp_socket) {
+        shutdown(private->callback.tcp_socket, SHUT_RDWR);      /* no more receptions */
+        close(private->callback.tcp_socket);
     }
-    private->command.socket = 0;
-    private->callback.socket = 0;
+    private->command.tcp_socket = 0;
+    private->callback.tcp_socket = 0;
 
-    free(private->command.recv_buf);
-    free(private->callback.recv_buf);
-    private->command.recv_buf = NULL;
-    private->callback.recv_buf = NULL;
+    free(private->command.buffer);
+    free(private->callback.buffer);
+    private->command.buffer = NULL;
+    private->callback.buffer = NULL;
 
     return 0;
 }
 
 static int
-cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean event_channel)
+cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
 {
     int sock;
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -219,16 +210,16 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean eve
     cib_fd_callbacks.dispatch = event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
-    connection->socket = 0;
-    connection->session = NULL;
+    connection->tcp_socket = 0;
+    connection->tls_session = NULL;
 
     sock = crm_remote_tcp_connect(private->server, private->port);
     if (sock <= 0) {
         crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server, private->port);
     }
 
-    connection->socket = sock;
-    if (connection->encrypted) {
+    connection->tcp_socket = sock;
+    if (private->encrypted) {
         /* initialize GnuTls lib */
 #ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote_gnutls_credentials_init == FALSE) {
@@ -238,14 +229,14 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean eve
         }
 
         /* bind the socket to GnuTls lib */
-        connection->session = crm_create_anon_tls_session(sock, GNUTLS_CLIENT, anon_cred_c);
+        connection->tls_session = crm_create_anon_tls_session(sock, GNUTLS_CLIENT, anon_cred_c);
 
-        if (crm_initiate_client_tls_handshake(connection->session, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
+        if (crm_initiate_client_tls_handshake(connection, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 
-            gnutls_deinit(*connection->session);
-            gnutls_free(connection->session);
-            connection->session = NULL;
+            gnutls_deinit(*connection->tls_session);
+            gnutls_free(connection->tls_session);
+            connection->tls_session = NULL;
             cib_tls_close(cib);
             return -1;
         }
@@ -253,7 +244,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean eve
         return -EPROTONOSUPPORT;
 #endif
     } else {
-        connection->session = GUINT_TO_POINTER(sock);
+        connection->tls_session = GUINT_TO_POINTER(sock);
     }
 
     /* login to server */
@@ -263,16 +254,16 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean eve
     crm_xml_add(login, "password", private->passwd);
     crm_xml_add(login, "hidden", "password");
 
-    crm_send_remote_msg(connection->session, login, connection->encrypted);
+    crm_remote_send(connection, login);
     free_xml(login);
 
-    crm_recv_remote_msg(connection->session, &connection->recv_buf, connection->encrypted, -1, &disconnected);
+    crm_remote_recv(connection, -1, &disconnected);
 
     if (disconnected) {
         rc = -ENOTCONN;
     }
 
-    answer = crm_parse_remote_buffer(&connection->recv_buf);
+    answer = crm_remote_parse_buffer(connection);
 
     crm_log_xml_trace(answer, "Reply");
     if (answer == NULL) {
@@ -303,7 +294,7 @@ cib_tls_signon(cib_t * cib, struct remote_connection_s *connection, gboolean eve
     }
 
     crm_trace("remote client connection established");
-    connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->socket, cib, &cib_fd_callbacks);
+    connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->tcp_socket, cib, &cib_fd_callbacks);
     return rc;
 }
 
@@ -324,10 +315,10 @@ cib_remote_command_dispatch(gpointer user_data)
     cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_recv_remote_msg(private->command.session, &private->command.recv_buf, private->command.encrypted, -1, &disconnected);
+    crm_remote_recv(&private->command, -1, &disconnected);
 
-    free(private->command.recv_buf);
-    private->command.recv_buf = NULL;
+    free(private->command.buffer);
+    private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
     if (disconnected) {
@@ -347,9 +338,9 @@ cib_remote_callback_dispatch(gpointer user_data)
 
     crm_info("Message on callback channel");
 
-    crm_recv_remote_msg(private->callback.session, &private->callback.recv_buf, private->callback.encrypted, -1, &disconnected);
+    crm_remote_recv(&private->callback, -1, &disconnected);
 
-    msg = crm_parse_remote_buffer(&private->callback.recv_buf);
+    msg = crm_remote_parse_buffer(&private->callback);
     while (msg) {
         const char *type = crm_element_value(msg, F_TYPE);
         crm_trace("Activating %s callbacks...", type);
@@ -365,7 +356,7 @@ cib_remote_callback_dispatch(gpointer user_data)
         }
 
         free_xml(msg);
-        msg = crm_parse_remote_buffer(&private->callback.recv_buf);
+        msg = crm_remote_parse_buffer(&private->callback);
     }
 
     if (disconnected) {
@@ -418,7 +409,7 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
         xmlNode *hello =
             cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        crm_send_remote_msg(private->command.session, hello, private->command.encrypted);
+        crm_remote_send(&private->command, hello);
         free_xml(hello);
     }
 
@@ -521,9 +512,9 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
 
     crm_trace("Sending %s message to CIB service", op);
     if (!(call_options & cib_sync_call)) {
-        crm_send_remote_msg(private->callback.session, op_msg, private->command.encrypted);
+        crm_remote_send(&private->callback, op_msg);
     } else {
-        crm_send_remote_msg(private->command.session, op_msg, private->command.encrypted);
+        crm_remote_send(&private->command, op_msg);
     }
     free_xml(op_msg);
 
@@ -544,8 +535,8 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         int reply_id = -1;
         int msg_id = cib->call_id;
 
-        crm_recv_remote_msg(private->command.session, &private->command.recv_buf, private->command.encrypted, remaining_time * 1000, &disconnected);
-        op_reply = crm_parse_remote_buffer(&private->command.recv_buf);
+        crm_remote_recv(&private->command, remaining_time * 1000, &disconnected);
+        op_reply = crm_remote_parse_buffer(&private->command);
 
         if (!op_reply) {
             break;

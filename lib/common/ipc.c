@@ -250,7 +250,7 @@ crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     client = calloc(1, sizeof(crm_client_t));
 
     client->ipcs = c;
-    client->kind = client_type_ipc;
+    client->kind = CRM_CLIENT_IPC;
     client->pid = crm_ipcs_client_pid(c);
 
     client->id = crm_generate_uuid();
@@ -291,17 +291,17 @@ crm_client_destroy(crm_client_t *c)
             g_hash_table_remove(client_connections, c->id);
         }
     }
-
-    if (c->remote_auth_timeout) {
-        g_source_remove(c->remote_auth_timeout);
-    }
     
     free(c->id);
     free(c->name);
     free(c->user);
-    free(c->user);
-    free(c->recv_buf);
-    free(c->callback_id);
+    if(c->remote) {
+        if (c->remote->auth_timeout) {
+            g_source_remove(c->remote->auth_timeout);
+        }
+        free(c->remote->buffer);
+        free(c->remote);
+    }
     free(c);
 }
 

@@ -202,11 +202,12 @@ char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 
 /*! remote tcp/tls helper functions */
-gboolean crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int total_timeout_ms, int *disconnected);
-char *crm_recv_remote_raw(void *data, gboolean encrypted, size_t max_recv, size_t *recv_len, int *disconnected);
-int crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted);
-int crm_recv_remote_ready(void *session, gboolean encrypted, int timeout_ms);
-xmlNode *crm_parse_remote_buffer(char **msg_buf);
+typedef struct crm_remote_s crm_remote_t;
+
+int crm_remote_send(crm_remote_t *remote, xmlNode * msg);
+int crm_remote_ready(crm_remote_t *remote, int total_timeout /*ms */);
+gboolean crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnected);
+xmlNode *crm_remote_parse_buffer(crm_remote_t *remote);
 int crm_remote_tcp_connect(const char *host, int port);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -218,7 +219,7 @@ int crm_remote_tcp_connect(const char *host, int port);
  * \retval 0 success
  * \retval negative, failure
  */
-int crm_initiate_client_tls_handshake(void *session_data, int timeout_ms);
+int crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms);
 /*!
  * \internal
  * \brief Create client or server session for anon DH encryption credentials

@@ -56,13 +56,13 @@ lrmd_remote_client_msg(gpointer data)
     xmlNode *request = NULL;
     crm_client_t *client = data;
 
-    if (client->handshake_complete == FALSE) {
+    if (client->remote->tls_handshake_complete == FALSE) {
         int rc = 0;
 
         /* Muliple calls to handshake will be required, this callback
          * will be invoked once the client sends more handshake data. */
         do {
-            rc = gnutls_handshake(*client->session);
+            rc = gnutls_handshake(*client->remote->tls_session);
 
             if (rc < 0 && rc != GNUTLS_E_AGAIN) {
                 crm_err("Remote lrmd tls handshake failed");
@@ -72,16 +72,16 @@ lrmd_remote_client_msg(gpointer data)
 
         if (rc == 0) {
             crm_debug("Remote lrmd tls handshake completed");
-            client->handshake_complete = TRUE;
-            if (client->remote_auth_timeout) {
-                g_source_remove(client->remote_auth_timeout);
+            client->remote->tls_handshake_complete = TRUE;
+            if (client->remote->auth_timeout) {
+                g_source_remove(client->remote->auth_timeout);
             }
-            client->remote_auth_timeout = 0;
+            client->remote->auth_timeout = 0;
         }
         return 0;
     }
 
-    rc = crm_recv_remote_ready(client->session, TRUE, 0);
+    rc = crm_remote_ready(client->remote, 0);
     if (rc == 0) {
         /* no msg to read */
         return 0;
@@ -90,10 +90,10 @@ lrmd_remote_client_msg(gpointer data)
         return -1;
     }
 
-    crm_recv_remote_msg(client->session, &client->recv_buf, TRUE, -1, &disconnected);
+    crm_remote_recv(client->remote, -1, &disconnected);
 
-    request = crm_parse_remote_buffer(&client->recv_buf);
-	while (request) {
+    request = crm_remote_parse_buffer(client->remote);
+    while (request) {
         crm_element_value_int(request, F_LRMD_REMOTE_MSG_ID, &id);
         crm_trace("processing request from remote client with remote msg id %d", id);
         if (!client->name) {
@@ -116,7 +116,7 @@ lrmd_remote_client_msg(gpointer data)
         free_xml(request);
 
         /* process all the messages in the current buffer */
-        request = crm_parse_remote_buffer(&client->recv_buf);
+        request = crm_remote_parse_buffer(client->remote);
     }
 
     if (disconnected) {
@@ -142,15 +142,15 @@ lrmd_remote_client_destroy(gpointer user_data)
         client->name ? client->name : "<unknown>",
         client->id);
 
-    if (client->session) {
+    if (client->remote->tls_session) {
         void *sock_ptr;
         int csock;
-        sock_ptr = gnutls_transport_get_ptr(*client->session);
+        sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
         csock = GPOINTER_TO_INT(sock_ptr);
 
-        gnutls_bye(*client->session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(*client->session);
-        gnutls_free(client->session);
+        gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_RDWR);
+        gnutls_deinit(*client->remote->tls_session);
+        gnutls_free(client->remote->tls_session);
         close(csock);
     }
 
@@ -164,14 +164,14 @@ lrmd_auth_timeout_cb(gpointer data)
 {
     crm_client_t *client = data;
 
-    client->remote_auth_timeout = 0;
+    client->remote->auth_timeout = 0;
 
-    if (client->handshake_complete == TRUE) {
+    if (client->remote->tls_handshake_complete == TRUE) {
         return FALSE;
     }
 
-    mainloop_del_fd(client->remote);
-    client->remote = NULL;
+    mainloop_del_fd(client->remote->source);
+    client->remote->source = NULL;
     crm_err("Remote client authentication timed out");
 
     return FALSE;
@@ -223,13 +223,15 @@ lrmd_remote_listen(gpointer data)
     }
 
     new_client = calloc(1, sizeof(crm_client_t));
-    new_client->kind = client_type_tls;
-    new_client->session = session;
+    new_client->remote = calloc(1, sizeof(crm_remote_t));
+    new_client->kind = CRM_CLIENT_TLS;
+    new_client->remote->tls_session = session;
     new_client->id = crm_generate_uuid();
-    new_client->remote_auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
+    new_client->remote->auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
     crm_notice("LRMD client connection established. %p id: %s", new_client, new_client->id);
 
-    new_client->remote = mainloop_add_fd("lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &lrmd_remote_fd_cb);
+    new_client->remote->source = mainloop_add_fd(
+        "lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &lrmd_remote_fd_cb);
     g_hash_table_insert(client_connections, new_client->id, new_client);
 
     return TRUE;

@@ -35,7 +35,7 @@
 #include <fcntl.h>
 #include <glib.h>
 
-#include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -57,17 +57,16 @@ const int anon_tls_kx_order[] = {
 };
 
 int
-crm_initiate_client_tls_handshake(void *session_data, int timeout_ms)
+crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms)
 {
     int rc = 0;
     int pollrc = 0;
     time_t start = time(NULL);
-    gnutls_session *session = session_data;
 
     do {
-        rc = gnutls_handshake(*session);
+        rc = gnutls_handshake(*remote->tls_session);
         if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            pollrc = crm_recv_remote_ready(session, TRUE, 1000);
+            pollrc = crm_remote_ready(remote, 1000);
             if (pollrc < 0) {
                 /* poll returned error, there is no hope */
                 rc = -1;
@@ -399,23 +398,25 @@ done:
 }
 
 static int
-crm_send_remote_msg_raw(void *session, const char *buf, size_t len, gboolean encrypted)
+crm_remote_send_raw(crm_remote_t *remote, const char *buf, size_t len)
 {
-    int rc = -1;
-    if (encrypted) {
+    int rc = -ESOCKTNOSUPPORT;
+
+    if(remote->tcp_socket) {
+        rc = crm_send_plaintext(remote->tcp_socket, buf, len);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        rc = crm_send_tls(session, buf, len);
-#else
-        CRM_ASSERT(encrypted == FALSE);
+
+    } else if(remote->tls_session) {
+        rc = crm_send_tls(remote->tls_session, buf, len);
 #endif
     } else {
-        rc = crm_send_plaintext(GPOINTER_TO_INT(session), buf, len);
+        crm_err("Unsupported connection type");
     }
     return rc;
 }
 
 int
-crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted)
+crm_remote_send(crm_remote_t *remote, xmlNode * msg)
 {
     int rc = -1;
     char *xml_text = NULL;
@@ -429,13 +430,11 @@ crm_send_remote_msg(void *session, xmlNode * msg, gboolean encrypted)
         return -1;
     }
 
-    rc = crm_send_remote_msg_raw(session, xml_text, len, encrypted);
-    if (rc < 0) {
-        goto done;
+    rc = crm_remote_send_raw(remote, xml_text, len);
+    if (rc >= 0) {
+        rc = crm_remote_send_raw(remote, REMOTE_MSG_TERMINATOR, strlen(REMOTE_MSG_TERMINATOR));
     }
-    rc = crm_send_remote_msg_raw(session, REMOTE_MSG_TERMINATOR, strlen(REMOTE_MSG_TERMINATOR), encrypted);
 
-done:
     if (rc < 0) {
         crm_err("Failed to send remote msg, rc = %d", rc);
     }
@@ -450,20 +449,20 @@ done:
  * \note new_data is owned by this function once it is passed in.
  */
 xmlNode *
-crm_parse_remote_buffer(char **msg_buf)
+crm_remote_parse_buffer(crm_remote_t *remote)
 {
     char *buf = NULL;
     char *start = NULL;
     char *end = NULL;
     xmlNode *xml = NULL;
 
-    if (*msg_buf == NULL) {
+    if (remote->buffer == NULL) {
         return NULL;
     }
 
     /* take ownership of the buffer */
-    buf = *msg_buf;
-    *msg_buf = NULL;
+    buf = remote->buffer;
+    remote->buffer = NULL;
 
     /* MSGS are separated by a '\r\n\r\n'. Split a message off the buffer and return it. */
     start = buf;
@@ -485,11 +484,11 @@ crm_parse_remote_buffer(char **msg_buf)
 
     if (xml && start) {
         /* we have msgs left over, save it until next time */
-        *msg_buf = strdup(start);
+        remote->buffer = strdup(start);
         free(buf);
     } else if (!xml) {
         /* no msg present */
-        *msg_buf = buf;
+        remote->buffer = buf;
     }
 
     return xml;
@@ -504,26 +503,24 @@ crm_parse_remote_buffer(char **msg_buf)
  * \retval negative, session has ended
  */
 int
-crm_recv_remote_ready(void *session, gboolean encrypted, int timeout /* ms */)
+crm_remote_ready(crm_remote_t *remote, int timeout /* ms */)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
-    void *sock_ptr = NULL;
     int rc = 0;
     time_t start;
 
-    if (encrypted) {
+    if (remote->tcp_socket) {
+        sock = remote->tcp_socket;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        gnutls_session *tls_session = session;
-        sock_ptr = gnutls_transport_get_ptr(*tls_session);
-#else
-        CRM_ASSERT(encrypted == FALSE);
+    } else if(remote->tls_session) {
+        void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
+        sock = GPOINTER_TO_INT(sock_ptr);
 #endif
     } else {
-        sock_ptr = session;
+        crm_err("Unsupported connection type");
     }
 
-    sock = GPOINTER_TO_INT(sock_ptr);
     if (sock <= 0) {
         return -ENOTCONN;
     }
@@ -550,34 +547,6 @@ crm_recv_remote_ready(void *session, gboolean encrypted, int timeout /* ms */)
     return rc;
 }
 
-char *
-crm_recv_remote_raw(void *session, gboolean encrypted, size_t max_recv, size_t *recv_len, int *disconnected)
-{
-    char *reply = NULL;
-    if (recv_len) {
-        *recv_len = 0;
-    }
-
-    if (disconnected) {
-        *disconnected = 0;
-    }
-
-    if (encrypted) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        reply = crm_recv_tls(session, max_recv, recv_len, disconnected);
-#else
-        CRM_ASSERT(encrypted == FALSE);
-#endif
-    } else {
-        reply = crm_recv_plaintext(GPOINTER_TO_INT(session), max_recv, recv_len, disconnected);
-    }
-    if (reply == NULL || strlen(reply) == 0) {
-        crm_trace("Empty reply");
-    }
-
-    return reply;
-}
-
 /*!
  * \internal
  * \brief Read data off the socket until at least one full message is present or timeout occures.
@@ -586,7 +555,7 @@ crm_recv_remote_raw(void *session, gboolean encrypted, size_t max_recv, size_t *
  */
 
 gboolean
-crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int total_timeout /*ms */, int *disconnected)
+crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnected)
 {
     int ret;
     size_t request_len = 0;
@@ -606,7 +575,7 @@ crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int tota
 
         /* read some more off the tls buffer if we still have time left. */
         crm_trace("waiting to receive remote msg, starting timeout %d, remaining_timeout %d", total_timeout, remaining_timeout);
-        ret = crm_recv_remote_ready(session, encrypted, remaining_timeout);
+        ret = crm_remote_ready(remote, remaining_timeout);
         raw_request = NULL;
 
         if (ret == 0) {
@@ -620,8 +589,16 @@ crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int tota
                 return FALSE;
             }
             crm_debug("poll EINTR encountered during poll, retrying");
+
+        } else if (remote->tcp_socket) {
+            raw_request = crm_recv_plaintext(remote->tcp_socket, 0, &request_len, disconnected);
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        } else if(remote->tls_session) {
+            raw_request = crm_recv_tls(remote->tls_session, 0, &request_len, disconnected);
+#endif
         } else {
-            raw_request = crm_recv_remote_raw(session, encrypted, 0, &request_len, disconnected);
+            crm_err("Unsupported connection type");
         }
 
         remaining_timeout = remaining_timeout - ((time(NULL) - start) * 1000);
@@ -631,20 +608,21 @@ crm_recv_remote_msg(void *session, char **recv_buf, gboolean encrypted, int tota
             continue;
         }
 
-        if (*recv_buf) {
-            int old_len = strlen(*recv_buf);
+        if (remote->buffer) {
+            int old_len = strlen(remote->buffer);
 
             crm_trace("Expanding recv buffer from %d to %d", old_len, old_len+request_len);
 
-            *recv_buf = realloc(*recv_buf, old_len + request_len + 1);
-            memcpy(*recv_buf + old_len, raw_request, request_len);
-            *(*recv_buf+old_len+request_len) = '\0';
+            remote->buffer = realloc(remote->buffer, old_len + request_len + 1);
+            memcpy(remote->buffer + old_len, raw_request, request_len);
+            *(remote->buffer+old_len+request_len) = '\0';
             free(raw_request);
+
         } else {
-            *recv_buf = raw_request;
+            remote->buffer = raw_request;
         }
 
-        if (strstr(*recv_buf, REMOTE_MSG_TERMINATOR)) {
+        if (strstr(remote->buffer, REMOTE_MSG_TERMINATOR)) {
             return TRUE;
         }
     }

@@ -65,7 +65,7 @@ gnutls_psk_client_credentials_t psk_cred_s;
 int lrmd_tls_set_key(gnutls_datum_t *key, const char *location);
 static void lrmd_tls_disconnect(lrmd_t *lrmd);
 static int global_remote_msg_id = 0;
-int lrmd_tls_send_msg(gnutls_session *session, xmlNode *msg, uint32_t id, const char *msg_type);
+int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id, const char *msg_type);
 static void lrmd_tls_connection_destroy(gpointer userdata);
 #endif
 
@@ -77,16 +77,15 @@ typedef struct lrmd_private_s {
     /* IPC parameters */
     crm_ipc_t *ipc;
 
-    /* TLS parameters */
+    crm_remote_t *remote;
+
+    /* Extra TLS parameters */
 #ifdef HAVE_GNUTLS_GNUTLS_H
     char *server;
     int port;
     gnutls_psk_client_credentials_t psk_cred_c;
-    gnutls_session *session;
+
     int sock;
-
-    char *recv_buf;
-
     GList *pending_notify;
     crm_trigger_t *process_notify;
 #endif
@@ -305,7 +304,7 @@ static int
 lrmd_tls_connected(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->private;
-    if (native->session) {
+    if (native->remote->tls_session) {
         return TRUE;
     }
 
@@ -341,20 +340,20 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     /* Next read the current buffer and see if there are any messages to handle. */
-    rc = crm_recv_remote_ready(native->session, TRUE, 0);
+    rc = crm_remote_ready(native->remote, 0);
     if (rc == 0) {
         /* nothing to read, see if any full messages are already in buffer. */
-        xml = crm_parse_remote_buffer(&native->recv_buf);
+        xml = crm_remote_parse_buffer(native->remote);
     } else if (rc < 0) {
         disconnected = 1;
     } else {
-        crm_recv_remote_msg(native->session, &native->recv_buf, TRUE, -1, &disconnected);
-        xml = crm_parse_remote_buffer(&native->recv_buf);
+        crm_remote_recv(native->remote, -1, &disconnected);
+        xml = crm_remote_parse_buffer(native->remote);
     }
     while (xml) {
         lrmd_dispatch_internal(lrmd, xml);
         free_xml(xml);
-        xml = crm_parse_remote_buffer(&native->recv_buf);
+        xml = crm_remote_parse_buffer(native->remote);
     }
 
     if (disconnected) {
@@ -369,29 +368,28 @@ lrmd_tls_dispatch(gpointer userdata)
 /* Not used with mainloop */
 int lrmd_poll(lrmd_t *lrmd, int timeout)
 {
-    int fd = -1;
     lrmd_private_t *native = lrmd->private;
 
     switch (native->type) {
-        case client_type_ipc:
-            fd = crm_ipc_get_fd(native->ipc);
-            break;
+        case CRM_CLIENT_IPC:
+            return crm_ipc_ready(native->ipc);
+
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             if (native->pending_notify) {
                 return 1;
-            } else if (native->recv_buf && strstr(native->recv_buf, REMOTE_MSG_TERMINATOR)) {
+            } else if (native->remote->buffer
+                       && strstr(native->remote->buffer, REMOTE_MSG_TERMINATOR)) {
                 return 1;
             }
 
-            fd = native->sock;
-            break;
+            return crm_remote_ready(native->remote, 0);
 #endif
         default:
             crm_err("Unsupported connection type: %d", native->type);
     }
 
-    return crm_recv_remote_ready(GUINT_TO_POINTER(fd), FALSE, 0);
+    return 0;
 }
 
 /* Not used with mainloop */
@@ -404,7 +402,7 @@ lrmd_dispatch(lrmd_t * lrmd)
 
     private = lrmd->private;
     switch (private->type) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             while (crm_ipc_ready(private->ipc)) {
                 if (crm_ipc_read(private->ipc) > 0) {
                     const char *msg = crm_ipc_buffer(private->ipc);
@@ -413,7 +411,7 @@ lrmd_dispatch(lrmd_t * lrmd)
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             lrmd_tls_dispatch(lrmd);
             break;
 #endif
@@ -480,10 +478,10 @@ lrmd_tls_connection_destroy(gpointer userdata)
 
     crm_info("TLS connection destroyed");
 
-    if (native->session) {
-        gnutls_bye(*native->session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(*native->session);
-        gnutls_free(native->session);
+    if (native->remote->tls_session) {
+        gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        gnutls_deinit(*native->remote->tls_session);
+        gnutls_free(native->remote->tls_session);
     }
     if (native->psk_cred_c) {
         gnutls_psk_free_client_credentials(native->psk_cred_c);
@@ -500,12 +498,12 @@ lrmd_tls_connection_destroy(gpointer userdata)
         native->pending_notify = NULL;
     }
 
-    free(native->recv_buf);
-    native->recv_buf = NULL;
+    free(native->remote->buffer);
+    native->remote->buffer = NULL;
     native->source = 0;
     native->sock = 0;
     native->psk_cred_c = NULL;
-    native->session = NULL;
+    native->remote->tls_session = NULL;
     native->sock = 0;
 
     if (native->callback) {
@@ -517,14 +515,14 @@ lrmd_tls_connection_destroy(gpointer userdata)
 }
 
 int
-lrmd_tls_send_msg(gnutls_session *session, xmlNode *msg, uint32_t id, const char *msg_type)
+lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id, const char *msg_type)
 {
     int rc = -1;
 
     crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, F_LRMD_REMOTE_MSG_TYPE, msg_type);
 
-    rc = crm_send_remote_msg(session, msg, TRUE);
+    rc = crm_remote_send(session, msg);
 
     if (rc < 0) {
         crm_err("Failed to send remote lrmd tls msg, rc = %d" , rc);
@@ -552,7 +550,7 @@ lrmd_tls_recv_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id, int 
 
     while (!xml) {
 
-        xml = crm_parse_remote_buffer(&native->recv_buf);
+        xml = crm_remote_parse_buffer(native->remote);
         if (!xml) {
             /* read some more off the tls buffer if we still have time left. */
             if (remaining_timeout) {
@@ -564,8 +562,8 @@ lrmd_tls_recv_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id, int 
                 return NULL;
             }
 
-            crm_recv_remote_msg(native->session, &native->recv_buf, TRUE, remaining_timeout, disconnected);
-            xml = crm_parse_remote_buffer(&native->recv_buf);
+            crm_remote_recv(native->remote, remaining_timeout, disconnected);
+            xml = crm_remote_parse_buffer(native->remote);
             if (!xml || *disconnected) {
                 return NULL;
             }
@@ -601,7 +599,7 @@ lrmd_tls_recv_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id, int 
         }
     }
 
-    if (native->recv_buf && native->process_notify) {
+    if (native->remote->buffer && native->process_notify) {
         mainloop_set_trigger(native->process_notify);
     }
 
@@ -625,7 +623,7 @@ lrmd_tls_send_recv(lrmd_t *lrmd, xmlNode *msg, int timeout, xmlNode **reply)
         global_remote_msg_id = 1;
     }
 
-    rc = lrmd_tls_send_msg(native->session, msg, global_remote_msg_id, "request");
+    rc = lrmd_tls_send_msg(native->remote, msg, global_remote_msg_id, "request");
     if (rc <= 0) {
         crm_err("Remote lrmd send failed, disconnecting");
         lrmd_tls_disconnect(lrmd);
@@ -660,11 +658,11 @@ lrmd_send_xml(lrmd_t *lrmd, xmlNode *msg, int timeout, xmlNode **reply)
     lrmd_private_t *native = lrmd->private;
 
     switch (native->type) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             rc = crm_ipc_send(native->ipc, msg, crm_ipc_client_response, timeout, reply);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             rc = lrmd_tls_send_recv(lrmd, msg, timeout, reply);
             break;
 #endif
@@ -681,11 +679,11 @@ lrmd_connected(lrmd_t *lrmd)
     lrmd_private_t *native = lrmd->private;
 
     switch (native->type) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             return crm_ipc_connected(native->ipc);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             return lrmd_tls_connected(lrmd);
             break;
 #endif
@@ -956,13 +954,13 @@ lrmd_tls_connect(lrmd_t *lrmd, int *fd)
     }
 
     native->sock = sock;
-    native->session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
+    native->remote->tls_session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
 
-    if (crm_initiate_client_tls_handshake(native->session, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
+    if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
         crm_err("Session creation for %s:%d failed", native->server, native->port);
-        gnutls_deinit(*native->session);
-        gnutls_free(native->session);
-        native->session = NULL;
+        gnutls_deinit(*native->remote->tls_session);
+        gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = NULL;
         lrmd_tls_connection_destroy(lrmd);
         return -1;
     }
@@ -992,11 +990,11 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
     lrmd_private_t *native = lrmd->private;
 
     switch (native->type) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             rc = lrmd_ipc_connect(lrmd, fd);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             rc = lrmd_tls_connect(lrmd, fd);
             break;
 #endif
@@ -1040,11 +1038,11 @@ lrmd_tls_disconnect(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->private;
 
-    if (native->session) {
-        gnutls_bye(*native->session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(*native->session);
-        gnutls_free(native->session);
-        native->session = 0;
+    if (native->remote->tls_session) {
+        gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        gnutls_deinit(*native->remote->tls_session);
+        gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = 0;
     }
 
     if (native->source != NULL) {
@@ -1070,11 +1068,11 @@ lrmd_api_disconnect(lrmd_t *lrmd)
 
     crm_info("Disconnecting from lrmd service");
     switch (native->type) {
-    case client_type_ipc:
+    case CRM_CLIENT_IPC:
         lrmd_ipc_disconnect(lrmd);
         break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
+        case CRM_CLIENT_TLS:
             lrmd_tls_disconnect(lrmd);
             break;
 #endif
@@ -1588,9 +1586,10 @@ lrmd_api_new(void)
 
     new_lrmd = calloc(1, sizeof(lrmd_t));
     pvt = calloc(1, sizeof(lrmd_private_t));
+    pvt->remote = calloc(1, sizeof(crm_remote_t));
     new_lrmd->cmds = calloc(1, sizeof(lrmd_api_operations_t));
 
-    pvt->type = client_type_ipc;
+    pvt->type = CRM_CLIENT_IPC;
     new_lrmd->private = pvt;
 
     new_lrmd->cmds->connect = lrmd_api_connect;
@@ -1620,7 +1619,7 @@ lrmd_remote_api_new(const char *server, int port)
     lrmd_t *new_lrmd = lrmd_api_new();
     lrmd_private_t *native = new_lrmd->private;
 
-    native->type = client_type_tls;
+    native->type = CRM_CLIENT_TLS;
     native->server = strdup(server);
     native->port = port ? port : DEFAULT_REMOTE_PORT;
     return new_lrmd;
@@ -1639,12 +1638,13 @@ lrmd_api_delete(lrmd_t * lrmd)
     }
     lrmd->cmds->disconnect(lrmd);       /* no-op if already disconnected */
     free(lrmd->cmds);
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    { /* this is done to avoid compiler warnings */
+    if (lrmd->private) {
         lrmd_private_t *native = lrmd->private;
+#ifdef HAVE_GNUTLS_GNUTLS_H
         free(native->server);
-    }
 #endif
+        free(native->remote);
+    }
     free(lrmd->private);
     free(lrmd);
 }

@@ -83,7 +83,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(client != NULL, return TRUE);
     CRM_CHECK(update_msg != NULL, return TRUE);
 
-    if (client->ipcs == NULL && client->session == NULL) {
+    if (client->ipcs == NULL && client->remote == NULL) {
         crm_warn("Skipping client with NULL channel");
         return FALSE;
     }
@@ -109,19 +109,15 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     if (do_send) {
         switch(client->kind) {
-            case client_type_ipc:
+            case CRM_CLIENT_IPC:
                 if(crm_ipcs_send(client, 0, update_msg, TRUE) == FALSE) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
-            case client_type_tls:
-            case client_type_tcp:
-                if(client->userdata) {
-                    crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-                    crm_send_remote_msg(client->session, update_msg, client->kind == client_type_tls);
-                } else {
-                    crm_warn("Notification of remote client %s/%s failed", client->name, client->id);
-                }
+            case CRM_CLIENT_TLS:
+            case CRM_CLIENT_TCP:
+                crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
+                crm_remote_send(client->remote, update_msg);
                 break;
             default:
                 crm_err("Unknown transport %d for %s", client->kind, client->name);

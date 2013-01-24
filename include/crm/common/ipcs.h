@@ -18,6 +18,8 @@
 #ifndef CRM_COMMON_IPCS__H
 #  define CRM_COMMON_IPCS__H
 
+#include <crm/common/ipc.h>
+
 #include <qb/qbipcs.h>
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
@@ -25,13 +27,32 @@
 #endif
 
 typedef struct mainloop_io_s mainloop_io_t;
+typedef struct crm_client_s crm_client_t;
 
 enum client_type
 {
-        client_type_ipc = 1,
-        client_type_tcp = 2,
+        CRM_CLIENT_IPC = 1,
+        CRM_CLIENT_TCP = 2,
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        client_type_tls = 3,
+        CRM_CLIENT_TLS = 3,
+#endif
+};
+
+struct crm_remote_s 
+{
+        /* Shared */
+        char *buffer;
+        int   auth_timeout;
+        bool  authenticated; /* CIB-only */
+        mainloop_io_t *source;
+
+        int tcp_socket;
+
+        char *token; /* CIB Only */
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        gnutls_session *tls_session;
+        bool tls_handshake_complete;
 #endif
 };
 
@@ -57,25 +78,9 @@ struct crm_client_s
          */
         enum client_type kind;
 
-/* CIB specific */
-        char *callback_id;
+        qb_ipcs_connection_t *ipcs; /* IPC */
 
-        /* IPC */
-        qb_ipcs_connection_t *ipcs;
-
-        /* TCP / TLS */
-        char *recv_buf;
-        bool  remote_auth;
-        int   remote_auth_timeout;
-        mainloop_io_t *remote;
-
-        /* TLS */
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        gnutls_session *session;
-        gboolean handshake_complete;
-#else
-        void *session;
-#endif
+        struct crm_remote_s *remote; /* TCP/TLS */
 };
 
 enum crm_ipc_server_flags
@@ -89,7 +94,6 @@ enum crm_ipc_server_flags
 
 extern GHashTable *client_connections;
 
-typedef struct crm_client_s crm_client_t;
 
 void crm_client_init(void);
 void crm_client_cleanup(void);

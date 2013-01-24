@@ -171,11 +171,11 @@ int lrmd_server_send_reply(crm_client_t *client, uint32_t id, xmlNode *reply)
 
     crm_trace("sending reply to client (%s) with msg id %d", client->id, id);
     switch (client->kind) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             return crm_ipcs_send(client, id, reply, FALSE);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
-            return lrmd_tls_send_msg(client->session, reply, id, "reply");
+        case CRM_CLIENT_TLS:
+            return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
             crm_err("Unknown lrmd client type %d" , client->kind);
@@ -187,19 +187,19 @@ int lrmd_server_send_notify(crm_client_t *client, xmlNode *msg)
 {
     crm_trace("sending notify to client (%s)", client->id);
     switch (client->kind) {
-        case client_type_ipc:
+        case CRM_CLIENT_IPC:
             if (client->ipcs == NULL) {
                 crm_trace("Asked to send event to disconnected local client");
                 return -1;
             }
             return crm_ipcs_send(client, 0, msg, TRUE);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case client_type_tls:
-            if (client->session == NULL) {
+        case CRM_CLIENT_TLS:
+            if (client->remote == NULL) {
                 crm_trace("Asked to send event to disconnected remote client");
                 return -1;
             }
-            return lrmd_tls_send_msg(client->session, msg, 0, "notify");
+            return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
 #endif
         default:
             crm_err("Unknown lrmd client type %d" , client->kind);
