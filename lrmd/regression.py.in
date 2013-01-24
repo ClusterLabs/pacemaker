@@ -97,7 +97,7 @@ class Test:
 				f = open('/tmp/lrmd-regression.log', 'r')
 				for line in f.readlines():
 					print line.strip()
-				os.remove('/tmp/lrmd-regression.log')
+			os.remove('/tmp/lrmd-regression.log')
 
 		if self.stonith_process:
 			self.stonith_process.terminate()
