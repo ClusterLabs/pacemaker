@@ -115,6 +115,18 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 <content type="string" default="G"/>
 </parameter>
 
+<parameter name="min_disk_free" unique="0">
+<longdesc lang="en">
+The amount of free space required in monitored disks. If any
+of the monitored disks has less than this amount of free space,
+all resources will move away from the node. Set the node-health-strategy
+property appropriately for this to take effect.
+If the unit is not specified, it defaults to disk_unit.
+</longdesc>
+<shortdesc lang="en">minimum disk free space required</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
 
 </parameters>
 <actions>
@@ -205,7 +217,12 @@ SysInfoStats() {
 	disk_free=`df -h ${disk} | tail -1 | awk '{print $4}'`
 	if [ x != x"$disk_free" ]; then
 	    disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
-	    UpdateStat ${disk_label}_free `SysInfo_hdd_units $disk_free`
+	    disk_free=`SysInfo_hdd_units $disk_free`
+	    UpdateStat ${disk_label}_free $disk_free
+	    if [ -n "$MIN_FREE" ]; then
+		test $disk_free -le $MIN_FREE &&
+		    UpdateStat "#health_disk" "red"
+	    fi
 	fi
     done
 }
@@ -311,6 +328,12 @@ fi
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
+fi
+MIN_FREE=""
+if [ -n "$OCF_RESKEY_min_disk_free" ]; then
+	ocf_is_decimal "$OCF_RESKEY_min_disk_free" &&
+		OCF_RESKEY_min_disk_free="$OCF_RESKEY_min_disk_free$OCF_RESKEY_disk_unit"
+    MIN_FREE=`SysInfo_hdd_units $OCF_RESKEY_min_disk_free`
 fi
 
 case $__OCF_ACTION in
