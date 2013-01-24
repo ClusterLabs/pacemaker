@@ -72,9 +72,13 @@ crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms)
                 rc = -1;
             }
         }
+
     } while (((time(NULL) - start) < (timeout_ms/1000)) &&
             (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN));
 
+    if(rc < 0) {
+        crm_trace("gnutls_handshake() failed with %d", rc);
+    }
     return rc;
 }
 
@@ -522,6 +526,7 @@ crm_remote_ready(crm_remote_t *remote, int timeout /* ms */)
     }
 
     if (sock <= 0) {
+        crm_trace("No longer connected");
         return -ENOTCONN;
     }
 
