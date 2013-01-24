@@ -15,16 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 #ifndef CRM_COMMON_IPCS__H
 #  define CRM_COMMON_IPCS__H
 
-#include <crm/common/ipc.h>
+#  include <crm/common/ipc.h>
 
-#include <qb/qbipcs.h>
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
-#  include <gnutls/gnutls.h>
-#endif
+#  include <qb/qbipcs.h>
+#  ifdef HAVE_GNUTLS_GNUTLS_H
+#    undef KEYFILE
+#    include <gnutls/gnutls.h>
+#  endif
 
 typedef struct mainloop_io_s mainloop_io_t;
 typedef struct crm_client_s crm_client_t;
@@ -33,9 +34,9 @@ enum client_type
 {
         CRM_CLIENT_IPC = 1,
         CRM_CLIENT_TCP = 2,
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#  ifdef HAVE_GNUTLS_GNUTLS_H
         CRM_CLIENT_TLS = 3,
-#endif
+#  endif
 };
 
 struct crm_remote_s 
@@ -46,9 +47,9 @@ struct crm_remote_s
         bool  authenticated; /* CIB-only */
         mainloop_io_t *source;
 
-        int tcp_socket;
-
         char *token; /* CIB Only */
+
+        int tcp_socket;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
         gnutls_session *tls_session;
@@ -70,8 +71,10 @@ struct crm_client_s
         long long options;
         
         int request_id;
-        GList *pending;
         void *userdata;
+
+        int event_timer;
+        GList *event_queue;
 
         /* Depending on the value of kind, only some of the following
          * will be populated/valid

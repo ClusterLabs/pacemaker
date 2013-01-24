@@ -283,13 +283,22 @@ crm_client_destroy(crm_client_t *c)
     if(client_connections) {
         if(c->ipcs) {
             crm_trace("Destroying %p (%d remaining)",
-                      c->ipcs, crm_hash_table_size(client_connections));
+                      c->ipcs, crm_hash_table_size(client_connections) - 1);
             g_hash_table_remove(client_connections, c->ipcs);
         } else {
             crm_trace("Destroying remote connection %p (%d remaining)",
-                      c, crm_hash_table_size(client_connections));
+                      c, crm_hash_table_size(client_connections) - 1);
             g_hash_table_remove(client_connections, c->id);
         }
+    }
+
+    crm_info("Destroying %d events", g_list_length(c->event_queue));
+    while(c->event_queue) {
+        struct iovec *event = c->event_queue->data;
+        c->event_queue = g_list_remove(c->event_queue, event);
+        free(event[0].iov_base);
+        free(event[1].iov_base);
+        free(event);
     }
     
     free(c->id);
@@ -328,81 +337,127 @@ crm_ipcs_recv(crm_client_t *c, void *data, size_t size, uint32_t *id, uint32_t *
     return string2xml(text);
 }
 
-ssize_t
-crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
+ssize_t crm_ipcs_flush_events(crm_client_t *c);
+
+static gboolean
+crm_ipcs_flush_events_cb(gpointer data)
 {
-    int rc;
-    int lpc = 0;
-    int retries = 20;
-    int level = LOG_CRIT;
-    struct iovec iov[2];
-    static uint32_t id = 1;
-    const char *type = "Response";
-    struct qb_ipc_response_header header;
-    char *buffer = dump_xml_unformatted(message);
-    struct timespec delay = { 0, 250000000 }; /* 250ms */
+    crm_client_t *c = data;
+    c->event_timer = 0;
+    crm_ipcs_flush_events(c);
+    return FALSE;
+}
 
-    memset(&iov, 0, 2 * sizeof(struct iovec));
-    iov[0].iov_len = sizeof(struct qb_ipc_response_header);
-    iov[0].iov_base = &header;
-    iov[1].iov_len = 1 + strlen(buffer);
-    iov[1].iov_base = buffer;
+ssize_t
+crm_ipcs_flush_events(crm_client_t *c)
+{
+    int sent = 0;
+    ssize_t rc = 0;
+    int queue_len = g_list_length(c->event_queue);
 
-    if(flags & crm_ipc_server_event) {
-        header.id = id++;    /* We don't really use it, but doesn't hurt to set one */
-    } else {
-        CRM_LOG_ASSERT (request != 0);
-        header.id = request; /* Replying to a specific request */
+    if(c->event_timer) {
+        /* There is already a timer, wait until it goes off */
+        crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
+        return FALSE;
     }
 
-    header.error = 0; /* unused */
-    header.size = iov[0].iov_len + iov[1].iov_len;
-
-    if(flags & crm_ipc_server_error) {
-        retries = 10;
-        level = LOG_ERR;
-
-    } else if(flags & crm_ipc_server_info) {
-        retries = 5;
-        level = LOG_INFO;
-    }
-
-    while(lpc < retries) {
-        if(flags & crm_ipc_server_event) {
-            type = "Event";
-            rc = qb_ipcs_event_sendv(c->ipcs, iov, 2);
-            
-        } else {
-            rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
-        }
-
-        if(rc == -EPIPE || rc == -ENOTCONN) {
-            crm_trace("Client %p disconnected", c->ipcs);
-            level = LOG_INFO;
-        }
-
-        if(rc != -EAGAIN) {
+    while(c->event_queue && sent < 100) {
+        struct qb_ipc_response_header *header = NULL;
+        struct iovec *event = c->event_queue->data;
+        rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+        if(rc < 0) {
             break;
         }
 
-        lpc++;
-        crm_debug("Attempting resend %d of %s %d (%d bytes) to %p[%d]: %.120s",
-                  lpc, type, header.id, header.size, c->ipcs, c->pid, buffer);
-        nanosleep(&delay, NULL);
+        sent++;
+        header = event[0].iov_base;
+        crm_trace("Event %d to %p[%d] (%d bytes) sent: %.120s",
+                  header->id, c->ipcs, c->pid, rc, event[1].iov_base);
+
+        c->event_queue = g_list_remove(c->event_queue, event);
+        free(event[0].iov_base);
+        free(event[1].iov_base);
+        free(event);
     }
 
-    if(rc < header.size) {
-        struct qb_ipcs_connection_stats_2 *stats = qb_ipcs_connection_stats_get_2(c->ipcs, 0);
-        do_crm_log(level,
-                   "%s %d failed, size=%d, to=%p[%d], queue=%d, retries=%d, rc=%d: %.120s",
-                   type, header.id, header.size, c->ipcs, c->pid, stats->event_q_length, lpc, rc, buffer);
-        free(stats);
+    queue_len -= sent;
+    if(sent > 0 || c->event_queue) {
+        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s",
+                  sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc<0?rc:0));
+    }
+
+    if(c->event_queue) {
+        if(queue_len % 100 == 0 && queue_len > 99) {
+            crm_warn("Event queue for %p[%d] has grown to %d", c->ipcs, c->pid, queue_len);
+
+        } else if(queue_len > 500) {
+            crm_err("Evicting slow client %p[%d]: event queue reached %d entries",
+                    c->ipcs, c->pid, queue_len);
+            qb_ipcs_disconnect(c->ipcs);
+            return rc;
+        }
+
+        c->event_timer = g_timeout_add(1000 + 100 * queue_len, crm_ipcs_flush_events_cb, c);
+    }
+
+    return rc;
+}
+
+ssize_t
+crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
+{
+    static uint32_t id = 1;
+
+    ssize_t rc = 0;
+    ssize_t event_rc;
+    struct iovec *iov;
+    char *buffer = dump_xml_unformatted(message);
+    struct qb_ipc_response_header *header = calloc(1, sizeof(struct qb_ipc_response_header));
+
+    iov = calloc(2, sizeof(struct iovec));
+
+    iov[0].iov_len = sizeof(struct qb_ipc_response_header);
+    iov[0].iov_base = header;
+
+    iov[1].iov_len = 1 + strlen(buffer);
+    iov[1].iov_base = buffer;
+
+    header->error = 0; /* unused */
+    header->size = iov[0].iov_len + iov[1].iov_len;
+
+    if(flags & crm_ipc_server_event) {
+        header->id = id++;    /* We don't really use it, but doesn't hurt to set one */
+        c->event_queue = g_list_append(c->event_queue, iov);
 
     } else {
-        crm_trace("%s %d sent, %d bytes to %p[%d]: %.120s", type, header.id, rc,
-                  c->ipcs, c->pid, buffer);
+        CRM_LOG_ASSERT (request != 0);
+        header->id = request; /* Replying to a specific request */
+
+        rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
+        if(rc < header->size) {
+            crm_notice("Response %d to %p[%d] (%d bytes) failed: %s - %.120s",
+                       header->id, c->ipcs, c->pid, header->size, pcmk_strerror(rc), buffer);
+
+        } else {
+            crm_trace("Response %d sent, %d bytes to %p[%d]: %.120s",
+                      header->id, rc, c->ipcs, c->pid, buffer);
+        }
+        free(iov[0].iov_base);
+        free(iov[1].iov_base);
+        free(iov);
     }
-    free(buffer);
+
+    event_rc = crm_ipcs_flush_events(c);
+
+    if(rc == -EPIPE || rc == -ENOTCONN) {
+        crm_trace("Client %p disconnected", c->ipcs);
+    } else if(event_rc == -EPIPE || event_rc == -ENOTCONN) {
+        crm_trace("Client %p disconnected", c->ipcs);
+        rc = event_rc;
+    } else if(flags & crm_ipc_server_event) {
+        rc = event_rc;
+    }
+
     return rc;
 }
 
