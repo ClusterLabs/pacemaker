@@ -403,10 +403,13 @@ crm_ipcs_flush_events(crm_client_t *c)
     return rc;
 }
 
+static int pick_ipc_buffer(int max);
+
 ssize_t
 crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
 {
     static uint32_t id = 1;
+    static int max = 0;
 
     ssize_t rc = 0;
     ssize_t event_rc;
@@ -424,6 +427,15 @@ crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_
 
     header->error = 0; /* unused */
     header->size = iov[0].iov_len + iov[1].iov_len;
+
+    if(max == 0) {
+        max = pick_ipc_buffer(0);
+    }
+
+    if(header->size > max) {
+        crm_trace("Message size %d exceeds ipc max %d", header->size, max);
+        /* CRM_ASSERT(FALSE); /\* TODO: - Compress it *\/ */
+    }
 
     if(flags & crm_ipc_server_event) {
         header->id = id++;    /* We don't really use it, but doesn't hurt to set one */
@@ -458,6 +470,10 @@ crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_
         rc = event_rc;
     }
 
+    if(header->size > max) {
+        crm_err("Message size %d exceeds ipc max %d: %s (%d) ",
+                header->size, max, pcmk_strerror(rc<=0?rc:0), rc);
+    }
     return rc;
 }
 
