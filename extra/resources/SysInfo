@@ -245,7 +245,7 @@ SysInfo_hdd_units() {
 	[Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
 	[Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
 	[Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
-	[Mm]) echo SysInfo_megabytes "$1";;
+	[Mm]) echo $(SysInfo_megabytes "$1");;
 	[Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
 	[Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
 	*) 
