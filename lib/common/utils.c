@@ -2211,3 +2211,39 @@ crm_md5sum(const char *buffer)
     crm_trace("Digest %s\n", digest);
     return digest;
 }
+
+#include <time.h>
+#include <bzlib.h>
+
+bool crm_compress_string(
+    const char *data, int length, int max, char **result, unsigned int *result_len) 
+{
+    int rc;
+    char *compressed = NULL;
+    char *uncompressed = strdup(data);
+    struct timespec after_t;
+    struct timespec before_t;
+    
+    clock_gettime(CLOCK_MONOTONIC, &before_t);
+    /* coverity[returned_null] Ignore */
+    compressed = malloc(max);
+
+    *result_len = max;
+    rc = BZ2_bzBuffToBuffCompress(
+        compressed, result_len, uncompressed, length, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
+
+    free(uncompressed);
+
+    if (rc != BZ_OK) {
+        crm_err("Compression of %d bytes failed: %s (%d)", length, bz2_strerror(rc), rc);
+        free(compressed);
+        return FALSE;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &after_t);
+    crm_info("Compressed %d bytes into %d (ratio %d:1) in %dms",
+             length, *result_len, length/(*result_len),
+             (after_t.tv_sec-before_t.tv_sec)*1000 + (after_t.tv_nsec-before_t.tv_nsec)/1000000);
+    *result = compressed;
+    return TRUE;
+}

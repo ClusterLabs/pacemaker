@@ -201,6 +201,9 @@ char *crm_concat(const char *prefix, const char *suffix, char join);
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 
+bool crm_compress_string(
+    const char *data, int length, int max, char **result, unsigned int *result_len);
+
 /*! remote tcp/tls helper functions */
 typedef struct crm_remote_s crm_remote_t;
 

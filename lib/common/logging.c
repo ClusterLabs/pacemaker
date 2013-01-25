@@ -35,6 +35,7 @@
 #include <time.h>
 #include <libgen.h>
 #include <signal.h>
+#include <bzlib.h>
 
 #include <qb/qbdefs.h>
 
@@ -866,6 +867,38 @@ pcmk_strerror(int rc)
     return "Unknown error";
 }
 
+const char *
+bz2_strerror(int rc) 
+{
+    /* http://www.bzip.org/1.0.3/html/err-handling.html */
+    switch(rc) {
+        case BZ_OK:
+        case BZ_RUN_OK:
+        case BZ_FLUSH_OK:
+        case BZ_FINISH_OK:
+        case BZ_STREAM_END:
+            return "Ok";
+        case BZ_CONFIG_ERROR:
+            return "libbz2 has been improperly compiled on your platform";
+        case BZ_SEQUENCE_ERROR:
+            return "library functions called in the wrong order";
+        case BZ_PARAM_ERROR:
+            return "parameter is out of range or otherwise incorrect";
+        case BZ_MEM_ERROR:
+            return "memory allocation failed";
+        case BZ_DATA_ERROR:
+            return "data integrity error is detected during decompression";
+        case BZ_DATA_ERROR_MAGIC:
+            return "the compressed stream does not start with the correct magic bytes";
+        case BZ_IO_ERROR:
+            return "error reading or writing in the compressed file";
+        case BZ_UNEXPECTED_EOF:
+            return "compressed file finishes before the logical end of stream is detected";
+        case BZ_OUTBUFF_FULL:
+            return "output data will not fit into the buffer provided";
+    }
+    return "Unknown error";
+}
 
 void crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix, const char *output) 
 {

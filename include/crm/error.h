@@ -50,5 +50,6 @@
 #  define pcmk_err_diff_resync          1007
 
 const char *pcmk_strerror(int rc);
+const char *bz2_strerror(int rc);
 
 #endif

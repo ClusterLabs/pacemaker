@@ -44,6 +44,7 @@ enum crm_ipc_flags
 {
     crm_ipc_client_none     = 0x0000,
     crm_ipc_client_response = 0x0001, /* A Response is expected in reply */ 
+    crm_ipc_compressed      = 0x0002, /* Message has been compressed */
 };
 
 #include <qb/qbipcc.h>
