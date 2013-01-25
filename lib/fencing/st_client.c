@@ -184,6 +184,14 @@ create_device_registration_xml(const char *id, const char *namespace, const char
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
+#if HAVE_STONITH_STONITH_H
+    namespace = get_stonith_provider(agent, namespace);
+    if (safe_str_eq(namespace, "heartbeat")) {
+        hash2field((gpointer) "plugin", (gpointer) agent, args);
+        agent = "fence_legacy";
+    }
+#endif
+
     crm_xml_add(data, XML_ATTR_ID, id);
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, "agent", agent);
@@ -203,14 +211,6 @@ stonith_api_register_device(stonith_t * st, int call_options,
 {
     int rc = 0;
     xmlNode *data = NULL;
-
-#if HAVE_STONITH_STONITH_H
-    namespace = get_stonith_provider(agent, namespace);
-    if (safe_str_eq(namespace, "heartbeat")) {
-        stonith_key_value_add(params, "plugin", agent);
-        agent = "fence_legacy";
-    }
-#endif
 
     data = create_device_registration_xml(id, namespace, agent, params);
 
