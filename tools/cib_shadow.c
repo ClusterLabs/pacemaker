@@ -56,6 +56,22 @@ void print_xml_diff(FILE * where, xmlNode * diff);
 static int force_flag = 0;
 static int batch_flag = 0;
 
+static int
+print_spaces(char *buffer, int depth, int max) 
+{
+    int lpc = 0;
+    int spaces = 2*depth;
+    max--;
+       
+    /* <= so that we always print 1 space - prevents problems with syslog */
+    for(lpc = 0; lpc <= spaces && lpc < max; lpc++) {
+       if(sprintf(buffer+lpc, "%c", ' ') < 1) {
+           return -1;
+       }
+    }
+    return lpc;
+}
+
 static char *
 get_shadow_prompt(const char *name)
 {
@@ -479,8 +495,6 @@ main(int argc, char **argv)
 	}					\
 	(*offset) += len;			\
     } while(0)
-
-extern int print_spaces(char *buffer, int depth, int max);
 
 int
 dump_data_element(int depth, char **buffer, int *max, int *offset, const char *prefix,

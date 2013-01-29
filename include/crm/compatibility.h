@@ -223,6 +223,13 @@ slist_basic_destroy(GListPtr list)
 
 #  define zap_xml_from_parent(parent, xml_obj) free_xml(xml_obj); xml_obj = NULL
 
+/* For ABI compatability with version < 1.1.4 */
+static inline char *
+calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+{
+    return calculate_xml_digest_v1(input, sort, do_filter);
+}
+
 static inline void free_xml_from_parent(xmlNode * parent, xmlNode * a_node)
 {
     free_xml(a_node);

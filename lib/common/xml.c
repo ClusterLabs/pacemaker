@@ -56,11 +56,12 @@
 
 enum xml_log_options 
 {
-    xml_log_option_formatted  = 0x01,
-    xml_log_option_diff_plus  = 0x02,
-    xml_log_option_diff_minus = 0x04,
-    xml_log_option_diff_short = 0x10,
-    xml_log_option_diff_all   = 0x20,
+    xml_log_option_filtered   = 0x001,
+    xml_log_option_formatted  = 0x002,
+    xml_log_option_diff_plus  = 0x010,
+    xml_log_option_diff_minus = 0x020,
+    xml_log_option_diff_short = 0x040,
+    xml_log_option_diff_all   = 0x100,
 };
 
 void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
@@ -105,11 +106,11 @@ static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
 
-					      typedef struct  
-					      {
-						      int found;
-						      const char *string;
-					      } filter_t;
+typedef struct  
+{
+        int found;
+        const char *string;
+} filter_t;
 					      
 static filter_t filter[] = {
     { 0, XML_ATTR_ORIGIN },
@@ -118,6 +119,41 @@ static filter_t filter[] = {
     { 0, XML_ATTR_UPDATE_CLIENT },
     { 0, XML_ATTR_UPDATE_USER },
 };
+
+#define CHUNK_SIZE 4096
+
+#define buffer_print(buffer, max, offset, fmt, args...) do {            \
+        int rc;                                                         \
+        if((buffer) == NULL) {                                          \
+            (buffer) = malloc(CHUNK_SIZE);                              \
+        }                                                               \
+        rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
+        if(rc < 0) {                                                    \
+            crm_perror(LOG_ERR, "snprintf failed");                     \
+            (buffer)[(offset)] = 0;                                     \
+            return;                                                     \
+        } else if(rc >= ((max) - (offset))) {                           \
+            (max) += CHUNK_SIZE;                                        \
+            (buffer) = realloc((buffer), (max) + 1);                    \
+        } else {                                                        \
+            offset += rc;                                               \
+            break;                                                      \
+        }                                                               \
+    } while(1);
+
+static void
+insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
+{
+    if(options & xml_log_option_formatted) {
+        size_t spaces = 2 * depth;
+        if(spaces >= ((*max) - (*offset))) {
+            (*max) += CHUNK_SIZE;
+            (*buffer) = realloc((*buffer), (*max) + 1);
+        }
+        memset((*buffer) + (*offset), ' ', spaces);
+        (*offset) += spaces;
+    }
+}
 
 static char *get_schema_path(const char *file) 
 {
@@ -130,8 +166,6 @@ static char *get_schema_path(const char *file)
     }
     return crm_concat(base, file, '/');
 }
-
-int print_spaces(char *buffer, int spaces, int max);
 
 int get_tag_name(const char *input, size_t offset, size_t max);
 int get_attr_name(const char *input, size_t offset, size_t max);
@@ -909,124 +943,88 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
     add_node_copy(holder, xml);
     return TRUE;
 }
-
-static char *
-dump_xml(xmlNode *an_xml_node, gboolean formatted, gboolean for_digest)
-{
-    int len = 0;
-    char *buffer = NULL;
-    xmlBuffer *xml_buffer = NULL;
-    xmlDoc *doc = getDocPtr(an_xml_node);
-
-    /* doc will only be NULL if an_xml_node is */
-    CRM_CHECK(doc != NULL, return NULL);
-
-    xml_buffer = xmlBufferCreate();
-    CRM_ASSERT(xml_buffer != NULL);
     
-    len = xmlNodeDump(xml_buffer, doc, an_xml_node, 0, formatted);
+static inline void
+dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max)
+{
+    bool changed = FALSE;
+    char *iter = NULL;
+    char *p_value = NULL;
+    const char *p_name = (const char *)attr->name;
 
-    if(len > 0) {
-	/* The copying here isn't ideal, but it doesn't even register
-	 * in the perf numbers
-	 */
-	if(for_digest) {
-	    /* for compatability with the old result which is used for digests */
-	    len += 3;
-	    buffer = calloc(1, len);
-	    snprintf(buffer, len, " %s\n", (char *)xml_buffer->content);
-	} else {
-	    buffer = strdup((char *)xml_buffer->content);	    
-	}
-
-    } else {
-	crm_err("Conversion failed");
+    if(attr == NULL || attr->children == NULL) {
+	return;
     }
 
-    xmlBufferFree(xml_buffer);
-    return buffer;    
-}
+    p_value = strdup((const char*)attr->children->content);
+    iter = p_value;
 
-char *
-dump_xml_formatted(xmlNode *an_xml_node)
-{
-    return dump_xml(an_xml_node, TRUE, FALSE);
-}
-
-char *
-dump_xml_unformatted(xmlNode *an_xml_node)
-{
-    return dump_xml(an_xml_node, FALSE, FALSE);
-}
-    
-#define update_buffer() do {						\
-	if(printed < 0) {						\
-	    crm_perror(LOG_ERR,"snprintf failed");			\
-	    goto print;							\
-	} else if(printed >= (buffer_len - offset)) {			\
-	    crm_err("Output truncated: available=%d, needed=%d", buffer_len - offset, printed);	\
-	    offset += printed;						\
-	    goto print;							\
-	} else if(offset >= buffer_len) {				\
-	    crm_err("Buffer exceeded");					\
-	    offset += printed;						\
-	    goto print;							\
-	} else {							\
-	    offset += printed;						\
-	}								\
-    } while(0)
-
-int
-print_spaces(char *buffer, int depth, int max) 
-{
-    int lpc = 0;
-    int spaces = 2*depth;
-    max--;
-	
-    /* <= so that we always print 1 space - prevents problems with syslog */
-    for(lpc = 0; lpc <= spaces && lpc < max; lpc++) {
-	if(sprintf(buffer+lpc, "%c", ' ') < 1) {
-	    return -1;
-	}
+    /*
+     * When xmlCtxtReadDoc() parses &lt; and friends in a
+     * value, it converts them to their human readable
+     * form.
+     *
+     * If one uses xmlNodeDump() to convert it back to a
+     * string, all is well, because special characters are
+     * converted back to their escape sequences.
+     *
+     * However xmlNodeDump() is randomly dog slow, even
+     * with the same input. So here we cheat and
+     * substitute []'s for <>'s so that the result can be
+     * re-parsed by xmlCtxtReadDoc() when necessary.
+     */
+    while(iter && iter[0]) {
+        switch(iter[0]) {
+            case '<': iter[0] = '['; changed = TRUE; break;
+            case '>': iter[0] = ']'; changed = TRUE; break;
+            case '"': iter[0] = '\''; changed = TRUE; break;
+        }
+        iter++;
     }
-    return lpc;
+    if(changed) {
+        crm_trace("Dumped %s as '%s'", p_name, p_value);
+    }
+    buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
+    free(p_value);
 }
 
-int
+void
 log_data_element(
     int log_level, const char *file, const char *function, int line,
     const char *prefix, xmlNode *data, int depth, int options)
 {
     xmlNode *a_child = NULL;
 
+    int max = 0;
     int offset = 0;
-    int printed = 0;
     char *buffer = NULL;
     char *prefix_m = NULL;
-    int buffer_len = 1000;
 
     xmlAttrPtr pIter = NULL;
     const char *name = NULL;
     const char *hidden = NULL;
 
-    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
-    if(data == NULL) {
-        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, ": No data to dump as XML");
-	return 0;
-    }
-
     if(prefix == NULL) {
         prefix = "";
     }
+    
+    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
+    if(data == NULL) {
+        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, ": No data to dump as XML");
+	return;
+
+    } else if(is_set(options, xml_log_option_diff_short) && is_not_set(options, xml_log_option_diff_all)) {
+        /* Still searching for the actual change */
+        for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+            log_data_element(
+                log_level, file, function, line, prefix, a_child, depth+1, options);
+        }
+        return;
+    }
 
     name = crm_element_name(data);
-    CRM_ASSERT(name != NULL);
-	
-    /* crm_trace("Dumping %s", name); */
-    buffer = calloc(1, buffer_len);
-	
+
     if(is_set(options, xml_log_option_formatted)) {
-	offset = print_spaces(buffer, depth, buffer_len - offset);
         if(is_set(options, xml_log_option_diff_plus) && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
             options |= xml_log_option_diff_all;
             prefix_m = strdup(prefix);
@@ -1041,27 +1039,15 @@ log_data_element(
         }
     }
 
-    if(is_set(options, xml_log_option_diff_short) && is_not_set(options, xml_log_option_diff_all)) {
-        /* Still searching for the actual change */
-        for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
-            log_data_element(
-                log_level, file, function, line, prefix, a_child, depth+1, options);
-        }
-        goto done;
-    }
+    insert_prefix(options, &buffer, &offset, &max, depth);
+    buffer_print(buffer, max, offset, "<%s", name);
 
-    printed = snprintf(buffer + offset, buffer_len - offset, "<%s", name);
-    update_buffer();
-	
     hidden = crm_element_value(data, "hidden");
     for(pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
         const char *p_value = crm_attr_value(pIter);
             
-	if(p_name == NULL || strcmp(F_XML_TAGNAME, p_name) == 0) {
-	    continue;
-
-        } else if((is_set(options, xml_log_option_diff_plus) || is_set(options, xml_log_option_diff_minus))
+        if((is_set(options, xml_log_option_diff_plus) || is_set(options, xml_log_option_diff_minus))
                   && strcmp(XML_DIFF_MARKER, p_name) == 0) {
             continue;
 
@@ -1070,45 +1056,167 @@ log_data_element(
 		  && strstr(hidden, p_name) != NULL) {
 	    p_value = "*****";
 	}
-		
-	/* crm_trace("Dumping <%s %s=\"%s\"...", */
-	/* 	    name, prop_name, prop_value); */
-	printed = snprintf(buffer + offset, buffer_len - offset,
-			   " %s=\"%s\"", p_name, p_value);
-	update_buffer();
+
+        buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_value);
     }
 
-    printed = snprintf(buffer + offset, buffer_len - offset,
-		       " %s>", xml_has_children(data)?"":"/");
-    update_buffer();
-	
-  print:
-    do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
-	
-    if(xml_has_children(data) == FALSE) {
-        free(prefix_m);
-	free(buffer);
-	return 0;
+    if(xml_has_children(data)) {
+        buffer_print(buffer, max, offset, ">");
+    } else {
+        buffer_print(buffer, max, offset, "/>");
     }
-
-    for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
-	log_data_element(
-	    log_level, file, function, line, prefix, a_child, depth+1, options);
-    }
-
-    if(is_set(options, xml_log_option_formatted)) {
-	offset = print_spaces(buffer, depth, buffer_len);
-    }
-
-    printed = snprintf(buffer + offset, buffer_len - offset, "</%s>", name);
-    update_buffer();
-
+    
     do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
 
-  done:
+    if(data->children) {
+        offset = 0; max = 0;
+        free(buffer); buffer = NULL;
+
+        for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+            log_data_element(
+                log_level, file, function, line, prefix, a_child, depth+1, options);
+        }
+        
+        insert_prefix(options, &buffer, &offset, &max, depth);
+        buffer_print(buffer, max, offset, "</%s>", name);
+
+        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
+    }
+    
     free(prefix_m);
     free(buffer);
-    return 1;
+}
+
+static void
+dump_filtered_xml(xmlNode *data, int options, char **buffer, int *offset, int *max)
+{
+    int lpc;
+    xmlAttrPtr xIter = NULL;
+    static int filter_len = DIMOF(filter);
+
+    for(lpc = 0; options && lpc < filter_len; lpc++){
+        filter[lpc].found = FALSE;
+    }
+
+    for(xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
+        bool skip = FALSE;
+        const char *p_name = (const char *)xIter->name;
+
+        for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
+            if(filter[lpc].found == FALSE && strcmp(p_name, filter[lpc].string) == 0) {
+                filter[lpc].found = TRUE;
+                skip = TRUE;
+                break;
+            }
+        }
+
+        if(skip == FALSE) {
+            dump_xml_attr(xIter, options, buffer, offset, max);
+        }
+    }
+}
+
+static void
+dump_xml(xmlNode *data, int options, char **buffer, int *offset, int *max, int depth)
+{
+    const char *name = NULL;
+
+    CRM_ASSERT(max != NULL);
+    CRM_ASSERT(offset != NULL);
+    CRM_ASSERT(buffer != NULL);
+    
+    if(data == NULL) {
+        crm_trace("Nothing to dump");
+        return;
+    }
+
+    if(*buffer == NULL) {
+        /* *buffer = malloc(CHUNK_SIZE+1); */
+        *offset = 0;
+        *max = 0;
+    }
+
+    name = crm_element_name(data);
+    CRM_ASSERT(name != NULL);
+
+    insert_prefix(options, buffer, offset, max, depth);
+    buffer_print(*buffer, *max, *offset, "<%s", name);
+
+    if(options & xml_log_option_filtered) {
+        dump_filtered_xml(data, options, buffer, offset, max);
+
+    } else {
+        xmlAttrPtr xIter = NULL;
+        for(xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
+            dump_xml_attr(xIter, options, buffer, offset, max);
+        }
+    }
+
+    if(data->children == NULL) {
+        buffer_print(*buffer, *max, *offset, "/>");
+
+    } else {
+        buffer_print(*buffer, *max, *offset, ">");
+    }
+
+    if(options & xml_log_option_formatted) {
+        buffer_print(*buffer, *max, *offset, "\n");
+    }
+    
+    if(data->children) {
+        xmlNode *xChild = NULL;
+
+        for(xChild = __xml_first_child(data); xChild != NULL; xChild = __xml_next(xChild)) {
+            dump_xml(xChild, options, buffer, offset, max, depth+1);
+        }
+
+        insert_prefix(options, buffer, offset, max, depth);
+        buffer_print(*buffer, *max, *offset, "</%s>", name);
+
+        if(options & xml_log_option_formatted) {
+            buffer_print(*buffer, *max, *offset, "\n");
+        }
+    }
+}
+
+static void
+fix_digest_buffer(char **buffer, int *offset, int *max, char c)
+{
+    buffer_print(*buffer, *max, *offset, "%c", c);
+}
+
+static char *
+dump_xml_for_digest(xmlNode *an_xml_node)
+{
+    char *buffer = NULL;
+    int offset = 0, max = 0;
+
+    /* for compatability with the old result which is used for v1 digests */
+    fix_digest_buffer(&buffer, &offset, &max, ' ');
+    dump_xml(an_xml_node, 0, &buffer, &offset, &max, 0);
+    fix_digest_buffer(&buffer, &offset, &max, '\n');
+
+    return buffer;
+}
+
+char *
+dump_xml_formatted(xmlNode *an_xml_node)
+{
+    char *buffer = NULL;
+    int offset = 0, max = 0;
+
+    dump_xml(an_xml_node, xml_log_option_formatted, &buffer, &offset, &max, 0);
+    return buffer;
+}
+
+char *
+dump_xml_unformatted(xmlNode *an_xml_node)
+{
+    char *buffer = NULL;
+    int offset = 0, max = 0;
+
+    dump_xml(an_xml_node, 0, &buffer, &offset, &max, 0);
+    return buffer;
 }
 
 gboolean
@@ -2023,43 +2131,22 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     return result;
 }
 
-static void
-filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive) 
-{
-    int lpc = 0;
-    xmlNode *child = NULL;
-    
-    for(lpc = 0; lpc < filter_len; lpc++) {
-	xml_remove_prop(data, filter[lpc].string);
-    }
-
-    if(recursive == FALSE || filter_len == 0) {
-	return;
-    }
-    
-    for(child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-	filter_xml(child, filter, filter_len, recursive);
-    }
-}
-
 /* "c048eae664dba840e1d2060f00299e9d" */
 static char *
-calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
+calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
 {
     char *digest = NULL;
-    xmlNode *copy = NULL;
     char *buffer = NULL;
+    xmlNode *copy = NULL;
 
-    if(sort || do_filter) {
+    if(sort) {
+        crm_trace("Sorting xml...");
 	copy = sorted_xml(input, NULL, TRUE);
+        crm_trace("Done");
 	input = copy;
     }
 
-    if(do_filter) {
-	filter_xml(input, filter, DIMOF(filter), TRUE);
-    }
-
-    buffer = dump_xml(input, FALSE, TRUE);
+    buffer = dump_xml_for_digest(input);
     CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy); free(buffer); return NULL);
 
     digest = crm_md5sum(buffer);
@@ -2070,88 +2157,6 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
     return digest;
 }
 
-#define CHUNK_SIZE 1024
-
-#define buffer_print(buffer, max, offset, fmt, args...) do {            \
-        int rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
-        if(rc < 0) {                                                    \
-            crm_perror(LOG_ERR,"snprintf failed");                      \
-            (buffer)[(offset)] = 0;                                     \
-            return;                                                     \
-        } else if(rc >= ((max) - (offset))) {                           \
-            max += CHUNK_SIZE;                                          \
-            (buffer) = realloc((buffer), (max) + 1);                    \
-        } else {                                                        \
-            offset += rc;                                               \
-            break;                                                      \
-        }                                                               \
-    } while(1);
-
-
-static void
-dump_xml_filtered(xmlNode *data, int options, char **buffer, int *offset, int *max)
-{
-    xmlNode *xChild = NULL;
-    xmlAttrPtr xIter = NULL;
-
-    int lpc;
-    const char *name = NULL;
-    static int filter_len = DIMOF(filter);
-
-    CRM_ASSERT(max != NULL);
-    CRM_ASSERT(offset != NULL);
-    CRM_ASSERT(buffer != NULL);
-    
-    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
-    if(data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
-    if(*buffer == NULL) {
-        *buffer = malloc(CHUNK_SIZE+1);
-        *offset = 0;
-        *max = CHUNK_SIZE;
-    }
-    
-    name = crm_element_name(data);
-    CRM_ASSERT(name != NULL);
-	
-    buffer_print(*buffer, *max, *offset, "<%s", name);
-	
-    for(lpc = 0; options && lpc < filter_len; lpc++){
-	filter[lpc].found = FALSE;
-    }
-
-    for(xIter = crm_first_attr(data); xIter != NULL; xIter = xIter->next) {
-	bool skip = FALSE;
-        const char *p_name = (const char *)xIter->name;
-
-	for(lpc = 0; options && skip == FALSE && lpc < filter_len; lpc++){
-	    if(filter[lpc].found == FALSE && strcmp(p_name, filter[lpc].string) == 0) {
-		filter[lpc].found = TRUE;
-		skip = TRUE;
-		break;
-	    }
-	}
-
-        if(skip == FALSE) {
-            const char *p_value = crm_attr_value(xIter);
-            buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
-        }
-    }
-
-    if(xml_has_children(data) == FALSE) {
-        buffer_print(*buffer, *max, *offset, "/>");
-
-    } else {
-        buffer_print(*buffer, *max, *offset, ">");
-        for(xChild = __xml_first_child(data); xChild != NULL; xChild = __xml_next(xChild)) {
-            dump_xml_filtered(xChild, options, buffer, offset, max);
-        }
-        buffer_print(*buffer, *max, *offset, "</%s>", name);
-    }
-}
 
 static char *
 calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
@@ -2177,7 +2182,7 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 	 */
 	
     } else {
-        dump_xml_filtered(source, do_filter, &buffer, &offset, &max);
+        dump_xml(source, do_filter?xml_log_option_filtered:0, &buffer, &offset, &max, 0);
     }
 
     CRM_ASSERT(buffer != NULL);
@@ -2220,12 +2225,6 @@ calculate_operation_digest(xmlNode *input, const char *version)
 {
     /* We still need the sorting for parameter digests */
     return calculate_xml_digest_v1(input, TRUE, FALSE);
-}
-
-char *
-calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
-{
-    return calculate_xml_digest_v1(input, sort, do_filter);
 }
 
 char *

@@ -191,9 +191,6 @@ void xml_validate(const xmlNode * root);
 
 gboolean xml_has_children(const xmlNode * root);
 
-/* For ABI compatability with version < 1.1.4 */
-char *calculate_xml_digest(xmlNode * local_cib, gboolean sort, gboolean do_filter);
-
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,

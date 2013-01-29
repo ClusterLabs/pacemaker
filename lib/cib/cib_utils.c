@@ -422,7 +422,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     static char *last_digest = NULL;
     static unsigned int dtd_throttle = 0;
 
-    crm_trace("Begin %s%s op", is_query?"read-only":"", op);
+    crm_trace("Begin %s%s op", is_query?"read-only ":"", op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
