@@ -49,6 +49,19 @@ struct crm_ipc_response_header
 };
 
 static int hdr_offset = 0;
+static int ipc_buffer_max = 0;
+static int pick_ipc_buffer(int max);
+
+static inline void
+crm_ipc_init(void) 
+{
+    if(hdr_offset == 0) {
+        hdr_offset = sizeof(struct crm_ipc_response_header);
+    }
+    if(ipc_buffer_max == 0) {
+        ipc_buffer_max = pick_ipc_buffer(0);
+    }
+}
 
 static char *
 generateReference(const char *custom1, const char *custom2)
@@ -428,9 +441,6 @@ crm_ipcs_flush_events(crm_client_t *c)
     return rc;
 }
 
-static int ipc_buffer_max = 0;
-static int pick_ipc_buffer(int max);
-
 ssize_t
 crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
 {
@@ -446,9 +456,7 @@ crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_
 
     iov = calloc(2, sizeof(struct iovec));
 
-    if(hdr_offset == 0) {
-        hdr_offset = sizeof(struct crm_ipc_response_header);
-    }
+    crm_ipc_init();
 
     iov[0].iov_len = hdr_offset;
     iov[0].iov_base = header;
@@ -724,6 +732,44 @@ crm_ipc_ready(crm_ipc_t *client)
     return poll(&(client->pfd), 1, 0);
 }
 
+static int
+crm_ipc_decompress(crm_ipc_t *client) 
+{
+    struct crm_ipc_response_header * header = (struct crm_ipc_response_header *)client->buffer;
+    if(header->flags & crm_ipc_compressed) {
+        int rc = 0;
+        unsigned int size_u = 1 + header->size_uncompressed;
+        char *uncompressed = calloc(1, hdr_offset + size_u);
+
+        crm_info("Decompressing message data %d bytes into %d bytes",
+                 header->size_compressed, size_u);
+
+        rc = BZ2_bzBuffToBuffDecompress(
+            uncompressed + hdr_offset, &size_u,
+            client->buffer + hdr_offset, header->size_compressed,
+            1, 0);
+
+        if(rc != BZ_OK) {
+            crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
+            free(uncompressed);
+            return -EREMOTEIO;
+        }
+
+        CRM_ASSERT(header->size_uncompressed >  ipc_buffer_max);
+        CRM_ASSERT(size_u == header->size_uncompressed);
+
+        memcpy(uncompressed, client->buffer, hdr_offset); /* Preserve the header */
+        header = (struct crm_ipc_response_header *)uncompressed;
+
+        free(client->buffer);
+        client->buf_size = hdr_offset + size_u;
+        client->buffer = uncompressed;
+    }
+
+    CRM_ASSERT(client->buffer[hdr_offset + header->size_uncompressed - 1] == 0);
+    return pcmk_ok;
+}
+
 long
 crm_ipc_read(crm_ipc_t *client) 
 {
@@ -733,48 +779,17 @@ crm_ipc_read(crm_ipc_t *client)
     CRM_ASSERT(client->ipc != NULL);
     CRM_ASSERT(client->buffer != NULL);
 
-    if(hdr_offset == 0) {
-        hdr_offset = sizeof(struct crm_ipc_response_header);
-    }
-    if(ipc_buffer_max == 0) {
-        ipc_buffer_max = pick_ipc_buffer(0);
-    
-}
+    crm_ipc_init();
+
     client->buffer[0] = 0;
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size-1, 0);
     if(client->msg_size >= 0) {
-        header = (struct crm_ipc_response_header *)client->buffer;
-        if(header->flags & crm_ipc_compressed) {
-            int rc = 0;
-            unsigned int size_u = 1 + header->size_uncompressed;
-            char *uncompressed = calloc(1, hdr_offset + size_u);
-
-            crm_info("Decompressing message data %d bytes into %d bytes",
-                     header->size_compressed, size_u);
-
-            rc = BZ2_bzBuffToBuffDecompress(
-                uncompressed + hdr_offset, &size_u,
-                client->buffer + hdr_offset, header->size_compressed,
-                1, 0);
-
-            if(rc != BZ_OK) {
-                crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
-                free(uncompressed);
-                return -EREMOTEIO;
-            }
-
-            CRM_ASSERT(header->size_uncompressed >  ipc_buffer_max);
-            CRM_ASSERT(size_u == header->size_uncompressed);
-
-            memcpy(uncompressed, client->buffer, hdr_offset); /* Preserve the header */
-            header = (struct crm_ipc_response_header *)uncompressed;
-
-            free(client->buffer);
-            client->buf_size = hdr_offset + size_u;
-            client->buffer = uncompressed;
+        int rc = crm_ipc_decompress(client);
+        if(rc != pcmk_ok) {
+            return rc;
         }
 
-        CRM_ASSERT(client->buffer[hdr_offset + header->size_uncompressed - 1] == 0);
+        header = (struct crm_ipc_response_header *)client->buffer;
         crm_trace("Recieved %s event %d, size=%d, rc=%d, text: %.100s",
                   client->name, header->qb.id, header->qb.size, client->msg_size,
                   client->buffer+hdr_offset);
@@ -837,14 +852,22 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout)
     time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
     int rc = 0;
 
+    crm_ipc_init();
+
     /* get the reply */
     crm_trace("client %s waiting on reply to msg id %d", client->name, request_id);
     do {
 
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
         if(rc > 0) {
-            struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)client->buffer;
+            struct crm_ipc_response_header *hdr = NULL;
 
+            int rc = crm_ipc_decompress(client);
+            if(rc != pcmk_ok) {
+                return rc;
+            }
+
+            hdr = (struct crm_ipc_response_header *)client->buffer;
             if(hdr->qb.id == request_id) {
                 /* Got it */
                 break;
@@ -877,6 +900,8 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
     static uint32_t id = 0;
     struct crm_ipc_request_header header;
     char *buffer = NULL;
+
+    crm_ipc_init();
 
     if(client == NULL) {
         crm_notice("Invalid connection");
@@ -927,6 +952,7 @@ crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int3
             crm_trace("Failed to send from client %s request %d with %u bytes: %.200s...",
                 client->name, header.qb.id, header.qb.size, buffer);
             goto send_cleanup;
+
         } else if(is_not_set(flags, crm_ipc_client_response)) {
             crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes: %.200s...",
                       header.qb.id, client->name, header.qb.size, buffer);
