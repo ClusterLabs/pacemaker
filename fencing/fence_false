@@ -86,7 +86,7 @@ def main():
     ## Defaults for fence agent
     docs = { }
     docs["shortdesc"] = "Fake fence agent"
-    docs["longdesc"] = "fence_true is a fake Fencing agent which always reports success without doing anything."
+    docs["longdesc"] = "fence_true is a fake Fencing agent which always reports failure without doing anything."
     show_docs(options, docs)
 
     ## Operate the fencing device
