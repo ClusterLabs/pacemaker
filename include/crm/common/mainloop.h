@@ -57,8 +57,6 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
 
 void mainloop_del_ipc_server(qb_ipcs_service_t *server);
 
-typedef struct mainloop_io_s mainloop_io_t;
-
 mainloop_io_t *mainloop_add_ipc_client(
     const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
 
