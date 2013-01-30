@@ -227,7 +227,7 @@ do_cl_join_finalize_respond(long long action,
 
     /* send our status section to the DC */
     crm_debug("Confirming join join-%d: %s", join_id, crm_element_value(input->msg, F_CRM_TASK));
-    tmp1 = do_lrm_query(TRUE);
+    tmp1 = do_lrm_query(TRUE, fsa_our_uname);
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
                                         CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);

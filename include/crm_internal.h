@@ -212,6 +212,11 @@ int crm_remote_ready(crm_remote_t *remote, int total_timeout /*ms */);
 gboolean crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnected);
 xmlNode *crm_remote_parse_buffer(crm_remote_t *remote);
 int crm_remote_tcp_connect(const char *host, int port);
+int crm_remote_tcp_connect_async(const char *host,
+    int port,
+    int timeout, /*ms*/
+    void *userdata,
+    void (*callback)(void *userdata, int sock));
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 /*!

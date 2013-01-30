@@ -85,7 +85,6 @@ extern volatile enum crmd_fsa_state fsa_state;
 extern volatile long long fsa_input_register;
 extern volatile long long fsa_actions;
 
-extern lrmd_t *fsa_lrm_conn;
 extern cib_t *fsa_cib_conn;
 
 extern char *fsa_our_uname;
