@@ -99,15 +99,6 @@ crmd_ha_msg_filter(xmlNode * msg)
     trigger_fsa(fsa_source);
 }
 
-extern gboolean process_lrm_event(lrmd_event_data_t * op);
-
-void
-lrm_op_callback(lrmd_event_data_t * op)
-{
-    CRM_CHECK(op != NULL, return);
-    process_lrm_event(op);
-}
-
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {

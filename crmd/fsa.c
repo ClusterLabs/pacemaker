@@ -41,7 +41,6 @@ char *fsa_our_dc = NULL;
 cib_t *fsa_cib_conn = NULL;
 char *fsa_our_dc_version = NULL;
 
-lrmd_t *fsa_lrm_conn;
 char *fsa_our_uuid = NULL;
 char *fsa_our_uname = NULL;
 
