@@ -35,7 +35,7 @@
 #include <arpa/inet.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#define LRMD_REMOTE_AUTH_TIMEOUT 3000
+#define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
 static int ssock = 0;

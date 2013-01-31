@@ -64,6 +64,8 @@ cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
 static int exec_call_opts = 0;
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
+static gboolean start_test(gpointer user_data);
+static void try_connect(void);
 
 static struct {
     int verbose;
@@ -155,20 +157,39 @@ timeout_err(gpointer data)
 }
 
 static void
+connection_events(lrmd_event_data_t * event)
+{
+    int rc = event->connection_rc;
+
+    if (event->type != lrmd_event_connect) {
+        /* ignore */
+        return;
+    }
+
+    if (!rc) {
+        crm_info("lrmd client connection established");
+        start_test(NULL);
+        return;
+    } else {
+        sleep(1);
+        try_connect();
+        crm_notice("lrmd client connection failed");
+    }
+}
+
+static void
 try_connect(void)
 {
     int tries = 10;
-    int i = 0;
+    static int num_tries = 0;
     int rc = 0;
 
-    for (i = 0; i < tries; i++) {
-        rc = lrmd_conn->cmds->connect(lrmd_conn, "lrmd", NULL);
+    lrmd_conn->cmds->set_callback(lrmd_conn, connection_events);
+    for (; num_tries < tries; num_tries++) {
+        rc = lrmd_conn->cmds->connect_async(lrmd_conn, "lrmd", 3000);
 
         if (!rc) {
-            crm_info("lrmd client connection established");
-            return;
-        } else {
-            crm_info("lrmd client connection failed");
+            return; /* we'll hear back in async callback */
         }
         sleep(1);
     }
@@ -183,7 +204,11 @@ start_test(gpointer user_data)
     int rc = 0;
 
     if (!options.no_connect) {
-        try_connect();
+        if (!lrmd_conn->cmds->is_connected(lrmd_conn)) {
+            try_connect();
+            /* async connect, this funciton will get called back into. */
+            return 0;
+        }
     }
     lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
 
@@ -568,7 +593,7 @@ main(int argc, char **argv)
     }
 
     if (use_tls) {
-        lrmd_conn = lrmd_remote_api_new("localhost", 0);
+        lrmd_conn = lrmd_remote_api_new(NULL, "localhost", 0);
     } else {
         lrmd_conn = lrmd_api_new();
     }
