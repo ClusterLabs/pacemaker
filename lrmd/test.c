@@ -568,7 +568,7 @@ main(int argc, char **argv)
     }
 
     if (use_tls) {
-        lrmd_conn = lrmd_remote_api_new("localhost", 0);
+        lrmd_conn = lrmd_remote_api_new(NULL, "localhost", 0);
     } else {
         lrmd_conn = lrmd_api_new();
     }

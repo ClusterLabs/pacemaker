@@ -34,7 +34,7 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 crmd_SOURCES	= main.c crmd.c corosync.c					\
 		fsa.c control.c messages.c membership.c callbacks.c		\
 		election.c join_client.c join_dc.c subsystems.c 	\
-		cib.c pengine.c tengine.c lrm.c 			\
+		cib.c pengine.c tengine.c lrm.c lrm_state.c			\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
 if BUILD_HEARTBEAT_SUPPORT

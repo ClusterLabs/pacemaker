@@ -94,8 +94,14 @@ lrmd_t *lrmd_api_new(void);
 
 /*!
  * \brief Create a new remote lrmd connection using tls backend
+ *
+ * \note nodename and server may be the same value.
+ *
+ * \param nodename, the remote node name identified with this connection.
+ * \param server, the server to connect to.
+ * \param port, the port to connect to.
  */
-lrmd_t *lrmd_remote_api_new(const char *server, int port);
+lrmd_t *lrmd_remote_api_new(const char *nodename, const char *server, int port);
 
 /*!
  * \brief Use after lrmd_poll returns 1.
@@ -203,6 +209,11 @@ typedef struct lrmd_event_data_s {
     /* This is a GHashTable containing the
      * parameters given to the operation */
     void *params;
+
+    /* If this is a remote connection, this is the remote node name
+     * registered for the connection. */
+    const char *remote_nodename;
+
 } lrmd_event_data_t;
 
 lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t *event);
