@@ -385,12 +385,12 @@ crm_ipcs_flush_events(crm_client_t *c)
     int queue_len = 0;
 
     if(c == NULL) {
-        return FALSE;
+        return pcmk_ok;
 
     } else if(c->event_timer) {
         /* There is already a timer, wait until it goes off */
         crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
-        return FALSE;
+        return pcmk_ok;
     }
 
     queue_len = g_list_length(c->event_queue);
@@ -442,18 +442,18 @@ crm_ipcs_flush_events(crm_client_t *c)
 }
 
 ssize_t
-crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
+crm_ipcs_prepare(uint32_t request, xmlNode *message, struct iovec **result) 
 {
-    static uint32_t id = 1;
     static int biggest = 0;
 
-    ssize_t rc = 0;
-    ssize_t event_rc;
     struct iovec *iov;
+    unsigned int total = 0;
     char *compressed = NULL;
     char *buffer = dump_xml_unformatted(message);
     struct crm_ipc_response_header *header = calloc(1, sizeof(struct crm_ipc_response_header));
 
+    CRM_ASSERT(result != NULL);
+    
     iov = calloc(2, sizeof(struct iovec));
 
     crm_ipc_init();
@@ -462,45 +462,41 @@ crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_
     iov[0].iov_base = header;
 
     header->size_uncompressed = 1 + strlen(buffer);
-    iov[1].iov_len = header->size_uncompressed;
-    iov[1].iov_base = buffer;
+    total = hdr_offset + header->size_uncompressed;
 
-    header->qb.size = iov[0].iov_len + iov[1].iov_len;
+    if(total < ipc_buffer_max) {
+        iov[1].iov_base = buffer;
+        iov[1].iov_len = header->size_uncompressed;
 
-    if(ipc_buffer_max == 0) {
-        ipc_buffer_max = pick_ipc_buffer(0);
-    }
-
-    if(header->qb.size > ipc_buffer_max) {
+    } else {
         unsigned int new_size = 0;
 
-        iov[1].iov_base = NULL;
+        if(total > biggest) {
+            biggest = 2*QB_MAX(total, biggest);
+            crm_notice("Message exceeds the configured ipc limit (%d bytes), "
+                       "consider configuring PCMK_ipc_buffer to %d or higher "
+                       "to avoid compression overheads",
+                       ipc_buffer_max, biggest);
+        }
+
         if(crm_compress_string(
-               buffer, iov[1].iov_len, ipc_buffer_max, &compressed, &new_size)) {
+               buffer, header->size_uncompressed, ipc_buffer_max, &compressed, &new_size)) {
 
             header->flags |= crm_ipc_compressed;
-
             header->size_compressed = new_size;
+
             iov[1].iov_len = header->size_compressed;
             iov[1].iov_base = compressed;
 
-            if(header->qb.size > biggest) {
-                biggest = 2*QB_MAX(header->qb.size, biggest);
-                crm_info("Message size %d exceeds the configured ipc limit (%d bytes), "
-                         "consider configuring PCMK_ipc_buffer with a higher value "
-                         "to avoid compression overheads",
-                         iov[0].iov_len + header->size_uncompressed, ipc_buffer_max);
-            }
-
-            header->qb.size = iov[0].iov_len + iov[1].iov_len;
+            free(buffer);
 
         } else {
-            rc = -EMSGSIZE;
-            biggest = 2 * QB_MAX(header->qb.size, biggest);
-            crm_notice("Response %d to %p[%d] (%d bytes) failed: %s - %.120s",
-                       header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), buffer);
-            crm_err("Compressed message size exceeds the configured ipc limit (%d bytes), "
-                    "configure PCMK_ipc_buffer with a higher value (%d bytes suggested)",
+            ssize_t rc = -EMSGSIZE;
+
+            crm_log_xml_trace(message, "EMSGSIZE");
+
+            crm_err("Could not compress the message into less than the configured ipc limit (%d bytes)."
+                    "Set PCMK_ipc_buffer to a higher value (%d bytes suggested)",
                     ipc_buffer_max, biggest);
 
             free(compressed);
@@ -512,42 +508,88 @@ crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_
         }
     }
 
+    header->qb.size = iov[0].iov_len + iov[1].iov_len;
+    header->qb.id = request; /* Replying to a specific request */
+
+    *result = iov;
+    return header->qb.size;
+}
+
+ssize_t
+crm_ipcs_sendv(crm_client_t *c, struct iovec *iov, enum crm_ipc_server_flags flags)
+{
+    ssize_t rc;
+    static uint32_t id = 1;
+    struct crm_ipc_response_header *header = iov[0].iov_base;
+
     if(flags & crm_ipc_server_event) {
         header->qb.id = id++;    /* We don't really use it, but doesn't hurt to set one */
-        c->event_queue = g_list_append(c->event_queue, iov);
-        if(compressed) {
-            free(buffer);
+
+        if(flags & crm_ipc_server_free) {
+            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+            c->event_queue = g_list_append(c->event_queue, iov);
+
+        } else {
+            struct iovec *iov_copy = calloc(2, sizeof(struct iovec));
+
+            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            iov_copy[0].iov_len = iov[0].iov_len;
+            iov_copy[0].iov_base = malloc(iov[0].iov_len);
+            memcpy(iov_copy[0].iov_base,iov[0].iov_base, iov[0].iov_len);
+
+            iov_copy[1].iov_len = iov[1].iov_len;
+            iov_copy[1].iov_base = malloc(iov[1].iov_len);
+            memcpy(iov_copy[1].iov_base,iov[1].iov_base, iov[1].iov_len);
+
+            c->event_queue = g_list_append(c->event_queue, iov_copy);            
         }
 
     } else {
-        CRM_LOG_ASSERT (request != 0);
-        header->qb.id = request; /* Replying to a specific request */
+        CRM_LOG_ASSERT (header->qb.id != 0); /* Replying to a specific request */
 
         rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if(rc < header->qb.size) {
-            crm_notice("Response %d to %p[%d] (%d bytes) failed: %s - %.120s",
-                       header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), buffer);
+            crm_notice("Response %d to %p[%d] (%d bytes) failed: %s (%d)",
+                       header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
 
         } else {
-            crm_trace("Response %d sent, %d bytes to %p[%d]: %.120s",
-                      header->qb.id, rc, c->ipcs, c->pid, buffer);
+            crm_trace("Response %d sent, %d bytes to %p[%d]",
+                      header->qb.id, rc, c->ipcs, c->pid);
         }
 
-        free(compressed);
-        free(header);
-        free(buffer);
-        free(iov);
+        if(header->flags & crm_ipc_server_free) {
+            free(iov[0].iov_base);
+            free(iov[1].iov_base);
+            free(iov);
+        }
     }
 
-    event_rc = crm_ipcs_flush_events(c);
+
+    if(flags & crm_ipc_server_event) {
+        rc = crm_ipcs_flush_events(c);
+    } else {
+        crm_ipcs_flush_events(c);
+    }
 
     if(rc == -EPIPE || rc == -ENOTCONN) {
         crm_trace("Client %p disconnected", c->ipcs);
-    } else if(event_rc == -EPIPE || event_rc == -ENOTCONN) {
-        crm_trace("Client %p disconnected", c->ipcs);
-        rc = event_rc;
-    } else if(flags & crm_ipc_server_event) {
-        rc = event_rc;
+    }
+
+    return rc;
+}
+
+ssize_t
+crm_ipcs_send(crm_client_t *c, uint32_t request, xmlNode *message, enum crm_ipc_server_flags flags)
+{
+    struct iovec *iov = NULL;
+    ssize_t rc = crm_ipcs_prepare(request, message, &iov);
+
+    if(rc > 0) {
+        rc = crm_ipcs_sendv(c, iov, flags|crm_ipc_server_free);
+
+    } else {
+        crm_notice("Message to %p[%d] failed: %s (%d)",
+                   c->ipcs, c->pid, pcmk_strerror(rc), rc);
     }
 
     return rc;
