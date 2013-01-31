@@ -358,7 +358,7 @@ lrm_state_verify_stopped(lrm_state_t *lrm_state, enum crmd_fsa_state cur_state, 
     if (lrm_state->pending_ops) {
         if (lrm_state_is_connected(lrm_state) == TRUE) {
             /* Only log/complain about non-recurring actions */
-            g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_actions, NULL);
+            g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_actions, lrm_state);
         }
         g_hash_table_foreach(lrm_state->pending_ops, ghash_count_pending, &counter);
     }
