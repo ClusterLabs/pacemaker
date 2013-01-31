@@ -217,11 +217,18 @@ lrm_op_callback(lrmd_event_data_t * op)
 
     CRM_CHECK(op != NULL, return);
 
-    /* determine if this is a callback for a remote or local connection */
+    /* determine the node name for this connection. */
     nodename = op->remote_nodename ? op->remote_nodename : fsa_our_uname;
     lrm_state = lrm_state_find(nodename);
 
     CRM_ASSERT(lrm_state != NULL);
+
+    if (op->type == lrmd_event_disconnect && (safe_str_eq(lrm_state->node_name, fsa_our_uname))) {
+        lrm_connection_destroy();
+        return;
+    } else if (op->type != lrmd_event_exec_complete) {
+        return;
+    }
 
     process_lrm_event(lrm_state, op);
 }
@@ -239,7 +246,7 @@ do_lrm_control(long long action,
 
     lrm_state_t *lrm_state = NULL;
 
-    lrm_state = lrm_state_find_or_create_local(fsa_our_uname);
+    lrm_state = lrm_state_find_or_create(fsa_our_uname);
     if (lrm_state == NULL) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         return;
@@ -254,7 +261,7 @@ do_lrm_control(long long action,
         }
 
         clear_bit(fsa_input_register, R_LRM_CONNECTED);
-        lrm_state->conn->cmds->disconnect(lrm_state->conn);
+        lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state);
         crm_notice("Disconnected from the LRM");
     }
@@ -263,10 +270,10 @@ do_lrm_control(long long action,
         int ret = pcmk_ok;
 
         crm_debug("Connecting to the LRM");
-        ret = lrm_state->conn->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
+        ret = lrm_state_ipc_connect(lrm_state);
 
         if (ret != pcmk_ok) {
-            if (++lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
+            if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
                 crm_warn("Failed to sign on to the LRM %d"
                          " (%d max) times", lrm_state->num_lrm_register_fails, MAX_LRM_REG_FAILS);
 
@@ -349,8 +356,7 @@ lrm_state_verify_stopped(lrm_state_t *lrm_state, enum crmd_fsa_state cur_state, 
     }
 
     if (lrm_state->pending_ops) {
-        /* TODO check if the state connection is connected, not if fsa bit is set */
-        if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
+        if (lrm_state_is_connected(lrm_state) == TRUE) {
             /* Only log/complain about non-recurring actions */
             g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_actions, NULL);
         }
@@ -409,7 +415,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
     }
 
     crm_trace("Retreiving metadata for %s::%s:%s", type, class, provider);
-    lrm_state->conn->cmds->get_metadata(lrm_state->conn, class, provider, type, &metadata, 0);
+    lrm_state_get_metadata(lrm_state, class, provider, type, &metadata, 0);
 
     if (metadata) {
         /* copy the metadata because the LRM likes using
@@ -996,7 +1002,7 @@ cancel_op(lrm_state_t *lrm_state, const char *rsc_id, const char *key, int op, g
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
 
-    rc = lrm_state->conn->cmds->cancel(lrm_state->conn,
+    rc = lrm_state_cancel(lrm_state, 
         pending->rsc_id,
         pending->op_type,
         pending->interval);
@@ -1074,9 +1080,10 @@ get_lrm_resource(lrm_state_t *lrm_state, xmlNode * resource, xmlNode * op_msg, g
     crm_trace("Retrieving %s from the LRM.", id);
     CRM_CHECK(id != NULL, return NULL);
 
-    rsc = lrm_state->conn->cmds->get_rsc_info(lrm_state->conn, id, 0);
+    rsc = lrm_state_get_rsc_info(lrm_state, id, 0);
+
     if (!rsc && long_id) {
-        rsc = lrm_state->conn->cmds->get_rsc_info(lrm_state->conn, long_id, 0);
+        rsc = lrm_state_get_rsc_info(lrm_state, long_id, 0);
     }
 
     if (!rsc && do_create) {
@@ -1085,10 +1092,10 @@ get_lrm_resource(lrm_state_t *lrm_state, xmlNode * resource, xmlNode * op_msg, g
 
         crm_trace("Adding rsc %s before operation", id);
 
-        lrm_state->conn->cmds->register_rsc(lrm_state->conn,
+        lrm_state_register_rsc(lrm_state,
             id, class, provider, type, lrmd_opt_drop_recurring);
 
-        rsc = lrm_state->conn->cmds->get_rsc_info(lrm_state->conn, id, 0);
+        rsc = lrm_state_get_rsc_info(lrm_state, id, 0);
 
         if (!rsc) {
             fsa_data_t *msg_data = NULL;
@@ -1116,7 +1123,7 @@ delete_resource(lrm_state_t *lrm_state,
     crm_info("Removing resource %s for %s (%s) on %s", id, sys, user ? user : "internal", host);
 
     if (rsc) {
-        rc = lrm_state->conn->cmds->unregister_rsc(lrm_state->conn, id, 0);
+        rc = lrm_state_unregister_rsc(lrm_state, id, 0);
     }
 
     if (rc == pcmk_ok) {
@@ -1698,14 +1705,13 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t * rsc, const char *operati
         }
     }
 
-    call_id = lrm_state->conn->cmds->exec(lrm_state->conn,
+    call_id = lrm_state_exec(lrm_state,
         rsc->id,
         op->op_type,
         op->user_data,
         op->interval,
         op->timeout,
         op->start_delay,
-        lrmd_opt_notify_changes_only,
         params);
 
     if (call_id <= 0) {
@@ -1878,18 +1884,11 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t * op)
 
     CRM_CHECK(op != NULL, return FALSE);
 
-    if (op->type == lrmd_event_disconnect) {
-        lrm_connection_destroy();
-        return TRUE;
-    } else if (op->type != lrmd_event_exec_complete) {
-        return TRUE;
-    }
-
     CRM_CHECK(op->rsc_id != NULL, return FALSE);
     op_id = make_stop_id(op->rsc_id, op->call_id);
     pending = g_hash_table_lookup(lrm_state->pending_ops, op_id);
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
-    rsc = lrm_state->conn->cmds->get_rsc_info(lrm_state->conn, op->rsc_id, 0);
+    rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
 
     switch (op->op_status) {
         case PCMK_LRM_OP_ERROR:

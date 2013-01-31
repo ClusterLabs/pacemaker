@@ -81,6 +81,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_RSC_UNREG         "lrmd_rsc_unregister"
 #define LRMD_OP_RSC_INFO          "lrmd_rsc_info"
 #define LRMD_OP_RSC_METADATA      "lrmd_rsc_metadata"
+#define LRMD_OP_POKE              "lrmd_rsc_poke"
 
 #define T_LRMD           "lrmd"
 #define T_LRMD_REPLY     "lrmd_reply"
@@ -150,6 +151,8 @@ enum lrmd_callback_event {
     lrmd_event_unregister,
     lrmd_event_exec_complete,
     lrmd_event_disconnect,
+    lrmd_event_connect,
+    lrmd_event_poke,
 };
 
 enum lrmd_exec_rc {
@@ -206,12 +209,17 @@ typedef struct lrmd_event_data_s {
     /*! Time in length spent in queue */
     unsigned int queue_time;
 
+    /*! int connection result. Used for connection and poke events*/
+    int connection_rc;
+
     /* This is a GHashTable containing the
      * parameters given to the operation */
     void *params;
 
-    /* If this is a remote connection, this is the remote node name
-     * registered for the connection. */
+    /* client node name associated with this conneciton.
+     * This is useful if multiple clients are being utilized by
+     * a single process. This name allows the actions to be matched
+     * to the proper client. */
     const char *remote_nodename;
 
 } lrmd_event_data_t;
@@ -237,6 +245,7 @@ typedef struct lrmd_list_s {
 } lrmd_list_t;
 
 void lrmd_list_freeall(lrmd_list_t *head);
+void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
 typedef struct lrmd_api_operations_s
 {
@@ -247,6 +256,35 @@ typedef struct lrmd_api_operations_s
      * \retval negative error code on failure
      */
     int (*connect) (lrmd_t *lrmd, const char *client_name, int *fd);
+
+    /*!
+     * \brief Establish an connection to lrmd, don't block while connecting.
+     * \note this function requires the use of mainloop.
+     *
+     * \note The is returned using the event callback.
+     * \note When this function returns 0, the callback will be invoked
+     *       to report the final result of the connect.
+     * \retval 0, connect in progress, wait for event callback
+     * \retval -1, failure.
+     */
+    int (*connect_async) (lrmd_t *lrmd, const char *client_name, int timeout /*ms */);
+
+    /*!
+     * \brief Is connected to lrmd daemon?
+     *
+     * \retval 0, false
+     * \retval 1, true
+     */
+    int (*is_connected) (lrmd_t *lrmd);
+
+    /*!
+     * \brief Poke lrmd connection to verify it is still capable of serving requests
+     * \note The response comes in the form of a poke event to the callback. 
+     *
+     * \retval 0, wait for response in callback
+     * \retval -1, connection failure, callback may not be invoked
+     */
+    int (*poke_connection) (lrmd_t *lrmd);
 
     /*!
      * \brief Disconnect from the lrmd.
@@ -459,6 +497,10 @@ lrmd_event_type2str(enum lrmd_callback_event type)
         return "exec_complete";
     case lrmd_event_disconnect:
         return "disconnect";
+    case lrmd_event_connect:
+        return "connect";
+    case lrmd_event_poke:
+        return "poke";
     }
     return "unknown";
 }

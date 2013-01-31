@@ -37,6 +37,7 @@
 
 #include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
+#include <crm/common/mainloop.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
@@ -635,14 +636,190 @@ crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnect
     return FALSE;
 }
 
+struct tcp_async_cb_data {
+    gboolean success;
+    int sock;
+    void *userdata;
+    void (*callback)(void *userdata, int sock);
+    int timeout; /*ms*/
+    time_t start;
+};
+
+static gboolean
+check_connect_finished(gpointer userdata)
+{
+    struct tcp_async_cb_data *cb_data = userdata;
+    int rc = 0;
+    int sock = cb_data->sock;
+    int error = 0;
+
+    fd_set  rset, wset;
+    socklen_t len = sizeof(error);
+    struct timeval  ts = { 0, };
+
+    if (cb_data->success == TRUE) {
+        goto dispatch_done;
+    }
+
+    FD_ZERO(&rset);
+    FD_SET(sock, &rset);
+    wset = rset;
+
+    crm_trace("fd %d: checking to see if connect finished", sock);
+    rc = select(sock + 1, &rset, &wset, NULL, &ts);
+
+    if (rc < 0) {
+        rc = errno;
+        if ((errno == EINPROGRESS) || (errno == EAGAIN)) {
+            /* reschedule if there is still time left */
+            if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
+                goto reschedule;
+            } else {
+                rc = -ETIMEDOUT;
+            }
+        }
+        crm_trace("fd %d: select failed %d connect dispatch ", rc);
+        goto dispatch_done;
+    } else if (rc == 0) {
+        if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
+            goto reschedule;
+        }
+        crm_err("fd %d: timeout during select", sock);
+        rc = -ETIMEDOUT;
+        goto dispatch_done;
+    } else {
+        crm_trace("fd %d: select returned success", sock);
+        rc = 0;
+    }
+
+    /* can we read or write to the socket now? */
+    if (FD_ISSET(sock, &rset) || FD_ISSET(sock, &wset)) {
+        if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+            crm_trace("fd %d: call to getsockopt failed", sock);
+            rc = -1;
+            goto dispatch_done;
+        }
+
+        if (error) {
+            crm_trace("fd %d: error returned from getsockopt: %d", sock, error);
+            rc = -1;
+            goto dispatch_done;
+        }
+    } else {
+        crm_trace("neither read nor write set after select");
+        rc = -1;
+        goto dispatch_done;
+    }
+
+dispatch_done:
+    if (!rc) {
+        crm_trace("fd %d: connected", sock);
+        /* Success, set the return code to the sock to report to the callback */
+        rc = cb_data->sock;
+        cb_data->sock = 0;
+    } else {
+        close(sock);
+    }
+    free(cb_data);
+
+    if (cb_data->callback) {
+        cb_data->callback(cb_data->userdata, rc);
+    }
+    return FALSE;
+
+reschedule:
+
+    /* will check again next interval */
+    return TRUE;
+}
+
+static int
+internal_tcp_connect_async(int sock,
+    const struct sockaddr *addr,
+    socklen_t addrlen,
+    int timeout /* ms */,
+    void *userdata,
+    void (*callback)(void *userdata, int sock))
+{
+    int rc = 0;
+    int flag = 0;
+    int interval;
+    struct tcp_async_cb_data *cb_data = NULL;
+
+    if ((flag = fcntl(sock, F_GETFL)) >= 0) {
+        if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
+            crm_err( "fcntl() write failed");
+            return -1;
+        }
+    }
+
+    rc = connect(sock, addr, addrlen);
+
+    if (rc <  0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
+        return -1;
+    }
+
+    cb_data = calloc(1, sizeof(struct tcp_async_cb_data));
+    cb_data->userdata = userdata;
+    cb_data->callback = callback;
+    cb_data->sock = sock;
+    cb_data->timeout = timeout;
+    cb_data->start = time(NULL);
+
+    if (rc == 0) {
+        /* The connect was successful immediately, we still return to mainloop
+         * and let this callback get called later. This avoids the user of this api
+         * to have to account for the fact the callback could be invoked within this
+         * function before returning. */
+        cb_data->success = TRUE;
+        interval = 1;
+    }
+
+    /* Check connect finished is mostly doing a non-block poll on the socket
+     * to see if we can read/write to it. Once we can, the connect has completed.
+     * This method allows us to connect to the server without blocking mainloop.
+     *
+     * This is a poor man's way of polling to see when the connection finished.
+     * At some point we should figure out a way to use a mainloop fd callback for this.
+     * Something about the way mainloop is currently polling prevents this from working at the
+     * moment though. */
+    crm_trace("fd %d: scheduling to check if connect finished in %dms second", sock, interval);
+    g_timeout_add(interval, check_connect_finished, cb_data);
+
+    return 0;
+}
+
+static int
+internal_tcp_connect(int sock,
+    const struct sockaddr *addr,
+    socklen_t addrlen)
+{
+    int flag = 0;
+    int rc = connect(sock, addr, addrlen);
+
+    if (rc == 0) {
+       if ((flag = fcntl(sock, F_GETFL)) >= 0) {
+           if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
+               crm_err( "fcntl() write failed");
+               return -1;
+           }
+        }
+    }
+
+    return rc;
+}
+
 /*!
  * \internal
  * \brief tcp connection to server at specified port
- * \retval positive, socket fd.
  * \retval negative, failed to connect.
  */
 int
-crm_remote_tcp_connect(const char *host, int port)
+crm_remote_tcp_connect_async(const char *host,
+    int port,
+    int timeout, /*ms*/
+    void *userdata,
+    void (*callback)(void *userdata, int sock))
 {
     struct addrinfo *res;
     struct addrinfo *rp;
@@ -671,7 +848,6 @@ crm_remote_tcp_connect(const char *host, int port)
 
     for (rp = res; rp != NULL; rp = rp->ai_next) {
         struct sockaddr *addr = rp->ai_addr;
-        int flag = 0;
         if (!addr) {
             continue;
         }
@@ -696,16 +872,15 @@ crm_remote_tcp_connect(const char *host, int port)
             crm_info("Attempting to connect to remote server at %s:%d", inet_ntoa(addr_in->sin_addr), port);
         }
 
-        if (connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
-            if ((flag = fcntl(sock, F_GETFL)) >= 0) {
-                if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-                    crm_err( "fcntl() write failed");
-                    close(sock);
-                    sock = -1;
-                    continue;
-                }
+        if (callback) {
+            if (internal_tcp_connect_async(sock, rp->ai_addr, rp->ai_addrlen, timeout, userdata, callback) == 0) {
+                return 0;  /* Success for now, we'll hear back later in the callback */
             }
-            break;                  /* Success */
+
+        } else {
+            if (internal_tcp_connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
+                break;                  /* Success */
+            }
         }
 
         close(sock);
@@ -716,3 +891,8 @@ crm_remote_tcp_connect(const char *host, int port)
     return sock;
 }
 
+int
+crm_remote_tcp_connect(const char *host, int port)
+{
+    return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL);
+}

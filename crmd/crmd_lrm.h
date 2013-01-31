@@ -46,7 +46,8 @@ struct recurring_op_s {
 
 typedef struct lrm_state_s {
     const char *node_name;
-    lrmd_t *conn;
+    void *conn;
+    void *remote_ra_data;
 
     GHashTable *resource_history;
     GHashTable *pending_ops;
@@ -78,9 +79,9 @@ gboolean lrm_state_init_local(void);
 void lrm_state_destroy_all(void);
 
 /*!
- * \brief Create remote lrmd connection entry.
+ * \brief Create lrmd connection entry.
  */
-lrm_state_t *lrm_state_create_remote(const char *node_name, const char *server, int port);
+lrm_state_t *lrm_state_create(const char *node_name);
 
 /*!
  * \brief Destroy lrmd connection keyed of node name
@@ -93,8 +94,67 @@ void lrm_state_destroy(const char *node_name);
 lrm_state_t *lrm_state_find(const char *node_name);
 
 /*!
- * \brief Either find or create a new entry for the local
- *        ipc lrmd connection.
+ * \brief Either find or create a new entry
  */
-lrm_state_t *lrm_state_find_or_create_local(const char *node_name);
+lrm_state_t *lrm_state_find_or_create(const char *node_name);
 
+
+/*!
+ * The functions below are wrappers for the lrmd api calls the crmd
+ * uses.  These wrapper functions allow us to treat the crmd's remote
+ * lrmd connection resources the same as regular resources.  Internally
+ * Regular resources go to the lrmd, and remote connection resources are
+ * handled locally in the crmd.
+ */
+void lrm_state_disconnect(lrm_state_t *lrm_state);
+int lrm_state_ipc_connect(lrm_state_t *lrm_state);
+int lrm_state_remote_connect_async(lrm_state_t *lrm_state, const char *server, int port, int timeout);
+int lrm_state_is_connected(lrm_state_t *lrm_state);
+int lrm_state_poke_connection(lrm_state_t *lrm_state);
+
+int lrm_state_get_metadata (lrm_state_t *lrm_state,
+        const char *class,
+        const char *provider,
+        const char *agent,
+        char **output,
+        enum lrmd_call_options options);
+int lrm_state_cancel(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    const char *action,
+    int interval);
+int lrm_state_exec(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    const char *action,
+    const char *userdata,
+    int interval, /* ms */
+    int timeout, /* ms */
+    int start_delay, /* ms */
+    lrmd_key_value_t *params);
+lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    enum lrmd_call_options options);
+int lrm_state_register_rsc(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    const char *class,
+    const char *provider,
+    const char *agent,
+    enum lrmd_call_options options);
+int lrm_state_unregister_rsc(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    enum lrmd_call_options options);
+
+/*! These functions are used to manage the remote lrmd connection resources */
+void remote_lrm_op_callback(lrmd_event_data_t * op);
+gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
+int remote_ra_get_metadata(char **output);
+lrmd_rsc_info_t * remote_ra_get_rsc_info(lrm_state_t *lrm_state, const char *rsc_id);
+int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action, int interval);
+int remote_ra_exec(lrm_state_t *lrm_state,
+    const char *rsc_id,
+    const char *action,
+    const char *userdata,
+    int interval, /* ms */
+    int timeout, /* ms */
+    int start_delay, /* ms */
+    lrmd_key_value_t *params);
+void remote_ra_cleanup(lrm_state_t *lrm_state);
