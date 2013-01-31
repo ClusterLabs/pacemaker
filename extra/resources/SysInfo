@@ -80,7 +80,7 @@ Units:
 
 <parameters>
 
-<parameter name="pidfile" unique="0">
+<parameter name="pidfile" unique="1">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
 <content type="string" default="$OCF_RESKEY_pidfile" />
@@ -92,17 +92,21 @@ Units:
 <content type="string" default="0s" />
 </parameter>
 
-<parameter name="disks" unique="1">
+<parameter name="disks" unique="0">
 <longdesc lang="en">
-Filesystems or Paths to be queried for free disk space as a SPACE separated list - e.g "/dev/sda1 /tmp".
-Results will be written to an attribute with leading slashes removed, and other slashes replaced with underscore, and the word 'free' appended - e.g /dev/sda1 -> dev_sda1_free
-Note: The root filesystem '/' is always queried to an attribute named 'root_free'
+Filesystems or Paths to be queried for free disk space as a SPACE
+separated list - e.g "/dev/sda1 /tmp".
+Results will be written to an attribute with leading slashes
+removed, and other slashes replaced with underscore, and the word
+'free' appended - e.g for /dev/sda1 it would be 'dev_sda1_free'.
+Note: The root filesystem '/' is always queried to an attribute
+named 'root_free'
 </longdesc>
 <shortdesc lang="en">List of Filesytems/Paths to query for free disk space</shortdesc>
 <content type="string" />
 </parameter>
 
-<parameter name="disk_unit" unique="1">
+<parameter name="disk_unit" unique="0">
 <longdesc lang="en">
 Unit to report disk free space in.
 Can be one of: B, K, M, G, T, P (case-insensitive)
@@ -111,11 +115,23 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 <content type="string" default="G"/>
 </parameter>
 
+<parameter name="min_disk_free" unique="0">
+<longdesc lang="en">
+The amount of free space required in monitored disks. If any
+of the monitored disks has less than this amount of free space,
+all resources will move away from the node. Set the node-health-strategy
+property appropriately for this to take effect.
+If the unit is not specified, it defaults to disk_unit.
+</longdesc>
+<shortdesc lang="en">minimum disk free space required</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
 
 </parameters>
 <actions>
-<action name="start"   timeout="90" />
-<action name="stop"    timeout="100" />
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
 <action name="monitor" timeout="20s" interval="60s"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
@@ -201,7 +217,12 @@ SysInfoStats() {
 	disk_free=`df -h ${disk} | tail -1 | awk '{print $4}'`
 	if [ x != x"$disk_free" ]; then
 	    disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
-	    UpdateStat ${disk_label}_free `SysInfo_hdd_units $disk_free`
+	    disk_free=`SysInfo_hdd_units $disk_free`
+	    UpdateStat ${disk_label}_free $disk_free
+	    if [ -n "$MIN_FREE" ]; then
+		test $disk_free -le $MIN_FREE &&
+		    UpdateStat "#health_disk" "red"
+	    fi
 	fi
     done
 }
@@ -241,7 +262,7 @@ SysInfo_hdd_units() {
 	[Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
 	[Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
 	[Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
-	[Mm]) echo SysInfo_megabytes "$1";;
+	[Mm]) echo $(SysInfo_megabytes "$1");;
 	[Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
 	[Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
 	*) 
@@ -307,6 +328,12 @@ fi
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
+fi
+MIN_FREE=""
+if [ -n "$OCF_RESKEY_min_disk_free" ]; then
+	ocf_is_decimal "$OCF_RESKEY_min_disk_free" &&
+		OCF_RESKEY_min_disk_free="$OCF_RESKEY_min_disk_free$OCF_RESKEY_disk_unit"
+    MIN_FREE=`SysInfo_hdd_units $OCF_RESKEY_min_disk_free`
 fi
 
 case $__OCF_ACTION in
