@@ -1478,7 +1478,7 @@ main(int argc, char **argv)
                 crm_perror(LOG_ERR, "Could not open %s for writing", graph_file);
 
             } else {
-                if (fprintf(graph_strm, "%s\n\n", msg_buffer) < 0) {
+                if (fprintf(graph_strm, "%s\n", msg_buffer) < 0) {
                     crm_perror(LOG_ERR, "Write to %s failed", graph_file);
                 }
                 fflush(graph_strm);
