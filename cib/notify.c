@@ -41,7 +41,12 @@
 
 int pending_updates = 0;
 
-gboolean cib_notify_client(gpointer key, gpointer value, gpointer user_data);
+struct cib_notification_s 
+{
+        xmlNode *msg;
+        struct iovec *iov;
+};
+
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
 void do_cib_notify(int options, const char *op, xmlNode * update,
@@ -71,24 +76,24 @@ need_post_notify(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-gboolean
-cib_notify_client(gpointer key, gpointer value, gpointer user_data)
+static gboolean
+cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
     gboolean do_send = FALSE;
 
     crm_client_t *client = value;
-    xmlNode *update_msg = user_data;
+    struct cib_notification_s *update = user_data;
 
     CRM_CHECK(client != NULL, return TRUE);
-    CRM_CHECK(update_msg != NULL, return TRUE);
+    CRM_CHECK(update != NULL, return TRUE);
 
     if (client->ipcs == NULL && client->remote == NULL) {
         crm_warn("Skipping client with NULL channel");
         return FALSE;
     }
 
-    type = crm_element_value(update_msg, F_SUBTYPE);
+    type = crm_element_value(update->msg, F_SUBTYPE);
 
     CRM_LOG_ASSERT(type != NULL);
     if (is_set(client->options, cib_notify_diff) && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
@@ -110,20 +115,47 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
     if (do_send) {
         switch(client->kind) {
             case CRM_CLIENT_IPC:
-                if(crm_ipcs_send(client, 0, update_msg, TRUE) == FALSE) {
+                if(crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
             case CRM_CLIENT_TLS:
             case CRM_CLIENT_TCP:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
-                crm_remote_send(client->remote, update_msg);
+                crm_remote_send(client->remote, update->msg);
                 break;
             default:
                 crm_err("Unknown transport %d for %s", client->kind, client->name);
         }
     }
     return FALSE;
+}
+
+static void cib_notify_send(xmlNode *xml)
+{
+    struct iovec *iov;
+    struct cib_notification_s update;
+
+    ssize_t rc = crm_ipcs_prepare(0, xml, &iov);
+
+    crm_trace("Notifying clients");
+
+    if(rc > 0) {
+        update.msg = xml;
+        update.iov = iov;
+        g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
+
+    } else {
+        crm_notice("Notification failed: %s (%d)", pcmk_strerror(rc), rc);
+    }
+        
+    if(iov) {
+        free(iov[0].iov_base);
+        free(iov[1].iov_base);
+        free(iov);
+    }
+
+    crm_trace("Notify complete");
 }
 
 void
@@ -170,7 +202,7 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
         add_message_xml(update_msg, F_CIB_UPDATE, update);
     }
 
-    g_hash_table_foreach_remove(client_connections, cib_notify_client, update_msg);
+    cib_notify_send(update_msg);
 
     if (update == NULL) {
         crm_trace("Performing operation %s (on section=%s)", op, type);
@@ -280,11 +312,10 @@ do_cib_notify(int options, const char *op, xmlNode * update,
         add_message_xml(update_msg, F_CIB_UPDATE_RESULT, result_data);
     }
 
-    crm_trace("Notifying clients");
-    g_hash_table_foreach_remove(client_connections, cib_notify_client, update_msg);
+    cib_notify_send(update_msg);
     free_xml(update_msg);
-    crm_trace("Notify complete");
 }
+
 
 void
 attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
@@ -340,6 +371,6 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
 
     crm_log_xml_trace(replace_msg, "CIB Replaced");
 
-    g_hash_table_foreach_remove(client_connections, cib_notify_client, replace_msg);
+    cib_notify_send(replace_msg);
     free_xml(replace_msg);
 }
