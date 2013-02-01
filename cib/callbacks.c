@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <grp.h>
 
 #include <stdlib.h>
 #include <errno.h>
