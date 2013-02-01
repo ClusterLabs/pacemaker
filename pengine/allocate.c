@@ -184,23 +184,11 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     char *key = NULL;
     int interval = 0;
     const char *interval_s = NULL;
-
+    const op_digest_cache_t *digest_data = NULL;
     gboolean did_change = FALSE;
 
-    xmlNode *params_all = NULL;
-    xmlNode *params_restart = NULL;
-    GHashTable *local_rsc_params = NULL;
-
-    char *digest_all_calc = NULL;
-    const char *digest_all = NULL;
-
-    const char *restart_list = NULL;
-    const char *digest_restart = NULL;
-    char *digest_restart_calc = NULL;
-
-    action_t *action = NULL;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    const char *op_version;
 
     CRM_CHECK(active_node != NULL, return FALSE);
     if (safe_str_eq(task, RSC_STOP)) {
@@ -209,11 +197,11 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     interval = crm_parse_int(interval_s, "0");
-    /* we need to reconstruct the key because of the way we used to construct resource IDs */
-    key = generate_op_key(rsc->id, task, interval);
 
     if (interval > 0) {
         xmlNode *op_match = NULL;
+        /* we need to reconstruct the key because of the way we used to construct resource IDs */
+        key = generate_op_key(rsc->id, task, interval);
 
         pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
@@ -228,27 +216,9 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             free(key);
             return TRUE;
         }
+        free(key);
+        key = NULL;
     }
-
-    action = custom_action(rsc, key, task, active_node, TRUE, FALSE, data_set);
-    /* key is free'd by custom_action() */
-
-    local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                             g_hash_destroy_str, g_hash_destroy_str);
-
-    get_rsc_attributes(local_rsc_params, rsc, active_node, data_set);
-
-    params_all = create_xml_node(NULL, XML_TAG_PARAMS);
-    g_hash_table_foreach(local_rsc_params, hash2field, params_all);
-    g_hash_table_foreach(action->extra, hash2field, params_all);
-    g_hash_table_foreach(rsc->parameters, hash2field, params_all);
-    g_hash_table_foreach(action->meta, hash2metafield, params_all);
-
-    filter_action_parameters(params_all, op_version);
-    digest_all_calc = calculate_operation_digest(params_all, op_version);
-    digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
-    digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
-    restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
     if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
@@ -259,36 +229,32 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         task = RSC_START;
     }
 
-    if (digest_restart) {
-        /* Changes that force a restart */
-        params_restart = copy_xml(params_all);
-        if (restart_list) {
-            filter_reload_parameters(params_restart, restart_list);
-        }
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
+    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
-        digest_restart_calc = calculate_operation_digest(params_restart, op_version);
-        if (safe_str_neq(digest_restart_calc, digest_restart)) {
-            did_change = TRUE;
-            key = generate_op_key(rsc->id, task, interval);
-            crm_log_xml_info(params_restart, "params:restart");
-            crm_info("Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
-                     key, active_node->details->uname,
-                     crm_str(digest_restart), digest_restart_calc,
-                     op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-
-            custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-            goto cleanup;
-        }
-    }
-
-    if (safe_str_neq(digest_all_calc, digest_all)) {
-        /* Changes that can potentially be handled by a reload */
+    /* Changes that force a restart */
+    if (digest_data->rc == RSC_DIGEST_RESTART) {
+        const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
         did_change = TRUE;
-        crm_log_xml_info(params_all, "params:reload");
+        key = generate_op_key(rsc->id, task, interval);
+        crm_log_xml_info(digest_data->params_restart, "params:restart");
+        crm_info("Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
+                 key, active_node->details->uname,
+                 crm_str(digest_restart), digest_data->digest_restart_calc,
+                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+
+        custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+
+    } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
+        /* Changes that can potentially be handled by a reload */
+        const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
+        const char *digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+        did_change = TRUE;
+        crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
         crm_info("Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
                  key, active_node->details->uname,
-                 crm_str(digest_all), digest_all_calc, op_version,
+                 crm_str(digest_all), digest_data->digest_all_calc, op_version,
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         if (interval > 0) {
@@ -322,15 +288,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
         }
     }
-
-  cleanup:
-    free_xml(params_all);
-    free_xml(params_restart);
-    free(digest_all_calc);
-    free(digest_restart_calc);
-    g_hash_table_destroy(local_rsc_params);
-
-    pe_free_action(action);
 
     return did_change;
 }

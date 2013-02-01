@@ -156,6 +156,9 @@ pe_free_nodes(GListPtr nodes)
             if (details->utilization != NULL) {
                 g_hash_table_destroy(details->utilization);
             }
+            if (details->digest_cache != NULL) {
+                g_hash_table_destroy(details->digest_cache);
+            }
             g_list_free(details->running_rsc);
             g_list_free(details->allocated_rsc);
             free(details);

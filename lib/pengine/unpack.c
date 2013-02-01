@@ -190,6 +190,17 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void
+destroy_digest_cache(gpointer ptr)
+{
+    op_digest_cache_t *data = ptr;
+    free_xml(data->params_all);
+    free_xml(data->params_restart);
+    free(data->digest_all_calc);
+    free(data->digest_restart_calc);
+    free(data);
+}
+
 gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
@@ -253,6 +264,10 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             new_node->details->utilization =
                 g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                                       g_hash_destroy_str);
+
+            new_node->details->digest_cache =
+                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+                                      destroy_digest_cache);
 
 /* 		if(data_set->have_quorum == FALSE */
 /* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
