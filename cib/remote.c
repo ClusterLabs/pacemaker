@@ -338,10 +338,6 @@ cib_remote_listen(gpointer data)
 
     g_hash_table_insert(client_connections, new_client->id/* Should work */, new_client);
     
-#if ENABLE_ACL
-    new_client->user = strdup(user);
-#endif
-
     /* clients have a few seconds to perform handshake. */
     new_client->remote->auth_timeout = g_timeout_add(
         REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
@@ -528,7 +524,7 @@ cib_remote_msg(gpointer data)
 #if ENABLE_ACL
         user = crm_element_value(command, "user");
         if (user) {
-           new_client->user = strdup(user);
+           client->user = strdup(user);
         }
 #endif
 

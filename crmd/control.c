@@ -38,7 +38,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <grp.h>
 
 qb_ipcs_service_t *ipcs = NULL;
 
