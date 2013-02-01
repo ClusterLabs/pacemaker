@@ -943,21 +943,31 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
     add_node_copy(holder, xml);
     return TRUE;
 }
-    
-static inline void
-dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max)
-{
-    bool changed = FALSE;
-    char *iter = NULL;
-    char *p_value = NULL;
-    const char *p_name = (const char *)attr->name;
 
-    if(attr == NULL || attr->children == NULL) {
-	return;
+static char *
+crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
+{
+    int lpc;
+    int offset = strlen(replace) - 1; /* We have space for 1 char already */
+
+    *length += offset;
+    text = realloc(text, *length);
+
+    for(lpc = (*length) - 1; lpc > (start + offset); lpc--) {
+        text[lpc] = text[lpc-offset];
     }
 
-    p_value = strdup((const char*)attr->children->content);
-    iter = p_value;
+    memcpy(text+start, replace, offset+1);
+    return text;
+}
+
+static char *
+crm_xml_escape(const char *text)
+{
+    int index;
+    int changes = 0;
+    int length = 1 + strlen(text);
+    char *copy = strdup(text);
 
     /*
      * When xmlCtxtReadDoc() parses &lt; and friends in a
@@ -968,22 +978,54 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
      * string, all is well, because special characters are
      * converted back to their escape sequences.
      *
-     * However xmlNodeDump() is randomly dog slow, even
-     * with the same input. So here we cheat and
-     * substitute []'s for <>'s so that the result can be
-     * re-parsed by xmlCtxtReadDoc() when necessary.
+     * However xmlNodeDump() is randomly dog slow, even with the same
+     * input. So we need to replicate the escapeing in our custom
+     * version so that the result can be re-parsed by xmlCtxtReadDoc()
+     * when necessary.
      */
-    while(iter && iter[0]) {
-        switch(iter[0]) {
-            case '<': iter[0] = '['; changed = TRUE; break;
-            case '>': iter[0] = ']'; changed = TRUE; break;
-            case '"': iter[0] = '\''; changed = TRUE; break;
+
+    for(index = 0; index < length; index++) {
+        switch(copy[index]) {
+            case '<':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "&lt;");
+                changes++;
+                break;
+            case '>':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "&gt;");
+                changes++;
+                break;
+            case '"':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "&quot;");
+                changes++;
+                break;
+            case '\'':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "&apos;");
+                changes++;
+                break;
+            case '&':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "&amp;");
+                changes++;
+                break;
         }
-        iter++;
     }
-    if(changed) {
-        crm_trace("Dumped %s as '%s'", p_name, p_value);
+
+    if(changes) {
+        crm_trace("Dumped '%s'", copy);
     }
+    return copy;
+}
+
+static inline void
+dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max)
+{
+    char *p_value = NULL;
+    const char *p_name = (const char *)attr->name;
+
+    if(attr == NULL || attr->children == NULL) {
+	return;
+    }
+
+    p_value = crm_xml_escape((const char*)attr->children->content);
     buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
     free(p_value);
 }
@@ -1046,6 +1088,7 @@ log_data_element(
     for(pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
         const char *p_value = crm_attr_value(pIter);
+        char *p_copy = NULL;
             
         if((is_set(options, xml_log_option_diff_plus) || is_set(options, xml_log_option_diff_minus))
                   && strcmp(XML_DIFF_MARKER, p_name) == 0) {
@@ -1054,10 +1097,14 @@ log_data_element(
 	} else if(hidden != NULL
 		  && p_name[0] != 0
 		  && strstr(hidden, p_name) != NULL) {
-	    p_value = "*****";
-	}
+	    p_copy = strdup("*****");
 
-        buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_value);
+	} else {
+            p_copy = crm_xml_escape(p_value);
+        }
+
+        buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
+        free(p_copy);
     }
 
     if(xml_has_children(data)) {
