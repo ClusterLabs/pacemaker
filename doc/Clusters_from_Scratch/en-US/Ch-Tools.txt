@@ -36,7 +36,7 @@ ifdef::pcs[]
 ===========
 Since `pcs` has the ability to manage all aspects of the cluster (both
 corosync and pacemaker), it requires a specific cluster stack to be in
-use, (corosync 2.0 with votequorum + Pacemaker version >= 1.8).
+use, (corosync 2.0 with votequorum + Pacemaker version >= 1.1.8).
 ===========
 
 [source,C]
