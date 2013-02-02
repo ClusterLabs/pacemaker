@@ -1694,6 +1694,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     int actual_rc_i = 0;
     int target_rc = -1;
     int last_failure = 0;
+    int clear_failcount = 0;
 
     action_t *action = NULL;
     node_t *effective_node = NULL;
@@ -1798,14 +1799,29 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         if (rsc->failure_timeout > 0
             && last_failure > 0
             && fc == 0) {
-            action_t *clear_op = NULL;
 
-            clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-                                     CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-
-            add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            clear_failcount = 1;
             crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
         }
+    } else if (strstr(id, "last_failure") &&
+        ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
+
+        op_digest_cache_t *digest_data = NULL;
+        digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+
+        if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
+            crm_trace("rsc op %s on node %s does not have a op digest to compare against", rsc->id, id, node->details->id);
+        } else if (digest_data->rc != RSC_DIGEST_MATCH) {
+            clear_failcount = 1;
+            crm_info("Clearing failcount for %s on %s, %s failed and now resource parameters have changed.", task, rsc->id, node->details->uname);
+        }
+    }
+
+    if (clear_failcount) {
+        action_t *clear_op = NULL;
+        clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+                                 CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+        add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     }
 
     if (expired

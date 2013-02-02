@@ -517,6 +517,20 @@ apply_placement_constraints(pe_working_set_t * data_set)
 
 }
 
+static gboolean
+failcount_clear_action_exists(node_t *node, resource_t *rsc)
+{
+    char *key = crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_');
+    gboolean rc = FALSE;
+
+    if (find_actions_exact(rsc->actions, key, node)) {
+        rc = TRUE;
+    }
+    free(key);
+
+    return rc;
+}
+
 static void
 common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -561,12 +575,18 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
         }
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        failed = uber_parent(rsc);
+    /* only check failcount here if a failcount clear action
+     * has not already been placed for this resource on the node.
+     * There is no sense in potentially forcing the rsc from this
+     * node if the failcount is being reset anyway. */
+    if (failcount_clear_action_exists(node, rsc) == FALSE) {
+        fail_count = get_failcount_all(node, rsc, NULL, data_set);
     }
 
-    fail_count = get_failcount_all(node, rsc, NULL, data_set);
     if (fail_count > 0 && rsc->migration_threshold != 0) {
+        if (is_not_set(rsc->flags, pe_rsc_unique)) {
+            failed = uber_parent(rsc);
+        }
         if (rsc->migration_threshold <= fail_count) {
             resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
             crm_warn("Forcing %s away from %s after %d failures (max=%d)",
