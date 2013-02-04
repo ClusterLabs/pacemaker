@@ -373,22 +373,27 @@ cib_remote_connection_destroy(gpointer user_data)
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
 
-    if (client->kind == CRM_CLIENT_TLS) {
+    switch (client->kind) {
+        case CRM_CLIENT_TCP:
+            csock = client->remote->tcp_socket;
+            break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        if (client->remote->tls_session) {
-            void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
-            csock = GPOINTER_TO_INT(sock_ptr);
-            if (client->remote->tls_handshake_complete) {
-                gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
+        case CRM_CLIENT_TLS:
+            if (client->remote->tls_session) {
+                void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
+                csock = GPOINTER_TO_INT(sock_ptr);
+                if (client->remote->tls_handshake_complete) {
+                    gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
+                }
+                gnutls_deinit(*client->remote->tls_session);
+                gnutls_free(client->remote->tls_session);
+                client->remote->tls_session = NULL;
             }
-            gnutls_deinit(*client->remote->tls_session);
-            gnutls_free(client->remote->tls_session);
-        }
+            break;
 #endif
-    } else {
-        csock = GPOINTER_TO_INT(client->remote->tls_session);
+        default:
+            crm_warn("Unexpected client type %d" , client->kind);
     }
-    client->remote->tls_session = NULL;
 
     if (csock > 0) {
         close(csock);
@@ -471,7 +476,7 @@ cib_remote_msg(gpointer data)
     int disconnected = 0;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
-    crm_trace("%s callback", client->kind == CRM_CLIENT_TLS ? "secure" : "clear-text");
+    crm_trace("%s callback", client->kind != CRM_CLIENT_TCP ? "secure" : "clear-text");
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (client->kind == CRM_CLIENT_TLS && (client->remote->tls_handshake_complete == FALSE)) {

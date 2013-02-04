@@ -20,6 +20,7 @@ import sys
 import subprocess
 import shlex
 import time
+
 def output_from_command(command, no_wait=0):
 	test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
 
@@ -206,6 +207,10 @@ class Tests:
 		self.rsc_classes = output_from_command("crm_resource --list-standards")		
 		self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
 		print "Testing "+repr(self.rsc_classes)
+
+		if not os.path.isfile("/etc/pacemaker/authkey"):
+			os.system("mkdir -p /etc/pacemaker")
+			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
 		self.common_cmds = {
 			"ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc -t 3000 -C ocf -P pacemaker -T Dummy",
