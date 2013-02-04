@@ -119,7 +119,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
+#  ifdef HAVE_GNUTLS_GNUTLS_H
             case CRM_CLIENT_TLS:
+#  endif
             case CRM_CLIENT_TCP:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
                 crm_remote_send(client->remote, update->msg);

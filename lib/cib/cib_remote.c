@@ -211,8 +211,9 @@ cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
     connection->tcp_socket = 0;
+#ifdef HAVE_GNUTLS_GNUTLS_H
     connection->tls_session = NULL;
-
+#endif
     sock = crm_remote_tcp_connect(private->server, private->port);
     if (sock <= 0) {
         crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server, private->port);
@@ -243,8 +244,6 @@ cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
 #else
         return -EPROTONOSUPPORT;
 #endif
-    } else {
-        connection->tls_session = GUINT_TO_POINTER(sock);
     }
 
     /* login to server */
