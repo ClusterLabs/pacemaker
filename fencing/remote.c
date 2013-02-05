@@ -694,6 +694,19 @@ get_device_timeout(st_query_result_t *peer, const char *device, int default_time
 }
 
 static int
+get_peer_timeout(st_query_result_t *peer, int default_timeout)
+{
+    int total_timeout = 0;
+
+    GListPtr cur = NULL;
+    for (cur = peer->device_list; cur; cur = cur->next) {
+        total_timeout += get_device_timeout(peer, cur->data, default_timeout);
+    }
+
+    return total_timeout ? total_timeout : default_timeout;
+}
+
+static int
 get_op_total_timeout(remote_fencing_op_t *op, st_query_result_t *chosen_peer, int default_timeout)
 {
     stonith_topology_t *tp = g_hash_table_lookup(topology, op->target);
@@ -727,10 +740,7 @@ get_op_total_timeout(remote_fencing_op_t *op, st_query_result_t *chosen_peer, in
         } /*End Loop1: iterate through fencing levels */
 
     } else if (chosen_peer) {
-        GListPtr cur = NULL;
-        for (cur = chosen_peer->device_list; cur; cur = cur->next) {
-            total_timeout += get_device_timeout(chosen_peer, cur->data, default_timeout);
-        }
+        total_timeout = get_peer_timeout(chosen_peer, default_timeout);
     } else {
         total_timeout = default_timeout;
     }
@@ -801,12 +811,12 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
 
     if(!op->op_timer_total) {
-        int t = get_op_total_timeout(op, peer, op->base_timeout);
-        op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * t;
+        int total_timeout = get_op_total_timeout(op, peer, op->base_timeout);
+        op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * total_timeout;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
         crm_info("Total remote op timeout set to %d for fencing of node %s for %s.%.8s",
-                 t, op->target, op->client_name, op->id);
+                 total_timeout, op->target, op->client_name, op->id);
     }
 
     if(is_set(op->call_options, st_opt_topology) && op->devices) {
@@ -820,7 +830,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
     }
 
     if(peer) {
-        int t = TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
+        int timeout_one = 0;
         xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
 
         crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
@@ -832,14 +842,16 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
 
         if(device) {
+            timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
             crm_info("Requesting that %s perform op %s %s with %s for %s (%ds)",
-                     peer->host, op->action, op->target, device, op->client_name, t);
+                     peer->host, op->action, op->target, device, op->client_name, timeout_one);
             crm_xml_add(query, F_STONITH_DEVICE, device);
             crm_xml_add(query, F_STONITH_MODE, "slave");
 
         } else {
+            timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(peer, op->base_timeout);
             crm_info("Requesting that %s perform op %s %s for %s (%ds)",
-                     peer->host, op->action, op->target, op->client_name, t);
+                     peer->host, op->action, op->target, op->client_name, timeout_one);
             crm_xml_add(query, F_STONITH_MODE, "smart");
         }
 
@@ -847,7 +859,7 @@ void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
         if(op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
-        op->op_timer_one = g_timeout_add((1000 * t), remote_op_timeout_one, op);
+        op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
 
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, query, FALSE);
         peer->tried = TRUE;
