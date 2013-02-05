@@ -83,6 +83,7 @@ main(int argc, char **argv)
     cib_t *cib_conn = NULL;
     int rc = pcmk_ok;
 
+    bool verbose = FALSE;
     gboolean xml_stdin = FALSE;
     const char *xml_tag = NULL;
     const char *xml_file = NULL;
@@ -127,6 +128,7 @@ main(int argc, char **argv)
                 cib_save = strdup(optarg);
                 break;
             case 'V':
+                verbose = TRUE;
                 crm_bump_log_level(argc, argv);
                 break;
             case 'L':
@@ -256,14 +258,14 @@ main(int argc, char **argv)
 
     if (crm_config_error) {
         fprintf(stderr, "Errors found during check: config not valid\n");
-        if (get_crm_log_level() < LOG_WARNING) {
+        if (verbose == FALSE) {
             fprintf(stderr, "  -V may provide more details\n");
         }
         rc = 2;
 
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
-        if (get_crm_log_level() < LOG_WARNING) {
+        if (verbose == FALSE) {
             fprintf(stderr, "  Use -V for more details\n");
         }
         rc = 1;
