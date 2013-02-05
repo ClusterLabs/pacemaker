@@ -146,7 +146,6 @@ int lrm_state_unregister_rsc(lrm_state_t *lrm_state,
 /*! These functions are used to manage the remote lrmd connection resources */
 void remote_lrm_op_callback(lrmd_event_data_t * op);
 gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
-int remote_ra_get_metadata(char **output);
 lrmd_rsc_info_t * remote_ra_get_rsc_info(lrm_state_t *lrm_state, const char *rsc_id);
 int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action, int interval);
 int remote_ra_exec(lrm_state_t *lrm_state,

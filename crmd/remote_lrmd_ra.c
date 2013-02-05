@@ -431,44 +431,6 @@ is_remote_lrmd_ra(const char *agent, const char *provider, const char *id)
     return FALSE;
 }
 
-int
-remote_ra_get_metadata(char **output)
-{
-#define remote_metadata  \
-"<?xml version=\"1.0\"?>\n"\
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
-"<resource-agent name=\"remote\" version=\"0.1\">\n"\
-"  <version>1.0</version>\n"\
-"  <parameters>\n"\
-"    <parameter name=\"server\" unique=\"1\">\n"\
-"    <longdesc lang=\"en\">\n"\
-"       Server location to connect to.  This can be an ip address or hostname.\n"\
-"    </longdesc>\n"\
-"    <shortdesc lang=\"en\">Server location</shortdesc>\n"\
-"    <content type=\"string\"/>\n"\
-"    </parameter>\n"\
-"    <parameter name=\"port\" unique=\"1\">\n"\
-"    <longdesc lang=\"en\">\n"\
-"       tcp port to connect to.\n"\
-"    </longdesc>\n"\
-"    <shortdesc lang=\"en\">tcp port</shortdesc>\n"\
-"    <content type=\"string\" default=\"1984\"/>\n"\
-"    </parameter>\n"\
-"  </parameters>\n"\
-"  <actions>\n"\
-"    <action name=\"start\"   timeout=\"15\" />\n"\
-"    <action name=\"stop\"    timeout=\"15\" />\n"\
-"    <action name=\"monitor\"    timeout=\"15\" />\n"\
-"    <action name=\"migrate_to\"   timeout=\"15\" />\n"\
-"    <action name=\"migrate_from\" timeout=\"15\" />\n"\
-"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
-"  </actions>\n"\
-"</resource-agent>\n"
-
-    *output = strdup(remote_metadata);
-    return 0;
-}
-
 lrmd_rsc_info_t *
 remote_ra_get_rsc_info(lrm_state_t *lrm_state, const char *rsc_id)
 {
