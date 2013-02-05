@@ -32,7 +32,8 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			pingd		\
 			Stateful	\
 			SysInfo		\
-			SystemHealth
+			SystemHealth \
+			remote
 
 if BUILD_XML_HELP
 man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)

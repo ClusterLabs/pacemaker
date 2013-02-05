@@ -275,9 +275,6 @@ int lrm_state_get_metadata (lrm_state_t *lrm_state,
     if (!lrm_state->conn) {
         return -ENOTCONN;
     }
-    if (is_remote_lrmd_ra(agent, provider, NULL)) {
-        return remote_ra_get_metadata(output);
-    }
 
     /* Optimize this... only retrieve metadata from local lrmd connection. Perhaps consider
      * caching result. */
