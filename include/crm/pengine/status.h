@@ -250,6 +250,9 @@ struct resource_s {
 
     node_t *partial_migration_target;
     node_t *partial_migration_source;
+
+    resource_t *container;
+    GListPtr fillers;
 };
 
 struct pe_action_s {

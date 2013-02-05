@@ -660,5 +660,15 @@ do_test template-clone-primitive "Cloned primitive from template"
 do_test template-clone-group     "Cloned group from template"
 
 echo ""
+do_test container-1 "Container - initial"
+do_test container-2 "Container - monitor failed"
+do_test container-3 "Container - stop failed"
+do_test container-4 "Container - reached migration-threshold"
+do_test container-group-1 "Container in group - initial"
+do_test container-group-2 "Container in group - monitor failed"
+do_test container-group-3 "Container in group - stop failed"
+do_test container-group-4 "Container in group - reached migration-threshold"
+
+echo ""
 
 test_results

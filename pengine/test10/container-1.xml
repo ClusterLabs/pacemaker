@@ -1,0 +1,45 @@
+<cib epoch="1" num_updates="36" admin_epoch="0" validate-with="pacemaker-1.1" cib-last-written="Fri Dec 14 22:11:23 2012" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+    </nodes>
+    <resources>
+      <primitive id="container1" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="container1-meta_attributes">
+          <nvpair id="container1-migration-threshold" name="migration-threshold" value="6"/>
+        </meta_attributes>
+        <operations>
+          <op id="container1-monitor-20" name="monitor" interval="20"/>
+        </operations>
+      </primitive>
+      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-container" name="container" value="container1"/>
+        </meta_attributes>
+        <operations>
+          <op id="rsc1-monitor-10" name="monitor" interval="10"/>
+        </operations>
+      </primitive>
+      <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc2-meta_attributes">
+          <nvpair id="rsc2-container" name="container" value="container1"/>
+        </meta_attributes>
+        <operations>
+          <op id="rsc2-monitor-5" name="monitor" interval="5"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate"/>
+  </status>
+</cib>
