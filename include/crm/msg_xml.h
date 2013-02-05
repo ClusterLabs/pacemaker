@@ -200,6 +200,7 @@
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_PRIORITY		"priority"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
+#  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"

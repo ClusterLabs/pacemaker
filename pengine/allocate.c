@@ -608,7 +608,7 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
         failed = uber_parent(rsc);
     }
 
-    fail_count = get_failcount(node, rsc, NULL, data_set);
+    fail_count = get_failcount_all(node, rsc, NULL, data_set);
     if (fail_count > 0 && rsc->migration_threshold != 0) {
         if (rsc->migration_threshold <= fail_count) {
             resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
