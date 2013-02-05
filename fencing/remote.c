@@ -932,6 +932,7 @@ all_topology_devices_found(remote_fencing_op_t *op)
 int process_remote_stonith_query(xmlNode *msg) 
 {
     int devices = 0;
+    gboolean host_is_target = FALSE;
     const char *id = NULL;
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
@@ -956,18 +957,20 @@ int process_remote_stonith_query(xmlNode *msg)
 
     op->replies++;
     host = crm_element_value(msg, F_ORIG);
+    host_is_target = safe_str_eq(host, op->target);
 
     if(devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
         crm_trace("Query result from %s (%d devices)", host, devices);
         return pcmk_ok;
 
-    } else if(op->call_options & st_opt_allow_suicide) {
-        crm_trace("Allowing %s to potentialy fence itself", op->target);
-
-    } else if(safe_str_eq(host, op->target)) {
-        crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide", op->target);
-        return pcmk_ok;
+    } else if (host_is_target) {
+        if(op->call_options & st_opt_allow_suicide) {
+            crm_trace("Allowing %s to potentialy fence itself", op->target);
+        } else {
+            crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide", op->target);
+            return pcmk_ok;
+        }
     }
 
     crm_debug("Query result from %s (%d devices)", host, devices);
@@ -1017,9 +1020,18 @@ int process_remote_stonith_query(xmlNode *msg)
         if (op->state == st_query && all_topology_devices_found(op)) {
             call_remote_stonith(op, result);
         }
-    /* We have a result for a non-topology fencing op, start fencing */
     } else if(op->state == st_query) {
-        call_remote_stonith(op, result);
+        /* We have a result for a non-topology fencing op that looks promising,
+         * go ahead and start fencing before query timeout */
+        if (host_is_target == FALSE && g_hash_table_size(result->verified_devices)) {
+            /* we have a verified device living on a peer that is not the target */
+            call_remote_stonith(op, result);
+        } else if (safe_str_eq(op->action, "on")) {
+            /* unfencing. */
+            call_remote_stonith(op, result);
+        } else {
+            crm_trace("Waiting for more peer results before launching fencing operation");
+        }
 
     } else if(op->state == st_done) {
         crm_info("Discarding query result from %s (%d devices): Operation is in state %d",
