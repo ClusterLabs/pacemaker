@@ -134,6 +134,9 @@ struct node_shared_s {
     enum node_type type;
 
     GHashTable *utilization;
+
+    /*! cache of calculated rsc digests for this node.*/
+    GHashTable *digest_cache;
 };
 
 struct node_s {
