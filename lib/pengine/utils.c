@@ -1643,3 +1643,78 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 
     return ticket;
 }
+
+op_digest_cache_t *
+rsc_action_digest_cmp(resource_t *rsc, xmlNode *xml_op, node_t *node, pe_working_set_t *data_set)
+{
+    op_digest_cache_t *data = NULL;
+
+    GHashTable *local_rsc_params = NULL;
+
+    action_t *action = NULL;
+    char *key = NULL;
+
+    int interval = 0;
+    const char *op_id = ID(xml_op);
+    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *digest_all;
+    const char *digest_restart;
+    const char *restart_list;
+    const char *op_version;
+
+    data = g_hash_table_lookup(node->details->digest_cache, op_id);
+    if (data) {
+        return data;
+    }
+
+    data = calloc(1, sizeof(op_digest_cache_t));
+
+    digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+    digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
+    restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+
+    /* key is freed in custom_action */
+    interval = crm_parse_int(interval_s, "0");
+    key = generate_op_key(rsc->id, task, interval);
+    action = custom_action(rsc, key, task, node, TRUE, FALSE, data_set);
+    key = NULL;
+
+    local_rsc_params = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                             g_hash_destroy_str, g_hash_destroy_str);
+    get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+    data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+    g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
+    g_hash_table_foreach(action->extra, hash2field, data->params_all);
+    g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
+    g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
+    filter_action_parameters(data->params_all, op_version);
+
+    data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
+
+    if (digest_restart) {
+        data->params_restart = copy_xml(data->params_all);
+
+        if (restart_list) {
+            filter_reload_parameters(data->params_restart, restart_list);
+        }
+        data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
+    }
+
+    if (digest_restart && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+        data->rc = RSC_DIGEST_RESTART;
+    } else if (digest_all == NULL) {
+        /* it is unknown what the previous op digest was */
+        data->rc = RSC_DIGEST_UNKNOWN;
+    } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
+        data->rc = RSC_DIGEST_ALL;
+    }
+
+    g_hash_table_insert(node->details->digest_cache, strdup(op_id), data);
+    g_hash_table_destroy(local_rsc_params);
+    pe_free_action(action);
+
+    return data;
+}
+
