@@ -21,8 +21,6 @@
 #  if VARIANT_CLONE
 
 typedef struct clone_variant_data_s {
-    resource_t *self;
-
     int clone_max;
     int clone_node_max;
 
@@ -61,7 +59,6 @@ typedef struct clone_variant_data_s {
 
 typedef struct group_variant_data_s {
     int num_children;
-    resource_t *self;
     resource_t *first_child;
     resource_t *last_child;
 

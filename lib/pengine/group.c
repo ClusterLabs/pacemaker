@@ -30,7 +30,6 @@
 gboolean
 group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
-    resource_t *self = NULL;
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_self = copy_xml(rsc->xml);
     xmlNode *xml_native_rsc = NULL;
@@ -43,7 +42,6 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     group_data = calloc(1, sizeof(group_variant_data_t));
     group_data->num_children = 0;
-    group_data->self = NULL;
     group_data->first_child = NULL;
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
@@ -60,14 +58,6 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     /* this is a bit of a hack - but simplifies everything else */
     xmlNodeSetName(xml_self, ((const xmlChar *)XML_CIB_TAG_RESOURCE));
-    if (common_unpack(xml_self, &self, NULL, data_set)) {
-        group_data->self = self;
-        self->restart_type = pe_restart_restart;
-
-    } else {
-        crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-        return FALSE;
-    }
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 
@@ -204,10 +194,8 @@ void
 group_free(resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
-    group_variant_data_t *group_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
-    get_group_variant_data(group_data, rsc);
 
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
@@ -220,11 +208,6 @@ group_free(resource_t * rsc)
 
     pe_rsc_trace(rsc, "Freeing child list");
     g_list_free(rsc->children);
-
-    if (group_data->self != NULL) {
-        free_xml(group_data->self->xml);
-        group_data->self->fns->free(group_data->self);
-    }
 
     common_free(rsc);
 }

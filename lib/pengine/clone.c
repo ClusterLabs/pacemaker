@@ -168,7 +168,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     int lpc = 0;
     const char *type = NULL;
-    resource_t *self = NULL;
     int num_xml_children = 0;
     xmlNode *a_child = NULL;
     xmlNode *xml_tmp = NULL;
@@ -261,15 +260,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
      */
     if (g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
         add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
-    }
-
-    if (common_unpack(xml_self, &self, rsc, data_set)) {
-        clone_data->self = self;
-
-    } else {
-        crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-        clone_data->self = self;
-        return FALSE;
     }
 
     pe_rsc_trace(rsc, "\tClone is unique (fixed): %s",
@@ -526,15 +516,12 @@ clone_free(resource_t * rsc)
 
     g_list_free(rsc->children);
 
-    if (clone_data->self) {
-        free_xml(clone_data->self->xml);
-        clone_data->self->fns->free(clone_data->self);
+    if(clone_data) {
+        CRM_ASSERT(clone_data->demote_notify == NULL);
+        CRM_ASSERT(clone_data->stop_notify == NULL);
+        CRM_ASSERT(clone_data->start_notify == NULL);
+        CRM_ASSERT(clone_data->promote_notify == NULL);
     }
-
-    CRM_ASSERT(clone_data->demote_notify == NULL);
-    CRM_ASSERT(clone_data->stop_notify == NULL);
-    CRM_ASSERT(clone_data->start_notify == NULL);
-    CRM_ASSERT(clone_data->promote_notify == NULL);
 
     common_free(rsc);
 }
