@@ -21,7 +21,7 @@
 
 struct svc_action_private_s {
     char *exec;
-    char *args[7];
+    char *args[255];
 
     guint repeat_timer;
     void (*callback)(svc_action_t *op);
@@ -34,7 +34,7 @@ struct svc_action_private_s {
 };
 
 GList *
-services_os_get_directory_list(const char *root, gboolean files);
+services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
 gboolean
 services_os_action_execute(svc_action_t *op, gboolean synchronous);
@@ -47,6 +47,9 @@ resources_os_list_ocf_providers(void);
 
 GList *
 resources_os_list_ocf_agents(const char *provider);
+
+GList *
+resources_os_list_nagios_agents(void);
 
 gboolean
 cancel_recurring_action(svc_action_t *op);

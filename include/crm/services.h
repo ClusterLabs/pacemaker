@@ -116,6 +116,17 @@ enum op_status {
     PCMK_LRM_OP_NOTSUPPORTED,
     PCMK_LRM_OP_ERROR
 };
+
+enum nagios_exitcode {
+    NAGIOS_STATE_OK        = 0,
+    NAGIOS_STATE_WARNING   = 1,
+    NAGIOS_STATE_CRITICAL  = 2,
+    NAGIOS_STATE_UNKNOWN   = 3,
+    NAGIOS_STATE_DEPENDENT = 4,
+
+    NAGIOS_INSUFFICIENT_PRIV = 100,
+    NAGIOS_NOT_INSTALLED     = 101,
+};
 /* *INDENT-ON* */
 
 typedef struct svc_action_private_s svc_action_private_t;
@@ -165,7 +176,7 @@ typedef struct svc_action_s
  *         be destroyed using g_list_free_full(list, free).
  */
 GList *
-get_directory_list(const char *root, gboolean files);
+get_directory_list(const char *root, gboolean files, gboolean executable);
 
 /**
  * Get a list of services
