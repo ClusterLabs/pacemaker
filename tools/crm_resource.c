@@ -1745,13 +1745,13 @@ main(int argc, char **argv)
         }
 
         if (rsc == NULL) {
-            CMD_ERR("Resource %s not moved:" " not found\n", rsc_id);
+            CMD_ERR("Resource %s not moved: not found\n", rsc_id);
 
         } else if (rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
-            CMD_ERR("Resource %s not moved:" " active on multiple nodes\n", rsc_id);
+            CMD_ERR("Resource %s not moved: active on multiple nodes\n", rsc_id);
 
         } else if (host_uname != NULL && dest == NULL) {
-            CMD_ERR("Error performing operation: " "%s is not a known node\n", host_uname);
+            CMD_ERR("Error performing operation: %s is not a known node\n", host_uname);
             rc = -ENXIO;
 
         } else if (host_uname != NULL && safe_str_eq(current_uname, host_uname)) {
@@ -1767,8 +1767,7 @@ main(int argc, char **argv)
             rc = move_resource(rsc_id, NULL, host_uname, cib_conn);
 
         } else {
-            CMD_ERR("Resource %s not moved: "
-                    "not-active and no preferred location" " specified.\n", rsc_id);
+            CMD_ERR("Resource %s not moved: not-active and no preferred location specified.\n", rsc_id);
             rc = -EINVAL;
         }
 
