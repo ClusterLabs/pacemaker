@@ -98,14 +98,16 @@ extern void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working
 gboolean
 native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
+    resource_t *parent = uber_parent(rsc);
     native_variant_data_t *native_data = NULL;
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     native_data = calloc(1, sizeof(native_variant_data_t));
+    rsc->variant_opaque = native_data;
 
     if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, "lsb")) {
             resource_t *top = uber_parent(rsc);
@@ -114,7 +116,14 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    rsc->variant_opaque = native_data;
+    if(safe_str_eq(class, "ocf") == FALSE) {
+        const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
+        if(safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
+            pe_err("Resource %s is of type %s and therefore cannot be used as a master/slave resource", rsc->id, class);
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
 
