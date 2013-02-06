@@ -27,7 +27,7 @@
         <meta_attributes id="primitive-simple-rsc.meta"/>
       </primitive>
       <master id="rsc1">
-        <primitive id="child_rsc1" class="heartbeat" type="apache">
+        <primitive id="child_rsc1" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc1.meta"/>
         </primitive>
         <meta_attributes id="master_slave-rsc1.meta">

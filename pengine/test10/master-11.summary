@@ -4,8 +4,8 @@ Online: [ node1 node2 ]
 
  simple-rsc	(heartbeat:apache):	Stopped 
  Master/Slave Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Stopped 
-     child_rsc1:1	(heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:1	(ocf::heartbeat:apache):	Stopped 
 
 Transition Summary:
  * Start   simple-rsc	(node2)
@@ -35,6 +35,6 @@ Online: [ node1 node2 ]
 
  simple-rsc	(heartbeat:apache):	Started node2
  Master/Slave Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Master node2
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Master node2
 

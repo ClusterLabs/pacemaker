@@ -24,7 +24,7 @@
     </nodes>
     <resources>
       <master id="rsc1">
-        <primitive id="child_rsc1" class="heartbeat" type="apache">
+        <primitive id="child_rsc1" class="ocf" provider="heartbeat" type="apache">
           <operations>
             <op name="monitor" interval="1" id="mon-1"/>
             <op name="monitor" interval="11" id="mon-2" role="Master"/>

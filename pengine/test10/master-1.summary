@@ -3,11 +3,11 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Master/Slave Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Stopped 
-     child_rsc1:1	(heartbeat:apache):	Stopped 
-     child_rsc1:2	(heartbeat:apache):	Stopped 
-     child_rsc1:3	(heartbeat:apache):	Stopped 
-     child_rsc1:4	(heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:1	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:2	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:3	(ocf::heartbeat:apache):	Stopped 
+     child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
 
 Transition Summary:
  * Start   child_rsc1:0	(node1)
@@ -42,9 +42,9 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Master/Slave Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Master node2
-     child_rsc1:2	(heartbeat:apache):	Started node1
-     child_rsc1:3	(heartbeat:apache):	Started node2
-     child_rsc1:4	(heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Master node2
+     child_rsc1:2	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:3	(ocf::heartbeat:apache):	Started node2
+     child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
 
