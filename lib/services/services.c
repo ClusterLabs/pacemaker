@@ -34,6 +34,7 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/services.h>
+#include <crm/msg_xml.h>
 #include "services_private.h"
 
 #if SUPPORT_UPSTART
@@ -194,6 +195,58 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(SERVICE_SCRIPT);
         op->opaque->args[1] = strdup(agent);
         op->opaque->args[2] = strdup(action);
+
+#if SUPPORT_NAGIOS
+    } else if(strcasecmp(op->standard, "nagios") == 0) {
+        int index = 0;
+
+        if (op->agent[0] == '/') {
+             /* if given an absolute path, use that instead
+              * of tacking on the NAGIOS_PLUGIN_DIR path to the front */
+            op->opaque->exec = strdup(op->agent);
+
+        } else if (asprintf(&op->opaque->exec, "%s/%s", NAGIOS_PLUGIN_DIR, op->agent) == -1) {
+            goto return_error;
+        }
+
+        op->opaque->args[0] = strdup(op->opaque->exec);
+        index = 1;
+
+        if (safe_str_eq(op->action, "monitor") && op->interval == 0) {
+            /* Invoke --version for a nagios probe */
+            op->opaque->args[index] = strdup("--version");
+            index++;
+
+        } else if (params) {
+            GHashTableIter iter;
+            char *key = NULL;
+            char *value = NULL;
+            static int args_size = sizeof(op->opaque->args) / sizeof(char *);
+
+            g_hash_table_iter_init(&iter, params);
+
+            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
+                   index <= args_size - 3) {
+                int len = 3;
+                char *long_opt = NULL;
+
+                if (safe_str_eq(key, XML_ATTR_CRM_VERSION) ||
+                    strstr(key, CRM_META "_")) {
+                    continue;
+                }
+
+                len += strlen(key);
+                long_opt = calloc(1, len);
+                sprintf(long_opt, "--%s", key);
+                long_opt[len - 1] = 0;
+
+                op->opaque->args[index] = long_opt;
+                op->opaque->args[index + 1] = strdup(value);
+                index += 2;
+            }
+        }
+        op->opaque->args[index] = NULL;
+#endif
 
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
@@ -380,9 +433,9 @@ services_action_sync(svc_action_t* op)
 }
 
 GList *
-get_directory_list(const char *root, gboolean files)
+get_directory_list(const char *root, gboolean files, gboolean executable)
 {
-    return services_os_get_directory_list(root, files);
+    return services_os_get_directory_list(root, files, executable);
 }
 
 GList *
@@ -421,6 +474,14 @@ resources_list_standards(void)
         standards = g_list_append(standards, strdup("upstart"));
         g_list_free_full(agents, free);
     }
+
+#if SUPPORT_NAGIOS
+    agents = resources_os_list_nagios_agents();
+    if (agents) {
+        standards = g_list_append(standards, strdup("nagios"));
+        g_list_free_full(agents, free);
+    }
+#endif
 
     return standards;
 }
@@ -480,6 +541,10 @@ resources_list_agents(const char *standard, const char *provider)
 #if SUPPORT_UPSTART
     } else if (strcasecmp(standard, "upstart") == 0) {
         return upstart_job_listall();
+#endif
+#if SUPPORT_NAGIOS
+    } else if (strcasecmp(standard, "nagios") == 0) {
+        return resources_os_list_nagios_agents();
 #endif
     }
 
