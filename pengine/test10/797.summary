@@ -55,7 +55,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:0 start on c001n01
  * Resource action: child_DoFencing:0 monitor=5000 on c001n01
  * Pseudo action:   DoFencing_running_0
- * Cluster action:  lrm_refresh on c001n03
 
 Revised cluster status:
 Node c001n08 (6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b): UNCLEAN (offline)

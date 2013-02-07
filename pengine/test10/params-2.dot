@@ -1,7 +1,6 @@
  digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "do_shutdown node1" [ style=bold color="green" fontcolor="black" ]
-"lrm_refresh node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" -> "probe_complete" [ style = bold]
@@ -19,7 +18,6 @@
 "rsc1_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc1_stop_0 node1" -> "do_shutdown node1" [ style = bold]
 "rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rsc2_delete_0 node2" -> "lrm_refresh node2" [ style = bold]
 "rsc2_delete_0 node2" -> "rsc2_start_0 node2" [ style = bold]
 "rsc2_delete_0 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc2_monitor_0 node1" -> "probe_complete node1" [ style = bold]
