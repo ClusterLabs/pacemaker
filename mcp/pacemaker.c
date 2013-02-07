@@ -804,6 +804,10 @@ main(int argc, char **argv)
     qb_ipcs_service_t *ipcs = NULL;
     const char *facility = daemon_option("logfacility");
 
+    setenv("LC_ALL", "C", 1);
+    setenv("HA_LOGFACILITY", facility, 1);
+    setenv("HA_LOGD", "no", 1);
+
     set_daemon_option("mcp", "true");
     set_daemon_option("use_logd", "off");
 
