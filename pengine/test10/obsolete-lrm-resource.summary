@@ -11,6 +11,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: rsc1_child:0    monitor on yingying.site
  * Pseudo action:   rsc1_start_0
+ * Resource action: rsc1            delete on yingying.site
  * Pseudo action:   probe_complete
  * Resource action: rsc1_child:0    start on yingying.site
  * Pseudo action:   rsc1_running_0

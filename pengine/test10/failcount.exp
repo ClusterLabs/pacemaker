@@ -17,5 +17,167 @@
     </action_set>
     <inputs/>
   </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="59" operation="delete" operation_key="re-named-103ns2-ip_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-named-103ns2-ip" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="50" operation="delete" operation_key="re-named-103ns2-ip_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-named-103ns2-ip" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="60" operation="delete" operation_key="re-monitoring-lv:0_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-monitoring-lv:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="51" operation="delete" operation_key="re-monitoring-lv:0_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-monitoring-lv:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="61" operation="delete" operation_key="re-dummy_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="52" operation="delete" operation_key="re-dummy_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="62" operation="delete" operation_key="re-dummy3_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="53" operation="delete" operation_key="re-dummy3_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="63" operation="delete" operation_key="re-dummy4_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="54" operation="delete" operation_key="re-dummy4_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="64" operation="delete" operation_key="re-dummy1_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="55" operation="delete" operation_key="re-dummy1_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="65" operation="delete" operation_key="re-monitoring-lv_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-monitoring-lv" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="56" operation="delete" operation_key="re-monitoring-lv_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-monitoring-lv" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="66" operation="delete" operation_key="re-dummy2_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="57" operation="delete" operation_key="re-dummy2_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="67" operation="delete" operation_key="re-named-103ns1-ip_delete_0" on_node="dresproddns02" on_node_uuid="dresproddns02">
+        <primitive id="re-named-103ns1-ip" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="58" operation="delete" operation_key="re-named-103ns1-ip_delete_0" on_node="dresproddns01" on_node_uuid="dresproddns01">
+        <primitive id="re-named-103ns1-ip" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
 </transition_graph>
 

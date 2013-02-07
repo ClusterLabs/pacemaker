@@ -60,7 +60,7 @@ Revised cluster status:
 Node c001n08 (6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b): UNCLEAN (offline)
 Online: [ c001n01 c001n02 c001n03 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n03
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Stopped 
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Stopped 
  rsc_c001n03	(ocf::heartbeat:IPaddr):	Stopped 

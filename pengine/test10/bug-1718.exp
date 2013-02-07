@@ -1,25 +1,25 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
-       <pseudo_event id="19" operation="stopped" operation_key="group_fUN_stopped_0">
+      <pseudo_event id="24" operation="stopped" operation_key="group_fUN_stopped_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="12" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
+        <rsc_op id="17" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
        </trigger>
        <trigger>
-        <rsc_op id="14" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
+        <rsc_op id="19" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0"/>
+        <pseudo_event id="23" operation="stop" operation_key="group_fUN_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0">
+      <pseudo_event id="23" operation="stop" operation_key="group_fUN_stop_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
@@ -27,45 +27,90 @@
   </synapse>
    <synapse id="2">
      <action_set>
-      <rsc_op id="12" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+      <rsc_op id="17" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="resource_IP3" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_timeout="20000" broadcast="10.0.0.255" cidr_netmask="255.255.255.0" crm_feature_set="3.0.7" ip="10.0.0.68" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="14" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
+        <rsc_op id="19" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0"/>
+        <pseudo_event id="23" operation="stop" operation_key="group_fUN_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-      <rsc_op id="14" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+      <rsc_op id="19" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="resource_dummy" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0"/>
+        <pseudo_event id="23" operation="stop" operation_key="group_fUN_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
+      <rsc_op id="4" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+        <primitive id="OpenVPN_IP" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="2" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+        <primitive id="OpenVPN_IP" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="6" operation="delete" operation_key="Apache_delete_0" on_node="biggame.ds9" on_node_uuid="de2a634c-e405-42bb-9df2-292e36ad5970">
+        <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="5" operation="delete" operation_key="Apache_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+        <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="3" operation="delete" operation_key="Apache_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+        <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.7"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="12" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
+        <rsc_op id="17" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
        </trigger>
        <trigger>
-        <rsc_op id="14" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
+        <rsc_op id="19" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad"/>
        </trigger>
      </inputs>
    </synapse>

@@ -1,4 +1,9 @@
 digraph "g" {
+"Apache_delete_0 biggame.ds9" [ style=bold color="green" fontcolor="black"]
+"Apache_delete_0 heartbeat.ds9" [ style=bold color="green" fontcolor="black"]
+"Apache_delete_0 ops.ds9" [ style=bold color="green" fontcolor="black"]
+"OpenVPN_IP_delete_0 heartbeat.ds9" [ style=bold color="green" fontcolor="black"]
+"OpenVPN_IP_delete_0 ops.ds9" [ style=bold color="green" fontcolor="black"]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "group_fUN_running_0" [ style=dashed color="red" fontcolor="orange" ]
 "group_fUN_start_0" -> "group_fUN_running_0" [ style = dashed]

@@ -1,5 +1,7 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
+"d0:0_delete_0 hex-13" [ style=bold color="green" fontcolor="black"]
+"dlm:0_delete_0 hex-13" [ style=bold color="green" fontcolor="black"]
 "dummy1_monitor_15000 hex-14" [ style=bold color="green" fontcolor="black" ]
 "dummy1_start_0 hex-14" -> "dummy1_monitor_15000 hex-14" [ style = bold]
 "dummy1_start_0 hex-14" [ style=bold color="green" fontcolor="black" ]
@@ -12,4 +14,7 @@ digraph "g" {
 "dummy3_stop_0 hex-13" -> "all_stopped" [ style = bold]
 "dummy3_stop_0 hex-13" -> "dummy3_start_0 hex-14" [ style = bold]
 "dummy3_stop_0 hex-13" [ style=bold color="green" fontcolor="black" ]
+"dummy4_delete_0 hex-13" [ style=bold color="green" fontcolor="black"]
+"o2cb:0_delete_0 hex-13" [ style=bold color="green" fontcolor="black"]
+"ocfs2-3:0_delete_0 hex-13" [ style=bold color="green" fontcolor="black"]
 }
