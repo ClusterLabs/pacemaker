@@ -24,7 +24,7 @@
 #include <allocate.h>
 #include <utils.h>
 
-#define DELETE_THEN_REFRESH 1   /* The crmd will remove the resource from the CIB itself, making this redundant */
+/* #define DELETE_THEN_REFRESH 1  // The crmd will remove the resource from the CIB itself, making this redundant */
 #define INFINITY_HACK   (INFINITY * -100)
 
 #define VARIANT_NATIVE 1
@@ -2130,9 +2130,8 @@ NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * da
 gboolean
 DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set)
 {
-    action_t *delete = NULL;
-
 #if DELETE_THEN_REFRESH
+    action_t *delete = NULL;
     action_t *refresh = NULL;
 #endif
     if (is_set(rsc->flags, pe_rsc_failed)) {
@@ -2150,7 +2149,11 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
 
     crm_notice("Removing %s from %s", rsc->id, node->details->uname);
 
+#if DELETE_THEN_REFRESH
     delete = delete_action(rsc, node, optional);
+#else
+    delete_action(rsc, node, optional);
+#endif
 
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
                   optional ? pe_order_implies_then : pe_order_optional, data_set);
