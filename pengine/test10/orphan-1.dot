@@ -37,6 +37,8 @@
 "rsc_c001n03_monitor_0 c001n08" -> "probe_complete c001n08" [ style = bold]
 "rsc_c001n03_monitor_0 c001n08" [ style=bold color="green" fontcolor="black" ]
 "rsc_c001n03_monitor_6000 c001n03" [ style=bold color="green" fontcolor="black" ]
+"rsc_c001n08_delete_0 c001n08" [ style=bold color="green" fontcolor="black"]
 "rsc_c001n08_stop_0 c001n08" -> "all_stopped" [ style = bold]
+"rsc_c001n08_stop_0 c001n08" -> "rsc_c001n08_delete_0 c001n08" [ style = bold]
 "rsc_c001n08_stop_0 c001n08" [ style=bold color="green" fontcolor="black" ]
 }

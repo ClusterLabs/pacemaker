@@ -25,7 +25,6 @@ Executing cluster transition:
  * Resource action: rsc3            start on node3
  * Pseudo action:   all_stopped
  * Resource action: rsc2            delete on node2
- * Cluster action:  lrm_refresh on node2
  * Resource action: rsc2            start on node2
 
 Revised cluster status:

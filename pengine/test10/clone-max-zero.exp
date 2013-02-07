@@ -1,181 +1,233 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="7" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
+      <rsc_op id="11" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="dlm:1" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="stop" operation_key="dlm-clone_stop_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="dlm-clone_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="17" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="8" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
+      <rsc_op id="5" operation="delete" operation_key="dlm:1_delete_0" internal_operation_key="dlm:0_delete_0" on_node="c001n11" on_node_uuid="c001n11">
+        <primitive id="dlm:1" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="3" operation="delete" operation_key="dlm:1_delete_0" internal_operation_key="dlm:0_delete_0" on_node="c001n12" on_node_uuid="c001n12">
+        <primitive id="dlm:1" long-id="dlm:0" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="12" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="dlm:0" long-id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="stop" operation_key="dlm-clone_stop_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="dlm-clone_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="14" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="2" priority="1000000">
-    <action_set>
-      <pseudo_event id="12" operation="stopped" operation_key="dlm-clone_stopped_0">
-        <attributes CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="7" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="8" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="11" operation="stop" operation_key="dlm-clone_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <pseudo_event id="11" operation="stop" operation_key="dlm-clone_stop_0">
-        <attributes CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="18" operation="stopped" operation_key="o2cb-clone_stopped_0"/>
+        <rsc_op id="18" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
+      <rsc_op id="4" operation="delete" operation_key="dlm:0_delete_0" internal_operation_key="dlm:1_delete_0" on_node="c001n11" on_node_uuid="c001n11">
+        <primitive id="dlm:0" long-id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="2" operation="delete" operation_key="dlm:0_delete_0" internal_operation_key="dlm:1_delete_0" on_node="c001n12" on_node_uuid="c001n12">
+        <primitive id="dlm:0" long-id="dlm:1" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <pseudo_event id="16" operation="stopped" operation_key="dlm-clone_stopped_0">
+        <attributes CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="15" operation="stop" operation_key="dlm-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="15" operation="stop" operation_key="dlm-clone_stop_0">
+        <attributes CRM_meta_clone_max="0" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="22" operation="stopped" operation_key="o2cb-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="17" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="o2cb" long-id="o2cb:1" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="stop" operation_key="o2cb-clone_stop_0"/>
+        <pseudo_event id="21" operation="stop" operation_key="o2cb-clone_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="27" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="31" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="9">
     <action_set>
-      <rsc_op id="14" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
+      <rsc_op id="18" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="o2cb" long-id="o2cb:0" class="ocf" provider="ocfs2" type="o2cb"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="stop" operation_key="o2cb-clone_stop_0"/>
+        <pseudo_event id="21" operation="stop" operation_key="o2cb-clone_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="32" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6" priority="1000000">
+  <synapse id="10" priority="1000000">
     <action_set>
-      <pseudo_event id="18" operation="stopped" operation_key="o2cb-clone_stopped_0">
+      <pseudo_event id="22" operation="stopped" operation_key="o2cb-clone_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="17" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
       <trigger>
-        <rsc_op id="14" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="18" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
       <trigger>
-        <pseudo_event id="17" operation="stop" operation_key="o2cb-clone_stop_0"/>
+        <pseudo_event id="21" operation="stop" operation_key="o2cb-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
+  <synapse id="11">
     <action_set>
-      <pseudo_event id="17" operation="stop" operation_key="o2cb-clone_stop_0">
+      <pseudo_event id="21" operation="stop" operation_key="o2cb-clone_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="32" operation="stopped" operation_key="c-ocfs2-1_stopped_0"/>
+        <pseudo_event id="36" operation="stopped" operation_key="c-ocfs2-1_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="8">
+  <synapse id="12">
     <action_set>
-      <rsc_op id="27" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
+      <rsc_op id="31" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12">
         <primitive id="ocfs2-1" long-id="ocfs2-1:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7" device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
+        <pseudo_event id="35" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="9">
+  <synapse id="13">
     <action_set>
-      <rsc_op id="28" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
+      <rsc_op id="32" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11">
         <primitive id="ocfs2-1" long-id="ocfs2-1:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7" device="/dev/drbd0" directory="/mnt" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
+        <pseudo_event id="35" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="10" priority="1000000">
+  <synapse id="14" priority="1000000">
     <action_set>
-      <pseudo_event id="32" operation="stopped" operation_key="c-ocfs2-1_stopped_0">
+      <pseudo_event id="36" operation="stopped" operation_key="c-ocfs2-1_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="27" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="31" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="32" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
       <trigger>
-        <pseudo_event id="31" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
+        <pseudo_event id="35" operation="stop" operation_key="c-ocfs2-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="15">
     <action_set>
-      <pseudo_event id="31" operation="stop" operation_key="c-ocfs2-1_stop_0">
+      <pseudo_event id="35" operation="stop" operation_key="c-ocfs2-1_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="12">
+  <synapse id="16">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.7"/>
@@ -183,22 +235,22 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="11" operation="stop" operation_key="dlm:1_stop_0" internal_operation_key="dlm:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
       <trigger>
-        <rsc_op id="8" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="12" operation="stop" operation_key="dlm:0_stop_0" internal_operation_key="dlm:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="17" operation="stop" operation_key="o2cb:1_stop_0" internal_operation_key="o2cb:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
       <trigger>
-        <rsc_op id="14" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="18" operation="stop" operation_key="o2cb:0_stop_0" internal_operation_key="o2cb:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
       <trigger>
-        <rsc_op id="27" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
+        <rsc_op id="31" operation="stop" operation_key="ocfs2-1:1_stop_0" internal_operation_key="ocfs2-1:0_stop_0" on_node="c001n12" on_node_uuid="c001n12"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
+        <rsc_op id="32" operation="stop" operation_key="ocfs2-1:0_stop_0" internal_operation_key="ocfs2-1:1_stop_0" on_node="c001n11" on_node_uuid="c001n11"/>
       </trigger>
     </inputs>
   </synapse>

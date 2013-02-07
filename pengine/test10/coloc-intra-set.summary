@@ -15,6 +15,11 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: dummy1          stop on hex-13
  * Resource action: dummy3          stop on hex-13
+ * Resource action: d0:0            delete on hex-13
+ * Resource action: o2cb:0          delete on hex-13
+ * Resource action: dummy4          delete on hex-13
+ * Resource action: dlm:0           delete on hex-13
+ * Resource action: ocfs2-3:0       delete on hex-13
  * Pseudo action:   all_stopped
  * Resource action: dummy1          start on hex-14
  * Resource action: dummy3          start on hex-14

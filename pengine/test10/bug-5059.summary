@@ -22,6 +22,8 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   ms_stateful_pre_notify_start_0
+ * Resource action: iptest          delete on gluster02.h
+ * Resource action: ipsrc2          delete on gluster02.h
  * Resource action: p_stateful1:0   notify on gluster01.h
  * Resource action: p_stateful1:1   notify on gluster02.h
  * Pseudo action:   ms_stateful_confirmed-pre_notify_start_0

@@ -32,7 +32,11 @@ Executing cluster transition:
  * Pseudo action:   o2cb-clone_stopped_0
  * Pseudo action:   dlm-clone_stop_0
  * Resource action: dlm:1           stop on c001n12
+ * Resource action: dlm:1           delete on c001n11
+ * Resource action: dlm:1           delete on c001n12
  * Resource action: dlm:0           stop on c001n11
+ * Resource action: dlm:0           delete on c001n11
+ * Resource action: dlm:0           delete on c001n12
  * Pseudo action:   dlm-clone_stopped_0
  * Pseudo action:   all_stopped
 

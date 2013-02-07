@@ -18,6 +18,11 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   group_fUN_stop_0
  * Resource action: resource_dummy  stop on ops.ds9
+ * Resource action: OpenVPN_IP      delete on ops.ds9
+ * Resource action: OpenVPN_IP      delete on heartbeat.ds9
+ * Resource action: Apache          delete on biggame.ds9
+ * Resource action: Apache          delete on ops.ds9
+ * Resource action: Apache          delete on heartbeat.ds9
  * Resource action: resource_IP3    stop on ops.ds9
  * Pseudo action:   all_stopped
  * Pseudo action:   group_fUN_stopped_0

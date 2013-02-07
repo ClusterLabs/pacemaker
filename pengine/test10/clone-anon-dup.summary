@@ -22,6 +22,9 @@ Executing cluster transition:
  * Resource action: stonith-1       start on wc01
  * Pseudo action:   group_webservice:2_stop_0
  * Resource action: apache2:0       stop on wc02
+ * Resource action: apache2:0       delete on wc03
+ * Resource action: apache2:0       delete on wc01
+ * Resource action: apache2:0       delete on wc02
  * Pseudo action:   all_stopped
  * Pseudo action:   group_webservice:2_stopped_0
  * Pseudo action:   clone_webservice_stopped_0
