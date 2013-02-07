@@ -99,7 +99,7 @@ fatal() {
 detect_host() {
 
     depth="-maxdepth 5"
-    local_state_dir=/var
+    local_state_dir=@localstatedir@
 
     if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
@@ -116,7 +116,7 @@ detect_host() {
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
     CRM_DAEMON_DIR=
-    for p in /usr /usr/local /opt/local; do
+    for p in /usr /usr/local /opt/local @exec_prefix@; do
 	for d in libexec lib64 lib; do
 	    if [ -e $p/$d/pacemaker/pengine ]; then
 		CRM_DAEMON_DIR=$p/$d/pacemaker
@@ -710,6 +710,14 @@ find_cluster_cf() {
 		    fi
 		fi
 	    done
+	    if [ -z "$best_file" ]; then
+	    	debug "Looking for corosync configuration file. This may take a while..."
+		for f in `find / -type f -name corosync.conf`; do
+		    best_file=$f
+		    break
+		done
+		debug "Located corosync config file: $best_file"
+	    fi
 	    echo "$best_file"
 	    ;;
 	openais)
