@@ -95,7 +95,7 @@ indexterm:[Corosync,Add Cluster Node]
 indexterm:[Add Cluster Node,Corosync]
 
 Adding a new node is as simple as installing Corosync and Pacemaker,
-and copying '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if
+and copying '/etc/corosync/corosync.conf' and '/etc/corosync/authkey' (if
 it exists) from an existing node.  You may need to modify the
 +mcastaddr+ option to match the new node's IP address.
 
@@ -140,7 +140,7 @@ The five-step guide to replacing an existing cluster node:
 . Make sure the old node is completely stopped
 . Give the new machine the same hostname and IP address as the old one
 . Install the cluster software :-)
-. Copy '/etc/corosync/corosync.conf' and '/etc/ais/authkey' (if it exists) to the new node
+. Copy '/etc/corosync/corosync.conf' and '/etc/corosync/authkey' (if it exists) to the new node
 . Start the new cluster node
 
 If a log message containing "Invalid digest" appears from Corosync,
