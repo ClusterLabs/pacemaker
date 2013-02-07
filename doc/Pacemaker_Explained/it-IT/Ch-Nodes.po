@@ -123,7 +123,7 @@ msgstr "Corosync"
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/corosync/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
 msgstr ""
 
 #. Tag: para
@@ -252,8 +252,8 @@ msgstr "Installare il software del cluster :-)"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) to the new node"
-msgstr "Copiare <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/ais/authkey</filename> (se esiste) nel nuovo nodo"
+msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/corosync/authkey</emphasis> (if it exists) to the new node"
+msgstr "Copiare <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/corosync/authkey</filename> (se esiste) nel nuovo nodo"
 
 #. Tag: para
 #, no-c-format
@@ -290,8 +290,8 @@ msgstr "Copiare ha.cf ed authkeys nel nuovo nodo"
 msgid "On the new node, populate it’s UUID using <literal>crm_uuid -w</literal> and the UUID from step 2"
 msgstr "Sul vecchio nodo, popolare il file con il valore UUID utilizzando crm_uuid -w ed il valore UUID ricavato nel passo 2"
 
-#~ msgid "Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node&#39;s IP address."
-#~ msgstr "Aggiungere un nuovo nodo è fattibile installando Corosync e Pacemaker, e copiando <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/ais/authkey</filename> (se esiste) da un nodo esistente. Potrebbe essere necessario modificare l'opzione mcastaddr in modo che corrisponda all'indirizzo IP del nuovo nodo."
+#~ msgid "Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/corosync/authkey</filename> (if it exists) from an existing node. You may need to modify the mcastaddr option to match the new node&#39;s IP address."
+#~ msgstr "Aggiungere un nuovo nodo è fattibile installando Corosync e Pacemaker, e copiando <filename>/etc/corosync/corosync.conf</filename> e <filename>/etc/corosync/authkey</filename> (se esiste) da un nodo esistente. Potrebbe essere necessario modificare l'opzione mcastaddr in modo che corrisponda all'indirizzo IP del nuovo nodo."
 
 #~ msgid "Provided you specified autojoin any in <filename>ha.cf</filename>, adding a new is as simple as installing heartbeat and copying <filename>ha.cf</filename> and <filename>authkeys</filename> from an existing node."
 #~ msgstr "A condizione che si sia specificato autojon any all'interno del file <filename>ha.cf</filename>,  aggiungere un nuovo nodo è possibile semplicemente installando heartbeat e copiando i file <filename>ha.cf</filename> e <filename>authkeys</filename> da un nodo esistente."

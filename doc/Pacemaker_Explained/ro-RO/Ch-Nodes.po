@@ -116,8 +116,8 @@ msgstr "Corosync"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
-msgstr "Adăugarea unui nou nod este la fel de simplă ca instalarea Corosync şi Pacemaker şi copierea <filename>/etc/corosync/corosync.conf</filename> şi a <filename>/etc/ais/authkey</filename> (dacă există) de pe un nod existent. Ar putea fi necesar să modificaţi opţiunea mcastaddr pentru a se potrivi cu adresa IP a noului nod."
+msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> Adding a new node is as simple as installing Corosync and Pacemaker, and copying <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/corosync/authkey</emphasis> (if it exists) from an existing node. You may need to modify the <literal>mcastaddr</literal> option to match the new node’s IP address."
+msgstr "Adăugarea unui nou nod este la fel de simplă ca instalarea Corosync şi Pacemaker şi copierea <filename>/etc/corosync/corosync.conf</filename> şi a <filename>/etc/corosync/authkey</filename> (dacă există) de pe un nod existent. Ar putea fi necesar să modificaţi opţiunea mcastaddr pentru a se potrivi cu adresa IP a noului nod."
 
 #. Tag: para
 #, no-c-format
@@ -249,8 +249,8 @@ msgstr "Instalaţi soft-ul de cluster :-)"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/ais/authkey</emphasis> (if it exists) to the new node"
-msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/ais/authkey</filename> (dacă există) pe nodul nou"
+msgid "Copy <emphasis>/etc/corosync/corosync.conf</emphasis> and <emphasis>/etc/corosync/authkey</emphasis> (if it exists) to the new node"
+msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/corosync/authkey</filename> (dacă există) pe nodul nou"
 
 #. Tag: para
 #, no-c-format
@@ -280,7 +280,7 @@ msgstr "Instalaţi soft-ul de cluster"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "Copy <emphasis>ha.cf</emphasis> and <emphasis>authkeys</emphasis> to the new node"
-msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/ais/authkey</filename> (dacă există) pe nodul nou"
+msgstr "Copiaţi <filename>/etc/corosync/corosync.conf</filename> şi <filename>/etc/corosync/authkey</filename> (dacă există) pe nodul nou"
 
 #. Tag: para
 #, fuzzy, no-c-format
