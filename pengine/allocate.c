@@ -359,7 +359,8 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     CRM_CHECK(node != NULL, return);
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {
-        pe_rsc_trace(rsc, "Skipping param check for %s: orphan", rsc->id);
+        pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
+        DeleteRsc(rsc, node, FALSE, data_set);
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {

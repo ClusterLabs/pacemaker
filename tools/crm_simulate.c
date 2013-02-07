@@ -358,6 +358,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     const char *rclass = NULL;
     const char *resource = NULL;
     const char *rprovider = NULL;
+    const char *operation = crm_element_value(action->xml, "operation");
     const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
 
     xmlNode *cib_node = NULL;
@@ -366,7 +367,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
-    if (safe_str_eq(crm_element_value(action->xml, "operation"), "probe_complete")) {
+    if (safe_str_eq(operation, "probe_complete")) {
         crm_info("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
         goto done;
     }
@@ -387,6 +388,11 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         if(pe_find_resource(resource_list, longname)) {
             resource = longname;
         }
+    }
+
+    if (safe_str_eq(operation, "delete")) {
+        quiet_log(" * Resource action: %-15s delete on %s\n", resource, node);
+        goto done;
     }
 
     rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
