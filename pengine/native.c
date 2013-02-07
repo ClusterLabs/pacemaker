@@ -481,14 +481,6 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     pe_weights_rollback);
     }
 
-    for (gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
-        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
-
-        if (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby) {
-            rsc_ticket_constraint(rsc, rsc_ticket, data_set);
-        }
-    }
-
     print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
