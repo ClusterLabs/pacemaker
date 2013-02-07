@@ -41,6 +41,8 @@ digraph "g" {
 "rsc_c001n08_clear_failcount c001n02" [ style=bold color="green" fontcolor="black"]
 "rsc_c001n08_clear_failcount c001n08" -> "probe_complete" [ style = bold]
 "rsc_c001n08_clear_failcount c001n08" [ style=bold color="green" fontcolor="black"]
+"rsc_c001n08_delete_0 c001n08" [ style=bold color="green" fontcolor="black"]
 "rsc_c001n08_stop_0 c001n08" -> "all_stopped" [ style = bold]
+"rsc_c001n08_stop_0 c001n08" -> "rsc_c001n08_delete_0 c001n08" [ style = bold]
 "rsc_c001n08_stop_0 c001n08" [ style=bold color="green" fontcolor="black"]
 }

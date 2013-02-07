@@ -16,6 +16,11 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   ms_stateful_pre_notify_start_0
+ * Resource action: service2:0      delete on alice.demo
+ * Resource action: service2:0      delete on bob.demo
+ * Resource action: service2:1      delete on bob.demo
+ * Resource action: service1        delete on alice.demo
+ * Resource action: service1        delete on bob.demo
  * Pseudo action:   ms_stateful_confirmed-pre_notify_start_0
  * Pseudo action:   ms_stateful_start_0
  * Resource action: stateful:0      start on alice.demo

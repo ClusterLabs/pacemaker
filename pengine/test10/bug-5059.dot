@@ -14,6 +14,8 @@ digraph "g" {
 "g_stateful:1_start_0" -> "g_stateful:1_running_0" [ style = bold]
 "g_stateful:1_start_0" -> "p_stateful2:1_start_0 gluster02.h" [ style = bold]
 "g_stateful:1_start_0" [ style=bold color="green" fontcolor="orange"]
+"ipsrc2_delete_0 gluster02.h" [ style=bold color="green" fontcolor="black"]
+"iptest_delete_0 gluster02.h" [ style=bold color="green" fontcolor="black"]
 "ms_stateful_confirmed-post_notify_promoted_0" -> "p_stateful1:1_monitor_10000 gluster02.h" [ style = bold]
 "ms_stateful_confirmed-post_notify_promoted_0" -> "p_stateful2:1_monitor_10000 gluster02.h" [ style = bold]
 "ms_stateful_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange"]
