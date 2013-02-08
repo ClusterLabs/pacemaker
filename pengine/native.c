@@ -1694,9 +1694,9 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
                 role2text(constraint->role_filter), rsc->id);
     
     /* take "lifetime" into account */
-    if (constraint->role_filter > 0 && constraint->role_filter != rsc->next_role) {
-        pe_rsc_debug(rsc, "Constraint (%s) is not active (role : %s)",
-                  constraint->id, role2text(constraint->role_filter));
+    if (constraint->role_filter > RSC_ROLE_UNKNOWN && constraint->role_filter != rsc->next_role) {
+        pe_rsc_debug(rsc, "Constraint (%s) is not active (role : %s vs. %s)",
+                     constraint->id, role2text(constraint->role_filter), role2text(rsc->next_role));
         return;
 
     } else if (is_active(constraint) == FALSE) {
