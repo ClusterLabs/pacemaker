@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -376,6 +376,11 @@ lrm_state_verify_stopped(lrm_state_t *lrm_state, enum crmd_fsa_state cur_state, 
 
     if (lrm_state->resource_history == NULL) {
         return rc;
+    }
+
+    if (cur_state == S_TERMINATE || is_set(fsa_input_register, R_SHUTDOWN)) {
+        /* At this point we're not waiting, we're just shutting down */
+        when = "shutdown";
     }
 
     counter = 0;
@@ -1002,7 +1007,7 @@ cancel_op(lrm_state_t *lrm_state, const char *rsc_id, const char *key, int op, g
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
 
-    rc = lrm_state_cancel(lrm_state, 
+    rc = lrm_state_cancel(lrm_state,
         pending->rsc_id,
         pending->op_type,
         pending->interval);
@@ -1165,7 +1170,7 @@ do_lrm_invoke(long long action,
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
 
-    /* TODO lrm_state. Once lrmd connection resources are enabled and controlled by the 
+    /* TODO lrm_state. Once lrmd connection resources are enabled and controlled by the
      * pengine, the input xml should tell us what lrm_state object we should be using here.
      * Until that work is done, we assume the local connection for now. */
     lrm_state = lrm_state_find(fsa_our_uname);
@@ -1981,7 +1986,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t * op)
         delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL);
     }
 
-    /* If a shutdown was escalated while operations were pending, 
+    /* If a shutdown was escalated while operations were pending,
      * then the FSA will be stalled right now... allow it to continue
      */
     mainloop_set_trigger(fsa_source);
@@ -1993,4 +1998,3 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t * op)
 
     return TRUE;
 }
-
