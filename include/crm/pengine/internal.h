@@ -105,6 +105,8 @@ extern node_t *node_copy(node_t * this_node);
 extern time_t get_timet_now(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, int *last_failure,
                          pe_working_set_t * data_set);
+extern int get_failcount_all(node_t * node, resource_t * rsc, int *last_failure,
+                         pe_working_set_t * data_set);
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
@@ -232,5 +234,28 @@ char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
 gint sort_node_uname(gconstpointer a, gconstpointer b);
+
+enum rsc_digest_cmp_val {
+    /*! Digests are the same */
+    RSC_DIGEST_MATCH   = 0,
+    /*! Params that require a restart changed */
+    RSC_DIGEST_RESTART,
+    /*! Some parameter changed.  */
+    RSC_DIGEST_ALL,
+    /*! rsc op didn't have a digest associated with it, so
+     *  it is unknown if parameters changed or not. */
+    RSC_DIGEST_UNKNOWN,
+};
+
+typedef struct op_digest_cache_s {
+    enum rsc_digest_cmp_val rc;
+    xmlNode *params_all;
+    xmlNode *params_restart;
+    char *digest_all_calc;
+    char *digest_restart_calc;
+} op_digest_cache_t;
+
+op_digest_cache_t *
+rsc_action_digest_cmp(resource_t *rsc, xmlNode *xml_op, node_t *node, pe_working_set_t *data_set);
 
 #endif

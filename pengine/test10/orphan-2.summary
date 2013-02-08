@@ -31,6 +31,7 @@ Executing cluster transition:
  * Cluster action:  clear_failcount on c001n02
  * Pseudo action:   probe_complete
  * Resource action: rsc_c001n08     stop on c001n08
+ * Resource action: rsc_c001n08     delete on c001n08
  * Pseudo action:   all_stopped
 
 Revised cluster status:

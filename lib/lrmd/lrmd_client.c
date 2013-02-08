@@ -701,11 +701,11 @@ lrmd_send_xml_no_reply(lrmd_t *lrmd, xmlNode *msg)
     case CRM_CLIENT_IPC:
         rc = crm_ipc_send(native->ipc, msg, crm_ipc_client_none, 0, NULL);
         break;
-    case CRM_CLIENT_TLS:
 #ifdef HAVE_GNUTLS_GNUTLS_H
+    case CRM_CLIENT_TLS:
         rc = lrmd_tls_send(lrmd, msg);
-#endif
         break;
+#endif
     default:
         crm_err("Unsupported connection type: %d", native->type);
     }
@@ -990,7 +990,6 @@ lrmd_tls_key_cb(gnutls_session_t session, char **username, gnutls_datum_t *key)
 
     return rc;
 }
-#endif
 
 static void
 lrmd_gnutls_global_init(void)
@@ -1002,6 +1001,7 @@ lrmd_gnutls_global_init(void)
     }
     gnutls_init = 1;
 }
+#endif
 
 static void
 report_async_connection_result(lrmd_t *lrmd, int rc)
@@ -1066,12 +1066,10 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 
     return;
 }
-#endif
 
 static int
 lrmd_tls_connect_async(lrmd_t *lrmd, int timeout /*ms*/)
 {
-#ifdef HAVE_GNUTLS_GNUTLS_H
     int rc = 0;
     lrmd_private_t *native = lrmd->private;
 
@@ -1080,16 +1078,11 @@ lrmd_tls_connect_async(lrmd_t *lrmd, int timeout /*ms*/)
     rc = crm_remote_tcp_connect_async(native->server, native->port, timeout, lrmd, lrmd_tcp_connect_cb);
 
     return rc;
-#else
-    crm_err("TLS not enabled for this build.");
-    return -ENOTCONN;
-#endif
 }
 
 static int
 lrmd_tls_connect(lrmd_t *lrmd, int *fd)
 {
-#ifdef HAVE_GNUTLS_GNUTLS_H
     static struct mainloop_fd_callbacks lrmd_tls_callbacks =
         {
             .dispatch = lrmd_tls_dispatch,
@@ -1134,11 +1127,8 @@ lrmd_tls_connect(lrmd_t *lrmd, int *fd)
         native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd, &lrmd_tls_callbacks);
     }
     return pcmk_ok;
-#else
-    crm_err("TLS not enabled for this build.");
-    return -ENOTCONN;
-#endif
 }
+#endif
 
 static int
 lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
@@ -1186,6 +1176,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             report_async_connection_result(lrmd, rc);
         }
         break;
+#ifdef HAVE_GNUTLS_GNUTLS_H
     case CRM_CLIENT_TLS:
         rc = lrmd_tls_connect_async(lrmd, timeout);
         if (rc) {
@@ -1193,6 +1184,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             report_async_connection_result(lrmd, rc);
         }
         break;
+#endif
     default:
         crm_err("Unsupported connection type: %d", native->type);
     }
@@ -1558,6 +1550,62 @@ lsb_get_metadata(const char *type, char **output)
     return pcmk_ok;
 }
 
+#if SUPPORT_NAGIOS
+static int
+nagios_get_metadata(const char *type, char **output)
+{
+    int rc = pcmk_ok;
+    FILE *file_strm = NULL;
+    int start = 0, length = 0, read_len = 0;
+    char *metadata_file = NULL;
+    int len = 36;
+
+    len += strlen(NAGIOS_METADATA_DIR);
+    len += strlen(type);
+    metadata_file = calloc(1, len);
+    CRM_CHECK(metadata_file != NULL, return -ENOMEM);
+
+    sprintf(metadata_file, "%s/%s.xml", NAGIOS_METADATA_DIR, type);
+    file_strm = fopen(metadata_file, "r");
+    if (file_strm == NULL) {
+        crm_err("Metadata file %s does not exist", metadata_file);
+        free(metadata_file);
+        return -EIO;
+    }
+
+    /* see how big the file is */
+    start = ftell(file_strm);
+    fseek(file_strm, 0L, SEEK_END);
+    length = ftell(file_strm);
+    fseek(file_strm, 0L, start);
+
+    CRM_ASSERT(length >= 0);
+    CRM_ASSERT(start == ftell(file_strm));
+
+    if (length <= 0) {
+        crm_info("%s was not valid", metadata_file);
+        free(*output);
+        *output = NULL;
+        rc = -EIO;
+
+    } else {
+        crm_trace("Reading %d bytes from file", length);
+        *output = calloc(1, (length + 1));
+        read_len = fread(*output, 1, length, file_strm);
+        if (read_len != length) {
+            crm_err("Calculated and read bytes differ: %d vs. %d", length, read_len);
+            free(*output);
+            *output = NULL;
+            rc = -EIO;
+        }
+    }
+
+    fclose(file_strm);
+    free(metadata_file);
+    return rc;
+}
+#endif
+
 static int
 generic_get_metadata(const char *standard, const char *provider, const char *type, char **output)
 {
@@ -1602,6 +1650,10 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
         return stonith_get_metadata(provider, type, output);
     } else if (safe_str_eq(class, "lsb")) {
         return lsb_get_metadata(type, output);
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(class, "nagios")) {
+        return nagios_get_metadata(type, output);
+#endif
     }
     return generic_get_metadata(class, provider, type, output);
 }

@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <grp.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -317,7 +316,9 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                     local_rc = -ENOMSG;
                 }
                 break;
+#  ifdef HAVE_GNUTLS_GNUTLS_H
             case CRM_CLIENT_TLS:
+#  endif
             case CRM_CLIENT_TCP:
                 crm_remote_send(client_obj->remote, notify_src);
                 break;

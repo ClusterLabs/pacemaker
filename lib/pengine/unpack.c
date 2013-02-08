@@ -190,6 +190,17 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void
+destroy_digest_cache(gpointer ptr)
+{
+    op_digest_cache_t *data = ptr;
+    free_xml(data->params_all);
+    free_xml(data->params_restart);
+    free(data->digest_all_calc);
+    free(data->digest_restart_calc);
+    free(data);
+}
+
 gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
@@ -253,6 +264,10 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             new_node->details->utilization =
                 g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                                       g_hash_destroy_str);
+
+            new_node->details->digest_cache =
+                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+                                      destroy_digest_cache);
 
 /* 		if(data_set->have_quorum == FALSE */
 /* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
@@ -365,10 +380,41 @@ destroy_template_rsc_set(gpointer data)
     free_xml(rsc_set);
 }
 
+static void
+setup_container(resource_t * rsc, pe_working_set_t * data_set)
+{
+    const char *container_id = NULL;
+
+    if (rsc->children) {
+        GListPtr gIter = rsc->children;
+
+        for (; gIter != NULL; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+            setup_container(child_rsc, data_set);
+        }
+        return;
+    }
+
+    container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
+    if (container_id && safe_str_neq(container_id, rsc->id)) {
+        resource_t *container = pe_find_resource(data_set->resources, container_id);
+
+        if (container) {
+            rsc->container = container;
+            container->fillers = g_list_append(container->fillers, rsc);
+            pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
+
+        } else {
+            pe_err("Resource %s: Unknown resource container (%s)", rsc->id, container_id);
+        } 
+    }
+}
+
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
+    GListPtr gIter = NULL;
 
     data_set->template_rsc_sets =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
@@ -401,6 +447,12 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
                 new_rsc->fns->free(new_rsc);
             }
         }
+    }
+
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc = (resource_t *) gIter->data;
+
+        setup_container(rsc, data_set);
     }
 
     data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
@@ -1296,6 +1348,17 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 stop_action(rsc, node, FALSE);
             }
             break;
+
+        case action_fail_restart_container:
+            set_bit(rsc->flags, pe_rsc_failed);
+
+            if (rsc->container) {
+                stop_action(rsc->container, node, FALSE);
+
+            } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+                stop_action(rsc, node, FALSE);
+            }
+            break;
     }
 
     if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
@@ -1631,6 +1694,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     int actual_rc_i = 0;
     int target_rc = -1;
     int last_failure = 0;
+    int clear_failcount = 0;
 
     action_t *action = NULL;
     node_t *effective_node = NULL;
@@ -1639,6 +1703,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     gboolean expired = FALSE;
     gboolean is_probe = FALSE;
     gboolean clear_past_failure = FALSE;
+    gboolean stop_failure_ignored = FALSE;
 
     CRM_CHECK(rsc != NULL, return FALSE);
     CRM_CHECK(node != NULL, return FALSE);
@@ -1734,14 +1799,29 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         if (rsc->failure_timeout > 0
             && last_failure > 0
             && fc == 0) {
-            action_t *clear_op = NULL;
 
-            clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-                                     CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-
-            add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            clear_failcount = 1;
             crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
         }
+    } else if (strstr(id, "last_failure") &&
+        ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
+
+        op_digest_cache_t *digest_data = NULL;
+        digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+
+        if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
+            crm_trace("rsc op %s on node %s does not have a op digest to compare against", rsc->id, id, node->details->id);
+        } else if (digest_data->rc != RSC_DIGEST_MATCH) {
+            clear_failcount = 1;
+            crm_info("Clearing failcount for %s on %s, %s failed and now resource parameters have changed.", task, rsc->id, node->details->uname);
+        }
+    }
+
+    if (clear_failcount) {
+        action_t *clear_op = NULL;
+        clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+                                 CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+        add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     }
 
     if (expired
@@ -1871,7 +1951,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        id, actual_rc_i, magic, node->details->uname);
             goto done;
 
-        } else if (action->on_fail == action_fail_ignore) {
+        } else if ((action->on_fail == action_fail_ignore) ||
+                   (action->on_fail == action_fail_restart_container &&
+                    safe_str_eq(task, CRMD_ACTION_STOP))){
             crm_warn("Remapping %s (rc=%d) on %s to DONE: ignore",
                      id, actual_rc_i, node->details->uname);
             task_status_i = PCMK_LRM_OP_DONE;
@@ -1880,6 +1962,14 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
             crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
             if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
                 add_node_copy(data_set->failed, xml_op);
+            }
+
+            if (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) {
+                *on_fail = action->on_fail;
+            }
+
+            if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+                stop_failure_ignored = TRUE;
             }
         }
     }
@@ -2033,6 +2123,17 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                     case action_fail_recover:
                         *on_fail = action_fail_ignore;
                         rsc->next_role = RSC_ROLE_UNKNOWN;
+                        break;
+
+                    case action_fail_restart_container:
+                        if (stop_failure_ignored) {
+                            pe_rsc_trace(rsc, "%s.%s is not cleared by an ignored failed stop",
+                                    rsc->id, fail2text(*on_fail));
+
+                        } else {
+                            *on_fail = action_fail_ignore;
+                            rsc->next_role = RSC_ROLE_UNKNOWN;
+                        }
                 }
             }
             break;
@@ -2047,7 +2148,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 add_node_copy(data_set->failed, xml_op);
             }
 
-            if (*on_fail < action->on_fail) {
+            if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
+                (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) ||
+                (*on_fail == action_fail_restart_container && action->on_fail >= action_fail_migrate)) {
                 pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)",
                              fail2text(*on_fail), fail2text(action->on_fail),
                              action->uuid, task_key ? task_key : id);

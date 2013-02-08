@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+#
+#	remote OCF RA. This script provides metadata for the internal
+#	pacemaker remote lrmd connection agent.  Outside of acting
+#	as a place holder so the remote ra script can be indexed and
+#	providing metadata, this script should never be invoked.  The
+#	actual functionality behind the remote lrmd connection lives
+#	within pacemaker's crmd component.
+#
+# Copyright (c) 2013 David Vossel
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
+. ${OCF_FUNCTIONS}
+: ${__OCF_ACTION=$1}
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="remote" version="0.1">
+  <version>0.1</version>
+  <parameters>
+    <parameter name="server" unique="1">
+    <longdesc lang="en">
+       Server location to connect to.  This can be an ip address or hostname.
+    </longdesc>
+    <shortdesc lang="en">Server location</shortdesc>
+    <content type="string"/>
+    </parameter>
+    <parameter name="port" unique="1">
+    <longdesc lang="en">
+       tcp port to connect to.
+    </longdesc>
+    <shortdesc lang="en">tcp port</shortdesc>
+    <content type="string" default="1984"/>
+    </parameter>
+  </parameters>
+  <actions>
+    <action name="start"   timeout="15" />
+    <action name="stop"    timeout="15" />
+    <action name="monitor"    timeout="15" />
+    <action name="migrate_to"   timeout="15" />
+    <action name="migrate_from" timeout="15" />
+    <action name="meta-data"  timeout="5" />
+  </actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+remote_usage() {
+	cat <<END
+usage: $0 {meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+remote_unsupported() {
+	ocf_log info "This pacemaker version does not support the ocf:pacemaker:remote agent"
+	return $OCF_ERR_GENERIC
+}
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		remote_unsupported;;
+stop)		remote_unsupported;;
+monitor)	remote_unsupported;;
+migrate_to)	remote_unsupported;;
+migrate_from) remote_unsupported;;
+validate-all) remote_unsupported;;
+usage|help)	remote_usage
+		exit $OCF_SUCCESS
+		;;
+*)		dummy_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc

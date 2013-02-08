@@ -1,0 +1,21 @@
+
+Current cluster status:
+Online: [ 18builder ]
+OFFLINE: [ 18node1 18node2 18node3 ]
+
+ remote-node	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   remote-node	(18builder)
+
+Executing cluster transition:
+ * Resource action: remote-node     start on 18builder
+ * Cluster action:  clear_failcount on 18builder
+ * Resource action: remote-node     monitor=30000 on 18builder
+
+Revised cluster status:
+Online: [ 18builder ]
+OFFLINE: [ 18node1 18node2 18node3 ]
+
+ remote-node	(ocf::pacemaker:Dummy):	Started 18builder
+

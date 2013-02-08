@@ -224,6 +224,25 @@ AC_ARG_WITH(cpg,
     [ SUPPORT_CS_QUORUM=try ],
 )
 
+AC_ARG_WITH(nagios,
+    [  --with-nagios
+       Support nagios remote monitoring ],
+    [ SUPPORT_NAGIOS=$withval ],
+    [ SUPPORT_NAGIOS=try ],
+)
+   
+AC_ARG_WITH(nagios-plugin-dir,
+    [  --with-nagios-plugin-dir=DIR
+       Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}]],
+    [ NAGIOS_PLUGIN_DIR="$withval" ]
+)
+
+AC_ARG_WITH(nagios-metadata-dir,
+    [  --with-nagios-metadata-dir=DIR
+       Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}]],
+    [ NAGIOS_METADATA_DIR="$withval" ]
+)
+
 AC_ARG_WITH(snmp,
     [  --with-snmp     
        Support the SNMP protocol ],
@@ -1178,6 +1197,34 @@ fi
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
 
+
+case $SUPPORT_NAGIOS in
+     1|yes|true|try)
+        SUPPORT_NAGIOS=1;;
+     *) 
+        SUPPORT_NAGIOS=0;;
+esac
+
+if test $SUPPORT_NAGIOS = 1; then
+    PCMK_FEATURES="$PCMK_FEATURES nagios"
+fi
+
+AC_DEFINE_UNQUOTED(SUPPORT_NAGIOS, $SUPPORT_NAGIOS, Support nagios plugins)
+AM_CONDITIONAL(BUILD_NAGIOS, test $SUPPORT_NAGIOS = 1)
+
+if test x"$NAGIOS_PLUGIN_DIR" = x""; then
+    NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"
+fi
+
+AC_DEFINE_UNQUOTED(NAGIOS_PLUGIN_DIR, "$NAGIOS_PLUGIN_DIR", Directory for nagios plugins)
+AC_SUBST(NAGIOS_PLUGIN_DIR)
+
+if test x"$NAGIOS_METADATA_DIR" = x""; then
+    NAGIOS_METADATA_DIR="${datadir}/nagios/plugins-metadata"
+fi
+
+AC_DEFINE_UNQUOTED(NAGIOS_METADATA_DIR, "$NAGIOS_METADATA_DIR", Directory for nagios plugins metadata)
+AC_SUBST(NAGIOS_METADATA_DIR)
 
 STACKS=""
 CLUSTERLIBS=""

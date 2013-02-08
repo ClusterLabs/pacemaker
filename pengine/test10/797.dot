@@ -1,6 +1,5 @@
  digraph "g" {
 "DcIPaddr_delete_0 c001n03" -> "DcIPaddr_start_0 c001n03" [ style = dashed]
-"DcIPaddr_delete_0 c001n03" -> "lrm_refresh c001n03" [ style = bold]
 "DcIPaddr_delete_0 c001n03" [ style=bold color="green" fontcolor="black" ]
 "DcIPaddr_monitor_0 c001n01" -> "probe_complete c001n01" [ style = bold]
 "DcIPaddr_monitor_0 c001n01" [ style=bold color="green" fontcolor="black" ]
@@ -50,7 +49,6 @@
 "child_DoFencing:3_monitor_0 c001n03" -> "probe_complete c001n03" [ style = bold]
 "child_DoFencing:3_monitor_0 c001n03" [ style=bold color="green" fontcolor="black" ]
 "do_shutdown c001n02" [ style=bold color="green" fontcolor="black" ]
-"lrm_refresh c001n03" [ style=bold color="green" fontcolor="black" ]
 "probe_complete c001n01" -> "probe_complete" [ style = bold]
 "probe_complete c001n01" [ style=bold color="green" fontcolor="black" ]
 "probe_complete c001n02" -> "probe_complete" [ style = bold]

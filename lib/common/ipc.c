@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <grp.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -797,7 +798,7 @@ crm_ipc_decompress(crm_ipc_t *client)
             return -EREMOTEIO;
         }
 
-        CRM_ASSERT(header->size_uncompressed >  ipc_buffer_max);
+        CRM_ASSERT((header->size_uncompressed + hdr_offset) >  ipc_buffer_max);
         CRM_ASSERT(size_u == header->size_uncompressed);
 
         memcpy(uncompressed, client->buffer, hdr_offset); /* Preserve the header */

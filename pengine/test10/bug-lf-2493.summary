@@ -18,6 +18,37 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: p_dummy2        start on hpn08
  * Resource action: p_dummy3        start on hpn08
+ * Resource action: res_Filesystem_nfs_fs1 delete on hpn08
+ * Resource action: res_Filesystem_nfs_fs1 delete on hpn07
+ * Resource action: res_drbd_nfs:0  delete on hpn08
+ * Resource action: res_drbd_nfs:0  delete on hpn07
+ * Resource action: res_Filesystem_nfs_fs2 delete on hpn08
+ * Resource action: res_Filesystem_nfs_fs2 delete on hpn07
+ * Resource action: res_Filesystem_nfs_fs3 delete on hpn08
+ * Resource action: res_Filesystem_nfs_fs3 delete on hpn07
+ * Resource action: res_exportfs_fs1 delete on hpn08
+ * Resource action: res_exportfs_fs1 delete on hpn07
+ * Resource action: res_exportfs_fs2 delete on hpn08
+ * Resource action: res_exportfs_fs2 delete on hpn07
+ * Resource action: res_exportfs_fs3 delete on hpn08
+ * Resource action: res_exportfs_fs3 delete on hpn07
+ * Resource action: res_drbd_nfs:1  delete on hpn08
+ * Resource action: res_drbd_nfs:1  delete on hpn07
+ * Resource action: res_LVM_nfs     delete on hpn08
+ * Resource action: res_LVM_nfs     delete on hpn07
+ * Resource action: res_LVM_p_vg-sap delete on hpn08
+ * Resource action: res_LVM_p_vg-sap delete on hpn07
+ * Resource action: res_exportfs_rootfs:0 delete on hpn07
+ * Resource action: res_IPaddr2_nfs delete on hpn08
+ * Resource action: res_IPaddr2_nfs delete on hpn07
+ * Resource action: res_drbd_hpn78:0 delete on hpn08
+ * Resource action: res_drbd_hpn78:0 delete on hpn07
+ * Resource action: res_Filesystem_sap_db delete on hpn08
+ * Resource action: res_Filesystem_sap_db delete on hpn07
+ * Resource action: res_Filesystem_sap_ci delete on hpn08
+ * Resource action: res_Filesystem_sap_ci delete on hpn07
+ * Resource action: res_exportfs_rootfs:1 delete on hpn08
+ * Resource action: res_drbd_hpn78:1 delete on hpn08
  * Resource action: p_dummy4        start on hpn07
 
 Revised cluster status:

@@ -24,7 +24,7 @@
 #include <allocate.h>
 #include <utils.h>
 
-#define DELETE_THEN_REFRESH 1   /* The crmd will remove the resource from the CIB itself, making this redundant */
+/* #define DELETE_THEN_REFRESH 1  // The crmd will remove the resource from the CIB itself, making this redundant */
 #define INFINITY_HACK   (INFINITY * -100)
 
 #define VARIANT_NATIVE 1
@@ -479,14 +479,6 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     constraint->node_attribute,
                                                     (float) constraint->score / INFINITY,
                                                     pe_weights_rollback);
-    }
-
-    for (gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
-        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
-
-        if (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby) {
-            rsc_ticket_constraint(rsc, rsc_ticket, data_set);
-        }
     }
 
     print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
@@ -1228,6 +1220,18 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
             free(load_stopped_task);
         }
+    }
+
+    if (rsc->container) {
+        custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
+                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                            pe_order_implies_then | pe_order_runnable_left, data_set);
+
+        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                            rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
+                            pe_order_implies_first, data_set);
+
+        rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL, NULL, data_set);
     }
 }
 
@@ -2118,9 +2122,8 @@ NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * da
 gboolean
 DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set)
 {
-    action_t *delete = NULL;
-
 #if DELETE_THEN_REFRESH
+    action_t *delete = NULL;
     action_t *refresh = NULL;
 #endif
     if (is_set(rsc->flags, pe_rsc_failed)) {
@@ -2138,7 +2141,11 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
 
     crm_notice("Removing %s from %s", rsc->id, node->details->uname);
 
+#if DELETE_THEN_REFRESH
     delete = delete_action(rsc, node, optional);
+#else
+    delete_action(rsc, node, optional);
+#endif
 
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
                   optional ? pe_order_implies_then : pe_order_optional, data_set);
@@ -2309,6 +2316,10 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
 
         return any_created;
+
+    } else if (rsc->container) {
+        pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
+        return FALSE;
     }
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {

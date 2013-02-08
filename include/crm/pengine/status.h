@@ -134,6 +134,9 @@ struct node_shared_s {
     enum node_type type;
 
     GHashTable *utilization;
+
+    /*! cache of calculated rsc digests for this node.*/
+    GHashTable *digest_cache;
 };
 
 struct node_s {
@@ -250,6 +253,9 @@ struct resource_s {
 
     node_t *partial_migration_target;
     node_t *partial_migration_source;
+
+    resource_t *container;
+    GListPtr fillers;
 };
 
 struct pe_action_s {
