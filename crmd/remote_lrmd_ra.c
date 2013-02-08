@@ -137,6 +137,7 @@ report_remote_ra_result(remote_ra_cmd_t *cmd)
     op.op_type = cmd->action;
     op.user_data = cmd->userdata;
     op.timeout = cmd->timeout;
+    op.interval = cmd->interval;
     op.rc = cmd->rc;
     op.op_status = cmd->op_status;
     if (cmd->params) {
