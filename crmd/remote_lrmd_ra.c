@@ -29,6 +29,9 @@
 
 #define REMOTE_LRMD_RA "remote"
 
+/* The max start timeout before cmd retry */
+#define MAX_START_TIMEOUT_MS 10000
+
 int remote_ra_callid = 0;
 
 typedef struct remote_ra_cmd_s {
@@ -46,6 +49,7 @@ typedef struct remote_ra_cmd_s {
     int delay_id;
     /*! timeout in ms for cmd */
     int timeout;
+    int remaining_timeout;
     /*! recurring interval in ms */
     int interval;
     /*! interval timer id */
@@ -58,6 +62,7 @@ typedef struct remote_ra_cmd_s {
     int rc;
     int op_status;
     int call_id;
+    time_t start_time;
     gboolean cancel;
 } remote_ra_cmd_t;
 
@@ -68,6 +73,8 @@ typedef struct remote_ra_data_s {
     GList *recurring_cmds;
 
 } remote_ra_data_t;
+
+static int handle_remote_ra_start(lrm_state_t *lrm_state, remote_ra_cmd_t *cmd, int timeout_ms);
 
 static void
 free_cmd(gpointer user_data)
@@ -160,6 +167,50 @@ report_remote_ra_result(remote_ra_cmd_t *cmd)
     }
 }
 
+static void
+update_remaining_timeout(remote_ra_cmd_t *cmd)
+{
+    cmd->remaining_timeout = ((cmd->timeout/1000) - (time(NULL) - cmd->start_time)) * 1000;
+}
+
+static gboolean
+retry_start_cmd_cb(gpointer data)
+{
+    lrm_state_t *lrm_state = data;
+    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+    remote_ra_cmd_t *cmd = NULL;
+    int rc = -1;
+
+    if (!ra_data || !ra_data->cur_cmd) {
+        return FALSE;
+    }
+    cmd = ra_data->cur_cmd;
+    if (safe_str_neq(cmd->action, "start")) {
+        return FALSE;
+    }
+    update_remaining_timeout(cmd);
+
+    if (cmd->remaining_timeout > 0) {
+        rc = handle_remote_ra_start(lrm_state, cmd, cmd->remaining_timeout);
+    }
+
+    if (rc != 0) {
+        cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+        cmd->op_status = PCMK_LRM_OP_ERROR;
+        report_remote_ra_result(cmd);
+
+        if (ra_data->cmds) {
+            mainloop_set_trigger(ra_data->work);
+        }
+        ra_data->cur_cmd = NULL;
+        free_cmd(cmd);
+    } else {
+        /* wait for connection event */
+    }
+
+    return FALSE;
+}
+
 static gboolean
 monitor_timeout_cb(gpointer data)
 {
@@ -228,12 +279,19 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             safe_str_eq(cmd->action, "start") ||
             safe_str_eq(cmd->action, "migrate_from"))) {
 
-        if (op->connection_rc == -ETIMEDOUT) {
+        if (op->connection_rc < 0) {
+            update_remaining_timeout(cmd);
+            /* There isn't much of a reason to reschedule if the timeout is too small */
+            if (cmd->remaining_timeout > 3000) {
+                crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
+                g_timeout_add(1000, retry_start_cmd_cb, lrm_state);
+                return;
+            } else {
+                crm_trace("can't reschedule start, remaining timeout too small %d", cmd->remaining_timeout);
+            }
             cmd->op_status = PCMK_LRM_OP_TIMEOUT;
             cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
-        } else if (op->connection_rc < 0) {
-            cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
-            cmd->op_status = PCMK_LRM_OP_ERROR;
+
         } else {
             cmd->rc = PCMK_EXECRA_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
@@ -284,6 +342,26 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
 }
 
+static int
+handle_remote_ra_start(lrm_state_t *lrm_state, remote_ra_cmd_t *cmd, int timeout_ms)
+{
+    const char *server = NULL;
+    lrmd_key_value_t *tmp = NULL;
+    int port = 0;
+    int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
+
+    for (tmp = cmd->params; tmp; tmp = tmp->next) {
+        if (safe_str_eq(tmp->key, "server")) {
+            server = tmp->value;
+        }
+        if (safe_str_eq(tmp->key, "port")) {
+            port = atoi(tmp->value);
+        }
+    }
+
+    return lrm_state_remote_connect_async(lrm_state, server, port, timeout_used);
+}
+
 static gboolean
 handle_remote_ra_exec(gpointer user_data)
 {
@@ -309,21 +387,7 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
-            const char *server = NULL;
-            lrmd_key_value_t *tmp = NULL;
-            int port = 0;
-
-            for (tmp = cmd->params; tmp; tmp = tmp->next) {
-                if (safe_str_eq(tmp->key, "server")) {
-                    server = tmp->value;
-                }
-                if (safe_str_eq(tmp->key, "port")) {
-                    port = atoi(tmp->value);
-                }
-            }
-
-            rc = lrm_state_remote_connect_async(lrm_state, server, port, cmd->timeout);
-
+            rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                /* take care of this later when we get async connection result */
                 crm_debug("began remote lrmd connect, waiting for connect event.");
@@ -535,6 +599,7 @@ int remote_ra_exec(lrm_state_t *lrm_state,
     cmd->timeout = timeout;
     cmd->start_delay = start_delay;
     cmd->params = params;
+    cmd->start_time = time(NULL);
 
     remote_ra_callid++;
     if (remote_ra_callid <=0) {
