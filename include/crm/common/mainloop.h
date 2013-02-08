@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -27,6 +27,8 @@
 #  include <glib.h>
 
 typedef struct trigger_s crm_trigger_t;
+typedef struct mainloop_io_s mainloop_io_t;
+typedef struct mainloop_child_s mainloop_child_t;
 
 crm_trigger_t *mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data),
                                            gpointer userdata);
@@ -46,7 +48,7 @@ gboolean mainloop_destroy_signal(int sig);
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 
-struct ipc_client_callbacks 
+struct ipc_client_callbacks
 {
         int (*dispatch)(const char *buffer, ssize_t length, gpointer userdata);
         void (*destroy) (gpointer);
@@ -57,8 +59,6 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
 
 void mainloop_del_ipc_server(qb_ipcs_service_t *server);
 
-typedef struct mainloop_io_s mainloop_io_t;
-
 mainloop_io_t *mainloop_add_ipc_client(
     const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks);
 
@@ -67,7 +67,7 @@ void mainloop_del_ipc_client(mainloop_io_t *client);
 crm_ipc_t *mainloop_get_ipc_client(mainloop_io_t *client);
 
 
-struct mainloop_fd_callbacks 
+struct mainloop_fd_callbacks
 {
         int (*dispatch)(gpointer userdata);
         void (*destroy)(gpointer userdata);
@@ -78,7 +78,6 @@ mainloop_io_t *mainloop_add_fd(
 
 void mainloop_del_fd(mainloop_io_t *client);
 
-typedef struct mainloop_child_s mainloop_child_t;
 /*
  * Create a new tracked process
  * To track a process group, use -pid

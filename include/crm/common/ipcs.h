@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -19,15 +19,15 @@
 #ifndef CRM_COMMON_IPCS__H
 #  define CRM_COMMON_IPCS__H
 
-#  include <crm/common/ipc.h>
-
 #  include <qb/qbipcs.h>
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    undef KEYFILE
 #    include <gnutls/gnutls.h>
 #  endif
 
-typedef struct mainloop_io_s mainloop_io_t;
+#include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
+
 typedef struct crm_client_s crm_client_t;
 
 enum client_type
@@ -39,7 +39,7 @@ enum client_type
 #  endif
 };
 
-struct crm_remote_s 
+struct crm_remote_s
 {
         /* Shared */
         char *buffer;
@@ -69,7 +69,7 @@ struct crm_client_s
         char *user;
 
         long long options;
-        
+
         int request_id;
         void *userdata;
 
@@ -89,10 +89,10 @@ struct crm_client_s
 enum crm_ipc_server_flags
 {
     crm_ipc_server_none  = 0x0000,
-    crm_ipc_server_event = 0x0001, /* Send an Event instead of a Response */ 
-    crm_ipc_server_free  = 0x0002, /* Free the iovec after sending */ 
+    crm_ipc_server_event = 0x0001, /* Send an Event instead of a Response */
+    crm_ipc_server_free  = 0x0002, /* Free the iovec after sending */
 
-    crm_ipc_server_info  = 0x0010, /* Log failures as LOG_INFO */ 
+    crm_ipc_server_info  = 0x0010, /* Log failures as LOG_INFO */
     crm_ipc_server_error = 0x0020, /* Log failures as LOG_ERR */
 
 };
