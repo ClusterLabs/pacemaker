@@ -521,15 +521,6 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     (pe_weights_rollback | pe_weights_positive));
     }
 
-    gIter = rsc->rsc_tickets;
-    for (; gIter != NULL; gIter = gIter->next) {
-        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
-
-        if (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby) {
-            rsc_ticket_constraint(rsc, rsc_ticket, data_set);
-        }
-    }
-
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     /* count now tracks the number of clones currently allocated */

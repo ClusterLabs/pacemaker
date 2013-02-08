@@ -7,11 +7,13 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
+ * Stop    rsc_stonith	(node1)
  * Stop    rsc1:0	(node1)
  * Stop    rsc1:1	(node2)
 
 Executing cluster transition:
  * Fencing node1
+ * Pseudo action:   rsc_stonith_stop_0
  * Fencing node2
  * Pseudo action:   stonith_complete
  * Pseudo action:   clone1_stop_0

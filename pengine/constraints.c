@@ -2116,6 +2116,10 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
 
     data_set->ticket_constraints = g_list_append(data_set->ticket_constraints, new_rsc_ticket);
 
+    if (new_rsc_ticket->ticket->granted == FALSE || new_rsc_ticket->ticket->standby) {
+        rsc_ticket_constraint(rsc_lh, new_rsc_ticket, data_set);
+    }
+
     return TRUE;
 }
 
