@@ -120,20 +120,17 @@ static filter_t filter[] = {
     { 0, XML_ATTR_UPDATE_USER },
 };
 
-#define CHUNK_SIZE 4096
+#define CHUNK_SIZE 1024
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
         int rc;                                                         \
-        if((buffer) == NULL) {                                          \
-            (buffer) = malloc(CHUNK_SIZE);                              \
-        }                                                               \
         rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
         if(rc < 0) {                                                    \
             crm_perror(LOG_ERR, "snprintf failed");                     \
             (buffer)[(offset)] = 0;                                     \
             return;                                                     \
         } else if(rc >= ((max) - (offset))) {                           \
-            (max) += CHUNK_SIZE;                                        \
+            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                             \
             (buffer) = realloc((buffer), (max) + 1);                    \
         } else {                                                        \
             offset += rc;                                               \
@@ -147,7 +144,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
     if(options & xml_log_option_formatted) {
         size_t spaces = 2 * depth;
         if(spaces >= ((*max) - (*offset))) {
-            (*max) += CHUNK_SIZE;
+            (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
             (*buffer) = realloc((*buffer), (*max) + 1);
         }
         memset((*buffer) + (*offset), ' ', spaces);
@@ -1178,7 +1175,6 @@ dump_xml(xmlNode *data, int options, char **buffer, int *offset, int *max, int d
     }
 
     if(*buffer == NULL) {
-        /* *buffer = malloc(CHUNK_SIZE+1); */
         *offset = 0;
         *max = 0;
     }
