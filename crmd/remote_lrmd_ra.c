@@ -202,31 +202,24 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
              lrmd_event_rc2str(op->rc),
              services_lrm_status_str(op->op_status));
 
-    /* we filter connection events and map them to start events for the remote agent */
-    if ((op->type != lrmd_event_connect) && (op->type != lrmd_event_poke)) {
-        crm_debug("not a connection or poke event, pass it up to crmd lrm callback");
+
+    /* filter all EXEC events up */
+    if (op->type == lrmd_event_exec_complete) {
         lrm_op_callback(op);
-        return;
-    } else if (!op->remote_nodename) {
-        crm_debug("no node name, dropping event.");
         return;
     }
 
     lrm_state = lrm_state_find(op->remote_nodename);
     if (!lrm_state || !lrm_state->remote_ra_data) {
         crm_debug("lrm_state info not found for remote lrmd connection event");
-        lrm_op_callback(op);
         return;
     }
 
     ra_data = lrm_state->remote_ra_data;
-
     if (!ra_data->cur_cmd) {
         crm_debug("no event to match");
-        lrm_op_callback(op);
         return;
     }
-
     cmd = ra_data->cur_cmd;
 
     /* Start actions and migrate from actions complete after connection

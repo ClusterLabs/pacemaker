@@ -170,6 +170,9 @@ void lrm_state_destroy_all(void)
 
 lrm_state_t *lrm_state_find(const char *node_name)
 {
+    if (!node_name) {
+        return NULL;
+    }
     return g_hash_table_lookup(lrm_state_table, node_name);
 }
 
