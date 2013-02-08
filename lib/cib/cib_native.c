@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -182,12 +182,12 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    static struct ipc_client_callbacks cib_callbacks = 
+    static struct ipc_client_callbacks cib_callbacks =
         {
             .dispatch = cib_native_dispatch_internal,
             .destroy = cib_native_destroy
         };
-    
+
     cib->call_timeout = MAX_IPC_DELAY;
 
     if (type == cib_command) {
@@ -207,7 +207,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     }
 
     crm_trace("Connecting %s channel", channel);
-    
+
     if (async_fd != NULL) {
         native->ipc = crm_ipc_new(channel, 0);
 
@@ -253,6 +253,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
                     rc = -EPROTO;
                 }
             }
+            free_xml(reply);
 
         } else {
             rc = -ECOMM;
@@ -386,7 +387,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     }
 
     crm_log_xml_trace(op_reply, "Reply");
-    
+
     if (!(call_options & cib_sync_call)) {
         crm_trace("Async call, returning %d", cib->call_id);
         CRM_CHECK(cib->call_id != 0, return -ENOMSG);
@@ -416,14 +417,14 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         crm_log_xml_err(op_reply, "Bad reply");
         rc = -ENOMSG;
         goto done;
-        
+
     } else {
         crm_err("Recieved bad reply: %d (wanted %d)", reply_id, cib->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         rc = -ENOMSG;
         goto done;
     }
-    
+
     if (op_reply == NULL && cib->state == cib_disconnected) {
         rc = -ENOTCONN;
 
