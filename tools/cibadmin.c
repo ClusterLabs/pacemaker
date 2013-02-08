@@ -1,17 +1,17 @@
 
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -77,7 +77,7 @@ static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\tThis text"},
     {"version", 0, 0, '$', "\tVersion information"  },
     {"verbose", 0, 0, 'V', "\tIncrease debug output\n"},
-    
+
     {"-spacer-",    0, 0, '-', "Commands:"},
     {"upgrade",     0, 0, 'u', "\tUpgrade the configuration to the latest syntax"},
     {"query",       0, 0, 'Q', "\tQuery the contents of the CIB"},
@@ -90,8 +90,8 @@ static struct crm_option long_options[] = {
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
     {"-spacer-",    0, 0, '-', "\n\tThe tagname and all attributes must match in order for the element to be deleted"},
     {"delete-all",  0, 0, 'd', "\tWhen used with --xpath, remove all matching objects in the configuration instead of just the first one"},
-    {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},    
-    {"md5-sum-versioned",  0, 0, '6', "\tCalculate an on-the-wire versioned CIB digest"},    
+    {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},
+    {"md5-sum-versioned",  0, 0, '6', "\tCalculate an on-the-wire versioned CIB digest"},
     {"sync",        0, 0, 'S', "\t(Advanced) Force a refresh of the CIB to all nodes\n"},
     {"make-slave",  0, 0, 'r', NULL, 1},
     {"make-master", 0, 0, 'w', NULL, 1},
@@ -107,7 +107,7 @@ static struct crm_option long_options[] = {
     {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a --modify,-M operation to be created if they do not exist"},
     {"no-children", 0, 0, 'n', "(Advanced) When querying an object, do not return include its children in the result\n"},
     {"no-bcast",    0, 0, 'b', NULL, 1},
-    
+
     {"-spacer-",    0, 0, '-', "Data:"},
     {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
     {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
@@ -125,7 +125,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "\nExamples:\n"},
     {"-spacer-",    0, 0, '-', "Query the configuration from the local node:", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " cibadmin --query --local", pcmk_option_example},
-    
+
     {"-spacer-",    0, 0, '-', "Query the just the cluster options configuration:", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " cibadmin --query --scope crm_config", pcmk_option_example},
 
@@ -175,7 +175,7 @@ static struct crm_option long_options[] = {
     {CIB_OP_SLAVE,   0, 0, 'r', NULL, 1},
     {CIB_OP_MASTER,  0, 0, 'w', NULL, 1},
     {CIB_OP_ISMASTER,0, 0, 'm', NULL, 1},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -206,7 +206,7 @@ print_xml_output(xmlNode *xml)
 
     } else {
         buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s\n", crm_str(buffer));
+        fprintf(stdout, "%s", crm_str(buffer));
         free(buffer);
     }
 }
@@ -463,7 +463,7 @@ main(int argc, char **argv)
         free(digest);
         goto bail;
     }
-    
+
     exit_code = do_init();
     if (exit_code != pcmk_ok) {
         crm_err("Init failed, could not perform requested operations");
