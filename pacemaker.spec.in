@@ -83,6 +83,7 @@ AutoReqProv:   on
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      %{name}-lrm = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      python >= 2.4
 
@@ -242,6 +243,19 @@ manager for Linux-HA (Heartbeat) and/or Corosync.
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
+%package -n %{name}-lrm
+License:      GPLv2+ and LGPLv2+
+Summary:      Local Resource Management Daemon used by Pacemaker
+Group:        System Environment/Daemons
+Requires:     %{name}-libs = %{version}-%{release}
+
+%description -n %{name}-lrm
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager for Linux-HA (Heartbeat) and/or Corosync.
+
+The %{name}-lrm package contains the Local Resource Management Daemon
+pacemaker component.
+
 %package -n %{name}-libs-devel 
 License:      GPLv2+ and LGPLv2+
 Summary:      Pacemaker development package
@@ -362,12 +376,14 @@ rm -rf %{buildroot}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
 /sbin/chkconfig --add pacemaker || :
+/sbin/chkconfig --add lrm || :
 
 %preun
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
+    /sbin/chkconfig --del lrm || :
 fi
 
 %pre -n %{name}-libs
@@ -403,6 +419,7 @@ exit 0
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
+%exclude %{_libexecdir}/pacemaker/lrmd
 %{_libexecdir}/pacemaker/*
 
 %if %{with heartbeat}
@@ -506,6 +523,17 @@ exit 0
 %files -n %{name}-cluster-libs
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
+%doc COPYING.LIB
+%doc AUTHORS
+
+%files -n %{name}-lrm
+%defattr(-,root,root)
+
+%if %{defined _unitdir}
+%{_unitdir}/lrm.service
+%endif
+
+%{_libexecdir}/pacemaker/lrmd
 %doc COPYING.LIB
 %doc AUTHORS
 
