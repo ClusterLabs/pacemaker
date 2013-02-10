@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,7 +26,7 @@
 #include <sys/resource.h>
 
 #include <crm/msg_xml.h>
-#include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 #include <crm/cluster.h>
 
@@ -134,7 +134,7 @@ pcmk_process_exit(pcmk_child_t *child)
     child->active_before_startup = FALSE;
 
     /* Broadcast the fact that one of our processes died ASAP
-     * 
+     *
      * Try to get some logging of the cause out first though
      * because we're probably about to get fenced
      *
@@ -159,7 +159,7 @@ pcmk_process_exit(pcmk_child_t *child)
     }
 }
 
-static void pcmk_child_exit(GPid pid, gint status, gpointer user_data) 
+static void pcmk_child_exit(GPid pid, gint status, gpointer user_data)
 {
     int exitcode = 0;
     pcmk_child_t *child = user_data;
@@ -403,7 +403,7 @@ pcmk_shutdown_worker(gpointer user_data)
         crm_notice("Attempting to inhibit respawning after fatal error");
         crm_exit(100);
     }
-    
+
     return TRUE;
 }
 
@@ -485,14 +485,14 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         /* Just send to everyone */
         update_process_clients();
     }
-    
+
     free_xml(msg);
     return 0;
 }
 
 /* Error code means? */
 static int32_t
-pcmk_ipc_closed(qb_ipcs_connection_t *c) 
+pcmk_ipc_closed(qb_ipcs_connection_t *c)
 {
     crm_client_t *client = crm_client_get(c);
     crm_trace("Connection %p", c);
@@ -501,12 +501,12 @@ pcmk_ipc_closed(qb_ipcs_connection_t *c)
 }
 
 static void
-pcmk_ipc_destroy(qb_ipcs_connection_t *c) 
+pcmk_ipc_destroy(qb_ipcs_connection_t *c)
 {
     crm_trace("Connection %p", c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = 
+struct qb_ipcs_service_handlers ipc_callbacks =
 {
     .connection_accept = pcmk_ipc_accept,
     .connection_created = pcmk_ipc_created,
@@ -863,7 +863,7 @@ main(int argc, char **argv)
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
     crm_ipc_connect(old_instance);
-    
+
     if(shutdown) {
         crm_debug("Terminating previous instance");
         while (crm_ipc_connected(old_instance)) {

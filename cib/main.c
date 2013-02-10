@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,7 +32,6 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
@@ -139,7 +138,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
-    
+
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
@@ -315,12 +314,12 @@ ccm_connect(void)
     int (*ccm_api_unregister) (oc_ev_t * token) =
         find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
 
-    static struct mainloop_fd_callbacks ccm_fd_callbacks = 
+    static struct mainloop_fd_callbacks ccm_fd_callbacks =
         {
             .dispatch = cib_ccm_dispatch,
             .destroy = ccm_connection_destroy,
         };
-    
+
     while (did_fail) {
         did_fail = FALSE;
         crm_info("Registering with CCM...");
@@ -426,7 +425,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         if (data) {
             old = *(const uint32_t *)data;
         }
-        
+
         if ((node->processes ^ old) & crm_proc_cib) {
             crm_info("status: cib process on %s is now %sactive",
                      node->uname, is_set(node->processes, crm_proc_cib)?"":"in");

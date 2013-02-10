@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,7 +31,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 
 struct mainloop_child_s {
     pid_t     pid;
@@ -143,7 +143,7 @@ mainloop_setup_trigger(GSource * source, int priority, int(*dispatch) (gpointer 
 }
 
 void
-mainloop_trigger_complete(crm_trigger_t *trig) 
+mainloop_trigger_complete(crm_trigger_t *trig)
 {
     crm_trace("Trigger handler %p complete", trig);
     trig->running = FALSE;
@@ -374,7 +374,7 @@ gio_read_socket (GIOChannel *gio, GIOCondition condition, gpointer data)
 }
 
 static void
-gio_poll_destroy(gpointer data) 
+gio_poll_destroy(gpointer data)
 {
     /* adaptor->source is valid but about to be destroyed (ref_count == 0) in gmain.c
      * adaptor->channel will still have ref_count > 0... should be == 1
@@ -435,13 +435,13 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
      *      -> g_source_callback_unref()
      * shortly after gio_poll_destroy() completes
      */
-    g_io_channel_unref(adaptor->channel);    
+    g_io_channel_unref(adaptor->channel);
 
     crm_trace("Added to mainloop with gsource id=%d, ref=%d", adaptor->source, gio_adapter_refcount(adaptor));
     if(adaptor->source > 0) {
         return 0;
     }
-    
+
     return -EINVAL;
 }
 
@@ -497,7 +497,7 @@ pick_ipc_type(enum qb_ipc_type requested)
 }
 
 qb_ipcs_service_t *mainloop_add_ipc_server(
-    const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks) 
+    const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks)
 {
     int rc = 0;
     qb_ipcs_service_t* server = NULL;
@@ -519,7 +519,7 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
     return server;
 }
 
-void mainloop_del_ipc_server(qb_ipcs_service_t *server) 
+void mainloop_del_ipc_server(qb_ipcs_service_t *server)
 {
     if(server) {
         qb_ipcs_destroy(server);
@@ -542,7 +542,7 @@ struct mainloop_io_s
 };
 
 static int
-mainloop_gio_refcount(mainloop_io_t *client) 
+mainloop_gio_refcount(mainloop_io_t *client)
 {
     /* This is evil
      * Looking at the giochannel header file, ref_count is the first member of channel
@@ -628,7 +628,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
           G_IO_PRI	There is urgent data to read.
           G_IO_ERR	Error condition.
           G_IO_HUP	Hung up (the connection has been broken, usually for pipes and sockets).
-          G_IO_NVAL	Invalid request. The file descriptor is not open.    
+          G_IO_NVAL	Invalid request. The file descriptor is not open.
         */
         crm_err("Strange condition: %d", condition);
     }
@@ -656,7 +656,7 @@ mainloop_gio_destroy(gpointer c)
     if(client->destroy_fn) {
         client->destroy_fn(client->userdata);
     }
-    
+
     if(client->ipc) {
         crm_ipc_destroy(client->ipc);
     }
@@ -670,7 +670,7 @@ mainloop_gio_destroy(gpointer c)
 
 mainloop_io_t *
 mainloop_add_ipc_client(
-    const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks) 
+    const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks)
 {
     mainloop_io_t *client = NULL;
     crm_ipc_t *conn = crm_ipc_new(name, max_size);
@@ -688,7 +688,7 @@ mainloop_add_ipc_client(
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
     }
-    
+
     return client;
 }
 
@@ -709,11 +709,11 @@ mainloop_get_ipc_client(mainloop_io_t *client)
 
 mainloop_io_t *
 mainloop_add_fd(
-    const char *name, int priority, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks) 
+    const char *name, int priority, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks)
 {
     mainloop_io_t *client = NULL;
     if(fd > 0) {
-        client = calloc(1, sizeof(mainloop_io_t));          
+        client = calloc(1, sizeof(mainloop_io_t));
         client->name = strdup(name);
         client->userdata = userdata;
 

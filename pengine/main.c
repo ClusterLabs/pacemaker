@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <crm/common/ipc.h>
+#include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
@@ -75,7 +75,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 
     if (msg != NULL) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);
-        
+
         process_pe_message(msg, data, c);
         free_xml(msg);
     }
@@ -84,7 +84,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-pe_ipc_closed(qb_ipcs_connection_t *c) 
+pe_ipc_closed(qb_ipcs_connection_t *c)
 {
     crm_client_t *client = crm_client_get(c);
     crm_trace("Connection %p", c);
@@ -93,12 +93,12 @@ pe_ipc_closed(qb_ipcs_connection_t *c)
 }
 
 static void
-pe_ipc_destroy(qb_ipcs_connection_t *c) 
+pe_ipc_destroy(qb_ipcs_connection_t *c)
 {
     crm_trace("Connection %p", c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = 
+struct qb_ipcs_service_handlers ipc_callbacks =
 {
     .connection_accept = pe_ipc_accept,
     .connection_created = pe_ipc_created,

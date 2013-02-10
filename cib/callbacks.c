@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,8 +30,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ipc.h>
-#include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
@@ -125,7 +123,7 @@ cib_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-cib_ipc_closed(qb_ipcs_connection_t *c) 
+cib_ipc_closed(qb_ipcs_connection_t *c)
 {
     crm_client_t *client = crm_client_get(c);
     crm_trace("Connection %p", c);
@@ -134,7 +132,7 @@ cib_ipc_closed(qb_ipcs_connection_t *c)
 }
 
 static void
-cib_ipc_destroy(qb_ipcs_connection_t *c) 
+cib_ipc_destroy(qb_ipcs_connection_t *c)
 {
     crm_trace("Connection %p", c);
     if (cib_shutdown_flag) {
@@ -142,7 +140,7 @@ cib_ipc_destroy(qb_ipcs_connection_t *c)
     }
 }
 
-struct qb_ipcs_service_handlers ipc_ro_callbacks = 
+struct qb_ipcs_service_handlers ipc_ro_callbacks =
 {
     .connection_accept = cib_ipc_accept,
     .connection_created = cib_ipc_created,
@@ -151,7 +149,7 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks =
     .connection_destroyed = cib_ipc_destroy
 };
 
-struct qb_ipcs_service_handlers ipc_rw_callbacks = 
+struct qb_ipcs_service_handlers ipc_rw_callbacks =
 {
     .connection_accept = cib_ipc_accept,
     .connection_created = cib_ipc_created,
@@ -1344,11 +1342,11 @@ cib_shutdown(int nsig)
     }
 
     qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
-    
+
     if(crm_hash_table_size(client_connections) == 0) {
         crm_info("All clients disconnected (%d)", srv_stats.active_connections);
         initiate_exit();
-        
+
     } else {
         crm_info("Waiting on %d clients to disconnect (%d)",
                  crm_hash_table_size(client_connections), srv_stats.active_connections);
@@ -1394,7 +1392,7 @@ terminate_cib(const char *caller, gboolean fast)
         close(remote_tls_fd);
         remote_tls_fd = 0;
     }
-    
+
     if(!fast) {
         crm_info("%s: Disconnecting from cluster infrastructure", caller);
         crm_cluster_disconnect(&crm_cluster);
