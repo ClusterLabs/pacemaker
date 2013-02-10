@@ -106,11 +106,11 @@ class crm_ais(crm_lha):
         })
 
     def errorstoignore(self):
-        # At some point implement a more elegant solution that 
+        # At some point implement a more elegant solution that
         #   also produces a report at the end
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
-            return [ 
+            return [
                 r"crm_mon:",
                 r"crmadmin:",
                 r"update_trace_data",
@@ -124,13 +124,14 @@ class crm_ais(crm_lha):
     def NodeUUID(self, node):
         return node
 
-    def ais_components(self):   
+    def ais_components(self):
         fullcomplist = {}
         self.complist = []
         self.common_ignore = [
                     "Pending action:",
                     "error: crm_log_message_adv:",
                     "error: MSG: No message to dump",
+                    "resources were active at shutdown",
                     "pending LRM operations at shutdown",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
@@ -211,9 +212,9 @@ class crm_ais(crm_lha):
             "stonith_connection_failed: STONITH connection failed, finalizing .* pending operations.",
             "process_lrm_event: LRM operation Fencing.* Error"
             ]
-        
+
         stonith_ignore.extend(self.common_ignore)
-        
+
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
                 "crm_ipc_read: Connection to stonith-ng failed",
                 "stonith_connection_destroy_cb: LRMD lost STONITH connection",
@@ -221,7 +222,7 @@ class crm_ais(crm_lha):
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "crmd.*stonith_api_add_notification: Callback already present",
                 ], badnews_ignore = stonith_ignore)
-        
+
         vgrind = self.Env["valgrind-procs"].split()
         for key in fullcomplist.keys():
             if self.Env["valgrind-tests"]:
@@ -231,7 +232,7 @@ class crm_ais(crm_lha):
                     continue
             if key == "stonith-ng" and not self.Env["DoFencing"]:
                 continue
-                
+
             self.complist.append(fullcomplist[key])
 
         #self.complist = [ fullcomplist["pengine"] ]
@@ -254,13 +255,13 @@ class crm_whitetank(crm_ais):
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
-            
+
             "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s openais.*Respawning failed child process: %s",
             "Pat:ChildExit"    : "Child process .* exited",
         })
 
-    def Components(self):    
+    def Components(self):
         self.ais_components()
 
         aisexec_ignore = [
@@ -283,7 +284,7 @@ class crm_whitetank(crm_ais):
                     "stonithd.*requests a STONITH operation RESET on node",
                     "stonithd.*Succeeded to STONITH the node",
                     ], badnews_ignore = aisexec_ignore))
-        
+
 class crm_cs_v0(crm_ais):
     '''
     The crm version 3 cluster manager class.
@@ -306,12 +307,12 @@ class crm_cs_v0(crm_ais):
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
-            
+
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s corosync.*Respawning failed child process: %s",
         })
 
-    def Components(self):    
+    def Components(self):
         self.ais_components()
 
         corosync_ignore = [
@@ -354,7 +355,7 @@ class crm_cs_v0(crm_ais):
                     r"log_operation: Operation .* for host .* with device .* returned: 0",
                     r"tengine_stonith_notify: Peer .* was terminated .*: OK",
                     ], badnews_ignore = corosync_ignore, common_ignore = self.common_ignore))
-    
+
         return self.complist
 
 class crm_cs_v1(crm_cs_v0):
@@ -379,7 +380,7 @@ class crm_cs_v1(crm_cs_v0):
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
-            
+
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
         })
@@ -407,7 +408,7 @@ class crm_mcp(crm_cs_v0):
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
-            
+
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
 
@@ -437,7 +438,7 @@ class crm_cman(crm_cs_v0):
             "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
-            
+
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
         })
