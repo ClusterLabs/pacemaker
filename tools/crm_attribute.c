@@ -1,17 +1,17 @@
 
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -64,7 +64,7 @@ static struct crm_option long_options[] = {
     {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
     {"name",    1, 0, 'n', "Name of the attribute/option to operate on"},
-    
+
     {"-spacer-",    0, 0, '-', "\nCommands:"},
     {"query",       0, 0, 'G', "\tQuery the current value of the attribute/option"},
     {"update",      1, 0, 'v', "Update the value of the attribute/option"},
@@ -80,19 +80,19 @@ static struct crm_option long_options[] = {
     {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"id",	    1, 0, 'i', "\t(Advanced) The ID used to identify the attribute"},
     {"default",     1, 0, 'd', "(Advanced) The default value to display if none is found in the configuration"},
-    
+
     {"inhibit-policy-engine", 0, 0, '!', NULL, 1},
 
     /* legacy */
     {"quiet",       0, 0, 'Q', NULL, 1},
-    {"node-uname",  1, 0, 'U', NULL, 1}, 
+    {"node-uname",  1, 0, 'U', NULL, 1},
     {"node-uuid",   1, 0, 'u', NULL, 1},
     {"get-value",   0, 0, 'G', NULL, 1},
     {"delete-attr", 0, 0, 'D', NULL, 1},
     {"attr-value",  1, 0, 'v', NULL, 1},
-    {"attr-name",   1, 0, 'n', NULL, 1}, 
+    {"attr-name",   1, 0, 'n', NULL, 1},
     {"attr-id",     1, 0, 'i', NULL, 1},
-    
+
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "Add a new attribute called 'location' with the value of 'office' for host 'myhost':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update office", pcmk_option_example},
@@ -106,7 +106,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option. Only print the value:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query --quiet", pcmk_option_example},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -216,7 +216,7 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         fprintf(stderr, "Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-        return rc;
+        return crm_exit(rc);
     }
 
     if (safe_str_eq(type, "reboot")) {

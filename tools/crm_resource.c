@@ -1,17 +1,17 @@
 
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -119,7 +119,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
-struct ipc_client_callbacks crm_callbacks = 
+struct ipc_client_callbacks crm_callbacks =
 {
     .dispatch = resource_ipc_callback,
     .destroy = resource_ipc_connection_destroy,
@@ -1146,7 +1146,7 @@ static struct crm_option long_options[] = {
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
-    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
+    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},
 
     {"list-standards",        0, 0, 0, "\tList supported standards"},
     {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},
@@ -1171,7 +1171,7 @@ static struct crm_option long_options[] = {
      "\n\t\t\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
      "\n\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
     {"un-move", 0, 0, 'U', "\t\tRemove all constraints created by a move command"},
-    
+
     {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
@@ -1181,7 +1181,7 @@ static struct crm_option long_options[] = {
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node\n"},
-    
+
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"node",		1, 0, 'N', "\tHost uname"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
@@ -1190,12 +1190,12 @@ static struct crm_option long_options[] = {
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
-    {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},    
-    {"force",		0, 0, 'f', "\n" /* Is this actually true anymore? 
+    {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
+    {"force",		0, 0, 'f', "\n" /* Is this actually true anymore?
 					   "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
 					   "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
 					   "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U or the --lifetime duration expires\n"*/ },
-    
+
     {"xml-file", 1, 0, 'x', NULL, 1},\
 
     /* legacy options */
@@ -1230,7 +1230,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
     {"-spacer-",	1, 0, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -1302,7 +1302,7 @@ main(int argc, char **argv)
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    return rc;
+                    return crm_exit(rc);
 
                 } else if(safe_str_eq("show-metadata", longname)) {
                     char standard[512];
@@ -1329,7 +1329,7 @@ main(int argc, char **argv)
                         fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return rc;
+                    return crm_exit(rc);
 
                 } else if(safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -1361,7 +1361,7 @@ main(int argc, char **argv)
                         rc = -1;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return rc;
+                    return crm_exit(rc);
 
                 } else {
                     crm_err("Unhandled long option: %s", longname);
@@ -1486,7 +1486,7 @@ main(int argc, char **argv)
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
             CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-            return rc;
+            return crm_exit(rc);
         }
 
         if (xml_file != NULL) {
@@ -1624,7 +1624,7 @@ main(int argc, char **argv)
         }
         rc = op->rc;
         services_action_free(op);
-        return rc;
+        return crm_exit(rc);
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
