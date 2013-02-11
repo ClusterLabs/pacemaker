@@ -2,23 +2,23 @@
  #			Almost everything as part of hb_report
  # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
  #			Cleanups, refactoring, extensions
- # 
+ #
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
  # version 2.1 of the License, or (at your option) any later version.
- # 
+ #
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  # General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
-if 
+if
     echo $REPORT_HOME | grep -qs '^/'
 then
     debug "Using full path to working directory: $REPORT_HOME"
@@ -222,7 +222,7 @@ getconfig() {
 
     crm_uuid -r > $target/$HB_UUID_F 2>&1
 
-    if 
+    if
 	ps -ef | egrep -qs [c]rmd
     then
 	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
@@ -275,7 +275,7 @@ sanitize() {
     file=$1
     compress=""
     if [ -z "$SANITIZE" ]; then
-	return 
+	return
     fi
     echo $file | grep -qs 'gz$' && compress=gzip
     echo $file | grep -qs 'bz2$' && compress=bzip2
@@ -338,9 +338,9 @@ pkg_ver() {
 	pkg_mgr="deb"
     elif which rpm >/dev/null 2>&1 ; then
 	pkg_mgr="rpm"
-    elif which pkg_info >/dev/null 2>&1 ; then 
+    elif which pkg_info >/dev/null 2>&1 ; then
 	pkg_mgr="pkg_info"
-    elif which pkginfo >/dev/null 2>&1 ; then 
+    elif which pkginfo >/dev/null 2>&1 ; then
 	pkg_mgr="pkginfo"
     else
 	warning "Unknown package manager"
@@ -461,7 +461,7 @@ sys_info() {
 
     # Cluster glue version hash (if available)
     stonith -V 2>/dev/null
-    
+
     # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
 
@@ -494,7 +494,7 @@ dlm_dump() {
 	echo NOTICE - Lockspace overview:
 	dlm_tool ls
 	dlm_tool ls | grep name |
-	while read X N ; do 
+	while read X N ; do
 	    echo NOTICE - Lockspace $N:
 	    dlm_tool lockdump $N
 	done
@@ -586,6 +586,9 @@ get_logfiles() {
 
     # Initial pacemakerd logs and tracing might also go to a file (other than the syslog log file)
     findmsg 3 "Starting Pacemaker"
+
+    # Make sure we get something from the Policy Engine
+    findmsg 3 "Calculated Transition"
 }
 
 essential_files() {
@@ -647,7 +650,7 @@ getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 
 case $cluster in
     cman|corosync)
-	if 
+	if
 	    ps -ef | egrep -qs '[c]orosync'
 	then
 	    corosync-blackbox &> corosync-blackbox-live.txt
@@ -710,7 +713,7 @@ done
 rm -f $pattfile
 trap "" 0
 
-# Purge files containing no information 
+# Purge files containing no information
 for f in `ls -1`; do
     if [ -d "$f" ]; then
 	continue
@@ -731,7 +734,7 @@ for l in $logfiles $EXTRA_LOGS; do
     # Link the first logfile to a standard name if it doesn't yet exist
     f=`basename $l`
     if [ -e $f -a ! -e $HALOG_F ]; then
-	ln -s $f $HALOG_F 
+	ln -s $f $HALOG_F
     fi
 done
 
@@ -743,4 +746,3 @@ if [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
 	rm -rf $REPORT_HOME
     fi
 fi
-
