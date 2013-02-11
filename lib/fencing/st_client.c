@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -481,7 +481,6 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
         }
     }
 
-    crm_trace("Calculated: %s", arg_list);
     return arg_list;
 }
 
@@ -1026,7 +1025,7 @@ static void stonith_plugin(int priority, const char * fmt, ...)
     va_list args;
     char *str;
     int	err = errno;
-    
+
     va_start (args, fmt);
     str = g_strdup_vprintf(fmt, args);
     va_end (args);
@@ -1508,7 +1507,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
     int rc = pcmk_ok;
     stonith_private_t *native = stonith->private;
-    static struct ipc_client_callbacks st_callbacks = 
+    static struct ipc_client_callbacks st_callbacks =
         {
             .dispatch = stonith_dispatch_internal,
             .destroy = stonith_connection_destroy
@@ -1520,7 +1519,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     if(stonith_fd) {
         /* No mainloop */
         native->ipc = crm_ipc_new("stonith-ng", 0);
-        
+
         if(native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
 
@@ -1533,7 +1532,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         native->source = mainloop_add_ipc_client("stonith-ng", G_PRIORITY_MEDIUM, 0, stonith, &st_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
-    
+
     if (native->ipc == NULL) {
         crm_debug("Could not connect to the Stonith API");
         rc = -ENOTCONN;
@@ -1559,24 +1558,24 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         } else {
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
             const char *tmp_ticket = crm_element_value(reply, F_STONITH_CLIENTID);
-            
+
             if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
                 crm_err("Invalid registration message: %s", msg_type);
                 crm_log_xml_err(reply, "Bad reply");
                 rc = -EPROTO;
-                
+
             } else if (tmp_ticket == NULL) {
                 crm_err("No registration token provided");
                 crm_log_xml_err(reply, "Bad reply");
                 rc = -EPROTO;
-                
+
             } else {
                 crm_trace("Obtained registration token: %s", tmp_ticket);
                 native->token = strdup(tmp_ticket);
                 rc = pcmk_ok;
             }
         }
-        
+
         free_xml(reply);
         free_xml(hello);
     }
@@ -1900,7 +1899,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
      </stonith_command>
    </st_calldata>
  </notify>
- 
+
  <notify t="st_notify" subt="st_notify_fence" st_op="st_notify_fence" st_rc="0" >
    <st_calldata >
      <st_notify_fence st_rc="0" st_target="some-host" st_op="st_fence" st_delegate="test-id" st_origin="61dd7759-e229-4be7-b1f8-ef49dd14d9f0" />
@@ -1908,7 +1907,7 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
  </notify>
 */
 static stonith_event_t *
-xml_to_event(xmlNode *msg) 
+xml_to_event(xmlNode *msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
@@ -1916,7 +1915,7 @@ xml_to_event(xmlNode *msg)
     xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
 
     crm_log_xml_trace(msg, "stonith_notify");
-    
+
     crm_element_value_int(msg, F_STONITH_RC, &(event->result));
 
     if(safe_str_eq(ntype, T_STONITH_NOTIFY_FENCE)) {
@@ -1984,7 +1983,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
     }
 
     st_event = xml_to_event(blob->xml);
-    
+
     crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, st_event);
     crm_trace("Callback invoked...");
@@ -2022,7 +2021,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     if (call_options & st_opt_sync_call) {
         ipc_flags |= crm_ipc_client_response;
     }
-    
+
     stonith->call_id++;
     /* prevent call_id from being negative (or zero) and conflicting
      *    with the stonith_errors enum
@@ -2051,7 +2050,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     }
 
     crm_log_xml_trace(op_reply, "Reply");
-    
+
     if (!(call_options & st_opt_sync_call)) {
         crm_trace("Async call %d, returning", stonith->call_id);
         CRM_CHECK(stonith->call_id != 0, return -EPROTO);
@@ -2077,13 +2076,13 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
             *output_data = op_reply;
             op_reply = NULL; /* Prevent subsequent free */
         }
-        
+
     } else if (reply_id <= 0) {
         crm_err("Recieved bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         free_xml(op_reply);
         rc = -ENOMSG;
-        
+
     } else {
         crm_err("Recieved bad reply: %d (wanted %d)", reply_id, stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
@@ -2110,7 +2109,7 @@ stonith_dispatch(stonith_t * st)
 
     CRM_ASSERT(st != NULL);
     private = st->private;
-    
+
     while(crm_ipc_ready(private->ipc)) {
 
         if(crm_ipc_read(private->ipc) > 0) {
@@ -2407,6 +2406,6 @@ const char *i_hate_pils(int rc);
 const char *
 i_hate_pils(int rc)
 {
-    return PIL_strerror(rc);    
+    return PIL_strerror(rc);
 }
 #endif
