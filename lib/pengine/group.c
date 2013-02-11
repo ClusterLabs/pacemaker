@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,7 +31,6 @@ gboolean
 group_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = rsc->xml;
-    xmlNode *xml_self = copy_xml(rsc->xml);
     xmlNode *xml_native_rsc = NULL;
     group_variant_data_t *group_data = NULL;
     const char *group_ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
@@ -55,9 +54,6 @@ group_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if (group_colocated != NULL) {
         crm_str_to_boolean(group_colocated, &(group_data->colocated));
     }
-
-    /* this is a bit of a hack - but simplifies everything else */
-    xmlNodeSetName(xml_self, ((const xmlChar *)XML_CIB_TAG_RESOURCE));
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 

@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -170,8 +170,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     const char *type = NULL;
     int num_xml_children = 0;
     xmlNode *a_child = NULL;
-    xmlNode *xml_tmp = NULL;
-    xmlNode *xml_self = NULL;
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
 
@@ -242,14 +240,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if (num_xml_children > 1) {
         crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
                        rsc->id, ID(clone_data->xml_obj_child));
-    }
-
-    xml_self = copy_xml(rsc->xml);
-    /* this is a bit of a hack - but simplifies everything else */
-    xmlNodeSetName(xml_self, ((const xmlChar *)XML_CIB_TAG_RESOURCE));
-    xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
-    if (xml_tmp != NULL) {
-        add_node_copy(xml_self, xml_tmp);
     }
 
     /*
