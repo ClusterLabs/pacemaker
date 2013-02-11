@@ -1,14 +1,14 @@
-/* 
+/*
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,12 +50,14 @@ struct unit_info {
 static GDBusProxy *systemd_proxy = NULL;
 
 static GDBusProxy *
-get_proxy(const char *path, const char *interface) 
+get_proxy(const char *path, const char *interface)
 {
     GError *error = NULL;
     GDBusProxy *proxy = NULL;
-    
+
+#ifndef GLIB_DEPRECATED_IN_2_36
     g_type_init();
+#endif
 
     if(path == NULL) {
         path = BUS_PATH;
@@ -65,7 +67,7 @@ get_proxy(const char *path, const char *interface)
         G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL, /* GDBusInterfaceInfo */
         BUS_NAME, path, interface,
         NULL, /* GCancellable */ &error);
-    
+
     if (error) {
         crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
         g_error_free(error);
@@ -75,7 +77,7 @@ get_proxy(const char *path, const char *interface)
 }
 
 static gboolean
-systemd_init(void) 
+systemd_init(void)
 {
     static int need_init = 1;
     if(need_init) {
@@ -105,7 +107,7 @@ systemd_service_name(const char *name)
     } else if(strstr(name, ".service")) {
         return strdup(name);
     }
-    
+
     return g_strdup_printf("%s.service", name);
 }
 
@@ -140,7 +142,7 @@ systemd_unit_by_name (
   "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
   "   <arg name=\"unit\" type=\"o\" direction=\"out\"/>\n"        \
   "  </method>\n"                                                 \
-*/  
+*/
 
     name = systemd_service_name(arg_name);
     crm_debug("Calling GetUnit");
@@ -226,7 +228,7 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
 
     asv = g_variant_get_child_value(_ret, 0);
     crm_trace("asv type '%s' %d\n", g_variant_get_type_string (asv), g_variant_n_children (asv));
-    
+
     value = g_variant_lookup_value(asv, name, NULL);
     if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
         crm_debug("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
@@ -242,7 +244,7 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
 }
 
 GList *
-systemd_unit_listall(void) 
+systemd_unit_listall(void)
 {
     int lpc = 0;
     GList *units = NULL;
@@ -251,7 +253,7 @@ systemd_unit_listall(void)
     GVariantIter iter;
     struct unit_info u;
     GVariant *_ret = NULL;
-    
+
     if(systemd_init() == FALSE) {
         return NULL;
     }
@@ -260,7 +262,7 @@ systemd_unit_listall(void)
         "  <method name=\"ListUnits\">\n"                               \
         "   <arg name=\"units\" type=\"a(ssssssouso)\" direction=\"out\"/>\n" \
         "  </method>\n"                                                 \
-*/  
+*/
 
     _ret = g_dbus_proxy_call_sync (
         systemd_proxy, "ListUnits", g_variant_new ("()"),
@@ -271,7 +273,7 @@ systemd_unit_listall(void)
         g_error_free(error);
         return NULL;
     }
-    
+
     g_variant_get (_ret, "(@a(ssssssouso))", &out_units);
 
     g_variant_iter_init (&iter, out_units);
@@ -327,20 +329,20 @@ systemd_unit_exists(const char *name)
 }
 
 static char *
-systemd_unit_metadata(const char *name) 
+systemd_unit_metadata(const char *name)
 {
     char *path = NULL;
     char *meta = NULL;
     char *desc = NULL;
     GError *error = NULL;
-    
+
     CRM_ASSERT(systemd_init());
     if(systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error)) {
         desc = systemd_unit_property(path, BUS_NAME".Unit", "Description");
     } else {
         desc = g_strdup_printf("systemd unit file for %s", name);
     }
-    
+
     meta = g_strdup_printf(
             "<?xml version=\"1.0\"?>\n"
             "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
@@ -421,7 +423,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     GVariant *_ret = NULL;
     const char *action = op->action;
     char *name = systemd_service_name(op->agent);
-    
+
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
@@ -442,7 +444,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
         g_error_free(error);
         goto cleanup;
     }
-    
+
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
         char *state = systemd_unit_property(unit, BUS_NAME".Unit", "ActiveState");
         if ( !g_strcmp0(state, "active")) {
@@ -474,11 +476,11 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
         free(name);
         return TRUE;
     }
-    
+
     _ret = g_dbus_proxy_call_sync (
         systemd_proxy, action, g_variant_new ("(ss)", name, "replace"),
         G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
-    
+
     if (error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(op->action, "stop")

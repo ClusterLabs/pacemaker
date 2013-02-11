@@ -1,14 +1,14 @@
-/* 
+/*
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,12 +50,14 @@
 static GDBusProxy *upstart_proxy = NULL;
 
 static GDBusProxy *
-get_proxy(const char *path, const char *interface) 
+get_proxy(const char *path, const char *interface)
 {
     GError *error = NULL;
     GDBusProxy *proxy = NULL;
-    
+
+#ifndef GLIB_DEPRECATED_IN_2_36
     g_type_init();
+#endif
 
     if(path == NULL) {
         path = BUS_PATH;
@@ -65,7 +67,7 @@ get_proxy(const char *path, const char *interface)
         G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL, /* GDBusInterfaceInfo */
         BUS_NAME, path, interface,
         NULL, /* GCancellable */ &error);
-    
+
     if (error) {
         crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
         g_error_free(error);
@@ -75,7 +77,7 @@ get_proxy(const char *path, const char *interface)
 }
 
 static gboolean
-upstart_init(void) 
+upstart_init(void)
 {
     static int need_init = 1;
     if(need_init) {
@@ -106,7 +108,7 @@ upstart_job_by_name (
 {
 /*
   com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
-*/  
+*/
     GVariant *_ret = g_dbus_proxy_call_sync (
         proxy, "GetJobByName", g_variant_new ("(s)", arg_name),
         G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
@@ -115,12 +117,12 @@ upstart_job_by_name (
         g_variant_get (_ret, "(o)", out_unit);
         g_variant_unref (_ret);
     }
-    
+
     return _ret != NULL;
 }
 
 static void
-fix(char *input, const char *search, char replace) 
+fix(char *input, const char *search, char replace)
 {
     char *match = NULL;
     int shuffle = strlen(search) - 1;
@@ -141,7 +143,7 @@ fix(char *input, const char *search, char replace)
 }
 
 static char *
-fix_upstart_name(const char *input) 
+fix_upstart_name(const char *input)
 {
     char *output = strdup(input);
     fix(output, "_2b", '+');
@@ -154,7 +156,7 @@ fix_upstart_name(const char *input)
 }
 
 GList *
-upstart_job_listall(void) 
+upstart_job_listall(void)
 {
     GList *units = NULL;
     GError *error = NULL;
@@ -169,7 +171,7 @@ upstart_job_listall(void)
 
 /*
   com.ubuntu.Upstart0_6.GetAllJobs (out <Array of ObjectPath> jobs)
-*/  
+*/
     _ret = g_dbus_proxy_call_sync (
         upstart_proxy, "GetAllJobs", g_variant_new ("()"),
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
@@ -196,7 +198,7 @@ upstart_job_listall(void)
         units = g_list_append(units, fix_upstart_name(job));
     }
     crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string (_ret), lpc);
-    
+
     g_variant_iter_free(iter);
     g_variant_unref(_ret);
     return units;
@@ -258,7 +260,7 @@ upstart_job_property(const char *obj, const gchar *iface, const char *name)
 
     asv = g_variant_get_child_value(_ret, 0);
     crm_trace("asv type '%s' %d\n", g_variant_get_type_string (asv), g_variant_n_children (asv));
-    
+
     value = g_variant_lookup_value(asv, name, NULL);
     if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
         crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
@@ -282,7 +284,7 @@ get_first_instance(const gchar *job)
     GVariant *_ret = g_dbus_proxy_call_sync (
         proxy, "GetAllInstances", g_variant_new ("()"),
         G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
-    
+
     if (error) {
         crm_err("Cannot call GetAllInstances for %s: %s", job, error->message);
         g_error_free(error);
@@ -297,7 +299,7 @@ get_first_instance(const gchar *job)
             instance = g_variant_dup_string(tmp2, NULL);
         }
     }
-    
+
     crm_info("Result: %s", instance);
     g_variant_unref(_ret);
     return instance;
@@ -336,7 +338,7 @@ upstart_job_running(const gchar *name)
 }
 
 static char *
-upstart_job_metadata(const char *name) 
+upstart_job_metadata(const char *name)
 {
     return g_strdup_printf(
         "<?xml version=\"1.0\"?>\n"
@@ -397,7 +399,7 @@ upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_d
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
         op->rc = PCMK_EXECRA_OK;
     }
-    
+
     operation_finalize(op);
     g_object_unref(proxy);
     if (_ret) {
@@ -416,7 +418,7 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
 
     GVariant *_ret = NULL;
     GDBusProxy *job_proxy = NULL;
-    
+
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(upstart_init());
 
@@ -460,9 +462,9 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     }
 
     job_proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
-    
+
     crm_debug("Calling %s for %s: %s", action, op->rsc, job);
-    if(synchronous == FALSE) { 
+    if(synchronous == FALSE) {
         g_dbus_proxy_call(
             job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
             G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, upstart_job_exec_done, op);
@@ -473,7 +475,7 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     _ret = g_dbus_proxy_call_sync (
         job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
         G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
-    
+
     if (error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(action, "Start")
