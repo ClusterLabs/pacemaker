@@ -119,27 +119,27 @@ sub get_options_stdin
         ($name,$val)=split /\s*=\s*/, $opt, 2;
 
         if ( $name eq "" )
-        {  
+        {
            print STDERR "parse error: illegal name in option $line\n";
            exit 2;
 	}
-	
-        # DO NOTHING -- this field is used by fenced
-	elsif ($name eq "agent" ) {} 
 
-	elsif ($name eq "timeout" ) 
-	{ 
+        # DO NOTHING -- this field is used by fenced
+	elsif ($name eq "agent" ) {}
+
+	elsif ($name eq "timeout" )
+	{
 	    $opt_t = $val;
-	} 
+	}
         elsif ($name eq "option" || $name eq "action" )
         {
             $opt_o = $val;
         }
-	elsif ($name eq "port" ) 
+	elsif ($name eq "port" )
 	{
             $opt_n = $val;
-        } 
-	else 
+        }
+	else
 	{
 	    $ENV{$name} = $val;
 	}
@@ -163,7 +163,7 @@ if (@ARGV > 0) {
 	print "$_\n";
     }
 #   getopts("ht:n:o:s:qV") || fail_usage ;
-    
+
    usage if defined $opt_h;
    version if defined $opt_V;
 
@@ -205,7 +205,7 @@ if ( $pid=fork() == 0 )
        } elsif ( $opt_o eq "off" || $opt_o eq "poweroff" ) {
 	   $cmd="--fence";
        }
-       system "logger -p daemon.notice \"fence_pcmk[$agent_pid]: Requesting Pacemaker fence $opt_n ($opt_o)\"";
+       system "logger -p daemon.notice -t \"fence_pcmk[$agent_pid]\" \"Requesting Pacemaker fence $opt_n ($opt_o)\"";
    }
    exec "stonith_admin $cmd $opt_n --tolerance 5s" or die "failed to exec \"stonith_admin $cmd $opt_n\"\n";
 }
@@ -218,6 +218,6 @@ print (($status == 0 ? "success":"failed") . ": $opt_n $status\n")
    unless defined $opt_q;
 
 if ( $status != 0 ) {
-       system "logger -p daemon.notice \"fence_pcmk[$agent_pid]: Call to fence $opt_n ($opt_o) failed with rc=$status\"";
+       system "logger -p daemon.notice -t \"fence_pcmk[$agent_pid]\" \"Call to fence $opt_n ($opt_o) failed with rc=$status\"";
 }
 exit ($status == 0 ? 0 : 1 );
