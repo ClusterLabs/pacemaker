@@ -362,12 +362,14 @@ rm -rf %{buildroot}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
 /sbin/chkconfig --add pacemaker || :
+/sbin/chkconfig --add lrmd || :
 
 %preun
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
+    /sbin/chkconfig --del lrmd || :
 fi
 
 %pre -n %{name}-libs
@@ -403,6 +405,7 @@ exit 0
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
+%exclude %{_libexecdir}/pacemaker/lrmd
 %{_libexecdir}/pacemaker/*
 
 %if %{with heartbeat}
@@ -491,6 +494,10 @@ exit 0
 %files -n %{name}-libs
 %defattr(-,root,root)
 
+%if %{defined _unitdir}
+%{_unitdir}/lrmd.service
+%endif
+
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
@@ -500,6 +507,7 @@ exit 0
 %{_libdir}/libpengine.so.*
 %{_libdir}/libstonithd.so.*
 %{_libdir}/libtransitioner.so.*
+%{_libexecdir}/pacemaker/lrmd
 %doc COPYING.LIB
 %doc AUTHORS
 
