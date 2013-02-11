@@ -86,7 +86,7 @@ crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms)
 void *
 crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, void *credentials)
 {
-    gnutls_session *session = gnutls_malloc(sizeof(gnutls_session));
+    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
     gnutls_init(session, type);
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
@@ -97,7 +97,7 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
     gnutls_set_default_priority(*session);
     gnutls_kx_set_priority(*session, anon_tls_kx_order);
 #  endif
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr) GINT_TO_POINTER(csock));
+    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
     case GNUTLS_SERVER:
         gnutls_credentials_set(*session, GNUTLS_CRD_ANON, (gnutls_anon_server_credentials_t) credentials);
@@ -113,7 +113,7 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
 void *
 create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, void *credentials)
 {
-    gnutls_session *session = gnutls_malloc(sizeof(gnutls_session));
+    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
     gnutls_init(session, type);
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
@@ -122,7 +122,7 @@ create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, v
     gnutls_set_default_priority(*session);
     gnutls_kx_set_priority(*session, psk_tls_kx_order);
 #  endif
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr) GINT_TO_POINTER(csock));
+    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
     case GNUTLS_SERVER:
         gnutls_credentials_set(*session, GNUTLS_CRD_PSK, (gnutls_psk_server_credentials_t) credentials);
@@ -137,7 +137,7 @@ create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, v
 
 
 static int
-crm_send_tls(gnutls_session * session, const char *buf, size_t len)
+crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
 {
     const char *unsent = buf;
     int rc = 0;
@@ -188,7 +188,7 @@ crm_send_tls(gnutls_session * session, const char *buf, size_t len)
  * \retval '\0' terminated buffer on success
  */
 static char *
-crm_recv_tls(gnutls_session * session, size_t max_size, size_t *recv_len, int *disconnected)
+crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t *recv_len, int *disconnected)
 {
     char *buf = NULL;
     int rc = 0;

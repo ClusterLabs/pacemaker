@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -69,8 +69,8 @@ void cib_remote_connection_destroy(gpointer user_data);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define DH_BITS 1024
-gnutls_dh_params dh_params;
-gnutls_anon_server_credentials anon_cred_s;
+gnutls_dh_params_t dh_params;
+gnutls_anon_server_credentials_t anon_cred_s;
 static void
 debug_log(int level, const char *str)
 {
@@ -99,7 +99,7 @@ init_remote_listener(int port, gboolean encrypted)
     int *ssock = NULL;
     struct sockaddr_in saddr;
     int optval;
-    static struct mainloop_fd_callbacks remote_listen_fd_callbacks = 
+    static struct mainloop_fd_callbacks remote_listen_fd_callbacks =
         {
             .dispatch = cib_remote_listen,
             .destroy = remote_connection_destroy,
@@ -285,7 +285,7 @@ cib_remote_listen(gpointer data)
 
     crm_client_t *new_client = NULL;
 
-    static struct mainloop_fd_callbacks remote_client_fd_callbacks = 
+    static struct mainloop_fd_callbacks remote_client_fd_callbacks =
         {
             .dispatch = cib_remote_msg,
             .destroy = cib_remote_connection_destroy,
@@ -333,11 +333,11 @@ cib_remote_listen(gpointer data)
     crm_client_init();
     new_client = calloc(1, sizeof(crm_client_t));
     new_client->remote = calloc(1, sizeof(crm_remote_t));
-    
+
     new_client->id = crm_generate_uuid();
 
     g_hash_table_insert(client_connections, new_client->id/* Should work */, new_client);
-    
+
     /* clients have a few seconds to perform handshake. */
     new_client->remote->auth_timeout = g_timeout_add(
         REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
@@ -559,7 +559,7 @@ cib_remote_msg(gpointer data)
 }
 
 #ifdef HAVE_PAM
-/* 
+/*
  * Useful Examples:
  *    http://www.kernel.org/pub/linux/libs/pam/Linux-PAM-html
  *    http://developer.apple.com/samplecode/CryptNoMore/index.html

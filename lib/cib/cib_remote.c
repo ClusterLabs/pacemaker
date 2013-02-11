@@ -38,7 +38,7 @@
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
-gnutls_anon_client_credentials anon_cred_c;
+gnutls_anon_client_credentials_t anon_cred_c;
 #define DEFAULT_CLIENT_HANDSHAKE_TIMEOUT 5000 /* 5 seconds */
 
 const int kx_prio[] = {
@@ -48,7 +48,7 @@ const int kx_prio[] = {
 
 static gboolean remote_gnutls_credentials_init = FALSE;
 #else
-typedef void gnutls_session;
+typedef void gnutls_session_t;
 #endif
 
 #include <arpa/inet.h>

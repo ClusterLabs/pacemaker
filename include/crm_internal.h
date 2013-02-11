@@ -1,6 +1,6 @@
 /* crm_internal.h */
 
-/* 
+/*
  * Copyright (C) 2006 - 2008
  *     Andrew Beekhof <andrew@beekhof.net>
  *
@@ -235,7 +235,7 @@ int crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms);
  * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
  * \param credentials, gnutls_anon_server_credentials_t or gnutls_anon_client_credentials_t
  *
- * \retval gnutls_session * on success
+ * \retval gnutls_session_t * on success
  * \retval NULL on failure
  */
 void *crm_create_anon_tls_session(int sock, int type, void *credentials);
@@ -246,7 +246,7 @@ void *crm_create_anon_tls_session(int sock, int type, void *credentials);
  * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
  * \param credentials, gnutls_psk_server_credentials_t or gnutls_osk_client_credentials_t
  *
- * \retval gnutls_session * on success
+ * \retval gnutls_session_t * on success
  * \retval NULL on failure
  */
 void *create_psk_tls_session(int csock, int type, void *credentials);

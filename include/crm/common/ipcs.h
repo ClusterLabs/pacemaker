@@ -52,7 +52,7 @@ struct crm_remote_s
         int tcp_socket;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        gnutls_session *tls_session;
+        gnutls_session_t *tls_session;
         bool tls_handshake_complete;
 #endif
 };
