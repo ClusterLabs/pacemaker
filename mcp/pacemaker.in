@@ -85,7 +85,7 @@ start()
 		success
 	else
 		$prog > /dev/null 2>&1 &
-		
+
 		# Time to connect to corosync and fail
 		sleep 5
 
@@ -101,16 +101,17 @@ start()
 	echo
 }
 
-cman_pre_stop() 
+cman_pre_stop()
 {
     cname=`crm_node --name`
     crm_attribute -N $cname -n standby -v true -l reboot
+    logger -t pacemaker -p daemon.notice "Waiting for shutdown of managed resources"
     echo -n "Waiting for shutdown of managed resources"
 
-    while [ 1 = 1 ]; do	
+    while [ 1 = 1 ]; do
 	# 0x0000000000000002 means managed
 	active=`crm_resource -c | grep Resource: | grep 0x...............[2367] | awk '{print $9}' | grep $cname | wc -l`
-	if [ $active = 0 ]; then 
+	if [ $active = 0 ]; then
 	    break;
 	fi
 	sleep 1
@@ -119,12 +120,15 @@ cman_pre_stop()
     success
     echo
 
+    logger -t pacemaker -p daemon.notice "Leaving fence domain"
     echo -n "Leaving fence domain"
     fence_tool leave -w 10
     checkrc
 
-    echo -n "Stopping fenced"
-    kill -TERM $(pidof fenced) > /dev/null 2>&1
+    logger -t pacemaker -p daemon.notice "Stopping fenced"
+    fenced=$(pidof fenced)
+    echo -n "Stopping fenced $fenced"
+    kill -KILL $fenced > /dev/null 2>&1
     checkrc
 }
 
@@ -183,7 +187,7 @@ stop)
 	#
 	# stonithd needs to be around until fenced is stopped
 	# fenced can't be stopped until any cluster filesystems are unmounted
-	# 
+	#
 	# So:
 	# 1. put the node into standby
 	# 2. wait for all resources to be stopped
