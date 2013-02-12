@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -35,13 +35,13 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 
-struct crm_ipc_request_header 
+struct crm_ipc_request_header
 {
         struct qb_ipc_request_header qb;
         uint32_t flags;
 };
 
-struct crm_ipc_response_header 
+struct crm_ipc_response_header
 {
         struct qb_ipc_response_header qb;
         uint32_t size_uncompressed;
@@ -54,7 +54,7 @@ static int ipc_buffer_max = 0;
 static int pick_ipc_buffer(int max);
 
 static inline void
-crm_ipc_init(void) 
+crm_ipc_init(void)
 {
     if(hdr_offset == 0) {
         hdr_offset = sizeof(struct crm_ipc_response_header);
@@ -195,7 +195,7 @@ create_reply_adv(xmlNode * original_request, xmlNode * xml_response_data, const 
 GHashTable *client_connections = NULL;
 
 crm_client_t *
-crm_client_get(qb_ipcs_connection_t *c) 
+crm_client_get(qb_ipcs_connection_t *c)
 {
     if(client_connections) {
         return g_hash_table_lookup(client_connections, c);
@@ -212,7 +212,7 @@ crm_client_get_by_id(const char *id)
     crm_client_t *client;
     GHashTableIter iter;
 
-    if(client_connections) {
+    if(client_connections && id) {
         g_hash_table_iter_init(&iter, client_connections);
         while (g_hash_table_iter_next(&iter, &key, (gpointer *) & client)) {
             if(strcmp(client->id, id) == 0) {
@@ -226,7 +226,7 @@ crm_client_get_by_id(const char *id)
 }
 
 const char *
-crm_client_name(crm_client_t *c) 
+crm_client_name(crm_client_t *c)
 {
     if(c == NULL){
         return "null";
@@ -240,7 +240,7 @@ crm_client_name(crm_client_t *c)
 }
 
 void
-crm_client_init(void) 
+crm_client_init(void)
 {
     if(client_connections == NULL) {
         crm_trace("Creating client hash table");
@@ -249,7 +249,7 @@ crm_client_init(void)
 }
 
 void
-crm_client_cleanup(void) 
+crm_client_cleanup(void)
 {
     if(client_connections == NULL) {
         int active = g_hash_table_size(client_connections);
@@ -261,7 +261,7 @@ crm_client_cleanup(void)
 }
 
 crm_client_t *
-crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid) 
+crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     crm_client_t *client = NULL;
 
@@ -282,7 +282,7 @@ crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 
     crm_info("Connecting %p for uid=%d gid=%d pid=%u id=%s",
               c, uid, gid, client->pid, client->id);
-    
+
 #if ENABLE_ACL
     {
         struct group *crm_grp = NULL;
@@ -299,7 +299,7 @@ crm_client_new(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 }
 
 void
-crm_client_destroy(crm_client_t *c) 
+crm_client_destroy(crm_client_t *c)
 {
     if(c == NULL) {
         return;
@@ -330,7 +330,7 @@ crm_client_destroy(crm_client_t *c)
         free(event[1].iov_base);
         free(event);
     }
-    
+
     free(c->id);
     free(c->name);
     free(c->user);
@@ -443,7 +443,7 @@ crm_ipcs_flush_events(crm_client_t *c)
 }
 
 ssize_t
-crm_ipcs_prepare(uint32_t request, xmlNode *message, struct iovec **result) 
+crm_ipcs_prepare(uint32_t request, xmlNode *message, struct iovec **result)
 {
     static int biggest = 0;
 
@@ -454,7 +454,7 @@ crm_ipcs_prepare(uint32_t request, xmlNode *message, struct iovec **result)
     struct crm_ipc_response_header *header = calloc(1, sizeof(struct crm_ipc_response_header));
 
     CRM_ASSERT(result != NULL);
-    
+
     iov = calloc(2, sizeof(struct iovec));
 
     crm_ipc_init();
@@ -542,7 +542,7 @@ crm_ipcs_sendv(crm_client_t *c, struct iovec *iov, enum crm_ipc_server_flags fla
             iov_copy[1].iov_base = malloc(iov[1].iov_len);
             memcpy(iov_copy[1].iov_base,iov[1].iov_base, iov[1].iov_len);
 
-            c->event_queue = g_list_append(c->event_queue, iov_copy);            
+            c->event_queue = g_list_append(c->event_queue, iov_copy);
         }
 
     } else {
@@ -615,7 +615,7 @@ crm_ipcs_send_ack(
 struct crm_ipc_s
 {
         struct pollfd pfd;
-        
+
         int buf_size;
         int msg_size;
         int need_reply;
@@ -623,7 +623,7 @@ struct crm_ipc_s
         char *name;
 
         qb_ipcc_connection_t *ipc;
-        
+
 };
 
 static int
@@ -648,7 +648,7 @@ pick_ipc_buffer(int max)
 }
 
 crm_ipc_t *
-crm_ipc_new(const char *name, size_t max_size) 
+crm_ipc_new(const char *name, size_t max_size)
 {
     crm_ipc_t *client = NULL;
     client = calloc(1, sizeof(crm_ipc_t));
@@ -660,12 +660,12 @@ crm_ipc_new(const char *name, size_t max_size)
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
     client->pfd.revents = 0;
-    
+
     return client;
 }
 
 bool
-crm_ipc_connect(crm_ipc_t *client) 
+crm_ipc_connect(crm_ipc_t *client)
 {
     client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
@@ -687,7 +687,7 @@ crm_ipc_connect(crm_ipc_t *client)
 }
 
 void
-crm_ipc_close(crm_ipc_t *client) 
+crm_ipc_close(crm_ipc_t *client)
 {
     if(client) {
         crm_trace("Disconnecting %s IPC connection %p (%p.%p)", client->name, client, client->ipc);
@@ -701,7 +701,7 @@ crm_ipc_close(crm_ipc_t *client)
 }
 
 void
-crm_ipc_destroy(crm_ipc_t *client) 
+crm_ipc_destroy(crm_ipc_t *client)
 {
     if(client) {
         if(client->ipc && qb_ipcc_is_connected(client->ipc)) {
@@ -727,7 +727,7 @@ int
 crm_ipc_get_fd(crm_ipc_t *client)
 {
     int fd = 0;
-    
+
     CRM_ASSERT(client != NULL);
     if(client->ipc && qb_ipcc_fd_get(client->ipc, &fd) == 0) {
         return fd;
@@ -738,7 +738,7 @@ crm_ipc_get_fd(crm_ipc_t *client)
 }
 
 bool
-crm_ipc_connected(crm_ipc_t *client) 
+crm_ipc_connected(crm_ipc_t *client)
 {
     bool rc = FALSE;
 
@@ -752,7 +752,7 @@ crm_ipc_connected(crm_ipc_t *client)
 
     } else if(client->pfd.fd < 0) {
         crm_trace("Bad descriptor");
-        return FALSE;        
+        return FALSE;
     }
 
     rc = qb_ipcc_is_connected(client->ipc);
@@ -763,7 +763,7 @@ crm_ipc_connected(crm_ipc_t *client)
 }
 
 int
-crm_ipc_ready(crm_ipc_t *client) 
+crm_ipc_ready(crm_ipc_t *client)
 {
     CRM_ASSERT(client != NULL);
 
@@ -776,7 +776,7 @@ crm_ipc_ready(crm_ipc_t *client)
 }
 
 static int
-crm_ipc_decompress(crm_ipc_t *client) 
+crm_ipc_decompress(crm_ipc_t *client)
 {
     struct crm_ipc_response_header * header = (struct crm_ipc_response_header *)client->buffer;
     if(header->flags & crm_ipc_compressed) {
@@ -814,7 +814,7 @@ crm_ipc_decompress(crm_ipc_t *client)
 }
 
 long
-crm_ipc_read(crm_ipc_t *client) 
+crm_ipc_read(crm_ipc_t *client)
 {
     struct crm_ipc_response_header *header = NULL;
 
@@ -853,9 +853,9 @@ crm_ipc_read(crm_ipc_t *client)
 }
 
 const char *
-crm_ipc_buffer(crm_ipc_t *client) 
+crm_ipc_buffer(crm_ipc_t *client)
 {
-    CRM_ASSERT(client != NULL);    
+    CRM_ASSERT(client != NULL);
     return client->buffer + sizeof(struct crm_ipc_response_header);
 }
 
