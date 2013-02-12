@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -73,6 +73,7 @@ struct crm_ais_quorum_resp_s {
     uint32_t quorate;
 } __attribute__ ((packed));
 
+/* *INDENT-OFF* */
 enum crm_proc_flag {
     crm_proc_none      = 0x00000001,
     /* These values are sent over the network by the legacy plugin
@@ -99,6 +100,7 @@ enum crm_proc_flag {
 
     crm_proc_mgmtd     = 0x00040000,
 };
+/* *INDENT-ON* */
 
 static inline const char *
 peer2text(enum crm_proc_flag proc)
@@ -162,7 +164,7 @@ text2proc(const char *proc)
     } else if(proc && strcmp(proc, "crmd") == 0) {
         return crm_proc_crmd;
     }
-    
+
     return crm_proc_none;
 }
 

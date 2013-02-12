@@ -36,6 +36,7 @@ extern gboolean cib_is_master;
 extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 
+/* *INDENT-OFF* */
 enum cib_notifications
 {
     cib_notify_pre     = 0x0001,
@@ -44,6 +45,7 @@ enum cib_notifications
     cib_notify_confirm = 0x0008,
     cib_notify_diff    = 0x0010,
 };
+/* *INDENT-ON* */
 
 typedef struct cib_operation_s {
     const char *operation;

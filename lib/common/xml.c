@@ -54,16 +54,6 @@
 #define XML_PARSER_DEBUG 0
 #define BEST_EFFORT_STATUS 0
 
-enum xml_log_options
-{
-    xml_log_option_filtered   = 0x001,
-    xml_log_option_formatted  = 0x002,
-    xml_log_option_diff_plus  = 0x010,
-    xml_log_option_diff_minus = 0x020,
-    xml_log_option_diff_short = 0x040,
-    xml_log_option_diff_all   = 0x100,
-};
-
 void xml_log(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
 
 void xml_log(int priority, const char * fmt, ...)
@@ -91,6 +81,22 @@ struct schema_s
 	void *cache;
 };
 
+typedef struct {
+    int found;
+    const char *string;
+} filter_t;
+
+/* *INDENT-OFF* */
+enum xml_log_options
+{
+    xml_log_option_filtered   = 0x001,
+    xml_log_option_formatted  = 0x002,
+    xml_log_option_diff_plus  = 0x010,
+    xml_log_option_diff_minus = 0x020,
+    xml_log_option_diff_short = 0x040,
+    xml_log_option_diff_all   = 0x100,
+};
+
 struct schema_s known_schemas[] = {
     /* 0 */    { 0, NULL, NULL, NULL, 1 },
     /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
@@ -102,16 +108,6 @@ struct schema_s known_schemas[] = {
     /* 7 */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
-static int all_schemas = DIMOF(known_schemas);
-static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
-
-
-typedef struct
-{
-        int found;
-        const char *string;
-} filter_t;
-
 static filter_t filter[] = {
     { 0, XML_ATTR_ORIGIN },
     { 0, XML_CIB_ATTR_WRITTEN },
@@ -119,6 +115,10 @@ static filter_t filter[] = {
     { 0, XML_ATTR_UPDATE_CLIENT },
     { 0, XML_ATTR_UPDATE_USER },
 };
+/* *INDENT-ON* */
+
+static int all_schemas = DIMOF(known_schemas);
+static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
 #define CHUNK_SIZE 1024
 

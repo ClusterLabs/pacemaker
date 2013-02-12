@@ -22,7 +22,7 @@ default: $(shell test ! -e configure && echo initialize) $(shell test -e configu
 
 PACKAGE		?= pacemaker
 
-# Force 'make dist' to be consistent with 'make export' 
+# Force 'make dist' to be consistent with 'make export'
 distprefix		= ClusterLabs-$(PACKAGE)
 distdir			= $(distprefix)-$(TAG)
 TARFILE			= $(distdir).tar.gz
@@ -46,7 +46,7 @@ MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
 TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= --without=doc
-#WITH    ?= --without=doc --with=gcov 
+#WITH    ?= --without=doc --with=gcov
 
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
 NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
@@ -59,7 +59,7 @@ initialize:
 	./autogen.sh
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
 
-export: 
+export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
 	    rm -f $(PACKAGE).tar.*;						\
@@ -130,7 +130,7 @@ srpm-%:	export $(PACKAGE)-%.spec
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
 	echo "Done"
 
-mock-next: 
+mock-next:
 	make F=$(shell expr 1 + $(F)) mock
 
 mock-rawhide:
@@ -145,7 +145,7 @@ mock-sh-%:
 	mock --root=$* $(MOCK_OPTIONS) --shell
 
 # eg. WITH="--with cman" make rpm
-mock-%: 
+mock-%:
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock
 	@echo "mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm"
@@ -226,30 +226,30 @@ www:	all global doxygen
 	make coverity
 
 summary:
-	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" 
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1"
 	@printf "\n- Update source tarball to revision: `git id`"
 	@printf "\n- Statistics:\n"
-	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" 
-	@printf "  Diff:      " 
+	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n"
+	@printf "  Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1
 
 changes:
-	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog 
-	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog 
-	@printf "\n- Statistics:\n">> ChangeLog 
-	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog 
-	@printf "  Diff:      " >> ChangeLog 
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog
+	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog
+	@printf "\n- Statistics:\n">> ChangeLog
+	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog
+	@printf "  Diff:      " >> ChangeLog
 	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1 >> ChangeLog
-	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog 
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sed -e s@High:@@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog 
-	@printf "\n">> ChangeLog 
+	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sed -e s@High:@@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog
+	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
 	find lib -name "*.c" -exec ./p-indent \{\} \;
-	git co - lib/common/xml.c include/crm/cib_ops.h crmd/fsa_proto.h
+	git co HEAD crmd/fsa_proto.h
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
@@ -261,7 +261,7 @@ clang:
 	test -e $(ccc_analyzer) || false
 	make CC=$(ccc_analyzer) check
 
-# V3	= scandir unsetenv alphasort 
+# V3	= scandir unsetenv alphasort
 # V2	= setenv strerror strchrnul strndup
 # http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
 GNU_MODS	= crypto/md5

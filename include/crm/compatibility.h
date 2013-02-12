@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2012 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,6 +32,7 @@
 #  define CRMD_STATE_ACTIVE            CRMD_JOINSTATE_MEMBER
 #  define CRMD_STATE_INACTIVE          CRMD_JOINSTATE_DOWN
 
+/* *INDENT-OFF* */
 enum cib_errors {
     cib_ok			=  pcmk_ok,
     cib_operation		= -EINVAL,
@@ -112,6 +113,7 @@ enum lrmd_errors {
     lrmd_err_stonith_connection  = -EUNATCH,
     lrmd_err_provider_required   = -EINVAL,
 };
+/* *INDENT-ON* */
 
 #define stonith_error2string pcmk_strerror
 #define lrmd_error2string    pcmk_strerror

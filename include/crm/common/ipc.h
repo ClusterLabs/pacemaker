@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -38,14 +38,14 @@ xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *ho
                                    const char *sys_to, const char *sys_from, const char *uuid_from,
                                    const char *origin);
 
-/* Libqb based IPC */
-
+/* *INDENT-OFF* */
 enum crm_ipc_flags
 {
     crm_ipc_client_none     = 0x0000,
-    crm_ipc_client_response = 0x0001, /* A Response is expected in reply */ 
+    crm_ipc_client_response = 0x0001, /* A Response is expected in reply */
     crm_ipc_compressed      = 0x0002, /* Message has been compressed */
 };
+/* *INDENT-ON* */
 
 #include <qb/qbipcc.h>
 typedef struct crm_ipc_s crm_ipc_t;
@@ -70,4 +70,3 @@ xmlNode *create_hello_message(const char *uuid, const char *client_name,
 
 
 #endif
-

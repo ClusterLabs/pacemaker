@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -85,6 +85,7 @@ typedef struct crm_cluster_s
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 void crm_cluster_disconnect(crm_cluster_t *cluster);
 
+/* *INDENT-OFF* */
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
     crm_class_members = 1,
@@ -107,6 +108,7 @@ enum crm_ais_msg_types {
     crm_msg_pe       = 8,
     crm_msg_stonith_ng = 9,
 };
+/* *INDENT-ON* */
 
 gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
@@ -150,7 +152,7 @@ enum crm_ais_msg_types text2msg_type(const char *text);
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 
 /* *INDENT-OFF* */
-enum cluster_type_e 
+enum cluster_type_e
 {
     pcmk_cluster_unknown     = 0x0001,
     pcmk_cluster_invalid     = 0x0002,

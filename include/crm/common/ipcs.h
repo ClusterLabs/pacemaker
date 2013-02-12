@@ -86,6 +86,7 @@ struct crm_client_s
         struct crm_remote_s *remote; /* TCP/TLS */
 };
 
+/* *INDENT-OFF* */
 enum crm_ipc_server_flags
 {
     crm_ipc_server_none  = 0x0000,
@@ -96,6 +97,7 @@ enum crm_ipc_server_flags
     crm_ipc_server_error = 0x0020, /* Log failures as LOG_ERR */
 
 };
+/* *INDENT-ON* */
 
 extern GHashTable *client_connections;
 
