@@ -202,6 +202,51 @@ destroy_digest_cache(gpointer ptr)
     free(data);
 }
 
+static node_t *
+add_node(const char *id, const char *uname, const char *type, const char *score)
+{
+    node_t *new_node = NULL;
+
+    new_node = calloc(1, sizeof(node_t));
+    if (new_node == NULL) {
+        return NULL;
+    }
+
+    new_node->weight = char2score(score);
+    new_node->fixed = FALSE;
+    new_node->details = calloc(1, sizeof(struct node_shared_s));
+
+    if (new_node->details == NULL) {
+        free(new_node);
+        return NULL;
+    }
+
+    crm_trace("Creaing node for entry %s/%s", uname, id);
+    new_node->details->id = id;
+    new_node->details->uname = uname;
+    new_node->details->online = FALSE;
+    new_node->details->shutdown = FALSE;
+    new_node->details->running_rsc = NULL;
+    new_node->details->type = node_ping;
+    if (type == NULL || safe_str_eq(type, "member")
+        || safe_str_eq(type, NORMALNODE)) {
+        new_node->details->type = node_member;
+    }
+
+    new_node->details->attrs = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                     g_hash_destroy_str,
+                                                     g_hash_destroy_str);
+    new_node->details->utilization =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+                              g_hash_destroy_str);
+
+    new_node->details->digest_cache =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+                              destroy_digest_cache);
+
+    return new_node;
+}
+
 gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
@@ -238,37 +283,11 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                                 " - this is rarely intended", uname);
             }
 
-            new_node = calloc(1, sizeof(node_t));
+            new_node = add_node(id, uname, type, score);
+
             if (new_node == NULL) {
                 return FALSE;
             }
-
-            new_node->weight = char2score(score);
-            new_node->fixed = FALSE;
-            new_node->details = calloc(1, sizeof(struct node_shared_s));
-
-            if (new_node->details == NULL) {
-                free(new_node);
-                return FALSE;
-            }
-
-            crm_trace("Creaing node for entry %s/%s", uname, id);
-            new_node->details->id = id;
-            new_node->details->uname = uname;
-            new_node->details->type = node_ping;
-            new_node->details->online = FALSE;
-            new_node->details->shutdown = FALSE;
-            new_node->details->running_rsc = NULL;
-            new_node->details->attrs = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                             g_hash_destroy_str,
-                                                             g_hash_destroy_str);
-            new_node->details->utilization =
-                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                                      g_hash_destroy_str);
-
-            new_node->details->digest_cache =
-                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                                      destroy_digest_cache);
 
 /* 		if(data_set->have_quorum == FALSE */
 /* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
@@ -286,11 +305,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                  * status entry
                  */
                 new_node->details->unclean = TRUE;
-            }
-
-            if (type == NULL || safe_str_eq(type, "member")
-                || safe_str_eq(type, NORMALNODE)) {
-                new_node->details->type = node_member;
             }
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
