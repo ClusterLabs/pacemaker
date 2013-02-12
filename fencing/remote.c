@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -130,7 +130,7 @@ create_op_done_notify(remote_fencing_op_t *op, int rc)
     crm_xml_add_int(notify_data, "state", op->state);
     crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
     crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
-    crm_xml_add(notify_data, F_STONITH_ACTION,    op->action); 
+    crm_xml_add(notify_data, F_STONITH_ACTION,    op->action);
     crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
     crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID,    op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
@@ -176,7 +176,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, int rc)
     notify_data = create_op_done_notify(op, rc);
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET,    op->target);
-    crm_xml_add(data, F_STONITH_OPERATION, op->action); 
+    crm_xml_add(data, F_STONITH_OPERATION, op->action);
 
     reply = stonith_construct_reply(op->request, NULL, data, rc);
     crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
@@ -361,7 +361,7 @@ static gboolean remote_op_query_timeout(gpointer data)
     return FALSE;
 }
 
-static int stonith_topology_next(remote_fencing_op_t *op) 
+static int stonith_topology_next(remote_fencing_op_t *op)
 {
     stonith_topology_t *tp = NULL;
     if(op->target) {
@@ -440,7 +440,7 @@ merge_duplicates(remote_fencing_op_t *op)
  * \internal
  * \brief Create a new remote stonith op
  * \param client, he local stonith client id that initaited the operation
- * \param request, The request from the client that started the operation 
+ * \param request, The request from the client that started the operation
  * \param peer, Is this operation owned by another stonith peer? Operations
  *        owned by other peers are stored on all the stonith nodes, but only the
  *        owner executes the operation.  All the nodes get the results to the operation
@@ -491,6 +491,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
         op->originator = strdup(stonith_our_uname);
     }
 
+    CRM_LOG_ASSERT(client != NULL);
     if(client) {
         op->client_id = strdup(client);
     }
@@ -800,7 +801,7 @@ report_timeout_period(remote_fencing_op_t *op, int op_timeout)
     }
 }
 
-void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer) 
+void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer)
 {
     const char *device = NULL;
     int timeout = op->base_timeout;
@@ -941,7 +942,7 @@ all_topology_devices_found(remote_fencing_op_t *op)
     return TRUE;
 }
 
-int process_remote_stonith_query(xmlNode *msg) 
+int process_remote_stonith_query(xmlNode *msg)
 {
     int devices = 0;
     gboolean host_is_target = FALSE;
@@ -1053,7 +1054,7 @@ int process_remote_stonith_query(xmlNode *msg)
     return pcmk_ok;
 }
 
-int process_remote_stonith_exec(xmlNode *msg) 
+int process_remote_stonith_exec(xmlNode *msg)
 {
     int rc = 0;
     const char *id = NULL;
@@ -1079,9 +1080,9 @@ int process_remote_stonith_exec(xmlNode *msg)
 
     if(op == NULL && rc == pcmk_ok) {
         /* Record successful fencing operations */
-        const char *client_id = crm_element_value(msg, F_STONITH_CLIENTID);
+        const char *client_id = crm_element_value(dev, F_STONITH_CLIENTID);
 
-        op = create_remote_stonith_op(client_id, msg, TRUE);
+        op = create_remote_stonith_op(client_id, dev, TRUE);
     }
 
     if(op == NULL) {
@@ -1169,7 +1170,7 @@ int process_remote_stonith_exec(xmlNode *msg)
     return rc;
 }
 
-int stonith_fence_history(xmlNode *msg, xmlNode **output) 
+int stonith_fence_history(xmlNode *msg, xmlNode **output)
 {
     int rc = 0;
     const char *target = NULL;
@@ -1194,7 +1195,7 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output)
         GHashTableIter iter;
         remote_fencing_op_t *op = NULL;
 
-        g_hash_table_iter_init(&iter, remote_op_list); 
+        g_hash_table_iter_init(&iter, remote_op_list);
         while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
             xmlNode *entry = NULL;
             if (target && strcmp(op->target, target) != 0) {
