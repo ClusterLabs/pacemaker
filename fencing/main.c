@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -96,7 +96,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         crm_ipcs_send_ack(c, id, "nack", __FUNCTION__, __LINE__);
         return 0;
     }
-    
+
     if(c->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
         if(value == NULL) {
@@ -109,7 +109,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         CRM_LOG_ASSERT(c->request_id == 0); /* This means the client has two synchronous events in-flight */
         c->request_id = id;                 /* Reply only to the last one */
     }
-    
+
     crm_xml_add(request, F_STONITH_CLIENTID, c->id);
     crm_xml_add(request, F_STONITH_CLIENTNAME, crm_client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
@@ -401,7 +401,7 @@ static void topology_remove_helper(const char *node, int level)
     free(desc);
 }
 
-static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list) 
+static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list)
 {
     int rc;
     char *desc = NULL;
@@ -577,7 +577,7 @@ static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force
     }
 }
 
-/* Fencing 
+/* Fencing
 <diff crm_feature_set="3.0.6">
   <diff-removed>
     <fencing-topology>
@@ -727,7 +727,7 @@ cib_connection_destroy(gpointer user_data)
 
 
 static void
-stonith_cleanup(void) 
+stonith_cleanup(void)
 {
     if(cib) {
         cib->cmds->signoff(cib);
@@ -813,7 +813,7 @@ struct qb_ipcs_service_handlers ipc_callbacks =
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    /* 
+    /*
      * This is a hack until we can send to a nodeid and/or we fix node name lookups
      * These messages are ignored in stonith_peer_callback()
      */
@@ -925,6 +925,13 @@ main(int argc, char ** argv)
             printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
             printf("  </parameter>\n");
 
+            printf("  <parameter name=\"pcmk_%s_timeout\" unique=\"0\">\n", actions[lpc]);
+            printf("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n", actions[lpc]);
+            printf("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
+                   "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n", actions[lpc]);
+            printf("    <content type=\"time\" default=\"60s\"/>\n");
+            printf("  </parameter>\n");
+
             printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
             printf("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n", actions[lpc]);
             printf("    <longdesc lang=\"en\">Some devices do not support multiple connections."
@@ -1019,4 +1026,3 @@ main(int argc, char ** argv)
 
     return crm_exit(rc);
 }
-
