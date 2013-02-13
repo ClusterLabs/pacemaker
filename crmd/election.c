@@ -45,7 +45,7 @@ crm_uptime(struct timeval *output)
 
     time_t tm_now = time(NULL);
 
-    if(expires < tm_now) {
+    if (expires < tm_now) {
         int rc = getrusage(RUSAGE_SELF, &info);
 
         output->tv_sec = 0;
@@ -61,7 +61,7 @@ crm_uptime(struct timeval *output)
                   (long)info.ru_utime.tv_usec);
     }
 
-    expires = tm_now + STORM_INTERVAL; /* N seconds after the last _access_ */
+    expires = tm_now + STORM_INTERVAL;  /* N seconds after the last _access_ */
     output->tv_sec = info.ru_utime.tv_sec;
     output->tv_usec = info.ru_utime.tv_usec;
     return 1;
@@ -394,19 +394,20 @@ do_election_count_vote(long long action,
  */
     }
 
-    if(expires < tm_now) {
+    if (expires < tm_now) {
         election_wins = 0;
         expires = tm_now + STORM_INTERVAL;
 
-    } else if(done == FALSE && we_loose == FALSE) {
+    } else if (done == FALSE && we_loose == FALSE) {
         int peers = 1 + g_hash_table_size(crm_peer_cache);
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leway before _really_ complaining
          */
         election_wins++;
-        if(election_wins > (peers * peers)) {
-            crm_warn("Election storm detected: %d elections in %d seconds", election_wins, STORM_INTERVAL);
+        if (election_wins > (peers * peers)) {
+            crm_warn("Election storm detected: %d elections in %d seconds", election_wins,
+                     STORM_INTERVAL);
             election_wins = 0;
             expires = tm_now + STORM_INTERVAL;
             crm_write_blackbox(0, NULL);
@@ -533,13 +534,11 @@ do_dc_takeover(long long action,
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
-    update_attr_delegate(
-        fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-        "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL);
+    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                         "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL);
 
-    update_attr_delegate(
-        fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-        "cluster-infrastructure", cluster_type, FALSE, NULL);
+    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                         "cluster-infrastructure", cluster_type, FALSE, NULL);
 
     mainloop_set_trigger(config_read);
     free_xml(cib);

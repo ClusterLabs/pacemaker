@@ -27,5 +27,5 @@ void nosuchfunctionname(void);
 void
 nosuchfunctionname(void)
 {
-	return;
+    return;
 }

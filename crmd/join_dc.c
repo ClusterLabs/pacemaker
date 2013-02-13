@@ -101,7 +101,7 @@ erase_node_from_join(const char *uname)
 
     if (w || i || f || c) {
         crm_debug("Removed node %s from join calculations:"
-                 " welcomed=%d itegrated=%d finalized=%d confirmed=%d", uname, w, i, f, c);
+                  " welcomed=%d itegrated=%d finalized=%d confirmed=%d", uname, w, i, f, c);
     }
 }
 
@@ -421,8 +421,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     clear_bit(fsa_input_register, R_CIB_ASKED);
     if (rc != pcmk_ok) {
         do_crm_log((rc == -pcmk_err_old_data ? LOG_WARNING : LOG_ERR),
-                   "Sync from %s failed: %s",
-                   (char *)user_data, pcmk_strerror(rc));
+                   "Sync from %s failed: %s", (char *)user_data, pcmk_strerror(rc));
 
         /* restart the whole join process */
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
@@ -554,7 +553,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     set_uuid(tmp1, XML_ATTR_UUID, join_to);
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
 
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1, cib_scope_local | cib_quorum_override | cib_can_create);
+    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
+                        cib_scope_local | cib_quorum_override | cib_can_create);
     free_xml(tmp1);
 
     join_node = crm_get_peer(0, join_to);
@@ -582,8 +582,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         crm_debug("join-%d: ACK'ing join request from %s, state %s",
                   current_join_id, join_to, join_state);
         crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
-        g_hash_table_insert(finalized_nodes,
-                            strdup(join_to), strdup(CRMD_JOINSTATE_MEMBER));
+        g_hash_table_insert(finalized_nodes, strdup(join_to), strdup(CRMD_JOINSTATE_MEMBER));
         crm_update_peer_expected(__FUNCTION__, join_node, CRMD_JOINSTATE_MEMBER);
 
     } else {
@@ -608,7 +607,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 
     if (saved_ccm_membership_id != crm_peer_seq) {
         crm_debug("%s: Membership changed since join started: %llu -> %llu",
-                 source, saved_ccm_membership_id, crm_peer_seq);
+                  source, saved_ccm_membership_id, crm_peer_seq);
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else if (cur_state == S_INTEGRATION) {

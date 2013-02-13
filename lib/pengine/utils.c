@@ -31,8 +31,10 @@ pe_working_set_t *pe_dataset = NULL;
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
-void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, pe_working_set_t * data_set);
-static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled);
+void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+                      pe_working_set_t * data_set);
+static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
+                                         gboolean include_disabled);
 
 node_t *
 node_copy(node_t * this_node)
@@ -345,16 +347,16 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         action = g_list_nth_data(possible_matches, 0);
         pe_rsc_trace(rsc, "Found existing action (%d) %s for %s on %s",
-                  action->id, task, rsc ? rsc->id : "<NULL>",
-                  on_node ? on_node->details->uname : "<NULL>");
+                     action->id, task, rsc ? rsc->id : "<NULL>",
+                     on_node ? on_node->details->uname : "<NULL>");
         g_list_free(possible_matches);
     }
 
     if (action == NULL) {
         if (save_action) {
             pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s",
-                      optional ? "" : " manditory", data_set->action_id, key,
-                      rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
+                         optional ? "" : " manditory", data_set->action_id, key,
+                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
         }
 
         action = calloc(1, sizeof(action_t));
@@ -451,8 +453,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
-                && action->node->details->unclean == FALSE
-                && save_action && a_task == stop_rsc) {
+                && action->node->details->unclean == FALSE && save_action && a_task == stop_rsc) {
                 do_crm_log(warn_level, "Marking node %s unclean", action->node->details->uname);
                 action->node->details->unclean = TRUE;
             }
@@ -485,7 +486,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
             if (rsc->fns->active(rsc, TRUE) == FALSE) {
                 pe_clear_action_bit(action, pe_action_runnable);
                 pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
-                          action->node->details->uname, action->uuid);
+                             action->node->details->uname, action->uuid);
             }
 
         } else {
@@ -515,7 +516,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 }
 
 static const char *
-unpack_operation_on_fail(action_t *action)
+unpack_operation_on_fail(action_t * action)
 {
 
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
@@ -535,8 +536,7 @@ unpack_operation_on_fail(action_t *action)
         CRM_CHECK(action->rsc != NULL, return NULL);
 
         for (operation = __xml_first_child(action->rsc->ops_xml);
-             operation && !value;
-             operation = __xml_next(operation)) {
+             operation && !value; operation = __xml_next(operation)) {
 
             if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
                 continue;
@@ -605,7 +605,8 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
 }
 
 void
-unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, pe_working_set_t * data_set)
+unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
+                 pe_working_set_t * data_set)
 {
     int value_i = 0;
     unsigned long long interval = 0;
@@ -655,18 +656,16 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, p
         action->needs = rsc_req_stonith;
         set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires (un)fencing but fencing is disabled",
-                       action->rsc->id);
+            crm_notice("%s requires (un)fencing but fencing is disabled", action->rsc->id);
         }
 
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires fencing but fencing is disabled",
-                       action->rsc->id);
+            crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
         }
-    /* End compatability code */
+        /* End compatability code */
 
     } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;
@@ -774,7 +773,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, p
             action->fail_role = RSC_ROLE_STARTED;
         }
     }
-    pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task, role2text(action->fail_role));
+    pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task,
+                 role2text(action->fail_role));
 
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
@@ -825,7 +825,8 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, p
             start_delay = delay_s * 1000;
 
             crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
-            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY), crm_itoa(start_delay));
+            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
+                                 crm_itoa(start_delay));
             crm_time_free(origin);
             crm_time_free(delay);
         }
@@ -833,13 +834,13 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container, p
 
     field = XML_ATTR_TIMEOUT;
     value = g_hash_table_lookup(action->meta, field);
-    if (value == NULL && xml_obj == NULL &&
-        safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
+    if (value == NULL && xml_obj == NULL && safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
         xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
 
         if (min_interval_mon) {
             value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            pe_rsc_trace(action->rsc, "\t%s uses the timeout value '%s' from the minimum interval monitor",
+            pe_rsc_trace(action->rsc,
+                         "\t%s uses the timeout value '%s' from the minimum interval monitor",
                          action->uuid, value);
         }
     }
@@ -890,7 +891,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
             }
             free(match_key);
 
-            if(rsc->clone_name) {
+            if (rsc->clone_name) {
                 match_key = generate_op_key(rsc->clone_name, name, number);
                 if (safe_str_eq(key, match_key)) {
                     op = operation;
@@ -928,7 +929,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
 xmlNode *
 find_rsc_op_entry(resource_t * rsc, const char *key)
 {
-    return find_rsc_op_entry_helper( rsc, key, FALSE);
+    return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
 
 void
@@ -997,8 +998,8 @@ pe_free_action(action_t * action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);        /* action_warpper_t* */
-    g_list_free_full(action->actions_after, free); /* action_warpper_t* */
+    g_list_free_full(action->actions_before, free);     /* action_warpper_t* */
+    g_list_free_full(action->actions_after, free);      /* action_warpper_t* */
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
@@ -1353,7 +1354,7 @@ get_timet_now(pe_working_set_t * data_set)
     /* if (data_set && data_set->now) { */
     /*     now = data_set->now->tm_now; */
     /* } */
-    
+
     if (now == 0) {
         /* eventually we should convert data_set->now into time_tm
          * for now, its only triggered by PE regression tests
@@ -1401,14 +1402,14 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
     struct fail_search search = { rsc, 0, 0, NULL };
 
     /* Optimize the "normal" case */
-    key = crm_concat("fail-count", rsc->clone_name?rsc->clone_name:rsc->id, '-');
+    key = crm_concat("fail-count", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
     value = g_hash_table_lookup(node->details->attrs, key);
     search.count = char2score(value);
     crm_trace("%s = %s", key, value);
     free(key);
-    
-    if(value) {
-        key = crm_concat("last-failure", rsc->clone_name?rsc->clone_name:rsc->id, '-');
+
+    if (value) {
+        key = crm_concat("last-failure", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
         value = g_hash_table_lookup(node->details->attrs, key);
         search.last = crm_int_helper(value, NULL);
         free(key);
@@ -1645,7 +1646,8 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 }
 
 op_digest_cache_t *
-rsc_action_digest_cmp(resource_t *rsc, xmlNode *xml_op, node_t *node, pe_working_set_t *data_set)
+rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
+                      pe_working_set_t * data_set)
 {
     op_digest_cache_t *data = NULL;
 
@@ -1717,4 +1719,3 @@ rsc_action_digest_cmp(resource_t *rsc, xmlNode *xml_op, node_t *node, pe_working
 
     return data;
 }
-

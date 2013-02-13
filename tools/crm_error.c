@@ -42,7 +42,7 @@ main(int argc, char **argv)
     crm_log_cli_init("crm_error");
     crm_set_options(NULL, "[options] -- rc", long_options,
                     "Tool for displaying the textual description of a reported error code");
-    
+
     while (flag >= 0) {
         flag = crm_get_option(argc, argv, &option_index);
         switch (flag) {
@@ -61,7 +61,7 @@ main(int argc, char **argv)
         }
     }
 
-    for(lpc = optind; lpc < argc; lpc++) {
+    for (lpc = optind; lpc < argc; lpc++) {
         rc = crm_atoi(argv[lpc], NULL);
         printf("%s\n", pcmk_strerror(rc));
     }

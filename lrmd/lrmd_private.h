@@ -25,10 +25,10 @@
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
-#  include <gnutls/gnutls.h>
-#endif
+#  ifdef HAVE_GNUTLS_GNUTLS_H
+#    undef KEYFILE
+#    include <gnutls/gnutls.h>
+#  endif
 GHashTable *rsc_list;
 
 typedef struct lrmd_rsc_s {
@@ -56,19 +56,20 @@ typedef struct lrmd_rsc_s {
     crm_trigger_t *work;
 } lrmd_rsc_t;
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#  ifdef HAVE_GNUTLS_GNUTLS_H
 /* in remote_tls.c */
 int lrmd_init_remote_tls_server(int port);
 void lrmd_tls_server_destroy(void);
 
 /* Hidden in lrmd client lib */
-extern int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id, const char *msg_type);
-extern int lrmd_tls_set_key(gnutls_datum_t *key, const char *location);
-#endif
+extern int lrmd_tls_send_msg(crm_remote_t * session, xmlNode * msg, uint32_t id,
+                             const char *msg_type);
+extern int lrmd_tls_set_key(gnutls_datum_t * key, const char *location);
+#  endif
 
-int lrmd_server_send_reply(crm_client_t *client, uint32_t id, xmlNode *reply);
+int lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply);
 
-int lrmd_server_send_notify(crm_client_t *client, xmlNode *msg);
+int lrmd_server_send_notify(crm_client_t * client, xmlNode * msg);
 
 void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request);
 

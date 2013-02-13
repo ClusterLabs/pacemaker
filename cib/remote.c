@@ -99,11 +99,11 @@ init_remote_listener(int port, gboolean encrypted)
     int *ssock = NULL;
     struct sockaddr_in saddr;
     int optval;
-    static struct mainloop_fd_callbacks remote_listen_fd_callbacks =
-        {
-            .dispatch = cib_remote_listen,
-            .destroy = remote_connection_destroy,
-        };
+
+    static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
+        .dispatch = cib_remote_listen,
+        .destroy = remote_connection_destroy,
+    };
 
     if (port <= 0) {
         /* dont start it */
@@ -143,7 +143,7 @@ init_remote_listener(int port, gboolean encrypted)
     /* reuse address */
     optval = 1;
     rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-    if(rc < 0) {
+    if (rc < 0) {
         crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
     }
 
@@ -212,7 +212,7 @@ check_group_membership(const char *usr, const char *grp)
 }
 
 static gboolean
-cib_remote_auth(xmlNode *login)
+cib_remote_auth(xmlNode * login)
 {
     const char *user = NULL;
     const char *pass = NULL;
@@ -274,6 +274,7 @@ remote_auth_timeout_cb(gpointer data)
 
     return FALSE;
 }
+
 int
 cib_remote_listen(gpointer data)
 {
@@ -285,11 +286,10 @@ cib_remote_listen(gpointer data)
 
     crm_client_t *new_client = NULL;
 
-    static struct mainloop_fd_callbacks remote_client_fd_callbacks =
-        {
-            .dispatch = cib_remote_msg,
-            .destroy = cib_remote_connection_destroy,
-        };
+    static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
+        .dispatch = cib_remote_msg,
+        .destroy = cib_remote_connection_destroy,
+    };
 
     /* accept the connection */
     laddr = sizeof(addr);
@@ -304,12 +304,12 @@ cib_remote_listen(gpointer data)
 
     if ((flag = fcntl(csock, F_GETFL)) >= 0) {
         if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err( "fcntl() write failed");
+            crm_err("fcntl() write failed");
             close(csock);
             return TRUE;
         }
     } else {
-        crm_err( "fcntl() read failed");
+        crm_err("fcntl() read failed");
         close(csock);
         return TRUE;
     }
@@ -317,8 +317,8 @@ cib_remote_listen(gpointer data)
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         /* create gnutls session for the server socket */
-        new_client->remote->tls_session = crm_create_anon_tls_session(
-            csock, GNUTLS_SERVER, anon_cred_s);
+        new_client->remote->tls_session =
+            crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
 
         if (new_client->remote->tls_session == NULL) {
             crm_err("TLS session creation failed");
@@ -336,11 +336,11 @@ cib_remote_listen(gpointer data)
 
     new_client->id = crm_generate_uuid();
 
-    g_hash_table_insert(client_connections, new_client->id/* Should work */, new_client);
+    g_hash_table_insert(client_connections, new_client->id /* Should work */ , new_client);
 
     /* clients have a few seconds to perform handshake. */
-    new_client->remote->auth_timeout = g_timeout_add(
-        REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
+    new_client->remote->auth_timeout =
+        g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -351,8 +351,9 @@ cib_remote_listen(gpointer data)
         new_client->remote->tcp_socket = csock;
     }
 
-    new_client->remote->source = mainloop_add_fd(
-        "cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &remote_client_fd_callbacks);
+    new_client->remote->source =
+        mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
+                        &remote_client_fd_callbacks);
 
     return TRUE;
 }
@@ -367,8 +368,7 @@ cib_remote_connection_destroy(gpointer user_data)
         return;
     }
 
-    crm_trace("Cleaning up after client disconnect: %s/%s",
-              crm_str(client->name), client->id);
+    crm_trace("Cleaning up after client disconnect: %s/%s", crm_str(client->name), client->id);
 
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
@@ -381,6 +381,7 @@ cib_remote_connection_destroy(gpointer user_data)
         case CRM_CLIENT_TLS:
             if (client->remote->tls_session) {
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
+
                 csock = GPOINTER_TO_INT(sock_ptr);
                 if (client->remote->tls_handshake_complete) {
                     gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
@@ -392,7 +393,7 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
 #endif
         default:
-            crm_warn("Unexpected client type %d" , client->kind);
+            crm_warn("Unexpected client type %d", client->kind);
     }
 
     if (csock > 0) {
@@ -410,7 +411,7 @@ cib_remote_connection_destroy(gpointer user_data)
 }
 
 static void
-cib_handle_remote_msg(crm_client_t *client, xmlNode *command)
+cib_handle_remote_msg(crm_client_t * client, xmlNode * command)
 {
     const char *value = NULL;
 
@@ -500,7 +501,8 @@ cib_remote_msg(gpointer data)
                 g_source_remove(client->remote->auth_timeout);
             }
             /* after handshake, clients must send auth in a few seconds */
-            client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, client);
+            client->remote->auth_timeout =
+                g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, client);
         }
         return 0;
     }
@@ -511,6 +513,7 @@ cib_remote_msg(gpointer data)
     /* must pass auth before we will process anything else */
     if (client->remote->authenticated == FALSE) {
         xmlNode *reg;
+
 #if ENABLE_ACL
         const char *user = NULL;
 #endif
@@ -529,7 +532,7 @@ cib_remote_msg(gpointer data)
 #if ENABLE_ACL
         user = crm_element_value(command, "user");
         if (user) {
-           client->user = strdup(user);
+            client->user = strdup(user);
         }
 #endif
 

@@ -136,8 +136,8 @@ xmlNode *stdin2xml(void);
 
 xmlNode *string2xml(const char *input);
 
-int write_xml_fd(xmlNode *xml_node, const char *filename, int fd, gboolean compress);
-int write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress);
+int write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress);
+int write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress);
 
 char *dump_xml_formatted(xmlNode * msg);
 
@@ -149,7 +149,7 @@ char *dump_xml_unformatted(xmlNode * msg);
 xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
 
 xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
-                             gboolean full, gboolean *changed, const char *marker);
+                             gboolean full, gboolean * changed, const char *marker);
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
@@ -168,13 +168,13 @@ xmlNode *find_entity(xmlNode * parent, const char *node_name, const char *id);
 void xml_remove_prop(xmlNode * obj, const char *name);
 
 gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
-                                  gboolean delete_only);
+                           gboolean delete_only);
 
 gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
 
 int find_xml_children(xmlNode ** children, xmlNode * root,
-                             const char *tag, const char *field, const char *value,
-                             gboolean search_matches);
+                      const char *tag, const char *field, const char *value,
+                      gboolean search_matches);
 
 int crm_element_value_int(xmlNode * data, const char *name, int *dest);
 char *crm_element_value_copy(xmlNode * data, const char *name);
@@ -194,7 +194,7 @@ gboolean xml_has_children(const xmlNode * root);
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
-                                            const char *version);
+                                     const char *version);
 
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
 gboolean validate_xml_verbose(xmlNode * xml_blob);

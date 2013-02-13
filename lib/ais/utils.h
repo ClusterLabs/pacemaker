@@ -141,7 +141,7 @@ level2char(int level)
     return "debug";
 }
 
-#define do_ais_log(level, fmt, args...) do {				\
+#  define do_ais_log(level, fmt, args...) do {				\
 	if(plugin_log_level < (level)) {				\
 	    continue;							\
 	} else if((level) > LOG_DEBUG) {				\

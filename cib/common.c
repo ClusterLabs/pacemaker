@@ -35,7 +35,6 @@
 
 #include <crm/common/xml.h>
 
-
 #include <cibio.h>
 #include <callbacks.h>
 #include <cibmessages.h>
@@ -47,7 +46,7 @@ gboolean stand_alone = FALSE;
 extern int cib_status;
 extern gboolean can_write(int flags);
 extern int cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
-                                           gboolean privileged);
+                               gboolean privileged);
 
 static xmlNode *
 cib_prepare_common(xmlNode * root, const char *section)

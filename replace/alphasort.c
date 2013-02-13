@@ -32,14 +32,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <unistd.h>		/* XXX for _POSIX_VERSION ifdefs */
+#include <unistd.h>             /* XXX for _POSIX_VERSION ifdefs */
 
 #if HAVE_STRINGS_H
-#include <strings.h>
+#  include <strings.h>
 #endif
 
 #if !defined sgi && !defined _POSIX_VERSION
-#include <sys/dir.h>
+#  include <sys/dir.h>
 #endif
 
 #include <sys/types.h>
@@ -47,7 +47,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-int alphasort(const void *dirent1, const void *dirent2) {
-  return(strcmp((*(const struct dirent **)dirent1)->d_name,
-                (*(const struct dirent **)dirent2)->d_name));
+int
+alphasort(const void *dirent1, const void *dirent2)
+{
+    return (strcmp((*(const struct dirent **)dirent1)->d_name,
+                   (*(const struct dirent **)dirent2)->d_name));
 }

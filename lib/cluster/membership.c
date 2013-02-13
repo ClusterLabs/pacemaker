@@ -41,12 +41,12 @@ gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
 #if SUPPORT_COROSYNC
-    if(is_openais_cluster()) {
+    if (is_openais_cluster()) {
         return crm_is_corosync_peer_active(node);
     }
 #endif
 #if SUPPORT_HEARTBEAT
-    if(is_heartbeat_cluster()) {
+    if (is_heartbeat_cluster()) {
         return crm_is_heartbeat_peer_active(node);
     }
 #endif
@@ -63,10 +63,10 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     if (search == NULL) {
         return FALSE;
 
-    } else if(search->id && node->id != search->id) {
+    } else if (search->id && node->id != search->id) {
         return FALSE;
 
-    } else if(search->id == 0 && safe_str_neq(node->uname, search->uname)) {
+    } else if (search->id == 0 && safe_str_neq(node->uname, search->uname)) {
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
@@ -82,7 +82,7 @@ reap_crm_member(uint32_t id, const char *name)
     int matches = 0;
     crm_node_t *node = NULL;
 
-    if(crm_peer_cache == NULL || crm_peer_id_cache == NULL) {
+    if (crm_peer_cache == NULL || crm_peer_id_cache == NULL) {
         crm_trace("Nothing to do, cache not initialized");
         return 0;
     }
@@ -107,7 +107,7 @@ reap_crm_member(uint32_t id, const char *name)
         if (g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(id))) {
             crm_notice("Purged dead peer %u/%s from the uuid cache", id, name);
 
-        } else if(id) {
+        } else if (id) {
             crm_warn("Peer %u/%s was not found in the ID cache", id, name);
         }
 
@@ -117,7 +117,6 @@ reap_crm_member(uint32_t id, const char *name)
 
     return matches;
 }
-
 
 static void
 crm_count_peer(gpointer key, gpointer value, gpointer user_data)
@@ -135,7 +134,7 @@ crm_active_peers(void)
 {
     guint count = 0;
 
-    if(crm_peer_cache) {
+    if (crm_peer_cache) {
         g_hash_table_foreach(crm_peer_cache, crm_count_peer, &count);
     }
     return count;
@@ -202,6 +201,7 @@ crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
+
     CRM_ASSERT(id > 0 || uname != NULL);
 
     crm_peer_init();
@@ -215,7 +215,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         if (node && node->uname && uname) {
             crm_crit("Node %s and %s share the same cluster node id '%u'!", node->uname, uname, id);
-            
+
             /* NOTE: Calling crm_new_peer() means the entry in 
              * crm_peer_id_cache will point to the new entity
              *
@@ -237,7 +237,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         node->id = id;
         crm_info("Node %s now has id: %u", crm_str(uname), id);
-        if(old && old->state) {
+        if (old && old->state) {
             /* Only corosync based clusters use nodeid's
              * The functions that call crm_update_peer_state() only know nodeid so 'old' is authorative when merging
              * Same for crm_update_peer_proc()
@@ -250,7 +250,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     if (uname && node->uname == NULL) {
         node->uname = strdup(uname);
-        if(node->id) {
+        if (node->id) {
             crm_info("Node %u is now known as %s", node->id, uname);
         }
         g_hash_table_replace(crm_peer_cache, node->uname, node);
@@ -262,7 +262,7 @@ crm_get_peer(unsigned int id, const char *uname)
     if (node && node->uname && node->uuid == NULL) {
         const char *uuid = get_node_uuid(id, node->uname);
 
-        if(uuid) {
+        if (uuid) {
             node->uuid = strdup(uuid);
             crm_info("Node %u has uuid %s", id, node->uuid);
         } else {
@@ -274,8 +274,9 @@ crm_get_peer(unsigned int id, const char *uname)
 }
 
 crm_node_t *
-crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
-                const char *uuid, const char *uname, const char *addr, const char *state)
+crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes,
+                uint32_t children, const char *uuid, const char *uname, const char *addr,
+                const char *state)
 {
 #if SUPPORT_PLUGIN
     gboolean addr_changed = FALSE;
@@ -305,7 +306,6 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     if (state != NULL) {
         crm_update_peer_state(source, node, state, seen);
     }
-
 #if SUPPORT_HEARTBEAT
     if (born != 0) {
         node->born = born;
@@ -332,7 +332,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     }
     if (addr_changed || votes_changed) {
         crm_info("%s: Node %s: id=%u state=%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
-                 " proc=%.32x", source, node->uname, node->id, node->state, 
+                 " proc=%.32x", source, node->uname, node->id, node->state,
                  node->addr, addr_changed ? " (new)" : "", node->votes,
                  votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes);
     }
@@ -342,19 +342,18 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 }
 
 void
-crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const char *status)
+crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const char *status)
 {
     uint32_t last = 0;
     gboolean changed = FALSE;
 
     CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
-                                    source, peer2text(flag), status);
-              return);
+                                    source, peer2text(flag), status); return);
 
     last = node->processes;
-    if(status == NULL) {
+    if (status == NULL) {
         node->processes = flag;
-        if(node->processes != last) {
+        if (node->processes != last) {
             changed = TRUE;
         }
 
@@ -363,7 +362,6 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
             set_bit(node->processes, flag);
             changed = TRUE;
         }
-
 #if SUPPORT_PLUGIN
     } else if (safe_str_eq(status, CRM_NODE_MEMBER)) {
         if (flag > 0 && node->processes != flag) {
@@ -378,26 +376,31 @@ crm_update_peer_proc(const char *source, crm_node_t *node, uint32_t flag, const 
     }
 
     if (changed) {
-        if(status == NULL && flag <= crm_proc_none) {
-            crm_info("%s: Node %s[%u] - all processes are now offline", source, node->uname, node->id);
+        if (status == NULL && flag <= crm_proc_none) {
+            crm_info("%s: Node %s[%u] - all processes are now offline", source, node->uname,
+                     node->id);
         } else {
-            crm_info("%s: Node %s[%u] - %s is now %s", source, node->uname, node->id, peer2text(flag), status);
+            crm_info("%s: Node %s[%u] - %s is now %s", source, node->uname, node->id,
+                     peer2text(flag), status);
         }
 
         if (crm_status_callback) {
             crm_status_callback(crm_status_processes, node, &last);
         }
     } else {
-        crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id, peer2text(flag), status);
+        crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id,
+                  peer2text(flag), status);
     }
 }
 
-void crm_update_peer_expected(const char *source, crm_node_t *node, const char *expected) 
+void
+crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected)
 {
     char *last = NULL;
     gboolean changed = FALSE;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected); return);
+    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected);
+              return);
 
     last = node->expected;
     if (expected != NULL && safe_str_neq(node->expected, expected)) {
@@ -406,19 +409,23 @@ void crm_update_peer_expected(const char *source, crm_node_t *node, const char *
     }
 
     if (changed) {
-        crm_info("%s: Node %s[%u] - expected state is now %s", source, node->uname, node->id, expected);
+        crm_info("%s: Node %s[%u] - expected state is now %s", source, node->uname, node->id,
+                 expected);
         free(last);
     } else {
-        crm_trace("%s: Node %s[%u] - expected state is unchanged (%s)", source, node->uname, node->id, expected);
+        crm_trace("%s: Node %s[%u] - expected state is unchanged (%s)", source, node->uname,
+                  node->id, expected);
     }
 }
 
-void crm_update_peer_state(const char *source, crm_node_t *node, const char *state, int membership) 
+void
+crm_update_peer_state(const char *source, crm_node_t * node, const char *state, int membership)
 {
     char *last = NULL;
     gboolean changed = FALSE;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'state' to %s", source, state); return);
+    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'state' to %s", source, state);
+              return);
 
     last = node->state;
     if (state != NULL && safe_str_neq(node->state, state)) {
@@ -437,12 +444,13 @@ void crm_update_peer_state(const char *source, crm_node_t *node, const char *sta
         }
         free(last);
     } else {
-        crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id, state);
+        crm_trace("%s: Node %s[%u] - state is unchanged (%s)", source, node->uname, node->id,
+                  state);
     }
 }
 
 int
-crm_terminate_member(int nodeid, const char *uname, void * unused)
+crm_terminate_member(int nodeid, const char *uname, void *unused)
 {
     /* Always use the synchronous, non-mainloop version */
     return stonith_api_kick(nodeid, uname, 120, TRUE);

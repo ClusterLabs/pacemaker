@@ -69,13 +69,13 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
-    if(get_node_uuid(0, target) == NULL) {
+    if (get_node_uuid(0, target) == NULL) {
         set_node_uuid(target, uuid);
     }
 
     /* Make sure the membership and join caches are accurate */
     peer = crm_get_peer(0, target);
-    if(peer->uuid == NULL) {
+    if (peer->uuid == NULL) {
         crm_info("Recording uuid '%s' for node '%s'", uuid, target);
         peer->uuid = strdup(uuid);
     }
@@ -84,7 +84,10 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     erase_node_from_join(target);
 
-    node_state = do_update_node_cib(peer, node_update_cluster|node_update_peer|node_update_join|node_update_expected, NULL, __FUNCTION__);
+    node_state =
+        do_update_node_cib(peer,
+                           node_update_cluster | node_update_peer | node_update_join |
+                           node_update_expected, NULL, __FUNCTION__);
 
     /* Force our known ID */
     crm_xml_add(node_state, XML_ATTR_UUID, uuid);
@@ -145,10 +148,11 @@ te_fence_node(crm_graph_t * graph, crm_action_t * action)
     rc = stonith_api->cmds->fence(stonith_api, options, target, type,
                                   transition_graph->stonith_timeout / 1000, 0);
 
-    stonith_api->cmds->register_callback(
-        stonith_api, rc, transition_graph->stonith_timeout / 1000,
-        st_opt_timeout_updates, generate_transition_key(transition_graph->id, action->id, 0, te_uuid),
-        "tengine_stonith_callback", tengine_stonith_callback);
+    stonith_api->cmds->register_callback(stonith_api, rc, transition_graph->stonith_timeout / 1000,
+                                         st_opt_timeout_updates,
+                                         generate_transition_key(transition_graph->id, action->id,
+                                                                 0, te_uuid),
+                                         "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;
 }
@@ -184,13 +188,12 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              crm_err( "Corrupted command (id=%s) %s: no node",
-                            crm_str(id), crm_str(task));
+              crm_err("Corrupted command (id=%s) %s: no node", crm_str(id), crm_str(task));
               return FALSE);
 
-    crm_info( "Executing crm-event (%s): %s on %s%s%s",
-                  crm_str(id), crm_str(task), on_node,
-                  is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
+    crm_info("Executing crm-event (%s): %s on %s%s%s",
+             crm_str(id), crm_str(task), on_node,
+             is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 
     if (safe_str_eq(on_node, fsa_our_uname)) {
         is_local = TRUE;
@@ -203,7 +206,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     if (is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
         /* defer until everything else completes */
-        crm_info( "crm-event (%s) is a local shutdown", crm_str(id));
+        crm_info("crm-event (%s) is a local shutdown", crm_str(id));
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
         action->confirmed = TRUE;
@@ -211,8 +214,9 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         trigger_graph();
         return TRUE;
 
-    } else if(safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+    } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
         crm_node_t *peer = crm_get_peer(0, on_node);
+
         crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     }
 
@@ -325,14 +329,14 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     lrmd_free_event(op);
 
     crm_trace("Updating CIB with \"%s\" (%s): %s %s on %s",
-                status < 0 ? "new action" : XML_ATTR_TIMEOUT,
-                crm_element_name(action->xml), crm_str(task), rsc_id, target);
+              status < 0 ? "new action" : XML_ATTR_TIMEOUT,
+              crm_element_name(action->xml), crm_str(task), rsc_id, target);
     crm_log_xml_trace(xml_op, "Op");
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
     crm_trace("Updating CIB with %s action %d: %s on %s (call_id=%d)",
-                services_lrm_status_str(status), action->id, task_uuid, target, rc);
+              services_lrm_status_str(status), action->id, task_uuid, target, rc);
 
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
@@ -375,8 +379,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              crm_err( "Corrupted command(id=%s) %s: no node",
-                            ID(action->xml), crm_str(task));
+              crm_err("Corrupted command(id=%s) %s: no node", ID(action->xml), crm_str(task));
               return FALSE);
 
     rsc_op = action->xml;
@@ -493,7 +496,7 @@ notify_crmd(crm_graph_t * graph)
                 if (transition_timer->period_ms > 0) {
                     crm_timer_stop(transition_timer);
                     crm_timer_start(transition_timer);
-                } else if(too_many_st_failures() == FALSE) {
+                } else if (too_many_st_failures() == FALSE) {
                     event = I_PE_CALC;
                 }
 
@@ -513,8 +516,7 @@ notify_crmd(crm_graph_t * graph)
             }
     }
 
-    crm_debug( "Transition %d status: %s - %s",
-                  graph->id, type, crm_str(graph->abort_reason));
+    crm_debug("Transition %d status: %s - %s", graph->id, type, crm_str(graph->abort_reason));
 
     graph->abort_reason = NULL;
     graph->completion_action = tg_done;

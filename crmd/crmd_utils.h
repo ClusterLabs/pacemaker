@@ -48,20 +48,19 @@ extern gboolean fsa_has_quorum;
 extern int last_peer_update;
 extern int last_resource_update;
 
-enum node_update_flags 
-{
-    node_update_none     = 0x0000,
-    node_update_quick    = 0x0001,
-    node_update_cluster  = 0x0010,
-    node_update_peer     = 0x0020,
-    node_update_join     = 0x0040,
+enum node_update_flags {
+    node_update_none = 0x0000,
+    node_update_quick = 0x0001,
+    node_update_cluster = 0x0010,
+    node_update_peer = 0x0020,
+    node_update_join = 0x0040,
     node_update_expected = 0x0100,
 };
 
 gboolean crm_timer_stop(fsa_timer_t * timer);
 gboolean crm_timer_start(fsa_timer_t * timer);
 gboolean crm_timer_popped(gpointer data);
-gboolean is_timer_started(fsa_timer_t *timer);
+gboolean is_timer_started(fsa_timer_t * timer);
 
 xmlNode *create_node_state(const char *uname, const char *in_cluster,
                            const char *is_peer, const char *join_state,
@@ -76,17 +75,16 @@ void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 
 gboolean update_dc(xmlNode * msg);
 void erase_node_from_join(const char *node);
-xmlNode *do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *source);
+xmlNode *do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void erase_status_tag(const char *uname, const char *tag, int options);
-void update_attrd(const char *host, const char *name, const char *value,
-                         const char *user_name);
+void update_attrd(const char *host, const char *name, const char *value, const char *user_name);
 
 const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);
 
-#define fsa_register_cib_callback(id, flag, data, fn) do {              \
+#  define fsa_register_cib_callback(id, flag, data, fn) do {              \
         fsa_cib_conn->cmds->register_callback(                          \
             fsa_cib_conn, id, 10 * (1 + crm_active_peers()),            \
             flag, data, #fn, fn);                                       \

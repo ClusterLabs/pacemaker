@@ -31,21 +31,22 @@ extern char **environ;
 #endif
 
 int
-unsetenv (const char *name)
+unsetenv(const char *name)
 {
-	const size_t len = strlen (name);
-	char **ep;
+    const size_t len = strlen(name);
+    char **ep;
 
-	for (ep = __environ; *ep; ++ep) {
-		if (!strncmp (*ep, name, len) && (*ep)[len] == '=') {
-			/* Found it.  */
-			/* Remove this pointer by moving later ones back.  */
-			char **dp = ep;
-			do
-				dp[0] = dp[1];
-			while (*dp++);
-			/* Continue the loop in case NAME appears again.  */  
-		}
-	}
-	return 0;
+    for (ep = __environ; *ep; ++ep) {
+        if (!strncmp(*ep, name, len) && (*ep)[len] == '=') {
+            /* Found it.  */
+            /* Remove this pointer by moving later ones back.  */
+            char **dp = ep;
+
+            do
+                dp[0] = dp[1];
+            while (*dp++);
+            /* Continue the loop in case NAME appears again.  */
+        }
+    }
+    return 0;
 }

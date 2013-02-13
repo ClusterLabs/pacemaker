@@ -126,7 +126,8 @@ do_cl_join_offer_respond(long long action,
     }
 
     CRM_LOG_ASSERT(input != NULL);
-    query_call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local|cib_no_children);
+    query_call_id =
+        fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local | cib_no_children);
     fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
@@ -160,7 +161,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-        if(fsa_our_dc) {
+        if (fsa_our_dc) {
             send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         } else {
             crm_warn("No DC for join-%s", join_id);

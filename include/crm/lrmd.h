@@ -24,7 +24,7 @@
  */
 
 #ifndef LRMD__H
-#define LRMD__H
+#  define LRMD__H
 
 typedef struct lrmd_s lrmd_t;
 typedef struct lrmd_key_value_s {
@@ -113,7 +113,7 @@ lrmd_t *lrmd_remote_api_new(const char *nodename, const char *server, int port);
  * \retval true - connection is still up
  * \retval false - disconnected
  */
-bool lrmd_dispatch(lrmd_t *lrmd);
+bool lrmd_dispatch(lrmd_t * lrmd);
 
 /*!
  * \brief Poll for a specified timeout period to determine if a message
@@ -122,15 +122,13 @@ bool lrmd_dispatch(lrmd_t *lrmd);
  * \retval 0 timeout occured
  * \retval negative error code
  */
-int lrmd_poll(lrmd_t *lrmd, int timeout);
+int lrmd_poll(lrmd_t * lrmd, int timeout);
 
 /*!
  * \brief Destroy lrmd object
  */
 void lrmd_api_delete(lrmd_t * lrmd);
-lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t *kvp,
-    const char *key,
-    const char *value);
+lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t * kvp, const char *key, const char *value);
 
 /* *INDENT-OFF* */
 /* Reserved for future use */
@@ -209,7 +207,7 @@ typedef struct lrmd_event_data_s {
     /*! Time in length spent in queue */
     unsigned int queue_time;
 
-    /*! int connection result. Used for connection and poke events*/
+    /*! int connection result. Used for connection and poke events */
     int connection_rc;
 
     /* This is a GHashTable containing the
@@ -224,8 +222,8 @@ typedef struct lrmd_event_data_s {
 
 } lrmd_event_data_t;
 
-lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t *event);
-void lrmd_free_event(lrmd_event_data_t *event);
+lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t * event);
+void lrmd_free_event(lrmd_event_data_t * event);
 
 typedef struct lrmd_rsc_info_s {
     char *id;
@@ -234,28 +232,27 @@ typedef struct lrmd_rsc_info_s {
     char *provider;
 } lrmd_rsc_info_t;
 
-lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t *rsc_info);
-void lrmd_free_rsc_info(lrmd_rsc_info_t *rsc_info);
+lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info);
+void lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info);
 
-typedef void (*lrmd_event_callback)(lrmd_event_data_t *event);
+typedef void (*lrmd_event_callback) (lrmd_event_data_t * event);
 
 typedef struct lrmd_list_s {
     const char *val;
     struct lrmd_list_s *next;
 } lrmd_list_t;
 
-void lrmd_list_freeall(lrmd_list_t *head);
+void lrmd_list_freeall(lrmd_list_t * head);
 void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
-typedef struct lrmd_api_operations_s
-{
+typedef struct lrmd_api_operations_s {
     /*!
      * \brief Connect from the lrmd.
      *
      * \retval 0, success
      * \retval negative error code on failure
      */
-    int (*connect) (lrmd_t *lrmd, const char *client_name, int *fd);
+    int (*connect) (lrmd_t * lrmd, const char *client_name, int *fd);
 
     /*!
      * \brief Establish an connection to lrmd, don't block while connecting.
@@ -267,7 +264,7 @@ typedef struct lrmd_api_operations_s
      * \retval 0, connect in progress, wait for event callback
      * \retval -1, failure.
      */
-    int (*connect_async) (lrmd_t *lrmd, const char *client_name, int timeout /*ms */);
+    int (*connect_async) (lrmd_t * lrmd, const char *client_name, int timeout /*ms */ );
 
     /*!
      * \brief Is connected to lrmd daemon?
@@ -275,7 +272,7 @@ typedef struct lrmd_api_operations_s
      * \retval 0, false
      * \retval 1, true
      */
-    int (*is_connected) (lrmd_t *lrmd);
+    int (*is_connected) (lrmd_t * lrmd);
 
     /*!
      * \brief Poke lrmd connection to verify it is still capable of serving requests
@@ -284,7 +281,7 @@ typedef struct lrmd_api_operations_s
      * \retval 0, wait for response in callback
      * \retval -1, connection failure, callback may not be invoked
      */
-    int (*poke_connection) (lrmd_t *lrmd);
+    int (*poke_connection) (lrmd_t * lrmd);
 
     /*!
      * \brief Disconnect from the lrmd.
@@ -292,7 +289,7 @@ typedef struct lrmd_api_operations_s
      * \retval 0, success
      * \retval negative error code on failure
      */
-    int (*disconnect)(lrmd_t *lrmd);
+    int (*disconnect) (lrmd_t * lrmd);
 
     /*!
      * \brief Register a resource with the lrmd.
@@ -302,22 +299,19 @@ typedef struct lrmd_api_operations_s
      * \retval 0, success
      * \retval negative error code on failure
      */
-    int (*register_rsc) (lrmd_t *lrmd,
-        const char *rsc_id,
-        const char *class,
-        const char *provider,
-        const char *agent,
-        enum lrmd_call_options options);
+    int (*register_rsc) (lrmd_t * lrmd,
+                         const char *rsc_id,
+                         const char *class,
+                         const char *provider, const char *agent, enum lrmd_call_options options);
 
     /*!
-      * \brief Retrieve registration info for a rsc
-      *
-      * \retval info on success
-      * \retval NULL on failure
-      */
-    lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t *lrmd,
-        const char *rsc_id,
-        enum lrmd_call_options options);
+     * \brief Retrieve registration info for a rsc
+     *
+     * \retval info on success
+     * \retval NULL on failure
+     */
+    lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t * lrmd,
+                                      const char *rsc_id, enum lrmd_call_options options);
 
     /*!
      * \brief Unregister a resource from the lrmd.
@@ -333,15 +327,12 @@ typedef struct lrmd_api_operations_s
      * \retval negative error code on failure
      *
      */
-    int (*unregister_rsc) (lrmd_t *lrmd,
-        const char *rsc_id,
-        enum lrmd_call_options options);
+    int (*unregister_rsc) (lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options);
 
     /*!
      * \brief Sets the callback to receive lrmd events on.
      */
-    void (*set_callback) (lrmd_t *lrmd,
-        lrmd_event_callback callback);
+    void (*set_callback) (lrmd_t * lrmd, lrmd_event_callback callback);
 
     /*!
      * \brief Issue a command on a resource
@@ -358,15 +349,11 @@ typedef struct lrmd_api_operations_s
      * \retval call_id to track async event result on success
      * \retval negative error code on failure
      */
-    int (*exec)(lrmd_t *lrmd,
-        const char *rsc_id,
-        const char *action,
-        const char *userdata, /* userdata string given back in event notification */
-        int interval, /* ms */
-        int timeout, /* ms */
-        int start_delay, /* ms */
-        enum lrmd_call_options options,
-        lrmd_key_value_t *params); /* ownership of params is given up to api here */
+    int (*exec) (lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata,   /* userdata string given back in event notification */
+                 int interval,  /* ms */
+                 int timeout,   /* ms */
+                 int start_delay,       /* ms */
+                 enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
 
     /*!
      * \brief Cancel a recurring command.
@@ -391,10 +378,7 @@ typedef struct lrmd_api_operations_s
      * \retval 0, cancel command sent.
      * \retval negative error code on failure
      */
-    int (*cancel)(lrmd_t *lrmd,
-        const char *rsc_id,
-        const char *action,
-        int interval);
+    int (*cancel) (lrmd_t * lrmd, const char *rsc_id, const char *action, int interval);
 
     /*!
      * \brief Get the metadata documentation for a resource.
@@ -404,12 +388,10 @@ typedef struct lrmd_api_operations_s
      * \retval lrmd_ok success
      * \retval negative error code on failure
      */
-    int (*get_metadata) (lrmd_t *lrmd,
-        const char *class,
-        const char *provider,
-        const char *agent,
-        char **output,
-        enum lrmd_call_options options);
+    int (*get_metadata) (lrmd_t * lrmd,
+                         const char *class,
+                         const char *provider,
+                         const char *agent, char **output, enum lrmd_call_options options);
 
     /*!
      * \brief Retrieve a list of installed resource agents.
@@ -420,7 +402,8 @@ typedef struct lrmd_api_operations_s
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_agents)(lrmd_t *lrmd, lrmd_list_t **agents, const char *class, const char *provider);
+    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents, const char *class,
+                        const char *provider);
 
     /*!
      * \brief Retrieve a list of resource agent providers
@@ -432,9 +415,7 @@ typedef struct lrmd_api_operations_s
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_ocf_providers)(lrmd_t *lrmd,
-        const char *agent,
-        lrmd_list_t **providers);
+    int (*list_ocf_providers) (lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers);
 
     /*!
      * \brief Retrieve a list of standards supported by this machine/installation
@@ -444,7 +425,7 @@ typedef struct lrmd_api_operations_s
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_standards)(lrmd_t *lrmd, lrmd_list_t **standards);
+    int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
 
 } lrmd_api_operations_t;
 
@@ -456,31 +437,31 @@ struct lrmd_s {
 static inline const char *
 lrmd_event_rc2str(enum lrmd_exec_rc rc)
 {
-    switch(rc) {
-    case PCMK_EXECRA_OK:
-        return "ok";
-    case PCMK_EXECRA_UNKNOWN_ERROR:
-        return "unknown error";
-    case PCMK_EXECRA_INVALID_PARAM:
-        return "invalid parameter";
-    case PCMK_EXECRA_UNIMPLEMENT_FEATURE:
-        return "unimplemented feature";
-    case PCMK_EXECRA_INSUFFICIENT_PRIV:
-        return "insufficient privileges";
-    case PCMK_EXECRA_NOT_INSTALLED:
-        return "not installed";
-    case PCMK_EXECRA_NOT_CONFIGURED:
-        return "not configured";
-    case PCMK_EXECRA_NOT_RUNNING:
-        return "not running";
-    case PCMK_EXECRA_RUNNING_MASTER:
-        return "master";
-    case PCMK_EXECRA_FAILED_MASTER:
-        return "master (failed)";
-    case PCMK_EXECRA_STATUS_UNKNOWN:
-        return "status: unknown";
-    default:
-        break;
+    switch (rc) {
+        case PCMK_EXECRA_OK:
+            return "ok";
+        case PCMK_EXECRA_UNKNOWN_ERROR:
+            return "unknown error";
+        case PCMK_EXECRA_INVALID_PARAM:
+            return "invalid parameter";
+        case PCMK_EXECRA_UNIMPLEMENT_FEATURE:
+            return "unimplemented feature";
+        case PCMK_EXECRA_INSUFFICIENT_PRIV:
+            return "insufficient privileges";
+        case PCMK_EXECRA_NOT_INSTALLED:
+            return "not installed";
+        case PCMK_EXECRA_NOT_CONFIGURED:
+            return "not configured";
+        case PCMK_EXECRA_NOT_RUNNING:
+            return "not running";
+        case PCMK_EXECRA_RUNNING_MASTER:
+            return "master";
+        case PCMK_EXECRA_FAILED_MASTER:
+            return "master (failed)";
+        case PCMK_EXECRA_STATUS_UNKNOWN:
+            return "status: unknown";
+        default:
+            break;
     }
     return "<unknown>";
 }
@@ -489,18 +470,18 @@ static inline const char *
 lrmd_event_type2str(enum lrmd_callback_event type)
 {
     switch (type) {
-    case lrmd_event_register:
-        return "register";
-    case lrmd_event_unregister:
-        return "unregister";
-    case lrmd_event_exec_complete:
-        return "exec_complete";
-    case lrmd_event_disconnect:
-        return "disconnect";
-    case lrmd_event_connect:
-        return "connect";
-    case lrmd_event_poke:
-        return "poke";
+        case lrmd_event_register:
+            return "register";
+        case lrmd_event_unregister:
+            return "unregister";
+        case lrmd_event_exec_complete:
+            return "exec_complete";
+        case lrmd_event_disconnect:
+            return "disconnect";
+        case lrmd_event_connect:
+            return "connect";
+        case lrmd_event_poke:
+            return "poke";
     }
     return "unknown";
 }

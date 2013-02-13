@@ -79,7 +79,7 @@ fail_incompletable_stonith(crm_graph_t * graph)
 }
 
 static void
-tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t *e)
+tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 {
     if (is_set(fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
@@ -102,9 +102,8 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t *e)
 #  include <libfenced.h>
 #endif
 
-
 static void
-tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
+tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 {
     if (st_event == NULL) {
         crm_err("Notify data not found");
@@ -112,13 +111,14 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
     }
 
     if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
-        crm_err("We were alegedly just fenced by %s for %s!", st_event->executioner, st_event->origin);
+        crm_err("We were alegedly just fenced by %s for %s!", st_event->executioner,
+                st_event->origin);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
         return;
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
-               st_event->target, st_event->result == pcmk_ok?"":" not",
+               st_event->target, st_event->result == pcmk_ok ? "" : " not",
                st_event->operation,
                st_event->executioner ? st_event->executioner : "<anyone>",
                st_event->origin, pcmk_strerror(st_event->result), st_event->id,
@@ -135,7 +135,8 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
          */
         local_rc = fenced_external(target_copy);
         if (local_rc != 0) {
-            crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target, local_rc);
+            crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target,
+                    local_rc);
         } else {
             crm_notice("Notified CMAN that '%s' is now fenced", st_event->target);
         }
@@ -149,7 +150,8 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
         if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
-                       fsa_our_dc?"was":"may have been", st_event->target, fsa_our_dc ? fsa_our_dc : "<unset>");
+                       fsa_our_dc ? "was" : "may have been", st_event->target,
+                       fsa_our_dc ? fsa_our_dc : "<unset>");
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
@@ -157,18 +159,21 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t *st_event)
              */
             if (we_are_executioner) {
                 const char *uuid = get_uuid(st_event->target);
+
                 send_stonith_update(NULL, st_event->target, uuid);
             }
             stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
 
         } else if (AM_I_DC &&
-                    st_event->client_origin &&
-                    safe_str_neq(st_event->client_origin, crm_system_name)) {
+                   st_event->client_origin &&
+                   safe_str_neq(st_event->client_origin, crm_system_name)) {
             const char *uuid = get_uuid(st_event->target);
+
             /* If a remote process outside of pacemaker invoked stonith to
              * fence someone, report the fencing result to the cib
              * and abort the transition graph. */
-            crm_info("External fencing operation from %s fenced %s", st_event->client_origin, st_event->target);
+            crm_info("External fencing operation from %s fenced %s", st_event->client_origin,
+                     st_event->target);
             send_stonith_update(NULL, st_event->target, uuid);
             abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
         }
@@ -210,11 +215,12 @@ te_connect_stonith(gpointer user_data)
         sleep(1);
     }
 
-    CRM_CHECK(rc == pcmk_ok, return TRUE);   /* If not, we failed 30 times... just get out */
+    CRM_CHECK(rc == pcmk_ok, return TRUE);      /* If not, we failed 30 times... just get out */
     stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT,
                                              tengine_stonith_connection_destroy);
 
-    stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE, tengine_stonith_notify);
+    stonith_api->cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE,
+                                             tengine_stonith_notify);
 
     crm_trace("Connected");
     return TRUE;
@@ -330,21 +336,24 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                                      &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
                                      &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
             if (crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR, TRUE)) {
-                crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
-                         fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                         NAME(reason), VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch,
-                         diff_add_epoch, diff_add_updates, abort_text);
+                crm_info
+                    ("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
+                     fn, line, transition_graph->complete, TYPE(reason), ID(reason), NAME(reason),
+                     VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch,
+                     diff_add_updates, abort_text);
             } else {
-                crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
-                         fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                         magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch,
-                         diff_add_updates, abort_text);
+                crm_info
+                    ("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
+                     fn, line, transition_graph->complete, TYPE(reason), ID(reason),
+                     magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
+                     abort_text);
             }
 
         } else {
-            crm_info("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
-                     fn, line, transition_graph->complete, TYPE(reason), ID(reason),
-                     magic ? magic : "NA", abort_text);
+            crm_info
+                ("%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
+                 fn, line, transition_graph->complete, TYPE(reason), ID(reason),
+                 magic ? magic : "NA", abort_text);
         }
 
     } else {
@@ -379,7 +388,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         if (transition_timer->period_ms > 0) {
             crm_timer_stop(transition_timer);
             crm_timer_start(transition_timer);
-        } else if(too_many_st_failures() == FALSE) {
+        } else if (too_many_st_failures() == FALSE) {
             register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }
         return;

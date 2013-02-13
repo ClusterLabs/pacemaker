@@ -208,7 +208,7 @@ get_node_uuid(uint32_t id, const char *uname)
 }
 
 gboolean
-crm_cluster_connect(crm_cluster_t *cluster)
+crm_cluster_connect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
@@ -255,7 +255,8 @@ crm_cluster_connect(crm_cluster_t *cluster)
              * If we fail to adjust the sendq length, that's not yet fatal, though.
              */
             if (HA_OK != heartbeat_cluster->llc_ops->set_sendq_len(heartbeat_cluster, 1024)) {
-                crm_warn("Cannot set sendq length: %s", heartbeat_cluster->llc_ops->errmsg(heartbeat_cluster));
+                crm_warn("Cannot set sendq length: %s",
+                         heartbeat_cluster->llc_ops->errmsg(heartbeat_cluster));
             }
         }
         return rv;
@@ -266,7 +267,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
 }
 
 void
-crm_cluster_disconnect(crm_cluster_t *cluster)
+crm_cluster_disconnect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
     const char *type_str = name_for_cluster_type(type);
@@ -303,7 +304,7 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
 }
 
 gboolean
-send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service, xmlNode * data,
+send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode * data,
                      gboolean ordered)
 {
 
@@ -350,20 +351,20 @@ get_local_node_name(void)
     char *name = NULL;
     enum cluster_type_e stack = get_cluster_type();
 
-    switch(stack) {
+    switch (stack) {
 
 #if SUPPORT_CMAN
         case pcmk_cluster_cman:
-            name = cman_node_name(0 /* AKA. CMAN_NODEID_US */);
+            name = cman_node_name(0 /* AKA. CMAN_NODEID_US */ );
             break;
 #endif
 
 #if SUPPORT_COROSYNC
-# if !SUPPORT_PLUGIN
+#  if !SUPPORT_PLUGIN
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, 0);
             break;
-# endif
+#  endif
 #endif
         case pcmk_cluster_heartbeat:
         case pcmk_cluster_classic_ais:
@@ -372,17 +373,18 @@ get_local_node_name(void)
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
     }
 
-    if(name == NULL) {
+    if (name == NULL) {
         struct utsname res;
         int rc = uname(&res);
 
-        if(rc == 0) {
-            crm_notice("Defaulting to uname -n for the local %s node name", name_for_cluster_type(stack));
+        if (rc == 0) {
+            crm_notice("Defaulting to uname -n for the local %s node name",
+                       name_for_cluster_type(stack));
             name = strdup(res.nodename);
         }
     }
 
-    if(name == NULL) {
+    if (name == NULL) {
         crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
         crm_exit(100);
     }
@@ -404,11 +406,11 @@ get_node_name(uint32_t nodeid)
             name = classic_node_name(nodeid);
             break;
 #else
-#if SUPPORT_COROSYNC
+#  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, nodeid);
             break;
-#endif
+#  endif
 #endif
 
 #if SUPPORT_CMAN
@@ -420,8 +422,8 @@ get_node_name(uint32_t nodeid)
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
     }
-    
-    if(name == NULL) {
+
+    if (name == NULL) {
         crm_notice("Could not obtain a node name for %s nodeid %u",
                    name_for_cluster_type(stack), nodeid);
     }
@@ -447,14 +449,13 @@ get_uname(const char *uuid)
         crm_trace("%s = %s (cached)", uuid, uname);
         return uname;
     }
-
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
         if (!uname_is_uuid() && is_corosync_cluster()) {
             uint32_t id = crm_int_helper(uuid, NULL);
             crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 
-            if(node && node->uname) {
+            if (node && node->uname) {
                 uname = strdup(node->uname);
             }
 
@@ -471,10 +472,10 @@ get_uname(const char *uuid)
             char *uuid_copy = strdup(uuid);
 
             cl_uuid_parse(uuid_copy, &uuid_raw);
-            uname = malloc( MAX_NAME);
+            uname = malloc(MAX_NAME);
 
-            if (heartbeat_cluster->llc_ops->get_name_by_uuid(
-                    heartbeat_cluster, &uuid_raw, uname, MAX_NAME) == HA_FAIL) {
+            if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, uname,
+                                                             MAX_NAME) == HA_FAIL) {
                 crm_err("Could not calculate uname for %s", uuid);
                 free(uuid_copy);
                 free(uname);
@@ -650,19 +651,19 @@ is_heartbeat_cluster(void)
 }
 
 gboolean
-node_name_is_valid(const char *key, const char *name) 
+node_name_is_valid(const char *key, const char *name)
 {
     int octet;
 
-    if(name == NULL) {
+    if (name == NULL) {
         crm_trace("%s is empty", key);
         return FALSE;
 
-    } else if(sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
+    } else if (sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
         crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
         return FALSE;
 
-    } else if(strstr(name, ":") != NULL) {
+    } else if (strstr(name, ":") != NULL) {
         crm_trace("%s contains an ipv6 address, ignoring: %s", key, name);
         return FALSE;
     }

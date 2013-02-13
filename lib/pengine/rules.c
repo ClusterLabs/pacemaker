@@ -411,7 +411,6 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
     return FALSE;
 }
 
-
 #define cron_check(xml_field, time_field)				\
     value = crm_element_value(cron_spec, xml_field);			\
     if(value != NULL) {							\
@@ -455,7 +454,7 @@ cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
     CRM_CHECK(now != NULL, return FALSE);
 
     crm_time_get_timeofday(now, &h, &m, &s);
-    
+
     cron_check("seconds", s);
     cron_check("minutes", m);
     cron_check("hours", h);

@@ -248,7 +248,7 @@ changes:
 
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
-	find lib -name "*.c" -exec ./p-indent \{\} \;
+	find . -name "*.c" -exec ./p-indent \{\} \;
 	git co HEAD crmd/fsa_proto.h
 
 rel-tags: tags

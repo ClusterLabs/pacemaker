@@ -34,5 +34,4 @@ extern void cib_post_notify(int options, const char *op, xmlNode * update,
 extern void cib_diff_notify(int options, const char *client, const char *call_id, const char *op,
                             xmlNode * update, int result, xmlNode * old_cib);
 
-extern void cib_replace_notify(const char *origin, xmlNode * update, int result,
-                               xmlNode * diff);
+extern void cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff);

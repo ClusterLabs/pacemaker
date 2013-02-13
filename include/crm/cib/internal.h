@@ -17,7 +17,7 @@
  */
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
-#include <crm/cib.h>
+#  include <crm/cib.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"
@@ -76,7 +76,7 @@
 #  define cib_channel_rw		"cib_rw"
 #  define cib_channel_shm		"cib_shm"
 
-void cib_add_digest(xmlNode *source, xmlNode *target);
+void cib_add_digest(xmlNode * source, xmlNode * target);
 void fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed);
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
@@ -113,18 +113,19 @@ struct timer_rec_s {
 };
 
 typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
-                                     xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+                         xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
 cib_t *cib_new_variant(void);
 
 int cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                    const char *section, xmlNode * req, xmlNode * input,
                    gboolean manage_counters, gboolean * config_changed,
-                   xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output);
+                   xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff,
+                   xmlNode ** output);
 
 xmlNode *cib_create_op(int call_id, const char *token, const char *op, const char *host,
-                              const char *section, xmlNode * data, int call_options,
-                              const char *user_name);
+                       const char *section, xmlNode * data, int call_options,
+                       const char *user_name);
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
@@ -134,44 +135,53 @@ gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gbo
                                       void (*callback) (xmlNode *, int, int, xmlNode *, void *));
 
 gboolean acl_enabled(GHashTable * config_hash);
-gboolean acl_filter_cib(xmlNode * request, xmlNode * current_cib, xmlNode * orig_cib, xmlNode ** filtered_cib);
-gboolean acl_check_diff(xmlNode * request, xmlNode * current_cib, xmlNode * result_cib, xmlNode * diff);
+gboolean acl_filter_cib(xmlNode * request, xmlNode * current_cib, xmlNode * orig_cib,
+                        xmlNode ** filtered_cib);
+gboolean acl_check_diff(xmlNode * request, xmlNode * current_cib, xmlNode * result_cib,
+                        xmlNode * diff);
 
-int cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                      xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
+                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                      xmlNode ** answer);
 
-int cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                      xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_erase(const char *op, int options, const char *section, xmlNode * req,
+                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                      xmlNode ** answer);
 
-int cib_process_bump(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                     xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_bump(const char *op, int options, const char *section, xmlNode * req,
+                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                     xmlNode ** answer);
 
 int cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer);
 
-int cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                       xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_create(const char *op, int options, const char *section, xmlNode * req,
+                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                       xmlNode ** answer);
 
-int cib_process_modify(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                       xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_modify(const char *op, int options, const char *section, xmlNode * req,
+                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                       xmlNode ** answer);
 
-int cib_process_delete(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                       xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_delete(const char *op, int options, const char *section, xmlNode * req,
+                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                       xmlNode ** answer);
 
-int cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                     xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_diff(const char *op, int options, const char *section, xmlNode * req,
+                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                     xmlNode ** answer);
 
 int cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer);
 
-int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                      xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer);
+int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req,
+                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                      xmlNode ** answer);
 
 gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);
-gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation,
-                               int return_code);
+gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
 int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,

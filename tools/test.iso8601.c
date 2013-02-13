@@ -54,7 +54,8 @@ log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
     char *start = crm_time_as_string(dtp->start, flags);
     char *end = crm_time_as_string(dtp->end, flags);
-    if(log_level < LOG_CRIT) {
+
+    if (log_level < LOG_CRIT) {
         printf("Period: %s to %s\n", start, end);
     } else {
         do_crm_log(log_level, "Period: %s to %s", start, end);
@@ -79,7 +80,7 @@ main(int argc, char **argv)
     const char *duration_s = NULL;
     const char *date_time_s = NULL;
     const char *expected_s = NULL;
-    
+
     crm_log_cli_init("iso8601");
     crm_set_options(NULL, "command [output modifier] ", long_options,
                     "Display and parse ISO8601 dates and times");
@@ -135,66 +136,81 @@ main(int argc, char **argv)
         }
     }
 
-    if(safe_str_eq("now", date_time_s)) {
+    if (safe_str_eq("now", date_time_s)) {
         date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {
             fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
             crm_help('?', 1);
         }
-        crm_time_log(LOG_TRACE, "Current date/time", date_time, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Current date/time", date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(LOG_TRACE, "Current date/time", date_time,
+                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Current date/time", date_time,
+                     print_options | crm_time_log_date | crm_time_log_timeofday);
 
-    } else if(date_time_s) {
+    } else if (date_time_s) {
         date_time = crm_time_new(date_time_s);
 
         if (date_time == NULL) {
             fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
             crm_help('?', 1);
         }
-        crm_time_log(LOG_TRACE, "Date", date_time, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Date", date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(LOG_TRACE, "Date", date_time,
+                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Date", date_time,
+                     print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
-    if(duration_s) {
+    if (duration_s) {
         duration = crm_time_parse_duration(duration_s);
 
         if (duration == NULL) {
             fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
             crm_help('?', 1);
         }
-        crm_time_log(LOG_TRACE, "Duration", duration, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Duration", duration, print_options | crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_TRACE, "Duration", duration,
+                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Duration", duration,
+                     print_options | crm_time_log_date | crm_time_log_timeofday |
+                     crm_time_log_with_timezone);
     }
 
-    if(period_s) {
+    if (period_s) {
         interval = crm_time_parse_period(period_s);
 
         if (interval == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
             crm_help('?', 1);
         }
-        log_time_period(LOG_TRACE, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
+        log_time_period(LOG_TRACE, interval,
+                        print_options | crm_time_log_date | crm_time_log_timeofday);
         log_time_period(-1, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
-    if(date_time && duration) {
+    if (date_time && duration) {
         crm_time_t *later = crm_time_add(date_time, duration);
 
-        crm_time_log(LOG_TRACE, "Duration ends at", later, crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Duration ends at", later, print_options | crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-        if(expected_s) {
-            char *dt_s = crm_time_as_string(later, print_options | crm_time_log_date | crm_time_log_timeofday);
-            if(safe_str_neq(expected_s, dt_s)) {
+        crm_time_log(LOG_TRACE, "Duration ends at", later,
+                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(-1, "Duration ends at", later,
+                     print_options | crm_time_log_date | crm_time_log_timeofday |
+                     crm_time_log_with_timezone);
+        if (expected_s) {
+            char *dt_s = crm_time_as_string(later,
+                                            print_options | crm_time_log_date |
+                                            crm_time_log_timeofday);
+            if (safe_str_neq(expected_s, dt_s)) {
                 rc = 1;
             }
             free(dt_s);
         }
         crm_time_free(later);
 
-    } else if(date_time && expected_s) {
-        char *dt_s = crm_time_as_string(date_time, print_options | crm_time_log_date | crm_time_log_timeofday);
-        if(safe_str_neq(expected_s, dt_s)) {
+    } else if (date_time && expected_s) {
+        char *dt_s = crm_time_as_string(date_time,
+                                        print_options | crm_time_log_date | crm_time_log_timeofday);
+
+        if (safe_str_neq(expected_s, dt_s)) {
             rc = 1;
         }
         free(dt_s);
@@ -205,7 +221,7 @@ main(int argc, char **argv)
 
     crm_time_free(date_time);
     crm_time_free(duration);
-    if(interval) {
+    if (interval) {
         crm_time_free(interval->start);
         crm_time_free(interval->end);
         crm_time_free(interval->diff);

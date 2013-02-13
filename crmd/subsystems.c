@@ -49,16 +49,19 @@ crmdManagedChildDied(GPid pid, gint status, gpointer user_data)
 {
     struct crm_subsystem_s *the_subsystem = user_data;
 
-    if(WIFSIGNALED(status)) {
+    if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
         int core = WCOREDUMP(status);
+
         crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
                    the_subsystem->name, signo, the_subsystem->pid, core);
 
-    } else if(WIFEXITED(status)) {
+    } else if (WIFEXITED(status)) {
         int exitcode = WEXITSTATUS(status);
+
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s exited (pid=%d, rc=%d)", the_subsystem->name, the_subsystem->pid, exitcode);
+                   "Child process %s exited (pid=%d, rc=%d)", the_subsystem->name,
+                   the_subsystem->pid, exitcode);
 
     } else {
         crm_err("Process %s:[%d] exited?", the_subsystem->name, the_subsystem->pid);
@@ -182,6 +185,6 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     /* Should not happen */
     crm_perror(LOG_ERR, "FATAL: Cannot exec %s", the_subsystem->command);
 
-    crmd_exit(100);              /* Suppress respawning */
+    crmd_exit(100);             /* Suppress respawning */
     return TRUE;                /* never reached */
 }

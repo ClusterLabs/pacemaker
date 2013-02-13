@@ -39,8 +39,8 @@
     } while(0)
 
 #  define pcmk_ok                       0
-#  define PCMK_ERROR_OFFSET             900  /* Replacements on non-linux systems, see include/portability.h */ 
-#  define PCMK_CUSTOM_OFFSET            1000 /* Purely custom codes */
+#  define PCMK_ERROR_OFFSET             900     /* Replacements on non-linux systems, see include/portability.h */
+#  define PCMK_CUSTOM_OFFSET            1000    /* Purely custom codes */
 #  define pcmk_err_generic              1001
 #  define pcmk_err_no_quorum            1002
 #  define pcmk_err_dtd_validation       1003

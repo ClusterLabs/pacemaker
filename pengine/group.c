@@ -238,7 +238,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             child_rsc->restart_type = pe_restart_restart;
 
             order_start_start(last_rsc, child_rsc, start);
-            order_stop_stop(child_rsc, last_rsc, pe_order_optional|pe_order_restart);
+            order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
             if (top->variant == pe_master) {
                 new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
@@ -265,12 +265,10 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         /* Look for partially active groups
          * Make sure they still shut down in sequence
          */
-        if(child_rsc->running_on) {
-            if(group_data->ordered
-               && last_rsc
-               && last_rsc->running_on == NULL
-               && last_active
-               && last_active->running_on) {
+        if (child_rsc->running_on) {
+            if (group_data->ordered
+                && last_rsc
+                && last_rsc->running_on == NULL && last_active && last_active->running_on) {
                 order_stop_stop(child_rsc, last_active, pe_order_optional);
             }
             last_active = child_rsc;
@@ -389,21 +387,23 @@ group_action_flags(action_t * action, node_t * node)
 
             if (is_set(flags, pe_action_optional)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
-                pe_rsc_trace(action->rsc, "%s is manditory because of %s", action->uuid, child_action->uuid);
+                pe_rsc_trace(action->rsc, "%s is manditory because of %s", action->uuid,
+                             child_action->uuid);
                 clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
             if (safe_str_neq(task_s, action->task)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
-                pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid, child_action->uuid);
+                pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
+                             child_action->uuid);
                 clear_bit(flags, pe_action_runnable);
                 pe_clear_action_bit(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc) {
-            pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)", action->uuid, task_s,
-                      child->id);
+            pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)",
+                         action->uuid, task_s, child->id);
             clear_bit(flags, pe_action_runnable);
         }
     }
@@ -504,7 +504,7 @@ group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const
 
         nodes = native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
                                      constraint->node_attribute,
-                                     (float) constraint->score / INFINITY, flags);
+                                     (float)constraint->score / INFINITY, flags);
     }
 
     clear_bit(rsc->flags, pe_rsc_merging);

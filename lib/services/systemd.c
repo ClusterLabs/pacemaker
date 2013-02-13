@@ -35,16 +35,16 @@
 */
 
 struct unit_info {
-        const char *id;
-        const char *description;
-        const char *load_state;
-        const char *active_state;
-        const char *sub_state;
-        const char *following;
-        const char *unit_path;
-        uint32_t job_id;
-        const char *job_type;
-        const char *job_path;
+    const char *id;
+    const char *description;
+    const char *load_state;
+    const char *active_state;
+    const char *sub_state;
+    const char *following;
+    const char *unit_path;
+    uint32_t job_id;
+    const char *job_type;
+    const char *job_path;
 };
 
 static GDBusProxy *systemd_proxy = NULL;
@@ -59,14 +59,13 @@ get_proxy(const char *path, const char *interface)
     g_type_init();
 #endif
 
-    if(path == NULL) {
+    if (path == NULL) {
         path = BUS_PATH;
     }
 
-    proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL, /* GDBusInterfaceInfo */
-        BUS_NAME, path, interface,
-        NULL, /* GCancellable */ &error);
+    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL,     /* GDBusInterfaceInfo */
+                                          BUS_NAME, path, interface,
+                                          NULL, /* GCancellable */ &error);
 
     if (error) {
         crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
@@ -80,17 +79,19 @@ static gboolean
 systemd_init(void)
 {
     static int need_init = 1;
-    if(need_init) {
+
+    if (need_init) {
         need_init = 0;
-        systemd_proxy = get_proxy(NULL, BUS_NAME".Manager");
+        systemd_proxy = get_proxy(NULL, BUS_NAME ".Manager");
     }
-    if(systemd_proxy == NULL) {
+    if (systemd_proxy == NULL) {
         return FALSE;
     }
     return TRUE;
 }
 
-void systemd_cleanup(void)
+void
+systemd_cleanup(void)
 {
     if (systemd_proxy) {
         g_object_unref(systemd_proxy);
@@ -101,10 +102,10 @@ void systemd_cleanup(void)
 static char *
 systemd_service_name(const char *name)
 {
-    if(name == NULL) {
+    if (name == NULL) {
         return NULL;
 
-    } else if(strstr(name, ".service")) {
+    } else if (strstr(name, ".service")) {
         return strdup(name);
     }
 
@@ -112,25 +113,20 @@ systemd_service_name(const char *name)
 }
 
 static void
-systemd_daemon_reload (GDBusProxy *proxy, GError **error)
+systemd_daemon_reload(GDBusProxy * proxy, GError ** error)
 {
-    GVariant *_ret = g_dbus_proxy_call_sync (
-        proxy, "Reload", g_variant_new ("()"),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, error);
+    GVariant *_ret = g_dbus_proxy_call_sync(proxy, "Reload", g_variant_new("()"),
+                                            G_DBUS_CALL_FLAGS_NONE, -1, NULL, error);
 
     if (_ret) {
-        g_variant_unref (_ret);
+        g_variant_unref(_ret);
     }
 }
 
-
 static gboolean
-systemd_unit_by_name (
-    GDBusProxy *proxy,
-    const gchar *arg_name,
-    gchar **out_unit,
-    GCancellable *cancellable,
-    GError **error)
+systemd_unit_by_name(GDBusProxy * proxy,
+                     const gchar * arg_name,
+                     gchar ** out_unit, GCancellable * cancellable, GError ** error)
 {
     GError *reload_error = NULL;
     GVariant *_ret = NULL;
@@ -146,20 +142,19 @@ systemd_unit_by_name (
 
     name = systemd_service_name(arg_name);
     crm_debug("Calling GetUnit");
-    _ret = g_dbus_proxy_call_sync (
-        proxy, "GetUnit", g_variant_new ("(s)", name),
-        G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
+    _ret = g_dbus_proxy_call_sync(proxy, "GetUnit", g_variant_new("(s)", name),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
 
     if (_ret) {
         crm_debug("Checking output");
-        g_variant_get (_ret, "(o)", out_unit);
+        g_variant_get(_ret, "(o)", out_unit);
         crm_debug("%s = %s", arg_name, *out_unit);
-        g_variant_unref (_ret);
+        g_variant_unref(_ret);
         goto done;
     }
 
     crm_debug("Reloading the systemd manager configuration");
-    systemd_daemon_reload (proxy, &reload_error);
+    systemd_daemon_reload(proxy, &reload_error);
     retry++;
 
     if (reload_error) {
@@ -168,7 +163,7 @@ systemd_unit_by_name (
         goto done;
     }
 
-    if(*error) {
+    if (*error) {
         crm_debug("Cannot find %s: %s", name, (*error)->message);
         g_error_free(*error);
         *error = NULL;
@@ -181,15 +176,14 @@ systemd_unit_by_name (
   </method>
  */
     crm_debug("Calling LoadUnit");
-    _ret = g_dbus_proxy_call_sync (
-        proxy, "LoadUnit", g_variant_new ("(s)", name),
-        G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
+    _ret = g_dbus_proxy_call_sync(proxy, "LoadUnit", g_variant_new("(s)", name),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
 
     if (_ret) {
         crm_debug("Checking output");
-        g_variant_get (_ret, "(o)", out_unit);
+        g_variant_get(_ret, "(o)", out_unit);
         crm_debug("%s = %s", arg_name, *out_unit);
-        g_variant_unref (_ret);
+        g_variant_unref(_ret);
     }
 
   done:
@@ -198,7 +192,7 @@ systemd_unit_by_name (
 }
 
 static char *
-systemd_unit_property(const char *obj, const gchar *iface, const char *name)
+systemd_unit_property(const char *obj, const gchar * iface, const char *name)
 {
     GError *error = NULL;
     GDBusProxy *proxy;
@@ -214,23 +208,24 @@ systemd_unit_property(const char *obj, const gchar *iface, const char *name)
         return NULL;
     }
 
-    _ret = g_dbus_proxy_call_sync (
-        proxy, "GetAll", g_variant_new ("(s)", iface),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(proxy, "GetAll", g_variant_new("(s)", iface),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
-        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy), error->message);
+        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy),
+                error->message);
         g_error_free(error);
         g_object_unref(proxy);
         return NULL;
     }
-    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string (_ret), g_variant_n_children (_ret));
+    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string(_ret),
+             g_variant_n_children(_ret));
 
     asv = g_variant_get_child_value(_ret, 0);
-    crm_trace("asv type '%s' %d\n", g_variant_get_type_string (asv), g_variant_n_children (asv));
+    crm_trace("asv type '%s' %d\n", g_variant_get_type_string(asv), g_variant_n_children(asv));
 
     value = g_variant_lookup_value(asv, name, NULL);
-    if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
+    if (value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
         crm_debug("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
         output = g_variant_dup_string(value, NULL);
 
@@ -254,7 +249,7 @@ systemd_unit_listall(void)
     struct unit_info u;
     GVariant *_ret = NULL;
 
-    if(systemd_init() == FALSE) {
+    if (systemd_init() == FALSE) {
         return NULL;
     }
 
@@ -264,33 +259,28 @@ systemd_unit_listall(void)
         "  </method>\n"                                                 \
 */
 
-    _ret = g_dbus_proxy_call_sync (
-        systemd_proxy, "ListUnits", g_variant_new ("()"),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(systemd_proxy, "ListUnits", g_variant_new("()"),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error || _ret == NULL) {
-        crm_info("Call to ListUnits failed: %s", error?error->message:"unknown");
+        crm_info("Call to ListUnits failed: %s", error ? error->message : "unknown");
         g_error_free(error);
         return NULL;
     }
 
-    g_variant_get (_ret, "(@a(ssssssouso))", &out_units);
+    g_variant_get(_ret, "(@a(ssssssouso))", &out_units);
 
-    g_variant_iter_init (&iter, out_units);
-    while (g_variant_iter_loop (&iter, "(ssssssouso)",
-                                &u.id,
-                                &u.description,
-                                &u.load_state,
-                                &u.active_state,
-                                &u.sub_state,
-                                &u.following,
-                                &u.unit_path,
-                                &u.job_id,
-                                &u.job_type,
-                                &u.job_path))
-    {
+    g_variant_iter_init(&iter, out_units);
+    while (g_variant_iter_loop(&iter, "(ssssssouso)",
+                               &u.id,
+                               &u.description,
+                               &u.load_state,
+                               &u.active_state,
+                               &u.sub_state,
+                               &u.following, &u.unit_path, &u.job_id, &u.job_type, &u.job_path)) {
         char *match = strstr(u.id, ".service");
-        if(match) {
+
+        if (match) {
             lpc++;
             match[0] = 0;
             crm_trace("Got %s[%s] = %s", u.id, u.active_state, u.description);
@@ -298,8 +288,9 @@ systemd_unit_listall(void)
         }
     }
 
-    crm_info("Call to ListUnits passed: type '%s' count %d", g_variant_get_type_string (out_units), lpc);
-    g_variant_unref (_ret);
+    crm_info("Call to ListUnits passed: type '%s' count %d", g_variant_get_type_string(out_units),
+             lpc);
+    g_variant_unref(_ret);
     return units;
 }
 
@@ -310,14 +301,14 @@ systemd_unit_exists(const char *name)
     GError *error = NULL;
     gboolean pass = FALSE;
 
-    if(systemd_init() == FALSE) {
+    if (systemd_init() == FALSE) {
         return FALSE;
     }
 
     pass = systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error);
 
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error?error->message:"unknown");
+        crm_err("Call to ListUnits failed: %s", error ? error->message : "unknown");
         g_error_free(error);
         pass = FALSE;
 
@@ -337,55 +328,52 @@ systemd_unit_metadata(const char *name)
     GError *error = NULL;
 
     CRM_ASSERT(systemd_init());
-    if(systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error)) {
-        desc = systemd_unit_property(path, BUS_NAME".Unit", "Description");
+    if (systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error)) {
+        desc = systemd_unit_property(path, BUS_NAME ".Unit", "Description");
     } else {
         desc = g_strdup_printf("systemd unit file for %s", name);
     }
 
-    meta = g_strdup_printf(
-            "<?xml version=\"1.0\"?>\n"
-            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-            "<resource-agent name=\"%s\" version=\"0.1\">\n"
-            "  <version>1.0</version>\n"
-            "  <longdesc lang=\"en\">\n"
-            "    %s\n"
-            "  </longdesc>\n"
-            "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"
-            "  <parameters>\n"
-            "  </parameters>\n"
-            "  <actions>\n"
-            "    <action name=\"start\"   timeout=\"15\" />\n"
-            "    <action name=\"stop\"    timeout=\"15\" />\n"
-            "    <action name=\"status\"  timeout=\"15\" />\n"
-            "    <action name=\"restart\"  timeout=\"15\" />\n"
-            "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-            "    <action name=\"meta-data\"  timeout=\"5\" />\n"
-            "  </actions>\n"
-            "  <special tag=\"systemd\">\n"
-            "  </special>\n"
-            "</resource-agent>\n",
-            name, desc, name);
+    meta = g_strdup_printf("<?xml version=\"1.0\"?>\n"
+                           "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+                           "<resource-agent name=\"%s\" version=\"0.1\">\n"
+                           "  <version>1.0</version>\n"
+                           "  <longdesc lang=\"en\">\n"
+                           "    %s\n"
+                           "  </longdesc>\n"
+                           "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"
+                           "  <parameters>\n"
+                           "  </parameters>\n"
+                           "  <actions>\n"
+                           "    <action name=\"start\"   timeout=\"15\" />\n"
+                           "    <action name=\"stop\"    timeout=\"15\" />\n"
+                           "    <action name=\"status\"  timeout=\"15\" />\n"
+                           "    <action name=\"restart\"  timeout=\"15\" />\n"
+                           "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+                           "    <action name=\"meta-data\"  timeout=\"5\" />\n"
+                           "  </actions>\n"
+                           "  <special tag=\"systemd\">\n"
+                           "  </special>\n" "</resource-agent>\n", name, desc, name);
     free(desc);
     return meta;
 }
 
 static void
-systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_data)
+systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer user_data)
 {
     GError *error = NULL;
     GVariant *_ret = NULL;
-    svc_action_t* op = user_data;
-    GDBusProxy *proxy = G_DBUS_PROXY (source_object);
+    svc_action_t *op = user_data;
+    GDBusProxy *proxy = G_DBUS_PROXY(source_object);
 
     /* Obtain rc and stderr/out */
-    _ret = g_dbus_proxy_call_finish (proxy, res, &error);
+    _ret = g_dbus_proxy_call_finish(proxy, res, &error);
 
     if (error) {
         /* ignore "already started" or "not running" errors */
         crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
-        if(strstr(error->message, "systemd1.LoadFailed")
-           || strstr(error->message, "systemd1.InvalidName")) {
+        if (strstr(error->message, "systemd1.LoadFailed")
+            || strstr(error->message, "systemd1.InvalidName")) {
 
             if (safe_str_eq(op->action, "stop")) {
                 crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
@@ -402,8 +390,10 @@ systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_
 
     } else {
         char *path = NULL;
+
         g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
+        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
+                 path);
         op->rc = PCMK_EXECRA_OK;
     }
 
@@ -413,9 +403,8 @@ systemd_unit_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_
     }
 }
 
-
 gboolean
-systemd_unit_exec(svc_action_t* op, gboolean synchronous)
+systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 {
     char *unit = NULL;
     GError *error = NULL;
@@ -427,7 +416,8 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
-    crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'", synchronous?"":"a", op->action, op->agent, op->rsc);
+    crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
+              synchronous ? "" : "a", op->action, op->agent, op->rsc);
 
     if (safe_str_eq(op->action, "meta-data")) {
         op->stdout_data = systemd_unit_metadata(op->agent);
@@ -435,10 +425,11 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
         goto cleanup;
     }
 
-    pass = systemd_unit_by_name (systemd_proxy, op->agent, &unit, NULL, &error);
+    pass = systemd_unit_by_name(systemd_proxy, op->agent, &unit, NULL, &error);
     if (error || pass == FALSE) {
-        crm_debug("Could not obtain unit named '%s': %s", op->agent, error?error->message:"unknown");
-        if(error && strstr(error->message, "systemd1.NoSuchUnit")) {
+        crm_debug("Could not obtain unit named '%s': %s", op->agent,
+                  error ? error->message : "unknown");
+        if (error && strstr(error->message, "systemd1.NoSuchUnit")) {
             op->rc = PCMK_EXECRA_NOT_INSTALLED;
         }
         g_error_free(error);
@@ -446,8 +437,9 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        char *state = systemd_unit_property(unit, BUS_NAME".Unit", "ActiveState");
-        if ( !g_strcmp0(state, "active")) {
+        char *state = systemd_unit_property(unit, BUS_NAME ".Unit", "ActiveState");
+
+        if (!g_strcmp0(state, "active")) {
             op->rc = PCMK_EXECRA_OK;
         } else {
             op->rc = PCMK_EXECRA_NOT_RUNNING;
@@ -468,18 +460,16 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     }
 
     crm_debug("Calling %s for %s: %s", action, op->rsc, unit);
-    if(synchronous == FALSE) {
-        g_dbus_proxy_call(
-            systemd_proxy, action, g_variant_new ("(ss)", name, "replace"),
-            G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, systemd_unit_exec_done, op);
+    if (synchronous == FALSE) {
+        g_dbus_proxy_call(systemd_proxy, action, g_variant_new("(ss)", name, "replace"),
+                          G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, systemd_unit_exec_done, op);
         free(unit);
         free(name);
         return TRUE;
     }
 
-    _ret = g_dbus_proxy_call_sync (
-        systemd_proxy, action, g_variant_new ("(ss)", name, "replace"),
-        G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(systemd_proxy, action, g_variant_new("(ss)", name, "replace"),
+                                  G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
 
     if (error) {
         /* ignore "already started" or "not running" errors */
@@ -494,8 +484,9 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
 
     } else {
         char *path = NULL;
+
         g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string (_ret), path);
+        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string(_ret), path);
         op->rc = PCMK_EXECRA_OK;
     }
 
@@ -506,7 +497,7 @@ systemd_unit_exec(svc_action_t* op, gboolean synchronous)
     if (_ret) {
         g_variant_unref(_ret);
     }
-    if(synchronous == FALSE) {
+    if (synchronous == FALSE) {
         operation_finalize(op);
         return TRUE;
     }

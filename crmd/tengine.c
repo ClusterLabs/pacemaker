@@ -43,7 +43,6 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-
 #include <crmd.h>
 #include <tengine.h>
 #include <te_callbacks.h>
@@ -84,8 +83,8 @@ do_te_control(long long action,
         }
 
         if (fsa_cib_conn) {
-            fsa_cib_conn->cmds->del_notify_callback(
-                fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff);
+            fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
+                                                    te_update_diff);
         }
 
         clear_bit(fsa_input_register, te_subsystem->flag_connected);

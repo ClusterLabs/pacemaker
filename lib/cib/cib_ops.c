@@ -207,12 +207,15 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         const char *peer = crm_element_value(req, F_ORIG);
         const char *digest = crm_element_value(req, XML_ATTR_DIGEST);
 
-        if(digest) {
+        if (digest) {
             const char *version = crm_element_value(req, XML_ATTR_CRM_VERSION);
-            char *digest_verify = calculate_xml_versioned_digest(input, FALSE, TRUE, version?version:CRM_FEATURE_SET);
+            char *digest_verify = calculate_xml_versioned_digest(input, FALSE, TRUE,
+                                                                 version ? version :
+                                                                 CRM_FEATURE_SET);
 
-            if(safe_str_neq(digest_verify, digest)) {
-                crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer, digest_verify, digest);
+            if (safe_str_neq(digest_verify, digest)) {
+                crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,
+                        digest_verify, digest);
                 reason = "digest mismatch";
 
             } else {
@@ -669,7 +672,8 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
                    "Diff %d.%d.%d -> %d.%d.%d from %s not applied to %d.%d.%d: %s",
                    diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                    diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                   originator?originator:"local", this_admin_epoch, this_epoch, this_updates, reason);
+                   originator ? originator : "local", this_admin_epoch, this_epoch, this_updates,
+                   reason);
 
         crm_log_xml_trace(input, "Discarded diff");
         if (result == pcmk_ok) {
@@ -680,7 +684,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         crm_trace("Diff %d.%d.%d -> %d.%d.%d from %s was applied to %d.%d.%d",
                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                  originator?originator:"local", this_admin_epoch, this_epoch, this_updates);
+                  originator ? originator : "local", this_admin_epoch, this_epoch, this_updates);
 
     }
     return result;
@@ -928,29 +932,30 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                     *answer = shallow;
                 }
 
-            } else if(options & cib_xpath_address) {
+            } else if (options & cib_xpath_address) {
 
                 int path_len = 0;
                 char *path = NULL;
                 xmlNode *parent = match;
 
-                while(parent && parent->type == XML_ELEMENT_NODE) {
+                while (parent && parent->type == XML_ELEMENT_NODE) {
                     int extra = 1;
                     char *new_path = NULL;
                     const char *id = crm_element_value(parent, XML_ATTR_ID);
 
                     extra += strlen((const char *)parent->name);
-                    if(id) {
-                        extra += 8; /* [@id=""] */
+                    if (id) {
+                        extra += 8;     /* [@id=""] */
                         extra += strlen(id);
                     }
 
                     path_len += extra;
                     new_path = malloc(path_len + 1);
-                    if(id) {
-                        snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id, path?path:"");
+                    if (id) {
+                        snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id,
+                                 path ? path : "");
                     } else {
-                        snprintf(new_path, path_len + 1, "/%s%s", parent->name, path?path:"");
+                        snprintf(new_path, path_len + 1, "/%s%s", parent->name, path ? path : "");
                     }
                     free(path);
                     path = new_path;

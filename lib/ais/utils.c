@@ -47,10 +47,11 @@ log_ais_message(int level, const AIS_Message * msg)
     qb_log_from_external_source(__func__, __FILE__,
                                 "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
                                 level, __LINE__, 0,
-               msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
-               ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-               msg->sender.pid,
-               msg->sender.uname == local_uname ? "false" : "true", ais_data_len(msg), data);
+                                msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+                                ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+                                msg->sender.pid,
+                                msg->sender.uname == local_uname ? "false" : "true",
+                                ais_data_len(msg), data);
 /*     do_ais_log(level, */
 /* 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s", */
 /* 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type), */
@@ -95,27 +96,30 @@ static char *opts_default[] = { NULL, NULL };
 static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 
 static void
-pcmk_setscheduler(crm_child_t *child)
+pcmk_setscheduler(crm_child_t * child)
 {
-#if defined(HAVE_SCHED_GETPARAM) && defined(HAVE_SCHED_SETPARAM) && defined(HAVE_SCHED_GET_PRIORITY_MIN) 
+#if defined(HAVE_SCHED_GETPARAM) && defined(HAVE_SCHED_SETPARAM) && defined(HAVE_SCHED_GET_PRIORITY_MIN)
     int policy = sched_getscheduler(0);
+
     if (policy == -1) {
         ais_perror("Could not get the scheduler policy for %s", child->name);
 
     } else if (policy == SCHED_RR) {
         struct sched_param param;
+
         if (sched_getparam(0, &param) == -1) {
             ais_perror("Could not get the scheduling parameters for %s", child->name);
 
         } else {
             int min_priority = sched_get_priority_min(SCHED_RR);
+
             if (min_priority == -1) {
                 ais_perror("Could not get the minimum scheduler priority of SCHED_RR policy for %s",
                            child->name);
 
-            } else if (param.sched_priority > min_priority){
+            } else if (param.sched_priority > min_priority) {
                 param.sched_priority = min_priority;
-                if (sched_setparam(0, &param)== -1) {
+                if (sched_setparam(0, &param) == -1) {
                     ais_perror("Could not set SCHED_RR to priority %d for %s",
                                param.sched_priority, child->name);
 
@@ -212,7 +216,7 @@ spawn_child(crm_child_t * child)
         if (uid) {
             struct passwd *pwent = getpwuid(uid);
 
-            if(pwent == NULL) {
+            if (pwent == NULL) {
                 ais_perror("Cannot get password entry of uid: %d", uid);
 
             } else if (initgroups(pwent->pw_name, pwent->pw_gid) < 0) {

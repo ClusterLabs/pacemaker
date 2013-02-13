@@ -95,7 +95,7 @@ free_hash_entry(gpointer data)
 }
 
 static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+attrd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
     if (need_shutdown) {
@@ -103,28 +103,28 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
         return -EPERM;
     }
 
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
 static void
-attrd_ipc_created(qb_ipcs_connection_t *c)
+attrd_ipc_created(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
 /* Exit code means? */
 static int32_t
-attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     crm_client_t *client = crm_client_get(c);
     xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
 
-    if(flags & crm_ipc_client_response) {
+    if (flags & crm_ipc_client_response) {
         crm_trace("Ack'ing msg from %d (%p)", crm_ipcs_client_pid(c), c);
         crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
     }
@@ -133,38 +133,37 @@ attrd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
         return 0;
     }
-
 #if ENABLE_ACL
     determine_request_user(client->user, msg, F_ATTRD_USER);
 #endif
 
     crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
     crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
-    
+
     attrd_local_callback(msg);
-    
+
     free_xml(msg);
     return 0;
 }
 
 /* Error code means? */
 static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t *c) 
+attrd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("Connection %p", c);
     crm_client_destroy(client);
     return 0;
 }
 
 static void
-attrd_ipc_destroy(qb_ipcs_connection_t *c) 
+attrd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = 
-{
+struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = attrd_ipc_accept,
     .connection_created = attrd_ipc_created,
     .msg_process = attrd_ipc_dispatch,
@@ -386,7 +385,8 @@ static void
 attrd_cib_connection_destroy(gpointer user_data)
 {
     cib_t *conn = user_data;
-    conn->cmds->signoff(conn); /* Ensure IPC is cleaned up */
+
+    conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
     if (need_shutdown) {
         crm_info("Connection to the CIB terminated...");
@@ -418,9 +418,9 @@ local_update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
     if (entry->timer_id == 0) {
         crm_trace("Performing local-only update after replace for %s", entry->id);
         attrd_perform_update(entry);
- /* } else {
-  *     just let the timer expire and attrd_timer_callback() will do the right thing
-  */
+        /* } else {
+         *     just let the timer expire and attrd_timer_callback() will do the right thing
+         */
     }
 }
 
@@ -464,8 +464,8 @@ cib_connect(void *user_data)
     crm_info("Connected to the CIB after %d signon attempts", attempts);
 
     if (was_err == FALSE) {
-        int rc =
-            local_conn->cmds->set_connection_dnotify(local_conn, attrd_cib_connection_destroy);
+        int rc = local_conn->cmds->set_connection_dnotify(local_conn, attrd_cib_connection_destroy);
+
         if (rc != pcmk_ok) {
             crm_err("Could not set dnotify callback");
             was_err = TRUE;
@@ -503,7 +503,7 @@ main(int argc, char **argv)
     gboolean was_err = FALSE;
     qb_ipcs_connection_t *c = NULL;
     qb_ipcs_service_t *ipcs = NULL;
-    
+
     crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, attrd_shutdown);
 
@@ -598,8 +598,9 @@ main(int argc, char **argv)
 #endif
 
     c = qb_ipcs_connection_first_get(ipcs);
-    while(c != NULL) {
+    while (c != NULL) {
         qb_ipcs_connection_t *last = c;
+
         c = qb_ipcs_connection_next_get(ipcs, last);
 
         /* There really shouldn't be anyone connected at this point */
@@ -609,7 +610,7 @@ main(int argc, char **argv)
     }
 
     qb_ipcs_destroy(ipcs);
-    
+
     if (cib_conn) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
@@ -636,7 +637,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     if (data->value == NULL && rc == -ENXIO) {
         rc = pcmk_ok;
 
-    } else if(call_id < 0) {
+    } else if (call_id < 0) {
         crm_warn("Update %s=%s failed: %s", data->attr, data->value, pcmk_strerror(call_id));
         goto cleanup;
     }
@@ -654,9 +655,9 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
                 }
             }
             break;
-        case -pcmk_err_diff_failed:  /* When an attr changes while the CIB is syncing */
-        case -ETIME:       /* When an attr changes while there is a DC election */
-        case -ENXIO:    /* When an attr changes while the CIB is syncing a
+        case -pcmk_err_diff_failed:    /* When an attr changes while the CIB is syncing */
+        case -ETIME:           /* When an attr changes while there is a DC election */
+        case -ENXIO:           /* When an attr changes while the CIB is syncing a
                                  *   newer config from a node that just came up
                                  */
             crm_warn("Update %d for %s=%s failed: %s",
@@ -715,9 +716,9 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
 
         } else {
             crm_trace("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
-                        rc, attrd_uuid, hash_entry->id,
-                        hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
-                        hash_entry->section);
+                      rc, attrd_uuid, hash_entry->id,
+                      hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
+                      hash_entry->section);
         }
 
     } else {
@@ -726,8 +727,10 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
                                   hash_entry->id, hash_entry->value, FALSE, user_name);
         if (rc < 0) {
-            crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value, pcmk_strerror(rc));
-        } if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
+            crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value,
+                       pcmk_strerror(rc));
+        }
+        if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
             crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
@@ -739,8 +742,8 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     if (hash_entry->value != NULL) {
         data->value = strdup(hash_entry->value);
     }
-    cib_conn->cmds->register_callback(
-        cib_conn, rc, 120, FALSE, data, "attrd_cib_callback", attrd_cib_callback);
+    cib_conn->cmds->register_callback(cib_conn, rc, 120, FALSE, data, "attrd_cib_callback",
+                                      attrd_cib_callback);
     return;
 }
 

@@ -141,8 +141,9 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
 
     } else
-        if (FALSE == attrd_update_delegate(
-                NULL, command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen, NULL)) {
+        if (FALSE ==
+            attrd_update_delegate(NULL, command, NULL, attr_name, attr_value, attr_section,
+                                  attr_set, attr_dampen, NULL)) {
         fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
         crm_exit(1);
     }

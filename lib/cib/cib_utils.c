@@ -164,15 +164,13 @@ log_cib_diff(int log_level, xmlNode * diff, const char *function)
 
     if (add_updates != del_updates) {
         do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: --- %d.%d.%d",
-                         del_admin_epoch, del_epoch, del_updates);
+                         "Diff: --- %d.%d.%d", del_admin_epoch, del_epoch, del_updates);
         do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: +++ %d.%d.%d %s",
-                         add_admin_epoch, add_epoch, add_updates, digest);
+                         "Diff: +++ %d.%d.%d %s", add_admin_epoch, add_epoch, add_updates, digest);
 
     } else if (diff != NULL) {
         do_crm_log(log_level,
-                   "%s: Local-only Change: %d.%d.%d", function?function:"",
+                   "%s: Local-only Change: %d.%d.%d", function ? function : "",
                    add_admin_epoch, add_epoch, add_updates);
     }
 
@@ -211,13 +209,13 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
     cib_version_details(tmp, _admin_epoch, _epoch, _updates);
 
-    if(*_admin_epoch < 0) {
+    if (*_admin_epoch < 0) {
         *_admin_epoch = *admin_epoch;
     }
-    if(*_epoch < 0) {
+    if (*_epoch < 0) {
         *_epoch = *epoch;
     }
-    if(*_updates < 0) {
+    if (*_updates < 0) {
         *_updates = *updates;
     }
     return TRUE;
@@ -342,11 +340,11 @@ fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean chan
     const char *tag = NULL;
     const char *value = NULL;
 
-    if(local_diff == NULL) {
+    if (local_diff == NULL) {
         crm_trace("Nothing to do");
         return;
     }
-    
+
     tag = "diff-removed";
     diff_child = find_xml_node(local_diff, tag, FALSE);
     if (diff_child == NULL) {
@@ -422,7 +420,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     static char *last_digest = NULL;
     static unsigned int dtd_throttle = 0;
 
-    crm_trace("Begin %s%s op", is_query?"read-only ":"", op);
+    crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
@@ -450,7 +448,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         rc = -EINVAL;
         goto done;
 
-    } else if(rc != pcmk_ok) {
+    } else if (rc != pcmk_ok) {
         goto done;
     }
 
@@ -503,7 +501,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      */
     *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
-    crm_trace("Updating version tuple: %s", manage_counters?"true":"false");
+    crm_trace("Updating version tuple: %s", manage_counters ? "true" : "false");
     if (manage_counters == FALSE) {
         if (dtd_throttle++ % 20) {
             /* Throttle the amount of costly validation we perform due to slave updates.
@@ -538,15 +536,15 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      * Exceptions, anything in:
 
      static filter_t filter[] = {
-         { 0, XML_ATTR_ORIGIN },
-         { 0, XML_CIB_ATTR_WRITTEN },		
-         { 0, XML_ATTR_UPDATE_ORIG },
-         { 0, XML_ATTR_UPDATE_CLIENT },
-         { 0, XML_ATTR_UPDATE_USER },
+     { 0, XML_ATTR_ORIGIN },
+     { 0, XML_CIB_ATTR_WRITTEN },               
+     { 0, XML_ATTR_UPDATE_ORIG },
+     { 0, XML_ATTR_UPDATE_CLIENT },
+     { 0, XML_ATTR_UPDATE_USER },
      };
-    */
+     */
 
-    if(local_diff == NULL) {
+    if (local_diff == NULL) {
         /* 50-60% of updates will not result in a change
          *
          * We used to bump the version and pretend a change occurred,
@@ -559,24 +557,24 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          *
          */
 
-        check_dtd = FALSE; /* Nothing to check */
+        check_dtd = FALSE;      /* Nothing to check */
 
-        if(last_digest == NULL) {
+        if (last_digest == NULL) {
             crm_trace("No reference point for ordering test");
 
-        } else if(crm_str_eq(new_digest, last_digest, TRUE) == FALSE) {
+        } else if (crm_str_eq(new_digest, last_digest, TRUE) == FALSE) {
 
             crm_notice("Configuration ordering change detected");
             cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 
             crm_trace("Old: %s, New: %s", last_digest, new_digest);
             /*
-            crm_log_xml_trace(current_cib, "Old");
-            crm_log_xml_trace(scratch, "New");
-            crm_log_xml_trace(req, "Re-order");
-            crm_write_blackbox(0, NULL);
-            */
-            
+               crm_log_xml_trace(current_cib, "Old");
+               crm_log_xml_trace(scratch, "New");
+               crm_log_xml_trace(req, "Re-order");
+               crm_write_blackbox(0, NULL);
+             */
+
             crm_trace("Recalculating the digest now that we modified %s and %s",
                       XML_ATTR_GENERATION, XML_ATTR_NUMUPDATES);
             free(new_digest);
@@ -598,21 +596,21 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     free(last_digest);
     last_digest = new_digest;
-    
-    if(*config_changed && is_not_set(call_options, cib_no_mtime)) {
+
+    if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
         char *now_str = NULL;
         time_t now = time(NULL);
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
         now_str = ctime(&now);
-        now_str[24] = EOS;  /* replace the newline */
+        now_str[24] = EOS;      /* replace the newline */
         crm_xml_replace(scratch, XML_CIB_ATTR_WRITTEN, now_str);
 
         if (schema) {
             static int minimum_schema = 0;
             int current_schema = get_schema_version(schema);
 
-            if(minimum_schema == 0) {
+            if (minimum_schema == 0) {
                 minimum_schema = get_schema_version("pacemaker-1.1");
             }
 
@@ -622,7 +620,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
                 CRM_LOG_ASSERT(origin != NULL);
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT, crm_element_value(req, F_CIB_CLIENTNAME));
+                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
+                                crm_element_value(req, F_CIB_CLIENTNAME));
 #if ENABLE_ACL
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
 #endif
@@ -643,9 +642,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
   done:
-    crm_trace("Perform validation: %s", check_dtd?"true":"false");
+    crm_trace("Perform validation: %s", check_dtd ? "true" : "false");
     if (rc == pcmk_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
         const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
+
         crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
         rc = -pcmk_err_dtd_validation;
     }
@@ -835,7 +835,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 }
 
 int
-cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output, int level) 
+cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level)
 {
     int rc = pcmk_err_generic;
 
@@ -892,13 +892,15 @@ cib_internal_config_changed(xmlNode * diff)
     return changed;
 }
 
-int cib_internal_op(cib_t * cib, const char *op, const char *host,
-                    const char *section, xmlNode * data,
-                    xmlNode ** output_data, int call_options, const char *user_name)
+int
+cib_internal_op(cib_t * cib, const char *op, const char *host,
+                const char *section, xmlNode * data,
+                xmlNode ** output_data, int call_options, const char *user_name)
 {
-    int (*delegate)(cib_t * cib, const char *op, const char *host,
-                    const char *section, xmlNode * data,
-                    xmlNode ** output_data, int call_options, const char *user_name) = cib->delegate_fn;
+    int (*delegate) (cib_t * cib, const char *op, const char *host,
+                     const char *section, xmlNode * data,
+                     xmlNode ** output_data, int call_options, const char *user_name) =
+        cib->delegate_fn;
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }

@@ -142,18 +142,17 @@ do_pe_control(long long action,
     long long stop_actions = A_PE_STOP;
     long long start_actions = A_PE_START;
 
-    static struct ipc_client_callbacks pe_callbacks = 
-        {
-            .dispatch = pe_ipc_dispatch,
-            .destroy = pe_ipc_destroy
-        };
-    
+    static struct ipc_client_callbacks pe_callbacks = {
+        .dispatch = pe_ipc_dispatch,
+        .destroy = pe_ipc_destroy
+    };
+
     if (action & stop_actions) {
         clear_bit(fsa_input_register, pe_subsystem->flag_required);
 
         mainloop_del_ipc_client(pe_subsystem->source);
         pe_subsystem->source = NULL;
-        
+
         clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     }
 
@@ -161,7 +160,9 @@ do_pe_control(long long action,
         if (cur_state != S_STOPPING) {
             set_bit(fsa_input_register, pe_subsystem->flag_required);
 
-            pe_subsystem->source = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, G_PRIORITY_DEFAULT, 5*1024*1024/* 5Mb */, NULL, &pe_callbacks);
+            pe_subsystem->source =
+                mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, G_PRIORITY_DEFAULT,
+                                        5 * 1024 * 1024 /* 5Mb */ , NULL, &pe_callbacks);
 
             if (pe_subsystem->source == NULL) {
                 crm_warn("Setup of client connection failed, not adding channel to mainloop");
@@ -209,7 +210,7 @@ do_pe_invoke(long long action,
         return;
     }
 
-    if(cur_state != S_POLICY_ENGINE) {
+    if (cur_state != S_POLICY_ENGINE) {
         crm_notice("No need to invoke the PE in state %s", fsa_state2string(cur_state));
         return;
     }
@@ -223,7 +224,8 @@ do_pe_invoke(long long action,
 
     fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
 
-    crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
+    crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
+              fsa_state2string(fsa_state));
 
     /* Make sure any queued calculations are discarded */
     free(fsa_pe_ref);
@@ -288,6 +290,6 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
-             fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+              fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);
 }

@@ -119,8 +119,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
-struct ipc_client_callbacks crm_callbacks =
-{
+struct ipc_client_callbacks crm_callbacks = {
     .dispatch = resource_ipc_callback,
     .destroy = resource_ipc_connection_destroy,
 };
@@ -756,7 +755,8 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
         }
 
         attr_name = crm_concat("fail-count", id, '-');
-        attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL);
+        attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
+                              NULL, NULL);
         free(attr_name);
     }
     return rc;
@@ -828,8 +828,10 @@ move_resource(const char *rsc_id,
         }
         now = crm_time_new(NULL);
         later = crm_time_add(now, duration);
-        crm_time_log(LOG_INFO, "now     ", now, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-        crm_time_log(LOG_INFO, "later   ", later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_INFO, "now     ", now,
+                     crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_INFO, "later   ", later,
+                     crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
         crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
         later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday);
         printf("Migration will take effect until: %s\n", later_s);
@@ -1084,7 +1086,7 @@ show_colocation(resource_t * rsc, gboolean dependants, gboolean recursive, int o
 }
 
 static GHashTable *
-generate_resource_params(resource_t *rsc, pe_working_set_t * data_set)
+generate_resource_params(resource_t * rsc, pe_working_set_t * data_set)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1096,12 +1098,14 @@ generate_resource_params(resource_t *rsc, pe_working_set_t * data_set)
         return NULL;
     }
 
-    params = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    combined = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    combined =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
-    get_rsc_attributes(params, rsc, NULL/* TODO: Pass in local node */, data_set);
-    get_meta_attributes(meta, rsc, NULL/* TODO: Pass in local node */, data_set);
+    get_rsc_attributes(params, rsc, NULL /* TODO: Pass in local node */ , data_set);
+    get_meta_attributes(meta, rsc, NULL /* TODO: Pass in local node */ , data_set);
 
     if (params) {
         char *key = NULL;
@@ -1264,25 +1268,26 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 0:
-                if(safe_str_eq("force-stop", longname)
-                   || safe_str_eq("force-start", longname)
-                   || safe_str_eq("force-check", longname)) {
+                if (safe_str_eq("force-stop", longname)
+                    || safe_str_eq("force-start", longname)
+                    || safe_str_eq("force-check", longname)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
 
-                } else if(safe_str_eq("list-ocf-providers", longname)
-                          || safe_str_eq("list-ocf-alternatives", longname)
-                          || safe_str_eq("list-standards", longname)) {
+                } else if (safe_str_eq("list-ocf-providers", longname)
+                           || safe_str_eq("list-ocf-alternatives", longname)
+                           || safe_str_eq("list-standards", longname)) {
                     const char *text = NULL;
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
-                    if(safe_str_eq("list-ocf-providers", longname) || safe_str_eq("list-ocf-alternatives", longname)) {
+                    if (safe_str_eq("list-ocf-providers", longname)
+                        || safe_str_eq("list-ocf-alternatives", longname)) {
                         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, optarg, &list);
                         text = "OCF providers";
 
-                    } else if(safe_str_eq("list-standards", longname)) {
+                    } else if (safe_str_eq("list-standards", longname)) {
                         rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
                         text = "standards";
                     }
@@ -1295,7 +1300,7 @@ main(int argc, char **argv)
                         }
                         lrmd_list_freeall(list);
 
-                    } else if(optarg) {
+                    } else if (optarg) {
                         fprintf(stderr, "No %s found for %s\n", text, optarg);
                     } else {
                         fprintf(stderr, "No %s found\n", text);
@@ -1304,7 +1309,7 @@ main(int argc, char **argv)
                     lrmd_api_delete(lrmd_conn);
                     return crm_exit(rc);
 
-                } else if(safe_str_eq("show-metadata", longname)) {
+                } else if (safe_str_eq("show-metadata", longname)) {
                     char standard[512];
                     char provider[512];
                     char type[512];
@@ -1312,18 +1317,22 @@ main(int argc, char **argv)
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
                     rc = sscanf(optarg, "%[^:]:%[^:]:%s", standard, provider, type);
-                    if(rc == 3) {
-                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, provider, type, &metadata, 0);
+                    if (rc == 3) {
+                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, provider, type,
+                                                           &metadata, 0);
 
-                    } else if(rc == 2) {
-                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, NULL, provider, &metadata, 0);
+                    } else if (rc == 2) {
+                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, NULL, provider,
+                                                           &metadata, 0);
 
-                    } else if(rc < 2) {
-                        fprintf(stderr, "Please specify standard:type or standard:provider:type, not %s\n", optarg);
+                    } else if (rc < 2) {
+                        fprintf(stderr,
+                                "Please specify standard:type or standard:provider:type, not %s\n",
+                                optarg);
                         rc = -EINVAL;
                     }
 
-                    if(metadata) {
+                    if (metadata) {
                         printf("%s\n", metadata);
                     } else {
                         fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
@@ -1331,7 +1340,7 @@ main(int argc, char **argv)
                     lrmd_api_delete(lrmd_conn);
                     return crm_exit(rc);
 
-                } else if(safe_str_eq("list-agents", longname)) {
+                } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
                     lrmd_list_t *iter = NULL;
                     char standard[512];
@@ -1339,12 +1348,12 @@ main(int argc, char **argv)
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
                     rc = sscanf(optarg, "%[^:]:%s", standard, provider);
-                    if(rc == 1) {
+                    if (rc == 1) {
                         rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, NULL);
                         provider[0] = '*';
                         provider[1] = 0;
 
-                    } else if(rc == 2) {
+                    } else if (rc == 2) {
                         rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, standard, provider);
                     }
 
@@ -1357,7 +1366,8 @@ main(int argc, char **argv)
                         lrmd_list_freeall(list);
                         rc = 0;
                     } else {
-                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard, provider);
+                        fprintf(stderr, "No agents found for standard=%s, provider=%s\n", standard,
+                                provider);
                         rc = -1;
                     }
                     lrmd_api_delete(lrmd_conn);
@@ -1515,7 +1525,8 @@ main(int argc, char **argv)
 
     if (rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'F' || rsc_cmd == 'P') {
         xmlNode *xml = NULL;
-        mainloop_io_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
+        mainloop_io_t *source =
+            mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
         crmd_channel = mainloop_get_ipc_client(source);
 
         if (crmd_channel == NULL) {
@@ -1553,8 +1564,8 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) {
         svc_action_t *op = NULL;
-        const char *rtype  = NULL;
-        const char *rprov  = NULL;
+        const char *rtype = NULL;
+        const char *rprov = NULL;
         const char *rclass = NULL;
         const char *action = NULL;
         GHashTable *params = NULL;
@@ -1566,31 +1577,31 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        if(safe_str_eq(rsc_long_cmd, "force-stop")) {
+        if (safe_str_eq(rsc_long_cmd, "force-stop")) {
             action = "stop";
-        } else if(safe_str_eq(rsc_long_cmd, "force-start")) {
+        } else if (safe_str_eq(rsc_long_cmd, "force-start")) {
             action = "start";
-        } else if(safe_str_eq(rsc_long_cmd, "force-check")) {
+        } else if (safe_str_eq(rsc_long_cmd, "force-check")) {
             action = "monitor";
         }
 
         rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-        rprov  = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-        rtype  = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
         params = generate_resource_params(rsc, &data_set);
 
-        op = resources_action_create(
-            rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
 
-        if(services_action_sync(op)) {
+        if (services_action_sync(op)) {
             int more, lpc, last;
             char *local_copy = NULL;
-            if(op->status == PCMK_LRM_OP_DONE) {
+
+            if (op->status == PCMK_LRM_OP_DONE) {
                 printf("Operation %s for %s (%s:%s:%s) returned %d\n",
-                       action, rsc->id, rclass, rprov?rprov:"", rtype, op->rc);
+                       action, rsc->id, rclass, rprov ? rprov : "", rtype, op->rc);
             } else {
                 printf("Operation %s for %s (%s:%s:%s) failed: %d\n",
-                       action, rsc->id, rclass, rprov?rprov:"", rtype, op->status);
+                       action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
             }
 
             if (op->stdout_data) {
@@ -1598,11 +1609,11 @@ main(int argc, char **argv)
                 more = strlen(local_copy);
                 last = 0;
 
-                for(lpc = 0; lpc < more; lpc++) {
-                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                for (lpc = 0; lpc < more; lpc++) {
+                    if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
                         local_copy[lpc] = 0;
-                        printf(" >  stdout: %s\n", local_copy+last);
-                        last = lpc+1;
+                        printf(" >  stdout: %s\n", local_copy + last);
+                        last = lpc + 1;
                     }
                 }
                 free(local_copy);
@@ -1612,11 +1623,11 @@ main(int argc, char **argv)
                 more = strlen(local_copy);
                 last = 0;
 
-                for(lpc = 0; lpc < more; lpc++) {
-                    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+                for (lpc = 0; lpc < more; lpc++) {
+                    if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
                         local_copy[lpc] = 0;
-                        printf(" >  stderr: %s\n", local_copy+last);
-                        last = lpc+1;
+                        printf(" >  stderr: %s\n", local_copy + last);
+                        last = lpc + 1;
                     }
                 }
                 free(local_copy);
@@ -1767,7 +1778,8 @@ main(int argc, char **argv)
             rc = move_resource(rsc_id, NULL, host_uname, cib_conn);
 
         } else {
-            CMD_ERR("Resource %s not moved: not-active and no preferred location specified.\n", rsc_id);
+            CMD_ERR("Resource %s not moved: not-active and no preferred location specified.\n",
+                    rsc_id);
             rc = -EINVAL;
         }
 

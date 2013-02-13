@@ -24,7 +24,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-
 #include <glib.h>
 
 #include <allocate.h>
@@ -161,7 +160,7 @@ rsc_expand_action(action_t * action)
         uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
         if (uuid) {
             pe_rsc_trace(action->rsc, "Converting %s to %s %d", action->uuid, uuid,
-                      is_set(action->rsc->flags, pe_rsc_notify));
+                         is_set(action->rsc->flags, pe_rsc_notify));
             result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
             if (result == NULL) {
                 crm_err("Couldn't expand %s", action->uuid);
@@ -206,8 +205,7 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
 
         processed = TRUE;
         changed |=
-            then->rsc->cmds->update_actions(first, then, node, flags, restart,
-                                            pe_order_restart);
+            then->rsc->cmds->update_actions(first, then, node, flags, restart, pe_order_restart);
         if (changed) {
             pe_rsc_trace(then->rsc, "restart: %s then %s: changed", first->uuid, then->uuid);
         } else {
@@ -240,16 +238,18 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         if (then->rsc) {
             changed |=
                 then->rsc->cmds->update_actions(first, then, node, flags & pe_action_optional,
-                                                 pe_action_optional, pe_order_implies_first_master);
+                                                pe_action_optional, pe_order_implies_first_master);
         }
 
         if (changed) {
-            pe_rsc_trace(then->rsc, "implies left when right rsc is Master role: %s then %s: changed", first->uuid, then->uuid);
+            pe_rsc_trace(then->rsc,
+                         "implies left when right rsc is Master role: %s then %s: changed",
+                         first->uuid, then->uuid);
         } else {
-            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid, then->uuid);
+            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid,
+                      then->uuid);
         }
     }
-
 
     if (type & pe_order_one_or_more) {
         processed = TRUE;
@@ -264,7 +264,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
             }
         }
         if (changed) {
-            pe_rsc_trace(then->rsc, "runnable_one_or_more: %s then %s: changed", first->uuid, then->uuid);
+            pe_rsc_trace(then->rsc, "runnable_one_or_more: %s then %s: changed", first->uuid,
+                         then->uuid);
         } else {
             crm_trace("runnable_one_or_more: %s then %s", first->uuid, then->uuid);
         }
@@ -319,7 +320,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
 
     }
 
-    if ((first->flags & pe_action_runnable) && (type & pe_order_implies_then_printed) && (flags & pe_action_optional) == 0) {
+    if ((first->flags & pe_action_runnable) && (type & pe_order_implies_then_printed)
+        && (flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
         update_action_flags(then, pe_action_print_always);      /* dont care about changed */
@@ -351,7 +353,6 @@ update_action(action_t * then)
               is_set(then->flags, pe_action_runnable) ? "runnable" : "unrunnable",
               is_set(then->flags,
                      pe_action_pseudo) ? "pseudo" : then->node ? then->node->details->uname : "");
-
 
     if (is_set(then->flags, pe_action_requires_any)) {
         clear_bit(then->flags, pe_action_runnable);
@@ -483,15 +484,15 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
 
         if (action->rsc == NULL || action->node == NULL) {
             continue;
-        } else if(action->node->details != node->details) {
+        } else if (action->node->details != node->details) {
             continue;
-        } else if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        } else if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             pe_rsc_trace(action->rsc, "Skipping %s: maintainence mode", action->uuid);
             continue;
-        } else if(safe_str_neq(action->task, RSC_STOP)) {
+        } else if (safe_str_neq(action->task, RSC_STOP)) {
             continue;
-        } else if(is_not_set(action->rsc->flags, pe_rsc_managed)
-                  && is_not_set(action->rsc->flags, pe_rsc_block)) {
+        } else if (is_not_set(action->rsc->flags, pe_rsc_managed)
+                   && is_not_set(action->rsc->flags, pe_rsc_block)) {
             /*
              * If another action depends on this one, we may still end up blocking
              */
@@ -499,11 +500,12 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
             continue;
         }
 
-        pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid, node->details->uname);
+        pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
+                     node->details->uname);
         clear_bit(action->flags, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                            pe_order_optional|pe_order_runnable_left, data_set);
+                            pe_order_optional | pe_order_runnable_left, data_set);
     }
 
     return TRUE;
@@ -628,7 +630,7 @@ action2xml(action_t * action, gboolean as_input)
                 XML_ATTR_TYPE
             };
 
-            if(is_set(action->rsc->flags, pe_rsc_orphan) && action->rsc->clone_name) {
+            if (is_set(action->rsc->flags, pe_rsc_orphan) && action->rsc->clone_name) {
                 /* Do not use the 'instance free' name here as that
                  * might interfere with the instance we plan to keep.
                  * Ie. if there are more than two named /anonymous/
@@ -640,13 +642,16 @@ action2xml(action_t * action, gboolean as_input)
                  * we'll do the right thing if anyone toggles the
                  * unique flag to 'off'
                  */
-                crm_debug("Using orphan clone name %s instead of %s", action->rsc->id, action->rsc->clone_name);
+                crm_debug("Using orphan clone name %s instead of %s", action->rsc->id,
+                          action->rsc->clone_name);
                 crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
-            } else if(is_not_set(action->rsc->flags, pe_rsc_unique)) {
+            } else if (is_not_set(action->rsc->flags, pe_rsc_unique)) {
                 const char *xml_id = ID(action->rsc->xml);
-                crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id, action->rsc->clone_name);
+
+                crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id,
+                          action->rsc->clone_name);
 
                 /* ID is what we'd like client to use
                  * ID_LONG is what they might know it as instead
@@ -662,7 +667,7 @@ action2xml(action_t * action, gboolean as_input)
                  * and fall into the claus above instead
                  */
                 crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-                if(action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
+                if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
                     crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
                 } else {
                     crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
@@ -714,8 +719,7 @@ should_dump_action(action_t * action)
     CRM_CHECK(action != NULL, return FALSE);
 
     if (is_set(action->flags, pe_action_dumped)) {
-        crm_trace( "action %d (%s) was already dumped",
-                            action->id, action->uuid);
+        crm_trace("action %d (%s) was already dumped", action->id, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_pseudo) && safe_str_eq(action->task, CRM_OP_PROBED)) {
@@ -744,26 +748,25 @@ should_dump_action(action_t * action)
             } else if (safe_str_neq(wrapper->action->task, RSC_START)) {
                 /* Only interested in start operations */
             } else if (is_set(wrapper->action->flags, pe_action_dumped)) {
-                crm_trace( "action %d (%s) dependancy of %s",
-                           action->id, action->uuid, wrapper->action->uuid);
+                crm_trace("action %d (%s) dependancy of %s",
+                          action->id, action->uuid, wrapper->action->uuid);
                 return TRUE;
 
             } else if (should_dump_action(wrapper->action)) {
-                crm_trace( "action %d (%s) dependancy of %s",
-                           action->id, action->uuid, wrapper->action->uuid);
+                crm_trace("action %d (%s) dependancy of %s",
+                          action->id, action->uuid, wrapper->action->uuid);
                 return TRUE;
             }
         }
     }
 
     if (is_set(action->flags, pe_action_runnable) == FALSE) {
-        crm_trace( "action %d (%s) was not runnable",
-                            action->id, action->uuid);
+        crm_trace("action %d (%s) was not runnable", action->id, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_optional)
                && is_set(action->flags, pe_action_print_always) == FALSE) {
-        crm_trace( "action %d (%s) was optional", action->id, action->uuid);
+        crm_trace("action %d (%s) was optional", action->id, action->uuid);
         return FALSE;
 
     } else if (action->rsc != NULL && is_not_set(action->rsc->flags, pe_rsc_managed)) {
@@ -773,8 +776,8 @@ should_dump_action(action_t * action)
 
         /* make sure probes and recurring monitors go through */
         if (safe_str_neq(action->task, RSC_STATUS) && interval == NULL) {
-            crm_trace( "action %d (%s) was for an unmanaged resource (%s)",
-                                action->id, action->uuid, action->rsc->id);
+            crm_trace("action %d (%s) was for an unmanaged resource (%s)",
+                      action->id, action->uuid, action->rsc->id);
             return FALSE;
         }
     }
@@ -843,32 +846,33 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
 
     wrapper->state = pe_link_not_dumped;
     if (last_action == wrapper->action->id) {
-        crm_trace( "Input (%d) %s duplicated for %s",
-                            wrapper->action->id, wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s duplicated for %s",
+                  wrapper->action->id, wrapper->action->uuid, action->uuid);
         wrapper->state = pe_link_dup;
         return FALSE;
 
     } else if (wrapper->type == pe_order_none) {
-        crm_trace( "Input (%d) %s suppressed for %s",
-                            wrapper->action->id, wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s suppressed for %s",
+                  wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
     } else if (is_set(wrapper->action->flags, pe_action_runnable) == FALSE
                && type == pe_order_none && safe_str_neq(wrapper->action->uuid, CRM_OP_PROBED)) {
-        crm_trace( "Input (%d) %s optional (ordering) for %s",
-                            wrapper->action->id, wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s optional (ordering) for %s",
+                  wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
     } else if (is_set(action->flags, pe_action_pseudo)
                && (wrapper->type & pe_order_stonith_stop)) {
-        crm_trace( "Input (%d) %s suppressed for %s",
-                            wrapper->action->id, wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s suppressed for %s",
+                  wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
     } else if (wrapper->type == pe_order_load) {
         crm_trace("check load filter %s.%s -> %s.%s",
-                  wrapper->action->uuid, wrapper->action->node ? wrapper->action->node->details->uname : "", 
-                  action->uuid, action->node ? action->node->details->uname : "");
+                  wrapper->action->uuid,
+                  wrapper->action->node ? wrapper->action->node->details->uname : "", action->uuid,
+                  action->node ? action->node->details->uname : "");
 
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
             /* Remove the orders like :
@@ -880,13 +884,13 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
             return FALSE;
 
         } else if (wrapper->action->node == NULL || action->node == NULL
-            || wrapper->action->node->details != action->node->details) {
+                   || wrapper->action->node->details != action->node->details) {
             /* Check if the actions are for the same node, ignore otherwise */
             crm_trace("load filter - node");
             wrapper->type = pe_order_none;
             return FALSE;
 
-        } else if(is_set(wrapper->action->flags, pe_action_optional)) {
+        } else if (is_set(wrapper->action->flags, pe_action_optional)) {
             /* Check if the pre-req is optional, ignore if so */
             crm_trace("load filter - optional");
             wrapper->type = pe_order_none;
@@ -906,8 +910,8 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
 
     } else if (is_set(wrapper->action->flags, pe_action_dumped)
                || should_dump_action(wrapper->action)) {
-        crm_trace( "Input (%d) %s should be dumped for %s", wrapper->action->id,
-                            wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s should be dumped for %s", wrapper->action->id,
+                  wrapper->action->uuid, action->uuid);
         goto dump;
 
 #if 0
@@ -915,32 +919,31 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                && is_set(wrapper->action->flags, pe_action_pseudo)
                && wrapper->action->rsc->variant != pe_native) {
         crm_crit("Input (%d) %s should be dumped for %s",
-                   wrapper->action->id, wrapper->action->uuid, action->uuid);
+                 wrapper->action->id, wrapper->action->uuid, action->uuid);
         goto dump;
 #endif
     } else if (is_set(wrapper->action->flags, pe_action_optional) == TRUE
                && is_set(wrapper->action->flags, pe_action_print_always) == FALSE) {
-        crm_trace( "Input (%d) %s optional for %s", wrapper->action->id,
-                            wrapper->action->uuid, action->uuid);
-        crm_trace( "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x",
-                            wrapper->action->id, wrapper->action->uuid, wrapper->action->node,
-                            is_set(wrapper->action->flags, pe_action_pseudo),
-                            is_set(wrapper->action->flags, pe_action_runnable),
-                            is_set(wrapper->action->flags, pe_action_optional),
-                            is_set(wrapper->action->flags, pe_action_print_always), wrapper->type);
+        crm_trace("Input (%d) %s optional for %s", wrapper->action->id,
+                  wrapper->action->uuid, action->uuid);
+        crm_trace("Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x",
+                  wrapper->action->id, wrapper->action->uuid, wrapper->action->node,
+                  is_set(wrapper->action->flags, pe_action_pseudo),
+                  is_set(wrapper->action->flags, pe_action_runnable),
+                  is_set(wrapper->action->flags, pe_action_optional),
+                  is_set(wrapper->action->flags, pe_action_print_always), wrapper->type);
         return FALSE;
     }
 
   dump:
-    crm_trace( "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
-                        wrapper->action->id,
-                        wrapper->action->uuid,
-                        wrapper->action->node,
-                        is_set(wrapper->action->flags, pe_action_pseudo),
-                        is_set(wrapper->action->flags, pe_action_runnable),
-                        is_set(wrapper->action->flags, pe_action_optional),
-                        is_set(wrapper->action->flags, pe_action_print_always),
-                        wrapper->type, action->uuid);
+    crm_trace("Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
+              wrapper->action->id,
+              wrapper->action->uuid,
+              wrapper->action->node,
+              is_set(wrapper->action->flags, pe_action_pseudo),
+              is_set(wrapper->action->flags, pe_action_runnable),
+              is_set(wrapper->action->flags, pe_action_optional),
+              is_set(wrapper->action->flags, pe_action_print_always), wrapper->type, action->uuid);
     return TRUE;
 }
 

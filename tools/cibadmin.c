@@ -181,19 +181,20 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 static void
-print_xml_output(xmlNode *xml)
+print_xml_output(xmlNode * xml)
 {
     char *buffer;
+
     if (!xml) {
         return;
     } else if (xml->type != XML_ELEMENT_NODE) {
         return;
     }
 
-    if(command_options & cib_xpath_address) {
+    if (command_options & cib_xpath_address) {
         const char *id = crm_element_value(xml, XML_ATTR_ID);
 
-        if(safe_str_eq((const char *)xml->name, "xpath-query")) {
+        if (safe_str_eq((const char *)xml->name, "xpath-query")) {
             xmlNode *child = NULL;
 
             for (child = xml->children; child; child = child->next) {
@@ -553,7 +554,8 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 
     } else if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, NULL);
+        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options,
+                               NULL);
 
     } else {
         crm_err("You must specify an operation");

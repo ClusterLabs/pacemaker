@@ -104,7 +104,8 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     }
 
     new_graph->num_synapses++;
-    CRM_CHECK(new_synapse->id >= 0, free(new_synapse); return NULL);
+    CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
+              return NULL);
 
     crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
 
@@ -195,11 +196,13 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
     if (xml_graph != NULL) {
         t_id = crm_element_value(xml_graph, "transition_id");
-        CRM_CHECK(t_id != NULL, free(new_graph); return NULL);
+        CRM_CHECK(t_id != NULL, free(new_graph);
+                  return NULL);
         new_graph->id = crm_parse_int(t_id, "-1");
 
         time = crm_element_value(xml_graph, "cluster-delay");
-        CRM_CHECK(time != NULL, free(new_graph); return NULL);
+        CRM_CHECK(time != NULL, free(new_graph);
+                  return NULL);
         new_graph->network_delay = crm_get_msec(time);
 
         time = crm_element_value(xml_graph, "stonith-timeout");
@@ -298,7 +301,8 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     CRM_CHECK(action->type == action_type_rsc, return NULL);
 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
-    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad"); return NULL);
+    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad");
+              return NULL);
 
     op = calloc(1, sizeof(lrmd_event_data_t));
 

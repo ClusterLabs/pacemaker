@@ -84,7 +84,7 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 static int
-cib_remove_node(uint32_t id, const char *name) 
+cib_remove_node(uint32_t id, const char *name)
 {
     int rc;
     cib_t *cib = NULL;
@@ -103,12 +103,12 @@ cib_remove_node(uint32_t id, const char *name)
     cib->cmds->signon(cib, crm_system_name, cib_command);
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
-    if(rc != pcmk_ok) {
-        printf("Could not remove %s from "XML_CIB_TAG_NODES": %s", name, pcmk_strerror(rc));
+    if (rc != pcmk_ok) {
+        printf("Could not remove %s from " XML_CIB_TAG_NODES ": %s", name, pcmk_strerror(rc));
     }
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
-    if(rc != pcmk_ok) {
-        printf("Could not remove %s from "XML_CIB_TAG_STATUS": %s", name, pcmk_strerror(rc));
+    if (rc != pcmk_ok) {
+        printf("Could not remove %s from " XML_CIB_TAG_STATUS ": %s", name, pcmk_strerror(rc));
     }
 
     cib->cmds->signoff(cib);
@@ -149,7 +149,7 @@ crmd_remove_node_cache(const char *id)
 
     errno = 0;
     n = strtol(id, &endptr, 10);
-    if(errno != 0 || endptr == id || *endptr != '\0') {
+    if (errno != 0 || endptr == id || *endptr != '\0') {
         /* Argument was not a nodeid */
         n = 0;
         name = strdup(id);
@@ -160,24 +160,20 @@ crmd_remove_node_cache(const char *id)
     crm_trace("Removing %s aka. %s from the membership cache", name, id);
 
     msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if(n) {
+    if (n) {
         crm_xml_add_int(msg_data, XML_ATTR_ID, n);
     }
     crm_xml_add(msg_data, XML_ATTR_UNAME, name);
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
-        msg_data,
-        NULL,
-        CRM_SYSTEM_CRMD,
-        "crm_node",
-        admin_uuid);
+                         msg_data, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
-    if(rc > 0) {
+    if (rc > 0) {
         rc = cib_remove_node(n, name);
     }
 
-rm_node_cleanup:
+  rm_node_cleanup:
     if (conn) {
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
@@ -568,26 +564,28 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
     if (msg) {
         xmlNode *node = NULL;
-        
+
         crm_log_xml_trace(msg, "message");
-        
+
         for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
             const char *uname = crm_element_value(node, "uname");
+
             if (command == 'l') {
                 int id = 0;
+
                 crm_element_value_int(node, "id", &id);
                 fprintf(stdout, "%u %s\n", id, uname);
-                
+
             } else if (command == 'p') {
                 fprintf(stdout, "%s ", uname);
             }
         }
         free_xml(msg);
-        
+
         if (command == 'p') {
             fprintf(stdout, "\n");
         }
-        
+
         crm_exit(0);
     }
 
@@ -613,11 +611,10 @@ try_corosync(int command, enum cluster_type_e stack)
     mainloop_io_t *ipc = NULL;
     GMainLoop *amainloop = NULL;
 
-    struct ipc_client_callbacks node_callbacks = 
-        {
-            .dispatch = node_mcp_dispatch,
-            .destroy = node_mcp_destroy
-        };
+    struct ipc_client_callbacks node_callbacks = {
+        .dispatch = node_mcp_dispatch,
+        .destroy = node_mcp_destroy
+    };
 
     switch (command) {
         case 'R':
@@ -673,11 +670,14 @@ try_corosync(int command, enum cluster_type_e stack)
 
         case 'l':
         case 'p':
-            /* Go to pacemakerd */ 
+            /* Go to pacemakerd */
             amainloop = g_main_new(FALSE);
-            ipc = mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL, &node_callbacks);
-            if(ipc != NULL) {
+            ipc =
+                mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL,
+                                        &node_callbacks);
+            if (ipc != NULL) {
                 xmlNode *poke = create_xml_node(NULL, "poke");
+
                 crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);
                 free_xml(poke);
                 g_main_run(amainloop);
@@ -693,12 +693,14 @@ static gboolean
 try_openais(int command, enum cluster_type_e stack)
 {
     static crm_cluster_t cluster;
+
     cluster.destroy = ais_membership_destroy;
     cluster.cs_dispatch = ais_membership_dispatch;
-    
+
     if (init_cs_connection_once(&cluster)) {
 
         GMainLoop *amainloop = NULL;
+
         switch (command) {
             case 'R':
                 send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
@@ -815,11 +817,11 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    if(command == 'n') {
+    if (command == 'n') {
         fprintf(stdout, "%s\n", get_local_node_name());
         crm_exit(0);
 
-    } else if(command == 'N') {
+    } else if (command == 'N') {
         fprintf(stdout, "%s\n", get_node_name(nodeid));
         crm_exit(0);
     }

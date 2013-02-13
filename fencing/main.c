@@ -61,28 +61,28 @@ static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
 
 static int32_t
-st_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    if(stonith_shutdown_flag) {
+    if (stonith_shutdown_flag) {
         crm_info("Ignoring new client [%d] during shutdown", crm_ipcs_client_pid(c));
         return -EPERM;
     }
 
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
 static void
-st_ipc_created(qb_ipcs_connection_t *c)
+st_ipc_created(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection created for %p", c);
 }
 
 /* Exit code means? */
 static int32_t
-st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
+st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
@@ -97,17 +97,18 @@ st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         return 0;
     }
 
-    if(c->name == NULL) {
+    if (c->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
-        if(value == NULL) {
+
+        if (value == NULL) {
             value = "unknown";
         }
         c->name = g_strdup_printf("%s.%u", value, c->pid);
     }
 
-    if(flags & crm_ipc_client_response) {
-        CRM_LOG_ASSERT(c->request_id == 0); /* This means the client has two synchronous events in-flight */
-        c->request_id = id;                 /* Reply only to the last one */
+    if (flags & crm_ipc_client_response) {
+        CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
+        c->request_id = id;     /* Reply only to the last one */
     }
 
     crm_xml_add(request, F_STONITH_CLIENTID, c->id);
@@ -118,7 +119,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
     stonith_command(c, id, flags, request, NULL);
 
   cleanup:
-    if(c == NULL) {
+    if (c == NULL) {
         crm_log_xml_notice(request, "Invalid client");
     }
 
@@ -128,7 +129,7 @@ st_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-st_ipc_closed(qb_ipcs_connection_t *c)
+st_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
 
@@ -140,18 +141,18 @@ st_ipc_closed(qb_ipcs_connection_t *c)
 }
 
 static void
-st_ipc_destroy(qb_ipcs_connection_t *c)
+st_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p destroyed", c);
 }
 
 static void
-stonith_peer_callback(xmlNode * msg, void* private_data)
+stonith_peer_callback(xmlNode * msg, void *private_data)
 {
     const char *remote_peer = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_STONITH_OPERATION);
 
-    if(crm_str_eq(op, "poke", TRUE)) {
+    if (crm_str_eq(op, "poke", TRUE)) {
         return;
     }
 
@@ -161,16 +162,18 @@ stonith_peer_callback(xmlNode * msg, void* private_data)
 
 #if SUPPORT_HEARTBEAT
 static void
-stonith_peer_hb_callback(HA_Message * msg, void* private_data)
+stonith_peer_hb_callback(HA_Message * msg, void *private_data)
 {
     xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
+
     stonith_peer_callback(xml, private_data);
     free_xml(xml);
 }
+
 static void
 stonith_peer_hb_destroy(gpointer user_data)
 {
-    if(stonith_shutdown_flag) {
+    if (stonith_shutdown_flag) {
         crm_info("Heartbeat disconnection complete... exiting");
     } else {
         crm_err("Heartbeat connection lost!  Exiting.");
@@ -179,15 +182,15 @@ stonith_peer_hb_destroy(gpointer user_data)
 }
 #endif
 
-
 #if SUPPORT_COROSYNC
-static gboolean stonith_peer_ais_callback(int kind, const char *from, const char *data)
+static gboolean
+stonith_peer_ais_callback(int kind, const char *from, const char *data)
 {
     xmlNode *xml = NULL;
 
-    if(kind == crm_class_cluster) {
+    if (kind == crm_class_cluster) {
         xml = string2xml(data);
-        if(xml == NULL) {
+        if (xml == NULL) {
             goto bail;
         }
         crm_xml_add(xml, F_ORIG, from);
@@ -212,8 +215,8 @@ stonith_peer_ais_destroy(gpointer user_data)
 }
 #endif
 
-void do_local_reply(xmlNode *notify_src, const char *client_id,
-             gboolean sync_reply, gboolean from_peer)
+void
+do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
 {
     /* send callback to originating child */
     crm_client_t *client_obj = NULL;
@@ -223,48 +226,49 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
     client_obj = crm_client_get_by_id(client_id);
 
     crm_trace("Sending callback to request originator");
-    if(client_obj == NULL) {
+    if (client_obj == NULL) {
         local_rc = -1;
         crm_trace("No client to sent the response to.  F_STONITH_CLIENTID not set.");
 
     } else {
         int rid = 0;
 
-        if(sync_reply) {
+        if (sync_reply) {
             CRM_LOG_ASSERT(client_obj->request_id);
 
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
             crm_trace("Sending response %d to %s %s",
-                      rid, client_obj->name, from_peer?"(originator of delegated request)":"");
+                      rid, client_obj->name, from_peer ? "(originator of delegated request)" : "");
 
         } else {
             crm_trace("Sending an event to %s %s",
-                      client_obj->name, from_peer?"(originator of delegated request)":"");
+                      client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
         local_rc = crm_ipcs_send(client_obj, rid, notify_src, !sync_reply);
     }
 
-    if(local_rc < pcmk_ok && client_obj != NULL) {
+    if (local_rc < pcmk_ok && client_obj != NULL) {
         crm_warn("%sSync reply to %s failed: %s",
-                 sync_reply?"":"A-",
-                 client_obj?client_obj->name:"<unknown>", pcmk_strerror(local_rc));
+                 sync_reply ? "" : "A-",
+                 client_obj ? client_obj->name : "<unknown>", pcmk_strerror(local_rc));
     }
 }
 
-long long get_stonith_flag(const char *name)
+long long
+get_stonith_flag(const char *name)
 {
-    if(safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
+    if (safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
         return 0x01;
 
-    } else if(safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
+    } else if (safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
         return 0x04;
 
-    } else if(safe_str_eq(name, STONITH_OP_DEVICE_DEL)) {
+    } else if (safe_str_eq(name, STONITH_OP_DEVICE_DEL)) {
         return 0x10;
-   }
+    }
     return 0;
 }
 
@@ -282,18 +286,20 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     type = crm_element_value(update_msg, F_SUBTYPE);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
-    if(client->ipcs == NULL) {
+    if (client->ipcs == NULL) {
         crm_trace("Skipping client with NULL channel");
         return;
     }
 
-    if(client->options & get_stonith_flag(type)) {
-        int rc = crm_ipcs_send(client, 0, update_msg, crm_ipc_server_event|crm_ipc_server_error);
-        if(rc <= 0) {
+    if (client->options & get_stonith_flag(type)) {
+        int rc = crm_ipcs_send(client, 0, update_msg, crm_ipc_server_event | crm_ipc_server_error);
+
+        if (rc <= 0) {
             crm_warn("%s notification of client %s.%.6s failed: %s (%d)",
                      type, crm_client_name(client), client->id, pcmk_strerror(rc), rc);
         } else {
-            crm_trace("Sent %s notification to client %s.%.6s", type, crm_client_name(client), client->id);
+            crm_trace("Sent %s notification to client %s.%.6s", type, crm_client_name(client),
+                      client->id);
         }
     }
 }
@@ -328,19 +334,19 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
 }
 
 void
-do_stonith_notify(int options, const char *type, int result, xmlNode *data)
+do_stonith_notify(int options, const char *type, int result, xmlNode * data)
 {
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
 
-    CRM_CHECK(type != NULL, ;);
+    CRM_CHECK(type != NULL,;);
 
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);
     crm_xml_add(update_msg, F_STONITH_OPERATION, type);
     crm_xml_add_int(update_msg, F_STONITH_RC, result);
 
-    if(data != NULL) {
+    if (data != NULL) {
         add_message_xml(update_msg, F_STONITH_CALLDATA, data);
     }
 
@@ -350,24 +356,25 @@ do_stonith_notify(int options, const char *type, int result, xmlNode *data)
     crm_trace("Notify complete");
 }
 
-static stonith_key_value_t *parse_device_list(const char *devices)
+static stonith_key_value_t *
+parse_device_list(const char *devices)
 {
     int lpc = 0;
     int max = 0;
     int last = 0;
     stonith_key_value_t *output = NULL;
 
-    if(devices == NULL) {
+    if (devices == NULL) {
         return output;
     }
 
     max = strlen(devices);
-    for(lpc = 0; lpc <= max; lpc++) {
-        if(devices[lpc] == ',' || devices[lpc] == 0) {
+    for (lpc = 0; lpc <= max; lpc++) {
+        if (devices[lpc] == ',' || devices[lpc] == 0) {
             char *line = NULL;
 
             line = calloc(1, 2 + lpc - last);
-            snprintf(line, 1 + lpc - last, "%s", devices+last);
+            snprintf(line, 1 + lpc - last, "%s", devices + last);
             output = stonith_key_value_add(output, NULL, line);
             free(line);
 
@@ -378,7 +385,8 @@ static stonith_key_value_t *parse_device_list(const char *devices)
     return output;
 }
 
-static void topology_remove_helper(const char *node, int level)
+static void
+topology_remove_helper(const char *node, int level)
 {
     int rc;
     char *desc = NULL;
@@ -401,7 +409,8 @@ static void topology_remove_helper(const char *node, int level)
     free(desc);
 }
 
-static void topology_register_helper(const char *node, int level, stonith_key_value_t *device_list)
+static void
+topology_register_helper(const char *node, int level, stonith_key_value_t * device_list)
 {
     int rc;
     char *desc = NULL;
@@ -420,18 +429,20 @@ static void topology_register_helper(const char *node, int level, stonith_key_va
     free(desc);
 }
 
-static void remove_cib_device(xmlXPathObjectPtr xpathObj)
+static void
+remove_cib_device(xmlXPathObjectPtr xpathObj)
 {
     int max = 0, lpc = 0;
 
-    if(xpathObj && xpathObj->nodesetval) {
+    if (xpathObj && xpathObj->nodesetval) {
         max = xpathObj->nodesetval->nodeNr;
     }
 
-    for(lpc = 0; lpc < max; lpc++) {
+    for (lpc = 0; lpc < max; lpc++) {
         const char *rsc_id = NULL;
         const char *standard = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
+
         CRM_CHECK(match != NULL, continue);
 
         standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
@@ -446,47 +457,50 @@ static void remove_cib_device(xmlXPathObjectPtr xpathObj)
     }
 }
 
-static void remove_fencing_topology(xmlXPathObjectPtr xpathObj)
+static void
+remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
     int max = 0, lpc = 0;
 
-    if(xpathObj && xpathObj->nodesetval) {
+    if (xpathObj && xpathObj->nodesetval) {
         max = xpathObj->nodesetval->nodeNr;
     }
 
-    for(lpc = 0; lpc < max; lpc++) {
+    for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
+
         CRM_CHECK(match != NULL, continue);
 
-        if(crm_element_value(match, XML_DIFF_MARKER)) {
+        if (crm_element_value(match, XML_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
             const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
 
             crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-            if(target == NULL) {
+            if (target == NULL) {
                 crm_err("Invalid fencing target in element %s", ID(match));
 
-            } else if(index <= 0) {
+            } else if (index <= 0) {
                 crm_err("Invalid level for %s in element %s", target, ID(match));
 
             } else {
                 topology_remove_helper(target, index);
             }
-     /* } else { Deal with modifications during the 'addition' stage */
+            /* } else { Deal with modifications during the 'addition' stage */
         }
     }
 }
 
-static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
+static void
+register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
 {
     int max = 0, lpc = 0;
 
-    if(xpathObj && xpathObj->nodesetval) {
+    if (xpathObj && xpathObj->nodesetval) {
         max = xpathObj->nodesetval->nodeNr;
     }
 
-    for(lpc = 0; lpc < max; lpc++) {
+    for (lpc = 0; lpc < max; lpc++) {
         const char *rsc_id = NULL;
         const char *agent = NULL;
         const char *standard = NULL;
@@ -520,12 +534,9 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
             params = stonith_key_value_add(params, name, value);
         }
 
-        data = create_device_registration_xml(rsc_id,
-            provider,
-            agent,
-            params);
+        data = create_device_registration_xml(rsc_id, provider, agent, params);
 
-        if(force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
+        if (force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
             stonith_device_register(data, NULL, TRUE);
         } else {
             stonith_device_remove(rsc_id, TRUE);
@@ -534,20 +545,22 @@ static void register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
     }
 }
 
-static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
+static void
+register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 {
     int max = 0, lpc = 0;
 
-    if(xpathObj && xpathObj->nodesetval) {
+    if (xpathObj && xpathObj->nodesetval) {
         max = xpathObj->nodesetval->nodeNr;
     }
 
-    for(lpc = 0; lpc < max; lpc++) {
+    for (lpc = 0; lpc < max; lpc++) {
         int index = 0;
         const char *target;
         const char *dev_list;
         stonith_key_value_t *devices = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
+
         CRM_CHECK(match != NULL, continue);
 
         crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
@@ -557,17 +570,17 @@ static void register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force
 
         crm_trace("Updating %s[%d] (%s) to %s", target, index, ID(match), dev_list);
 
-        if(target == NULL) {
+        if (target == NULL) {
             crm_err("Invalid fencing target in element %s", ID(match));
 
-        } else if(index <= 0) {
+        } else if (index <= 0) {
             crm_err("Invalid level for %s in element %s", target, ID(match));
 
-        } else if(force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
+        } else if (force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
             /* Addition */
             topology_register_helper(target, index, devices);
 
-        } else { /* Modification */
+        } else {                /* Modification */
             /* Remove then re-add */
             topology_remove_helper(target, index);
             topology_register_helper(target, index, devices);
@@ -609,13 +622,13 @@ fencing_topology_init(xmlNode * msg)
 
     register_fencing_topology(xpathObj, TRUE);
 
-    if(xpathObj) {
+    if (xpathObj) {
         xmlXPathFreeObject(xpathObj);
     }
 }
 
 static void
-cib_stonith_devices_init(xmlNode *msg)
+cib_stonith_devices_init(xmlNode * msg)
 {
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_CIB_TAG_RESOURCE;
@@ -625,7 +638,7 @@ cib_stonith_devices_init(xmlNode *msg)
     /* Grab everything */
     xpathObj = xpath_search(msg, xpath);
 
-    if(xpathObj) {
+    if (xpathObj) {
         register_cib_device(xpathObj, TRUE);
         xmlXPathFreeObject(xpathObj);
     }
@@ -635,8 +648,10 @@ static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
 
-    const char *xpath_add = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE;
-    const char *xpath_del = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE;
+    const char *xpath_add =
+        "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE;
+    const char *xpath_del =
+        "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE;
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process deletions */
@@ -666,7 +681,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
     remove_fencing_topology(xpathObj);
 
-    if(xpathObj) {
+    if (xpathObj) {
         xmlXPathFreeObject(xpathObj);
     }
 
@@ -676,7 +691,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
     register_fencing_topology(xpathObj, FALSE);
 
-    if(xpathObj) {
+    if (xpathObj) {
         xmlXPathFreeObject(xpathObj);
     }
 }
@@ -700,7 +715,7 @@ stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
     crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
-    if(mainloop != NULL && g_main_is_running(mainloop)) {
+    if (mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
     } else {
         stonith_cleanup();
@@ -713,7 +728,7 @@ cib_t *cib = NULL;
 static void
 cib_connection_destroy(gpointer user_data)
 {
-    if(stonith_shutdown_flag) {
+    if (stonith_shutdown_flag) {
         crm_info("Connection to the CIB closed.");
         return;
     } else {
@@ -725,15 +740,14 @@ cib_connection_destroy(gpointer user_data)
     stonith_shutdown(0);
 }
 
-
 static void
 stonith_cleanup(void)
 {
-    if(cib) {
+    if (cib) {
         cib->cmds->signoff(cib);
     }
 
-    if(ipcs) {
+    if (ipcs) {
         qb_ipcs_destroy(ipcs);
     }
     crm_peer_destroy();
@@ -757,25 +771,25 @@ static void
 setup_cib(void)
 {
     static void *cib_library = NULL;
-    static cib_t *(*cib_new_fn)(void) = NULL;
-    static const char *(*cib_err_fn)(int) = NULL;
+    static cib_t *(*cib_new_fn) (void) = NULL;
+    static const char *(*cib_err_fn) (int) = NULL;
 
     int rc, retries = 0;
 
-    if(cib_library == NULL) {
+    if (cib_library == NULL) {
         cib_library = dlopen(CIB_LIBRARY, RTLD_LAZY);
     }
-    if(cib_library && cib_new_fn == NULL) {
+    if (cib_library && cib_new_fn == NULL) {
         cib_new_fn = dlsym(cib_library, "cib_new");
     }
-    if(cib_library && cib_err_fn == NULL) {
+    if (cib_library && cib_err_fn == NULL) {
         cib_err_fn = dlsym(cib_library, "pcmk_strerror");
     }
-    if(cib_new_fn != NULL) {
-        cib = (*cib_new_fn)();
+    if (cib_new_fn != NULL) {
+        cib = (*cib_new_fn) ();
     }
 
-    if(cib == NULL) {
+    if (cib == NULL) {
         crm_err("No connection to the CIB");
         return;
     }
@@ -783,26 +797,25 @@ setup_cib(void)
     do {
         sleep(retries);
         rc = cib->cmds->signon(cib, CRM_SYSTEM_CRMD, cib_command);
-    } while(rc == -ENOTCONN && ++retries < 5);
+    } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB service: %d %p", rc, cib_err_fn);
 
-    } else if (pcmk_ok != cib->cmds->add_notify_callback(
-                   cib, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
+    } else if (pcmk_ok !=
+               cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
         crm_err("Could not set CIB notification callback");
 
     } else {
         rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
-        cib->cmds->register_callback(
-            cib, rc, 120, FALSE, NULL, "init_cib_cache_cb", init_cib_cache_cb);
+        cib->cmds->register_callback(cib, rc, 120, FALSE, NULL, "init_cib_cache_cb",
+                                     init_cib_cache_cb);
         cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
         crm_notice("Watching for stonith topology changes");
     }
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks =
-{
+struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = st_ipc_accept,
     .connection_created = st_ipc_created,
     .msg_process = st_ipc_dispatch,
@@ -817,20 +830,20 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
      * This is a hack until we can send to a nodeid and/or we fix node name lookups
      * These messages are ignored in stonith_peer_callback()
      */
-        xmlNode *query = create_xml_node(NULL, "stonith_command");
+    xmlNode *query = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
-        crm_xml_add(query, F_TYPE, T_STONITH_NG);
-        crm_xml_add(query, F_STONITH_OPERATION, "poke");
+    crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
+    crm_xml_add(query, F_TYPE, T_STONITH_NG);
+    crm_xml_add(query, F_STONITH_OPERATION, "poke");
 
-        crm_debug("Broadcasting our uname because of node %u", node->id);
-        send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
+    crm_debug("Broadcasting our uname because of node %u", node->id);
+    send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
-        free_xml(query);
+    free_xml(query);
 }
 
 int
-main(int argc, char ** argv)
+main(int argc, char **argv)
 {
     int flag;
     int rc = 0;
@@ -842,8 +855,8 @@ main(int argc, char ** argv)
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options,
-        "Provides a summary of cluster's current state."
-        "\n\nOutputs varying levels of detail in a number of different formats.\n");
+                    "Provides a summary of cluster's current state."
+                    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
@@ -851,89 +864,112 @@ main(int argc, char ** argv)
             break;
         }
 
-        switch(flag) {
-        case 'V':
-            crm_bump_log_level(argc, argv);
-            break;
-        case 's':
-            stand_alone = TRUE;
-            break;
-        case 'c':
-            stand_alone = FALSE;
-            no_cib_connect = TRUE;
-            break;
-        case '$':
-        case '?':
-            crm_help(flag, EX_OK);
-            break;
-        default:
-            ++argerr;
-            break;
+        switch (flag) {
+            case 'V':
+                crm_bump_log_level(argc, argv);
+                break;
+            case 's':
+                stand_alone = TRUE;
+                break;
+            case 'c':
+                stand_alone = FALSE;
+                no_cib_connect = TRUE;
+                break;
+            case '$':
+            case '?':
+                crm_help(flag, EX_OK);
+                break;
+            default:
+                ++argerr;
+                break;
         }
     }
 
-    if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
         printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
         printf("<resource-agent name=\"stonithd\">\n");
         printf(" <version>1.0</version>\n");
-        printf(" <longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
+        printf
+            (" <longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
         printf(" <shortdesc lang=\"en\">Options available for all stonith resources</shortdesc>\n");
         printf(" <parameters>\n");
 
         printf("  <parameter name=\"stonith-timeout\" unique=\"0\">\n");
-        printf("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete per a stonith device.</shortdesc>\n");
-        printf("    <longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">How long to wait for the STONITH action to complete per a stonith device.</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
         printf("    <content type=\"time\" default=\"60s\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
-        printf("    <shortdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</shortdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</shortdesc>\n");
         printf("    <content type=\"integer\" default=\"0\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
-        printf("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
-        printf("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
-               "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
-               "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
-               "     </longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
+             "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
+             "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+             "     </longdesc>\n");
         printf("    <content type=\"string\" default=\"port\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
-        printf("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
-        printf("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTLIST);
-        printf("    <shortdesc lang=\"en\">A list of machines controlled by this device (Optional unless %s=static-list).</shortdesc>\n", STONITH_ATTR_HOSTCHECK);
+        printf
+            ("    <shortdesc lang=\"en\">A list of machines controlled by this device (Optional unless %s=static-list).</shortdesc>\n",
+             STONITH_ATTR_HOSTCHECK);
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
-        printf("    <shortdesc lang=\"en\">How to determin which machines are controlled by the device.</shortdesc>\n");
-        printf("    <longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n", STONITH_ATTR_HOSTLIST);
+        printf
+            ("    <shortdesc lang=\"en\">How to determin which machines are controlled by the device.</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n",
+             STONITH_ATTR_HOSTLIST);
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
-        for(lpc = 0; lpc < DIMOF(actions); lpc++) {
+        for (lpc = 0; lpc < DIMOF(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
-            printf("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n", actions[lpc]);
-            printf("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
-                   "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n", actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",
+                 actions[lpc]);
+            printf
+                ("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
+                 "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n",
+                 actions[lpc]);
             printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
             printf("  </parameter>\n");
 
             printf("  <parameter name=\"pcmk_%s_timeout\" unique=\"0\">\n", actions[lpc]);
-            printf("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n", actions[lpc]);
-            printf("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
-                   "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n", actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n",
+                 actions[lpc]);
+            printf
+                ("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
+                 "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n",
+                 actions[lpc]);
             printf("    <content type=\"time\" default=\"60s\"/>\n");
             printf("  </parameter>\n");
 
             printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
-            printf("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n", actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n",
+                 actions[lpc]);
             printf("    <longdesc lang=\"en\">Some devices do not support multiple connections."
                    " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining."
                    " Use this option to alter the number of times Pacemaker retries '%s' actions before giving up."
@@ -959,21 +995,21 @@ main(int argc, char ** argv)
 
     crm_peer_init();
 
-    if(stand_alone == FALSE) {
+    if (stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT
         cluster.hb_conn = NULL;
         cluster.hb_dispatch = stonith_peer_hb_callback;
         cluster.destroy = stonith_peer_hb_destroy;
 #endif
 
-        if(is_openais_cluster()) {
+        if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
             cluster.destroy = stonith_peer_ais_destroy;
             cluster.cs_dispatch = stonith_peer_ais_callback;
 #endif
         }
 
-        if(crm_cluster_connect(&cluster) == FALSE) {
+        if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(100);
         } else {
@@ -991,18 +1027,15 @@ main(int argc, char ** argv)
 
     crm_set_status_callback(&st_peer_update_callback);
 
-    device_list = g_hash_table_new_full(
-        crm_str_hash, g_str_equal, NULL, free_device);
+    device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_device);
 
-    topology = g_hash_table_new_full(
-        crm_str_hash, g_str_equal, NULL, free_topology_entry);
+    topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
     ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, &ipc_callbacks);
-    if(ipcs == NULL) {
+    if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         crm_exit(100);
     }
-
 #if SUPPORT_STONITH_CONFIG
     if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
         standalone_cfg_commit();
@@ -1017,7 +1050,7 @@ main(int argc, char ** argv)
     stonith_cleanup();
 
 #if SUPPORT_HEARTBEAT
-    if(cluster.hb_conn) {
+    if (cluster.hb_conn) {
         cluster.hb_conn->llc_ops->delete(cluster.hb_conn);
     }
 #endif

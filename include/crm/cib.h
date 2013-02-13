@@ -130,11 +130,9 @@ typedef struct cib_api_operations_s {
 
     int (*register_notification) (cib_t * cib, const char *callback, int enabled);
 
-    gboolean(*register_callback) (cib_t * cib, int call_id, int timeout, gboolean only_success,
+     gboolean(*register_callback) (cib_t * cib, int call_id, int timeout, gboolean only_success,
                                    void *user_data, const char *callback_name,
                                    void (*callback) (xmlNode *, int, int, xmlNode *, void *));
-
-
 
 } cib_api_operations_t;
 
@@ -159,7 +157,7 @@ cib_t *cib_new(void);
 cib_t *cib_native_new(void);
 cib_t *cib_file_new(const char *filename);
 cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
-                             gboolean encrypted);
+                      gboolean encrypted);
 
 cib_t *cib_new_no_shadow(void);
 char *get_shadow_file(const char *name);

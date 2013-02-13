@@ -4,11 +4,12 @@
 #include <string.h>
 /* Find the first occurrence of C in S or the final NUL byte.  */
 char *
-strchrnul (const char *s, int c_in)
+strchrnul(const char *s, int c_in)
 {
-  char c = c_in;
-  while (*s && (*s != c))
-    s++;
+    char c = c_in;
 
-  return (char *) s;
+    while (*s && (*s != c))
+        s++;
+
+    return (char *)s;
 }

@@ -189,7 +189,7 @@ try_connect(void)
         rc = lrmd_conn->cmds->connect_async(lrmd_conn, "lrmd", 3000);
 
         if (!rc) {
-            return; /* we'll hear back in async callback */
+            return;             /* we'll hear back in async callback */
         }
         sleep(1);
     }

@@ -26,25 +26,26 @@
  *	Small replacement function for setenv()
  */
 int
-setenv(const char *name, const char * value, int why)
+setenv(const char *name, const char *value, int why)
 {
-	int rc = -1;
+    int rc = -1;
 
-	if ( name && value ) {
-		char * envp = NULL;
-		envp = malloc(strlen(name)+strlen(value)+2);
-		if (envp) {
-			/*
-			 * Unfortunately, the putenv API guarantees memory leaks when
-			 * changing environment variables repeatedly...   :-(
-			 */
+    if (name && value) {
+        char *envp = NULL;
 
-			sprintf(envp, "%s=%s", name, value);
+        envp = malloc(strlen(name) + strlen(value) + 2);
+        if (envp) {
+            /*
+             * Unfortunately, the putenv API guarantees memory leaks when
+             * changing environment variables repeatedly...   :-(
+             */
 
-			/* Cannot free envp (!) */
-			rc = putenv(envp);
-		}
-	
-	}
-	return(rc);
+            sprintf(envp, "%s=%s", name, value);
+
+            /* Cannot free envp (!) */
+            rc = putenv(envp);
+        }
+
+    }
+    return (rc);
 }

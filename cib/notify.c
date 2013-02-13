@@ -40,10 +40,9 @@
 
 int pending_updates = 0;
 
-struct cib_notification_s
-{
-        xmlNode *msg;
-        struct iovec *iov;
+struct cib_notification_s {
+    xmlNode *msg;
+    struct iovec *iov;
 };
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
@@ -98,10 +97,12 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (is_set(client->options, cib_notify_diff) && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_replace) && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
+    } else if (is_set(client->options, cib_notify_replace)
+               && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_confirm) && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+    } else if (is_set(client->options, cib_notify_confirm)
+               && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
         do_send = TRUE;
 
     } else if (is_set(client->options, cib_notify_pre) && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
@@ -112,15 +113,15 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (do_send) {
-        switch(client->kind) {
+        switch (client->kind) {
             case CRM_CLIENT_IPC:
-                if(crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
+                if (crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
-#  ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef HAVE_GNUTLS_GNUTLS_H
             case CRM_CLIENT_TLS:
-#  endif
+#endif
             case CRM_CLIENT_TCP:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
                 crm_remote_send(client->remote, update->msg);
@@ -132,7 +133,8 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-static void cib_notify_send(xmlNode *xml)
+static void
+cib_notify_send(xmlNode * xml)
 {
     struct iovec *iov;
     struct cib_notification_s update;
@@ -141,7 +143,7 @@ static void cib_notify_send(xmlNode *xml)
 
     crm_trace("Notifying clients");
 
-    if(rc > 0) {
+    if (rc > 0) {
         update.msg = xml;
         update.iov = iov;
         g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
@@ -150,7 +152,7 @@ static void cib_notify_send(xmlNode *xml)
         crm_notice("Notification failed: %s (%d)", pcmk_strerror(rc), rc);
     }
 
-    if(iov) {
+    if (iov) {
         free(iov[0].iov_base);
         free(iov[1].iov_base);
         free(iov);
@@ -216,8 +218,7 @@ cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update
 }
 
 void
-cib_post_notify(int options, const char *op, xmlNode * update,
-                int result, xmlNode * new_obj)
+cib_post_notify(int options, const char *op, xmlNode * update, int result, xmlNode * new_obj)
 {
     gboolean needed = FALSE;
 
@@ -317,7 +318,6 @@ do_cib_notify(int options, const char *op, xmlNode * update,
     free_xml(update_msg);
 }
 
-
 void
 attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
 {
@@ -350,7 +350,7 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
                              &del_admin_epoch, &del_epoch, &del_updates);
 
-    if(del_updates < 0) {
+    if (del_updates < 0) {
         crm_log_xml_debug(diff, "Bad replace diff");
     }
 

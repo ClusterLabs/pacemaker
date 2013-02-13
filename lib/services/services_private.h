@@ -17,44 +17,37 @@
  */
 
 #ifndef __MH_SERVICES_PRIVATE_H__
-#define __MH_SERVICES_PRIVATE_H__
+#  define __MH_SERVICES_PRIVATE_H__
 
 struct svc_action_private_s {
     char *exec;
     char *args[255];
 
     guint repeat_timer;
-    void (*callback)(svc_action_t *op);
+    void (*callback) (svc_action_t * op);
 
-    int            stderr_fd;
+    int stderr_fd;
     mainloop_io_t *stderr_gsource;
 
-    int            stdout_fd;
+    int stdout_fd;
     mainloop_io_t *stdout_gsource;
 };
 
-GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
+GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
-gboolean
-services_os_action_execute(svc_action_t *op, gboolean synchronous);
+gboolean services_os_action_execute(svc_action_t * op, gboolean synchronous);
 
-GList *
-resources_os_list_lsb_agents(void);
+GList *resources_os_list_lsb_agents(void);
 
-GList *
-resources_os_list_ocf_providers(void);
+GList *resources_os_list_ocf_providers(void);
 
-GList *
-resources_os_list_ocf_agents(const char *provider);
+GList *resources_os_list_ocf_agents(const char *provider);
 
-GList *
-resources_os_list_nagios_agents(void);
+GList *resources_os_list_nagios_agents(void);
 
-gboolean
-cancel_recurring_action(svc_action_t *op);
+gboolean cancel_recurring_action(svc_action_t * op);
 
 gboolean recurring_action_timer(gpointer data);
-void operation_finalize(svc_action_t *op);
+void operation_finalize(svc_action_t * op);
 
-#endif /* __MH_SERVICES_PRIVATE_H__ */
+#endif                          /* __MH_SERVICES_PRIVATE_H__ */

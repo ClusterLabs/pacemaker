@@ -19,19 +19,19 @@
 #include <crm_internal.h>
 #include <errno.h>
 #include <stdio.h>
-extern const char *	sys_err[];
-extern int	sys_nerr;
+extern const char *sys_err[];
+extern int sys_nerr;
 char *
 strerror(int errnum)
 {
-	static	char  whaterr[32];
+    static char whaterr[32];
 
-	if (errnum < 0) {
-		return "negative errno";
-	}
-	if (errnum >= sys_nerr) {
-		snprintf(whaterr, sizeof(whaterr),"error %d",  errnum);
-		return whaterr;
-	}
-	return sys_err[sys_nerr];
+    if (errnum < 0) {
+        return "negative errno";
+    }
+    if (errnum >= sys_nerr) {
+        snprintf(whaterr, sizeof(whaterr), "error %d", errnum);
+        return whaterr;
+    }
+    return sys_err[sys_nerr];
 }

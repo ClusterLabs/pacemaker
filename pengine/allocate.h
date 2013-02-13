@@ -31,7 +31,8 @@ typedef struct notify_entry_s {
 } notify_entry_t;
 
 struct resource_alloc_functions_s {
-    GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, float, enum pe_weights);
+    GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, float,
+                                  enum pe_weights);
     node_t *(*allocate) (resource_t *, node_t *, pe_working_set_t *);
     void (*create_actions) (resource_t *, pe_working_set_t *);
      gboolean(*create_probe) (resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -50,22 +51,22 @@ struct resource_alloc_functions_s {
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
 };
 
-action_t *pe_fence_op(node_t *node, const char *op, pe_working_set_t * data_set);
+action_t *pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set);
 
 extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                      const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
+                                       const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
+                                        const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
+                                        const char *attr, float factor, enum pe_weights flags);
 
 extern GHashTable *group_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                     const char *attr, float factor, enum pe_weights flags);
+                                       const char *attr, float factor, enum pe_weights flags);
 
 extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);

@@ -24,12 +24,11 @@
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 
-
 #include <tengine.h>
 #include <te_callbacks.h>
 #include <crmd_fsa.h>
 
-#include <crm/cluster.h> /* For ONLINESTATUS etc */
+#include <crm/cluster.h>        /* For ONLINESTATUS etc */
 
 void te_update_confirm(const char *event, xmlNode * msg);
 
@@ -106,7 +105,7 @@ te_update_diff(const char *event, xmlNode * msg)
                && fsa_state != S_IDLE
                && fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
         crm_trace("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
-                    transition_graph->complete);
+                  transition_graph->complete);
         return;
     }
 
@@ -222,7 +221,7 @@ te_update_diff(const char *event, xmlNode * msg)
              * for more than one resource at a time
              */
             crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events",
-                     updates);
+                      updates);
             crm_log_xml_trace(diff, "lrm-refresh");
             abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
             goto bail;
@@ -344,35 +343,33 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
 }
 
 GHashTable *stonith_failures = NULL;
-struct st_fail_rec 
-{
-        int count;
+struct st_fail_rec {
+    int count;
 };
 
-gboolean too_many_st_failures(void) 
+gboolean
+too_many_st_failures(void)
 {
     GHashTableIter iter;
     const char *key = NULL;
     struct st_fail_rec *value = NULL;
 
-    if(stonith_failures == NULL) {
+    if (stonith_failures == NULL) {
         return FALSE;
     }
 
     g_hash_table_iter_init(&iter, stonith_failures);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-        if(value->count > 10) {
-            crm_notice("Too many failures to fence %s (%d), giving up",
-                       key, value->count);
+        if (value->count > 10) {
+            crm_notice("Too many failures to fence %s (%d), giving up", key, value->count);
             return TRUE;
         }
     }
     return FALSE;
 }
 
-
 void
-tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
+tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
     char *uuid = NULL;
     int target_rc = -1;
@@ -386,7 +383,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
 
     CRM_CHECK(userdata != NULL, return);
     crm_notice("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
-             pcmk_strerror(rc), rc);
+               pcmk_strerror(rc), rc);
 
     if (AM_I_DC == FALSE) {
         return;
@@ -416,9 +413,9 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
     }
 
     stop_te_timer(action->timer);
-    if(stonith_failures == NULL) {
-        stonith_failures = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, g_hash_destroy_str, free);
+    if (stonith_failures == NULL) {
+        stonith_failures =
+            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free);
     }
 
     if (rc == pcmk_ok) {
@@ -428,27 +425,28 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t *data)
         crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             action->confirmed = TRUE;
-            if(action->sent_update == FALSE) {
+            if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);
             }
         }
         rec = g_hash_table_lookup(stonith_failures, target);
-        if(rec) {
+        if (rec) {
             rec->count = 0;
         }
-        
+
     } else {
         const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
         const char *allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);
 
         action->failed = TRUE;
         if (crm_is_true(allow_fail) == FALSE) {
-            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id, target, pcmk_strerror(rc));
+            crm_notice("Stonith operation %d for %s failed (%s): aborting transition.", call_id,
+                       target, pcmk_strerror(rc));
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
 
         rec = g_hash_table_lookup(stonith_failures, target);
-        if(rec) {
+        if (rec) {
             rec->count++;
         } else {
             rec = malloc(sizeof(struct st_fail_rec));

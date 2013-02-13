@@ -203,7 +203,7 @@ main(int argc, char **argv)
                 inhibit_exit = TRUE;
                 break;
             case 'X':
-                /*use_stdin = TRUE;*/
+                /*use_stdin = TRUE; */
                 input_xml = optarg;
                 break;
             case 's':
@@ -334,9 +334,10 @@ main(int argc, char **argv)
 
     if (use_date != NULL) {
         a_date = crm_time_new(use_date);
-        crm_time_log(LOG_WARNING, "Set fake 'now' to", a_date, crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(LOG_WARNING, "Set fake 'now' to (localtime)",
-                 a_date, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to", a_date,
+                     crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to (localtime)", a_date,
+                     crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     }
 
     set_working_set_defaults(&data_set);

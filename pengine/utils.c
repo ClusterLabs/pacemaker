@@ -108,8 +108,8 @@ can_run_resources(const node_t * node)
     if (node->details->online == FALSE
         || node->details->shutdown || node->details->unclean || node->details->standby) {
         crm_trace("%s: online=%d, unclean=%d, standby=%d",
-                    node->details->uname, node->details->online,
-                    node->details->unclean, node->details->standby);
+                  node->details->uname, node->details->online,
+                  node->details->unclean, node->details->standby);
         return FALSE;
     }
     return TRUE;
@@ -212,21 +212,19 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     if (node1_weight > node2_weight) {
-        crm_trace( "%s (%d) > %s (%d) : weight",
-                            node1->details->uname, node1_weight,
-                            node2->details->uname, node2_weight);
+        crm_trace("%s (%d) > %s (%d) : weight",
+                  node1->details->uname, node1_weight, node2->details->uname, node2_weight);
         return -1;
     }
 
     if (node1_weight < node2_weight) {
-        crm_trace( "%s (%d) < %s (%d) : weight",
-                            node1->details->uname, node1_weight,
-                            node2->details->uname, node2_weight);
+        crm_trace("%s (%d) < %s (%d) : weight",
+                  node1->details->uname, node1_weight, node2->details->uname, node2_weight);
         return 1;
     }
 
-    crm_trace( "%s (%d) == %s (%d) : weight",
-                        node1->details->uname, node1_weight, node2->details->uname, node2_weight);
+    crm_trace("%s (%d) == %s (%d) : weight",
+              node1->details->uname, node1_weight, node2->details->uname, node2_weight);
 
     if (safe_str_eq(pe_dataset->placement_strategy, "minimal")) {
         goto equal;
@@ -241,31 +239,31 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 
     /* now try to balance resources across the cluster */
     if (node1->details->num_resources < node2->details->num_resources) {
-        crm_trace( "%s (%d) < %s (%d) : resources",
-                            node1->details->uname, node1->details->num_resources,
-                            node2->details->uname, node2->details->num_resources);
+        crm_trace("%s (%d) < %s (%d) : resources",
+                  node1->details->uname, node1->details->num_resources,
+                  node2->details->uname, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
-        crm_trace( "%s (%d) > %s (%d) : resources",
-                            node1->details->uname, node1->details->num_resources,
-                            node2->details->uname, node2->details->num_resources);
+        crm_trace("%s (%d) > %s (%d) : resources",
+                  node1->details->uname, node1->details->num_resources,
+                  node2->details->uname, node2->details->num_resources);
         return 1;
     }
 
     if (active && active->details == node1->details) {
-        crm_trace( "%s (%d) > %s (%d) : active",
-                            node1->details->uname, node1->details->num_resources,
-                            node2->details->uname, node2->details->num_resources);
+        crm_trace("%s (%d) > %s (%d) : active",
+                  node1->details->uname, node1->details->num_resources,
+                  node2->details->uname, node2->details->num_resources);
         return -1;
     } else if (active && active->details == node2->details) {
-        crm_trace( "%s (%d) > %s (%d) : active",
-                            node1->details->uname, node1->details->num_resources,
-                            node2->details->uname, node2->details->num_resources);
+        crm_trace("%s (%d) > %s (%d) : active",
+                  node1->details->uname, node1->details->num_resources,
+                  node2->details->uname, node2->details->num_resources);
         return 1;
     }
   equal:
-    crm_trace( "%s = %s", node1->details->uname, node2->details->uname);
+    crm_trace("%s = %s", node1->details->uname, node2->details->uname);
     return strcmp(node1->details->uname, node2->details->uname);
 }
 
@@ -394,7 +392,6 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
     return TRUE;
 }
 
-
 void
 log_action(unsigned int log_level, const char *pre_text, action_t * action, gboolean details)
 {
@@ -421,37 +418,34 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
     switch (text2task(action->task)) {
         case stonith_node:
         case shutdown_crm:
-            crm_trace(
-                                "%s%s%sAction %d: %s%s%s%s%s%s",
-                                pre_text == NULL ? "" : pre_text,
-                                pre_text == NULL ? "" : ": ",
-                                is_set(action->flags,
-                                       pe_action_pseudo) ? "Pseduo " : is_set(action->flags,
-                                                                              pe_action_optional) ?
-                                "Optional " : is_set(action->flags,
-                                                     pe_action_runnable) ? is_set(action->flags,
-                                                                                  pe_action_processed)
-                                ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                                action->uuid, node_uname ? "\ton " : "",
-                                node_uname ? node_uname : "", node_uuid ? "\t\t(" : "",
-                                node_uuid ? node_uuid : "", node_uuid ? ")" : "");
+            crm_trace("%s%s%sAction %d: %s%s%s%s%s%s",
+                      pre_text == NULL ? "" : pre_text,
+                      pre_text == NULL ? "" : ": ",
+                      is_set(action->flags,
+                             pe_action_pseudo) ? "Pseduo " : is_set(action->flags,
+                                                                    pe_action_optional) ?
+                      "Optional " : is_set(action->flags,
+                                           pe_action_runnable) ? is_set(action->flags,
+                                                                        pe_action_processed)
+                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
+                      action->uuid, node_uname ? "\ton " : "",
+                      node_uname ? node_uname : "", node_uuid ? "\t\t(" : "",
+                      node_uuid ? node_uuid : "", node_uuid ? ")" : "");
             break;
         default:
-            crm_trace(
-                                "%s%s%sAction %d: %s %s%s%s%s%s%s",
-                                pre_text == NULL ? "" : pre_text,
-                                pre_text == NULL ? "" : ": ",
-                                is_set(action->flags,
-                                       pe_action_optional) ? "Optional " : is_set(action->flags,
-                                                                                  pe_action_pseudo)
-                                ? "Pseduo " : is_set(action->flags,
-                                                     pe_action_runnable) ? is_set(action->flags,
-                                                                                  pe_action_processed)
-                                ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                                action->uuid, action->rsc?action->rsc->id:"<none>",
-                                node_uname ? "\ton " : "", node_uname ? node_uname : "",
-                                node_uuid ? "\t\t(" : "", node_uuid ? node_uuid : "",
-                                node_uuid ? ")" : "");
+            crm_trace("%s%s%sAction %d: %s %s%s%s%s%s%s",
+                      pre_text == NULL ? "" : pre_text,
+                      pre_text == NULL ? "" : ": ",
+                      is_set(action->flags,
+                             pe_action_optional) ? "Optional " : is_set(action->flags,
+                                                                        pe_action_pseudo)
+                      ? "Pseduo " : is_set(action->flags,
+                                           pe_action_runnable) ? is_set(action->flags,
+                                                                        pe_action_processed)
+                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
+                      action->uuid, action->rsc ? action->rsc->id : "<none>",
+                      node_uname ? "\ton " : "", node_uname ? node_uname : "",
+                      node_uuid ? "\t\t(" : "", node_uuid ? node_uuid : "", node_uuid ? ")" : "");
 
             break;
     }
@@ -459,7 +453,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
     if (details) {
         GListPtr gIter = NULL;
 
-        crm_trace( "\t\t====== Preceding Actions");
+        crm_trace("\t\t====== Preceding Actions");
 
         gIter = action->actions_before;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -468,7 +462,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
 
-        crm_trace( "\t\t====== Subsequent Actions");
+        crm_trace("\t\t====== Subsequent Actions");
 
         gIter = action->actions_after;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -477,13 +471,12 @@ log_action(unsigned int log_level, const char *pre_text, action_t * action, gboo
             log_action(log_level + 1, "\t\t", other->action, FALSE);
         }
 
-        crm_trace( "\t\t====== End");
+        crm_trace("\t\t====== End");
 
     } else {
-        crm_trace( "\t\t(seen=%d, before=%d, after=%d)",
-                            action->seen_count,
-                            g_list_length(action->actions_before),
-                            g_list_length(action->actions_after));
+        crm_trace("\t\t(seen=%d, before=%d, after=%d)",
+                  action->seen_count,
+                  g_list_length(action->actions_before), g_list_length(action->actions_after));
     }
 }
 

@@ -197,7 +197,8 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         xmlNode *cib_top = NULL;
 
         rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top,
-                             cib_sync_call | cib_scope_local | cib_xpath | cib_no_children, user_name);
+                             cib_sync_call | cib_scope_local | cib_xpath | cib_no_children,
+                             user_name);
 
         value = crm_element_value(cib_top, "ignore_dtd");
         if (value != NULL) {

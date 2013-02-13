@@ -518,8 +518,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
             if (fail_sticky == -INFINITY) {
                 (*rsc)->migration_threshold = 1;
                 pe_rsc_info((*rsc),
-                    "Set a migration threshold of %d for %s based on a failure-stickiness of %s",
-                     (*rsc)->migration_threshold, (*rsc)->id, value);
+                            "Set a migration threshold of %d for %s based on a failure-stickiness of %s",
+                            (*rsc)->migration_threshold, (*rsc)->id, value);
 
             } else if ((*rsc)->stickiness != 0 && fail_sticky != 0) {
                 (*rsc)->migration_threshold = (*rsc)->stickiness / fail_sticky;
@@ -529,8 +529,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
                 }
                 (*rsc)->migration_threshold += 1;
                 pe_rsc_info((*rsc),
-                    "Calculated a migration threshold for %s of %d based on a stickiness of %d/%s",
-                     (*rsc)->id, (*rsc)->migration_threshold, (*rsc)->stickiness, value);
+                            "Calculated a migration threshold for %s of %d based on a stickiness of %d/%s",
+                            (*rsc)->id, (*rsc)->migration_threshold, (*rsc)->stickiness, value);
             }
         }
     }
@@ -545,15 +545,13 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires (un)fencing but fencing is disabled",
-                       (*rsc)->id);
+            crm_notice("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
         }
 
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires fencing but fencing is disabled",
-                       (*rsc)->id);
+            crm_notice("%s requires fencing but fencing is disabled", (*rsc)->id);
         }
 
     } else {
@@ -587,7 +585,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     get_target_role(*rsc, &((*rsc)->next_role));
     pe_rsc_trace((*rsc), "\tDesired next state: %s",
-              (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
+                 (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
         return FALSE;
@@ -598,7 +596,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     pe_rsc_trace((*rsc), "\tAction notification: %s",
-              is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
+                 is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
 
     if (safe_str_eq(class, "stonith")) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
@@ -686,7 +684,7 @@ common_free(resource_t * rsc)
         free_xml(rsc->orig_xml);
         rsc->orig_xml = NULL;
 
-    /* if rsc->orig_xml, then rsc->xml is an expanded xml from a template */
+        /* if rsc->orig_xml, then rsc->xml is an expanded xml from a template */
     } else if (rsc->orig_xml) {
         free_xml(rsc->xml);
         rsc->xml = NULL;

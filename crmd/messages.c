@@ -110,8 +110,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     last_data_id++;
     crm_trace("%s %s FSA input %d (%s) (cause=%s) %s data",
-                raised_from, prepend ? "prepended" : "appended", last_data_id,
-                fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
+              raised_from, prepend ? "prepended" : "appended", last_data_id,
+              fsa_input2string(input), fsa_cause2string(cause), data ? "with" : "without");
 
     fsa_data = calloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
@@ -133,7 +133,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
                 crm_trace("Copying %s data from %s as a HA msg",
-                            fsa_cause2string(cause), raised_from);
+                          fsa_cause2string(cause), raised_from);
                 CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
                           crm_err("Bogus data from %s", raised_from));
                 fsa_data->data = copy_ha_msg_input(data);
@@ -142,7 +142,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
             case C_LRM_OP_CALLBACK:
                 crm_trace("Copying %s data from %s as lrmd_event_data_t",
-                            fsa_cause2string(cause), raised_from);
+                          fsa_cause2string(cause), raised_from);
                 fsa_data->data = lrmd_copy_event((lrmd_event_data_t *) data);
                 fsa_data->data_type = fsa_dt_lrm;
                 break;
@@ -198,10 +198,10 @@ fsa_dump_queue(int log_level)
         fsa_data_t *data = (fsa_data_t *) lpc->data;
 
         do_crm_log_unlikely(log_level,
-                   "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
-                   offset++, data->id, fsa_input2string(data->fsa_input),
-                   data->origin, data->data, data->data_type,
-                   fsa_cause2string(data->fsa_cause));
+                            "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
+                            offset++, data->id, fsa_input2string(data->fsa_input),
+                            data->origin, data->data, data->data_type,
+                            fsa_cause2string(data->fsa_cause));
     }
 }
 
@@ -527,7 +527,7 @@ crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
     xmlNode *xml = NULL;
     const char *op = crm_element_value(client_msg, F_CRM_TASK);
 
-    if(curr_client == NULL) {
+    if (curr_client == NULL) {
         crm_warn("Message [%s] not authorized", crm_element_value(client_msg, XML_ATTR_REFERENCE));
         return FALSE;
 
@@ -777,11 +777,11 @@ handle_request(xmlNode * stored_msg)
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
         int id = 0;
         const char *name = NULL;
-        xmlNode *options = get_xpath_object("//"XML_TAG_OPTIONS, stored_msg, LOG_ERR);
+        xmlNode *options = get_xpath_object("//" XML_TAG_OPTIONS, stored_msg, LOG_ERR);
 
         if (options) {
-           crm_element_value_int(options, XML_ATTR_ID, &id);
-           name = crm_element_value(options, XML_ATTR_UNAME);
+            crm_element_value_int(options, XML_ATTR_ID, &id);
+            name = crm_element_value(options, XML_ATTR_UNAME);
         }
 
         reap_crm_member(id, name);
@@ -931,4 +931,3 @@ delete_ha_msg_input(ha_msg_input_t * orig)
     free_xml(orig->msg);
     free(orig);
 }
-

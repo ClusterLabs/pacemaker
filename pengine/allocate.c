@@ -25,7 +25,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-
 #include <glib.h>
 
 #include <crm/pengine/status.h>
@@ -200,6 +199,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     if (interval > 0) {
         xmlNode *op_match = NULL;
+
         /* we need to reconstruct the key because of the way we used to construct resource IDs */
         key = generate_op_key(rsc->id, task, interval);
 
@@ -235,6 +235,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     /* Changes that force a restart */
     if (digest_data->rc == RSC_DIGEST_RESTART) {
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
+
         did_change = TRUE;
         key = generate_op_key(rsc->id, task, interval);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
@@ -249,6 +250,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         /* Changes that can potentially be handled by a reload */
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
         const char *digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+
         did_change = TRUE;
         crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
@@ -259,6 +261,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
         if (interval > 0) {
             action_t *op = NULL;
+
 #if 0
             /* Always reload/restart the entire resource */
             op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
@@ -322,7 +325,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
         pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
-                    rsc->id, node->details->uname);
+                     rsc->id, node->details->uname);
         return;
     }
 
@@ -368,7 +371,8 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         if (interval > 0 && is_set(data_set->flags, pe_flag_maintenance_mode)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0 || safe_str_eq(task, RSC_MIGRATED)) {
+        } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0
+                   || safe_str_eq(task, RSC_MIGRATED)) {
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
         }
 
@@ -377,7 +381,8 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             action_t *action_clear = NULL;
 
             key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-            action_clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+            action_clear =
+                custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
             set_bit(action_clear->flags, pe_action_runnable);
         }
     }
@@ -466,8 +471,7 @@ check_actions(pe_working_set_t * data_set)
                 continue;
 
             } else if (can_run_resources(node) == FALSE) {
-                crm_trace("Skipping param check for %s: cant run resources",
-                            node->details->uname);
+                crm_trace("Skipping param check for %s: cant run resources", node->details->uname);
                 continue;
             }
 
@@ -519,7 +523,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
 }
 
 static gboolean
-failcount_clear_action_exists(node_t *node, resource_t *rsc)
+failcount_clear_action_exists(node_t * node, resource_t * rsc)
 {
     char *key = crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_');
     gboolean rc = FALSE;
@@ -561,14 +565,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
 
             resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
             pe_rsc_debug(sticky_rsc, "Resource %s: preferring current location"
-                      " (node=%s, weight=%d)", sticky_rsc->id,
-                      node->details->uname, rsc->stickiness);
+                         " (node=%s, weight=%d)", sticky_rsc->id,
+                         node->details->uname, rsc->stickiness);
         } else {
             GHashTableIter iter;
             node_t *nIter = NULL;
 
             pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
-                      " and node %s is not explicitly allowed", rsc->id, node->details->uname);
+                         " and node %s is not explicitly allowed", rsc->id, node->details->uname);
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void **)&nIter)) {
                 crm_err("%s[%s] = %d", rsc->id, nIter->details->uname, nIter->weight);
@@ -770,7 +774,7 @@ wait_for_probe(resource_t * rsc, const char *action, action_t * probe_complete,
     } else {
         char *key = NULL;
 
-        if(safe_str_eq(action, RSC_STOP) && g_list_length(rsc->running_on) == 1) {
+        if (safe_str_eq(action, RSC_STOP) && g_list_length(rsc->running_on) == 1) {
             node_t *node = (node_t *) rsc->running_on->data;
 
             /* Stop actions on nodes that are shutting down do not need to wait for probes to complete
@@ -778,7 +782,7 @@ wait_for_probe(resource_t * rsc, const char *action, action_t * probe_complete,
              * The purpose of waiting is to not stop resources until we know for sure the
              *  intended destination is able to take them 
              */
-            if(node && node->details->shutdown) {
+            if (node && node->details->shutdown) {
                 crm_debug("Skipping %s before %s_%s_0 due to %s shutdown",
                           probe_complete->uuid, rsc->id, action, node->details->uname);
                 return;
@@ -1068,9 +1072,9 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         g_hash_table_destroy(r2_nodes);
     }
 
-    crm_trace( "%s (%d) %c %s (%d) on %s: %s",
-                        resource1->id, r1_weight, rc < 0 ? '>' : rc > 0 ? '<' : '=',
-                        resource2->id, r2_weight, node ? node->details->id : "n/a", reason);
+    crm_trace("%s (%d) %c %s (%d) on %s: %s",
+              resource1->id, r1_weight, rc < 0 ? '>' : rc > 0 ? '<' : '=',
+              resource2->id, r2_weight, node ? node->details->id : "n/a", reason);
     return rc;
 }
 
@@ -1204,21 +1208,20 @@ any_managed_resouces(pe_working_set_t * data_set)
 }
 
 action_t *
-pe_fence_op(node_t *node, const char *op, pe_working_set_t * data_set)
+pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
 {
-    action_t *stonith_op = custom_action(
-        NULL, g_strdup_printf("%s-%s", CRM_OP_FENCE, node->details->uname),
-        CRM_OP_FENCE, node, FALSE, TRUE, data_set);
+    action_t *stonith_op =
+        custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_FENCE, node->details->uname),
+                      CRM_OP_FENCE, node, FALSE, TRUE, data_set);
 
     add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
 
     add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
 
-    add_hash_param(stonith_op->meta, "stonith_action", op?op:data_set->stonith_action);
+    add_hash_param(stonith_op->meta, "stonith_action", op ? op : data_set->stonith_action);
 
     return stonith_op;
 }
-
 
 /*
  * Create dependancies for stonith and shutdown operations
@@ -1309,7 +1312,7 @@ stage6(pe_working_set_t * data_set)
         GListPtr shutdown_matches = find_actions(data_set->actions, CRM_OP_SHUTDOWN, NULL);
 
         crm_trace("Ordering shutdowns before %s on %s (DC)",
-                    dc_down->task, dc_down->node->details->uname);
+                  dc_down->task, dc_down->node->details->uname);
 
         add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
@@ -1406,7 +1409,7 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
 
     if (rh_actions == NULL) {
         pe_rsc_trace(rsc, "No RH-Side (%s/%s) found for constraint..."
-                    " ignoring", rsc->id, order->rh_action_task);
+                     " ignoring", rsc->id, order->rh_action_task);
         if (lh_action) {
             pe_rsc_trace(rsc, "LH-Side was: %s", lh_action->uuid);
         }
@@ -1414,7 +1417,8 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
     }
 
     if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
-        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid, order->rh_action_task);
+        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid,
+                     order->rh_action_task);
         clear_bit(type, pe_order_implies_then);
     }
 
@@ -1465,13 +1469,13 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) != RSC_ROLE_STOPPED || safe_str_neq(op_type, RSC_STOP)) {
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - creating",
-                        lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
         } else {
             free(key);
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
-                        lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
         }
 
         free(op_type);
@@ -1722,7 +1726,8 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
     g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
 
     /* pseudo_notify before notify */
-    pe_rsc_trace(rsc, "Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id, op->id);
+    pe_rsc_trace(rsc, "Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id,
+                 op->id);
 
     order_actions(op, trigger, pe_order_optional);
     order_actions(trigger, confirm, pe_order_optional);
@@ -2103,7 +2108,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
     }
 
     pe_rsc_trace(rsc, "Creating notificaitons for: %s.%s (%s->%s)",
-                n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                 n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
 
     stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
     start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
@@ -2236,10 +2241,10 @@ stage8(pe_working_set_t * data_set)
              * CIB resource updates are being lost
              */
             crm_crit("Cannot %s node '%s' because of %s:%s%s",
-                     action->node->details->unclean?"fence":"shut down",
+                     action->node->details->unclean ? "fence" : "shut down",
                      action->node->details->uname, action->rsc->id,
-                     is_not_set(action->rsc->flags, pe_rsc_managed)?" unmanaged":" blocked",
-                     is_set(action->rsc->flags, pe_rsc_failed)?" failed":"");
+                     is_not_set(action->rsc->flags, pe_rsc_managed) ? " unmanaged" : " blocked",
+                     is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "");
         }
 
         graph_element_from_action(action, data_set);
@@ -2259,22 +2264,22 @@ cleanup_alloc_calculations(pe_working_set_t * data_set)
     }
 
     crm_trace("deleting %d order cons: %p",
-                g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
+              g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
     pe_free_ordering(data_set->ordering_constraints);
     data_set->ordering_constraints = NULL;
 
     crm_trace("deleting %d node cons: %p",
-                g_list_length(data_set->placement_constraints), data_set->placement_constraints);
+              g_list_length(data_set->placement_constraints), data_set->placement_constraints);
     pe_free_rsc_to_node(data_set->placement_constraints);
     data_set->placement_constraints = NULL;
 
     crm_trace("deleting %d inter-resource cons: %p",
-                g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
+              g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
     g_list_free_full(data_set->colocation_constraints, free);
     data_set->colocation_constraints = NULL;
 
     crm_trace("deleting %d ticket deps: %p",
-                g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
+              g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
     g_list_free_full(data_set->ticket_constraints, free);
     data_set->ticket_constraints = NULL;
 

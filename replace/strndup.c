@@ -23,16 +23,16 @@
 
 /* Taken from the GlibC implementation of strndup */
 
-char *strndup(const char *str, size_t len)
+char *
+strndup(const char *str, size_t len)
 {
-	size_t n = strnlen(str,len);
-	char *new = (char *) malloc (len+1);
+    size_t n = strnlen(str, len);
+    char *new = (char *)malloc(len + 1);
 
-	if (NULL == new) {
-		return NULL;
-	}
+    if (NULL == new) {
+        return NULL;
+    }
 
-	new[n] = '\0';
-	return (char *)memcpy (new, str, len);
+    new[n] = '\0';
+    return (char *)memcpy(new, str, len);
 }
-

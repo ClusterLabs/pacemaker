@@ -39,7 +39,8 @@
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
 gnutls_anon_client_credentials_t anon_cred_c;
-#define DEFAULT_CLIENT_HANDSHAKE_TIMEOUT 5000 /* 5 seconds */
+
+#  define DEFAULT_CLIENT_HANDSHAKE_TIMEOUT 5000 /* 5 seconds */
 
 const int kx_prio[] = {
     GNUTLS_KX_ANON_DH,
@@ -77,7 +78,8 @@ int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
 
 int cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                          xmlNode * data, xmlNode ** output_data, int call_options, const char *name);
+                          xmlNode * data, xmlNode ** output_data, int call_options,
+                          const char *name);
 
 static int
 cib_remote_inputfd(cib_t * cib)
@@ -195,7 +197,7 @@ cib_tls_close(cib_t * cib)
 }
 
 static int
-cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
+cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
 {
     int sock;
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -207,7 +209,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
 
     static struct mainloop_fd_callbacks cib_fd_callbacks = { 0, };
 
-    cib_fd_callbacks.dispatch = event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
+    cib_fd_callbacks.dispatch =
+        event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
     connection->tcp_socket = 0;
@@ -216,7 +219,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
 #endif
     sock = crm_remote_tcp_connect(private->server, private->port);
     if (sock <= 0) {
-        crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server, private->port);
+        crm_perror(LOG_ERR, "remote tcp connection to %s:%d failed", private->server,
+                   private->port);
     }
 
     connection->tcp_socket = sock;
@@ -293,7 +297,9 @@ cib_tls_signon(cib_t * cib, crm_remote_t *connection, gboolean event_channel)
     }
 
     crm_trace("remote client connection established");
-    connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->tcp_socket, cib, &cib_fd_callbacks);
+    connection->source =
+        mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->tcp_socket, cib,
+                        &cib_fd_callbacks);
     return rc;
 }
 
@@ -342,6 +348,7 @@ cib_remote_callback_dispatch(gpointer user_data)
     msg = crm_remote_parse_buffer(&private->callback);
     while (msg) {
         const char *type = crm_element_value(msg, F_TYPE);
+
         crm_trace("Activating %s callbacks...", type);
 
         if (safe_str_eq(type, T_CIB)) {

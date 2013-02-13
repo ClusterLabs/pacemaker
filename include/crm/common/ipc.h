@@ -29,14 +29,13 @@
 /* clplumbing based IPC */
 
 #  define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
-xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data,
-                                 const char *origin);
+xmlNode *create_reply_adv(xmlNode * request, xmlNode * xml_response_data, const char *origin);
 
 #  define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, __FUNCTION__)
 
 xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *host_to,
-                                   const char *sys_to, const char *sys_from, const char *uuid_from,
-                                   const char *origin);
+                            const char *sys_to, const char *sys_from, const char *uuid_from,
+                            const char *origin);
 
 /* *INDENT-OFF* */
 enum crm_ipc_flags
@@ -47,26 +46,26 @@ enum crm_ipc_flags
 };
 /* *INDENT-ON* */
 
-#include <qb/qbipcc.h>
+#  include <qb/qbipcc.h>
 typedef struct crm_ipc_s crm_ipc_t;
 
 crm_ipc_t *crm_ipc_new(const char *name, size_t max_size);
-bool crm_ipc_connect(crm_ipc_t *client);
-void crm_ipc_close(crm_ipc_t *client);
-void crm_ipc_destroy(crm_ipc_t *client);
+bool crm_ipc_connect(crm_ipc_t * client);
+void crm_ipc_close(crm_ipc_t * client);
+void crm_ipc_destroy(crm_ipc_t * client);
 
-int crm_ipc_send(crm_ipc_t *client, xmlNode *message, enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply);
+int crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags,
+                 int32_t ms_timeout, xmlNode ** reply);
 
-int crm_ipc_get_fd(crm_ipc_t *client);
-bool crm_ipc_connected(crm_ipc_t *client);
-int crm_ipc_ready(crm_ipc_t *client);
-long crm_ipc_read(crm_ipc_t *client);
-const char *crm_ipc_buffer(crm_ipc_t *client);
-const char *crm_ipc_name(crm_ipc_t *client);
+int crm_ipc_get_fd(crm_ipc_t * client);
+bool crm_ipc_connected(crm_ipc_t * client);
+int crm_ipc_ready(crm_ipc_t * client);
+long crm_ipc_read(crm_ipc_t * client);
+const char *crm_ipc_buffer(crm_ipc_t * client);
+const char *crm_ipc_name(crm_ipc_t * client);
 
 /* Utils */
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
-
 
 #endif

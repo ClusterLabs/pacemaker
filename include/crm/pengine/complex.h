@@ -51,10 +51,10 @@ typedef struct resource_object_functions_s {
 } resource_object_functions_t;
 
 extern resource_object_functions_t resource_class_functions[];
-void get_meta_attributes(
-    GHashTable * meta_hash, resource_t * rsc, node_t * node, pe_working_set_t * data_set);
-void get_rsc_attributes(
-    GHashTable * meta_hash, resource_t * rsc, node_t * node, pe_working_set_t * data_set);
+void get_meta_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
+                         pe_working_set_t * data_set);
+void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
+                        pe_working_set_t * data_set);
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 resource_t *uber_parent(resource_t * rsc);

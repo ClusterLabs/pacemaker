@@ -67,7 +67,6 @@ free_recurring_op(gpointer value)
     free(op);
 }
 
-
 lrm_state_t *
 lrm_state_create(const char *node_name)
 {
@@ -84,26 +83,21 @@ lrm_state_create(const char *node_name)
     state->node_name = strdup(node_name);
 
     state->deletion_ops = g_hash_table_new_full(crm_str_hash,
-                                                g_str_equal,
-                                                g_hash_destroy_str,
-                                                free_deletion_op);
+                                                g_str_equal, g_hash_destroy_str, free_deletion_op);
 
     state->pending_ops = g_hash_table_new_full(crm_str_hash,
-                                               g_str_equal,
-                                               g_hash_destroy_str,
-                                               free_recurring_op);
+                                               g_str_equal, g_hash_destroy_str, free_recurring_op);
 
     state->resource_history = g_hash_table_new_full(crm_str_hash,
-                                                    g_str_equal,
-                                                    NULL,
-                                                    history_cache_destroy);
+                                                    g_str_equal, NULL, history_cache_destroy);
 
-    g_hash_table_insert(lrm_state_table, (char *) state->node_name, state);
+    g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
 
 }
 
-void lrm_state_destroy(const char *node_name)
+void
+lrm_state_destroy(const char *node_name)
 {
     g_hash_table_remove(lrm_state_table, node_name);
 }
@@ -112,6 +106,7 @@ static void
 internal_lrm_state_destroy(gpointer data)
 {
     lrm_state_t *lrm_state = data;
+
     if (!lrm_state) {
         return;
     }
@@ -129,11 +124,12 @@ internal_lrm_state_destroy(gpointer data)
         g_hash_table_destroy(lrm_state->pending_ops);
     }
 
-    free((char *) lrm_state->node_name);
+    free((char *)lrm_state->node_name);
     free(lrm_state);
 }
 
-void lrm_state_reset_tables(lrm_state_t *lrm_state)
+void
+lrm_state_reset_tables(lrm_state_t * lrm_state)
 {
 
     if (lrm_state->resource_history) {
@@ -147,13 +143,15 @@ void lrm_state_reset_tables(lrm_state_t *lrm_state)
     }
 }
 
-gboolean lrm_state_init_local(void)
+gboolean
+lrm_state_init_local(void)
 {
     if (lrm_state_table) {
         return TRUE;
     }
 
-    lrm_state_table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, internal_lrm_state_destroy);
+    lrm_state_table =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, internal_lrm_state_destroy);
     if (!lrm_state_table) {
         return FALSE;
     }
@@ -161,14 +159,16 @@ gboolean lrm_state_init_local(void)
     return TRUE;
 }
 
-void lrm_state_destroy_all(void)
+void
+lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
         g_hash_table_destroy(lrm_state_table);
     }
 }
 
-lrm_state_t *lrm_state_find(const char *node_name)
+lrm_state_t *
+lrm_state_find(const char *node_name)
 {
     if (!node_name) {
         return NULL;
@@ -176,7 +176,8 @@ lrm_state_t *lrm_state_find(const char *node_name)
     return g_hash_table_lookup(lrm_state_table, node_name);
 }
 
-lrm_state_t *lrm_state_find_or_create(const char *node_name)
+lrm_state_t *
+lrm_state_find_or_create(const char *node_name)
 {
     lrm_state_t *lrm_state;
 
@@ -188,13 +189,14 @@ lrm_state_t *lrm_state_find_or_create(const char *node_name)
     return lrm_state;
 }
 
-GList *lrm_state_get_list(void)
+GList *
+lrm_state_get_list(void)
 {
     return g_hash_table_get_values(lrm_state_table);
 }
 
 void
-lrm_state_disconnect(lrm_state_t *lrm_state)
+lrm_state_disconnect(lrm_state_t * lrm_state)
 {
     if (!lrm_state->conn) {
         return;
@@ -205,7 +207,7 @@ lrm_state_disconnect(lrm_state_t *lrm_state)
 }
 
 int
-lrm_state_is_connected(lrm_state_t *lrm_state)
+lrm_state_is_connected(lrm_state_t * lrm_state)
 {
     if (!lrm_state->conn) {
         return FALSE;
@@ -213,7 +215,8 @@ lrm_state_is_connected(lrm_state_t *lrm_state)
     return ((lrmd_t *) lrm_state->conn)->cmds->is_connected(lrm_state->conn);
 }
 
-int lrm_state_poke_connection(lrm_state_t *lrm_state)
+int
+lrm_state_poke_connection(lrm_state_t * lrm_state)
 {
 
     if (!lrm_state->conn) {
@@ -223,13 +226,13 @@ int lrm_state_poke_connection(lrm_state_t *lrm_state)
 }
 
 int
-lrm_state_ipc_connect(lrm_state_t *lrm_state)
+lrm_state_ipc_connect(lrm_state_t * lrm_state)
 {
     int ret;
 
     if (!lrm_state->conn) {
         lrm_state->conn = lrmd_api_new();
-        ((lrmd_t *)lrm_state->conn)->cmds->set_callback(lrm_state->conn, lrm_op_callback);
+        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, lrm_op_callback);
     }
 
     ret = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
@@ -244,7 +247,8 @@ lrm_state_ipc_connect(lrm_state_t *lrm_state)
 }
 
 int
-lrm_state_remote_connect_async(lrm_state_t *lrm_state, const char *server, int port, int timeout_ms)
+lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
+                               int timeout_ms)
 {
     int ret;
 
@@ -257,7 +261,9 @@ lrm_state_remote_connect_async(lrm_state_t *lrm_state, const char *server, int p
     }
 
     crm_trace("initiating remote connection to %s at %d with timeout %d", server, port, timeout_ms);
-    ret = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn, lrm_state->node_name, timeout_ms);
+    ret =
+        ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn, lrm_state->node_name,
+                                                          timeout_ms);
 
     if (ret != pcmk_ok) {
         lrm_state->num_lrm_register_fails++;
@@ -268,12 +274,11 @@ lrm_state_remote_connect_async(lrm_state_t *lrm_state, const char *server, int p
     return ret;
 }
 
-int lrm_state_get_metadata (lrm_state_t *lrm_state,
-        const char *class,
-        const char *provider,
-        const char *agent,
-        char **output,
-        enum lrmd_call_options options)
+int
+lrm_state_get_metadata(lrm_state_t * lrm_state,
+                       const char *class,
+                       const char *provider,
+                       const char *agent, char **output, enum lrmd_call_options options)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -281,13 +286,12 @@ int lrm_state_get_metadata (lrm_state_t *lrm_state,
 
     /* Optimize this... only retrieve metadata from local lrmd connection. Perhaps consider
      * caching result. */
-    return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata(lrm_state->conn, class, provider, agent, output, options);
+    return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata(lrm_state->conn, class, provider, agent,
+                                                            output, options);
 }
 
-int lrm_state_cancel(lrm_state_t *lrm_state,
-    const char *rsc_id,
-    const char *action,
-    int interval)
+int
+lrm_state_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action, int interval)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -301,9 +305,8 @@ int lrm_state_cancel(lrm_state_t *lrm_state,
     return ((lrmd_t *) lrm_state->conn)->cmds->cancel(lrm_state->conn, rsc_id, action, interval);
 }
 
-lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t *lrm_state,
-    const char *rsc_id,
-    enum lrmd_call_options options)
+lrmd_rsc_info_t *
+lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_call_options options)
 {
     if (!lrm_state->conn) {
         return NULL;
@@ -317,14 +320,11 @@ lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t *lrm_state,
     return ((lrmd_t *) lrm_state->conn)->cmds->get_rsc_info(lrm_state->conn, rsc_id, options);
 }
 
-int lrm_state_exec(lrm_state_t *lrm_state,
-    const char *rsc_id,
-    const char *action,
-    const char *userdata,
-    int interval, /* ms */
-    int timeout, /* ms */
-    int start_delay, /* ms */
-    lrmd_key_value_t *params)
+int
+lrm_state_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, const char *userdata, int interval,     /* ms */
+               int timeout,     /* ms */
+               int start_delay, /* ms */
+               lrmd_key_value_t * params)
 {
 
     if (!lrm_state->conn) {
@@ -334,32 +334,24 @@ int lrm_state_exec(lrm_state_t *lrm_state,
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         return remote_ra_exec(lrm_state,
-            rsc_id,
-            action,
-            userdata,
-            interval,
-            timeout,
-            start_delay,
-            params);
+                              rsc_id, action, userdata, interval, timeout, start_delay, params);
     }
 
     return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,
-        rsc_id,
-        action,
-        userdata,
-        interval,
-        timeout,
-        start_delay,
-        lrmd_opt_notify_changes_only,
-        params);
+                                                    rsc_id,
+                                                    action,
+                                                    userdata,
+                                                    interval,
+                                                    timeout,
+                                                    start_delay,
+                                                    lrmd_opt_notify_changes_only, params);
 }
 
-int lrm_state_register_rsc(lrm_state_t *lrm_state,
-    const char *rsc_id,
-    const char *class,
-    const char *provider,
-    const char *agent,
-    enum lrmd_call_options options)
+int
+lrm_state_register_rsc(lrm_state_t * lrm_state,
+                       const char *rsc_id,
+                       const char *class,
+                       const char *provider, const char *agent, enum lrmd_call_options options)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -373,12 +365,13 @@ int lrm_state_register_rsc(lrm_state_t *lrm_state,
         return lrm_state_find_or_create(rsc_id) ? pcmk_ok : -1;
     }
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->register_rsc(lrm_state->conn, rsc_id, class, provider, agent, options);
+    return ((lrmd_t *) lrm_state->conn)->cmds->register_rsc(lrm_state->conn, rsc_id, class,
+                                                            provider, agent, options);
 }
 
-int lrm_state_unregister_rsc(lrm_state_t *lrm_state,
-    const char *rsc_id,
-    enum lrmd_call_options options)
+int
+lrm_state_unregister_rsc(lrm_state_t * lrm_state,
+                         const char *rsc_id, enum lrmd_call_options options)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;

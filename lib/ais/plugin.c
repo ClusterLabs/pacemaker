@@ -350,7 +350,7 @@ process_ais_conf(void)
                 ignore = fchown(logfd, pcmk_uid, pcmk_gid);
                 ignore = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
-                if(ignore < 0) {
+                if (ignore < 0) {
                     fprintf(logfile, "Could not set r/w permissions for uid=%d, gid=%d on %s\n",
                             pcmk_uid, pcmk_gid, value);
 
@@ -926,9 +926,9 @@ pcmk_cluster_callback(ais_void_ptr * message, unsigned int nodeid)
 
     } else {
         ais_trace("Discarding Msg[%d] (dest=%s:%s, from=%s:%s)",
-                    ais_msg->id, ais_dest(&(ais_msg->host)),
-                    msg_type2text(ais_msg->host.type),
-                    ais_dest(&(ais_msg->sender)), msg_type2text(ais_msg->sender.type));
+                  ais_msg->id, ais_dest(&(ais_msg->host)),
+                  msg_type2text(ais_msg->host.type),
+                  ais_dest(&(ais_msg->sender)), msg_type2text(ais_msg->sender.type));
     }
 }
 
@@ -1031,7 +1031,9 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
      */
     AIS_CHECK(transient || mutable->sender.pid == pcmk_children[type].pid,
               ais_err("Sender: %d, child[%d]: %d", mutable->sender.pid, type,
-                      pcmk_children[type].pid); ais_free(mutable); return);
+                      pcmk_children[type].pid);
+              ais_free(mutable);
+              return);
 #endif
 
     if (transient == FALSE
@@ -1385,7 +1387,8 @@ check_message_sanity(const AIS_Message * msg, const char *data)
 
     AIS_CHECK(msg->header.size > sizeof(AIS_Message),
               ais_err("Message %d size too small: %d < %zu",
-                      msg->header.id, msg->header.size, sizeof(AIS_Message)); return FALSE);
+                      msg->header.id, msg->header.size, sizeof(AIS_Message));
+              return FALSE);
 
     if (sane && ais_data_len(msg) != tmp_size) {
         ais_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg),
@@ -1471,9 +1474,9 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
     static int service_id = SERVICE_ID_MAKE(PCMK_SERVICE_ID, 0);
 
     ais_trace("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
-                mutable->id, ais_dest(&(mutable->host)), msg_type2text(dest),
-                ais_dest(&(mutable->sender)), msg_type2text(mutable->sender.type),
-                mutable->sender.pid, local_origin ? "false" : "true", ais_data_len((mutable)));
+              mutable->id, ais_dest(&(mutable->host)), msg_type2text(dest),
+              ais_dest(&(mutable->sender)), msg_type2text(mutable->sender.type),
+              mutable->sender.pid, local_origin ? "false" : "true", ais_data_len((mutable)));
 
     if (local_origin == FALSE) {
         if (mutable->host.size == 0 || ais_str_eq(local_uname, mutable->host.uname)) {
@@ -1575,8 +1578,7 @@ send_plugin_msg_raw(const AIS_Message * ais_msg)
     if (mutable->id == 0) {
         msg_id++;
         AIS_CHECK(msg_id != 0 /* detect wrap-around */ ,
-                  msg_id++;
-                  ais_err("Message ID wrapped around"));
+                  msg_id++; ais_err("Message ID wrapped around"));
         mutable->id = msg_id;
     }
 

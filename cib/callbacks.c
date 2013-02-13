@@ -34,7 +34,6 @@
 
 #include <crm/common/xml.h>
 
-
 #include <cibio.h>
 #include <callbacks.h>
 #include <cibmessages.h>
@@ -80,12 +79,13 @@ extern unsigned long cib_bad_connects, cib_num_timeouts;
 extern int cib_status;
 
 int cib_process_command(xmlNode * request, xmlNode ** reply,
-                                    xmlNode ** cib_diff, gboolean privileged);
+                        xmlNode ** cib_diff, gboolean privileged);
 
-gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean privileged);
+gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
+                             gboolean privileged);
 
 static int32_t
-cib_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
     if (cib_shutdown_flag) {
@@ -93,46 +93,49 @@ cib_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
         return -EPERM;
     }
 
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
 static void
-cib_ipc_created(qb_ipcs_connection_t *c)
+cib_ipc_created(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
 static int32_t
-cib_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
+cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, TRUE);
 }
 
 static int32_t
-cib_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
+cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, FALSE);
 }
 
 /* Error code means? */
 static int32_t
-cib_ipc_closed(qb_ipcs_connection_t *c)
+cib_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("Connection %p", c);
     crm_client_destroy(client);
     return 0;
 }
 
 static void
-cib_ipc_destroy(qb_ipcs_connection_t *c)
+cib_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
     if (cib_shutdown_flag) {
@@ -140,8 +143,7 @@ cib_ipc_destroy(qb_ipcs_connection_t *c)
     }
 }
 
-struct qb_ipcs_service_handlers ipc_ro_callbacks =
-{
+struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_accept = cib_ipc_accept,
     .connection_created = cib_ipc_created,
     .msg_process = cib_ipc_dispatch_ro,
@@ -149,8 +151,7 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks =
     .connection_destroyed = cib_ipc_destroy
 };
 
-struct qb_ipcs_service_handlers ipc_rw_callbacks =
-{
+struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_accept = cib_ipc_accept,
     .connection_created = cib_ipc_created,
     .msg_process = cib_ipc_dispatch_rw,
@@ -159,12 +160,13 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks =
 };
 
 void
-cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, crm_client_t * cib_client, gboolean privileged)
+cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
+                           crm_client_t * cib_client, gboolean privileged)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
 
     if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-        if(flags & crm_ipc_client_response) {
+        if (flags & crm_ipc_client_response) {
             xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
@@ -180,6 +182,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, cr
         int on_off = 0;
         long long bit = 0;
         const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
+
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 
         crm_debug("Setting %s callbacks for %s (%s): %s",
@@ -201,13 +204,13 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, cr
             bit = cib_notify_replace;
         }
 
-        if(on_off) {
+        if (on_off) {
             set_bit(cib_client->options, bit);
         } else {
             clear_bit(cib_client->options, bit);
         }
 
-        if(flags & crm_ipc_client_response) {
+        if (flags & crm_ipc_client_response) {
             /* TODO - include rc */
             crm_ipcs_send_ack(cib_client, id, "ack", __FUNCTION__, __LINE__);
             cib_client->request_id = 0;
@@ -219,7 +222,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request, cr
 }
 
 int32_t
-cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean privileged)
+cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean privileged)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
@@ -227,7 +230,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
     crm_client_t *cib_client = crm_client_get(c);
     xmlNode *op_request = crm_ipcs_recv(cib_client, data, size, &id, &flags);
 
-    if(op_request) {
+    if (op_request) {
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
     }
 
@@ -237,17 +240,18 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, gboolean p
         return 0;
     }
 
-    if(is_set(call_options, cib_sync_call)) {
+    if (is_set(call_options, cib_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
     }
 
-    if(flags & crm_ipc_client_response) {
-        CRM_LOG_ASSERT(cib_client->request_id == 0); /* This means the client has two synchronous events in-flight */
-        cib_client->request_id = id;                 /* Reply only to the last one */
+    if (flags & crm_ipc_client_response) {
+        CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
+        cib_client->request_id = id;    /* Reply only to the last one */
     }
 
     if (cib_client->name == NULL) {
         const char *value = crm_element_value(op_request, F_CIB_CLIENTNAME);
+
         if (value == NULL) {
             cib_client->name = crm_itoa(cib_client->pid);
         } else {
@@ -289,7 +293,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
     } else {
         int rid = 0;
 
-        if(sync_reply) {
+        if (sync_reply) {
             if (client_obj->ipcs) {
                 CRM_LOG_ASSERT(client_obj->request_id);
 
@@ -297,26 +301,27 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                 client_obj->request_id = 0;
 
                 crm_trace("Sending response %d to %s %s",
-                      rid, client_obj->name, from_peer?"(originator of delegated request)":"");
+                          rid, client_obj->name,
+                          from_peer ? "(originator of delegated request)" : "");
             } else {
                 crm_trace("Sending response to %s %s",
-                      client_obj->name, from_peer?"(originator of delegated request)":"");
+                          client_obj->name, from_peer ? "(originator of delegated request)" : "");
             }
 
         } else {
             crm_trace("Sending an event to %s %s",
-                      client_obj->name, from_peer?"(originator of delegated request)":"");
+                      client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
-        switch(client_obj->kind) {
+        switch (client_obj->kind) {
             case CRM_CLIENT_IPC:
                 if (crm_ipcs_send(client_obj, rid, notify_src, !sync_reply) < 0) {
                     local_rc = -ENOMSG;
                 }
                 break;
-#  ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef HAVE_GNUTLS_GNUTLS_H
             case CRM_CLIENT_TLS:
-#  endif
+#endif
             case CRM_CLIENT_TCP:
                 crm_remote_send(client_obj->remote, notify_src);
                 break;
@@ -354,13 +359,15 @@ check_local_notify(int bcast_id)
     notify = g_hash_table_lookup(local_notify_queue, GINT_TO_POINTER(bcast_id));
 
     if (notify) {
-        do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply, notify->from_peer);
+        do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply,
+                        notify->from_peer);
         g_hash_table_remove(local_notify_queue, GINT_TO_POINTER(bcast_id));
     }
 }
 
 static void
-queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
+queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
+                   gboolean from_peer)
 {
     cib_local_notify_t *notify = calloc(1, sizeof(cib_local_notify_t));
 
@@ -371,7 +378,8 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 
     if (!local_notify_queue) {
         local_notify_queue = g_hash_table_new_full(g_direct_hash,
-            g_direct_equal, NULL, local_notify_destroy_callback);
+                                                   g_direct_equal, NULL,
+                                                   local_notify_destroy_callback);
     }
 
     g_hash_table_insert(local_notify_queue, GINT_TO_POINTER(cib_local_bcast_num), notify);
@@ -409,7 +417,7 @@ parse_local_options(crm_client_t * cib_client, int call_type, int call_options, 
 
     } else {
         crm_trace("%s op from %s needs to be forwarded to %s",
-                    op, cib_client->name, host ? host : "the master instance");
+                  op, cib_client->name, host ? host : "the master instance");
         *needs_forward = TRUE;
         *process = FALSE;
     }
@@ -452,13 +460,13 @@ parse_peer_options(int call_type, xmlNode * request,
     }
 
     op = crm_element_value(request, F_CIB_OPERATION);
-    if(safe_str_eq(op, "cib_shutdown_req")) {
+    if (safe_str_eq(op, "cib_shutdown_req")) {
         /* Always process these */
         *local_notify = FALSE;
-        if(reply_to == NULL || is_reply) {
+        if (reply_to == NULL || is_reply) {
             *process = TRUE;
         }
-        if(is_reply) {
+        if (is_reply) {
             *needs_reply = FALSE;
         }
         return *process;
@@ -554,7 +562,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
                                  &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
         crm_trace("Sending update diff %d.%d.%d -> %d.%d.%d %s",
-                    diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
+                  diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
@@ -602,7 +610,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     const char *target = NULL;
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
 
-    if(cib_client) {
+    if (cib_client) {
         from_peer = FALSE;
     }
 
@@ -623,23 +631,22 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         host = NULL;
     }
 
-    if(host) {
+    if (host) {
         target = host;
 
-    } else if(call_options & cib_scope_local) {
+    } else if (call_options & cib_scope_local) {
         target = "local host";
 
     } else {
         target = "master";
     }
 
-    if(from_peer) {
+    if (from_peer) {
         crm_trace("Processing peer %s operation from %s on %s intended for %s",
                   op, client_id, originator, target);
     } else {
         crm_xml_add(request, F_ORIG, cib_our_uname);
-        crm_trace("Processing local %s operation from %s intended for %s",
-                  op, client_id, target);
+        crm_trace("Processing local %s operation from %s intended for %s", op, client_id, target);
     }
 
     rc = cib_get_operation_id(op, &call_type);
@@ -730,17 +737,14 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
-
                    originator ? originator : "local",
                    crm_element_value(request, F_CIB_CLIENTNAME),
                    crm_element_value(request, F_CIB_CALLID),
-
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0"
-            );
+                   the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
-        if((now + 1) < time(NULL)) {
+        if ((now + 1) < time(NULL)) {
             crm_write_blackbox(0, NULL);
         }
 
@@ -765,19 +769,17 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         crm_xml_add_int(request, F_CIB_LOCAL_NOTIFY_ID, cib_local_bcast_num);
         broadcast = send_peer_reply(request, result_diff, originator, TRUE);
 
-        if (broadcast &&
-            client_id &&
-            local_notify &&
-            op_reply) {
+        if (broadcast && client_id && local_notify && op_reply) {
 
             /* If we have been asked to sync the reply,
              * and a bcast msg has gone out, we queue the local notify
              * until we know the bcast message has been received */
             local_notify = FALSE;
-            crm_trace("Queuing local %ssync notification for %s", (call_options & cib_sync_call)?"":"a-", client_id);
+            crm_trace("Queuing local %ssync notification for %s",
+                      (call_options & cib_sync_call) ? "" : "a-", client_id);
 
             queue_local_notify(op_reply, client_id, (call_options & cib_sync_call), from_peer);
-            op_reply = NULL; /* the reply is queued, so don't free here */
+            op_reply = NULL;    /* the reply is queued, so don't free here */
         }
 
     } else if (call_options & cib_discard_reply) {
@@ -800,7 +802,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     if (local_notify && client_id) {
-        crm_trace("Performing local %ssync notification for %s", (call_options & cib_sync_call)?"":"a-", client_id);
+        crm_trace("Performing local %ssync notification for %s",
+                  (call_options & cib_sync_call) ? "" : "a-", client_id);
         if (process == FALSE) {
             do_local_notify(request, client_id, call_options & cib_sync_call, from_peer);
         } else {
@@ -1126,6 +1129,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     if (originator == NULL || crm_str_eq(originator, cib_our_uname, TRUE)) {
         /* message is from ourselves */
         int bcast_id = 0;
+
         if (!(crm_element_value_int(msg, F_CIB_LOCAL_NOTIFY_ID, &bcast_id))) {
             check_local_notify(bcast_id);
         }
@@ -1152,7 +1156,6 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         crm_warn("Discarding %s message (%s) from %s: %s", op, seq, originator, reason);
     }
 }
-
 
 #if SUPPORT_HEARTBEAT
 extern oc_ev_t *cib_ev_token;
@@ -1288,6 +1291,7 @@ static void
 disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
 {
     crm_client_t *a_client = value;
+
     crm_err("Disconnecting %s... Not implemented", crm_str(a_client->name));
 }
 
@@ -1295,6 +1299,7 @@ void
 cib_shutdown(int nsig)
 {
     struct qb_ipcs_stats srv_stats;
+
     if (cib_shutdown_flag == FALSE) {
         int disconnects = 0;
         qb_ipcs_connection_t *c = NULL;
@@ -1302,8 +1307,9 @@ cib_shutdown(int nsig)
         cib_shutdown_flag = TRUE;
 
         c = qb_ipcs_connection_first_get(ipcs_rw);
-        while(c != NULL) {
+        while (c != NULL) {
             qb_ipcs_connection_t *last = c;
+
             c = qb_ipcs_connection_next_get(ipcs_rw, last);
 
             crm_debug("Disconnecting r/w client %p...", last);
@@ -1313,8 +1319,9 @@ cib_shutdown(int nsig)
         }
 
         c = qb_ipcs_connection_first_get(ipcs_ro);
-        while(c != NULL) {
+        while (c != NULL) {
             qb_ipcs_connection_t *last = c;
+
             c = qb_ipcs_connection_next_get(ipcs_ro, last);
 
             crm_debug("Disconnecting r/o client %p...", last);
@@ -1324,8 +1331,9 @@ cib_shutdown(int nsig)
         }
 
         c = qb_ipcs_connection_first_get(ipcs_shm);
-        while(c != NULL) {
+        while (c != NULL) {
             qb_ipcs_connection_t *last = c;
+
             c = qb_ipcs_connection_next_get(ipcs_shm, last);
 
             crm_debug("Disconnecting non-blocking r/w client %p...", last);
@@ -1343,7 +1351,7 @@ cib_shutdown(int nsig)
 
     qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
 
-    if(crm_hash_table_size(client_connections) == 0) {
+    if (crm_hash_table_size(client_connections) == 0) {
         crm_info("All clients disconnected (%d)", srv_stats.active_connections);
         initiate_exit();
 
@@ -1393,16 +1401,16 @@ terminate_cib(const char *caller, gboolean fast)
         remote_tls_fd = 0;
     }
 
-    if(!fast) {
+    if (!fast) {
         crm_info("%s: Disconnecting from cluster infrastructure", caller);
         crm_cluster_disconnect(&crm_cluster);
     }
 
     uninitializeCib();
 
-    crm_info("%s: Exiting%s...", caller, fast?" fast":mainloop?" from mainloop":"");
+    crm_info("%s: Exiting%s...", caller, fast ? " fast" : mainloop ? " from mainloop" : "");
 
-    if(fast == FALSE && mainloop != NULL && g_main_is_running(mainloop)) {
+    if (fast == FALSE && mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
 
     } else {

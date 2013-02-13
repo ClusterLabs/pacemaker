@@ -121,7 +121,7 @@ find_action(crm_graph_t * graph, int id)
 {
     GListPtr sIter = NULL;
 
-    if(graph == NULL) {
+    if (graph == NULL) {
         return NULL;
     }
 
@@ -132,7 +132,7 @@ find_action(crm_graph_t * graph, int id)
         for (aIter = synapse->actions; aIter != NULL; aIter = aIter->next) {
             crm_action_t *action = (crm_action_t *) aIter->data;
 
-            if(action->id == id) {
+            if (action->id == id) {
                 return action;
             }
         }
@@ -141,12 +141,12 @@ find_action(crm_graph_t * graph, int id)
 }
 
 static void
-print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
+print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
 {
     GListPtr lpc = NULL;
     char *pending = NULL;
     const char *state = "Pending";
-    
+
     if (synapse->failed) {
         state = "Failed";
 
@@ -168,10 +168,10 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
             if (input->failed) {
                 pending = add_list_element(pending, id_string);
 
-            } else if(input->confirmed) {
+            } else if (input->confirmed) {
                 /* Confirmed, skip */
 
-            } else if(find_action(graph, input->id)) {
+            } else if (find_action(graph, input->id)) {
                 /* In-flight or pending */
                 pending = add_list_element(pending, id_string);
             }
@@ -186,8 +186,8 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
 
         do_crm_log(log_level,
                    "[Action %4d]: %-50s on %s (priority: %d, waiting: %s)",
-                   action->id, desc, host?host:"N/A",
-                   synapse->priority, pending?pending:"none");
+                   action->id, desc, host ? host : "N/A",
+                   synapse->priority, pending ? pending : "none");
 
         g_free(desc);
     }
@@ -199,7 +199,7 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t *synapse)
             const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
 
             if (find_action(graph, input->id) == NULL) {
-                if(host == NULL) {
+                if (host == NULL) {
                     do_crm_log(log_level, " * [Input %2d]: Unresolved dependancy %s op %s",
                                input->id, actiontype2text(input->type), key);
                 } else {
@@ -238,6 +238,7 @@ print_graph(unsigned int log_level, crm_graph_t * graph)
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
+
         print_synapse(log_level, graph, synapse);
     }
 }

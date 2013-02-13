@@ -48,10 +48,12 @@ do_log(long long action,
 
     if (msg_data->data_type == fsa_dt_ha_msg) {
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
+
         crm_log_xml_debug(input->msg, __FUNCTION__);
 
     } else if (msg_data->data_type == fsa_dt_xml) {
         xmlNode *input = fsa_typed_data(msg_data->data_type);
+
         crm_log_xml_debug(input, __FUNCTION__);
 
     } else if (msg_data->data_type == fsa_dt_lrm) {

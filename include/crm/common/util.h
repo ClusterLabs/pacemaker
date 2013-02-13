@@ -62,11 +62,10 @@ char *score2char(int score);
 int compare_version(const char *version1, const char *version2);
 
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
-gboolean decode_transition_key(
-    const char *key, char **uuid, int *action, int *transition_id, int *target_rc);
-gboolean decode_transition_magic(
-    const char *magic, char **uuid, int *transition_id, int *action_id,
-    int *op_status, int *op_rc, int *target_rc);
+gboolean decode_transition_key(const char *key, char **uuid, int *action, int *transition_id,
+                               int *target_rc);
+gboolean decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
+                                 int *op_status, int *op_rc, int *target_rc);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
@@ -76,7 +75,7 @@ gboolean safe_str_neq(const char *a, const char *b);
 
 /* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
-                      const char *condition, gboolean do_core, gboolean do_fork);
+               const char *condition, gboolean do_core, gboolean do_fork);
 
 static inline gboolean
 is_not_set(long long word, long long bit)
@@ -97,9 +96,9 @@ is_set_any(long long word, long long bit)
 }
 
 static inline guint
-crm_hash_table_size(GHashTable *hashtable)
+crm_hash_table_size(GHashTable * hashtable)
 {
-    if(hashtable == NULL) {
+    if (hashtable == NULL) {
         return 0;
     }
     return g_hash_table_size(hashtable);
@@ -108,8 +107,8 @@ crm_hash_table_size(GHashTable *hashtable)
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);
 
-int rsc_op_expected_rc(lrmd_event_data_t *event);
-gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
+int rsc_op_expected_rc(lrmd_event_data_t * event);
+gboolean did_rsc_op_fail(lrmd_event_data_t * event, int target_rc);
 
 char *crm_md5sum(const char *buffer);
 

@@ -73,10 +73,11 @@ crmd_ais_dispatch(int kind, const char *from, const char *data)
                     crm_log_xml_err(xml, "Invalid quorum/membership update");
 
                 } else {
-                    int rc = update_attr_delegate(
-                        fsa_cib_conn, cib_quorum_override | cib_scope_local | cib_inhibit_notify,
-                        XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                        XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL);
+                    int rc = update_attr_delegate(fsa_cib_conn,
+                                                  cib_quorum_override | cib_scope_local |
+                                                  cib_inhibit_notify,
+                                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                                                  XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL);
 
                     crm_info("Setting expected votes to %s", votes);
                     if (pcmk_ok > rc) {
@@ -90,19 +91,20 @@ crmd_ais_dispatch(int kind, const char *from, const char *data)
             crm_xml_add(xml, F_ORIG, from);
             /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
 
-            if(is_heartbeat_cluster()) { 
+            if (is_heartbeat_cluster()) {
                 flag = crm_proc_heartbeat;
 
-            } else if(is_classic_ais_cluster()) {
+            } else if (is_classic_ais_cluster()) {
                 flag = crm_proc_plugin;
             }
 
             peer = crm_get_peer(0, from);
-            if(is_not_set(peer->processes, flag)) {
+            if (is_not_set(peer->processes, flag)) {
                 /* If we can still talk to our peer process on that node,
                  * then its also part of the corosync membership
                  */
-                crm_err("Recieving messages from a node we think is dead: %s[%d]", peer->uname, peer->id);
+                crm_err("Recieving messages from a node we think is dead: %s[%d]", peer->uname,
+                        peer->id);
                 crm_update_peer_proc(__FUNCTION__, peer, flag, ONLINESTATUS);
             }
             crmd_ha_msg_filter(xml);
@@ -157,7 +159,7 @@ crmd_ais_destroy(gpointer user_data)
     }
 }
 
-#if SUPPORT_CMAN
+#  if SUPPORT_CMAN
 static void
 crmd_cman_destroy(gpointer user_data)
 {
@@ -169,12 +171,12 @@ crmd_cman_destroy(gpointer user_data)
         crm_info("connection closed");
     }
 }
-#endif
+#  endif
 
-extern gboolean crm_connect_corosync(crm_cluster_t *cluster);
+extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 
 gboolean
-crm_connect_corosync(crm_cluster_t *cluster)
+crm_connect_corosync(crm_cluster_t * cluster)
 {
     gboolean rc = FALSE;
 
@@ -189,13 +191,12 @@ crm_connect_corosync(crm_cluster_t *cluster)
     if (rc && is_corosync_cluster()) {
         init_quorum_connection(crmd_cman_dispatch, crmd_quorum_destroy);
     }
-
-#if SUPPORT_CMAN
+#  if SUPPORT_CMAN
     if (rc && is_cman_cluster()) {
         init_cman_connection(crmd_cman_dispatch, crmd_cman_destroy);
         set_bit(fsa_input_register, R_MEMBERSHIP);
     }
-#endif
+#  endif
     return rc;
 }
 

@@ -75,7 +75,6 @@ check_dead_member(const char *uname, GHashTable * members)
     }
 }
 
-
 static void
 reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {
@@ -101,7 +100,8 @@ post_cache_update(int instance)
     set_bit(fsa_input_register, R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer|node_update_expected, __FUNCTION__);
+        populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
+                           node_update_expected, __FUNCTION__);
     }
 
     /*
@@ -137,14 +137,14 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 }
 
 xmlNode *
-do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *source)
+do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *source)
 {
     const char *value = NULL;
     xmlNode *node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
     set_uuid(node_state, XML_ATTR_UUID, node->uname);
 
-    if(crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
+    if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
         crm_info("Node update for %s cancelled: no id", node->uname);
         free_xml(node_state);
         return NULL;
@@ -152,10 +152,10 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
 
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
-    if(flags & node_update_cluster) {
+    if (flags & node_update_cluster) {
         if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
             value = XML_BOOLEAN_YES;
-        } else if(node->state) {
+        } else if (node->state) {
             value = XML_BOOLEAN_NO;
         } else {
             value = NULL;
@@ -163,7 +163,7 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
         crm_xml_add(node_state, XML_NODE_IN_CLUSTER, value);
     }
 
-    if(flags & node_update_peer) {
+    if (flags & node_update_peer) {
         value = OFFLINESTATUS;
         if (node->processes & proc_flags) {
             value = ONLINESTATUS;
@@ -171,7 +171,7 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
         crm_xml_add(node_state, XML_NODE_IS_PEER, value);
     }
 
-    if(flags & node_update_join) {
+    if (flags & node_update_join) {
         const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
 
         if (peer_member != NULL) {
@@ -182,7 +182,7 @@ do_update_node_cib(crm_node_t *node, int flags, xmlNode *parent, const char *sou
         crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
     }
 
-    if(flags & node_update_expected) {
+    if (flags & node_update_expected) {
         crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
     }
 
@@ -248,15 +248,15 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 #  endif
 #endif
 
-    if(from_hashtable) {
-    /* if(uname_is_uuid()) { */
-    /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, node_list); */
-    /* } else { */
+    if (from_hashtable) {
+        /* if(uname_is_uuid()) { */
+        /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, node_list); */
+        /* } else { */
         g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, node_list);
-    /* } */
+        /* } */
     }
 
-    crm_trace("Populating <nodes> section from %s", from_hashtable?"hashtable":"cluster");
+    crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
     fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id, NULL);
     fsa_register_cib_callback(call_id, FALSE, NULL, node_list_update_callback);
@@ -269,6 +269,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
          * we've not seen valid membership data
          */
         struct update_data_s update_data;
+
         node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
         update_data.caller = source;

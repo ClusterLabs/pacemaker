@@ -20,7 +20,7 @@
  */
 
 #ifndef DOXYGEN__H
-#define DOXYGEN__H
+#  define DOXYGEN__H
 
 /**
  * \file
@@ -65,4 +65,4 @@
  * \verbinclude doc/coding_guidelines.txt
  */
 
-#endif /* DOXYGEN__H */
+#endif                          /* DOXYGEN__H */

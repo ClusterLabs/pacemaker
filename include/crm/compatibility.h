@@ -115,9 +115,9 @@ enum lrmd_errors {
 };
 /* *INDENT-ON* */
 
-#define stonith_error2string pcmk_strerror
-#define lrmd_error2string    pcmk_strerror
-#define cib_error2string     pcmk_strerror
+#  define stonith_error2string pcmk_strerror
+#  define lrmd_error2string    pcmk_strerror
+#  define cib_error2string     pcmk_strerror
 
 static inline void
 slist_basic_destroy(GListPtr list)
@@ -156,7 +156,7 @@ slist_basic_destroy(GListPtr list)
 	CRM_ASSERT(realloc_obj != NULL);				\
     } while(0)
 
-#define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
+#  define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
 
 /* These two child iterator macros are no longer to be used
  * They exist for compatability reasons and will be removed in a
@@ -227,16 +227,16 @@ slist_basic_destroy(GListPtr list)
 
 /* For ABI compatability with version < 1.1.4 */
 static inline char *
-calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+calculate_xml_digest(xmlNode * input, gboolean sort, gboolean do_filter)
 {
     return calculate_xml_digest_v1(input, sort, do_filter);
 }
 
-static inline void free_xml_from_parent(xmlNode * parent, xmlNode * a_node)
+static inline void
+free_xml_from_parent(xmlNode * parent, xmlNode * a_node)
 {
     free_xml(a_node);
 }
-
 
 /* Use something like this instead of the next macro:
 
@@ -259,16 +259,16 @@ static inline void free_xml_from_parent(xmlNode * parent, xmlNode * a_node)
 
 #  ifdef CRM_ATTRD__H
 static inline gboolean
-attrd_update(crm_ipc_t *cluster, char command, const char *host, const char *name,
+attrd_update(crm_ipc_t * cluster, char command, const char *host, const char *name,
              const char *value, const char *section, const char *set, const char *dampen)
 {
-    return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL) > 0;
+    return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen,
+                                 NULL) > 0;
 }
 
 static inline gboolean
 attrd_lazy_update(char command, const char *host, const char *name,
-                  const char *value, const char *section, const char *set,
-                  const char *dampen)
+                  const char *value, const char *section, const char *set, const char *dampen)
 {
     return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL) > 0;
 }
@@ -282,7 +282,7 @@ attrd_update_no_mainloop(int *connection, char command, const char *host,
 }
 #  endif
 
-# ifdef CIB_UTIL__H
+#  ifdef CIB_UTIL__H
 static inline int
 update_attr(cib_t * the_cib, int call_options,
             const char *section, const char *node_uuid, const char *set_type, const char *set_name,

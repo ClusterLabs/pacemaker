@@ -17,7 +17,7 @@
  */
 
 G_GNUC_INTERNAL GList *systemd_unit_listall(void);
-G_GNUC_INTERNAL int systemd_unit_exec(svc_action_t* op, gboolean synchronous);
-G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar *name);
-G_GNUC_INTERNAL gboolean systemd_unit_running(const gchar *name);
+G_GNUC_INTERNAL int systemd_unit_exec(svc_action_t * op, gboolean synchronous);
+G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar * name);
+G_GNUC_INTERNAL gboolean systemd_unit_running(const gchar * name);
 G_GNUC_INTERNAL void systemd_cleanup(void);

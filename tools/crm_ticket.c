@@ -62,9 +62,10 @@ extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
     } while(0)
 
 static ticket_t *
-find_ticket(const char *ticket_id , pe_working_set_t * data_set)
+find_ticket(const char *ticket_id, pe_working_set_t * data_set)
 {
     ticket_t *ticket = NULL;
+
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
 
     return ticket;
@@ -82,20 +83,20 @@ print_date(time_t time)
             date_str[lpc] = 0;
         }
     }
-    fprintf(stdout,"'%s'", date_str);
+    fprintf(stdout, "'%s'", date_str);
 }
 
 static int
-print_ticket(ticket_t *ticket, gboolean raw, gboolean details)
+print_ticket(ticket_t * ticket, gboolean raw, gboolean details)
 {
     if (raw) {
-        fprintf(stdout, "%s\n", ticket->id); 
+        fprintf(stdout, "%s\n", ticket->id);
         return pcmk_ok;
     }
 
     fprintf(stdout, "%s\t%s %s",
-            ticket->id, ticket->granted?"granted":"revoked", 
-            ticket->standby?"[standby]":"         ");
+            ticket->id, ticket->granted ? "granted" : "revoked",
+            ticket->standby ? "[standby]" : "         ");
 
     if (details && g_hash_table_size(ticket->state) > 0) {
         GHashTableIter iter;
@@ -124,8 +125,8 @@ print_ticket(ticket_t *ticket, gboolean raw, gboolean details)
 
     } else {
         if (ticket->last_granted > -1) {
-             fprintf(stdout, " last-granted=");
-             print_date(ticket->last_granted);
+            fprintf(stdout, " last-granted=");
+            print_date(ticket->last_granted);
         }
         fprintf(stdout, "\n");
     }
@@ -149,7 +150,7 @@ print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
 }
 
 static int
-find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_state_xml)
+find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -162,12 +163,11 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     *ticket_state_xml = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
-                       XML_CIB_TAG_TICKET_STATE, ticket_id);
+                           XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -193,7 +193,7 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
 }
 
 static int
-find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_cons_xml)
+find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -212,7 +212,7 @@ find_ticket_constraints(cib_t * the_cib, const char * ticket_id, xmlNode ** tick
 
     if (ticket_id) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "[@ticket=\"%s\"]",
-                       ticket_id);
+                           ticket_id);
     }
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -234,7 +234,7 @@ static int
 dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
 {
     int rc = pcmk_ok;
-    xmlNode * state_xml = NULL;
+    xmlNode *state_xml = NULL;
 
     rc = find_ticket_state(the_cib, ticket_id, &state_xml);
 
@@ -256,10 +256,10 @@ dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
 }
 
 static int
-dump_constraints(cib_t * the_cib, const char * ticket_id)
+dump_constraints(cib_t * the_cib, const char *ticket_id)
 {
     int rc = pcmk_ok;
-    xmlNode * cons_xml = NULL;
+    xmlNode *cons_xml = NULL;
     char *cons_xml_str = NULL;
 
     rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
@@ -277,8 +277,9 @@ dump_constraints(cib_t * the_cib, const char * ticket_id)
 }
 
 static int
-find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *ticket_id, const char *set_type,
-                   const char *set_name, const char *attr_id, const char *attr_name, char **value)
+find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *ticket_id,
+                              const char *set_type, const char *set_name, const char *attr_id,
+                              const char *attr_name, char **value)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -291,8 +292,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     *value = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
     if (set_type) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
@@ -342,7 +342,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
 
         for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
             fprintf(stdout, "  Value: %s \t(id=%s)\n",
-                   crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
 
     } else {
@@ -361,15 +361,15 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
 
 static int
 delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, const char *attr_id,
-                     const char *attr_name, cib_t * cib)
+                                const char *attr_name, cib_t * cib)
 {
     xmlNode *xml_obj = NULL;
 
     int rc = pcmk_ok;
     char *local_attr_id = NULL;
 
-    rc = find_ticket_state_attr_legacy(cib, XML_ATTR_ID, ticket_id, XML_TAG_ATTR_SETS, set_name, attr_id, attr_name,
-                            &local_attr_id);
+    rc = find_ticket_state_attr_legacy(cib, XML_ATTR_ID, ticket_id, XML_TAG_ATTR_SETS, set_name,
+                                       attr_id, attr_name, &local_attr_id);
 
     if (rc == -ENXIO) {
         return pcmk_ok;
@@ -384,16 +384,16 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
 
     xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
     crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    /*crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);*/
+    /*crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name); */
 
     crm_log_xml_debug(xml_obj, "Delete");
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);
 
     if (rc == pcmk_ok) {
-        fprintf(stdout, "Deleted legacy %s state attribute: id=%s%s%s%s%s\n", ticket_id, local_attr_id,
-               set_name ? " set=" : "", set_name ? set_name : "",
-               attr_name ? " name=" : "", attr_name ? attr_name : "");
+        fprintf(stdout, "Deleted legacy %s state attribute: id=%s%s%s%s%s\n", ticket_id,
+                local_attr_id, set_name ? " set=" : "", set_name ? set_name : "",
+                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
 
     free_xml(xml_obj);
@@ -402,7 +402,8 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
 }
 
 static int
-get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value, pe_working_set_t * data_set)
+get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value,
+                      pe_working_set_t * data_set)
 {
     ticket_t *ticket = NULL;
 
@@ -443,7 +444,7 @@ delete_ticket_state_attr(const char *ticket_id, const char *attr_name, cib_t * c
 
     if (rc == pcmk_ok) {
         fprintf(stdout, "Deleted %s state attribute: %s%s\n", ticket_id,
-               attr_name ? " name=" : "", attr_name ? attr_name : "");
+                attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
 
     free_xml(ticket_state_xml);
@@ -522,27 +523,27 @@ confirm(const char *ticket_id, const char *action)
     static int text_max = 1024;
 
     char *warning = NULL;
-    const char * word = NULL;
+    const char *word = NULL;
 
     warning = calloc(1, text_max);
     if (safe_str_eq(action, "grant")) {
         offset += snprintf(warning + offset, text_max - offset,
-                "The command cannot help you verify if '%s' is already granted elsewhere.\n",
-                ticket_id);
+                           "The command cannot help you verify if '%s' is already granted elsewhere.\n",
+                           ticket_id);
         word = "to";
 
     } else {
         offset += snprintf(warning + offset, text_max - offset,
-                "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
-                ticket_id, ticket_id);
+                           "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
+                           ticket_id, ticket_id);
 
         offset += snprintf(warning + offset, text_max - offset,
-                "You can check that with:\ncrm_ticket --ticket %s --constraints\n\n",
-                ticket_id);
+                           "You can check that with:\ncrm_ticket --ticket %s --constraints\n\n",
+                           ticket_id);
 
         offset += snprintf(warning + offset, text_max - offset,
-                "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n",
-                ticket_id, ticket_id, ticket_id);
+                           "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n",
+                           ticket_id, ticket_id, ticket_id);
         word = "from";
     }
 
@@ -573,7 +574,7 @@ confirm(const char *ticket_id, const char *action)
         }
     }
 
-bail:
+  bail:
     free(warning);
     return rc;
 }
@@ -763,8 +764,7 @@ main(int argc, char **argv)
     cib_conn = cib_new();
     if (cib_conn == NULL) {
         rc = -ENOTCONN;
-        CMD_ERR("Error initiating the connection to the CIB service: %s\n",
-                pcmk_strerror(rc));
+        CMD_ERR("Error initiating the connection to the CIB service: %s\n", pcmk_strerror(rc));
         return rc;
     }
 
@@ -799,6 +799,7 @@ main(int argc, char **argv)
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;
         gboolean details = FALSE;
+
         rc = pcmk_ok;
 
         if (ticket_cmd == 'L') {
@@ -809,6 +810,7 @@ main(int argc, char **argv)
 
         if (ticket_id) {
             ticket_t *ticket = find_ticket(ticket_id, &data_set);
+
             if (ticket == NULL) {
                 rc = -ENXIO;
                 goto bail;
@@ -842,7 +844,7 @@ main(int argc, char **argv)
             rc = pcmk_ok;
         }
 
-    } else if (ticket_cmd == 'S' 
+    } else if (ticket_cmd == 'S'
                || ticket_cmd == 'g' || ticket_cmd == 'r'
                || ticket_cmd == 's' || ticket_cmd == 'a') {
         gboolean is_granting = FALSE;
@@ -900,7 +902,7 @@ main(int argc, char **argv)
         rc = set_ticket_state_attr(ticket_id, attr_name, attr_value, cib_conn);
         delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, attr_name, cib_conn);
 
-        if(rc != pcmk_ok) {
+        if (rc != pcmk_ok) {
             goto bail;
         }
 
@@ -932,7 +934,7 @@ main(int argc, char **argv)
             rc = -ENXIO;
             goto bail;
         }
-        
+
         if (do_force == FALSE) {
             ticket_t *ticket = NULL;
 

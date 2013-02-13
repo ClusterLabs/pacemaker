@@ -31,8 +31,8 @@
 /* TO-DO: Work out how to drop this requirement */
 #  include <libxml/tree.h>
 
-#define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
-#define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
+#  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
+#  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -339,7 +339,7 @@ const char *get_stonith_provider(const char *agent, const char *provider);
 bool stonith_dispatch(stonith_t * st);
 
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
-                                                  const char *value);
+                                           const char *value);
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
 /* Basic helpers that allows nodes to be fenced and the history to be

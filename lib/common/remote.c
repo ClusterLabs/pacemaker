@@ -29,7 +29,6 @@
 #include <netinet/ip.h>
 #include <netdb.h>
 
-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -49,6 +48,7 @@ const int psk_tls_kx_order[] = {
     GNUTLS_KX_DHE_PSK,
     GNUTLS_KX_PSK,
 };
+
 const int anon_tls_kx_order[] = {
     GNUTLS_KX_ANON_DH,
     GNUTLS_KX_DHE_RSA,
@@ -58,7 +58,7 @@ const int anon_tls_kx_order[] = {
 };
 
 int
-crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms)
+crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
 {
     int rc = 0;
     int pollrc = 0;
@@ -74,17 +74,18 @@ crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms)
             }
         }
 
-    } while (((time(NULL) - start) < (timeout_ms/1000)) &&
-            (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN));
+    } while (((time(NULL) - start) < (timeout_ms / 1000)) &&
+             (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN));
 
-    if(rc < 0) {
+    if (rc < 0) {
         crm_trace("gnutls_handshake() failed with %d", rc);
     }
     return rc;
 }
 
 void *
-crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, void *credentials)
+crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ ,
+                            void *credentials)
 {
     gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
@@ -99,19 +100,21 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
 #  endif
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
-    case GNUTLS_SERVER:
-        gnutls_credentials_set(*session, GNUTLS_CRD_ANON, (gnutls_anon_server_credentials_t) credentials);
-        break;
-    case GNUTLS_CLIENT:
-        gnutls_credentials_set(*session, GNUTLS_CRD_ANON, (gnutls_anon_client_credentials_t) credentials);
-        break;
+        case GNUTLS_SERVER:
+            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
+                                   (gnutls_anon_server_credentials_t) credentials);
+            break;
+        case GNUTLS_CLIENT:
+            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
+                                   (gnutls_anon_client_credentials_t) credentials);
+            break;
     }
 
     return session;
 }
 
 void *
-create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, void *credentials)
+create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ , void *credentials)
 {
     gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
@@ -124,17 +127,18 @@ create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */, v
 #  endif
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
-    case GNUTLS_SERVER:
-        gnutls_credentials_set(*session, GNUTLS_CRD_PSK, (gnutls_psk_server_credentials_t) credentials);
-        break;
-    case GNUTLS_CLIENT:
-        gnutls_credentials_set(*session, GNUTLS_CRD_PSK, (gnutls_psk_client_credentials_t) credentials);
-        break;
+        case GNUTLS_SERVER:
+            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
+                                   (gnutls_psk_server_credentials_t) credentials);
+            break;
+        case GNUTLS_CLIENT:
+            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
+                                   (gnutls_psk_client_credentials_t) credentials);
+            break;
     }
 
     return session;
 }
-
 
 static int
 crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
@@ -173,7 +177,6 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
     return rc < 0 ? rc : total_send;
 }
 
-
 /*!
  * \internal
  * \brief Read bytes off non blocking tls session.
@@ -188,7 +191,7 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
  * \retval '\0' terminated buffer on success
  */
 static char *
-crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t *recv_len, int *disconnected)
+crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t * recv_len, int *disconnected)
 {
     char *buf = NULL;
     int rc = 0;
@@ -210,10 +213,11 @@ crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t *recv_len, int 
     while (TRUE) {
         read_size = buf_size - len;
 
-        /* automatically grow the buffer when needed if max_size is not set.*/
+        /* automatically grow the buffer when needed if max_size is not set. */
         if (!max_size && (read_size < (chunk_size / 2))) {
             buf_size += chunk_size;
-            crm_trace("Grow buffer by %d more bytes. buf is now %d bytes", (int)chunk_size, buf_size);
+            crm_trace("Grow buffer by %d more bytes. buf is now %d bytes", (int)chunk_size,
+                      buf_size);
             buf = realloc(buf, buf_size + 1);
             CRM_ASSERT(buf != NULL);
 
@@ -225,11 +229,11 @@ crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t *recv_len, int 
         if (rc > 0) {
             crm_trace("Got %d more bytes.", rc);
             len += rc;
-            /* always null terminate buffer, the +1 to alloc always allows for this.*/
+            /* always null terminate buffer, the +1 to alloc always allows for this. */
             buf[len] = '\0';
         }
         if (max_size && (max_size == read_size)) {
-            crm_trace("Buffer max read size %d met" , max_size);
+            crm_trace("Buffer max read size %d met", max_size);
             goto done;
         }
 
@@ -252,7 +256,7 @@ crm_recv_tls(gnutls_session_t * session, size_t max_size, size_t *recv_len, int 
         }
     }
 
-done:
+  done:
     if (recv_len) {
         *recv_len = len;
     }
@@ -283,13 +287,13 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
     rc = write(sock, unsent, len);
     if (rc < 0) {
         switch (errno) {
-        case EINTR:
-        case EAGAIN:
-            crm_trace("Retry");
-            goto retry;
-        default:
-            crm_perror(LOG_ERR, "Could only write %d of the remaining %d bytes", rc, (int) len);
-            break;
+            case EINTR:
+            case EAGAIN:
+                crm_trace("Retry");
+                goto retry;
+            default:
+                crm_perror(LOG_ERR, "Could only write %d of the remaining %d bytes", rc, (int)len);
+                break;
         }
 
     } else if (rc < len) {
@@ -298,7 +302,7 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
         unsent += rc;
         goto retry;
 
-     } else {
+    } else {
         crm_trace("Sent %d bytes: %.100s", rc, buf);
     }
 
@@ -320,7 +324,7 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
  * \retval '\0' terminated buffer on success
  */
 static char *
-crm_recv_plaintext(int sock, size_t max_size, size_t *recv_len, int *disconnected)
+crm_recv_plaintext(int sock, size_t max_size, size_t * recv_len, int *disconnected)
 {
     char *buf = NULL;
     ssize_t rc = 0;
@@ -343,10 +347,11 @@ crm_recv_plaintext(int sock, size_t max_size, size_t *recv_len, int *disconnecte
         errno = 0;
         read_size = buf_size - len;
 
-        /* automatically grow the buffer when needed if max_size is not set.*/
+        /* automatically grow the buffer when needed if max_size is not set. */
         if (!max_size && (read_size < (chunk_size / 2))) {
             buf_size += chunk_size;
-            crm_trace("Grow buffer by %d more bytes. buf is now %d bytes", (int)chunk_size, buf_size);
+            crm_trace("Grow buffer by %d more bytes. buf is now %d bytes", (int)chunk_size,
+                      buf_size);
             buf = realloc(buf, buf_size + 1);
             CRM_ASSERT(buf != NULL);
 
@@ -358,11 +363,11 @@ crm_recv_plaintext(int sock, size_t max_size, size_t *recv_len, int *disconnecte
         if (rc > 0) {
             crm_trace("Got %d more bytes. errno=%d", (int)rc, errno);
             len += rc;
-            /* always null terminate buffer, the +1 to alloc always allows for this.*/
+            /* always null terminate buffer, the +1 to alloc always allows for this. */
             buf[len] = '\0';
         }
         if (max_size && (max_size == read_size)) {
-            crm_trace("Buffer max read size %d met" , max_size);
+            crm_trace("Buffer max read size %d met", max_size);
             goto done;
         }
 
@@ -391,7 +396,7 @@ crm_recv_plaintext(int sock, size_t max_size, size_t *recv_len, int *disconnecte
         }
     }
 
-done:
+  done:
     if (recv_len) {
         *recv_len = len;
     }
@@ -403,15 +408,15 @@ done:
 }
 
 static int
-crm_remote_send_raw(crm_remote_t *remote, const char *buf, size_t len)
+crm_remote_send_raw(crm_remote_t * remote, const char *buf, size_t len)
 {
     int rc = -ESOCKTNOSUPPORT;
 
-    if(remote->tcp_socket) {
+    if (remote->tcp_socket) {
         rc = crm_send_plaintext(remote->tcp_socket, buf, len);
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
-    } else if(remote->tls_session) {
+    } else if (remote->tls_session) {
         rc = crm_send_tls(remote->tls_session, buf, len);
 #endif
     } else {
@@ -421,7 +426,7 @@ crm_remote_send_raw(crm_remote_t *remote, const char *buf, size_t len)
 }
 
 int
-crm_remote_send(crm_remote_t *remote, xmlNode * msg)
+crm_remote_send(crm_remote_t * remote, xmlNode * msg)
 {
     int rc = -1;
     char *xml_text = NULL;
@@ -454,7 +459,7 @@ crm_remote_send(crm_remote_t *remote, xmlNode * msg)
  * \note new_data is owned by this function once it is passed in.
  */
 xmlNode *
-crm_remote_parse_buffer(crm_remote_t *remote)
+crm_remote_parse_buffer(crm_remote_t * remote)
 {
     char *buf = NULL;
     char *start = NULL;
@@ -508,7 +513,7 @@ crm_remote_parse_buffer(crm_remote_t *remote)
  * \retval negative, session has ended
  */
 int
-crm_remote_ready(crm_remote_t *remote, int timeout /* ms */)
+crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
 {
     struct pollfd fds = { 0, };
     int sock = 0;
@@ -518,8 +523,9 @@ crm_remote_ready(crm_remote_t *remote, int timeout /* ms */)
     if (remote->tcp_socket) {
         sock = remote->tcp_socket;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    } else if(remote->tls_session) {
+    } else if (remote->tls_session) {
         void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
+
         sock = GPOINTER_TO_INT(sock_ptr);
 #endif
     } else {
@@ -561,7 +567,7 @@ crm_remote_ready(crm_remote_t *remote, int timeout /* ms */)
  */
 
 gboolean
-crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnected)
+crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconnected)
 {
     int ret;
     size_t request_len = 0;
@@ -580,7 +586,8 @@ crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnect
     while ((remaining_timeout > 0) && !(*disconnected)) {
 
         /* read some more off the tls buffer if we still have time left. */
-        crm_trace("waiting to receive remote msg, starting timeout %d, remaining_timeout %d", total_timeout, remaining_timeout);
+        crm_trace("waiting to receive remote msg, starting timeout %d, remaining_timeout %d",
+                  total_timeout, remaining_timeout);
         ret = crm_remote_ready(remote, remaining_timeout);
         raw_request = NULL;
 
@@ -590,7 +597,8 @@ crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnect
 
         } else if (ret < 0) {
             if (errno != EINTR) {
-                crm_debug("poll returned error while waiting for msg, rc: %d, errno: %d", ret, errno);
+                crm_debug("poll returned error while waiting for msg, rc: %d, errno: %d", ret,
+                          errno);
                 *disconnected = 1;
                 return FALSE;
             }
@@ -600,7 +608,7 @@ crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnect
             raw_request = crm_recv_plaintext(remote->tcp_socket, 0, &request_len, disconnected);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        } else if(remote->tls_session) {
+        } else if (remote->tls_session) {
             raw_request = crm_recv_tls(remote->tls_session, 0, &request_len, disconnected);
 #endif
         } else {
@@ -617,11 +625,11 @@ crm_remote_recv(crm_remote_t *remote, int total_timeout /*ms */, int *disconnect
         if (remote->buffer) {
             int old_len = strlen(remote->buffer);
 
-            crm_trace("Expanding recv buffer from %d to %d", old_len, old_len+request_len);
+            crm_trace("Expanding recv buffer from %d to %d", old_len, old_len + request_len);
 
             remote->buffer = realloc(remote->buffer, old_len + request_len + 1);
             memcpy(remote->buffer + old_len, raw_request, request_len);
-            *(remote->buffer+old_len+request_len) = '\0';
+            *(remote->buffer + old_len + request_len) = '\0';
             free(raw_request);
 
         } else {
@@ -640,8 +648,8 @@ struct tcp_async_cb_data {
     gboolean success;
     int sock;
     void *userdata;
-    void (*callback)(void *userdata, int sock);
-    int timeout; /*ms*/
+    void (*callback) (void *userdata, int sock);
+    int timeout;                /*ms */
     time_t start;
 };
 
@@ -653,9 +661,9 @@ check_connect_finished(gpointer userdata)
     int sock = cb_data->sock;
     int error = 0;
 
-    fd_set  rset, wset;
+    fd_set rset, wset;
     socklen_t len = sizeof(error);
-    struct timeval  ts = { 0, };
+    struct timeval ts = { 0, };
 
     if (cb_data->success == TRUE) {
         goto dispatch_done;
@@ -711,7 +719,7 @@ check_connect_finished(gpointer userdata)
         goto dispatch_done;
     }
 
-dispatch_done:
+  dispatch_done:
     if (!rc) {
         crm_trace("fd %d: connected", sock);
         /* Success, set the return code to the sock to report to the callback */
@@ -727,7 +735,7 @@ dispatch_done:
     }
     return FALSE;
 
-reschedule:
+  reschedule:
 
     /* will check again next interval */
     return TRUE;
@@ -735,11 +743,8 @@ reschedule:
 
 static int
 internal_tcp_connect_async(int sock,
-    const struct sockaddr *addr,
-    socklen_t addrlen,
-    int timeout /* ms */,
-    void *userdata,
-    void (*callback)(void *userdata, int sock))
+                           const struct sockaddr *addr, socklen_t addrlen, int timeout /* ms */ ,
+                           void *userdata, void (*callback) (void *userdata, int sock))
 {
     int rc = 0;
     int flag = 0;
@@ -748,14 +753,14 @@ internal_tcp_connect_async(int sock,
 
     if ((flag = fcntl(sock, F_GETFL)) >= 0) {
         if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err( "fcntl() write failed");
+            crm_err("fcntl() write failed");
             return -1;
         }
     }
 
     rc = connect(sock, addr, addrlen);
 
-    if (rc <  0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
+    if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
         return -1;
     }
 
@@ -790,19 +795,17 @@ internal_tcp_connect_async(int sock,
 }
 
 static int
-internal_tcp_connect(int sock,
-    const struct sockaddr *addr,
-    socklen_t addrlen)
+internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
 {
     int flag = 0;
     int rc = connect(sock, addr, addrlen);
 
     if (rc == 0) {
-       if ((flag = fcntl(sock, F_GETFL)) >= 0) {
-           if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-               crm_err( "fcntl() write failed");
-               return -1;
-           }
+        if ((flag = fcntl(sock, F_GETFL)) >= 0) {
+            if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
+                crm_err("fcntl() write failed");
+                return -1;
+            }
         }
     }
 
@@ -815,11 +818,8 @@ internal_tcp_connect(int sock,
  * \retval negative, failed to connect.
  */
 int
-crm_remote_tcp_connect_async(const char *host,
-    int port,
-    int timeout, /*ms*/
-    void *userdata,
-    void (*callback)(void *userdata, int sock))
+crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
+                             void *userdata, void (*callback) (void *userdata, int sock))
 {
     struct addrinfo *res;
     struct addrinfo *rp;
@@ -830,7 +830,7 @@ crm_remote_tcp_connect_async(const char *host,
 
     /* getaddrinfo */
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_UNSPEC;        /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
 
@@ -848,6 +848,7 @@ crm_remote_tcp_connect_async(const char *host,
 
     for (rp = res; rp != NULL; rp = rp->ai_next) {
         struct sockaddr *addr = rp->ai_addr;
+
         if (!addr) {
             continue;
         }
@@ -864,22 +865,26 @@ crm_remote_tcp_connect_async(const char *host,
             continue;
         }
         if (addr->sa_family == AF_INET6) {
-            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *) addr;
+            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr;
+
             addr_in->sin6_port = htons(port);
         } else {
-            struct sockaddr_in *addr_in = (struct sockaddr_in *) addr;
+            struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+
             addr_in->sin_port = htons(port);
-            crm_info("Attempting to connect to remote server at %s:%d", inet_ntoa(addr_in->sin_addr), port);
+            crm_info("Attempting to connect to remote server at %s:%d",
+                     inet_ntoa(addr_in->sin_addr), port);
         }
 
         if (callback) {
-            if (internal_tcp_connect_async(sock, rp->ai_addr, rp->ai_addrlen, timeout, userdata, callback) == 0) {
-                return 0;  /* Success for now, we'll hear back later in the callback */
+            if (internal_tcp_connect_async
+                (sock, rp->ai_addr, rp->ai_addrlen, timeout, userdata, callback) == 0) {
+                return 0;       /* Success for now, we'll hear back later in the callback */
             }
 
         } else {
             if (internal_tcp_connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
-                break;                  /* Success */
+                break;          /* Success */
             }
         }
 

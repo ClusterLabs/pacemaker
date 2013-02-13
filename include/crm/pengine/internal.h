@@ -56,7 +56,7 @@ void add_hash_param(GHashTable * hash, const char *name, const char *value);
 void append_hashtable(gpointer key, gpointer value, gpointer user_data);
 
 char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
-                              pe_working_set_t * data_set);
+                       pe_working_set_t * data_set);
 node_t *native_location(resource_t * rsc, GListPtr * list, gboolean current);
 
 void pe_metadata(void);
@@ -93,11 +93,10 @@ enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 
-gboolean common_unpack(
-    xmlNode * xml_obj, resource_t ** rsc, resource_t * parent, pe_working_set_t * data_set);
+gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
+                       pe_working_set_t * data_set);
 void common_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void common_free(resource_t * rsc);
-
 
 extern pe_working_set_t *pe_dataset;
 
@@ -106,7 +105,7 @@ extern time_t get_timet_now(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, int *last_failure,
                          pe_working_set_t * data_set);
 extern int get_failcount_all(node_t * node, resource_t * rsc, int *last_failure,
-                         pe_working_set_t * data_set);
+                             pe_working_set_t * data_set);
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
@@ -218,8 +217,8 @@ extern GListPtr find_recurring_actions(GListPtr input, node_t * not_on_node);
 
 extern void pe_free_action(action_t * action);
 
-extern void resource_location(
-    resource_t * rsc, node_t * node, int score, const char *tag, pe_working_set_t * data_set);
+extern void resource_location(resource_t * rsc, node_t * node, int score, const char *tag,
+                              pe_working_set_t * data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 extern gboolean get_target_role(resource_t * rsc, enum rsc_role_e *role);
@@ -228,7 +227,7 @@ extern resource_t *find_clone_instance(resource_t * rsc, const char *sub_id,
                                        pe_working_set_t * data_set);
 
 extern void destroy_ticket(gpointer data);
-extern ticket_t *ticket_new(const char * ticket_id, pe_working_set_t * data_set);
+extern ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
 
 char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
@@ -237,7 +236,7 @@ gint sort_node_uname(gconstpointer a, gconstpointer b);
 
 enum rsc_digest_cmp_val {
     /*! Digests are the same */
-    RSC_DIGEST_MATCH   = 0,
+    RSC_DIGEST_MATCH = 0,
     /*! Params that require a restart changed */
     RSC_DIGEST_RESTART,
     /*! Some parameter changed.  */
@@ -255,7 +254,7 @@ typedef struct op_digest_cache_s {
     char *digest_restart_calc;
 } op_digest_cache_t;
 
-op_digest_cache_t *
-rsc_action_digest_cmp(resource_t *rsc, xmlNode *xml_op, node_t *node, pe_working_set_t *data_set);
+op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
+                                         pe_working_set_t * data_set);
 
 #endif

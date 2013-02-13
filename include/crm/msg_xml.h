@@ -18,37 +18,37 @@
 #ifndef XML_TAGS__H
 #  define XML_TAGS__H
 
-#ifndef F_ORIG
-#  define F_ORIG    "src"
-#endif
+#  ifndef F_ORIG
+#    define F_ORIG    "src"
+#  endif
 
-#ifndef F_SEQ
-#  define F_SEQ		"seq"
-#endif
+#  ifndef F_SEQ
+#    define F_SEQ		"seq"
+#  endif
 
-#ifndef F_SUBTYPE
-#  define F_SUBTYPE "subt"
-#endif
+#  ifndef F_SUBTYPE
+#    define F_SUBTYPE "subt"
+#  endif
 
-#ifndef F_TYPE
-#  define F_TYPE    "t"
-#endif
+#  ifndef F_TYPE
+#    define F_TYPE    "t"
+#  endif
 
-#ifndef F_CLIENTNAME
-#  define	F_CLIENTNAME	"cn"
-#endif
+#  ifndef F_CLIENTNAME
+#    define	F_CLIENTNAME	"cn"
+#  endif
 
-#ifndef F_XML_TAGNAME
-#  define F_XML_TAGNAME	"__name__"
-#endif
+#  ifndef F_XML_TAGNAME
+#    define F_XML_TAGNAME	"__name__"
+#  endif
 
-#ifndef T_CRM
-#  define T_CRM     "crmd"
-#endif
+#  ifndef T_CRM
+#    define T_CRM     "crmd"
+#  endif
 
-#ifndef T_ATTRD
-#  define T_ATTRD     "attrd"
-#endif
+#  ifndef T_ATTRD
+#    define T_ATTRD     "attrd"
+#  endif
 
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 

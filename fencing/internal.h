@@ -1,6 +1,5 @@
 #include <crm/common/mainloop.h>
 
-
 /*!
  * \internal
  * \brief Check to see if target was fenced in the last few seconds.
@@ -11,15 +10,14 @@
  * \retval FALSE, not match
  * \retval TRUE, fencing operation took place in the last 'tolerance' number of seconds.
  */
-gboolean
-stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
+gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
 typedef struct stonith_device_s {
     char *id;
     char *agent;
     char *namespace;
 
-    /*! list of actions that must execute on the target node. Used for unfencing*/
+    /*! list of actions that must execute on the target node. Used for unfencing */
     char *on_target_actions;
     GListPtr targets;
     time_t targets_age;
@@ -103,7 +101,7 @@ typedef struct remote_fencing_op_s {
     GListPtr devices;
 
     /*! List of duplicate operations attached to this operation. Once this operation
-     * completes, the duplicate operations will be closed out as well. */ 
+     * completes, the duplicate operations will be closed out as well. */
     GListPtr duplicates;
 
 } remote_fencing_op_t;
@@ -116,7 +114,8 @@ typedef struct stonith_topology_s {
 
 extern long long get_stonith_flag(const char *name);
 
-extern void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * op_request, const char *remote_peer);
+extern void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
+                            xmlNode * op_request, const char *remote_peer);
 
 extern int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
@@ -129,10 +128,11 @@ extern int stonith_level_remove(xmlNode * msg, char **desc);
 extern void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 
-extern xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, int rc);
+extern xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data,
+                                        int rc);
 
 void
-do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
+ do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
 extern void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
 
@@ -150,7 +150,6 @@ extern int stonith_fence_history(xmlNode * msg, xmlNode ** output);
 extern void free_device(gpointer data);
 
 extern void free_topology_entry(gpointer data);
-
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;

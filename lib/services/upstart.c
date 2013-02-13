@@ -59,14 +59,13 @@ get_proxy(const char *path, const char *interface)
     g_type_init();
 #endif
 
-    if(path == NULL) {
+    if (path == NULL) {
         path = BUS_PATH;
     }
 
-    proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL, /* GDBusInterfaceInfo */
-        BUS_NAME, path, interface,
-        NULL, /* GCancellable */ &error);
+    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL,     /* GDBusInterfaceInfo */
+                                          BUS_NAME, path, interface,
+                                          NULL, /* GCancellable */ &error);
 
     if (error) {
         crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
@@ -80,17 +79,19 @@ static gboolean
 upstart_init(void)
 {
     static int need_init = 1;
-    if(need_init) {
+
+    if (need_init) {
         need_init = 0;
         upstart_proxy = get_proxy(NULL, BUS_MANAGER_IFACE);
     }
-    if(upstart_proxy == NULL) {
+    if (upstart_proxy == NULL) {
         return FALSE;
     }
     return TRUE;
 }
 
-void upstart_cleanup(void)
+void
+upstart_cleanup(void)
 {
     if (upstart_proxy) {
         g_object_unref(upstart_proxy);
@@ -99,23 +100,19 @@ void upstart_cleanup(void)
 }
 
 static gboolean
-upstart_job_by_name (
-    GDBusProxy *proxy,
-    const gchar *arg_name,
-    gchar **out_unit,
-    GCancellable *cancellable,
-    GError **error)
+upstart_job_by_name(GDBusProxy * proxy,
+                    const gchar * arg_name,
+                    gchar ** out_unit, GCancellable * cancellable, GError ** error)
 {
 /*
   com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
 */
-    GVariant *_ret = g_dbus_proxy_call_sync (
-        proxy, "GetJobByName", g_variant_new ("(s)", arg_name),
-        G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
+    GVariant *_ret = g_dbus_proxy_call_sync(proxy, "GetJobByName", g_variant_new("(s)", arg_name),
+                                            G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
 
     if (_ret) {
-        g_variant_get (_ret, "(o)", out_unit);
-        g_variant_unref (_ret);
+        g_variant_get(_ret, "(o)", out_unit);
+        g_variant_unref(_ret);
     }
 
     return _ret != NULL;
@@ -127,17 +124,18 @@ fix(char *input, const char *search, char replace)
     char *match = NULL;
     int shuffle = strlen(search) - 1;
 
-    while(TRUE) {
+    while (TRUE) {
         int len, lpc;
+
         match = strstr(input, search);
-        if(match == NULL) {
+        if (match == NULL) {
             break;
         }
         crm_err("Found: %s", match);
         match[0] = replace;
         len = strlen(match) - shuffle;
-        for(lpc = 1; lpc <= len; lpc++) {
-            match[lpc] = match[lpc+shuffle];
+        for (lpc = 1; lpc <= len; lpc++) {
+            match[lpc] = match[lpc + shuffle];
         }
     }
 }
@@ -146,6 +144,7 @@ static char *
 fix_upstart_name(const char *input)
 {
     char *output = strdup(input);
+
     fix(output, "_2b", '+');
     fix(output, "_2c", ',');
     fix(output, "_2d", '-');
@@ -165,16 +164,15 @@ upstart_job_listall(void)
     GVariant *_ret = NULL;
     int lpc = 0;
 
-    if(upstart_init() == FALSE) {
+    if (upstart_init() == FALSE) {
         return NULL;
     }
 
 /*
   com.ubuntu.Upstart0_6.GetAllJobs (out <Array of ObjectPath> jobs)
 */
-    _ret = g_dbus_proxy_call_sync (
-        upstart_proxy, "GetAllJobs", g_variant_new ("()"),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(upstart_proxy, "GetAllJobs", g_variant_new("()"),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
         crm_info("Call to GetAllJobs failed: %s", error->message);
@@ -182,14 +180,14 @@ upstart_job_listall(void)
         return NULL;
     }
 
-    g_variant_get (_ret, "(ao)", &iter);
-    while (g_variant_iter_loop (iter, "o", &path)) {
+    g_variant_get(_ret, "(ao)", &iter);
+    while (g_variant_iter_loop(iter, "o", &path)) {
         int llpc = 0;
         const char *job = path;
 
-        while(path[llpc] != 0) {
-            if(path[llpc] == '/') {
-                job = path+llpc+1;
+        while (path[llpc] != 0) {
+            if (path[llpc] == '/') {
+                job = path + llpc + 1;
             }
             llpc++;
         }
@@ -197,7 +195,8 @@ upstart_job_listall(void)
         crm_trace("%s\n", path);
         units = g_list_append(units, fix_upstart_name(job));
     }
-    crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string (_ret), lpc);
+    crm_info("Call to GetAllJobs passed: type '%s', count %d", g_variant_get_type_string(_ret),
+             lpc);
 
     g_variant_iter_free(iter);
     g_variant_unref(_ret);
@@ -211,18 +210,18 @@ upstart_job_exists(const char *name)
     GError *error = NULL;
     gboolean pass = FALSE;
 
-    if(upstart_init() == FALSE) {
+    if (upstart_init() == FALSE) {
         return FALSE;
     }
 
-    pass = upstart_job_by_name (upstart_proxy, name, &path, NULL, &error);
+    pass = upstart_job_by_name(upstart_proxy, name, &path, NULL, &error);
 
     if (error) {
         crm_trace("Call to ListUnits failed: %s", error->message);
         g_error_free(error);
         pass = FALSE;
 
-    } else if(pass) {
+    } else if (pass) {
         crm_trace("Got %s", path);
     }
     /* free(path) */
@@ -230,7 +229,7 @@ upstart_job_exists(const char *name)
 }
 
 static char *
-upstart_job_property(const char *obj, const gchar *iface, const char *name)
+upstart_job_property(const char *obj, const gchar * iface, const char *name)
 {
     GError *error = NULL;
     GDBusProxy *proxy;
@@ -246,23 +245,24 @@ upstart_job_property(const char *obj, const gchar *iface, const char *name)
         return NULL;
     }
 
-    _ret = g_dbus_proxy_call_sync (
-        proxy, "GetAll", g_variant_new ("(s)", iface),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(proxy, "GetAll", g_variant_new("(s)", iface),
+                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
-        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy), error->message);
+        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy),
+                error->message);
         g_error_free(error);
         g_object_unref(proxy);
         return NULL;
     }
-    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string (_ret), g_variant_n_children (_ret));
+    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string(_ret),
+             g_variant_n_children(_ret));
 
     asv = g_variant_get_child_value(_ret, 0);
-    crm_trace("asv type '%s' %d\n", g_variant_get_type_string (asv), g_variant_n_children (asv));
+    crm_trace("asv type '%s' %d\n", g_variant_get_type_string(asv), g_variant_n_children(asv));
 
     value = g_variant_lookup_value(asv, name, NULL);
-    if(value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
+    if (value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
         crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
         output = g_variant_dup_string(value, NULL);
 
@@ -276,14 +276,13 @@ upstart_job_property(const char *obj, const gchar *iface, const char *name)
 }
 
 static char *
-get_first_instance(const gchar *job)
+get_first_instance(const gchar * job)
 {
     char *instance = NULL;
     GError *error = NULL;
-    GDBusProxy *proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
-    GVariant *_ret = g_dbus_proxy_call_sync (
-        proxy, "GetAllInstances", g_variant_new ("()"),
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    GDBusProxy *proxy = get_proxy(job, BUS_MANAGER_IFACE ".Job");
+    GVariant *_ret = g_dbus_proxy_call_sync(proxy, "GetAllInstances", g_variant_new("()"),
+                                            G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
     if (error) {
         crm_err("Cannot call GetAllInstances for %s: %s", job, error->message);
@@ -291,11 +290,14 @@ get_first_instance(const gchar *job)
         return NULL;
     }
 
-    crm_trace("Call to GetAllInstances passed: type '%s' %d\n", g_variant_get_type_string (_ret), g_variant_n_children (_ret));
-    if(g_variant_n_children (_ret)) {
+    crm_trace("Call to GetAllInstances passed: type '%s' %d\n", g_variant_get_type_string(_ret),
+              g_variant_n_children(_ret));
+    if (g_variant_n_children(_ret)) {
         GVariant *tmp1 = g_variant_get_child_value(_ret, 0);
-        if(g_variant_n_children (tmp1)) {
+
+        if (g_variant_n_children(tmp1)) {
             GVariant *tmp2 = g_variant_get_child_value(tmp1, 0);
+
             instance = g_variant_dup_string(tmp2, NULL);
         }
     }
@@ -306,25 +308,27 @@ get_first_instance(const gchar *job)
 }
 
 gboolean
-upstart_job_running(const gchar *name)
+upstart_job_running(const gchar * name)
 {
     char *job = NULL;
     GError *error = NULL;
     gboolean pass = FALSE;
 
-    pass = upstart_job_by_name (upstart_proxy, name, &job, NULL, &error);
+    pass = upstart_job_by_name(upstart_proxy, name, &job, NULL, &error);
     if (error || pass == FALSE) {
-        crm_err("Call to ListUnits failed: %s", error?error->message:"unknown");
+        crm_err("Call to ListUnits failed: %s", error ? error->message : "unknown");
         g_error_free(error);
 
     } else {
         char *instance = get_first_instance(job);
+
         pass = FALSE;
-        if(instance) {
+        if (instance) {
             if (instance) {
-                char *state = upstart_job_property(instance, BUS_MANAGER_IFACE".Instance", "state");
+                char *state =
+                    upstart_job_property(instance, BUS_MANAGER_IFACE ".Instance", "state");
                 crm_info("State of %s: %s", name, state);
-                if(state) {
+                if (state) {
                     pass = !g_strcmp0(state, "running");
                 }
                 free(state);
@@ -333,59 +337,55 @@ upstart_job_running(const gchar *name)
         free(instance);
     }
 
-    crm_info("%s is%s running", name, pass?"":" not");
+    crm_info("%s is%s running", name, pass ? "" : " not");
     return pass;
 }
 
 static char *
 upstart_job_metadata(const char *name)
 {
-    return g_strdup_printf(
-        "<?xml version=\"1.0\"?>\n"
-        "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-        "<resource-agent name=\"%s\" version=\"0.1\">\n"
-        "  <version>1.0</version>\n"
-        "  <longdesc lang=\"en\">\n"
-        "    Upstart agent for controlling the system %s service\n"
-        "  </longdesc>\n"
-        "  <shortdesc lang=\"en\">%s upstart agent</shortdesc>\n"
-        "  <parameters>\n"
-        "  </parameters>\n"
-        "  <actions>\n"
-        "    <action name=\"start\"   timeout=\"15\" />\n"
-        "    <action name=\"stop\"    timeout=\"15\" />\n"
-        "    <action name=\"status\"  timeout=\"15\" />\n"
-        "    <action name=\"restart\"  timeout=\"15\" />\n"
-        "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-        "    <action name=\"meta-data\"  timeout=\"5\" />\n"
-        "  </actions>\n"
-        "  <special tag=\"upstart\">\n"
-        "  </special>\n"
-        "</resource-agent>\n",
-        name, name, name);
+    return g_strdup_printf("<?xml version=\"1.0\"?>\n"
+                           "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+                           "<resource-agent name=\"%s\" version=\"0.1\">\n"
+                           "  <version>1.0</version>\n"
+                           "  <longdesc lang=\"en\">\n"
+                           "    Upstart agent for controlling the system %s service\n"
+                           "  </longdesc>\n"
+                           "  <shortdesc lang=\"en\">%s upstart agent</shortdesc>\n"
+                           "  <parameters>\n"
+                           "  </parameters>\n"
+                           "  <actions>\n"
+                           "    <action name=\"start\"   timeout=\"15\" />\n"
+                           "    <action name=\"stop\"    timeout=\"15\" />\n"
+                           "    <action name=\"status\"  timeout=\"15\" />\n"
+                           "    <action name=\"restart\"  timeout=\"15\" />\n"
+                           "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+                           "    <action name=\"meta-data\"  timeout=\"5\" />\n"
+                           "  </actions>\n"
+                           "  <special tag=\"upstart\">\n"
+                           "  </special>\n" "</resource-agent>\n", name, name, name);
 }
 
-
 static void
-upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_data)
+upstart_job_exec_done(GObject * source_object, GAsyncResult * res, gpointer user_data)
 {
     GError *error = NULL;
     GVariant *_ret = NULL;
-    svc_action_t* op = user_data;
-    GDBusProxy *proxy = G_DBUS_PROXY (source_object);
+    svc_action_t *op = user_data;
+    GDBusProxy *proxy = G_DBUS_PROXY(source_object);
 
     /* Obtain rc and stderr/out */
-    _ret = g_dbus_proxy_call_finish (proxy, res, &error);
+    _ret = g_dbus_proxy_call_finish(proxy, res, &error);
 
     if (error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(op->action, "start")
-            && strstr(error->message, BUS_MANAGER_IFACE".Error.AlreadyStarted")) {
+            && strstr(error->message, BUS_MANAGER_IFACE ".Error.AlreadyStarted")) {
             crm_trace("Masking Start failure for %s: already started", op->rsc);
             op->rc = PCMK_EXECRA_OK;
 
         } else if (safe_str_eq(op->action, "stop")
-                   && strstr(error->message, BUS_MANAGER_IFACE".Error.UnknownInstance")) {
+                   && strstr(error->message, BUS_MANAGER_IFACE ".Error.UnknownInstance")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
             op->rc = PCMK_EXECRA_OK;
         } else {
@@ -395,8 +395,10 @@ upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_d
 
     } else {
         char *path = NULL;
+
         g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string (_ret), path);
+        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
+                 path);
         op->rc = PCMK_EXECRA_OK;
     }
 
@@ -408,7 +410,7 @@ upstart_job_exec_done(GObject *source_object, GAsyncResult *res, gpointer user_d
 }
 
 gboolean
-upstart_job_exec(svc_action_t* op, gboolean synchronous)
+upstart_job_exec(svc_action_t * op, gboolean synchronous)
 {
     char *job = NULL;
     GError *error = NULL;
@@ -428,12 +430,12 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
         goto cleanup;
     }
 
-    pass = upstart_job_by_name (upstart_proxy, op->agent, &job, NULL, &error);
+    pass = upstart_job_by_name(upstart_proxy, op->agent, &job, NULL, &error);
     if (error) {
         crm_debug("Could not obtain job named '%s': %s", op->agent, error->message);
         pass = FALSE;
     }
-    if(pass == FALSE) {
+    if (pass == FALSE) {
         if (!g_strcmp0(action, "stop")) {
             op->rc = PCMK_EXECRA_OK;
         } else {
@@ -443,7 +445,7 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        if (upstart_job_running (op->agent)) {
+        if (upstart_job_running(op->agent)) {
             op->rc = PCMK_EXECRA_OK;
         } else {
             op->rc = PCMK_EXECRA_NOT_RUNNING;
@@ -461,29 +463,27 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
         goto cleanup;
     }
 
-    job_proxy = get_proxy(job, BUS_MANAGER_IFACE".Job");
+    job_proxy = get_proxy(job, BUS_MANAGER_IFACE ".Job");
 
     crm_debug("Calling %s for %s: %s", action, op->rsc, job);
-    if(synchronous == FALSE) {
-        g_dbus_proxy_call(
-            job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
-            G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, upstart_job_exec_done, op);
+    if (synchronous == FALSE) {
+        g_dbus_proxy_call(job_proxy, action, g_variant_new("(^asb)", no_args, TRUE),
+                          G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, upstart_job_exec_done, op);
         free(job);
         return TRUE;
     }
 
-    _ret = g_dbus_proxy_call_sync (
-        job_proxy, action, g_variant_new ("(^asb)", no_args, TRUE),
-        G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
+    _ret = g_dbus_proxy_call_sync(job_proxy, action, g_variant_new("(^asb)", no_args, TRUE),
+                                  G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
 
     if (error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(action, "Start")
-            && strstr(error->message, BUS_MANAGER_IFACE".Error.AlreadyStarted")) {
+            && strstr(error->message, BUS_MANAGER_IFACE ".Error.AlreadyStarted")) {
             crm_trace("Masking Start failure for %s: already started", op->rsc);
             op->rc = PCMK_EXECRA_OK;
         } else if (safe_str_eq(action, "Stop")
-                   && strstr(error->message, BUS_MANAGER_IFACE".Error.UnknownInstance")) {
+                   && strstr(error->message, BUS_MANAGER_IFACE ".Error.UnknownInstance")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
             op->rc = PCMK_EXECRA_OK;
         } else {
@@ -492,23 +492,24 @@ upstart_job_exec(svc_action_t* op, gboolean synchronous)
 
     } else {
         char *path = NULL;
+
         g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string (_ret), path);
+        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string(_ret), path);
         op->rc = PCMK_EXECRA_OK;
     }
 
   cleanup:
     free(job);
-    if(error) {
+    if (error) {
         g_error_free(error);
     }
-    if(job_proxy) {
+    if (job_proxy) {
         g_object_unref(job_proxy);
     }
     if (_ret) {
         g_variant_unref(_ret);
     }
-    if(synchronous == FALSE) {
+    if (synchronous == FALSE) {
         operation_finalize(op);
         return TRUE;
     }

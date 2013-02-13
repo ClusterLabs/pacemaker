@@ -55,7 +55,7 @@ int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
 int get_revision(xmlNode * xml_obj, int cur_revision);
 
 int updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
-                           int operation, const char *section);
+               int operation, const char *section);
 
 gboolean check_generation(xmlNode * newCib, xmlNode * oldCib);
 
@@ -457,7 +457,8 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
-    if (send_cluster_message(all ? NULL : crm_get_peer(0, host), crm_msg_cib, replace_request, FALSE) == FALSE) {
+    if (send_cluster_message
+        (all ? NULL : crm_get_peer(0, host), crm_msg_cib, replace_request, FALSE) == FALSE) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);

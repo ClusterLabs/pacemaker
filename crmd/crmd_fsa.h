@@ -41,10 +41,10 @@ struct crm_subsystem_s {
     const char *path;           /* Command location */
     const char *command;        /* Command with path */
     const char *args;           /* Command arguments */
-    crm_client_t *client;         /* Client connection object */
+    crm_client_t *client;       /* Client connection object */
 
     gboolean sent_kill;
-    mainloop_io_t *source;     /* How can we communicate with it */
+    mainloop_io_t *source;      /* How can we communicate with it */
     long long flag_connected;   /*  */
     long long flag_required;    /*  */
 };
@@ -54,7 +54,7 @@ struct fsa_timer_s {
     guint source_id;            /* timer source id */
     int period_ms;              /* timer period */
     enum crmd_fsa_input fsa_input;
-    gboolean(*callback) (gpointer data);
+     gboolean(*callback) (gpointer data);
     gboolean repeat;
     int counter;
 };
@@ -128,7 +128,7 @@ extern gboolean ever_had_quorum;
 #  include <fsa_proto.h>
 #  include <crmd_utils.h>
 
-#define trigger_fsa(source) crm_trace("Triggering FSA: %s", __FUNCTION__); \
+#  define trigger_fsa(source) crm_trace("Triggering FSA: %s", __FUNCTION__); \
 	mainloop_set_trigger(source);
 
 #endif

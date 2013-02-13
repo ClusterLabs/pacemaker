@@ -457,8 +457,8 @@ process_graph_event(xmlNode * event, const char *event_node)
         return FALSE;
     }
 
-    
-    if(decode_transition_key(magic, &update_te_uuid, &transition_num, &action, &target_rc) == FALSE) {
+    if (decode_transition_key(magic, &update_te_uuid, &transition_num, &action, &target_rc) ==
+        FALSE) {
         crm_err("Invalid event %s.%d detected: %s", id, callid, magic);
         abort_transition(INFINITY, tg_restart, "Bad event", event);
         return FALSE;
@@ -490,7 +490,7 @@ process_graph_event(xmlNode * event, const char *event_node)
         desc = "unknown";
         abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
-    } else if(rc == target_rc) {
+    } else if (rc == target_rc) {
         passed = TRUE;
         crm_trace("Processed update to %s: %s", id, magic);
     }
@@ -501,10 +501,10 @@ process_graph_event(xmlNode * event, const char *event_node)
             stop_early = FALSE;
             desc = "failed";
         }
-        crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num, action, id, callid, lrmd_event_rc2str(rc), desc);
+        crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num, action, id, callid,
+                 lrmd_event_rc2str(rc), desc);
     }
 
-    
   bail:
     free(update_te_uuid);
     return stop_early;

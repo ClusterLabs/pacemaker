@@ -86,10 +86,10 @@ crm_exit(int rc)
 #endif
     qb_log_fini();
     exit(rc);
-    return rc; /* Can never happen, but allows return crm_exit(rc)
-                * where "return rc" was used previously
-                * - which keeps compilers happy.
-                */
+    return rc;                  /* Can never happen, but allows return crm_exit(rc)
+                                 * where "return rc" was used previously
+                                 * - which keeps compilers happy.
+                                 */
 }
 
 gboolean
@@ -283,9 +283,9 @@ config_metadata(const char *name, const char *version, const char *desc_short,
                 option_list[lpc].description_short,
                 option_list[lpc].type,
                 option_list[lpc].default_value,
-                option_list[lpc].
-                description_long ? option_list[lpc].description_long : option_list[lpc].
-                description_short, option_list[lpc].values ? "  Allowed values: " : "",
+                option_list[lpc].description_long ? option_list[lpc].
+                description_long : option_list[lpc].description_short,
+                option_list[lpc].values ? "  Allowed values: " : "",
                 option_list[lpc].values ? option_list[lpc].values : "");
     }
     fprintf(stdout, "  </parameters>\n</resource-agent>\n");
@@ -343,7 +343,6 @@ crm_itoa(int an_int)
     return buffer;
 }
 
-
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {
@@ -371,7 +370,6 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     free(buffer);
     return rc;
 }
-
 
 static int
 crm_version_helper(const char *text, char **end_text)
@@ -742,7 +740,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
         offset--;
     }
 
-    CRM_CHECK(key[offset] == '_', free(mutable_key); return FALSE);
+    CRM_CHECK(key[offset] == '_', free(mutable_key);
+              return FALSE);
 
     mutable_key_ptr = mutable_key + offset + 1;
 
@@ -753,7 +752,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     mutable_key[offset] = 0;
     offset--;
 
-    CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key); return FALSE);
+    CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key);
+              return FALSE);
 
     notify = strstr(mutable_key, "_post_notify");
     if (notify && safe_str_eq(notify, "_post_notify")) {
@@ -846,8 +846,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     }
 
     CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc), result = FALSE;
-              goto bail;
-        );
+              goto bail;);
 
   bail:
     free(key);
@@ -1293,7 +1292,7 @@ crm_read_pidfile(const char *filename)
 }
 
 static int
-crm_pidfile_inuse(const char *filename, long mypid) 
+crm_pidfile_inuse(const char *filename, long mypid)
 {
     long pid = 0;
     struct stat sbuf;
@@ -1308,7 +1307,7 @@ crm_pidfile_inuse(const char *filename, long mypid)
         }
         if (read(fd, buf, sizeof(buf)) > 0) {
             if (sscanf(buf, "%lu", &pid) > 0) {
-                if(pid <= 1) {
+                if (pid <= 1) {
                     /* Invalid pid */
                     rc = -ENOENT;
 
@@ -1337,7 +1336,7 @@ crm_lock_pidfile(const char *filename)
     mypid = (unsigned long)getpid();
 
     rc = crm_pidfile_inuse(filename, 0);
-    if(rc != pcmk_ok && rc != -ENOENT) {
+    if (rc != pcmk_ok && rc != -ENOENT) {
         /* locked by existing process - give up */
         return -1;
     }
@@ -1351,7 +1350,7 @@ crm_lock_pidfile(const char *filename)
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
-    if(rc != LOCKSTRLEN) {
+    if (rc != LOCKSTRLEN) {
         crm_perror(LOG_ERR, "Incomplete write to %s", filename);
         return -errno;
 
@@ -1473,7 +1472,7 @@ crm_is_writable(const char *dir, const char *file,
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
-    if(use_case) {
+    if (use_case) {
         return g_strcmp0(a, b) == 0;
 
         /* TODO - Figure out which calls, if any, really need to be case independant */
@@ -1638,9 +1637,9 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
 
         switch (flag) {
             case 0:
-                if(long_opts[*index].val) {
+                if (long_opts[*index].val) {
                     return long_opts[*index].val;
-                } else if(longname) {
+                } else if (longname) {
                     *longname = long_opts[*index].name;
                 } else {
                     crm_notice("Unhandled option --%s", long_opts[*index].name);
@@ -1743,7 +1742,7 @@ crm_help(char cmd, int exit_code)
 }
 
 int
-attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char *name,
+attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
                       const char *user_name)
 {
@@ -1755,16 +1754,16 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
     static gboolean connected = TRUE;
     static crm_ipc_t *local_ipc = NULL;
 
-    if(ipc == NULL && local_ipc == NULL) {
+    if (ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
         flags |= crm_ipc_client_response;
         connected = FALSE;
     }
 
-    if(ipc == NULL) {
+    if (ipc == NULL) {
         ipc = local_ipc;
     }
-    
+
     /* remap common aliases */
     if (safe_str_eq(section, "reboot")) {
         section = XML_CIB_TAG_STATUS;
@@ -1773,14 +1772,13 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
         section = XML_CIB_TAG_NODES;
     }
 
-
     crm_xml_add(update, F_TYPE, T_ATTRD);
     crm_xml_add(update, F_ORIG, crm_system_name);
-    
+
     if (name == NULL && command == 'U') {
         command = 'R';
     }
-    
+
     switch (command) {
         case 'D':
         case 'U':
@@ -1795,7 +1793,7 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
             crm_xml_add(update, F_ATTRD_TASK, "query");
             break;
     }
-    
+
     crm_xml_add(update, F_ATTRD_VALUE, value);
     crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
     crm_xml_add(update, F_ATTRD_SECTION, section);
@@ -1813,24 +1811,24 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
             connected = crm_ipc_connect(ipc);
         }
 
-        if(connected) {
+        if (connected) {
             rc = crm_ipc_send(ipc, update, flags, 0, NULL);
         }
 
-        if(ipc != local_ipc) {
+        if (ipc != local_ipc) {
             break;
 
         } else if (rc > 0) {
             break;
 
-        } else if(rc == -EAGAIN || rc == -EREMOTEIO) {
-            sleep(5-max);
+        } else if (rc == -EAGAIN || rc == -EREMOTEIO) {
+            sleep(5 - max);
             max--;
 
         } else {
             crm_ipc_close(ipc);
             connected = FALSE;
-            sleep(5-max);
+            sleep(5 - max);
             max--;
         }
     }
@@ -1839,14 +1837,16 @@ attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host, const char
     if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
     } else {
-        crm_debug("Could not send update %s=%s for %s: %s (%d)", name, value, host ? host : "localhost", pcmk_strerror(rc), rc);
+        crm_debug("Could not send update %s=%s for %s: %s (%d)", name, value,
+                  host ? host : "localhost", pcmk_strerror(rc), rc);
     }
     return rc;
 }
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 static void
-append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, const char *magic, int level)
+append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, const char *magic,
+              int level)
 {
     /* this will enable us to later determine that the
      *   resource's parameters have changed and we should force
@@ -1920,8 +1920,8 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 }
 
 xmlNode *
-create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *caller_version, int target_rc,
-                        const char *origin, int level)
+create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *caller_version,
+                        int target_rc, const char *origin, int level)
 {
     char *key = NULL;
     char *magic = NULL;
@@ -1935,7 +1935,8 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resouce %s after %s op %s (interval=%d)",
-               origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status), op->interval);
+               origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
+               op->interval);
 
     if (op->op_status == PCMK_LRM_OP_CANCELLED) {
         crm_trace("Ignoring cancelled op");
@@ -1964,7 +1965,8 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         }
 
     } else if (dc_munges_migrate_ops
-               && op->op_status == PCMK_LRM_OP_DONE && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+               && op->op_status == PCMK_LRM_OP_DONE
+               && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
         task = CRMD_ACTION_START;
     }
 
@@ -2081,7 +2083,7 @@ void
 determine_request_user(char *user, xmlNode * request, const char *field)
 {
     /* Get our internal validation out of the way first */
-    CRM_CHECK(user != NULL && request !=NULL && field != NULL, return);
+    CRM_CHECK(user != NULL && request != NULL && field != NULL, return);
 
     /* If our peer is a privileged user, we might be doing something on behalf of someone else */
     if (is_privileged(user) == FALSE) {
@@ -2135,8 +2137,8 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     }
 
     if (!(*handle)) {
-        crm_err("%sCould not open %s: %s", fatal?"Fatal: ":"", lib, dlerror());
-        if(fatal) {
+        crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
+        if (fatal) {
             crm_exit(100);
         }
         return NULL;
@@ -2144,8 +2146,8 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
 
     a_function = dlsym(*handle, fn);
     if ((error = dlerror()) != NULL) {
-        crm_err("%sCould not find %s in %s: %s", fatal?"Fatal: ":"", fn, lib, error);
-        if(fatal) {
+        crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
+        if (fatal) {
             crm_exit(100);
         }
     }
@@ -2183,13 +2185,15 @@ convert_const_pointer(const void *ptr)
 #  include <uuid/uuid.h>
 #endif
 
-char *crm_generate_uuid(void) 
+char *
+crm_generate_uuid(void)
 {
-	unsigned char uuid[16];
-        char *buffer = malloc(37); /* Including NUL byte */
-	uuid_generate(uuid);
-	uuid_unparse(uuid, buffer);
-        return buffer;
+    unsigned char uuid[16];
+    char *buffer = malloc(37);  /* Including NUL byte */
+
+    uuid_generate(uuid);
+    uuid_unparse(uuid, buffer);
+    return buffer;
 }
 
 #include <md5.h>
@@ -2202,12 +2206,12 @@ crm_md5sum(const char *buffer)
     unsigned char raw_digest[MD5_DIGEST_SIZE];
 
     crm_trace("Beginning digest");
-    digest = malloc(2*MD5_DIGEST_SIZE + 1);
+    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
     md5_buffer(buffer, strlen(buffer), raw_digest);
-    for(lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
-	sprintf(digest+(2*lpc), "%02x", raw_digest[lpc]);
+    for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
+        sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
     }
-    digest[(2*MD5_DIGEST_SIZE)] = 0;
+    digest[(2 * MD5_DIGEST_SIZE)] = 0;
     crm_trace("Digest %s\n", digest);
     return digest;
 }
@@ -2215,22 +2219,22 @@ crm_md5sum(const char *buffer)
 #include <time.h>
 #include <bzlib.h>
 
-bool crm_compress_string(
-    const char *data, int length, int max, char **result, unsigned int *result_len) 
+bool
+crm_compress_string(const char *data, int length, int max, char **result, unsigned int *result_len)
 {
     int rc;
     char *compressed = NULL;
     char *uncompressed = strdup(data);
     struct timespec after_t;
     struct timespec before_t;
-    
+
     clock_gettime(CLOCK_MONOTONIC, &before_t);
     /* coverity[returned_null] Ignore */
     compressed = malloc(max);
 
     *result_len = max;
-    rc = BZ2_bzBuffToBuffCompress(
-        compressed, result_len, uncompressed, length, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
+    rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length, CRM_BZ2_BLOCKS, 0,
+                                  CRM_BZ2_WORK);
 
     free(uncompressed);
 
@@ -2242,8 +2246,9 @@ bool crm_compress_string(
 
     clock_gettime(CLOCK_MONOTONIC, &after_t);
     crm_info("Compressed %d bytes into %d (ratio %d:1) in %dms",
-             length, *result_len, length/(*result_len),
-             (after_t.tv_sec-before_t.tv_sec)*1000 + (after_t.tv_nsec-before_t.tv_nsec)/1000000);
+             length, *result_len, length / (*result_len),
+             (after_t.tv_sec - before_t.tv_sec) * 1000 + (after_t.tv_nsec -
+                                                          before_t.tv_nsec) / 1000000);
     *result = compressed;
     return TRUE;
 }

@@ -128,7 +128,7 @@ get_process_list(void)
 }
 
 static void
-pcmk_process_exit(pcmk_child_t *child)
+pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
     child->active_before_startup = FALSE;
@@ -159,18 +159,20 @@ pcmk_process_exit(pcmk_child_t *child)
     }
 }
 
-static void pcmk_child_exit(GPid pid, gint status, gpointer user_data)
+static void
+pcmk_child_exit(GPid pid, gint status, gpointer user_data)
 {
     int exitcode = 0;
     pcmk_child_t *child = user_data;
 
-    if(WIFSIGNALED(status)) {
+    if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
         int core = WCOREDUMP(status);
+
         crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
                    child->name, signo, child->pid, core);
 
-    } else if(WIFEXITED(status)) {
+    } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
                    "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
@@ -399,7 +401,7 @@ pcmk_shutdown_worker(gpointer user_data)
     crm_notice("Shutdown complete");
     g_main_loop_quit(mainloop);
 
-    if(fatal_error) {
+    if (fatal_error) {
         crm_notice("Attempting to inhibit respawning after fatal error");
         crm_exit(100);
     }
@@ -440,24 +442,24 @@ build_path(const char *path_c, mode_t mode)
 }
 
 static int32_t
-pcmk_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
 static void
-pcmk_ipc_created(qb_ipcs_connection_t *c)
+pcmk_ipc_created(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
 /* Exit code means? */
 static int32_t
-pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
+pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
@@ -465,7 +467,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
     crm_client_t *c = crm_client_get(qbc);
     xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
-    if(flags & crm_ipc_client_response) {
+    if (flags & crm_ipc_client_response) {
         crm_ipcs_send_ack(c, id, "ack", __FUNCTION__, __LINE__);
     }
 
@@ -474,11 +476,10 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
     }
 
     task = crm_element_value(msg, F_CRM_TASK);
-    if(crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
+    if (crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
         /* Time to quit */
         crm_notice("Shutting down in responce to ticket %s (%s)",
-                   crm_element_value(msg, F_CRM_REFERENCE),
-                   crm_element_value(msg, F_CRM_ORIGIN));
+                   crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
         pcmk_shutdown(15);
 
     } else {
@@ -492,29 +493,28 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-pcmk_ipc_closed(qb_ipcs_connection_t *c)
+pcmk_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("Connection %p", c);
     crm_client_destroy(client);
     return 0;
 }
 
 static void
-pcmk_ipc_destroy(qb_ipcs_connection_t *c)
+pcmk_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks =
-{
+struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = pcmk_ipc_accept,
     .connection_created = pcmk_ipc_created,
     .msg_process = pcmk_ipc_dispatch,
     .connection_closed = pcmk_ipc_closed,
     .connection_destroyed = pcmk_ipc_destroy
 };
-
 
 static void
 ghash_send_proc_details(gpointer key, gpointer value, gpointer data)
@@ -593,14 +593,16 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
             int lpc, len = strlen(uname);
 
             crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
-                     node->uname?node->uname:", was: ", node->uname?node->uname:"");
+                       node->uname ? node->uname : ", was: ", node->uname ? node->uname : "");
             free(node->uname);
             node->uname = strdup(uname);
             changed = TRUE;
 
-            for(lpc = 0; lpc < len; lpc++) {
-                if(uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
-                    crm_warn("Node names with capitals are discouraged, consider changing '%s' to something else", uname);
+            for (lpc = 0; lpc < len; lpc++) {
+                if (uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
+                    crm_warn
+                        ("Node names with capitals are discouraged, consider changing '%s' to something else",
+                         uname);
                     break;
                 }
             }
@@ -611,7 +613,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
     }
 
     if (procs != 0) {
-        if(procs != node->processes) {
+        if (procs != node->processes) {
             crm_debug("Node %s now has process list: %.32x (was %.32x)",
                       node->uname, procs, node->processes);
             node->processes = procs;
@@ -650,7 +652,8 @@ static void
 mcp_chown(const char *path, uid_t uid, gid_t gid)
 {
     int rc = chown(path, uid, gid);
-    if(rc < 0) {
+
+    if (rc < 0) {
         crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
                  path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
     }
@@ -672,8 +675,7 @@ check_active_before_startup_processes(gpointer user_data)
                 continue;
             } else if (crm_pid_active(pcmk_children[lpc].pid) != 1) {
                 crm_notice("Process %s terminated (pid=%d)",
-                    pcmk_children[lpc].name,
-                    pcmk_children[lpc].pid);
+                           pcmk_children[lpc].name, pcmk_children[lpc].pid);
                 pcmk_process_exit(&(pcmk_children[lpc]));
                 continue;
             }
@@ -741,6 +743,7 @@ find_and_track_existing_processes(void)
 
         for (i = 0; i < max; i++) {
             const char *name = pcmk_children[i].name;
+
             if (pcmk_children[i].start_seq == 0) {
                 continue;
             }
@@ -751,8 +754,7 @@ find_and_track_existing_processes(void)
                 if (crm_pid_active(pid) != 1) {
                     continue;
                 }
-                crm_notice("Tracking existing %s process (pid=%d)",
-                           value, pid);
+                crm_notice("Tracking existing %s process (pid=%d)", value, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;
                 start_tracker = 1;
@@ -761,13 +763,15 @@ find_and_track_existing_processes(void)
     }
 
     if (start_tracker) {
-        g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_active_before_startup_processes, NULL);
+        g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_active_before_startup_processes,
+                              NULL);
     }
     closedir(dp);
 }
 
 static void
-init_children_processes(void) {
+init_children_processes(void)
+{
     int start_seq = 1, lpc = 0;
     static int max = SIZEOF(pcmk_children);
 
@@ -864,10 +868,11 @@ main(int argc, char **argv)
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
     crm_ipc_connect(old_instance);
 
-    if(shutdown) {
+    if (shutdown) {
         crm_debug("Terminating previous instance");
         while (crm_ipc_connected(old_instance)) {
-            xmlNode *cmd = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
+            xmlNode *cmd =
+                create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
 
             crm_debug(".");
             crm_ipc_send(old_instance, cmd, 0, 0, NULL);
@@ -879,7 +884,7 @@ main(int argc, char **argv)
         crm_ipc_destroy(old_instance);
         crm_exit(0);
 
-    } else if(crm_ipc_connected(old_instance)) {
+    } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
@@ -894,8 +899,7 @@ main(int argc, char **argv)
         crm_exit(1);
     }
 
-    crm_notice("Starting Pacemaker %s (Build: %s): %s",
-               VERSION, BUILD_VERSION, CRM_FEATURES);
+    crm_notice("Starting Pacemaker %s (Build: %s): %s", VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
 
     rc = getrlimit(RLIMIT_CORE, &cores);
@@ -988,7 +992,7 @@ main(int argc, char **argv)
 
     g_main_run(mainloop);
 
-    if(ipcs) {
+    if (ipcs) {
         crm_trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;

@@ -117,7 +117,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             return;
         case crm_status_nstate:
             crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
-            if(safe_str_neq(data, node->state)) {
+            if (safe_str_neq(data, node->state)) {
                 /* State did not change */
                 return;
             }
@@ -130,7 +130,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* crmd_proc_update(node, proc_flags); */
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
             crm_info("Client %s/%s now has status [%s] (DC=%s)",
-                     node->uname, peer2text(proc_flags), status, AM_I_DC ? "true" : crm_str(fsa_our_dc));
+                     node->uname, peer2text(proc_flags), status,
+                     AM_I_DC ? "true" : crm_str(fsa_our_dc));
 
             if (((node->processes ^ old) & proc_flags) == 0) {
                 /* Peer process did not change */
@@ -157,26 +158,27 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         crm_action_t *down = match_down_event(0, node->uuid, NULL);
         gboolean alive = crm_is_peer_active(node);
 
-        if(alive && type == crm_status_processes) {
+        if (alive && type == crm_status_processes) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
         crm_trace("Alive=%d, down=%p", alive, down);
-        
+
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
             if (alive && safe_str_eq(task, CRM_OP_FENCE)) {
-                crm_info("Node return implies stonith of %s (action %d) completed", node->uname, down->id);
+                crm_info("Node return implies stonith of %s (action %d) completed", node->uname,
+                         down->id);
                 erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
                 erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
-                down->sent_update = TRUE; /* Prevent tengine_stonith_callback() from calling send_stonith_update() */
+                down->sent_update = TRUE;       /* Prevent tengine_stonith_callback() from calling send_stonith_update() */
 
             } else if (safe_str_eq(task, CRM_OP_FENCE)) {
                 crm_trace("Waiting for stonithd to report the fencing of %s is complete", node->uname); /* via tengine_stonith_callback() */
 
-            } else if(alive == FALSE) {
+            } else if (alive == FALSE) {
                 crm_notice("%s of %s (op %d) is complete", task, node->uname, down->id);
                 /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
                 stop_te_timer(down->timer);
@@ -192,7 +194,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_trace("Other %p", down);
             }
 
-        } else if(alive == FALSE) {
+        } else if (alive == FALSE) {
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
             erase_node_from_join(node->uname);
@@ -206,8 +208,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         update = do_update_node_cib(node, node_update_peer, NULL, __FUNCTION__);
-        fsa_cib_anon_update(
-            XML_CIB_TAG_STATUS, update, cib_scope_local | cib_quorum_override | cib_can_create);
+        fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
+                            cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);
     }
 

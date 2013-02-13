@@ -231,7 +231,7 @@ main(int argc, char **argv)
         type = XML_CIB_TAG_CRMCONFIG;
 
     } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
-        if(dest_uname == NULL) {
+        if (dest_uname == NULL) {
             dest_uname = get_local_node_name();
         }
         if (pcmk_ok != query_node_uuid(the_cib, dest_uname, &dest_node)) {
@@ -240,8 +240,9 @@ main(int argc, char **argv)
     }
 
     if ((command == 'v' || command == 'D')
-               && safe_str_eq(type, XML_CIB_TAG_STATUS)
-               && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name, NULL, NULL)) {
+        && safe_str_eq(type, XML_CIB_TAG_STATUS)
+        && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
+                                 NULL, NULL)) {
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 
     } else if (command == 'D') {
@@ -259,9 +260,8 @@ main(int argc, char **argv)
             time_t now = time(NULL);
 
             now_s = crm_itoa(now);
-            update_attr_delegate(
-                the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                "last-lrm-refresh", now_s, TRUE, NULL);
+            update_attr_delegate(the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
+                                 NULL, "last-lrm-refresh", now_s, TRUE, NULL);
             free(now_s);
         }
 
@@ -270,9 +270,8 @@ main(int argc, char **argv)
         CRM_LOG_ASSERT(attr_name != NULL);
         CRM_LOG_ASSERT(attr_value != NULL);
 
-        rc = update_attr_delegate(
-            the_cib, cib_opts, type, dest_node, set_type, set_name,
-            attr_id, attr_name, attr_value, TRUE, NULL);
+        rc = update_attr_delegate(the_cib, cib_opts, type, dest_node, set_type, set_name,
+                                  attr_id, attr_name, attr_value, TRUE, NULL);
 
     } else {                    /* query */
 

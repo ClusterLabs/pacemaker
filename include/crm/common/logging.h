@@ -53,8 +53,9 @@ gboolean crm_log_init(const char *entity, int level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
 void crm_log_args(int argc, char **argv);
-void crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix, const char *output);
-#define crm_log_output(level, prefix, output) crm_log_output_fn(__FILE__, __FUNCTION__, __LINE__, level, prefix, output)
+void crm_log_output_fn(const char *file, const char *function, int line, int level,
+                       const char *prefix, const char *output);
+#  define crm_log_output(level, prefix, output) crm_log_output_fn(__FILE__, __FUNCTION__, __LINE__, level, prefix, output)
 
 gboolean crm_add_logfile(const char *filename);
 
@@ -77,12 +78,12 @@ unsigned int get_crm_log_level(void);
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
+#  define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 
-#    define do_crm_log(level, fmt, args...) qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args)
+#  define do_crm_log(level, fmt, args...) qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args)
 
 /* level /MUST/ be a constant or compilation will fail */
-#    define do_crm_log_unlikely(level, fmt, args...) do {               \
+#  define do_crm_log_unlikely(level, fmt, args...) do {               \
         static struct qb_log_callsite *trace_cs = NULL;                 \
         if(trace_cs == NULL) {                                          \
             trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, level, __LINE__, 0); \
@@ -93,7 +94,7 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
-#    define CRM_LOG_ASSERT(expr) do {					\
+#  define CRM_LOG_ASSERT(expr) do {					\
         if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
@@ -104,7 +105,7 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
-#    define CRM_CHECK(expr, failure_action) do {				\
+#  define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
@@ -116,7 +117,7 @@ unsigned int get_crm_log_level(void);
 	}								\
     } while(0)
 
-#    define do_crm_log_xml(level, text, xml) do {                       \
+#  define do_crm_log_xml(level, text, xml) do {                       \
         static struct qb_log_callsite *xml_cs = NULL;                   \
         if(xml_cs == NULL) {                                            \
             xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
@@ -126,11 +127,11 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
-#    define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
 	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
     } while(0)
 
-#    define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+#  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
@@ -138,7 +139,7 @@ unsigned int get_crm_log_level(void);
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
     } while(0)
 
-#    define crm_log_tag(level, tag, fmt, args...)    do {               \
+#  define crm_log_tag(level, tag, fmt, args...)    do {               \
         static struct qb_log_callsite *trace_tag_cs = NULL;                 \
         int converted_tag = g_quark_try_string(tag);                   \
         if(trace_tag_cs == NULL) {                                          \
@@ -149,14 +150,14 @@ unsigned int get_crm_log_level(void);
         }                                                               \
       } while(0)
 
-#    define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
-#    define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
-#    define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
-#    define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
-#    define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+#  define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
+#  define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+#  define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
+#  define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
+#  define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
 
-#    define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-#    define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
+#  define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#  define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 
 #  define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
 #  define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)

@@ -35,7 +35,7 @@
 #include <arpa/inet.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#define LRMD_REMOTE_AUTH_TIMEOUT 10000
+#  define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
 static int ssock = 0;
@@ -98,6 +98,7 @@ lrmd_remote_client_msg(gpointer data)
         crm_trace("processing request from remote client with remote msg id %d", id);
         if (!client->name) {
             const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
+
             if (value) {
                 client->name = strdup(value);
             }
@@ -139,12 +140,12 @@ lrmd_remote_client_destroy(gpointer user_data)
     client_disconnect_cleanup(client->id);
 
     crm_notice("LRMD client disconnecting remote client - name: %s id: %s",
-        client->name ? client->name : "<unknown>",
-        client->id);
+               client->name ? client->name : "<unknown>", client->id);
 
     if (client->remote->tls_session) {
         void *sock_ptr;
         int csock;
+
         sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
         csock = GPOINTER_TO_INT(sock_ptr);
 
@@ -187,11 +188,10 @@ lrmd_remote_listen(gpointer data)
     gnutls_session_t *session = NULL;
     crm_client_t *new_client = NULL;
 
-    static struct mainloop_fd_callbacks lrmd_remote_fd_cb =
-        {
-            .dispatch = lrmd_remote_client_msg,
-            .destroy = lrmd_remote_client_destroy,
-        };
+    static struct mainloop_fd_callbacks lrmd_remote_fd_cb = {
+        .dispatch = lrmd_remote_client_msg,
+        .destroy = lrmd_remote_client_destroy,
+    };
 
     /* accept the connection */
     laddr = sizeof(addr);
@@ -205,12 +205,12 @@ lrmd_remote_listen(gpointer data)
 
     if ((flag = fcntl(csock, F_GETFL)) >= 0) {
         if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err( "fcntl() write failed");
+            crm_err("fcntl() write failed");
             close(csock);
             return TRUE;
         }
     } else {
-        crm_err( "fcntl() read failed");
+        crm_err("fcntl() read failed");
         close(csock);
         return TRUE;
     }
@@ -227,11 +227,13 @@ lrmd_remote_listen(gpointer data)
     new_client->kind = CRM_CLIENT_TLS;
     new_client->remote->tls_session = session;
     new_client->id = crm_generate_uuid();
-    new_client->remote->auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
+    new_client->remote->auth_timeout =
+        g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
     crm_notice("LRMD client connection established. %p id: %s", new_client, new_client->id);
 
-    new_client->remote->source = mainloop_add_fd(
-        "lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client, &lrmd_remote_fd_cb);
+    new_client->remote->source =
+        mainloop_add_fd("lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
+                        &lrmd_remote_fd_cb);
     g_hash_table_insert(client_connections, new_client->id, new_client);
 
     return TRUE;
@@ -245,7 +247,7 @@ lrmd_remote_connection_destroy(gpointer user_data)
 }
 
 static int
-lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t *key)
+lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t * key)
 {
     int rc = 0;
 
@@ -266,11 +268,11 @@ lrmd_init_remote_tls_server(int port)
     int rc;
     struct sockaddr_in saddr;
     int optval;
-    static struct mainloop_fd_callbacks remote_listen_fd_callbacks =
-        {
-            .dispatch = lrmd_remote_listen,
-            .destroy = lrmd_remote_connection_destroy,
-        };
+
+    static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
+        .dispatch = lrmd_remote_listen,
+        .destroy = lrmd_remote_connection_destroy,
+    };
 
     crm_notice("Starting a tls listener on port %d.", port);
     gnutls_global_init();
@@ -292,7 +294,7 @@ lrmd_init_remote_tls_server(int port)
     /* reuse address */
     optval = 1;
     rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-    if(rc < 0) {
+    if (rc < 0) {
         crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
     }
 
@@ -316,7 +318,7 @@ lrmd_init_remote_tls_server(int port)
     mainloop_add_fd("lrmd-remote", G_PRIORITY_DEFAULT, ssock, NULL, &remote_listen_fd_callbacks);
 
     rc = ssock;
-init_remote_cleanup:
+  init_remote_cleanup:
     if (rc < 0) {
         close(ssock);
         ssock = 0;

@@ -298,7 +298,6 @@ do_work(void)
         crmd_operation = CRM_OP_PING;
         crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
-
     } else if (DO_NODE_LIST) {
 
         cib_t *the_cib = cib_new();
@@ -396,8 +395,7 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
     }
 }
 
-struct ipc_client_callbacks crm_callbacks = 
-{
+struct ipc_client_callbacks crm_callbacks = {
     .dispatch = admin_msg_callback,
     .destroy = crmadmin_ipc_connection_destroy
 };
@@ -405,7 +403,8 @@ struct ipc_client_callbacks crm_callbacks =
 gboolean
 do_init(void)
 {
-    mainloop_io_t *source = mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
+    mainloop_io_t *source =
+        mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
 
     admin_uuid = calloc(1, 11);
     if (admin_uuid != NULL) {
@@ -420,6 +419,7 @@ do_init(void)
 
     } else if (crmd_channel != NULL) {
         xmlNode *xml = create_hello_message(admin_uuid, crm_system_name, "0", "1");
+
         crm_ipc_send(crmd_channel, xml, 0, 0, NULL);
         return TRUE;
     }
@@ -438,7 +438,7 @@ validate_crm_message(xmlNode * msg, const char *sys, const char *uuid, const cha
 
     type = crm_element_value(msg, F_CRM_MSG_TYPE);
     crm_msg_reference = crm_element_value(msg, XML_ATTR_REFERENCE);
-     
+
     if (type == NULL) {
         crm_info("No message type defined.");
         return FALSE;
@@ -506,12 +506,12 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
             crm_exit(0);
         }
     }
-    
+
     free_xml(xml);
 
     if (received_responses >= expected_responses) {
         crm_trace("Received expected number (%d) of messages from Heartbeat."
-                    "  Exiting normally.", expected_responses);
+                  "  Exiting normally.", expected_responses);
         crm_exit(0);
     }
 
@@ -546,8 +546,8 @@ is_node_online(xmlNode * node_state)
         return TRUE;
     }
     crm_trace("Node %s: ccm=%s join=%s exp=%s crm=%s",
-                uname, crm_str(ccm_state),
-                crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
+              uname, crm_str(ccm_state),
+              crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
     crm_trace("Node %s is offline", uname);
     return FALSE;
 }

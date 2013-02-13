@@ -41,168 +41,168 @@
 ll_cluster_t *heartbeat_cluster = NULL;
 
 static void
-convert_ha_field(xmlNode *parent, void *msg_v, int lpc) 
+convert_ha_field(xmlNode * parent, void *msg_v, int lpc)
 {
     int type = 0;
     const char *name = NULL;
     const char *value = NULL;
     xmlNode *xml = NULL;
     HA_Message *msg = msg_v;
-    
+
     int rc = BZ_OK;
     size_t orig_len = 0;
     unsigned int used = 0;
     char *uncompressed = NULL;
     char *compressed = NULL;
     int size = orig_len * 10;
-    
+
     CRM_CHECK(parent != NULL, return);
     CRM_CHECK(msg != NULL, return);
-	
+
     name = msg->names[lpc];
     type = cl_get_type(msg, name);
 
-    switch(type) {
-	case FT_STRUCT:
-	    convert_ha_message(parent, msg->values[lpc], name);
-	    break;
-	case FT_COMPRESS:
-	case FT_UNCOMPRESS:
-	    convert_ha_message(parent, cl_get_struct(msg, name), name);
-	    break;
-	case FT_STRING:
-	    value = msg->values[lpc];
-	    CRM_CHECK(value != NULL, return);
-	    crm_trace("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
+    switch (type) {
+        case FT_STRUCT:
+            convert_ha_message(parent, msg->values[lpc], name);
+            break;
+        case FT_COMPRESS:
+        case FT_UNCOMPRESS:
+            convert_ha_message(parent, cl_get_struct(msg, name), name);
+            break;
+        case FT_STRING:
+            value = msg->values[lpc];
+            CRM_CHECK(value != NULL, return);
+            crm_trace("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml" : "field");
 
-	    if( value[0] != '<' ) {
-		crm_xml_add(parent, name, value);
-		break;
-	    }
-	    
-	    /* unpack xml string */
-	    xml = string2xml(value);
-	    if(xml == NULL) {
-		crm_err("Conversion of field '%s' failed", name);
-		return;
-	    }
+            if (value[0] != '<') {
+                crm_xml_add(parent, name, value);
+                break;
+            }
 
-	    add_node_nocopy(parent, NULL, xml);
-	    break;
+            /* unpack xml string */
+            xml = string2xml(value);
+            if (xml == NULL) {
+                crm_err("Conversion of field '%s' failed", name);
+                return;
+            }
 
-	case FT_BINARY:
-	    value = cl_get_binary(msg, name, &orig_len);
-	    size = orig_len * 10 + 1; /* +1 because an exact 10x compression factor happens occasionally */
+            add_node_nocopy(parent, NULL, xml);
+            break;
 
-	    if(orig_len < 3
-	       || value[0] != 'B'
-	       || value[1] != 'Z'
-	       || value[2] != 'h') {
-		if(strstr(name, "uuid") == NULL) {
-		    crm_err("Skipping non-bzip binary field: %s", name);
-		}
-		return;
-	    }
+        case FT_BINARY:
+            value = cl_get_binary(msg, name, &orig_len);
+            size = orig_len * 10 + 1;   /* +1 because an exact 10x compression factor happens occasionally */
 
-	    compressed = calloc(1, orig_len);
-	    memcpy(compressed, value, orig_len);
-	    
-	    crm_trace("Trying to decompress %d bytes", (int)orig_len);
-	retry:
-	    uncompressed = realloc(uncompressed, size);
-	    memset(uncompressed, 0, size);
-	    used = size - 1; /* always leave room for a trailing '\0'
-			      * BZ2_bzBuffToBuffDecompress wont say anything if
-			      * the uncompressed data is exactly 'size' bytes 
-			      */
-	    
-	    rc = BZ2_bzBuffToBuffDecompress(
-		uncompressed, &used, compressed, orig_len, 1, 0);
-	    
-	    if(rc == BZ_OUTBUFF_FULL) {
-		size = size * 2;
-		/* dont try to allocate more memory than we have */
-		if(size > 0) {
-		    goto retry;
-		}
-	    }
-	    
-	    if(rc != BZ_OK) { 
-		crm_err("Decompression of %s (%d bytes) into %d failed: %d",
-			name, (int)orig_len, size, rc);
-		
-	    } else if(used >= size) {
-		CRM_ASSERT(used < size);
+            if (orig_len < 3 || value[0] != 'B' || value[1] != 'Z' || value[2] != 'h') {
+                if (strstr(name, "uuid") == NULL) {
+                    crm_err("Skipping non-bzip binary field: %s", name);
+                }
+                return;
+            }
 
-	    } else {
-		CRM_LOG_ASSERT(uncompressed[used] == 0);
-		uncompressed[used] = 0;
-		xml = string2xml(uncompressed);
-	    }
+            compressed = calloc(1, orig_len);
+            memcpy(compressed, value, orig_len);
 
-	    if(xml != NULL) {
-		add_node_copy(parent, xml);
-		free_xml(xml);
-	    }
-	    
-	    free(uncompressed);
-	    free(compressed);		
-	    break;
+            crm_trace("Trying to decompress %d bytes", (int)orig_len);
+  retry:
+            uncompressed = realloc(uncompressed, size);
+            memset(uncompressed, 0, size);
+            used = size - 1;    /* always leave room for a trailing '\0'
+                                 * BZ2_bzBuffToBuffDecompress wont say anything if
+                                 * the uncompressed data is exactly 'size' bytes 
+                                 */
+
+            rc = BZ2_bzBuffToBuffDecompress(uncompressed, &used, compressed, orig_len, 1, 0);
+
+            if (rc == BZ_OUTBUFF_FULL) {
+                size = size * 2;
+                /* dont try to allocate more memory than we have */
+                if (size > 0) {
+                    goto retry;
+                }
+            }
+
+            if (rc != BZ_OK) {
+                crm_err("Decompression of %s (%d bytes) into %d failed: %d",
+                        name, (int)orig_len, size, rc);
+
+            } else if (used >= size) {
+                CRM_ASSERT(used < size);
+
+            } else {
+                CRM_LOG_ASSERT(uncompressed[used] == 0);
+                uncompressed[used] = 0;
+                xml = string2xml(uncompressed);
+            }
+
+            if (xml != NULL) {
+                add_node_copy(parent, xml);
+                free_xml(xml);
+            }
+
+            free(uncompressed);
+            free(compressed);
+            break;
     }
 }
 
 xmlNode *
-convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field) 
+convert_ha_message(xmlNode * parent, HA_Message * msg, const char *field)
 {
     int lpc = 0;
     xmlNode *child = NULL;
     const char *tag = NULL;
-    
-    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
-    
-    tag = cl_get_string(msg, F_XML_TAGNAME);
-    if(tag == NULL) {
-	tag = field;
 
-    } else if(parent && safe_str_neq(field, tag)) {
-	/* For compatability with 0.6.x */
-	crm_debug("Creating intermediate parent %s between %s and %s", field, crm_element_name(parent), tag);
-	parent = create_xml_node(parent, field);
+    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field);
+              return parent);
+
+    tag = cl_get_string(msg, F_XML_TAGNAME);
+    if (tag == NULL) {
+        tag = field;
+
+    } else if (parent && safe_str_neq(field, tag)) {
+        /* For compatability with 0.6.x */
+        crm_debug("Creating intermediate parent %s between %s and %s", field,
+                  crm_element_name(parent), tag);
+        parent = create_xml_node(parent, field);
     }
-    
-    if(parent == NULL) {
-	parent = create_xml_node(NULL, tag);
-	child = parent;
-	
+
+    if (parent == NULL) {
+        parent = create_xml_node(NULL, tag);
+        child = parent;
+
     } else {
-	child = create_xml_node(parent, tag);
+        child = create_xml_node(parent, tag);
     }
 
     for (lpc = 0; lpc < msg->nfields; lpc++) {
-	convert_ha_field(child, msg, lpc);
+        convert_ha_field(child, msg, lpc);
     }
-    
+
     return parent;
 }
 
-static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *field) 
+static void
+add_ha_nocopy(HA_Message * parent, HA_Message * child, const char *field)
 {
     int next = parent->nfields;
-    if (parent->nfields >= parent->nalloc && ha_msg_expand(parent) != HA_OK ) {
-	crm_err("Parent expansion failed");
-	return;
+
+    if (parent->nfields >= parent->nalloc && ha_msg_expand(parent) != HA_OK) {
+        crm_err("Parent expansion failed");
+        return;
     }
-    
+
     parent->names[next] = strdup(field);
     parent->nlens[next] = strlen(field);
     parent->values[next] = child;
     parent->vlens[next] = sizeof(HA_Message);
     parent->types[next] = FT_UNCOMPRESS;
-    parent->nfields++;	
+    parent->nfields++;
 }
 
-static HA_Message*
-convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *field) 
+static HA_Message *
+convert_xml_message_struct(HA_Message * parent, xmlNode * src_node, const char *field)
 {
     xmlNode *child = NULL;
     xmlNode *__crm_xml_iter = src_node->children;
@@ -211,48 +211,50 @@ convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *fi
     const char *value = NULL;
 
     HA_Message *result = ha_msg_new(3);
+
     ha_msg_add(result, F_XML_TAGNAME, (const char *)src_node->name);
-    
-    while(prop_iter != NULL) {
-	name = (const char *)prop_iter->name;
-	value = (const char *)xmlGetProp(src_node, prop_iter->name);
-	prop_iter = prop_iter->next;
-	ha_msg_add(result, name, value);
+
+    while (prop_iter != NULL) {
+        name = (const char *)prop_iter->name;
+        value = (const char *)xmlGetProp(src_node, prop_iter->name);
+        prop_iter = prop_iter->next;
+        ha_msg_add(result, name, value);
     }
 
-    while(__crm_xml_iter != NULL) {
-	child = __crm_xml_iter;
-	__crm_xml_iter = __crm_xml_iter->next;
-	convert_xml_message_struct(result, child, NULL);
+    while (__crm_xml_iter != NULL) {
+        child = __crm_xml_iter;
+        __crm_xml_iter = __crm_xml_iter->next;
+        convert_xml_message_struct(result, child, NULL);
     }
 
-    if(parent == NULL) {
-	return result;
+    if (parent == NULL) {
+        return result;
     }
-    
-    if(field) {
-	HA_Message *holder = ha_msg_new(3);
-	CRM_ASSERT(holder != NULL);
-	
-	ha_msg_add(holder, F_XML_TAGNAME, field);
-	add_ha_nocopy(holder, result, (const char*)src_node->name);
-	
-	ha_msg_addstruct_compress(parent, field, holder);
-	ha_msg_del(holder);
+
+    if (field) {
+        HA_Message *holder = ha_msg_new(3);
+
+        CRM_ASSERT(holder != NULL);
+
+        ha_msg_add(holder, F_XML_TAGNAME, field);
+        add_ha_nocopy(holder, result, (const char *)src_node->name);
+
+        ha_msg_addstruct_compress(parent, field, holder);
+        ha_msg_del(holder);
 
     } else {
-	add_ha_nocopy(parent, result, (const char*)src_node->name);
+        add_ha_nocopy(parent, result, (const char *)src_node->name);
     }
     return result;
 }
 
 static void
-convert_xml_child(HA_Message *msg, xmlNode *xml) 
+convert_xml_child(HA_Message * msg, xmlNode * xml)
 {
     int orig = 0;
     int rc = BZ_OK;
     unsigned int len = 0;
-    
+
     char *buffer = NULL;
     char *compressed = NULL;
     const char *name = NULL;
@@ -260,23 +262,23 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     name = (const char *)xml->name;
     buffer = dump_xml_unformatted(xml);
     orig = strlen(buffer);
-    if(orig < CRM_BZ2_THRESHOLD) {
-	ha_msg_add(msg, name, buffer);
-	goto done;
+    if (orig < CRM_BZ2_THRESHOLD) {
+        ha_msg_add(msg, name, buffer);
+        goto done;
     }
-    
-    len = (orig * 1.1) + 600; /* recomended size */
-    
-    compressed = malloc( len);
+
+    len = (orig * 1.1) + 600;   /* recomended size */
+
+    compressed = malloc(len);
     rc = BZ2_bzBuffToBuffCompress(compressed, &len, buffer, orig, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
-    
-    if(rc != BZ_OK) {
-	crm_err("Compression failed: %d", rc);
-	free(compressed);
-	convert_xml_message_struct(msg, xml, name);
-	goto done;
+
+    if (rc != BZ_OK) {
+        crm_err("Compression failed: %d", rc);
+        free(compressed);
+        convert_xml_message_struct(msg, xml, name);
+        goto done;
     }
-    
+
     free(buffer);
     buffer = compressed;
     crm_trace("Compression details: %d -> %d", orig, len);
@@ -284,30 +286,30 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
   done:
     free(buffer);
 
-
 #  if 0
     {
-	unsigned int used = orig;
-	char *uncompressed = NULL;
-	
-	crm_debug("Trying to decompress %d bytes", len);
-	uncompressed = calloc(1, orig);
-	rc = BZ2_bzBuffToBuffDecompress(
-	    uncompressed, &used, compressed, len, 1, 0);
-	CRM_CHECK(rc == BZ_OK, ;);
-	CRM_CHECK(used == orig, ;);
-	crm_debug("rc=%d, used=%d", rc, used);
-	if(rc != BZ_OK) {
-	    crm_exit(100);
-	}
-	crm_debug("Original %s, decompressed %s", buffer, uncompressed);
-	free(uncompressed);
+        unsigned int used = orig;
+        char *uncompressed = NULL;
+
+        crm_debug("Trying to decompress %d bytes", len);
+        uncompressed = calloc(1, orig);
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &used, compressed, len, 1, 0);
+        CRM_CHECK(rc == BZ_OK,;
+            );
+        CRM_CHECK(used == orig,;
+            );
+        crm_debug("rc=%d, used=%d", rc, used);
+        if (rc != BZ_OK) {
+            crm_exit(100);
+        }
+        crm_debug("Original %s, decompressed %s", buffer, uncompressed);
+        free(uncompressed);
     }
-#  endif 
+#  endif
 }
 
-static HA_Message*
-convert_xml_message(xmlNode *xml) 
+static HA_Message *
+convert_xml_message(xmlNode * xml)
 {
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
@@ -316,15 +318,17 @@ convert_xml_message(xmlNode *xml)
     result = ha_msg_new(3);
     ha_msg_add(result, F_XML_TAGNAME, (const char *)xml->name);
 
-    for(pIter = xml->properties; pIter != NULL; pIter = pIter->next) {
+    for (pIter = xml->properties; pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
-        if(pIter->children) {
+
+        if (pIter->children) {
             const char *p_value = (const char *)pIter->children->content;
+
             ha_msg_add(result, p_name, p_value);
         }
     }
-    for(child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
-	convert_xml_child(result, child);
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        convert_xml_child(result, child);
     }
 
     return result;
@@ -334,23 +338,23 @@ gboolean
 crm_is_heartbeat_peer_active(const crm_node_t * node)
 {
     enum crm_proc_flag proc = text2proc(crm_system_name);
-    
+
     if (node == NULL) {
         crm_trace("NULL");
         return FALSE;
 
-    } else if(safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+    } else if (safe_str_neq(node->state, CRM_NODE_MEMBER)) {
         crm_trace("%s: state=%s", node->uname, node->state);
         return FALSE;
 
-    } else if((node->processes & crm_proc_heartbeat) == 0) {
+    } else if ((node->processes & crm_proc_heartbeat) == 0) {
         crm_trace("%s: processes=%.16x", node->uname, node->processes);
         return FALSE;
 
-    } else if(proc == crm_proc_none) {
+    } else if (proc == crm_proc_none) {
         return TRUE;
 
-    } else if((node->processes & proc) == 0) {
+    } else if ((node->processes & proc) == 0) {
         crm_trace("%s: proc %.16x not in %.16x", node->uname, proc, node->processes);
         return FALSE;
     }
@@ -428,7 +432,8 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
             send_q = ipc->send_queue;
         }
         if (send_q != NULL) {
-            CRM_CHECK(send_q->current_qlen < send_q->max_qlen,;);
+            CRM_CHECK(send_q->current_qlen < send_q->max_qlen,;
+                );
         }
     }
 
@@ -438,7 +443,7 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
         crm_log_xml_warn(xml, "outbound");
     }
 
-    if(msg != NULL) {
+    if (msg != NULL) {
         ha_msg_del(msg);
     }
     return all_is_good;
@@ -475,20 +480,21 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
 }
 
 gboolean
-register_heartbeat_conn(crm_cluster_t *cluster)
+register_heartbeat_conn(crm_cluster_t * cluster)
 {
     const char *const_uuid = NULL;
     const char *const_uname = NULL;
 
     crm_debug("Signing in with Heartbeat");
     if (cluster->hb_conn->llc_ops->signon(cluster->hb_conn, crm_system_name) != HA_OK) {
-        crm_err("Cannot sign on with heartbeat: %s", cluster->hb_conn->llc_ops->errmsg(cluster->hb_conn));
+        crm_err("Cannot sign on with heartbeat: %s",
+                cluster->hb_conn->llc_ops->errmsg(cluster->hb_conn));
         return FALSE;
     }
 
     if (HA_OK !=
-        cluster->hb_conn->llc_ops->set_msg_callback(
-            cluster->hb_conn, crm_system_name, cluster->hb_dispatch, cluster->hb_conn)) {
+        cluster->hb_conn->llc_ops->set_msg_callback(cluster->hb_conn, crm_system_name,
+                                                    cluster->hb_dispatch, cluster->hb_conn)) {
 
         crm_err("Cannot set msg callback: %s", cluster->hb_conn->llc_ops->errmsg(cluster->hb_conn));
         return FALSE;
@@ -556,7 +562,7 @@ ccm_event_name(oc_ed_t event)
 }
 
 gboolean
-heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent) 
+heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent)
 {
     const char *ha_node = NULL;
     ll_cluster_t *conn = cluster;

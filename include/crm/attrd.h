@@ -19,7 +19,7 @@
 #  define CRM_ATTRD__H
 #  include <crm/common/ipc.h>
 
-int attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
+int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
                           const char *set, const char *dampen, const char *user_name);
 

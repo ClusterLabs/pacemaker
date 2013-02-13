@@ -23,9 +23,9 @@
 size_t
 strnlen(const char *s, size_t maxlen)
 {
-	const char * eospos;
+    const char *eospos;
 
-	eospos = memchr(s, (int)'\0', maxlen);
+    eospos = memchr(s, (int)'\0', maxlen);
 
-	return (eospos == NULL ? maxlen : (size_t)(eospos-s));
+    return (eospos == NULL ? maxlen : (size_t) (eospos - s));
 }

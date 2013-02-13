@@ -24,7 +24,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-
 #include <glib.h>
 
 #include <crm/pengine/internal.h>
@@ -213,8 +212,10 @@ cleanup_calculations(pe_working_set_t * data_set)
 
     set_working_set_defaults(data_set);
 
-    CRM_CHECK(data_set->ordering_constraints == NULL,;);
-    CRM_CHECK(data_set->placement_constraints == NULL,;);
+    CRM_CHECK(data_set->ordering_constraints == NULL,;
+        );
+    CRM_CHECK(data_set->placement_constraints == NULL,;
+        );
 }
 
 void
@@ -242,7 +243,8 @@ pe_find_resource(GListPtr rsc_list, const char *id)
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         resource_t *parent = rIter->data;
 
-        resource_t *match = parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
+        resource_t *match =
+            parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
         if (match != NULL) {
             return match;
         }
@@ -255,7 +257,8 @@ node_t *
 pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
 {
     node_t *match = pe_find_node_id(nodes, id);
-    if(match) {
+
+    if (match) {
         return match;
     }
     crm_trace("Looking up %s via it's uname instead", uname);

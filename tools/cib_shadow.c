@@ -57,17 +57,18 @@ static int force_flag = 0;
 static int batch_flag = 0;
 
 static int
-print_spaces(char *buffer, int depth, int max) 
+print_spaces(char *buffer, int depth, int max)
 {
     int lpc = 0;
-    int spaces = 2*depth;
+    int spaces = 2 * depth;
+
     max--;
-       
+
     /* <= so that we always print 1 space - prevents problems with syslog */
-    for(lpc = 0; lpc <= spaces && lpc < max; lpc++) {
-       if(sprintf(buffer+lpc, "%c", ' ') < 1) {
-           return -1;
-       }
+    for (lpc = 0; lpc <= spaces && lpc < max; lpc++) {
+        if (sprintf(buffer + lpc, "%c", ' ') < 1) {
+            return -1;
+        }
     }
     return lpc;
 }
@@ -527,14 +528,17 @@ dump_data_element(int depth, char **buffer, int *max, int *offset, const char *p
     printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
     update_buffer_head(printed);
 
-    if(data) {
+    if (data) {
         xmlAttrPtr xIter = NULL;
-        for(xIter = data->properties; xIter; xIter = xIter->next) {
+
+        for (xIter = data->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
             const char *prop_value = crm_element_value(data, prop_name);
-            crm_trace("Dumping <%s %s=\"%s\"...",
-                        name, prop_name, prop_value);
-            printed = snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name, prop_value);
+
+            crm_trace("Dumping <%s %s=\"%s\"...", name, prop_name, prop_value);
+            printed =
+                snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name,
+                         prop_value);
             update_buffer_head(printed);
         }
     }

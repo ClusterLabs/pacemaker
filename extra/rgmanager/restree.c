@@ -40,6 +40,7 @@ int store_childtype(resource_child_t ** childp, char *name, int start,
 int _res_op(xmlNode ** xpp, xmlNode * rmp, resource_node_t ** tree, resource_t * first, char *type);
 static inline int
 
+
 _res_op_internal(xmlNode ** xpp, xmlNode * rmp, resource_node_t ** tree, resource_t * first,
                  char *type, resource_node_t * node);
 

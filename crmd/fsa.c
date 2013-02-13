@@ -156,7 +156,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     enum crmd_fsa_state last_state = fsa_state;
 
     crm_trace("FSA invoked with Cause: %s\tState: %s",
-                fsa_cause2string(cause), fsa_state2string(fsa_state));
+              fsa_cause2string(cause), fsa_state2string(fsa_state));
 
     fsa_dump_actions(fsa_actions, "Initial");
 
@@ -286,7 +286,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* sub-system restart */
         } else if ((fsa_actions & O_LRM_RECONNECT) == O_LRM_RECONNECT) {
-            do_fsa_action(fsa_data,  O_LRM_RECONNECT, do_lrm_control);
+            do_fsa_action(fsa_data, O_LRM_RECONNECT, do_lrm_control);
         } else if ((fsa_actions & O_CIB_RESTART) == O_CIB_RESTART) {
             do_fsa_action(fsa_data, O_CIB_RESTART, do_cib_control);
         } else if ((fsa_actions & O_PE_RESTART) == O_PE_RESTART) {
@@ -487,18 +487,18 @@ do_state_transition(long long actions,
     do_dot_log(DOT_PREFIX "\t%s -> %s [ label=%s cause=%s origin=%s ]",
                state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
-    if(cur_state == S_IDLE || next_state == S_IDLE) {
+    if (cur_state == S_IDLE || next_state == S_IDLE) {
         level = LOG_NOTICE;
-    } else if(cur_state == S_NOT_DC || next_state == S_NOT_DC) {
+    } else if (cur_state == S_NOT_DC || next_state == S_NOT_DC) {
         level = LOG_NOTICE;
-    } else if(cur_state == S_ELECTION) {
+    } else if (cur_state == S_ELECTION) {
         level = LOG_NOTICE;
-    } else if(next_state == S_RECOVERY) {
+    } else if (next_state == S_RECOVERY) {
         level = LOG_WARNING;
     }
 
     do_crm_log(level, "State transition %s -> %s [ input=%s cause=%s origin=%s ]",
-             state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
+               state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
     /* the last two clauses might cause trouble later */
     if (election_timeout != NULL && next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
@@ -534,7 +534,8 @@ do_state_transition(long long actions,
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
-        populate_cib_nodes(node_update_quick|node_update_cluster|node_update_peer|node_update_join|node_update_expected, __FUNCTION__);
+        populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
+                           node_update_join | node_update_expected, __FUNCTION__);
     }
 
     switch (next_state) {
@@ -542,16 +543,17 @@ do_state_transition(long long actions,
             fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
             /* fall through */
         case S_ELECTION:
-            crm_trace("Resetting our DC to NULL on transition to %s",
-                        fsa_state2string(next_state));
+            crm_trace("Resetting our DC to NULL on transition to %s", fsa_state2string(next_state));
             update_dc(NULL);
             break;
         case S_NOT_DC:
             election_trigger->counter = 0;
-            if(stonith_cleanup_list) {
+            if (stonith_cleanup_list) {
                 GListPtr gIter = NULL;
+
                 for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
                     char *target = gIter->data;
+
                     crm_info("Purging %s from stonith cleanup list", target);
                     free(target);
                 }
@@ -587,7 +589,7 @@ do_state_transition(long long actions,
 
             } else {
                 crm_debug("All %d cluster nodes "
-                         "responded to the join offer.", g_hash_table_size(integrated_nodes));
+                          "responded to the join offer.", g_hash_table_size(integrated_nodes));
             }
             break;
 
@@ -610,7 +612,7 @@ do_state_transition(long long actions,
             } else if (g_hash_table_size(confirmed_nodes)
                        == crm_active_peers()) {
                 crm_debug("All %u cluster nodes are"
-                         " eligible to run resources.", crm_active_peers());
+                          " eligible to run resources.", crm_active_peers());
 
             } else if (g_hash_table_size(confirmed_nodes) > crm_active_peers()) {
                 crm_err("We have more confirmed nodes than our membership does: %d vs. %d",

@@ -55,7 +55,7 @@ void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
-void mon_st_callback(stonith_t *st, stonith_event_t *e);
+void mon_st_callback(stonith_t * st, stonith_event_t * e);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
@@ -206,9 +206,9 @@ mon_shutdown(int nsig)
 #endif
 
 #if CURSES_ENABLED
-#ifndef HAVE_SIGHANDLER_T
-typedef void (*sighandler_t)(int);
-#endif
+#  ifndef HAVE_SIGHANDLER_T
+typedef void (*sighandler_t) (int);
+#  endif
 static sighandler_t ncurses_winch_handler;
 static void
 mon_winresize(int nsig)
@@ -242,19 +242,19 @@ cib_connect(gboolean full)
         need_pass = FALSE;
     }
 
-    if(watch_fencing && st == NULL) {
+    if (watch_fencing && st == NULL) {
         st = stonith_api_new();
     }
-    
-    if(watch_fencing && st->state == stonith_disconnected) {
+
+    if (watch_fencing && st->state == stonith_disconnected) {
         crm_trace("Connecting to stonith");
         rc = st->cmds->connect(st, crm_system_name, NULL);
-        if(rc == pcmk_ok) {
+        if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
             st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback);
         }
     }
-    
+
     if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
         crm_trace("Connecting to the CIB");
         if (as_console && need_pass && cib->variant == cib_remote) {
@@ -275,7 +275,8 @@ cib_connect(gboolean full)
             if (rc == pcmk_ok) {
                 rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
                 if (rc == -EPROTONOSUPPORT) {
-                    print_as("Notification setup not supported, won't be able to reconnect after failure");
+                    print_as
+                        ("Notification setup not supported, won't be able to reconnect after failure");
                     if (as_console) {
                         sleep(2);
                     }
@@ -986,8 +987,7 @@ print_ticket(gpointer name, gpointer value, gpointer data)
     ticket_t *ticket = (ticket_t *) value;
 
     print_as(" %s\t%s%10s", ticket->id,
-             ticket->granted ? "granted":"revoked",
-             ticket->standby ? " [standby]":"");
+             ticket->granted ? "granted" : "revoked", ticket->standby ? " [standby]" : "");
     if (ticket->last_granted > -1) {
         print_as(" last-granted=");
         print_date(ticket->last_granted);
@@ -1256,7 +1256,6 @@ print_status(pe_working_set_t * data_set)
     if (print_tickets) {
         print_cluster_tickets(data_set);
     }
-
 #if CURSES_ENABLED
     if (as_console) {
         refresh();
@@ -1276,7 +1275,6 @@ print_xml_status(pe_working_set_t * data_set)
     const char *quorum_votes = "unknown";
 
     dc = data_set->dc_node;
-
 
     fprintf(stream, "<?xml version=\"1.0\"?>\n");
     fprintf(stream, "<crm_mon version=\"%s\">\n", VERSION);
@@ -1298,18 +1296,17 @@ print_xml_status(pe_working_set_t * data_set)
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        fprintf(stream, "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
-            last_written ? last_written : "",
-            user ? user : "",
-            client ? client : "",
-            origin ? origin : "");
+        fprintf(stream,
+                "        <last_change time=\"%s\" user=\"%s\" client=\"%s\" origin=\"%s\" />\n",
+                last_written ? last_written : "", user ? user : "", client ? client : "",
+                origin ? origin : "");
     }
 
     stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-        data_set->input,
-        LOG_DEBUG);
+                             data_set->input, LOG_DEBUG);
     if (stack) {
-        fprintf(stream, "        <stack type=\"%s\" />\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+        fprintf(stream, "        <stack type=\"%s\" />\n",
+                crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
     }
 
     if (!dc) {
@@ -1319,26 +1316,25 @@ print_xml_status(pe_working_set_t * data_set)
         const char *uname = dc->details->uname;
         const char *id = dc->details->id;
         xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
-            data_set->input,
-            LOG_DEBUG);
-        fprintf(stream, "        <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
-            dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "",
-            uname,
-            id,
-            quorum ? (crm_is_true(quorum) ? "true" : "false") : "false");
+                                               data_set->input,
+                                               LOG_DEBUG);
+
+        fprintf(stream,
+                "        <current_dc present=\"true\" version=\"%s\" name=\"%s\" id=\"%s\" with_quorum=\"%s\" />\n",
+                dc_version ? crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE) : "", uname, id,
+                quorum ? (crm_is_true(quorum) ? "true" : "false") : "false");
     }
 
     quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
-                    data_set->input,
-                    LOG_DEBUG);
+                                   data_set->input, LOG_DEBUG);
     if (quorum_node) {
         quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
     fprintf(stream, "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
-        g_list_length(data_set->nodes),
-        quorum_votes);
+            g_list_length(data_set->nodes), quorum_votes);
 
-    fprintf(stream, "        <resources_configured number=\"%d\" />\n", count_resources(data_set, NULL));
+    fprintf(stream, "        <resources_configured number=\"%d\" />\n",
+            count_resources(data_set, NULL));
 
     fprintf(stream, "    </summary>\n");
 
@@ -1349,12 +1345,12 @@ print_xml_status(pe_working_set_t * data_set)
         const char *node_type = "unknown";
 
         switch (node->details->type) {
-        case node_member:
-            node_type = "member";
-            break;
-        case node_ping:
-            node_type = "ping";
-            break;
+            case node_member:
+                node_type = "member";
+                break;
+            case node_ping:
+                node_type = "ping";
+                break;
         }
 
         fprintf(stream, "        <node name=\"%s\" ", node->details->uname);
@@ -1372,6 +1368,7 @@ print_xml_status(pe_working_set_t * data_set)
 
         if (group_by_node) {
             GListPtr lpc2 = NULL;
+
             fprintf(stream, ">\n");
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 resource_t *rsc = (resource_t *) lpc2->data;
@@ -2133,12 +2130,13 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (current_cib != NULL) {
         xmlNode *cib_last = current_cib;
+
         current_cib = NULL;
 
         rc = cib_apply_patch_event(msg, cib_last, &current_cib, LOG_DEBUG);
         free_xml(cib_last);
 
-        switch(rc) {
+        switch (rc) {
             case pcmk_err_diff_resync:
             case pcmk_err_diff_failed:
                 crm_warn("[%s] %s Patch aborted: %s (%d)", event, op, pcmk_strerror(rc), rc);
@@ -2156,9 +2154,9 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (crm_mail_to || snmp_target || external_agent) {
         /* Process operation updates */
-        xmlXPathObject *xpathObj =
-            xpath_search(msg,
-                         "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
+        xmlXPathObject *xpathObj = xpath_search(msg,
+                                                "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+                                                "//" XML_LRM_TAG_RSC_OP);
         if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
             int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 
@@ -2233,11 +2231,12 @@ mon_refresh_display(gpointer user_data)
     return TRUE;
 }
 
-void mon_st_callback(stonith_t *st, stonith_event_t *e)
+void
+mon_st_callback(stonith_t * st, stonith_event_t * e)
 {
-    char *desc = g_strdup_printf(
-        "Operation %s requested by %s for peer %s: %s (ref=%s)",
-        e->operation, e->origin, e->target, pcmk_strerror(e->result), e->id); 
+    char *desc = g_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
+                                 e->operation, e->origin, e->target, pcmk_strerror(e->result),
+                                 e->id);
 
     if (snmp_target) {
         send_snmp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);

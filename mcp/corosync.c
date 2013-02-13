@@ -118,11 +118,11 @@ cluster_connect_cfg(uint32_t * nodeid)
 {
     cs_error_t rc;
     int fd = 0, retries = 0;
-    static struct mainloop_fd_callbacks cfg_fd_callbacks = 
-        {
-            .dispatch = pcmk_cfg_dispatch,
-            .destroy = cfg_connection_destroy,
-        };
+
+    static struct mainloop_fd_callbacks cfg_fd_callbacks = {
+        .dispatch = pcmk_cfg_dispatch,
+        .destroy = cfg_connection_destroy,
+    };
 
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
@@ -227,11 +227,11 @@ cluster_connect_cpg(void)
     unsigned int nodeid;
     int fd;
     int retries = 0;
-    static struct mainloop_fd_callbacks cpg_fd_callbacks = 
-        {
-            .dispatch = pcmk_cpg_dispatch,
-            .destroy = cpg_connection_destroy,
-        };
+
+    static struct mainloop_fd_callbacks cpg_fd_callbacks = {
+        .dispatch = pcmk_cpg_dispatch,
+        .destroy = cpg_connection_destroy,
+    };
 
     strcpy(cpg_group.value, "pcmk");
     cpg_group.length = strlen(cpg_group.value) + 1;
@@ -403,14 +403,15 @@ config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_h
 }
 #else
 static int
-get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, char **value, const char *fallback)
+get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, char **value,
+               const char *fallback)
 {
     int rc = 0, retries = 0;
 
     cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
-    if(rc != CS_OK) {
+    if (rc != CS_OK) {
         crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
-        if(fallback) {
+        if (fallback) {
             *value = strdup(fallback);
         } else {
             *value = NULL;
@@ -452,16 +453,16 @@ read_config(void)
 
     do {
         rc = confdb_initialize(&config, &callbacks);
-	if(rc != CS_OK) {
-	    retries++;
-	    printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
-	    sleep(retries);
+        if (rc != CS_OK) {
+            retries++;
+            printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
+            sleep(retries);
 
-	} else {
+        } else {
             break;
         }
 
-    } while(retries < 5);
+    } while (retries < 5);
 #elif HAVE_CMAP
     cmap_handle_t local_handle;
     uint64_t config = 0;
@@ -469,19 +470,17 @@ read_config(void)
     /* There can be only one (possibility if confdb isn't around) */
     do {
         rc = cmap_initialize(&local_handle);
-	if(rc != CS_OK) {
-	    retries++;
-	    printf("API connection setup failed: %s.  Retrying in %ds\n",
-                   cs_strerror(rc), retries);
-	    crm_info("API connection setup failed: %s.  Retrying in %ds",
-                     cs_strerror(rc), retries);
-	    sleep(retries);
+        if (rc != CS_OK) {
+            retries++;
+            printf("API connection setup failed: %s.  Retrying in %ds\n", cs_strerror(rc), retries);
+            crm_info("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+            sleep(retries);
 
-	} else {
+        } else {
             break;
         }
 
-    } while(retries < 5);
+    } while (retries < 5);
 #endif
 
     if (rc != CS_OK) {
@@ -492,7 +491,7 @@ read_config(void)
 
     stack = get_cluster_type();
     crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
-    
+
     /* =::=::= Should we be here =::=::= */
     if (stack == pcmk_cluster_corosync) {
         set_daemon_option("cluster_type", "corosync");
@@ -547,50 +546,52 @@ read_config(void)
 #endif
 
     /* =::=::= Logging =::=::= */
-    get_config_opt(config, local_handle, KEY_PREFIX"debug", &logging_debug, "off");
+    get_config_opt(config, local_handle, KEY_PREFIX "debug", &logging_debug, "off");
 
     const_value = daemon_option("debugfile");
-    if(const_value) {
+    if (const_value) {
         logging_to_logfile = strdup("on");
         logging_logfile = strdup(const_value);
         crm_trace("Using debugfile setting from the environment: %s", logging_logfile);
 
     } else {
-        get_config_opt(config, local_handle, KEY_PREFIX"to_logfile", &logging_to_logfile, "off");
-        get_config_opt(config, local_handle, KEY_PREFIX"logfile", &logging_logfile, "/var/log/pacemaker");
+        get_config_opt(config, local_handle, KEY_PREFIX "to_logfile", &logging_to_logfile, "off");
+        get_config_opt(config, local_handle, KEY_PREFIX "logfile", &logging_logfile,
+                       "/var/log/pacemaker");
     }
-    
+
     const_value = daemon_option("logfacility");
-    if(const_value) {
+    if (const_value) {
         logging_syslog_facility = strdup(const_value);
         crm_trace("Using logfacility setting from the environment: %s", logging_syslog_facility);
 
-        if(safe_str_eq(logging_syslog_facility, "none")) {
+        if (safe_str_eq(logging_syslog_facility, "none")) {
             logging_to_syslog = strdup("off");
         } else {
             logging_to_syslog = strdup("on");
         }
 
     } else {
-        get_config_opt(config, local_handle, KEY_PREFIX"to_syslog", &logging_to_syslog, "on");
-        get_config_opt(config, local_handle, KEY_PREFIX"syslog_facility", &logging_syslog_facility, "daemon");
+        get_config_opt(config, local_handle, KEY_PREFIX "to_syslog", &logging_to_syslog, "on");
+        get_config_opt(config, local_handle, KEY_PREFIX "syslog_facility", &logging_syslog_facility,
+                       "daemon");
     }
-    
+
 #if HAVE_CONFDB
-    confdb_finalize(config);    
+    confdb_finalize(config);
 #elif HAVE_CMAP
-    cmap_finalize(local_handle); 
+    cmap_finalize(local_handle);
 #endif
 
-    if(daemon_option("debug")) {
+    if (daemon_option("debug")) {
         crm_trace("Using debug setting from the environment: %s", daemon_option("debug"));
-        if(get_crm_log_level() < LOG_DEBUG && daemon_option_enabled("pacemakerd", "debug")) {
+        if (get_crm_log_level() < LOG_DEBUG && daemon_option_enabled("pacemakerd", "debug")) {
             set_crm_log_level(LOG_DEBUG);
         }
 
     } else if (crm_is_true(logging_debug)) {
         set_daemon_option("debug", "1");
-        if(get_crm_log_level() < LOG_DEBUG) {
+        if (get_crm_log_level() < LOG_DEBUG) {
             set_crm_log_level(LOG_DEBUG);
         }
 
@@ -599,8 +600,8 @@ read_config(void)
     }
 
     if (crm_is_true(logging_to_logfile)) {
-        if(crm_add_logfile(logging_logfile)) {
-            /* What a cluster fsck, eventually we need to mandate /one/ */ 
+        if (crm_add_logfile(logging_logfile)) {
+            /* What a cluster fsck, eventually we need to mandate /one/ */
             set_daemon_option("debugfile", logging_logfile);
             set_daemon_option("DEBUGLOG", logging_logfile);
             have_log = TRUE;
@@ -609,7 +610,7 @@ read_config(void)
             crm_err("Couldn't create logfile: %s", logging_logfile);
         }
     }
-    
+
     if (have_log && crm_is_true(logging_to_syslog) == FALSE) {
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
         free(logging_syslog_facility);
@@ -622,7 +623,7 @@ read_config(void)
     }
 
     set_daemon_option("logfacility", logging_syslog_facility);
-    
+
     free(logging_debug);
     free(logging_logfile);
     free(logging_to_logfile);

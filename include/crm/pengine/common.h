@@ -62,9 +62,9 @@ enum rsc_recovery_type {
 };
 
 enum rsc_start_requirement {
-    rsc_req_nothing,/* Allowed by custom_action() */
-    rsc_req_quorum, /* Enforced by custom_action() */
-    rsc_req_stonith /* Enforced by native_start_constraints() */
+    rsc_req_nothing,            /* Allowed by custom_action() */
+    rsc_req_quorum,             /* Enforced by custom_action() */
+    rsc_req_stonith             /* Enforced by native_start_constraints() */
 };
 
 enum rsc_role_e {

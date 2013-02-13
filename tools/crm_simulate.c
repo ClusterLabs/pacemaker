@@ -129,7 +129,7 @@ inject_node_state(cib_t * cib_conn, char *node)
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
-    if(cib_object && ID(cib_object) == NULL) {
+    if (cib_object && ID(cib_object) == NULL) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
         crm_exit(1);
@@ -337,9 +337,10 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+
     action->confirmed = TRUE;
 
-    quiet_log(" * Pseudo action:   %s%s%s\n", task, node?" on ":"", node?node:"");
+    quiet_log(" * Pseudo action:   %s%s%s\n", task, node ? " on " : "", node ? node : "");
     update_graph(graph, action);
     return TRUE;
 }
@@ -383,9 +384,10 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
      * If not found use the preferred name anyway
      */
     resource = crm_element_value(action_rsc, XML_ATTR_ID);
-    if(pe_find_resource(resource_list, resource) == NULL) {
+    if (pe_find_resource(resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
-        if(pe_find_resource(resource_list, longname)) {
+
+        if (pe_find_resource(resource_list, longname)) {
             resource = longname;
         }
     }
@@ -413,8 +415,9 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(cib_resource != NULL);
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
-    if(op->interval) {
-        quiet_log(" * Resource action: %-15s %s=%d on %s\n", resource, op->op_type, op->interval, node);
+    if (op->interval) {
+        quiet_log(" * Resource action: %-15s %s=%d on %s\n", resource, op->op_type, op->interval,
+                  node);
     } else {
         quiet_log(" * Resource action: %-15s %s on %s\n", resource, op->op_type, node);
     }
@@ -427,7 +430,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
-            rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
+            rc = sscanf(spec, "%*[^=]=%d", (int *)&op->rc);
 
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
@@ -459,6 +462,7 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+
     action->confirmed = TRUE;
 
     quiet_log(" * Cluster action:  %s on %s\n", task, node);
@@ -641,16 +645,16 @@ create_action_name(action_t * action)
 
     if (action->node) {
         action_host = action->node->details->uname;
-    } else if(is_not_set(action->flags, pe_action_pseudo)) {
+    } else if (is_not_set(action->flags, pe_action_pseudo)) {
         action_host = "<none>";
     }
 
     if (safe_str_eq(action->task, RSC_CANCEL)) {
         prefix = "Cancel ";
-        task = "monitor"; /* TO-DO: Hack! */
+        task = "monitor";       /* TO-DO: Hack! */
     }
 
-    if(action->rsc && action->rsc->clone_name) {
+    if (action->rsc && action->rsc->clone_name) {
         char *key = NULL;
         const char *name = action->rsc->clone_name;
         const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
@@ -670,23 +674,22 @@ create_action_name(action_t * action)
             key = generate_op_key(name, task, interval);
         }
 
-        if(action_host) {
-            action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", key, action_host);
+        if (action_host) {
+            action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", key, action_host);
         } else {
-            action_name = g_strdup_printf("%s%s", prefix?prefix:"", key);
+            action_name = g_strdup_printf("%s%s", prefix ? prefix : "", key);
         }
         free(key);
 
-    } else if(safe_str_eq(action->task, CRM_OP_FENCE)) {
-        action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", action->task, action_host);
+    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
 
-    } else if(action_host) {
-        action_name = g_strdup_printf("%s%s %s", prefix?prefix:"", action->uuid, action_host);
+    } else if (action_host) {
+        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
 
     } else {
         action_name = g_strdup_printf("%s", action->uuid);
     }
-
 
     return action_name;
 }
@@ -794,7 +797,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 }
 
 static int
-find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_state_xml)
+find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -807,12 +810,11 @@ find_ticket_state(cib_t * the_cib, const char * ticket_id, xmlNode ** ticket_sta
     *ticket_state_xml = NULL;
 
     xpath_string = calloc(1, xpath_max);
-    offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
-                       XML_CIB_TAG_TICKET_STATE, ticket_id);
+                           XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -941,7 +943,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Granting ticket %s\n", ticket_id);
         rc = set_ticket_state_attr(ticket_id, "granted", "true",
-                                  global_cib, cib_sync_call | cib_scope_local);
+                                   global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
@@ -951,7 +953,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Revoking ticket %s\n", ticket_id);
         rc = set_ticket_state_attr(ticket_id, "granted", "false",
-                                  global_cib, cib_sync_call | cib_scope_local);
+                                   global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
@@ -961,7 +963,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Making ticket %s standby\n", ticket_id);
         rc = set_ticket_state_attr(ticket_id, "standby", "true",
-                                  global_cib, cib_sync_call | cib_scope_local);
+                                   global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
@@ -971,7 +973,7 @@ modify_configuration(pe_working_set_t * data_set,
 
         quiet_log(" + Activating ticket %s\n", ticket_id);
         rc = set_ticket_state_attr(ticket_id, "standby", "false",
-                                  global_cib, cib_sync_call | cib_scope_local);
+                                   global_cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
@@ -1208,27 +1210,27 @@ profile_all(const char *dir)
     int file_num = scandir(dir, &namelist, 0, alphasort);
 
     if (file_num > 0) {
-	struct stat prop;
-	char buffer[FILENAME_MAX + 1];
+        struct stat prop;
+        char buffer[FILENAME_MAX + 1];
 
-	while (file_num--) {
-	    if ('.' == namelist[file_num]->d_name[0]) {
-		free(namelist[file_num]);
-		continue;
+        while (file_num--) {
+            if ('.' == namelist[file_num]->d_name[0]) {
+                free(namelist[file_num]);
+                continue;
 
-	    } else if (strstr(namelist[file_num]->d_name, ".xml") == NULL) {
-		free(namelist[file_num]);
-		continue;
-	    }
+            } else if (strstr(namelist[file_num]->d_name, ".xml") == NULL) {
+                free(namelist[file_num]);
+                continue;
+            }
 
-	    lpc++;
-	    snprintf(buffer, FILENAME_MAX, "%s/%s", dir, namelist[file_num]->d_name);
-	    if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-		profile_one(buffer);
-	    }
-	    free(namelist[file_num]);
-	}
-	free(namelist);
+            lpc++;
+            snprintf(buffer, FILENAME_MAX, "%s/%s", dir, namelist[file_num]->d_name);
+            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+                profile_one(buffer);
+            }
+            free(namelist[file_num]);
+        }
+        free(namelist);
     }
 
     return lpc;
@@ -1286,13 +1288,13 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 'V':
-                if(have_stdout == FALSE) {
+                if (have_stdout == FALSE) {
                     /* Redirect stderr to stdout so we can grep the output */
                     have_stdout = TRUE;
                     close(STDERR_FILENO);
                     dup2(STDOUT_FILENO, STDERR_FILENO);
                 }
-                
+
                 crm_bump_log_level(argc, argv);
                 break;
             case '?':
@@ -1409,8 +1411,8 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    if(test_dir != NULL) {
-	return profile_all(test_dir);
+    if (test_dir != NULL) {
+        return profile_all(test_dir);
     }
 
     setup_input(xml_file, store ? xml_file : output_file);
@@ -1422,7 +1424,8 @@ main(int argc, char **argv)
 
     if (data_set.now != NULL) {
         quiet_log(" + Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_WARNING, "Set fake 'now' to", data_set.now, crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(LOG_WARNING, "Set fake 'now' to", data_set.now,
+                     crm_time_log_date | crm_time_log_timeofday);
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);

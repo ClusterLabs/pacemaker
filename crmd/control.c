@@ -41,7 +41,7 @@
 
 qb_ipcs_service_t *ipcs = NULL;
 
-extern gboolean crm_connect_corosync(crm_cluster_t *cluster);
+extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
 void crm_shutdown(int nsig);
@@ -61,7 +61,7 @@ do_ha_control(long long action,
     gboolean registered = FALSE;
     static crm_cluster_t *cluster = NULL;
 
-    if(cluster == NULL) {
+    if (cluster == NULL) {
         cluster = calloc(1, sizeof(crm_cluster_t));
     }
 
@@ -207,19 +207,18 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 }
 
 int
-crmd_exit(int rc) 
+crmd_exit(int rc)
 {
     GListPtr gIter = NULL;
 
-    if(attrd_ipc) {
+    if (attrd_ipc) {
         crm_ipc_close(attrd_ipc);
         crm_ipc_destroy(attrd_ipc);
     }
-    if(crmd_mainloop) {
+    if (crmd_mainloop) {
         g_main_loop_quit(crmd_mainloop);
         g_main_loop_unref(crmd_mainloop);
     }
-
 #if SUPPORT_HEARTBEAT
     if (fsa_cluster_conn) {
         fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
@@ -227,8 +226,9 @@ crmd_exit(int rc)
     }
 #endif
 
-    for(gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
+    for (gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
         fsa_data_t *fsa_data = gIter->data;
+
         crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
                  fsa_input2string(fsa_data->fsa_input),
                  fsa_state2string(fsa_state),
@@ -497,7 +497,7 @@ do_startup(long long action,
     }
 
     if (was_error == FALSE && is_heartbeat_cluster()) {
-        if(start_subsystem(pe_subsystem) == FALSE) {
+        if (start_subsystem(pe_subsystem) == FALSE) {
             was_error = TRUE;
         }
     }
@@ -517,39 +517,39 @@ do_startup(long long action,
 }
 
 static int32_t
-crmd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+crmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
 }
 
 static void
-crmd_ipc_created(qb_ipcs_connection_t *c)
+crmd_ipc_created(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
 
 static int32_t
-crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     crm_client_t *client = crm_client_get(c);
 
     xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
+
     crm_trace("Invoked: %s", crm_client_name(client));
 
-    if(flags & crm_ipc_client_response) {
+    if (flags & crm_ipc_client_response) {
         crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
     }
 
     if (msg == NULL) {
         return 0;
     }
-
 #if ENABLE_ACL
     determine_request_user(client->user, msg, F_CRM_USER);
 #endif
@@ -561,14 +561,14 @@ crmd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     if (crmd_authorize_message(msg, client)) {
         route_message(C_IPC_MESSAGE, msg);
     }
-    
-    trigger_fsa(fsa_source);    
+
+    trigger_fsa(fsa_source);
     free_xml(msg);
     return 0;
 }
 
 static int32_t
-crmd_ipc_closed(qb_ipcs_connection_t *c) 
+crmd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
     struct crm_subsystem_s *the_subsystem = NULL;
@@ -597,17 +597,17 @@ crmd_ipc_closed(qb_ipcs_connection_t *c)
         /* else that was a transient client */
         crm_trace("Received HUP from transient client");
     }
-    
+
     crm_trace("Disconnecting client %s (%p)", crm_client_name(client), client);
     free(client->userdata);
     crm_client_destroy(client);
 
-    trigger_fsa(fsa_source);    
+    trigger_fsa(fsa_source);
     return 0;
 }
 
 static void
-crmd_ipc_destroy(qb_ipcs_connection_t *c) 
+crmd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
@@ -619,7 +619,7 @@ do_stop(long long action,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (is_heartbeat_cluster()) {
-        stop_subsystem(pe_subsystem, FALSE);   
+        stop_subsystem(pe_subsystem, FALSE);
     }
 
     mainloop_del_ipc_server(ipcs);
@@ -632,14 +632,13 @@ do_started(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    static struct qb_ipcs_service_handlers crmd_callbacks = 
-        {
-            .connection_accept = crmd_ipc_accept,
-            .connection_created = crmd_ipc_created,
-            .msg_process = crmd_ipc_dispatch,
-            .connection_closed = crmd_ipc_closed,
-            .connection_destroyed = crmd_ipc_destroy
-        };
+    static struct qb_ipcs_service_handlers crmd_callbacks = {
+        .connection_accept = crmd_ipc_accept,
+        .connection_created = crmd_ipc_created,
+        .msg_process = crmd_ipc_dispatch,
+        .connection_closed = crmd_ipc_closed,
+        .connection_destroyed = crmd_ipc_destroy
+    };
 
     if (cur_state != S_STARTING) {
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
@@ -677,6 +676,7 @@ do_started(long long action,
 #if SUPPORT_HEARTBEAT
         if (is_heartbeat_cluster()) {
             HA_Message *msg = NULL;
+
             crm_trace("Looking for a HA message");
             msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
             if (msg != NULL) {
@@ -873,7 +873,8 @@ crm_shutdown(int nsig)
             }
 
             /* cant rely on this... */
-            crm_notice("Requesting shutdown, upper limit is %dms", shutdown_escalation_timer->period_ms);
+            crm_notice("Requesting shutdown, upper limit is %dms",
+                       shutdown_escalation_timer->period_ms);
             crm_timer_start(shutdown_escalation_timer);
         }
 

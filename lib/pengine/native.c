@@ -116,10 +116,13 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if(safe_str_eq(class, "ocf") == FALSE) {
+    if (safe_str_eq(class, "ocf") == FALSE) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
-        if(safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
-            pe_err("Resource %s is of type %s and therefore cannot be used as a master/slave resource", rsc->id, class);
+
+        if (safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
+            pe_err
+                ("Resource %s is of type %s and therefore cannot be used as a master/slave resource",
+                 rsc->id, class);
             return FALSE;
         }
     }
@@ -138,13 +141,14 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
 
     if (flags & pe_find_clone) {
         const char *rid = ID(rsc->xml);
-        if(rsc->parent == NULL) {
+
+        if (rsc->parent == NULL) {
             match = FALSE;
 
         } else if (safe_str_eq(rsc->id, id)) {
             match = TRUE;
 
-        } else if(safe_str_eq(rid, id)) {
+        } else if (safe_str_eq(rid, id)) {
             match = TRUE;
         }
 
@@ -153,8 +157,7 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
             match = TRUE;
 
         } else if (is_set(flags, pe_find_renamed)
-                   && rsc->clone_name
-                   && strcmp(rsc->clone_name, id) == 0) {
+                   && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
             match = TRUE;
         }
     }
@@ -316,8 +319,9 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
 
-            status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text, node->details->uname,
-                         node->details->id, node->details->online ? "false" : "true");
+            status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
+                         node->details->uname, node->details->id,
+                         node->details->online ? "false" : "true");
         }
         status_print("%s</resource>\n", pre_text);
     } else {

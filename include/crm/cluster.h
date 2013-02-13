@@ -44,11 +44,11 @@ extern unsigned long long crm_peer_seq;
 /* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
-    uint32_t id;   /* Only used by corosync derivatives */
-    uint64_t born; /* Only used by heartbeat and the legacy plugin */
+    uint32_t id;                /* Only used by corosync derivatives */
+    uint64_t born;              /* Only used by heartbeat and the legacy plugin */
     uint64_t last_seen;
 
-    int32_t votes; /* Only used by the legacy plugin */
+    int32_t votes;              /* Only used by the legacy plugin */
     uint32_t processes;
 
     char *uname;
@@ -56,8 +56,8 @@ typedef struct crm_peer_node_s {
     char *state;
     char *expected;
 
-    char *addr;   /* Only used by the legacy plugin */
-    char *version;/* Unused */
+    char *addr;                 /* Only used by the legacy plugin */
+    char *version;              /* Unused */
 } crm_node_t;
 
 void crm_peer_init(void);
@@ -66,24 +66,23 @@ char *get_corosync_uuid(uint32_t id, const char *uname);
 const char *get_node_uuid(uint32_t id, const char *uname);
 int get_corosync_id(int id, const char *uuid);
 
-typedef struct crm_cluster_s
-{
-        char *uuid;
-        char *uname;
-        uint32_t nodeid;
+typedef struct crm_cluster_s {
+    char *uuid;
+    char *uname;
+    uint32_t nodeid;
 
-#if SUPPORT_HEARTBEAT
-        ll_cluster_t *hb_conn;
-        void (*hb_dispatch)(HA_Message *msg, void *private);
-#endif
+#  if SUPPORT_HEARTBEAT
+    ll_cluster_t *hb_conn;
+    void (*hb_dispatch) (HA_Message * msg, void *private);
+#  endif
 
-        gboolean (*cs_dispatch) (int kind, const char *from, const char *data);
-        void (*destroy) (gpointer);
+     gboolean(*cs_dispatch) (int kind, const char *from, const char *data);
+    void (*destroy) (gpointer);
 
 } crm_cluster_t;
 
-gboolean crm_cluster_connect(crm_cluster_t *cluster);
-void crm_cluster_disconnect(crm_cluster_t *cluster);
+gboolean crm_cluster_connect(crm_cluster_t * cluster);
+void crm_cluster_disconnect(crm_cluster_t * cluster);
 
 /* *INDENT-OFF* */
 enum crm_ais_msg_class {
@@ -110,17 +109,17 @@ enum crm_ais_msg_types {
 };
 /* *INDENT-ON* */
 
-gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+gboolean send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
 
-void destroy_crm_node(gpointer/* crm_node_t* */ data);
+void destroy_crm_node(gpointer /* crm_node_t* */ data);
 
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);
-int crm_terminate_member(int nodeid, const char *uname, void* unused);
+int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 gboolean crm_get_cluster_name(char **cname);
 
@@ -132,7 +131,7 @@ gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
 extern int ais_fd_sync;
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_ais_text(int class, const char *data, gboolean local,
-                              crm_node_t *node, enum crm_ais_msg_types dest);
+                       crm_node_t * node, enum crm_ais_msg_types dest);
 gboolean get_ais_nodeid(uint32_t * id, char **uname);
 #  endif
 

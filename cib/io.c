@@ -94,7 +94,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
         crm_warn("No on-disk digest present");
         return TRUE;
 
-    } else if(expected_strm == NULL) {
+    } else if (expected_strm == NULL) {
         crm_perror(LOG_ERR, "Could not open signature file %s for reading", sigfile);
         goto bail;
     }
@@ -138,8 +138,7 @@ validate_cib_digest(xmlNode * local_cib, const char *sigfile)
 }
 
 static int
-write_cib_digest(
-    xmlNode * local_cib, const char *digest_file, int fd, char *digest)
+write_cib_digest(xmlNode * local_cib, const char *digest_file, int fd, char *digest)
 {
     int rc = 0;
     char *local_digest = NULL;
@@ -236,7 +235,7 @@ cib_rename(const char *old, const char *new)
                    new);
         cib_writes_enabled = FALSE;
     }
-    if(automatic_fd > 0) {
+    if (automatic_fd > 0) {
         close(automatic_fd);
     }
     free(automatic);
@@ -533,21 +532,25 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
     return pcmk_ok;
 }
 
-static void cib_diskwrite_complete(GPid pid, gint status, gpointer user_data) 
+static void
+cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
 {
     int exitcode = -1;
 
-    if(WIFSIGNALED(status)) {
+    if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
         int core = WCOREDUMP(status);
-        crm_notice("Disk write process terminated with signal %d (pid=%d, core=%d)", signo, pid, core);
 
-    } else if(WIFEXITED(status)) {
+        crm_notice("Disk write process terminated with signal %d (pid=%d, core=%d)", signo, pid,
+                   core);
+
+    } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
-        do_crm_log(exitcode == 0 ? LOG_TRACE : LOG_ERR, "Disk write process exited (pid=%d, rc=%d)", pid, exitcode);
+        do_crm_log(exitcode == 0 ? LOG_TRACE : LOG_ERR, "Disk write process exited (pid=%d, rc=%d)",
+                   pid, exitcode);
     }
 
-    if(exitcode != 0 && cib_writes_enabled) {
+    if (exitcode != 0 && cib_writes_enabled) {
         crm_err("Disabling disk writes after write failure");
         cib_writes_enabled = FALSE;
     }
@@ -606,14 +609,14 @@ write_cib_contents(gpointer p)
         if (pid) {
             /* Parent */
             g_child_watch_add(pid, cib_diskwrite_complete, NULL);
-            if(bb_state == QB_LOG_STATE_ENABLED) {
+            if (bb_state == QB_LOG_STATE_ENABLED) {
                 /* Re-enable now that it it safe */
                 qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
             }
 
-            return -1; /* -1 means 'still work to do' */
+            return -1;          /* -1 means 'still work to do' */
         }
-        
+
         /* A-synchronous write out after a fork() */
 
         /* Don't log anything unless strictly necessary */
@@ -653,14 +656,14 @@ write_cib_contents(gpointer p)
         unlink(backup_digest);
 
         rc = link(primary_file, backup_file);
-        if(rc < 0) {
+        if (rc < 0) {
             exit_rc = 4;
             crm_perror(LOG_ERR, "Cannot link %s to %s", primary_file, backup_file);
             goto cleanup;
         }
 
         rc = link(digest_file, backup_digest);
-        if(rc < 0 && errno != ENOENT) {
+        if (rc < 0 && errno != ENOENT) {
             exit_rc = 5;
             crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
             goto cleanup;
@@ -732,7 +735,7 @@ write_cib_contents(gpointer p)
     free_xml(cib_tmp);
     free_xml(cib_local);
 
-    if(fd >= 0) {
+    if (fd >= 0) {
         close(fd);
     }
 

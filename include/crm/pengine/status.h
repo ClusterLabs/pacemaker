@@ -135,7 +135,7 @@ struct node_shared_s {
 
     GHashTable *utilization;
 
-    /*! cache of calculated rsc digests for this node.*/
+    /*! cache of calculated rsc digests for this node. */
     GHashTable *digest_cache;
 };
 
@@ -343,5 +343,5 @@ node_t *pe_find_node(GListPtr node_list, const char *uname);
 node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
-                         pe_working_set_t * data_set);    
+                         pe_working_set_t * data_set);
 #endif

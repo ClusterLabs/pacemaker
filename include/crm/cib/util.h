@@ -39,29 +39,25 @@ int update_attr_delegate(cib_t * the_cib, int call_options,
                          const char *section, const char *node_uuid,
                          const char *set_type, const char *set_name,
                          const char *attr_id, const char *attr_name,
-                         const char *attr_value, gboolean to_console,
-                         const char *user_name);
+                         const char *attr_value, gboolean to_console, const char *user_name);
 
 int find_nvpair_attr_delegate(cib_t * the_cib, const char *attr,
                               const char *section, const char *node_uuid,
                               const char *set_type, const char *set_name,
                               const char *attr_id, const char *attr_name,
-                              gboolean to_console, char **value,
-                              const char *user_name);
+                              gboolean to_console, char **value, const char *user_name);
 
 int read_attr_delegate(cib_t * the_cib,
                        const char *section, const char *node_uuid,
                        const char *set_type, const char *set_name,
                        const char *attr_id, const char *attr_name,
-                       char **attr_value, gboolean to_console,
-                       const char *user_name);
+                       char **attr_value, gboolean to_console, const char *user_name);
 
 int delete_attr_delegate(cib_t * the_cib, int options,
                          const char *section, const char *node_uuid,
                          const char *set_type, const char *set_name,
                          const char *attr_id, const char *attr_name,
-                         const char *attr_value, gboolean to_console,
-                         const char *user_name);
+                         const char *attr_value, gboolean to_console, const char *user_name);
 
 int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid);
 
@@ -74,6 +70,6 @@ xmlNode *cib_get_generation(cib_t * cib);
 
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
-int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output, int level);
+int cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level);
 
 #endif

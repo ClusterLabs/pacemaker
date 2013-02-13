@@ -207,14 +207,14 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    if(cib_root == NULL) {
+    if (cib_root == NULL) {
         char *path = g_strdup_printf("%s/cib.xml", CRM_CONFIG_DIR);
         char *legacy = g_strdup_printf("%s/cib.xml", CRM_LEGACY_CONFIG_DIR);
 
-        if(g_file_test(path, G_FILE_TEST_EXISTS)) {
+        if (g_file_test(path, G_FILE_TEST_EXISTS)) {
             cib_root = CRM_CONFIG_DIR;
 
-        } else if(g_file_test(legacy, G_FILE_TEST_EXISTS)) {
+        } else if (g_file_test(legacy, G_FILE_TEST_EXISTS)) {
             cib_root = CRM_LEGACY_CONFIG_DIR;
             crm_notice("Using legacy config location: %s", cib_root);
 
@@ -240,7 +240,8 @@ main(int argc, char **argv)
     /* read local config file */
     rc = cib_init();
 
-    CRM_CHECK(crm_hash_table_size(client_connections) == 0, crm_warn("Not all clients gone at exit"));
+    CRM_CHECK(crm_hash_table_size(client_connections) == 0,
+              crm_warn("Not all clients gone at exit"));
     g_hash_table_foreach(client_connections, log_cib_client, NULL);
     cib_cleanup();
 
@@ -314,11 +315,10 @@ ccm_connect(void)
     int (*ccm_api_unregister) (oc_ev_t * token) =
         find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
 
-    static struct mainloop_fd_callbacks ccm_fd_callbacks =
-        {
-            .dispatch = cib_ccm_dispatch,
-            .destroy = ccm_connection_destroy,
-        };
+    static struct mainloop_fd_callbacks ccm_fd_callbacks = {
+        .dispatch = cib_ccm_dispatch,
+        .destroy = ccm_connection_destroy,
+    };
 
     while (did_fail) {
         did_fail = FALSE;
@@ -414,21 +414,22 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     /* crm_active_peers(crm_proc_cib) appears to give the wrong answer
      * sometimes, this might help figure out why
      */
-    if(type == crm_status_nstate) {
+    if (type == crm_status_nstate) {
         crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
         if (safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
             return;
         }
 
-    } else if(type == crm_status_processes) {
+    } else if (type == crm_status_processes) {
         uint32_t old = 0;
+
         if (data) {
             old = *(const uint32_t *)data;
         }
 
         if ((node->processes ^ old) & crm_proc_cib) {
             crm_info("status: cib process on %s is now %sactive",
-                     node->uname, is_set(node->processes, crm_proc_cib)?"":"in");
+                     node->uname, is_set(node->processes, crm_proc_cib) ? "" : "in");
         } else {
             return;
         }
@@ -437,7 +438,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         return;
     }
 #endif
-    if(cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
+    if (cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
     }
@@ -465,7 +466,7 @@ cib_init(void)
         crm_cluster.destroy = cib_ais_destroy;
         crm_cluster.cs_dispatch = cib_ais_dispatch;
 #endif
-    } else if(is_heartbeat_cluster()) {
+    } else if (is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
         crm_cluster.hb_dispatch = cib_ha_peer_callback;
         crm_cluster.destroy = cib_ha_connection_destroy;

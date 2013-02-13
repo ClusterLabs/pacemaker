@@ -49,6 +49,7 @@ struct cpg_name pcmk_cpg_group = {
 };
 
 quorum_handle_t pcmk_quorum_handle = 0;
+
 gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
 
 static char *pcmk_uname = NULL;
@@ -70,7 +71,8 @@ static uint32_t pcmk_nodeid = 0;
  * CFG functionality stolen from node_name() in corosync-quorumtool.c
  * This resolves the first address assigned to a node and returns the name or IP address.
  */
-char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid)
+char *
+corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 {
     int lpc = 0;
     int rc = CS_OK;
@@ -80,15 +82,15 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
     cmap_handle_t local_handle = 0;
 
     /* nodeid == 0 == CMAN_NODEID_US */
-    if(nodeid == 0 && pcmk_nodeid) {
+    if (nodeid == 0 && pcmk_nodeid) {
         nodeid = pcmk_nodeid;
 
-    } else if(nodeid == 0) {
+    } else if (nodeid == 0) {
         /* Look it up */
         int rc = -1;
         int retries = 0;
         cpg_handle_t handle = 0;
-        cpg_callbacks_t cb = {};
+        cpg_callbacks_t cb = { };
 
         cs_repeat(retries, 5, rc = cpg_initialize(&handle, &cb));
         if (rc == CS_OK) {
@@ -101,31 +103,33 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
         }
         cpg_finalize(handle);
     }
-    
-    if(cmap_handle == 0 && local_handle == 0) {
+
+    if (cmap_handle == 0 && local_handle == 0) {
         retries = 0;
         crm_trace("Initializing CMAP connection");
         do {
             rc = cmap_initialize(&local_handle);
-            if(rc != CS_OK) {
+            if (rc != CS_OK) {
                 retries++;
-                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
+                          retries);
                 sleep(retries);
             }
 
-        } while(retries < 5 && rc != CS_OK);
+        } while (retries < 5 && rc != CS_OK);
 
         if (rc != CS_OK) {
-            crm_warn("Could not connect to Cluster Configuration Database API, error %s", cs_strerror(rc));
+            crm_warn("Could not connect to Cluster Configuration Database API, error %s",
+                     cs_strerror(rc));
             local_handle = 0;
         }
     }
 
-    if(cmap_handle == 0) {
+    if (cmap_handle == 0) {
         cmap_handle = local_handle;
     }
 
-    while(name == NULL && cmap_handle != 0) {
+    while (name == NULL && cmap_handle != 0) {
         uint32_t id = 0;
         char *key = NULL;
 
@@ -134,24 +138,25 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
         crm_trace("Checking %u vs %u from %s", nodeid, id, key);
         g_free(key);
 
-        if(rc != CS_OK) {
+        if (rc != CS_OK) {
             break;
         }
 
-        if(nodeid == id) {
+        if (nodeid == id) {
             crm_trace("Searching for node name for %u in nodelist.node.%d %s", nodeid, lpc, name);
-            if(name == NULL) {
+            if (name == NULL) {
                 key = g_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 rc = cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, name);
 
-                if(node_name_is_valid(key, name) == FALSE) {
-                    free(name); name = NULL;
+                if (node_name_is_valid(key, name) == FALSE) {
+                    free(name);
+                    name = NULL;
                 }
                 g_free(key);
             }
 
-            if(name == NULL) {
+            if (name == NULL) {
                 key = g_strdup_printf("nodelist.node.%d.name", lpc);
                 rc = cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s %d", key, name, rc);
@@ -163,7 +168,7 @@ char *corosync_node_name(uint64_t /*cmap_handle_t*/ cmap_handle, uint32_t nodeid
         lpc++;
     }
 
-    if(name == NULL) {
+    if (name == NULL) {
         crm_notice("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
@@ -227,7 +232,7 @@ crm_get_cluster_name(char **cname)
 
 gboolean
 send_ais_text(int class, const char *data,
-              gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
+              gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -243,7 +248,8 @@ send_ais_text(int class, const char *data,
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
-    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class); return FALSE);
+    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
+              return FALSE);
 
     if (data == NULL) {
         data = "";
@@ -297,7 +303,7 @@ send_ais_text(int class, const char *data,
         crm_trace("Compressing message payload");
 
         /* coverity[returned_null] Ignore */
-        compressed = malloc( len);
+        compressed = malloc(len);
 
         rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
                                       0, CRM_BZ2_WORK);
@@ -342,7 +348,8 @@ send_ais_text(int class, const char *data,
 
         errno = 0;
         transport = "cpg";
-        CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
+        CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR;
+                  goto bail);
         rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
         if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
             cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
@@ -376,10 +383,11 @@ send_ais_text(int class, const char *data,
 }
 
 gboolean
-send_ais_message(xmlNode * msg, gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
+send_ais_message(xmlNode * msg, gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
     char *data = dump_xml_unformatted(msg);
+
     rc = send_ais_text(crm_class_cluster, data, local, node, dest);
     free(data);
     return rc;
@@ -390,21 +398,21 @@ terminate_cs_connection(void)
 {
     crm_notice("Disconnecting from Corosync");
 
-    if(pcmk_cpg_handle) {
+    if (pcmk_cpg_handle) {
         crm_trace("Disconnecting CPG");
         cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
         cpg_finalize(pcmk_cpg_handle);
         pcmk_cpg_handle = 0;
-        
+
     } else {
         crm_info("No CPG connection");
     }
 
-    if(pcmk_quorum_handle) {
+    if (pcmk_quorum_handle) {
         crm_trace("Disconnecting quorum");
         quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
-        
+
     } else {
         crm_info("No Quorum connection");
     }
@@ -414,7 +422,8 @@ int ais_membership_timer = 0;
 gboolean ais_membership_force = FALSE;
 
 static gboolean
-ais_dispatch_message(AIS_Message * msg, gboolean(*dispatch) (int kind, const char *from, const char *data))
+ais_dispatch_message(AIS_Message * msg,
+                     gboolean(*dispatch) (int kind, const char *from, const char *data))
 {
     char *data = NULL;
     char *uncompressed = NULL;
@@ -565,6 +574,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
+
         crm_info("Left[%d.%d] %s.%u ", counter, i, groupName->value, left_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
     }
@@ -575,18 +585,19 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
+
         crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-        if(pcmk_nodeid == member_list[i].nodeid) {
+        if (pcmk_nodeid == member_list[i].nodeid) {
             found = TRUE;
         }
     }
 
-    if(!found) {
+    if (!found) {
         crm_err("We're not part of CPG group %s anymore!", groupName->value);
         /* Possibly re-call cpg_join() */
     }
-    
+
     counter++;
 }
 
@@ -596,18 +607,19 @@ cpg_callbacks_t cpg_callbacks = {
 };
 
 static gboolean
-init_cpg_connection(gboolean(*dispatch) (int kind, const char *from, const char *data), void (*destroy) (gpointer),
-                    uint32_t * nodeid)
+init_cpg_connection(gboolean(*dispatch) (int kind, const char *from, const char *data),
+                    void (*destroy) (gpointer), uint32_t * nodeid)
 {
     int rc = -1;
     int fd = 0;
     int retries = 0;
     crm_node_t *peer = NULL;
+
     struct mainloop_fd_callbacks cpg_fd_callbacks = {
         .dispatch = pcmk_cpg_dispatch,
         .destroy = destroy,
     };
-    
+
     strncpy(pcmk_cpg_group.value, crm_system_name, 128);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
 
@@ -670,7 +682,8 @@ corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
     int *seq = user_data;
     crm_node_t *node = value;
 
-    if (node->last_seen != *seq && node->state && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
+    if (node->last_seen != *seq && node->state
+        && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
         crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
         crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
     }
@@ -702,7 +715,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
                  quorate ? "retained" : "still lost", (long unsigned int)view_list_entries);
     }
 
-    if(view_list_entries == 0 && init_phase) {
+    if (view_list_entries == 0 && init_phase) {
         crm_info("Corosync membership is still forming, ignoring");
         return;
     }
@@ -718,7 +731,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         crm_debug("Member[%d] %d ", i, id);
 
         node = crm_get_peer(id, NULL);
-        if(node->uname == NULL) {
+        if (node->uname == NULL) {
             crm_info("Obtaining name for new node %u", id);
             name = corosync_node_name(0, id);
             node = crm_get_peer(id, name);
@@ -749,6 +762,7 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
     int quorate = 0;
     uint32_t quorum_type = 0;
     struct mainloop_fd_callbacks quorum_fd_callbacks;
+
     quorum_fd_callbacks.dispatch = pcmk_quorum_dispatch;
     quorum_fd_callbacks.destroy = destroy;
 
@@ -760,8 +774,8 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
         goto bail;
 
     } else if (quorum_type != QUORUM_SET) {
-       crm_err("Corosync quorum is not configured\n");
-       goto bail;
+        crm_err("Corosync quorum is not configured\n");
+        goto bail;
     }
 
     rc = quorum_getquorate(pcmk_quorum_handle, &quorate);
@@ -799,12 +813,13 @@ init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
 }
 
 gboolean
-init_cs_connection(crm_cluster_t *cluster)
+init_cs_connection(crm_cluster_t * cluster)
 {
     int retries = 0;
 
     while (retries < 5) {
         int rc = init_cs_connection_once(cluster);
+
         retries++;
 
         switch (rc) {
@@ -825,18 +840,18 @@ init_cs_connection(crm_cluster_t *cluster)
 }
 
 gboolean
-init_cs_connection_once(crm_cluster_t *cluster)
+init_cs_connection_once(crm_cluster_t * cluster)
 {
     enum cluster_type_e stack = get_cluster_type();
 
     crm_peer_init();
 
     /* Here we just initialize comms */
-    if(stack != pcmk_cluster_corosync) {
+    if (stack != pcmk_cluster_corosync) {
         crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(stack), stack);
         return FALSE;
     }
-    
+
     if (init_cpg_connection(cluster->cs_dispatch, cluster->destroy, &pcmk_nodeid) == FALSE) {
         return FALSE;
     }
@@ -945,11 +960,11 @@ crm_is_corosync_peer_active(const crm_node_t * node)
         crm_trace("NULL");
         return FALSE;
 
-    } else if(safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+    } else if (safe_str_neq(node->state, CRM_NODE_MEMBER)) {
         crm_trace("%s: state=%s", node->uname, node->state);
         return FALSE;
 
-    } else if((node->processes & crm_proc_cpg) == 0) {
+    } else if ((node->processes & crm_proc_cpg) == 0) {
         crm_trace("%s: processes=%.16x", node->uname, node->processes);
         return FALSE;
     }
@@ -957,7 +972,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
 }
 
 gboolean
-corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_parent) 
+corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent)
 {
     int lpc = 0;
     int rc = CS_OK;
@@ -967,13 +982,14 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
 
     do {
         rc = cmap_initialize(&cmap_handle);
-	if(rc != CS_OK) {
-	    retries++;
-	    crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
-	    sleep(retries);
+        if (rc != CS_OK) {
+            retries++;
+            crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
+                      retries);
+            sleep(retries);
         }
 
-    } while(retries < 5 && rc != CS_OK);
+    } while (retries < 5 && rc != CS_OK);
 
     if (rc != CS_OK) {
         crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
@@ -982,7 +998,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
 
     crm_peer_init();
     crm_trace("Initializing corosync nodelist");
-    for(lpc = 0; ; lpc++) {
+    for (lpc = 0;; lpc++) {
         uint32_t nodeid = 0;
         char *name = NULL;
         char *key = NULL;
@@ -991,32 +1007,35 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
         rc = cmap_get_uint32(cmap_handle, key, &nodeid);
         g_free(key);
 
-        if(rc != CS_OK) {
+        if (rc != CS_OK) {
             break;
         }
 
         name = corosync_node_name(cmap_handle, nodeid);
         if (name != NULL) {
             crm_node_t *node = g_hash_table_lookup(crm_peer_cache, name);
-            if(node && node->id != nodeid) {
-                crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id, nodeid, name);
+
+            if (node && node->id != nodeid) {
+                crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id,
+                         nodeid, name);
                 crm_exit(100);
             }
         }
 
-        if(nodeid > 0 || name != NULL) {
+        if (nodeid > 0 || name != NULL) {
             crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
             crm_get_peer(nodeid, name);
         }
 
-        if(nodeid > 0 && name != NULL) {
+        if (nodeid > 0 && name != NULL) {
             any = TRUE;
 
-            if(xml_parent) {
+            if (xml_parent) {
                 xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
+
                 crm_xml_add_int(node, XML_ATTR_ID, nodeid);
                 crm_xml_add(node, XML_ATTR_UNAME, name);
-                if(force_member) {
+                if (force_member) {
                     crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);
                 }
             }
@@ -1024,6 +1043,6 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode *xml_
 
         free(name);
     }
-    cmap_finalize(cmap_handle); 
+    cmap_finalize(cmap_handle);
     return any;
 }

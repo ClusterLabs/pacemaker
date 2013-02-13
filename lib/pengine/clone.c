@@ -213,7 +213,8 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Options for %s", rsc->id);
     pe_rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
     pe_rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
-    pe_rsc_trace(rsc, "\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    pe_rsc_trace(rsc, "\tClone is unique: %s",
+                 is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
 
     clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
 
@@ -253,13 +254,13 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     pe_rsc_trace(rsc, "\tClone is unique (fixed): %s",
-              is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+                 is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
     for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
-        if(create_child_clone(rsc, lpc, data_set) == NULL) {
+        if (create_child_clone(rsc, lpc, data_set) == NULL) {
             return FALSE;
         }
     }
@@ -268,7 +269,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         /* create one so that unpack_find_resource() will hook up
          * any orphans up to the parent correctly
          */
-        if(create_child_clone(rsc, -1, data_set) == NULL) {
+        if (create_child_clone(rsc, -1, data_set) == NULL) {
             return FALSE;
         }
     }
@@ -453,8 +454,9 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     /* Masters */
     master_list = g_list_sort(master_list, sort_node_uname);
-    for(gIter = master_list; gIter; gIter = gIter->next) {
+    for (gIter = master_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
+
         list_text = add_list_element(list_text, host->details->uname);
     }
 
@@ -465,12 +467,14 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
-    for(gIter = started_list; gIter; gIter = gIter->next) {
+    for (gIter = started_list; gIter; gIter = gIter->next) {
         node_t *host = gIter->data;
+
         list_text = add_list_element(list_text, host->details->uname);
     }
 
-    short_print(list_text, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options, print_data);
+    short_print(list_text, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options,
+                print_data);
     g_list_free(started_list);
     free(list_text);
     list_text = NULL;
@@ -510,7 +514,7 @@ clone_free(resource_t * rsc)
 
     g_list_free(rsc->children);
 
-    if(clone_data) {
+    if (clone_data) {
         CRM_ASSERT(clone_data->demote_notify == NULL);
         CRM_ASSERT(clone_data->stop_notify == NULL);
         CRM_ASSERT(clone_data->start_notify == NULL);

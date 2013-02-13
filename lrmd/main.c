@@ -39,7 +39,7 @@ static int remote_port = 0;
 int lrmd_call_id = 0;
 
 static void
-stonith_connection_destroy_cb(stonith_t * st, stonith_event_t *e)
+stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
 {
     stonith_api->state = stonith_disconnected;
     crm_err("LRMD lost STONITH connection");
@@ -63,8 +63,8 @@ get_stonith_connection(void)
             rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL);
             if (rc == pcmk_ok) {
                 stonith_api->cmds->register_notification(stonith_api,
-                    T_STONITH_NOTIFY_DISCONNECT,
-                    stonith_connection_destroy_cb);
+                                                         T_STONITH_NOTIFY_DISCONNECT,
+                                                         stonith_connection_destroy_cb);
                 break;
             }
             sleep(1);
@@ -85,7 +85,7 @@ static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
-    if(crm_client_new(c, uid, gid) == NULL) {
+    if (crm_client_new(c, uid, gid) == NULL) {
         return -EIO;
     }
     return 0;
@@ -146,6 +146,7 @@ static int32_t
 lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
+
     crm_trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
     crm_client_destroy(client);
@@ -166,7 +167,8 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
     .connection_destroyed = lrmd_ipc_destroy
 };
 
-int lrmd_server_send_reply(crm_client_t *client, uint32_t id, xmlNode *reply)
+int
+lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
 {
 
     crm_trace("sending reply to client (%s) with msg id %d", client->id, id);
@@ -178,12 +180,13 @@ int lrmd_server_send_reply(crm_client_t *client, uint32_t id, xmlNode *reply)
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Unknown lrmd client type %d" , client->kind);
+            crm_err("Unknown lrmd client type %d", client->kind);
     }
     return -1;
 }
 
-int lrmd_server_send_notify(crm_client_t *client, xmlNode *msg)
+int
+lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 {
     crm_trace("sending notify to client (%s)", client->id);
     switch (client->kind) {
@@ -202,7 +205,7 @@ int lrmd_server_send_notify(crm_client_t *client, xmlNode *msg)
             return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
 #endif
         default:
-            crm_err("Unknown lrmd client type %d" , client->kind);
+            crm_err("Unknown lrmd client type %d", client->kind);
     }
     return -1;
 }
@@ -239,7 +242,8 @@ main(int argc, char **argv)
     int index = 0;
 
     crm_log_init("lrmd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_set_options(NULL, "[options]", long_options, "Daemon for controlling services confirming to different standards");
+    crm_set_options(NULL, "[options]", long_options,
+                    "Daemon for controlling services confirming to different standards");
 
     while (1) {
         flag = crm_get_option(argc, argv, &index);
@@ -257,7 +261,7 @@ main(int argc, char **argv)
             case 'p':
                 remote_port = atoi(optarg);
             case 'V':
-                set_crm_log_level(crm_log_level+1);
+                set_crm_log_level(crm_log_level + 1);
                 break;
             case '?':
             case '$':

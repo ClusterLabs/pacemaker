@@ -25,7 +25,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-
 #include <glib.h>
 
 #include <crm/pengine/status.h>
@@ -57,10 +56,10 @@ series_t series[] = {
     {"pe-input", "pe-input-series-max", 400},
 };
 
-gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender);
+gboolean process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender);
 
 gboolean
-process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender)
+process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
 {
     static char *last_digest = NULL;
 
@@ -151,7 +150,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender)
         CRM_ASSERT(reply != NULL);
 
         if (is_repoke == FALSE) {
-            filename = generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, HAVE_BZLIB_H);
+            filename =
+                generate_series_filename(PE_STATE_DIR, series[series_id].name, seq, HAVE_BZLIB_H);
         }
 
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
@@ -168,16 +168,13 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender)
         cleanup_alloc_calculations(&data_set);
 
         if (was_processing_error) {
-            crm_err("Calculated Transition %d: %s",
-                    transition_id, filename);
+            crm_err("Calculated Transition %d: %s", transition_id, filename);
 
         } else if (was_processing_warning) {
-            crm_warn("Calculated Transition %d: %s",
-                     transition_id, filename);
+            crm_warn("Calculated Transition %d: %s", transition_id, filename);
 
         } else {
-            crm_notice("Calculated Transition %d: %s",
-                       transition_id, filename);
+            crm_notice("Calculated Transition %d: %s", transition_id, filename);
         }
 
         if (crm_config_error) {
@@ -187,11 +184,9 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t* sender)
 
         if (is_repoke == FALSE && series_wrap != 0) {
             write_xml_file(xml_data, filename, HAVE_BZLIB_H);
-            write_last_sequence(PE_STATE_DIR, series[series_id].name,
-                                seq + 1, series_wrap);
+            write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
         } else {
-            crm_trace("Not writing out %s: %d & %d",
-                      filename, is_repoke, series_wrap);
+            crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
         }
 
         free_xml(converted);

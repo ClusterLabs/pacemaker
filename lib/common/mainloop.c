@@ -34,15 +34,15 @@
 #include <crm/common/ipcs.h>
 
 struct mainloop_child_s {
-    pid_t     pid;
-    char     *desc;
-    unsigned  timerid;
-    unsigned  watchid;
-    gboolean  timeout;
-    void     *privatedata;
+    pid_t pid;
+    char *desc;
+    unsigned timerid;
+    unsigned watchid;
+    gboolean timeout;
+    void *privatedata;
 
     /* Called when a process dies */
-    void (*callback)(mainloop_child_t* p, int status, int signo, int exitcode);
+    void (*callback) (mainloop_child_t * p, int status, int signo, int exitcode);
 };
 
 struct trigger_s {
@@ -95,7 +95,7 @@ crm_trigger_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
     int rc = TRUE;
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
-    if(trig->running) {
+    if (trig->running) {
         /* Wait until the existing job is complete before starting the next one */
         return TRUE;
     }
@@ -103,7 +103,7 @@ crm_trigger_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
 
     if (callback) {
         rc = callback(trig->user_data);
-        if(rc < 0) {
+        if (rc < 0) {
             crm_trace("Trigger handler %p not yet complete", trig);
             trig->running = TRUE;
             rc = TRUE;
@@ -120,7 +120,7 @@ static GSourceFuncs crm_trigger_funcs = {
 };
 
 static crm_trigger_t *
-mainloop_setup_trigger(GSource * source, int priority, int(*dispatch) (gpointer user_data),
+mainloop_setup_trigger(GSource * source, int priority, int (*dispatch) (gpointer user_data),
                        gpointer userdata)
 {
     crm_trigger_t *trigger = NULL;
@@ -143,7 +143,7 @@ mainloop_setup_trigger(GSource * source, int priority, int(*dispatch) (gpointer 
 }
 
 void
-mainloop_trigger_complete(crm_trigger_t *trig)
+mainloop_trigger_complete(crm_trigger_t * trig)
 {
     crm_trace("Trigger handler %p complete", trig);
     trig->running = FALSE;
@@ -155,7 +155,7 @@ mainloop_trigger_complete(crm_trigger_t *trig)
  *   1: Leave the trigger in mainloop
  */
 crm_trigger_t *
-mainloop_add_trigger(int priority, int(*dispatch) (gpointer user_data), gpointer userdata)
+mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data), gpointer userdata)
 {
     GSource *source = NULL;
 
@@ -264,8 +264,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         crm_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if (crm_signals[sig] != NULL
-               && crm_signals[sig]->handler == dispatch) {
+    } else if (crm_signals[sig] != NULL && crm_signals[sig]->handler == dispatch) {
         crm_trace("Signal handler for %d is already installed", sig);
         return TRUE;
 
@@ -334,13 +333,13 @@ static qb_array_t *gio_map = NULL;
  * libqb...
  */
 struct gio_to_qb_poll {
-        int32_t is_used;
-        GIOChannel *channel;
-        guint source;
-        int32_t events;
-        void * data;
-        qb_ipcs_dispatch_fn_t fn;
-        enum qb_loop_priority p;
+    int32_t is_used;
+    GIOChannel *channel;
+    guint source;
+    int32_t events;
+    void *data;
+    qb_ipcs_dispatch_fn_t fn;
+    enum qb_loop_priority p;
 };
 
 static int
@@ -350,22 +349,23 @@ gio_adapter_refcount(struct gio_to_qb_poll *adaptor)
      * Looking at the giochannel header file, ref_count is the first member of channel
      * So cheat...
      */
-    if(adaptor && adaptor->channel) {
-        int *ref = (void*)adaptor->channel;
+    if (adaptor && adaptor->channel) {
+        int *ref = (void *)adaptor->channel;
+
         return *ref;
     }
     return 0;
 }
 
 static gboolean
-gio_read_socket (GIOChannel *gio, GIOCondition condition, gpointer data)
+gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
     gint fd = g_io_channel_unix_get_fd(gio);
 
     crm_trace("%p.%d %d (ref=%d)", data, fd, condition, gio_adapter_refcount(adaptor));
 
-    if(condition & G_IO_NVAL) {
+    if (condition & G_IO_NVAL) {
         crm_trace("Marking failed adaptor %p unused", adaptor);
         adaptor->is_used = QB_FALSE;
     }
@@ -381,22 +381,22 @@ gio_poll_destroy(gpointer data)
      */
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
-    crm_trace("Destroying adaptor %p channel %p (ref=%d)", adaptor, adaptor->channel, gio_adapter_refcount(adaptor));
+    crm_trace("Destroying adaptor %p channel %p (ref=%d)", adaptor, adaptor->channel,
+              gio_adapter_refcount(adaptor));
     adaptor->is_used = QB_FALSE;
     adaptor->channel = NULL;
     adaptor->source = 0;
 }
 
-
 static int32_t
 gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
-                  void *data, qb_ipcs_dispatch_fn_t fn)
+                      void *data, qb_ipcs_dispatch_fn_t fn)
 {
     struct gio_to_qb_poll *adaptor;
     GIOChannel *channel;
     int32_t res = 0;
 
-    res = qb_array_index(gio_map, fd, (void**)&adaptor);
+    res = qb_array_index(gio_map, fd, (void **)&adaptor);
     if (res < 0) {
         crm_err("Array lookup failed for fd=%d: %d", fd, res);
         return res;
@@ -416,7 +416,7 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
     }
 
     /* Because unlike the poll() API, glib doesn't tell us about HUPs by default */
-    evts |= (G_IO_HUP|G_IO_NVAL|G_IO_ERR);
+    evts |= (G_IO_HUP | G_IO_NVAL | G_IO_ERR);
 
     adaptor->channel = channel;
     adaptor->fn = fn;
@@ -424,7 +424,9 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
     adaptor->data = data;
     adaptor->p = p;
     adaptor->is_used = QB_TRUE;
-    adaptor->source = g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor, gio_poll_destroy);
+    adaptor->source =
+        g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
+                            gio_poll_destroy);
 
     /* Now that mainloop now holds a reference to adaptor->channel,
      * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
@@ -437,8 +439,9 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
      */
     g_io_channel_unref(adaptor->channel);
 
-    crm_trace("Added to mainloop with gsource id=%d, ref=%d", adaptor->source, gio_adapter_refcount(adaptor));
-    if(adaptor->source > 0) {
+    crm_trace("Added to mainloop with gsource id=%d, ref=%d", adaptor->source,
+              gio_adapter_refcount(adaptor));
+    if (adaptor->source > 0) {
         return 0;
     }
 
@@ -447,7 +450,7 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
 
 static int32_t
 gio_poll_dispatch_mod(enum qb_loop_priority p, int32_t fd, int32_t evts,
-                  void *data, qb_ipcs_dispatch_fn_t fn)
+                      void *data, qb_ipcs_dispatch_fn_t fn)
 {
     return 0;
 }
@@ -456,8 +459,9 @@ static int32_t
 gio_poll_dispatch_del(int32_t fd)
 {
     struct gio_to_qb_poll *adaptor;
+
     crm_trace("Looking for fd=%d", fd);
-    if (qb_array_index(gio_map, fd, (void**)&adaptor) == 0) {
+    if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
         crm_trace("Marking adaptor %p unused (ref=%d)", adaptor, gio_adapter_refcount(adaptor));
         adaptor->is_used = QB_FALSE;
     }
@@ -476,15 +480,15 @@ pick_ipc_type(enum qb_ipc_type requested)
 {
     const char *env = getenv("PCMK_ipc_type");
 
-    if(env && strcmp("shared-mem", env) == 0) {
+    if (env && strcmp("shared-mem", env) == 0) {
         return QB_IPC_SHM;
-    } else if(env && strcmp("socket", env) == 0) {
+    } else if (env && strcmp("socket", env) == 0) {
         return QB_IPC_SOCKET;
-    } else if(env && strcmp("posix", env) == 0) {
+    } else if (env && strcmp("posix", env) == 0) {
         return QB_IPC_POSIX_MQ;
-    } else if(env && strcmp("sysv", env) == 0) {
+    } else if (env && strcmp("sysv", env) == 0) {
         return QB_IPC_SYSV_MQ;
-    } else if(requested == QB_IPC_NATIVE) {
+    } else if (requested == QB_IPC_NATIVE) {
         /* We prefer shared memory because the server never blocks on
          * send.  If part of a message fits into the socket, libqb
          * needs to block until the remainder can be sent also.
@@ -496,13 +500,14 @@ pick_ipc_type(enum qb_ipc_type requested)
     return requested;
 }
 
-qb_ipcs_service_t *mainloop_add_ipc_server(
-    const char *name, enum qb_ipc_type type, struct qb_ipcs_service_handlers *callbacks)
+qb_ipcs_service_t *
+mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
+                        struct qb_ipcs_service_handlers * callbacks)
 {
     int rc = 0;
-    qb_ipcs_service_t* server = NULL;
+    qb_ipcs_service_t *server = NULL;
 
-    if(gio_map == NULL) {
+    if (gio_map == NULL) {
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
@@ -519,73 +524,76 @@ qb_ipcs_service_t *mainloop_add_ipc_server(
     return server;
 }
 
-void mainloop_del_ipc_server(qb_ipcs_service_t *server)
+void
+mainloop_del_ipc_server(qb_ipcs_service_t * server)
 {
-    if(server) {
+    if (server) {
         qb_ipcs_destroy(server);
     }
 }
 
-struct mainloop_io_s
-{
-        char *name;
-        void *userdata;
+struct mainloop_io_s {
+    char *name;
+    void *userdata;
 
-        guint source;
-        crm_ipc_t *ipc;
-        GIOChannel *channel;
+    guint source;
+    crm_ipc_t *ipc;
+    GIOChannel *channel;
 
-        int (*dispatch_fn_ipc)(const char *buffer, ssize_t length, gpointer userdata);
-        int (*dispatch_fn_io) (gpointer userdata);
-        void (*destroy_fn) (gpointer userdata);
+    int (*dispatch_fn_ipc) (const char *buffer, ssize_t length, gpointer userdata);
+    int (*dispatch_fn_io) (gpointer userdata);
+    void (*destroy_fn) (gpointer userdata);
 
 };
 
 static int
-mainloop_gio_refcount(mainloop_io_t *client)
+mainloop_gio_refcount(mainloop_io_t * client)
 {
     /* This is evil
      * Looking at the giochannel header file, ref_count is the first member of channel
      * So cheat...
      */
-    if(client && client->channel) {
-        int *ref = (void*)client->channel;
+    if (client && client->channel) {
+        int *ref = (void *)client->channel;
+
         return *ref;
     }
     return 0;
 }
 
 static gboolean
-mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
+mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     gboolean keep = TRUE;
     mainloop_io_t *client = data;
 
-    if(condition & G_IO_IN) {
-        if(client->ipc) {
+    if (condition & G_IO_IN) {
+        if (client->ipc) {
             long rc = 0;
             int max = 10;
+
             do {
                 rc = crm_ipc_read(client->ipc);
-                if(rc <= 0) {
+                if (rc <= 0) {
                     crm_trace("Message acquisition from %s[%p] failed: %s (%ld)",
                               client->name, client, pcmk_strerror(rc), rc);
 
-                } else if(client->dispatch_fn_ipc) {
+                } else if (client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
+
                     crm_trace("New message from %s[%p] = %d", client->name, client, rc, condition);
-                    if(client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
+                    if (client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
                         crm_trace("Connection to %s no longer required", client->name);
                         keep = FALSE;
                     }
                 }
 
-            } while(keep && rc > 0 && --max > 0);
+            } while (keep && rc > 0 && --max > 0);
 
         } else {
             crm_trace("New message from %s[%p]", client->name, client);
-            if(client->dispatch_fn_io) {
-                if(client->dispatch_fn_io(client->userdata) < 0) {
+            if (client->dispatch_fn_io) {
+                if (client->dispatch_fn_io(client->userdata) < 0) {
                     crm_trace("Connection to %s no longer required", client->name);
                     keep = FALSE;
                 }
@@ -593,43 +601,43 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         }
     }
 
-    if(client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
+    if (client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
         crm_err("Connection to %s[%p] closed (I/O condition=%d)", client->name, client, condition);
         keep = FALSE;
 
-    } else if(condition & (G_IO_HUP|G_IO_NVAL|G_IO_ERR)) {
+    } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
         crm_trace("The connection %s[%p] has been closed (I/O condition=%d, refcount=%d)",
                   client->name, client, condition, mainloop_gio_refcount(client));
         keep = FALSE;
 
-    } else if((condition & G_IO_IN) == 0) {
+    } else if ((condition & G_IO_IN) == 0) {
         /*
-          #define 	GLIB_SYSDEF_POLLIN     =1
-          #define 	GLIB_SYSDEF_POLLPRI    =2
-          #define 	GLIB_SYSDEF_POLLOUT    =4
-          #define 	GLIB_SYSDEF_POLLERR    =8
-          #define 	GLIB_SYSDEF_POLLHUP    =16
-          #define 	GLIB_SYSDEF_POLLNVAL   =32
+           #define      GLIB_SYSDEF_POLLIN     =1
+           #define      GLIB_SYSDEF_POLLPRI    =2
+           #define      GLIB_SYSDEF_POLLOUT    =4
+           #define      GLIB_SYSDEF_POLLERR    =8
+           #define      GLIB_SYSDEF_POLLHUP    =16
+           #define      GLIB_SYSDEF_POLLNVAL   =32
 
-          typedef enum
-          {
-            G_IO_IN	GLIB_SYSDEF_POLLIN,
-            G_IO_OUT	GLIB_SYSDEF_POLLOUT,
-            G_IO_PRI	GLIB_SYSDEF_POLLPRI,
-            G_IO_ERR	GLIB_SYSDEF_POLLERR,
-            G_IO_HUP	GLIB_SYSDEF_POLLHUP,
-            G_IO_NVAL	GLIB_SYSDEF_POLLNVAL
-          } GIOCondition;
+           typedef enum
+           {
+           G_IO_IN      GLIB_SYSDEF_POLLIN,
+           G_IO_OUT     GLIB_SYSDEF_POLLOUT,
+           G_IO_PRI     GLIB_SYSDEF_POLLPRI,
+           G_IO_ERR     GLIB_SYSDEF_POLLERR,
+           G_IO_HUP     GLIB_SYSDEF_POLLHUP,
+           G_IO_NVAL    GLIB_SYSDEF_POLLNVAL
+           } GIOCondition;
 
-          A bitwise combination representing a condition to watch for on an event source.
+           A bitwise combination representing a condition to watch for on an event source.
 
-          G_IO_IN	There is data to read.
-          G_IO_OUT	Data can be written (without blocking).
-          G_IO_PRI	There is urgent data to read.
-          G_IO_ERR	Error condition.
-          G_IO_HUP	Hung up (the connection has been broken, usually for pipes and sockets).
-          G_IO_NVAL	Invalid request. The file descriptor is not open.
-        */
+           G_IO_IN      There is data to read.
+           G_IO_OUT     Data can be written (without blocking).
+           G_IO_PRI     There is urgent data to read.
+           G_IO_ERR     Error condition.
+           G_IO_HUP     Hung up (the connection has been broken, usually for pipes and sockets).
+           G_IO_NVAL    Invalid request. The file descriptor is not open.
+         */
         crm_err("Strange condition: %d", condition);
     }
 
@@ -649,41 +657,42 @@ mainloop_gio_destroy(gpointer c)
      */
     crm_trace("Destroying client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
 
-    if(client->ipc) {
+    if (client->ipc) {
         crm_ipc_close(client->ipc);
     }
 
-    if(client->destroy_fn) {
+    if (client->destroy_fn) {
         client->destroy_fn(client->userdata);
     }
 
-    if(client->ipc) {
+    if (client->ipc) {
         crm_ipc_destroy(client->ipc);
     }
 
     crm_trace("Destroyed client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
     free(client->name);
 
-    memset(client, 0, sizeof(mainloop_io_t)); /* A bit of pointless paranoia */
+    memset(client, 0, sizeof(mainloop_io_t));   /* A bit of pointless paranoia */
     free(client);
 }
 
 mainloop_io_t *
-mainloop_add_ipc_client(
-    const char *name, int priority, size_t max_size, void *userdata, struct ipc_client_callbacks *callbacks)
+mainloop_add_ipc_client(const char *name, int priority, size_t max_size, void *userdata,
+                        struct ipc_client_callbacks *callbacks)
 {
     mainloop_io_t *client = NULL;
     crm_ipc_t *conn = crm_ipc_new(name, max_size);
 
-    if(conn && crm_ipc_connect(conn)) {
+    if (conn && crm_ipc_connect(conn)) {
         int32_t fd = crm_ipc_get_fd(conn);
+
         client = mainloop_add_fd(name, priority, fd, userdata, NULL);
         client->ipc = conn;
         client->destroy_fn = callbacks->destroy;
         client->dispatch_fn_ipc = callbacks->dispatch;
     }
 
-    if(conn && client == NULL) {
+    if (conn && client == NULL) {
         crm_trace("Connection to %s failed", name);
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
@@ -693,39 +702,41 @@ mainloop_add_ipc_client(
 }
 
 void
-mainloop_del_ipc_client(mainloop_io_t *client)
+mainloop_del_ipc_client(mainloop_io_t * client)
 {
     mainloop_del_fd(client);
 }
 
 crm_ipc_t *
-mainloop_get_ipc_client(mainloop_io_t *client)
+mainloop_get_ipc_client(mainloop_io_t * client)
 {
-    if(client) {
+    if (client) {
         return client->ipc;
     }
     return NULL;
 }
 
 mainloop_io_t *
-mainloop_add_fd(
-    const char *name, int priority, int fd, void *userdata, struct mainloop_fd_callbacks *callbacks)
+mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
+                struct mainloop_fd_callbacks * callbacks)
 {
     mainloop_io_t *client = NULL;
-    if(fd > 0) {
+
+    if (fd > 0) {
         client = calloc(1, sizeof(mainloop_io_t));
         client->name = strdup(name);
         client->userdata = userdata;
 
-        if(callbacks) {
+        if (callbacks) {
             client->destroy_fn = callbacks->destroy;
             client->dispatch_fn_io = callbacks->dispatch;
         }
 
         client->channel = g_io_channel_unix_new(fd);
-        client->source = g_io_add_watch_full(
-            client->channel, priority, (G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR),
-            mainloop_gio_callback, client, mainloop_gio_destroy);
+        client->source =
+            g_io_add_watch_full(client->channel, priority,
+                                (G_IO_IN | G_IO_HUP | G_IO_NVAL | G_IO_ERR), mainloop_gio_callback,
+                                client, mainloop_gio_destroy);
 
         /* Now that mainloop now holds a reference to adaptor->channel,
          * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
@@ -737,16 +748,17 @@ mainloop_add_fd(
          * shortly after mainloop_gio_destroy() completes
          */
         g_io_channel_unref(client->channel);
-        crm_trace("Added connection %d for %s[%p].%d %d", client->source, client->name, client, fd, mainloop_gio_refcount(client));
+        crm_trace("Added connection %d for %s[%p].%d %d", client->source, client->name, client, fd,
+                  mainloop_gio_refcount(client));
     }
 
     return client;
 }
 
 void
-mainloop_del_fd(mainloop_io_t *client)
+mainloop_del_fd(mainloop_io_t * client)
 {
-    if(client != NULL) {
+    if (client != NULL) {
         crm_trace("Removing client %s[%p] %d", client->name, client, mainloop_gio_refcount(client));
         if (client->source) {
             /* Results in mainloop_gio_destroy() being called just
@@ -758,25 +770,25 @@ mainloop_del_fd(mainloop_io_t *client)
 }
 
 pid_t
-mainloop_get_child_pid(mainloop_child_t *child)
+mainloop_get_child_pid(mainloop_child_t * child)
 {
     return child->pid;
 }
 
 int
-mainloop_get_child_timeout(mainloop_child_t *child)
+mainloop_get_child_timeout(mainloop_child_t * child)
 {
     return child->timeout;
 }
 
 void *
-mainloop_get_child_userdata(mainloop_child_t *child)
+mainloop_get_child_userdata(mainloop_child_t * child)
 {
     return child->privatedata;
 }
 
 void
-mainloop_clear_child_userdata(mainloop_child_t *child)
+mainloop_clear_child_userdata(mainloop_child_t * child)
 {
     child->privatedata = NULL;
 }
@@ -808,7 +820,7 @@ child_timeout_callback(gpointer p)
 }
 
 static void
-mainloop_child_destroy(mainloop_child_t *child)
+mainloop_child_destroy(mainloop_child_t * child)
 {
     if (child->timerid != 0) {
         crm_trace("Removing timer %d", child->timerid);
@@ -831,13 +843,11 @@ child_death_dispatch(GPid pid, gint status, gpointer user_data)
 
     if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
-        crm_trace("Managed process %d (%s) exited with rc=%d", pid,
-                 child->desc, exitcode);
+        crm_trace("Managed process %d (%s) exited with rc=%d", pid, child->desc, exitcode);
 
     } else if (WIFSIGNALED(status)) {
         signo = WTERMSIG(status);
-        crm_trace("Managed process %d (%s) exited with signal=%d", pid,
-                 child->desc, signo);
+        crm_trace("Managed process %d (%s) exited with signal=%d", pid, child->desc, signo);
     }
 #ifdef WCOREDUMP
     if (WCOREDUMP(status)) {
@@ -846,7 +856,7 @@ child_death_dispatch(GPid pid, gint status, gpointer user_data)
 #endif
 
     if (child->callback) {
-       child->callback(child, status, signo, exitcode);
+        child->callback(child, status, signo, exitcode);
     }
     crm_trace("Removed process entry for %d", pid);
 
@@ -858,8 +868,8 @@ child_death_dispatch(GPid pid, gint status, gpointer user_data)
  * To track a process group, use -pid
  */
 void
-mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
-    void (*callback)(mainloop_child_t *p, int status, int signo, int exitcode))
+mainloop_add_child(pid_t pid, int timeout, const char *desc, void *privatedata,
+                   void (*callback) (mainloop_child_t * p, int status, int signo, int exitcode))
 {
     mainloop_child_t *child = g_new(mainloop_child_t, 1);
 
@@ -871,8 +881,7 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
     child->callback = callback;
 
     if (timeout) {
-        child->timerid = g_timeout_add(
-            timeout, child_timeout_callback, child);
+        child->timerid = g_timeout_add(timeout, child_timeout_callback, child);
     }
 
     child->watchid = g_child_watch_add(pid, child_death_dispatch, child);
