@@ -249,7 +249,7 @@ changes:
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
 	find . -name "*.c" -exec ./p-indent \{\} \;
-	git co HEAD crmd/fsa_proto.h
+	git co HEAD crmd/fsa_proto.h lib/gnu
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
