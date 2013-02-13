@@ -449,16 +449,6 @@ parse_peer_options(int call_type, xmlNode * request,
         return TRUE;
     }
 
-    host = crm_element_value(request, F_CIB_HOST);
-    if (host != NULL && safe_str_eq(host, cib_our_uname)) {
-        crm_trace("Processing request sent to us from %s", originator);
-        return TRUE;
-
-    } else if (host == NULL && cib_is_master == TRUE) {
-        crm_trace("Processing request sent to master instance from %s", originator);
-        return TRUE;
-    }
-
     op = crm_element_value(request, F_CIB_OPERATION);
     if (safe_str_eq(op, "cib_shutdown_req")) {
         /* Always process these */
@@ -477,6 +467,16 @@ parse_peer_options(int call_type, xmlNode * request,
         *process = FALSE;
         *needs_reply = FALSE;
         *local_notify = TRUE;
+        return TRUE;
+    }
+
+    host = crm_element_value(request, F_CIB_HOST);
+    if (host != NULL && safe_str_eq(host, cib_our_uname)) {
+        crm_trace("Processing request sent to us from %s", originator);
+        return TRUE;
+
+    } else if (host == NULL && cib_is_master == TRUE) {
+        crm_trace("Processing request sent to master instance from %s", originator);
         return TRUE;
     }
 
