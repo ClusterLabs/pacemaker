@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -525,12 +525,14 @@ apply_placement_constraints(pe_working_set_t * data_set)
 static gboolean
 failcount_clear_action_exists(node_t * node, resource_t * rsc)
 {
-    char *key = crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_');
     gboolean rc = FALSE;
+    char *key = crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_');
+    GListPtr list = find_actions_exact(rsc->actions, key, node);
 
-    if (find_actions_exact(rsc->actions, key, node)) {
+    if (list) {
         rc = TRUE;
     }
+    g_list_free(list);
     free(key);
 
     return rc;
@@ -780,7 +782,7 @@ wait_for_probe(resource_t * rsc, const char *action, action_t * probe_complete,
             /* Stop actions on nodes that are shutting down do not need to wait for probes to complete
              * Doing so prevents node shutdown in the presence of nodes that are coming up
              * The purpose of waiting is to not stop resources until we know for sure the
-             *  intended destination is able to take them 
+             *  intended destination is able to take them
              */
             if (node && node->details->shutdown) {
                 crm_debug("Skipping %s before %s_%s_0 due to %s shutdown",
