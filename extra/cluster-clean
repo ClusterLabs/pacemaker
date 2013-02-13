@@ -57,6 +57,7 @@ log_files="$log_files corosync.log"
 log_files="$log_files pacemaker.log"
 
 state_files=""
+state_files="$state_files 'cib.xml*'"
 state_files="$state_files 'cib-*'"
 state_files="$state_files 'core.*'"
 state_files="$state_files hostcache"
