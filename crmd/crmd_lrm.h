@@ -61,6 +61,8 @@ struct pending_deletion_op_s {
     ha_msg_input_t *input;
 };
 
+xmlNode *do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace);
+
 /*!
  * \brief Clear all state information from a single state entry. 
  * \note This does not close the lrmd connection

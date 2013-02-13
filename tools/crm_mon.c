@@ -1348,6 +1348,9 @@ print_xml_status(pe_working_set_t * data_set)
             case node_member:
                 node_type = "member";
                 break;
+            case node_remote:
+                node_type = "remote";
+                break;
             case node_ping:
                 node_type = "ping";
                 break;

@@ -44,19 +44,30 @@ CRM_TRACE_INIT_DATA(pe_status);
 
 gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
+static gboolean determine_remote_online_status(node_t * this_node);
 
 static void
 pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
     CRM_CHECK(node, return);
-    if (node->details->unclean == FALSE) {
+
+    /* fence remote nodes living in a container by marking
+     * the container as failed. */
+    if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        resource_t *rsc = node->details->remote_rsc->container;
+        if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
+            crm_warn("Remote node %s will be fenced by recovering container resource %s",
+                node->details->uname, rsc->id, reason);
+            set_bit(rsc->flags, pe_rsc_failed);
+        }
+    } else if (node->details->unclean == FALSE) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
         } else {
             crm_warn("Node %s is unclean %s", node->details->uname, reason);
         }
+        node->details->unclean = TRUE;
     }
-    node->details->unclean = TRUE;
 }
 
 gboolean
@@ -203,9 +214,14 @@ destroy_digest_cache(gpointer ptr)
 }
 
 static node_t *
-add_node(const char *id, const char *uname, const char *type, const char *score)
+create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set)
 {
     node_t *new_node = NULL;
+
+    if (pe_find_node(data_set->nodes, uname) != NULL) {
+        crm_config_warn("Detected multiple node entries with uname=%s"
+                        " - this is rarely intended", uname);
+    }
 
     new_node = calloc(1, sizeof(node_t));
     if (new_node == NULL) {
@@ -221,14 +237,17 @@ add_node(const char *id, const char *uname, const char *type, const char *score)
         return NULL;
     }
 
-    crm_trace("Creaing node for entry %s/%s", uname, id);
+    crm_trace("Creating node for entry %s/%s", uname, id);
     new_node->details->id = id;
     new_node->details->uname = uname;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
-    if (type == NULL || safe_str_eq(type, "member")
+
+    if (safe_str_eq(type, "remote")) {
+        new_node->details->type = node_remote;
+    } else if (type == NULL || safe_str_eq(type, "member")
         || safe_str_eq(type, NORMALNODE)) {
         new_node->details->type = node_member;
     }
@@ -244,7 +263,137 @@ add_node(const char *id, const char *uname, const char *type, const char *score)
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                               destroy_digest_cache);
 
+    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
+}
+
+static gboolean
+is_remote_node(xmlNode *xml)
+{
+    const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
+    const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
+    const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
+
+    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker") && safe_str_eq(class, "ocf")) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static const char *
+expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_check)
+{
+    xmlNode *xml_rsc = NULL;
+    xmlNode *xml_tmp = NULL;
+    xmlNode *attr_set = NULL;
+    xmlNode *attr = NULL;
+
+    const char *container_id = ID(xml_obj);
+    const char *remote_name = NULL;
+    const char *remote_server = NULL;
+    const char *remote_port = NULL;
+    char *tmp_id = NULL;
+
+    for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
+        if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
+            continue;
+        }
+
+        for (attr = __xml_first_child(attr_set); attr != NULL; attr = __xml_next(attr)) {
+            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+
+            if (safe_str_eq(name, "remote-node")) {
+                remote_name = value;
+            } else if (safe_str_eq(name, "remote-addr")) {
+                remote_server = value;
+            } else if (safe_str_eq(name, "remote-port")) {
+                remote_port = value;
+            }
+        }
+    }
+
+    if (remote_name == NULL) {
+        return NULL;
+    }
+
+    if (*rsc_name_check == NULL) {
+        *rsc_name_check = g_hash_table_new(crm_str_hash, g_str_equal);
+        for (xml_rsc = __xml_first_child(parent); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
+            const char *id = ID(xml_rsc);
+
+            /* avoiding heap allocation here because we know the duration of this hashtable allows us to */
+            g_hash_table_insert(*rsc_name_check, (char *) id, (char *) id);
+        }
+    }
+
+    if (g_hash_table_lookup(*rsc_name_check, remote_name)) {
+
+        crm_err("Naming conflict with remote-node=%s.  remote-nodes can not have the same name as a resource.",
+                remote_name);
+        return NULL;
+    }
+
+    xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
+
+    crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
+    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, "ocf");
+    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
+    crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
+
+    xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
+    tmp_id = crm_concat(remote_name, XML_TAG_META_SETS, '_');
+    crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
+    free(tmp_id);
+
+    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+    tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
+    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
+    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
+    free(tmp_id);
+
+    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+    tmp_id = crm_concat(remote_name, "meta-attributes-internal", '_');
+    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
+    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
+    free(tmp_id);
+
+    xml_tmp = create_xml_node(xml_rsc, "operations");
+    attr = create_xml_node(xml_tmp, XML_ATTR_OP);
+    tmp_id = crm_concat(remote_name, "monitor-interval-30s", '_');
+    crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+    crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
+    crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
+    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
+    free(tmp_id);
+
+    if (remote_port || remote_server) {
+        xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
+        tmp_id = crm_concat(remote_name, XML_TAG_ATTR_SETS, '_');
+        crm_xml_add(xml_tmp, XML_ATTR_ID, tmp_id);
+        free(tmp_id);
+
+        if (remote_server) {
+            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+            tmp_id = crm_concat(remote_name, "instance-attributes-addr", '_');
+            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
+            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
+            free(tmp_id);
+        }
+        if (remote_port) {
+            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+            tmp_id = crm_concat(remote_name, "instance-attributes-port", '_');
+            crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
+            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
+            free(tmp_id);
+        }
+    }
+
+    return remote_name;
 }
 
 gboolean
@@ -278,12 +427,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                 crm_config_err("Must specify id tag in <node>");
                 continue;
             }
-            if (pe_find_node(data_set->nodes, uname) != NULL) {
-                crm_config_warn("Detected multiple node entries with uname=%s"
-                                " - this is rarely intended", uname);
-            }
-
-            new_node = add_node(id, uname, type, score);
+            new_node = create_node(id, uname, type, score, data_set);
 
             if (new_node == NULL) {
                 return FALSE;
@@ -311,7 +455,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_UTILIZATION, NULL,
                                        new_node->details->utilization, NULL, FALSE, data_set->now);
 
-            data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
             crm_trace("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
         }
     }
@@ -419,11 +562,53 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
             rsc->container = container;
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
-
+            if (rsc->is_remote_node) {
+                node_t *node = g_hash_table_lookup(container->allowed_nodes, rsc->id);
+                if (node) {
+                    node->weight = -INFINITY;
+                }
+            }
         } else {
             pe_err("Resource %s: Unknown resource container (%s)", rsc->id, container_id);
         }
     }
+}
+
+gboolean
+unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
+{
+    xmlNode *xml_obj = NULL;
+    GHashTable *rsc_name_check = NULL;
+
+    /* generate remote nodes from resource config before unpacking resources */
+    for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
+        const char *new_node_id = NULL;
+
+        /* remote rsc can be defined as primitive, or exist within the metadata of another rsc */
+        if (is_remote_node(xml_obj)) {
+            new_node_id = ID(xml_obj);
+            /* This check is here to make sure we don't iterate over
+             * an expanded node that has already been added to the node list. */
+            if (new_node_id && pe_find_node(data_set->nodes, new_node_id) != NULL) {
+                continue;
+            }
+        } else {
+            /* expands a metadata defined remote resource into the xml config
+             * as an actual rsc primitive to be unpacked later. */
+            new_node_id = expand_remote_rsc_meta(xml_obj, xml_resources, &rsc_name_check);
+        }
+
+        if (new_node_id) {
+            set_bit(data_set->flags, pe_flag_have_remote_nodes);
+            crm_trace("detected remote node %s", new_node_id);
+            create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+        }
+    }
+    if (rsc_name_check) {
+        g_hash_table_destroy(rsc_name_check);
+    }
+
+    return TRUE;
 }
 
 gboolean
@@ -454,6 +639,13 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
 
+            if (is_remote_node(xml_obj)) {
+                node_t *remote = pe_find_node(data_set->nodes, new_rsc->id);
+                if (remote) {
+                    remote->details->remote_rsc = new_rsc;
+                    new_rsc->is_remote_node = TRUE;
+                }
+            }
             print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
 
         } else {
@@ -691,11 +883,10 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
-            xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+            xmlNode *attrs = NULL;
 
             id = crm_element_value(state, XML_ATTR_ID);
             uname = crm_element_value(state, XML_ATTR_UNAME);
-            crm_trace("Processing node id=%s, uname=%s", id, uname);
             this_node = pe_find_node_any(data_set->nodes, id, uname);
 
             if (uname == NULL) {
@@ -705,12 +896,19 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             } else if (this_node == NULL) {
                 crm_config_warn("Node %s in status section no longer exists", uname);
                 continue;
+            } else if (this_node->details->remote_rsc) {
+                /* online state for remote nodes is determined by the rsc state
+                 * after all the unpacking is done. */
+                continue;
             }
+
+            crm_trace("Processing node id=%s, uname=%s", id, uname);
 
             /* Mark the node as provisionally clean
              * - at least we have seen it in the current cluster's lifetime
              */
             this_node->details->unclean = FALSE;
+            attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
             add_node_attrs(attrs, this_node, TRUE, data_set);
 
             if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
@@ -747,6 +945,11 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_info("Node %s is unknown", id);
             continue;
 
+        } else if (this_node->details->remote_rsc) {
+
+            /* online status of remote node can not be determined until all other
+             * resource status is unpacked. */
+            continue;
         } else if (this_node->details->online) {
             crm_trace("Processing lrm resource entries on healthy node: %s",
                       this_node->details->uname);
@@ -776,7 +979,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
         if (this_node == NULL || this_node->details->online) {
             continue;
-
+        } else if (this_node->details->remote_rsc) {
+            /* online status can not be determined for remote node until all unpacking is done */
+            continue;
         } else {
             crm_trace("Processing lrm resource entries on unhealthy node: %s",
                       this_node->details->uname);
@@ -784,6 +989,85 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
             unpack_lrm_resources(this_node, lrm_rsc, data_set);
         }
+    }
+
+    /* now that the rest of the cluster's status is determined
+     * calculate remote-nodes */
+    unpack_remote_status(status, data_set);
+
+    return TRUE;
+}
+
+gboolean
+unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
+{
+    const char *id = NULL;
+    const char *uname = NULL;
+    GListPtr gIter = NULL;
+
+    xmlNode *state = NULL;
+    xmlNode *lrm_rsc = NULL;
+    node_t *this_node = NULL;
+
+    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
+        crm_trace("no remote nodes to unpack");
+        return TRUE;
+    }
+
+    /* get online status */
+    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        this_node = gIter->data;
+
+        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+            continue;
+        }
+        determine_remote_online_status(this_node);
+    }
+
+    /* process attributes */
+    for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+        xmlNode *attrs = NULL;
+        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+            continue;
+        }
+
+        id = crm_element_value(state, XML_ATTR_ID);
+        uname = crm_element_value(state, XML_ATTR_UNAME);
+        this_node = pe_find_node_any(data_set->nodes, id, uname);
+
+        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+            continue;
+        }
+        crm_trace("Processing remote node id=%s, uname=%s", id, uname);
+
+        this_node->details->unclean = FALSE;
+        attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+        add_node_attrs(attrs, this_node, TRUE, data_set);
+
+        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+            crm_info("Node %s is in standby-mode", this_node->details->uname);
+            this_node->details->standby = TRUE;
+        }
+    }
+
+    /* process node rsc status */
+    for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+            continue;
+        }
+
+        id = crm_element_value(state, XML_ATTR_ID);
+        uname = crm_element_value(state, XML_ATTR_UNAME);
+        this_node = pe_find_node_any(data_set->nodes, id, uname);
+
+        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+            continue;
+        }
+        crm_trace("Processing lrm resource entries on healthy remote node: %s",
+                  this_node->details->uname);
+        lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
+        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+        unpack_lrm_resources(this_node, lrm_rsc, data_set);
     }
 
     return TRUE;
@@ -921,6 +1205,41 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     return online;
 }
 
+static gboolean
+determine_remote_online_status(node_t * this_node)
+{
+    resource_t *rsc = this_node->details->remote_rsc;
+    resource_t *container = rsc->container;
+
+    CRM_ASSERT(rsc != NULL);
+
+    /* If the resource is currently started, mark it online. */
+    if (rsc->role == RSC_ROLE_STARTED) {
+        crm_trace("Remote node %s is set to ONLINE. role == started", this_node->details->id);
+        this_node->details->online = TRUE;
+    }
+
+    /* consider this node shutting down if transitioning start->stop */
+    if (rsc->role == RSC_ROLE_STARTED && rsc->next_role == RSC_ROLE_STOPPED) {
+        crm_trace("Remote node %s shutdown. transition from start to stop role", this_node->details->id);
+        this_node->details->shutdown = TRUE;
+    }
+
+    /* Now check all the failure conditions. */
+    if (is_set(rsc->flags, pe_rsc_failed) ||
+        (rsc->role == RSC_ROLE_STOPPED) ||
+        (container && is_set(container->flags, pe_rsc_failed)) ||
+        (container && container->role == RSC_ROLE_STOPPED)) {
+
+        crm_trace("Remote node %s is set to OFFLINE. node is stopped or rsc failed.", this_node->details->id);
+        this_node->details->online = FALSE;
+    }
+
+    crm_trace("Remote node %s online=%s",
+        this_node->details->id, this_node->details->online ? "TRUE" : "FALSE");
+    return this_node->details->online;
+}
+
 gboolean
 determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set_t * data_set)
 {
@@ -944,7 +1263,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         this_node->details->expected_up = TRUE;
     }
 
-    if (this_node->details->type != node_member) {
+    if (this_node->details->type == node_ping) {
         this_node->details->unclean = FALSE;
         online = FALSE;         /* As far as resource management is concerned,
                                  * the node is safely offline.
@@ -973,7 +1292,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
         this_node->weight = -INFINITY;
     }
 
-    if (this_node->details->type != node_member) {
+    if (this_node->details->type == node_ping) {
         crm_info("Node %s is not a pacemaker node", this_node->details->uname);
 
     } else if (this_node->details->unclean) {
@@ -1266,7 +1585,15 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
 
             if (node->details->online && get_failcount(node, rsc, NULL, data_set)) {
                 action_t *clear_op = NULL;
-                action_t *ready = get_pseudo_op(CRM_OP_PROBED, data_set);
+                action_t *ready = NULL;
+
+                if (node->details->remote_rsc) {
+                    char *pseudo_op_name = crm_concat(CRM_OP_PROBED, node->details->id, '_');
+                    ready = get_pseudo_op(pseudo_op_name, data_set);
+                    free(pseudo_op_name);
+                } else {
+                    ready = get_pseudo_op(CRM_OP_PROBED, data_set);
+                }
 
                 clear_op = custom_action(rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
                                          CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
@@ -1311,12 +1638,29 @@ process_rsc_state(resource_t * rsc, node_t * node,
     }
 
     if (rsc->role > RSC_ROLE_STOPPED
-        && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)
-        && is_set(data_set->flags, pe_flag_stonith_enabled)) {
-        char *reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+        && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
 
-        pe_fence_node(data_set, node, reason);
-        g_free(reason);
+        gboolean should_fence = FALSE;
+
+        /* if this is a remote_node living in a container, fence the container
+         * by recovering it. Mark the resource as unmanaged. Once the container
+         * and remote connenction are re-established, the status section will
+         * get reset in the crmd freeing up this resource to run again once we
+         * are sure we know the resources state. */
+        if (node->details->remote_rsc && node->details->remote_rsc->container) {
+            crm_warn("Resource %s on remote node %s marked as unmanaged until container resource %s can recover",
+                rsc->id, node->details->id, node->details->remote_rsc->container->id);
+            clear_bit(rsc->flags, pe_rsc_managed);
+            should_fence = TRUE;
+        } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            should_fence = TRUE;
+        }
+
+        if (should_fence) {
+            char *reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+            pe_fence_node(data_set, node, reason);
+            g_free(reason);
+        }
     }
 
     if (node->details->unclean) {
@@ -2435,7 +2779,11 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             this_node = pe_find_node(data_set->nodes, uname);
             CRM_CHECK(this_node != NULL, continue);
 
-            determine_online_status(node_state, this_node, data_set);
+            if (this_node->details->remote_rsc) {
+                determine_remote_online_status(this_node);
+            } else {
+                determine_online_status(node_state, this_node, data_set);
+            }
 
             if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
