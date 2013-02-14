@@ -82,7 +82,7 @@ class CTSTest:
 
     def __setitem__(self, key, value):
         self.Stats[key] = value
-        
+
     def __getitem__(self, key):
         return self.Stats[key]
 
@@ -168,7 +168,7 @@ class CTSTest:
         if not prefix:
             prefix = "LocalBadNews:"
 
-        ignorelist = []                
+        ignorelist = []
         ignorelist.append(" CTS: ")
         ignorelist.append(prefix)
         ignorelist.extend(local_ignore)
@@ -264,7 +264,7 @@ class StopTest(CTSTest):
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
                 #self.debug("Checking %s will notice %s left"%(other, node))
-                
+
         watch = self.create_watch(patterns, self.CM["DeadTime"])
         watch.setwatch()
 
@@ -285,7 +285,7 @@ class StopTest(CTSTest):
             (rc, output) = self.CM.rsh(node, "/bin/ps axf", None)
             for line in output:
                 self.CM.debug(line)
-                
+
             (rc, output) = self.CM.rsh(node, "/usr/sbin/dlm_tool dump", None)
             for line in output:
                 self.CM.debug(line)
@@ -396,7 +396,7 @@ class RestartTest(CTSTest):
         self.incr("calls")
 
         self.incr("node:" + node)
-        
+
         ret1 = 1
         if self.CM.StataCM(node):
             self.incr("WasStopped")
@@ -505,8 +505,8 @@ class StonithdTest(CTSTest):
         return self.success()
 
     def errorstoignore(self):
-        return [ 
-            self.CM["Pat:Fencing_start"] % ".*", 
+        return [
+            self.CM["Pat:Fencing_start"] % ".*",
             self.CM["Pat:Fencing_ok"] % ".*",
             "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
             "error: remote_op_done: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
@@ -520,7 +520,7 @@ class StonithdTest(CTSTest):
             return self.CM.Env["DoFencing"]
 
         return 1
-           
+
 AllTestClasses.append(StonithdTest)
 
 ###################################################################
@@ -579,9 +579,9 @@ class SimulStart(CTSTest):
         ret = self.stopall(None)
         if not ret:
             return self.failure("Setup failed")
-        
+
         self.CM.clear_all_caches()
- 
+
         if not self.startall(None):
             return self.failure("Startall failed")
 
@@ -683,7 +683,7 @@ class RestartOnebyOne(CTSTest):
                 did_fail.append(node)
 
         if did_fail:
-            return self.failure("Could not restart %d nodes: %s" 
+            return self.failure("Could not restart %d nodes: %s"
                                 %(len(did_fail), repr(did_fail)))
         return self.success()
 
@@ -721,7 +721,7 @@ class PartialStart(CTSTest):
         ret = watch.lookforall()
         if not ret:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
-            return self.failure("Setup of %s failed" % node) 
+            return self.failure("Setup of %s failed" % node)
 
         ret = self.stop(node)
         if not ret:
@@ -745,24 +745,24 @@ class StandbyTest(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="Standby"
         self.benchmark = 1
-            
+
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
-        
+
     # make sure the node is active
     # set the node to standby mode
     # check resources, none resource should be running on the node
     # set the node to active mode
     # check resouces, resources should have been migrated back (SHOULD THEY?)
-    
+
     def __call__(self, node):
-    
+
         self.incr("calls")
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
-        
-        self.CM.debug("Make sure node %s is active" % node)    
+
+        self.CM.debug("Make sure node %s is active" % node)
         if self.CM.StandbyStatus(node) != "off":
             if not self.CM.SetStandbyMode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
@@ -781,7 +781,7 @@ class StandbyTest(CTSTest):
         watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
         watch.setwatch()
 
-        self.CM.debug("Setting node %s to standby mode" % node) 
+        self.CM.debug("Setting node %s to standby mode" % node)
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
@@ -791,7 +791,7 @@ class StandbyTest(CTSTest):
         if not ret:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
             self.CM.SetStandbyMode(node, "off")
-            return self.failure("cluster didn't react to standby change on %s" % node) 
+            return self.failure("cluster didn't react to standby change on %s" % node)
 
         self.CM.cluster_stable()
 
@@ -804,11 +804,11 @@ class StandbyTest(CTSTest):
         bad_run = self.CM.active_resources(node)
         if len(bad_run) > 0:
             rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
-            self.CM.debug("Setting node %s to active mode" % node) 
+            self.CM.debug("Setting node %s to active mode" % node)
             self.CM.SetStandbyMode(node, "off")
             return rc
 
-        self.CM.debug("Setting node %s to active mode" % node) 
+        self.CM.debug("Setting node %s to active mode" % node)
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
@@ -838,7 +838,7 @@ class ValgrindTest(CTSTest):
 
     def setup(self, node):
         self.incr("calls")
-        
+
         ret=self.stopall(None)
         if not ret:
             return self.failure("Stop all nodes failed")
@@ -849,7 +849,7 @@ class ValgrindTest(CTSTest):
         self.CM.Env["valgrind-prefix"] = self.name
 
         self.CM.rsh(node, "rm -f %s" % self.logPat, None)
-        
+
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
@@ -902,7 +902,7 @@ class ValgrindTest(CTSTest):
     def __call__(self, node):
         leaked = self.find_leaks()
         if len(leaked) > 0:
-            return self.failure("Nodes %s leaked" % repr(leaked))            
+            return self.failure("Nodes %s leaked" % repr(leaked))
 
         return self.success()
 
@@ -917,9 +917,9 @@ class StandbyLoopTest(ValgrindTest):
     def __init__(self, cm):
         ValgrindTest.__init__(self,cm)
         self.name="StandbyLoop"
-        
+
     def __call__(self, node):
-    
+
         lpc = 0
         delay = 2
         failed = 0
@@ -963,11 +963,11 @@ class BandwidthTest(CTSTest):
         self.__setitem__("totalbandwidth",0)
         self.tempfile = tempfile.mktemp(".cts")
         self.startall = SimulStartLite(cm)
-        
+
     def __call__(self, node):
         '''Perform the Bandwidth test'''
         self.incr("calls")
-        
+
         if self.CM.upcount()<1:
             return self.skipped()
 
@@ -987,7 +987,7 @@ class BandwidthTest(CTSTest):
         fstmpfile = "/var/run/band_estimate"
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
         %                (port, fstmpfile)
- 
+
         rc = self.CM.rsh(node, dumpcmd)
         if rc == 0:
             farfile = "root@%s:%s" % (node, fstmpfile)
@@ -1026,7 +1026,7 @@ class BandwidthTest(CTSTest):
                 for j in range(len(linesplit)-1):
                     if linesplit[j]=="udp": break
                     if linesplit[j]=="length:": break
-                        
+
                 try:
                     sum = sum + int(linesplit[j+1])
                 except ValueError:
@@ -1270,7 +1270,7 @@ class ResourceRecover(CTSTest):
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
         self.incr("calls")
-        
+
         ret = self.startall(None)
         if not ret:
             return self.failure("Setup failed")
@@ -1314,7 +1314,7 @@ class ResourceRecover(CTSTest):
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
-        
+
         self.CM.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover")
@@ -1324,7 +1324,7 @@ class ResourceRecover(CTSTest):
         self.CM.cluster_stable()
         recovered=self.CM.ResourceLocation(self.rid)
 
-        if watch.unmatched: 
+        if watch.unmatched:
             return self.failure("Patterns not found: %s" % repr(watch.unmatched))
 
         elif rsc.unique() and len(recovered) > 1:
@@ -1386,8 +1386,8 @@ class ComponentFail(CTSTest):
 
         self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
-        
-        if chosen.name != "aisexec":
+
+        if chosen.name != "aisexec" and chosen.name != "corosync":
             if self.CM["Name"] != "crm-lha" or chosen.name != "pengine":
                 self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
                 self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
@@ -1405,7 +1405,7 @@ class ComponentFail(CTSTest):
             self.patterns.append(self.CM["Pat:Slave_started"] % node)
             self.patterns.append(self.CM["Pat:Local_started"] % node)
 
-            if chosen.dc_only: 
+            if chosen.dc_only:
                 # Sometimes these will be in the log, and sometimes they won't...
                 self.okerrpatterns.append("%s .*Process %s:.* exited" %(node, chosen.name))
                 self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" %node)
@@ -1432,7 +1432,7 @@ class ComponentFail(CTSTest):
         watch = self.create_watch(
             tmpPats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
-        
+
         # kill the component
         chosen.kill(node)
 
@@ -1479,7 +1479,7 @@ class ComponentFail(CTSTest):
     # The good news is that this works fine for us...
         self.okerrpatterns.extend(self.patterns)
         return self.okerrpatterns
-    
+
 AllTestClasses.append(ComponentFail)
 
 ####################################################################
@@ -1497,13 +1497,13 @@ class SplitBrainTest(CTSTest):
     def isolate_partition(self, partition):
         other_nodes = []
         other_nodes.extend(self.CM.Env["nodes"])
-        
+
         for node in partition:
             try:
                 other_nodes.remove(node)
             except ValueError:
                 self.CM.log("Node "+node+" not in " + repr(self.CM.Env["nodes"]) + " from " +repr(partition))
-                
+
         if len(other_nodes) == 0:
             return 1
 
@@ -1544,7 +1544,7 @@ class SplitBrainTest(CTSTest):
 
         ret = self.startall(None)
         if not ret:
-            return self.failure("Setup failed")        
+            return self.failure("Setup failed")
 
         while 1:
             # Retry until we get multiple partitions
@@ -1559,7 +1559,7 @@ class SplitBrainTest(CTSTest):
             if p_max > 1:
                 break
             # else, try again
-            
+
         self.CM.debug("Created %d partitions" % p_max)
         for key in partitions.keys():
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
@@ -1571,14 +1571,14 @@ class SplitBrainTest(CTSTest):
             self.isolate_partition(partitions[key])
 
         count = 30
-        while count > 0: 
+        while count > 0:
             if len(self.CM.find_partitions()) != p_max:
                 time.sleep(10)
             else:
                 break
         else:
             self.failure("Expected partitions were not created")
-            
+
         # Target number of partitions formed - wait for stability
         if not self.CM.cluster_stable():
             self.failure("Partitioned cluster not stable")
@@ -1595,7 +1595,7 @@ class SplitBrainTest(CTSTest):
 
         # Wait for a single partition to form
         count = 30
-        while count > 0: 
+        while count > 0:
             if len(self.CM.find_partitions()) != 1:
                 time.sleep(10)
                 count -= 1
@@ -1606,7 +1606,7 @@ class SplitBrainTest(CTSTest):
 
         # Wait for it to have the right number of members
         count = 30
-        while count > 0: 
+        while count > 0:
             members = []
 
             partitions = self.CM.find_partitions()
@@ -1632,7 +1632,7 @@ class SplitBrainTest(CTSTest):
         # Turn fencing back on
         if self.CM.Env["DoFencing"]:
             self.CM.rsh(node, "crm_attribute -V -D -n stonith-enabled")
-        
+
         self.CM.cluster_stable()
 
         if self.passed:
@@ -1685,7 +1685,7 @@ class Reattach(CTSTest):
         return 1
 
     def teardown(self, node):
-        
+
         # Make sure 'node' is up
         start = StartTest(self.CM)
         start(node)
@@ -1696,9 +1696,9 @@ class Reattach(CTSTest):
             self.CM.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
             managed = self.create_watch(["is-managed-default"], 60)
             managed.setwatch()
-            
+
             self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
-            
+
             if not managed.lookforall():
                 self.CM.log("Patterns not found: " + repr(managed.unmatched))
                 self.CM.log("Could not re-enable resource management")
@@ -1719,7 +1719,7 @@ class Reattach(CTSTest):
         pats = []
         managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
-        
+
         self.CM.debug("Disable resource management")
         self.CM.rsh(node, "crm_attribute -V -n is-managed-default -v false")
 
@@ -1762,7 +1762,7 @@ class Reattach(CTSTest):
 
         managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
-        
+
         self.CM.debug("Re-enable resource management")
         self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
 
@@ -1782,7 +1782,7 @@ class Reattach(CTSTest):
 
                     self.CM.debug("Ignoring start actions for %s" % r.id)
                     ignore.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % r.id)
-        
+
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
 
@@ -1790,7 +1790,7 @@ class Reattach(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ 
+        return [
             "resources were active at shutdown",
             "pingd: .*(ERROR|error): send_ipc_message:",
             "pingd: .*(ERROR|error): send_update:",
@@ -1859,7 +1859,7 @@ class HAETest(CTSTest):
     def teardown(self, node):
         # Stop everything
         ret = self.stopall(None)
-        if not ret: 
+        if not ret:
             return self.failure("Couldn't stop all nodes")
         return self.success()
 
@@ -1871,10 +1871,10 @@ class HAETest(CTSTest):
             # Hack until crm_resource does the right thing
             if rc == 0 and lines:
                 active = len(lines)
-                
+
             if len(lines) == expected_clones:
                 return 1
-                
+
             elif rc == 1:
                 self.CM.debug("Resource %s is still inactive" % resource)
 
@@ -1963,7 +1963,7 @@ class HAERoleTest(HAETest):
             if not self.wait_on_state(node, self.r_o2cb, clone_max):
                 self.failure("%s did not come up correctly" % self.r_o2cb)
                 failed = lpc
-            
+
             for fs in self.r_ocfs2:
                 if not self.wait_on_state(node, fs, clone_max):
                     self.failure("%s did not come up correctly" % fs)
@@ -2012,7 +2012,7 @@ class HAEStandbyTest(HAETest):
             if not self.wait_on_state(node, self.r_o2cb, clone_max):
                 self.failure("%s did not come up correctly" % self.r_o2cb)
                 failed = lpc
-            
+
             for fs in self.r_ocfs2:
                 if not self.wait_on_state(node, fs, clone_max):
                     self.failure("%s did not come up correctly" % fs)
@@ -2037,7 +2037,7 @@ class NearQuorumPointTest(CTSTest):
     - figure out what to do to get into that state from the current state
     - in parallel, bring up those going up  and bring those going down.
     '''
-    
+
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="NearQuorumPoint"
@@ -2047,7 +2047,7 @@ class NearQuorumPointTest(CTSTest):
         self.incr("calls")
         startset = []
         stopset = []
-       
+
         stonith = self.CM.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
         for node in self.CM.Env["nodes"]:
@@ -2057,7 +2057,7 @@ class NearQuorumPointTest(CTSTest):
                 startset.append(node)
             elif action == "stop" :
                 stopset.append(node)
-                
+
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
 
@@ -2066,7 +2066,7 @@ class NearQuorumPointTest(CTSTest):
         for node in stopset:
             if self.CM.ShouldBeStatus[node] == "up":
                 watchpats.append(self.CM["Pat:We_stopped"] % node)
-                
+
         for node in startset:
             if self.CM.ShouldBeStatus[node] == "down":
                 #watchpats.append(self.CM["Pat:Slave_started"] % node)
@@ -2075,7 +2075,7 @@ class NearQuorumPointTest(CTSTest):
                 for stopping in stopset:
                     if self.CM.ShouldBeStatus[stopping] == "up":
                         watchpats.append(self.CM["Pat:They_stopped"] % (node, self.CM.key_for_node(stopping)))
-                
+
         if len(watchpats) == 0:
             return self.skipped()
 
@@ -2083,32 +2083,32 @@ class NearQuorumPointTest(CTSTest):
             watchpats.append(self.CM["Pat:DC_IDLE"])
 
         watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
-        
+
         watch.setwatch()
-        
+
         #begin actions
         for node in stopset:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
-                
+
         for node in startset:
             if self.CM.ShouldBeStatus[node] == "down":
                 self.CM.StartaCMnoBlock(node)
-        
-        #get the result        
+
+        #get the result
         if watch.lookforall():
             self.CM.cluster_stable()
             self.CM.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
         self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
-        
+
         #get the "bad" nodes
-        upnodes = []        
+        upnodes = []
         for node in stopset:
             if self.CM.StataCM(node) == 1:
                 upnodes.append(node)
-        
+
         downnodes = []
         for node in startset:
             if self.CM.StataCM(node) == 0:
@@ -2126,10 +2126,10 @@ class NearQuorumPointTest(CTSTest):
 
         if len(upnodes) > 0:
             self.CM.log("Warn: Unstoppable nodes: " + repr(upnodes))
-        
+
         if len(downnodes) > 0:
             self.CM.log("Warn: Unstartable nodes: " + repr(downnodes))
-        
+
         return self.failure()
 
     def is_applicable(self):
@@ -2169,7 +2169,7 @@ class RollingUpgradeTest(CTSTest):
     def teardown(self, node):
         # Stop everything
         ret = self.stopall(None)
-        if not ret: 
+        if not ret:
             return self.failure("Couldn't stop all nodes")
 
         for node in self.CM.Env["nodes"]:
@@ -2370,7 +2370,7 @@ class SimulStopLite(CTSTest):
         if did_fail:
             return self.failure("Active nodes exist: " + repr(up_nodes))
 
-        self.CM.log("Warn: All nodes stopped but CTS didnt detect: " 
+        self.CM.log("Warn: All nodes stopped but CTS didnt detect: "
                     + repr(watch.unmatched))
 
         self.CM.clear_all_caches()
@@ -2387,7 +2387,7 @@ class SimulStartLite(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="SimulStartLite"
-        
+
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
@@ -2410,14 +2410,14 @@ class SimulStartLite(CTSTest):
 
             watchpats.append(self.CM["Pat:DC_IDLE"])
             for node in node_list:
-                watchpats.append(uppat % node)        
+                watchpats.append(uppat % node)
                 watchpats.append(self.CM["Pat:InfraUp"] % node)
                 watchpats.append(self.CM["Pat:PacemakerUp"] % node)
-        
+
             #   Start all the nodes - at about the same time...
             watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
             watch.setwatch()
-            
+
             stonith = self.CM.prepare_fencing_watcher(self.name)
 
             for node in node_list:
@@ -2436,7 +2436,7 @@ class SimulStartLite(CTSTest):
                     self.CM.log ("Warn: Startup pattern not found: %s" %(regex))
 
             if not self.CM.cluster_stable():
-                return self.failure("Cluster did not stabilize")                 
+                return self.failure("Cluster did not stabilize")
 
         did_fail=0
         unstable = []
@@ -2457,7 +2457,7 @@ class SimulStartLite(CTSTest):
         if did_fail:
             return self.failure("Unstable cluster nodes exist: " + repr(unstable))
 
-        return self.success() 
+        return self.success()
 
 
     def is_applicable(self):
