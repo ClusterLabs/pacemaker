@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -64,11 +64,8 @@ struct device_search_s {
 
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
-static void
-
-
-stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
-                   const char *client_id);
+static void stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
+                               const char *client_id);
 
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
@@ -1422,7 +1419,12 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     }
 
     if (rc > 0) {
-        rc = -pcmk_err_generic;
+        if(output && strstr(output, "imed out")) {
+            rc = -ETIMEDOUT;
+
+        } else {
+            rc = -pcmk_err_generic;
+        }
     }
 
     stonith_send_async_reply(cmd, output, rc, pid);
@@ -1448,7 +1450,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
          * 1. The client connections are different.
          * 2. The node victim is the same.
          * 3. The fencing action is the same.
-         * 4. The device scheduled to execute the action is the same. 
+         * 4. The device scheduled to execute the action is the same.
          */
         if (safe_str_eq(cmd->client, cmd_other->client) ||
             safe_str_neq(cmd->victim, cmd_other->victim) ||
