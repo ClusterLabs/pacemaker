@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -942,11 +942,22 @@ find_corosync_variant(void)
     int rc = CS_OK;
     cmap_handle_t handle;
 
-    /* There can be only one (possibility if confdb isn't around) */
     rc = cmap_initialize(&handle);
-    if (rc != CS_OK) {
-        crm_info("Failed to initialize the cmap API. Error %d", rc);
-        return pcmk_cluster_unknown;
+
+    switch(rc) {
+        case CS_OK:
+            break;
+        case CS_ERR_SECURITY:
+            crm_debug("Failed to initialize the cmap API: Permission denied (%d)", rc);
+            /* It's there, we just can't talk to it.
+             * Good enough for us to identify as 'corosync'
+             */
+            return pcmk_cluster_corosync;
+
+        default:
+            crm_info("Failed to initialize the cmap API: %s (%d)",
+                     ais_error2text(rc), rc);
+            return pcmk_cluster_unknown;
     }
 
     cmap_finalize(handle);
