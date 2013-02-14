@@ -1419,8 +1419,15 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     }
 
     if (rc > 0) {
-        if(output && strstr(output, "imed out")) {
+        /* Try to provide _something_ useful */
+        if(output == NULL) {
+            rc = -ENODATA;
+
+        } else if(strstr(output, "imed out")) {
             rc = -ETIMEDOUT;
+
+        } else if(strstr(output, "Unrecognised action")) {
+            rc = -EOPNOTSUPP;
 
         } else {
             rc = -pcmk_err_generic;
