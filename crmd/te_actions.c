@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -399,9 +399,9 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         no_wait = TRUE;
     }
 
-    crm_info("Initiating action %d: %s %s on %s%s%s",
-             action->id, task, task_uuid, on_node,
-             is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
+    crm_notice("Initiating action %d: %s %s on %s%s%s",
+               action->id, task, task_uuid, on_node,
+               is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 
     cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
                          CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
