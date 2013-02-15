@@ -35,6 +35,77 @@ from cts.CTSvars import *
 trace_rsh=None
 trace_lw=None
 
+has_log_stats = {}
+log_stats_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_stats.sh"
+log_stats = """
+#!/bin/bash
+# Tool for generating system load reports while CTS runs
+
+f=$1; shift
+action=$1; shift
+base=`basename $0`
+
+if [ ! -e $f ]; then
+    echo "Time, Load 1, Load 5, Load 15, Test Marker" > $f
+fi
+
+function killpid() {
+    if [ -e $f.pid ]; then
+       kill -9 `cat $f.pid`
+       rm -f $f.pid
+    fi
+}
+
+function status() {
+    if [ -e $f.pid ]; then
+       kill -0 `cat $f.pid`
+       return $?
+    else
+       return 1
+    fi
+}
+
+function start() {
+    # Is it already running?
+    if
+	status
+    then
+        return
+    fi
+
+    echo Active as $$
+    echo $$ > $f.pid
+
+    while [ 1 = 1 ]; do
+        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
+        #top -b -c -n1 | grep -e usr/libexec/pacemaker | grep -v -e grep -e python | head -n 1 | sed s@/usr/libexec/pacemaker/@@ | awk '{print " 0, "$9", "$10", "$12}' | tr '\\n' ',' >> $f
+        echo 0 >> $f
+        sleep 5
+    done
+}
+
+case $action in
+    start)
+        start
+        ;;
+    stop)
+	killpid
+	;;
+    delete)
+	killpid
+	rm -f $f
+	;;
+    mark)
+	uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
+	echo " $*" >> $f
+        start
+	;;
+    *)
+	echo "Unknown action: $action."
+	;;
+esac
+"""
+
 class CtsLab(UserDict):
     '''This class defines the Lab Environment for the Cluster Test System.
     It defines those things which are expected to change from test
@@ -97,7 +168,7 @@ class CtsLab(UserDict):
             self.log("Random seed is: " + str(seed))
 
         self["RandSeed"] = seed
-        self.RandomGen.seed(str(seed)) 
+        self.RandomGen.seed(str(seed))
 
     def HasMinimalKeys(self):
         'Return TRUE if our object has the minimal set of keys/values in it'
@@ -122,7 +193,7 @@ class CtsLab(UserDict):
         keys = []
         for key in self.keys():
             keys.append(key)
-            
+
         keys.sort()
         for key in keys:
             self.debug("Environment["+key+"]:\t"+str(self[key]))
@@ -136,6 +207,7 @@ class CtsLab(UserDict):
         for node in self["nodes"]:
             self.log("    * %s" % (node))
 
+        self.StatsMark(0)
         if not Scenario.SetUp():
             return 1
 
@@ -145,14 +217,16 @@ class CtsLab(UserDict):
             self.log("Exception by %s" % sys.exc_info()[0])
             for logmethod in self["logger"]:
                 traceback.print_exc(50, logmethod)
-            
+
             Scenario.summarize()
             Scenario.TearDown()
+            self.StatsExtract()
             return 1
 
-        #ClusterManager.oprofileSave(Iterations) 
+        #ClusterManager.oprofileSave(Iterations)
         Scenario.TearDown()
-        
+        self.StatsExtract()
+
         Scenario.summarize()
         if Scenario.Stats["failure"] > 0:
             return Scenario.Stats["failure"]
@@ -210,7 +284,7 @@ class CtsLab(UserDict):
         #    for elem in value:
         #        if not isinstance(elem, types.IntType):
         #            raise ValueError("'Randseed' list must all be ints")
-              
+
         self.data[key] = value
 
     def IsValidNode(self, node):
@@ -226,6 +300,51 @@ class CtsLab(UserDict):
     def RandomNode(self):
         '''Choose a random node from the cluster'''
         return self.RandomGen.choice(self["nodes"])
+
+    def StatsExtract(self):
+        if not self["stats"]:
+            return
+
+        for host in self["nodes"]:
+            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
+            if has_log_stats.has_key(host):
+                self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
+                (rc, lines) = self.rsh(host, '''cat %s''' % log_stats_file, stdout=2)
+                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
+
+                fname = "cts-stats-%d-nodes-%s.csv" % (len(self["nodes"]), host)
+                print "Extracted stats: %s" % fname
+                fd = open(fname, "a")
+                fd.writelines(lines)
+                fd.close()
+
+    def StatsMark(self, testnum):
+        '''Mark the test number in the stats log'''
+
+        global has_log_stats
+        if not self["stats"]:
+            return
+
+        for host in self["nodes"]:
+            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
+            if not has_log_stats.has_key(host):
+
+                global log_stats
+                global log_stats_bin
+                script=log_stats
+                #script = re.sub("\\\\", "\\\\", script)
+                script = re.sub('\"', '\\\"', script)
+                script = re.sub("'", "\'", script)
+                script = re.sub("`", "\`", script)
+                script = re.sub("\$", "\\\$", script)
+
+                self.debug("Installing %s on %s" % (log_stats_bin, host))
+                self.rsh(host, '''echo "%s" > %s''' % (script, log_stats_bin), silent=True)
+                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
+                has_log_stats[host] = 1
+
+            # Now mark it
+            self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
 
 class Logger:
     TimeFormat = "%b %d %H:%M:%S\t"
@@ -289,7 +408,7 @@ class SysLog(Logger):
           self.facility=SysLog.map[self.facility]
         syslog.closelog()
         syslog.openlog(self.source, 0, self.facility)
-        
+
 
     def __call__(self, lines):
         if isinstance(lines, types.StringType):
@@ -307,7 +426,7 @@ class StdErrLog(Logger):
         pass
 
     def __call__(self, lines):
-        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
+        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))
         if isinstance(lines, types.StringType):
             sys.__stderr__.writelines([t, lines, "\n"])
         else:
@@ -323,7 +442,7 @@ class FileLog(Logger):
 
         if filename == None:
             filename=labinfo["LogFileName"]
-        
+
         self.logfile=filename
         import os
         self.hostname = os.uname()[1]+" "
@@ -331,7 +450,7 @@ class FileLog(Logger):
     def __call__(self, lines):
 
         fd = open(self.logfile, "a")
-        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
+        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))
 
         if isinstance(lines, types.StringType):
             fd.writelines([t, self.hostname, self.source, lines, "\n"])
@@ -358,7 +477,7 @@ class RemoteExec:
             self.silent = False
 
         #   -n: no stdin, -x: no X11,
-        #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding 
+        #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding
         self.Command = "ssh -l root -n -x -o ServerAliveInterval=5 -o ConnectTimeout=10 -o TCPKeepAlive=yes -o ServerAliveCountMax=3 "
         #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "scp -B -q"
@@ -368,10 +487,10 @@ class RemoteExec:
     def enable_qarsh(self):
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
-        
+
         self.Command = "qarsh -t 300 -l root"
         self.CpCommand = "qacp -q"
-        
+
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
 
@@ -427,7 +546,7 @@ class RemoteExec:
             if proc.pid > 0:
                 return 0
             return -1
-        
+
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
@@ -472,8 +591,9 @@ class RemoteExec:
         if trace_rsh:
             silent = False
         if not silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
-        
+
         return rc
+
 
 has_log_watcher = {}
 log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_watcher.py"
@@ -499,7 +619,7 @@ for i in range(0, len(args)):
     if skipthis:
         skipthis=None
         continue
-    
+
     elif args[i] == '-l' or args[i] == '--limit':
         skipthis=1
         limit = int(args[i+1])
@@ -511,14 +631,14 @@ for i in range(0, len(args)):
     elif args[i] == '-o' or args[i] == '--offset':
         skipthis=1
         offset = args[i+1]
-    
+
     elif args[i] == '-p' or args[i] == '--prefix':
         skipthis=1
         prefix = args[i+1]
 
     elif args[i] == '-t' or args[i] == '--tag':
         skipthis=1
-    
+
 if not os.access(filename, os.R_OK):
     print prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0)
     sys.exit(1)
@@ -543,7 +663,7 @@ if offset != 'EOF':
 fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
 count = 0
-while True: 
+while True:
     if logfile.tell() >= newsize:   break
     elif limit and count >= limit: break
 
@@ -573,7 +693,7 @@ class SearchObj:
 
         global has_log_watcher
         if not has_log_watcher.has_key(host):
-            
+
             global log_watcher
             global log_watcher_bin
             self.debug("Installing %s on %s" % (log_watcher_bin, host))
@@ -607,9 +727,9 @@ class SearchObj:
             global log_watcher_bin
             (rc, lines) = self.Env.rsh(
                 self.host,
-                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset), 
+                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
                 stdout=None, silent=True, blocking=False)
-            
+
             for line in lines:
                 match = re.search("^CTSwatcher:Last read: (\d+)", line)
                 if match:
@@ -690,7 +810,7 @@ class LogWatcher(RemoteExec):
         if self.Env["LogWatcher"] == "remote":
             for node in self.hosts:
                 self.file_list.append(SearchObj(self.Env, self.filename, node, self.name))
-    
+
         else:
             self.file_list.append(SearchObj(self.Env, self.filename))
 
@@ -711,7 +831,7 @@ class LogWatcher(RemoteExec):
             lines = f.next()
             if len(lines):
                 self.line_cache.extend(lines)
-        
+
     def look(self, timeout=None, silent=False):
         '''Examine the log looking for the given patterns.
         It starts looking from the place marked by setwatch().
@@ -762,7 +882,7 @@ class LogWatcher(RemoteExec):
                             if self.debug_level > 1: self.debug("With: "+ regex)
                             return line
 
-            elif timeout > 0 and end > time.time(): 
+            elif timeout > 0 and end > time.time():
                 if self.debug_level > 1: self.debug("lines during timeout")
                 time.sleep(1)
                 self.__get_lines()
@@ -798,7 +918,7 @@ class LogWatcher(RemoteExec):
         if trace_lw:
             silent = False
 
-        if not silent: 
+        if not silent:
             self.debug("starting search: timeout=%d" % timeout)
             for regex in self.regexes:
                 if self.debug_level > 2: self.debug("Looking for regex: "+regex)
@@ -857,7 +977,7 @@ class NodeStatus:
             time.sleep(30)
             if (not anytimeouts):
                 self.Env.debug("Waiting for node %s to come up" % node)
-                
+
             anytimeouts=1
             timeout = timeout - 1
 
@@ -1084,7 +1204,7 @@ class ClusterManager(UserDict):
             elif not peer in peer_list:
                 self.debug("Found peer: "+ peer)
                 peer_list.append(peer)
-                
+
             # Get the next one
             shot = stonith.look(60)
 
@@ -1101,7 +1221,7 @@ class ClusterManager(UserDict):
                     time.sleep(self["StartTime"])
 
                 if not self.StataCM(peer):
-                    self.log("ERROR: Peer %s failed to restart after being fenced" % peer) 
+                    self.log("ERROR: Peer %s failed to restart after being fenced" % peer)
                     return None
 
                 self.ShouldBeStatus[peer]="up"
@@ -1132,7 +1252,7 @@ class ClusterManager(UserDict):
 
         watch = LogWatcher(
             self.Env, self["LogFileName"], patterns, "StartaCM", self["StartTime"]+10)
-        
+
         self.install_config(node)
 
         self.ShouldBeStatus[node] = "any"
@@ -1364,7 +1484,7 @@ class ClusterManager(UserDict):
                 else:
                     self.debug("Communication cut between %s and %s" % (target, node))
         return 1
- 
+
     def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
         if not nodes:
@@ -1379,7 +1499,7 @@ class ClusterManager(UserDict):
                 self.rsh(target, self["FixCommCmd"] % self.key_for_node(node), synchronous=0)
                 self.rsh(node, self["FixCommCmd"] % self.key_for_node(target), synchronous=0)
                 self.debug("Communication restored between %s and %s" % (target, node))
-        
+
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
         rc = self.rsh(node, self["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
@@ -1388,7 +1508,7 @@ class ClusterManager(UserDict):
         else:
             self.log("Could not reduce the communication between the nodes from node: %s" % node)
         return None
-    
+
     def restorecomm_node(self,node):
         '''restore the saved communication between the nodes'''
         rc = 0
@@ -1405,9 +1525,9 @@ class ClusterManager(UserDict):
         # If we are auditing a partition, then one side will
         #   have quorum and the other not.
         # So the caller needs to tell us which we are checking
-        # If no value for node_list is specified... assume all nodes  
+        # If no value for node_list is specified... assume all nodes
         raise ValueError("Abstract Class member (HasQuorum)")
-    
+
     def Components(self):
         raise ValueError("Abstract Class member (Components)")
 
@@ -1417,7 +1537,7 @@ class ClusterManager(UserDict):
                 self.oprofileStart(n)
 
         elif node in self.Env["oprofile"]:
-            self.debug("Enabling oprofile on %s" % node) 
+            self.debug("Enabling oprofile on %s" % node)
             self.rsh(node, "opcontrol --init")
             self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=20 --image=all")
             self.rsh(node, "opcontrol --start")
@@ -1444,11 +1564,11 @@ class ClusterManager(UserDict):
                 self.oprofileStop(n)
 
         elif node in self.Env["oprofile"]:
-            self.debug("Stopping oprofile on %s" % node) 
+            self.debug("Stopping oprofile on %s" % node)
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
-    
+
 class Resource:
     '''
     This is an HA resource (not a resource group).
@@ -1512,7 +1632,7 @@ class Resource:
 class Component:
     def kill(self, node):
         None
-        
+
 class Process(Component):
     def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], common_ignore=[], triggersreboot=0):
         self.name = str(name)
@@ -1535,4 +1655,3 @@ class Process(Component):
             self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))
             return None
         return 1
-

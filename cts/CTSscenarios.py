@@ -20,7 +20,7 @@ class ScenarioComponent:
     def TearDown(self, CM):
         '''Tear down (undo) the given ScenarioComponent'''
         raise ValueError("Abstract Class member (Setup)")
-        
+
 class Scenario:
     (
 '''The basic idea of a scenario is that of an ordered list of
@@ -83,8 +83,8 @@ A partially set up scenario is torn down if it fails during setup.
         if self.ClusterManager.Env["valgrind-tests"]:
             self.ClusterManager.install_helper("cts.supp")
 
-        self.BadNews = LogWatcher(self.ClusterManager.Env, 
-                                  self.ClusterManager["LogFileName"], 
+        self.BadNews = LogWatcher(self.ClusterManager.Env,
+                                  self.ClusterManager["LogFileName"],
                                   self.ClusterManager["BadRegexes"], "BadNews", 0)
         self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
 
@@ -121,7 +121,7 @@ A partially set up scenario is torn down if it fails during setup.
         self.Stats[name] = self.Stats[name]+1
 
     def run(self, Iterations):
-        self.ClusterManager.oprofileStart() 
+        self.ClusterManager.oprofileStart()
         try:
             self.run_loop(Iterations)
             self.ClusterManager.oprofileStop()
@@ -134,11 +134,12 @@ A partially set up scenario is torn down if it fails during setup.
 
     def run_test(self, test, testcount):
         nodechoice = self.ClusterManager.Env.RandomNode()
-        
+
         ret = 1
         where = ""
         did_run = 0
 
+        self.ClusterManager.Env.StatsMark(testcount)
         self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
@@ -146,7 +147,7 @@ A partially set up scenario is torn down if it fails during setup.
         if not test.setup(nodechoice):
             self.ClusterManager.log("Setup failed")
             ret = 0
-            
+
         elif not test.canrunnow(nodechoice):
             self.ClusterManager.log("Skipped")
             test.skipped()
@@ -177,7 +178,7 @@ A partially set up scenario is torn down if it fails during setup.
                 test["min_time"] = test_time
             if test_time > test["max_time"]:
                 test["max_time"] = test_time
-               
+
         if ret:
             self.incr("success")
             test.log_timer()
@@ -194,7 +195,7 @@ A partially set up scenario is torn down if it fails during setup.
         self.ClusterManager.log("Overall Results:" + repr(self.Stats))
         self.ClusterManager.log("****************")
 
-        stat_filter = {   
+        stat_filter = {
             "calls":0,
             "failure":0,
             "skipped":0,
@@ -393,7 +394,7 @@ According to the manual page for ping:
 
         # Otherwise, we're the child process.
 
-   
+
         os.execvp("ping", Args)
         self.Env.log("Cannot execvp ping: " + repr(Args))
         sys.exit(1)
@@ -403,7 +404,7 @@ class PacketLoss(ScenarioComponent):
 '''
 It would be useful to do some testing of CTS with a modest amount of packet loss
 enabled - so we could see that everything runs like it should with a certain
-amount of packet loss present. 
+amount of packet loss present.
 ''')
 
     def IsApplicable(self):
@@ -417,7 +418,7 @@ amount of packet loss present.
 
         for node in CM.Env["nodes"]:
             CM.reducecomm_node(node)
-        
+
         CM.log("Reduce the reliability of communications")
 
         return 1
@@ -428,7 +429,7 @@ amount of packet loss present.
 
         if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
             return 1
-        
+
         for node in CM.Env["nodes"]:
             CM.unisolate_node(node)
 
@@ -544,4 +545,3 @@ Test a rolling upgrade between two versions of the stack
                 return None
 
         return 1
-

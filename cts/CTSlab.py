@@ -42,7 +42,7 @@ except ImportError:
                      ' '.join(sys.path))
     sys.stderr.write("(check your install and PYTHONPATH)\n")
 
-    # Now do it again to get more details 
+    # Now do it again to get more details
     from cts.CTSvars    import *
     from cts.CM_ais     import *
     from cts.CM_lha     import crm_lha
@@ -56,14 +56,14 @@ Tests = []
 Chosen = []
 scenario = None
 
-# Not really used, the handler in 
+# Not really used, the handler in
 def sig_handler(signum, frame) :
     if cm: cm.log("Interrupted by signal %d"%signum)
     if scenario: scenario.summarize()
     if signum == 15 :
         if scenario: scenario.TearDown()
         sys.exit(1)
-        
+
 class LabEnvironment(CtsLab):
 
     def __init__(self):
@@ -102,7 +102,7 @@ class LabEnvironment(CtsLab):
 
         master = socket.gethostname()
 
-        # Use the IP where possible to avoid name lookup failures  
+        # Use the IP where possible to avoid name lookup failures
         for ip in socket.gethostbyname_ex(master)[2]:
             if ip != "127.0.0.1":
                 master = ip
@@ -111,43 +111,43 @@ class LabEnvironment(CtsLab):
 
 def usage(arg, status=1):
     print "Illegal argument " + arg
-    print "usage: " + sys.argv[0] +" [options] number-of-iterations" 
-    print "\nCommon options: "  
-    print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace" 
-    print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)" 
-    print "\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes" 
+    print "usage: " + sys.argv[0] +" [options] number-of-iterations"
+    print "\nCommon options: "
+    print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"
+    print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)"
+    print "\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes"
     print "\t [--stack (v0|v1|cman|corosync|heartbeat|openais)]    which cluster stack is installed"
-    print "\t [--list-tests]               list the valid tests" 
-    print "\t [--benchmark]                add the timing information" 
+    print "\t [--list-tests]               list the valid tests"
+    print "\t [--benchmark]                add the timing information"
     print "\t "
-    print "Options that CTS will usually auto-detect correctly: "  
-    print "\t [--logfile path]             where should the test software look for logs from cluster nodes" 
-    print "\t [--syslog-facility name]     which syslog facility should the test software log to" 
-    print "\t [--at-boot (1|0)]            does the cluster software start at boot time" 
+    print "Options that CTS will usually auto-detect correctly: "
+    print "\t [--logfile path]             where should the test software look for logs from cluster nodes"
+    print "\t [--syslog-facility name]     which syslog facility should the test software log to"
+    print "\t [--at-boot (1|0)]            does the cluster software start at boot time"
     print "\t [--test-ip-base ip]          offset for generated IP address resources"
     print "\t "
-    print "Options for release testing: "  
+    print "Options for release testing: "
     print "\t [--populate-resources | -r]  generate a sample configuration"
-    print "\t [--choose name]              run only the named test" 
-    print "\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]" 
-    print "\t [--once]                     run all valid tests once" 
+    print "\t [--choose name]              run only the named test"
+    print "\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]"
+    print "\t [--once]                     run all valid tests once"
     print "\t "
-    print "Additional (less common) options: "  
+    print "Additional (less common) options: "
     print "\t [--clobber-cib | -c ]        erase any existing configuration"
-    print "\t [--outputfile path]          optional location for the test software to write logs to" 
-    print "\t [--trunc]                    truncate logfile before starting" 
-    print "\t [--xmit-loss lost-rate(0.0-1.0)]" 
-    print "\t [--recv-loss lost-rate(0.0-1.0)]" 
-    print "\t [--standby (1 | 0 | yes | no)]" 
-    print "\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]" 
-    print "\t [--stonith-type type]" 
-    print "\t [--stonith-args name=value]" 
-    print "\t [--bsc]" 
-    print "\t [--no-loop-tests]            dont run looping/time-based tests" 
-    print "\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd" 
-    print "\t [--valgrind-tests]           include tests using valgrind" 
-    print "\t [--experimental-tests]       include experimental tests" 
-    print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]" 
+    print "\t [--outputfile path]          optional location for the test software to write logs to"
+    print "\t [--trunc]                    truncate logfile before starting"
+    print "\t [--xmit-loss lost-rate(0.0-1.0)]"
+    print "\t [--recv-loss lost-rate(0.0-1.0)]"
+    print "\t [--standby (1 | 0 | yes | no)]"
+    print "\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]"
+    print "\t [--stonith-type type]"
+    print "\t [--stonith-args name=value]"
+    print "\t [--bsc]"
+    print "\t [--no-loop-tests]            dont run looping/time-based tests"
+    print "\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd"
+    print "\t [--valgrind-tests]           include tests using valgrind"
+    print "\t [--experimental-tests]       include experimental tests"
+    print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]"
     print "\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH"
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
@@ -157,11 +157,11 @@ def usage(arg, status=1):
 
     sys.exit(status)
 
-    
+
 #
 #   A little test code...
 #
-if __name__ == '__main__': 
+if __name__ == '__main__':
 
     Environment = LabEnvironment()
     rsh = RemoteExec(None, silent=True)
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     # Set the signal handler
     signal.signal(15, sig_handler)
     signal.signal(10, sig_handler)
-    
+
     # Process arguments...
 
     skipthis=None
@@ -420,6 +420,7 @@ if __name__ == '__main__':
            skipthis=1
            (name, value) = args[i+1].split('=')
            Environment[name] = value
+           print "Setting %s = %s" % (name, value)
 
        elif args[i] == "--":
            break
@@ -435,7 +436,7 @@ if __name__ == '__main__':
         LimitNodes = 1
         Chosen.append("AddResource")
         Environment["ClobberCIB"]  = 1
-        Environment["CIBResource"] = 0 
+        Environment["CIBResource"] = 0
         Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
 
     elif Environment["OutputFile"]:
@@ -543,7 +544,7 @@ if __name__ == '__main__':
             lf.close()
 
     Audits = AuditList(cm)
-        
+
     if Environment["ListTests"] == 1 :
         Tests = TestList(cm, Audits)
         Environment.log("Total %d tests"%len(Tests))
@@ -563,19 +564,19 @@ if __name__ == '__main__':
                    match = test
 
            if not match:
-               usage("--choose: No applicable/valid tests chosen")        
+               usage("--choose: No applicable/valid tests chosen")
            else:
                Tests.append(match)
-    
+
     # Scenario selection
-    if Environment["scenario"] == "basic-sanity": 
+    if Environment["scenario"] == "basic-sanity":
         scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
 
-    elif Environment["scenario"] == "all-once": 
+    elif Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
-    elif Environment["scenario"] == "sequence": 
+    elif Environment["scenario"] == "sequence":
         scenario = Sequence(
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
     else:
@@ -595,7 +596,7 @@ if __name__ == '__main__':
     if Environment.has_key("IPBase"):
         Environment.log("Base IP for resources:  %s" % Environment["IPBase"])
     Environment.log("Cluster starts at boot: %d" % Environment["at-boot"])
-        
+
 
     Environment.dump()
     rc = Environment.run(scenario, NumIter)
