@@ -748,7 +748,7 @@ internal_tcp_connect_async(int sock,
 {
     int rc = 0;
     int flag = 0;
-    int interval;
+    int interval = 1000;
     struct tcp_async_cb_data *cb_data = NULL;
 
     if ((flag = fcntl(sock, F_GETFL)) >= 0) {
