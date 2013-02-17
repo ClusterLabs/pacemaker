@@ -2582,6 +2582,7 @@ crm_xml_cleanup(void)
                 break;
         }
     }
+    xsltCleanupGlobals();
     xmlCleanupParser();
 }
 
@@ -2735,8 +2736,6 @@ apply_transformation(xmlNode * xml, const char *transform)
         xsltFreeStylesheet(xslt);
     }
 
-    xsltCleanupGlobals();
-    xmlCleanupParser();
     free(xform);
 
     return out;
