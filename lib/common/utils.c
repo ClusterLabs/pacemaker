@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -81,6 +81,7 @@ int node_score_infinity = INFINITY;
 int
 crm_exit(int rc)
 {
+    crm_trace("exit %d", rc);
 #if HAVE_LIBXML2
     crm_xml_cleanup();
 #endif
@@ -1947,7 +1948,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     task = op->op_type;
     /* remap the task name under various scenarios
-     * this makes life easier for the PE when its trying determin the current state 
+     * this makes life easier for the PE when its trying determin the current state
      */
     if (crm_str_eq(task, "reload", TRUE)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
