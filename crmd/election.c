@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -85,10 +85,12 @@ crm_compare_age(struct timeval your_age)
         crm_debug("Loose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
         return -1;
     } else if (our_age.tv_usec > your_age.tv_usec) {
-        crm_debug("Win: %ld vs %ld  (usec)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+        crm_debug("Win: %ld.%ld vs %ld.%ld (usec)",
+                  (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
         return 1;
     } else if (our_age.tv_usec < your_age.tv_usec) {
-        crm_debug("Loose: %ld vs %ld (usec)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+        crm_debug("Loose: %ld.%ld vs %ld.%ld (usec)",
+                  (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
         return -1;
     }
 
@@ -276,9 +278,13 @@ do_election_count_vote(long long action,
      */
 
     CRM_CHECK(msg_data != NULL, return);
-    CRM_CHECK(crm_peer_cache != NULL, return);
     CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
     CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+
+    if(crm_peer_cache == NULL) {
+        CRM_LOG_ASSERT(is_set(fsa_input_register, R_SHUTDOWN));
+        return;
+    }
 
     your_age.tv_sec = 0;
     your_age.tv_usec = 0;
@@ -309,6 +315,10 @@ do_election_count_vote(long long action,
     }
 
     age = crm_compare_age(your_age);
+    if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE) == FALSE && your_age.tv_sec == 0 && your_age.tv_usec == 0) {
+        crm_log_xml_trace(vote->msg, "bad vote");
+        crm_write_blackbox(0, NULL);
+    }
 
     if (cur_state == S_STARTING) {
         reason = "Still starting";
