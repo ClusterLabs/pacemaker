@@ -789,7 +789,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         unsigned int size_u = 1 + header->size_uncompressed;
         char *uncompressed = calloc(1, hdr_offset + size_u);
 
-        crm_info("Decompressing message data %d bytes into %d bytes",
+        crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->size_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + hdr_offset, &size_u,
