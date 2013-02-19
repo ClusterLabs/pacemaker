@@ -99,6 +99,7 @@ class LabEnvironment(CtsLab):
         self["unsafe-tests"] = 1
         self["loop-tests"] = 1
         self["scenario"] = "random"
+        self["stats"] = 0
 
         master = socket.gethostname()
 
