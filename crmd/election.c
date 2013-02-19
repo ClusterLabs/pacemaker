@@ -252,7 +252,6 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_state cur_state,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    struct timeval your_age;
     int age = 0;
     int election_id = -1;
     int log_level = LOG_INFO;
@@ -261,7 +260,6 @@ do_election_count_vote(long long action,
     gboolean we_loose = FALSE;
     const char *op = NULL;
     const char *vote_from = NULL;
-    const char *your_version = NULL;
     const char *election_owner = NULL;
     const char *reason = "unknown";
     crm_node_t *our_node = NULL, *your_node = NULL;
@@ -286,16 +284,10 @@ do_election_count_vote(long long action,
         return;
     }
 
-    your_age.tv_sec = 0;
-    your_age.tv_usec = 0;
-
     op = crm_element_value(vote->msg, F_CRM_TASK);
     vote_from = crm_element_value(vote->msg, F_CRM_HOST_FROM);
-    your_version = crm_element_value(vote->msg, F_CRM_VERSION);
     election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
     crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
-    crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_S, (int *)&(your_age.tv_sec));
-    crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_US, (int *)&(your_age.tv_usec));
 
     CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 
@@ -312,12 +304,6 @@ do_election_count_vote(long long action,
         use_born_on = TRUE;
     } else if (is_classic_ais_cluster()) {
         use_born_on = TRUE;
-    }
-
-    age = crm_compare_age(your_age);
-    if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE) == FALSE && your_age.tv_sec == 0 && your_age.tv_usec == 0) {
-        crm_log_xml_trace(vote->msg, "bad vote");
-        crm_write_blackbox(0, NULL);
     }
 
     if (cur_state == S_STARTING) {
@@ -351,57 +337,71 @@ do_election_count_vote(long long action,
         reason = "Recorded";
         done = TRUE;
 
-    } else if (crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
-        char *op_copy = strdup(op);
-        char *uname_copy = strdup(vote_from);
-
-        CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
-
-        /* update ourselves in the list of nodes that have voted */
-        g_hash_table_replace(voted, uname_copy, op_copy);
-        reason = "Recorded";
-        done = TRUE;
-
-    } else if (compare_version(your_version, CRM_FEATURE_SET) < 0) {
-        reason = "Version";
-        we_loose = TRUE;
-
-    } else if (compare_version(your_version, CRM_FEATURE_SET) > 0) {
-        reason = "Version";
-
-    } else if (age < 0) {
-        reason = "Uptime";
-        we_loose = TRUE;
-
-    } else if (age > 0) {
-        reason = "Uptime";
-
-        /* TODO: Check for y(our) born < 0 */
-    } else if (use_born_on && your_node->born < our_node->born) {
-        reason = "Born";
-        we_loose = TRUE;
-
-    } else if (use_born_on && your_node->born > our_node->born) {
-        reason = "Born";
-
-    } else if (fsa_our_uname == NULL) {
-        reason = "Unknown host name";
-        we_loose = TRUE;
-
-    } else if (strcasecmp(fsa_our_uname, vote_from) > 0) {
-        reason = "Host name";
-        we_loose = TRUE;
-
     } else {
-        reason = "Host name";
-        CRM_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
+        struct timeval your_age;
+        const char *your_version = crm_element_value(vote->msg, F_CRM_VERSION);
+
+        your_age.tv_sec = 0;
+        your_age.tv_usec = 0;
+
+        crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_S, (int *)&(your_age.tv_sec));
+        crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_US, (int *)&(your_age.tv_usec));
+
+        age = crm_compare_age(your_age);
+        if(your_age.tv_sec == 0 && your_age.tv_usec == 0) {
+            crm_log_xml_trace(vote->msg, "bad vote");
+            crm_write_blackbox(0, NULL);
+        }
+
+        if (crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
+            char *op_copy = strdup(op);
+            char *uname_copy = strdup(vote_from);
+
+            CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
+
+            /* update ourselves in the list of nodes that have voted */
+            g_hash_table_replace(voted, uname_copy, op_copy);
+            reason = "Recorded";
+            done = TRUE;
+
+        } else if (compare_version(your_version, CRM_FEATURE_SET) < 0) {
+            reason = "Version";
+            we_loose = TRUE;
+
+        } else if (compare_version(your_version, CRM_FEATURE_SET) > 0) {
+            reason = "Version";
+
+        } else if (age < 0) {
+            reason = "Uptime";
+            we_loose = TRUE;
+
+        } else if (age > 0) {
+            reason = "Uptime";
+
+            /* TODO: Check for y(our) born < 0 */
+        } else if (use_born_on && your_node->born < our_node->born) {
+            reason = "Born";
+            we_loose = TRUE;
+
+        } else if (use_born_on && your_node->born > our_node->born) {
+            reason = "Born";
+
+        } else if (fsa_our_uname == NULL) {
+            reason = "Unknown host name";
+            we_loose = TRUE;
+
+        } else if (strcasecmp(fsa_our_uname, vote_from) > 0) {
+            reason = "Host name";
+            we_loose = TRUE;
+
+        } else {
+            reason = "Host name";
+            CRM_ASSERT(strcasecmp(fsa_our_uname, vote_from) < 0);
 /* cant happen...
  *	} else if(strcasecmp(fsa_our_uname, vote_from) == 0) {
  *
- * default...
- *	} else { // strcasecmp(fsa_our_uname, vote_from) < 0
- *		we win
  */
+        }
     }
 
     if (expires < tm_now) {
