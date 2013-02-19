@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -123,12 +123,32 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    erase_node_from_join(join_to);
-
     if (saved_ccm_membership_id != crm_peer_seq) {
         saved_ccm_membership_id = crm_peer_seq;
         crm_info("Making join offers based on membership %llu", crm_peer_seq);
     }
+
+    if(user_data) {
+        const char *reason = NULL;
+        if(reason == NULL && g_hash_table_lookup(welcomed_nodes, join_to)) {
+            reason = "welcomed";
+        }
+        if(reason == NULL && g_hash_table_lookup(integrated_nodes, join_to)) {
+            reason = "integrated";
+        }
+        if(reason == NULL && g_hash_table_lookup(finalized_nodes, join_to)) {
+            reason = "finalized";
+        }
+        if(reason == NULL && g_hash_table_lookup(confirmed_nodes, join_to)) {
+            reason = "confirmed";
+        }
+        if(reason) {
+            crm_info("Skipping %s: already %s", member->uname, reason);
+            return;
+        }
+    }
+
+    erase_node_from_join(join_to);
 
     if (crm_is_peer_active(member)) {
         xmlNode *offer = create_request(CRM_OP_JOIN_OFFER, NULL, join_to,
@@ -137,12 +157,14 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
         crm_xml_add_int(offer, F_CRM_JOIN_ID, current_join_id);
         /* send the welcome */
-        crm_debug("join-%d: Sending offer to %s", current_join_id, join_to);
+        crm_info("join-%d: Sending offer to %s", current_join_id, join_to);
 
         send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, offer, TRUE);
         free_xml(offer);
 
         g_hash_table_insert(welcomed_nodes, strdup(join_to), join_offered);
+        /* crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_PENDING); */
+
     } else {
         crm_info("Peer process on %s is not active (yet?): %.8lx %d",
                  join_to, (long)member->processes, g_hash_table_size(crm_peer_cache));
@@ -194,7 +216,8 @@ do_dc_join_offer_one(long long action,
         welcome = fsa_typed_data(fsa_dt_ha_msg);
 
     } else {
-        crm_info("A new node joined - wait until it contacts us");
+        crm_info("An unknown node joined - (re-)offer to any unconfirmed nodes");
+        g_hash_table_foreach(crm_peer_cache, join_make_offer, &member);
         return;
     }
 
@@ -210,13 +233,6 @@ do_dc_join_offer_one(long long action,
     }
 
     member = crm_get_peer(0, join_to);
-    crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_PENDING);
-
-    if (crm_is_peer_active(member) == FALSE) {
-        crm_err("%s is not a fully active member of our partition", join_to);
-        return;
-    }
-
     op = crm_element_value(welcome->msg, F_CRM_TASK);
     if (join_to != NULL && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
         /* note: it _is_ possible that a node will have been
@@ -230,6 +246,7 @@ do_dc_join_offer_one(long long action,
     crm_info("join-%d: Processing %s request from %s in state %s",
              current_join_id, op, join_to, fsa_state2string(cur_state));
 
+    erase_node_from_join(join_to);
     join_make_offer(NULL, member, NULL);
 
     /* always offer to the DC (ourselves)
@@ -632,7 +649,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                    && g_hash_table_size(finalized_nodes) != 0) {
             char *msg = NULL;
 
-            crm_err("join-%d: Waiting on %d integrated nodes"
+            crm_info("join-%d: Waiting on %d integrated nodes"
                     " AND %d finalized nodes",
                     current_join_id,
                     g_hash_table_size(integrated_nodes), g_hash_table_size(finalized_nodes));
