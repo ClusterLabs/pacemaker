@@ -64,10 +64,6 @@ volatile enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
 extern uint num_join_invites;
-extern GHashTable *welcomed_nodes;
-extern GHashTable *finalized_nodes;
-extern GHashTable *confirmed_nodes;
-extern GHashTable *integrated_nodes;
 extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
@@ -579,17 +575,14 @@ do_state_transition(long long actions,
                 crm_warn("Progressed to state %s after %s",
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
-            if (g_hash_table_size(welcomed_nodes) > 0) {
-                char *msg = strdup("  Welcome reply not received from");
-
+            if (crmd_join_phase_count(crm_join_welcomed) > 0) {
                 crm_warn("%u cluster nodes failed to respond"
-                         " to the join offer.", g_hash_table_size(welcomed_nodes));
-                g_hash_table_foreach(welcomed_nodes, ghash_print_node, msg);
-                free(msg);
+                         " to the join offer.", crmd_join_phase_count(crm_join_welcomed));
+                crmd_join_phase_log(LOG_NOTICE);
 
             } else {
-                crm_debug("All %d cluster nodes "
-                          "responded to the join offer.", g_hash_table_size(integrated_nodes));
+                crm_debug("All %d cluster nodes responded to the join offer.",
+                          crmd_join_phase_count(crm_join_integrated));
             }
             break;
 
@@ -601,22 +594,19 @@ do_state_transition(long long actions,
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
 
-            if (g_hash_table_size(finalized_nodes) > 0) {
-                char *msg = strdup("  Confirm not received from");
+            if (crmd_join_phase_count(crm_join_finalized) > 0) {
+                crm_err("%u cluster nodes failed to confirm their join.",
+                        crmd_join_phase_count(crm_join_finalized));
+                crmd_join_phase_log(LOG_NOTICE);
 
-                crm_err("%u cluster nodes failed to confirm"
-                        " their join.", g_hash_table_size(finalized_nodes));
-                g_hash_table_foreach(finalized_nodes, ghash_print_node, msg);
-                free(msg);
-
-            } else if (g_hash_table_size(confirmed_nodes)
+            } else if (crmd_join_phase_count(crm_join_confirmed)
                        == crm_active_peers()) {
                 crm_debug("All %u cluster nodes are"
                           " eligible to run resources.", crm_active_peers());
 
-            } else if (g_hash_table_size(confirmed_nodes) > crm_active_peers()) {
+            } else if (crmd_join_phase_count(crm_join_confirmed) > crm_active_peers()) {
                 crm_err("We have more confirmed nodes than our membership does: %d vs. %d",
-                        g_hash_table_size(confirmed_nodes), crm_active_peers());
+                        crmd_join_phase_count(crm_join_confirmed), crm_active_peers());
                 register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 
             } else if (saved_ccm_membership_id != crm_peer_seq) {
@@ -627,8 +617,8 @@ do_state_transition(long long actions,
             } else {
                 crm_warn("Only %u of %u cluster "
                          "nodes are eligible to run resources - continue %d",
-                         g_hash_table_size(confirmed_nodes),
-                         crm_active_peers(), g_hash_table_size(welcomed_nodes));
+                         crmd_join_phase_count(crm_join_confirmed),
+                         crm_active_peers(), crmd_join_phase_count(crm_join_welcomed));
             }
 /* 			initialize_join(FALSE); */
             break;

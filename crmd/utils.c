@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -140,8 +140,9 @@ crm_timer_popped(gpointer data)
 
     if (timer->fsa_input == I_INTEGRATED) {
         crm_info("Welcomed: %d, Integrated: %d",
-                 g_hash_table_size(welcomed_nodes), g_hash_table_size(integrated_nodes));
-        if (g_hash_table_size(welcomed_nodes) == 0) {
+                 crmd_join_phase_count(crm_join_welcomed),
+                 crmd_join_phase_count(crm_join_integrated));
+        if (crmd_join_phase_count(crm_join_welcomed) == 0) {
             /* If we don't even have ourself, start again */
             register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
 

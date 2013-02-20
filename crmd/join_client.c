@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -111,7 +111,8 @@ do_cl_join_offer_respond(long long action,
     }
 #endif
 
-    crm_trace("Accepting join offer: join-%s", crm_element_value(input->msg, F_CRM_JOIN_ID));
+    crm_trace("Accepting join offer from %s: join-%s",
+              welcome_from, crm_element_value(input->msg, F_CRM_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {

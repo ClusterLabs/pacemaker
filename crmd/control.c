@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -257,15 +257,6 @@ crmd_exit(int rc)
 
     free(cib_subsystem);
 
-    if (integrated_nodes) {
-        g_hash_table_destroy(integrated_nodes);
-    }
-    if (finalized_nodes) {
-        g_hash_table_destroy(finalized_nodes);
-    }
-    if (confirmed_nodes) {
-        g_hash_table_destroy(confirmed_nodes);
-    }
     if (reload_hash) {
         g_hash_table_destroy(reload_hash);
     }
@@ -506,14 +497,6 @@ do_startup(long long action,
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 
-    welcomed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                           g_hash_destroy_str, g_hash_destroy_str);
-    integrated_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                             g_hash_destroy_str, g_hash_destroy_str);
-    finalized_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                            g_hash_destroy_str, g_hash_destroy_str);
-    confirmed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                            g_hash_destroy_str, g_hash_destroy_str);
 }
 
 static int32_t

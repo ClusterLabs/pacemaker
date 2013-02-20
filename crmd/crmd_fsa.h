@@ -110,12 +110,6 @@ extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
 extern struct crm_subsystem_s *pe_subsystem;
 
-extern GHashTable *welcomed_nodes;
-extern GHashTable *integrated_nodes;
-extern GHashTable *finalized_nodes;
-extern GHashTable *confirmed_nodes;
-extern GHashTable *crmd_peer_state;
-
 /* these two should be moved elsewhere... */
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
 extern gboolean do_dc_heartbeat(gpointer data);

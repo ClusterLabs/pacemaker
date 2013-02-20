@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -216,7 +216,7 @@ crm_get_peer(unsigned int id, const char *uname)
         if (node && node->uname && uname) {
             crm_crit("Node %s and %s share the same cluster node id '%u'!", node->uname, uname, id);
 
-            /* NOTE: Calling crm_new_peer() means the entry in 
+            /* NOTE: Calling crm_new_peer() means the entry in
              * crm_peer_id_cache will point to the new entity
              *
              * TO-DO: Replace the old uname instead?
@@ -339,6 +339,38 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 #endif
 
     return node;
+}
+
+void
+crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
+{
+    enum crm_join_phase last = 0;
+
+    if(node == NULL) {
+        crm_err("%s: Could not set join to %d for NULL", source, phase);
+        return;
+    }
+
+    last = node->join;
+
+    if(phase == last) {
+        crm_trace("%s: Node %s[%u] - join phase still %u",
+                  source, node->uname, node->id, last);
+
+    } else if (phase <= crm_join_none) {
+        node->join = phase;
+        crm_info("%s: Node %s[%u] - join phase %u -> %u",
+                 source, node->uname, node->id, last, phase);
+
+    } else if(phase == last + 1) {
+        node->join = phase;
+        crm_info("%s: Node %s[%u] - join phase %u -> %u",
+                 source, node->uname, node->id, last, phase);
+    } else {
+        crm_err("%s: Node %s[%u] - join phase cannot transition from %u to %u",
+                source, node->uname, node->id, last, phase);
+
+    }
 }
 
 void

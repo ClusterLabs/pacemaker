@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -80,6 +80,9 @@ void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void erase_status_tag(const char *uname, const char *tag, int options);
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name);
+
+int crmd_join_phase_count(enum crm_join_phase phase);
+void crmd_join_phase_log(int level);
 
 const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);

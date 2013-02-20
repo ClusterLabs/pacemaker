@@ -41,6 +41,16 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
 #define CRM_NODE_EVICTED   "evicted"
 
+enum crm_join_phase
+{
+    crm_join_nack       = -1,
+    crm_join_none       = 0,
+    crm_join_welcomed   = 1,
+    crm_join_integrated = 2,
+    crm_join_finalized  = 3,
+    crm_join_confirmed  = 4,
+};
+
 /* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
@@ -50,6 +60,7 @@ typedef struct crm_peer_node_s {
 
     int32_t votes;              /* Only used by the legacy plugin */
     uint32_t processes;
+    enum crm_join_phase join;
 
     char *uname;
     char *uuid;

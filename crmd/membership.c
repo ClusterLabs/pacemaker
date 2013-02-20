@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -172,12 +172,10 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
     }
 
     if (flags & node_update_join) {
-        const char *peer_member = g_hash_table_lookup(confirmed_nodes, node->uname);
-
-        if (peer_member != NULL) {
-            value = CRMD_JOINSTATE_MEMBER;
-        } else {
+        if(node->join <= crm_join_none) {
             value = CRMD_JOINSTATE_DOWN;
+        } else {
+            value = CRMD_JOINSTATE_MEMBER;
         }
         crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
     }
