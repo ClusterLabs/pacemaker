@@ -129,8 +129,28 @@ controld_start() {
 
     ${OCF_RESKEY_daemon} $OCF_RESKEY_args
 
-    sleep 1
-    controld_monitor
+    while true
+    do
+        sleep 1
+
+        controld_monitor; rc=$?
+        case $rc in
+          $OCF_SUCCESS)
+            check_dir=/sys/kernel/config/dlm/cluster/comms
+            if grep 1 $check_dir/*/local >/dev/null 2>&1; then
+                return $OCF_SUCCESS
+            fi
+            ;;
+          $OCF_NOT_RUNNING) 
+            return $OCF_NOT_RUNNING
+            ;;
+          *) 
+            return $OCF_ERR_GENERIC
+            ;;
+        esac
+
+        ocf_log debug "Waiting for ${OCF_RESKEY_daemon} to be ready"
+    done
 }
 
 controld_stop() {
