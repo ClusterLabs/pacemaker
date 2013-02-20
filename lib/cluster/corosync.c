@@ -234,6 +234,84 @@ crm_get_cluster_name(char **cname)
     return FALSE;
 }
 
+GListPtr cs_message_queue = NULL;
+int cs_message_timer = 0;
+
+static ssize_t crm_cs_flush(void);
+
+static gboolean
+crm_cs_flush_cb(gpointer data)
+{
+    cs_message_timer = 0;
+    crm_cs_flush();
+    return FALSE;
+}
+
+static ssize_t
+crm_cs_flush(void)
+{
+    int sent = 0;
+    ssize_t rc = 0;
+    int queue_len = 0;
+    static unsigned int last_sent = 0;
+
+    if (pcmk_cpg_handle == 0) {
+        return pcmk_ok;
+
+    } else if (cs_message_timer) {
+        /* There is already a timer, wait until it goes off */
+        crm_trace("Timer active %d", cs_message_timer);
+        return pcmk_ok;
+    }
+
+    queue_len = g_list_length(cs_message_queue);
+    while (cs_message_queue && sent < 100) {
+        AIS_Message *header = NULL;
+        struct iovec *iov = cs_message_queue->data;
+
+        errno = 0;
+        rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, iov, 1);
+
+        if (rc != CS_OK) {
+            break;
+        }
+
+        sent++;
+        header = iov->iov_base;
+        last_sent = header->id;
+        if (header->compressed_size) {
+            crm_trace("CPG message %d (%d compressed bytes) sent",
+                      header->id, header->compressed_size);
+        } else {
+            crm_trace("CPG message %d (%d bytes) sent: %.200s",
+                      header->id, header->size, header->data);
+        }
+
+        cs_message_queue = g_list_remove(cs_message_queue, iov);
+        free(iov[0].iov_base);
+        free(iov);
+    }
+
+    queue_len -= sent;
+    if (sent > 1 || cs_message_queue) {
+        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s",
+                 sent, queue_len, last_sent, ais_error2text(rc));
+    } else {
+        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s",
+                  sent, queue_len, last_sent, ais_error2text(rc));
+    }
+
+    if (cs_message_queue) {
+        if (queue_len % 100 == 0 && queue_len > 99) {
+            crm_err("CPG queue has grown to %d", queue_len);
+        }
+
+        cs_message_timer = g_timeout_add(1000 + 100 * queue_len, crm_cs_flush_cb, NULL);
+    }
+
+    return rc;
+}
+
 gboolean
 send_ais_text(int class, const char *data,
               gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
@@ -241,19 +319,16 @@ send_ais_text(int class, const char *data,
     static int msg_id = 0;
     static int local_pid = 0;
 
-    int retries = 0;
-    int rc = CS_OK;
-    int buf_len = sizeof(cs_ipc_header_response_t);
-
-    char *buf = NULL;
-    struct iovec iov;
-    const char *transport = "pcmk";
+    char *target = NULL;
+    struct iovec *iov;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
     CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
               return FALSE);
+
+    CRM_CHECK(dest != crm_msg_ais, return FALSE);
 
     if (data == NULL) {
         data = "";
@@ -278,11 +353,16 @@ send_ais_text(int class, const char *data,
 
     if (node) {
         if (node->uname) {
+            target = strdup(node->uname);
             ais_msg->host.size = strlen(node->uname);
             memset(ais_msg->host.uname, 0, MAX_NAME);
             memcpy(ais_msg->host.uname, node->uname, ais_msg->host.size);
+        } else {
+            target = g_strdup_printf("%u", node->id);
         }
         ais_msg->host.id = node->id;
+    } else {
+        target = strdup("all");
     }
 
     ais_msg->sender.id = 0;
@@ -293,97 +373,52 @@ send_ais_text(int class, const char *data,
     memcpy(ais_msg->sender.uname, pcmk_uname, ais_msg->sender.size);
 
     ais_msg->size = 1 + strlen(data);
+    ais_msg->header.size = sizeof(AIS_Message) + ais_msg->size;
 
     if (ais_msg->size < CRM_BZ2_THRESHOLD) {
-  failback:
-        ais_msg = realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
+        ais_msg = realloc(ais_msg, ais_msg->header.size);
         memcpy(ais_msg->data, data, ais_msg->size);
 
     } else {
         char *compressed = NULL;
+        unsigned int new_size = 0;
         char *uncompressed = strdup(data);
-        unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 
-        crm_trace("Compressing message payload");
+        if (crm_compress_string(uncompressed, ais_msg->size, 0, &compressed, &new_size)) {
 
-        /* coverity[returned_null] Ignore */
-        compressed = malloc(len);
+            ais_msg->header.size = sizeof(AIS_Message) + new_size + 1;
+            ais_msg = realloc(ais_msg, ais_msg->header.size);
+            memcpy(ais_msg->data, compressed, new_size);
+            ais_msg->data[new_size] = 0;
 
-        rc = BZ2_bzBuffToBuffCompress(compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS,
-                                      0, CRM_BZ2_WORK);
+            ais_msg->is_compressed = TRUE;
+            ais_msg->compressed_size = new_size;
+
+        } else {
+            ais_msg = realloc(ais_msg, ais_msg->header.size);
+            memcpy(ais_msg->data, data, ais_msg->size);
+        }
 
         free(uncompressed);
-
-        if (rc != BZ_OK) {
-            crm_err("Compression failed: %d", rc);
-            free(compressed);
-            goto failback;
-        }
-
-        ais_msg = realloc(ais_msg, sizeof(AIS_Message) + len + 1);
-        memcpy(ais_msg->data, compressed, len);
-        ais_msg->data[len] = 0;
         free(compressed);
-
-        ais_msg->is_compressed = TRUE;
-        ais_msg->compressed_size = len;
-
-        crm_trace("Compression details: %d -> %d", ais_msg->size, ais_data_len(ais_msg));
     }
 
-    ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
-
-    crm_trace("Sending%s message %d to %s.%s (data=%d, total=%d)",
-              ais_msg->is_compressed ? " compressed" : "",
-              ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
-              ais_data_len(ais_msg), ais_msg->header.size);
-
-    iov.iov_base = ais_msg;
-    iov.iov_len = ais_msg->header.size;
-    buf = realloc(buf, buf_len);
-
-    do {
-        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
-            retries++;
-            crm_info("Peer overloaded or membership in flux:"
-                     " Re-sending message (Attempt %d of 20)", retries);
-            sleep(retries);     /* Proportional back off */
-        }
-
-        errno = 0;
-        transport = "cpg";
-        CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR;
-                  goto bail);
-        rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
-        if (rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {
-            cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
-            int rc2 = cpg_flow_control_state_get(pcmk_cpg_handle, &fc_state);
-
-            if (rc2 == CS_OK && fc_state == CPG_FLOW_CONTROL_ENABLED) {
-                crm_warn("Connection overloaded, cannot send messages");
-                goto bail;
-
-            } else if (rc2 != CS_OK) {
-                crm_warn("Could not determin the connection state: %s (%d)",
-                         ais_error2text(rc2), rc2);
-                goto bail;
-            }
-        }
-
-    } while ((rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) && retries < 20);
-
-  bail:
-    if (rc != CS_OK) {
-        crm_perror(LOG_ERR, "Sending message %d via %s: FAILED (rc=%d): %s",
-                   ais_msg->id, transport, rc, ais_error2text(rc));
-
+    if (ais_msg->compressed_size) {
+        crm_trace("Queueing CPG message %u to %s (%d compressed bytes)",
+                  ais_msg->id, target, ais_msg->compressed_size);
     } else {
-        crm_trace("Message %d: sent", ais_msg->id);
+        crm_trace("Queueing CPG message %u to %s (%d bytes)",
+                  ais_msg->id, target, ais_msg->size);
     }
 
-    free(buf);
-    free(ais_msg);
-    return (rc == CS_OK);
+    iov = calloc(1, sizeof(struct iovec));
+    iov->iov_base = ais_msg;
+    iov->iov_len = ais_msg->header.size;
+    cs_message_queue = g_list_append(cs_message_queue, iov);
+    crm_cs_flush();
+
+    free(target);
+    return TRUE;
 }
 
 gboolean
