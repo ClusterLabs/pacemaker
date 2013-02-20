@@ -388,12 +388,16 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
         }
         g_error_free(error);
 
-    } else {
+    } else if(g_variant_is_of_type (_ret, G_VARIANT_TYPE("(o)"))) {
         char *path = NULL;
 
         g_variant_get(_ret, "(o)", &path);
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
                  path);
+        op->rc = PCMK_EXECRA_OK;
+
+    } else {
+        crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
         op->rc = PCMK_EXECRA_OK;
     }
 
@@ -482,11 +486,16 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         }
         g_error_free(error);
 
-    } else {
+    } else if(g_variant_is_of_type (_ret, G_VARIANT_TYPE("(o)"))) {
         char *path = NULL;
 
         g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", action, g_variant_get_type_string(_ret), path);
+        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
+                 path);
+        op->rc = PCMK_EXECRA_OK;
+
+    } else {
+        crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
         op->rc = PCMK_EXECRA_OK;
     }
 
