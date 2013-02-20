@@ -177,6 +177,7 @@ do_dc_join_offer_one(long long action,
     } else {
         crm_info("An unknown node joined - (re-)offer to any unconfirmed nodes");
         g_hash_table_foreach(crm_peer_cache, join_make_offer, &member);
+        check_join_state(cur_state, __FUNCTION__);
         return;
     }
 
@@ -548,12 +549,18 @@ void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 gboolean
 check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
+    static unsigned long long highest_seq = 0;
+
     crm_debug("Invoked by %s in state: %s", source, fsa_state2string(cur_state));
 
     if (saved_ccm_membership_id != crm_peer_seq) {
-        crm_debug("%s: Membership changed since join started: %llu -> %llu",
-                  source, saved_ccm_membership_id, crm_peer_seq);
-        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+        crm_debug("%s: Membership changed since join started: %llu -> %llu (%llu)",
+                  source, saved_ccm_membership_id, crm_peer_seq, highest_seq);
+        if(highest_seq < crm_peer_seq) {
+            /* Don't spam the FSA with duplicates */
+            highest_seq = crm_peer_seq;
+            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+        }
 
     } else if (cur_state == S_INTEGRATION) {
         if (crmd_join_phase_count(crm_join_welcomed) == 0) {
