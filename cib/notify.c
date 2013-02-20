@@ -139,7 +139,7 @@ cib_notify_send(xmlNode * xml)
     struct iovec *iov;
     struct cib_notification_s update;
 
-    ssize_t rc = crm_ipcs_prepare(0, xml, &iov);
+    ssize_t rc = crm_ipc_prepare(0, xml, &iov);
 
     crm_trace("Notifying clients");
 
