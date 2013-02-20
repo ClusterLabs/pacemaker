@@ -2229,6 +2229,10 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     struct timespec after_t;
     struct timespec before_t;
 
+    if(max == 0) {
+        max = (length * 1.1) + 600; /* recomended size */
+    }
+
     clock_gettime(CLOCK_MONOTONIC, &before_t);
     /* coverity[returned_null] Ignore */
     compressed = malloc(max);
