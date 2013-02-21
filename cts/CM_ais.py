@@ -320,6 +320,7 @@ class crm_cs_v0(crm_ais):
             r"error: send_cpg_message: Sending message via cpg FAILED",
             r"crmd.*error: verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             r"error: pcmk_cpg_dispatch: Connection to the CPG API failed:",
+            r"error: pcmk_cman_dispatch: Connection to cman failed: -1",
             r"error: crm_ipc_read: Connection to cib_shm failed",
             r"error: mainloop_gio_callback: Connection to .* closed",
             r"crmd_cib_connection_destroys:",
@@ -340,7 +341,7 @@ class crm_cs_v0(crm_ais):
             r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
             r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=do_shutdown_req",
 
-            r"crmd.*error: cib_native_perform_op_delegate: Couldn't perform cib_slave operation.*: Transport endpoint is not connected",
+            r"crmd.*error: cib_native_perform_op_delegate: Couldn't perform cib_slave operation",
             r"crmd.*error: cib_native_perform_op_delegate: CIB disconnected",
             ]
 
