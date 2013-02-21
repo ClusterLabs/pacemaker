@@ -355,8 +355,10 @@ do_dc_join_finalize(long long action,
      */
     crm_debug("Finializing join-%d for %d clients",
               current_join_id, crmd_join_phase_count(crm_join_integrated));
+
     if (crmd_join_phase_count(crm_join_integrated) == 0) {
         /* If we don't even have ourself, start again */
+        crmd_join_phase_log(LOG_NOTICE);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
         return;
     }
