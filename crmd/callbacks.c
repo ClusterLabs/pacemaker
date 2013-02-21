@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -103,6 +103,7 @@ void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     uint32_t old = 0;
+    uint32_t changed = 0;
     const char *status = NULL;
 
     set_bit(fsa_input_register, R_PEER_DATA);
@@ -117,7 +118,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             return;
         case crm_status_nstate:
             crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
-            if (safe_str_neq(data, node->state)) {
+            if (safe_str_eq(data, node->state)) {
                 /* State did not change */
                 return;
             }
@@ -125,6 +126,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         case crm_status_processes:
             if (data) {
                 old = *(const uint32_t *)data;
+                changed = node->processes ^ old;
             }
 
             /* crmd_proc_update(node, proc_flags); */
@@ -133,7 +135,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                      node->uname, peer2text(proc_flags), status,
                      AM_I_DC ? "true" : crm_str(fsa_our_dc));
 
-            if (((node->processes ^ old) & proc_flags) == 0) {
+            if ((changed & proc_flags) == 0) {
                 /* Peer process did not change */
                 crm_trace("No change %6x %6x %6x", old, node->processes, proc_flags);
                 return;
@@ -145,9 +147,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
             }
 
-            if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
+            if (safe_str_eq(node->uname, fsa_our_uname) && (node->processes & proc_flags) == 0) {
+                /* Did we get evicted? */
+                crm_notice("Our peer connection failed");
+                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
+
+            } else if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
                 /* Did the DC leave us? */
-                crm_notice("Got client status callback - our DC is dead");
+                crm_notice("Our peer on the DC is dead");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
             }
             break;
@@ -155,14 +162,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
     if (AM_I_DC) {
         xmlNode *update = NULL;
-        crm_action_t *down = match_down_event(0, node->uuid, NULL);
         gboolean alive = crm_is_peer_active(node);
+        crm_action_t *down = match_down_event(0, node->uuid, NULL, alive);
+
+        crm_trace("Alive=%d, down=%p", alive, down);
 
         if (alive && type == crm_status_processes) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
-
-        crm_trace("Alive=%d, down=%p", alive, down);
 
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);

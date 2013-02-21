@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -350,7 +350,7 @@ get_cancel_action(const char *id, const char *node)
 }
 
 crm_action_t *
-match_down_event(int id, const char *target, const char *filter)
+match_down_event(int id, const char *target, const char *filter, bool quiet)
 {
     const char *this_action = NULL;
     const char *this_node = NULL;
@@ -415,7 +415,7 @@ match_down_event(int id, const char *target, const char *filter)
     } else if (id > 0) {
         crm_err("No match for action %d", id);
 
-    } else {
+    } else if(quiet == FALSE) {
         crm_warn("No match for shutdown action on %s", target);
     }
 
