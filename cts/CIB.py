@@ -98,7 +98,7 @@ class Option(CibXml):
         CibXml.__init__(self, Factory, "cluster_property_set", section)
         if name and value:
             self.add_child(CibXml(Factory, "nvpair", "cts-%s" % name, name=name, value=value))
-                           
+
     def __setitem__(self, key, value):
         self.add_child(CibXml(self.Factory, "nvpair", "cts-%s" % key, name=key, value=value))
 
@@ -142,7 +142,7 @@ class Resource(CibXml):
 
     def __setitem__(self, key, value):
         self.add_param(key, value)
-        
+
     def add_op(self, name, interval, **kwargs):
         self.op.append(
             CibXml(self.Factory, "op", "%s-%s" % (name, interval), name=name, interval=interval, **kwargs))
@@ -155,7 +155,7 @@ class Resource(CibXml):
 
     def prefer(self, node, score="INFINITY", rule=None):
         if not rule:
-            rule = Rule(self.Factory, "prefer-%s-r" % node, score, 
+            rule = Rule(self.Factory, "prefer-%s-r" % node, score,
                         expr=Expression(self.Factory, "prefer-%s-e" % node, "#uname", "eq", node))
         self.scores[node] = rule
 
@@ -178,7 +178,7 @@ class Resource(CibXml):
             kargs["rsc-role"] = role
         if withrole:
             kargs["with-rsc-role"] = withrole
-        
+
         self.coloc[resource] = kargs
 
     def constraints(self):
@@ -248,7 +248,7 @@ class Group(Resource):
 
     def __setitem__(self, key, value):
         self.add_meta(key, value)
-        
+
     def show(self):
         text = '''<%s id="%s">''' % (self.tag, self.name)
 
@@ -297,7 +297,7 @@ class CIB11(CibBase):
         ip = self.NextIP()
         if not name:
             name = "r"+ip
-            
+
         r = Resource(self.Factory, name, "IPaddr2", standard)
         r["ip"] = ip
         r["cidr_netmask"] = "32"
@@ -320,7 +320,7 @@ class CIB11(CibBase):
         # fencing resource
         if self.cts_cib:
             return self.cts_cib
-        
+
         if target:
             self.Factory.target = target
 
@@ -336,7 +336,7 @@ class CIB11(CibBase):
         no_quorum = "stop"
         if self.num_nodes < 3:
             no_quorum = "ignore"
-            self.Factory.log("Cluster only has %d nodes, configuring: no-quroum-policy=ignore" % self.num_nodes) 
+            self.Factory.log("Cluster only has %d nodes, configuring: no-quroum-policy=ignore" % self.num_nodes)
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
@@ -344,9 +344,9 @@ class CIB11(CibBase):
             st = Resource(self.Factory, "Fencing", self.CM.Env["stonith-type"], "stonith")
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
-            st.add_op("monitor", "120s", timeout="300s")
-            st.add_op("stop", "0", timeout="180s")
-            st.add_op("start", "0", timeout="180s")
+            st.add_op("monitor", "120s", timeout="120s")
+            st.add_op("stop", "0", timeout="60s")
+            st.add_op("start", "0", timeout="60s")
 
             entries = string.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
@@ -400,7 +400,7 @@ class CIB11(CibBase):
                     stf["power_timeout"] = "20"
                     stf["random_sleep_range"] = "30"
                     stf.commit()
-                  
+
                 # Now commit the levels themselves
                 stl.commit()
 
@@ -452,7 +452,7 @@ class CIB11(CibBase):
             r.commit()
 
         # Migrator
-        # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach 
+        # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
         m = Resource(self.Factory, "migrator","Dummy",  "ocf", "pacemaker")
         m.add_meta("resource-stickiness","1")
         m.add_meta("allow-migrate", "1")
@@ -465,7 +465,7 @@ class CIB11(CibBase):
         p["host-list"] = self.CM.Env["cts-master"]
         p["name"] = "connected"
         p["debug"] = "true"
-        
+
         c = Clone(self.Factory, "Connectivity", p)
         c["globally-unique"] = "false"
         c.commit()
@@ -476,16 +476,16 @@ class CIB11(CibBase):
         s.add_op("monitor", "16s", timeout="60s", role="Master")
         ms = Master(self.Factory, "master-1", s)
         ms["clone-max"] = self.num_nodes
-        ms["master-max"] = 1 
-        ms["clone-node-max"] = 1 
-        ms["master-node-max"] = 1 
+        ms["master-max"] = 1
+        ms["clone-node-max"] = 1
+        ms["master-node-max"] = 1
 
         # Require conectivity to run the master
         r = Rule(self.Factory, "connected", "-INFINITY", op="or")
         r.add_child(Expression(self.Factory, "m1-connected-1", "connected", "lt", "1"))
         r.add_child(Expression(self.Factory, "m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
-        
+
         ms.commit()
 
         # Group Resource
@@ -502,7 +502,7 @@ class CIB11(CibBase):
 
         # LSB resource
         lsb_agent = self.CM.install_helper("LSBDummy")
-    
+
         lsb = Resource(self.Factory, "lsb-dummy",lsb_agent,  "lsb")
         lsb.add_op("monitor", "5s")
 
@@ -528,7 +528,7 @@ class CIB12(CIB11):
 #        self._create('''colocation o2cb-with-dlm INFINITY: o2cb-clone dlm-clone''')
 #        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
 
-class ConfigFactory:      
+class ConfigFactory:
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
@@ -536,7 +536,7 @@ class ConfigFactory:
         self.register("pacemaker12", CIB12, CM, self)
 #        self.register("hae", HASI, CM, self)
         self.target = self.CM.Env["nodes"][0]
-        self.tmpfile = None 
+        self.tmpfile = None
 
     def log(self, args):
         self.CM.log("cib: %s" % args)
@@ -549,7 +549,7 @@ class ConfigFactory:
         _args = [constructor]
         _args.extend(args)
         setattr(self, methodName, apply(ConfigFactoryItem,_args, kargs))
-        
+
     def unregister(self, methodName):
         """unregister a constructor"""
         delattr(self, methodName)
@@ -577,7 +577,7 @@ class ConfigFactoryItem:
         self._function = function
         self._args = args
         self._kargs = kargs
-        
+
     def __call__(self, *args, **kargs):
         """call function"""
         _args = list(self._args)
@@ -587,7 +587,7 @@ class ConfigFactoryItem:
         return apply(self._function,_args,_kargs)
 
 # Basic Sanity Testing
-if __name__ == '__main__': 
+if __name__ == '__main__':
     import CTSlab
     env = CTSlab.LabEnvironment()
     env["nodes"] = []
