@@ -635,7 +635,7 @@ crm_ipcs_send_ack(crm_client_t * c, uint32_t request, const char *tag, const cha
 /* Client... */
 
 #define MIN_MSG_SIZE    12336   /* sizeof(struct qb_ipc_connection_response) */
-#define MAX_MSG_SIZE    20*1024 /* 50k default */
+#define MAX_MSG_SIZE    50*1024 /* 50k default */
 
 struct crm_ipc_s {
     struct pollfd pfd;
