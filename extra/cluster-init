@@ -21,7 +21,7 @@ distro=
 dsh_group=0
 cluster=dummy0
 
-#  Corosync/OpenAIS Settings 
+#  Corosync/OpenAIS Settings
 cs_port=666
 
 # Settings that work great on nXX
@@ -77,18 +77,18 @@ function helptext() {
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
     echo "-e, --extra package-list"
-    echo "                    Extra packages to install"  
+    echo "                    Extra packages to install"
     exit $1
 }
 
 host_input=""
 while true; do
     case "$1" in
-	-g) cluster=$2;   
+	-g) cluster=$2;
 	    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
 	    host_input="-g $cluster"
 	    shift; shift;;
-	-w|--host) 
+	-w|--host)
 	    for h in $2; do
 		host_input="$host_input -w $h";
 	    done
@@ -111,16 +111,25 @@ while true; do
 	--plugin|-p) CTYPE=plugin; plugin_ver=$2; shift; shift;;
 	-u|--unicast) nodelist=1; transport=udpu; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
-#	-t|--test) pkgs="$pkgs qarsh-server valgrind"; shift; shift;;
+	-t|--test)  rpm_repo=rpm-test-next; pkgs="$pkgs valgrind"; shift;;
 
-	r6)  CTYPE=cman; rpm_repo=rpm-test-next; distro=rhel-6; pkgs="$pkgs qarsh-server valgrind"; shift;;
-	r7)  CTYPE=corosync; rpm_repo=rpm-test-next; distro=rhel-7; pkgs="$pkgs qarsh-server valgrind"; shift;;
-	f*[0-9][0-9]) 
+	r*[0-9])
+	    rhel=`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`
+	    distro="rhel-$rhel";
+	    pkgs="$pkgs qarsh-server";
+	    case $rhel in
+		6) CTYPE=cman;;
+		7) CTYPE=corosync;;
+	    esac
+	    shift
+	    ;;
+
+	f*[0-9][0-9])
 	    distro="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`";
-	    CTYPE=corosync; 
-	    shift;;
+	    CTYPE=corosync;
+	    shift
+	    ;;
 	p0|10) pcmk_ver=10; plugin_ver=0; rpm_repo="rpm-test"; install=1; shift;;
-
 
 	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
@@ -135,7 +144,7 @@ if [ x = "x$host_input" -a x = "x$CTS_GROUP" ]; then
         read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 CTS_GROUP
     else
         read -p "Please specify a whitespace delimetered list of nodes you'd like to configure as a cluster? [] " -t 60 host_list
-	
+
         for h in $2; do
 	    host_input="$host_input -w $h";
 	done
@@ -168,7 +177,7 @@ case $CTYPE in
     corosync) cs_conf=/etc/corosync/corosync.conf;;
     heartbeat) do_heartbeat=1;;
     openais) cs_conf=/etc/ais/openais.conf;;
-    plugin) 
+    plugin)
 	cs_conf=/etc/corosync/corosync.conf
 	if [ -z $plugin_ver ]; then
 	    echo ""
@@ -181,20 +190,20 @@ case $CTYPE in
 	;;
 esac
 
-function get_defaults() 
+function get_defaults()
 {
     if [ -z $SSH ]; then
 	SSH="No"
     fi
-    
+
     if [ -z $SELINUX ]; then
 	SELINUX="Yes"
     fi
-    
+
     if [ -z $IPTABLES ]; then
 	IPTABLES="Yes"
     fi
-    
+
     if [ -z $DOMAIN ]; then
 	DOMAIN="No"
     fi
@@ -230,12 +239,12 @@ if [ $accept_defaults = 0 ]; then
     read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
 
     case $INSTALL in
-	[Yy][Ee][Ss]|[Yy]|"") 
+	[Yy][Ee][Ss]|[Yy]|"")
 	    if [ -z $rpm_repo ]; then
 		echo ""
 		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next) "  -t 60 rpm_repo
 	    fi
-	    
+
 	    if [ ! -z $rpm_repo ]; then
 		if [ -z $distro ]; then
 		    distro=fedora-18
@@ -269,10 +278,10 @@ echo "Beginning cluster configuration"
 echo ""
 
 case $SSH in
-    [Yy][Ee][Ss]|[Yy]) 
+    [Yy][Ee][Ss]|[Yy])
 	for host in $host_list; do
 	    echo "Installing our ssh key on ${host}"
-	    ssh-copy-id root@${host} >/dev/null 2>&1 
+	    ssh-copy-id root@${host} >/dev/null 2>&1
 	    # Fix selinux labeling
 	    ssh -l root ${host} -- restorecon -R -v .
 	done
@@ -280,7 +289,7 @@ case $SSH in
 esac
 
 case $DATE in
-    [Yy][Ee][Ss]|[Yy]) 
+    [Yy][Ee][Ss]|[Yy])
 	now=`date`
 	for host in $host_list; do
 	    echo "Setting time on ${host}"
@@ -336,13 +345,13 @@ fatal() {
 }
 
 case $SELINUX in
-    [Yy][Ee][Ss]|[Yy]|"") 
+    [Yy][Ee][Ss]|[Yy]|"")
 	sed -i.sed "s/enforcing/disabled/g" /etc/selinux/config
 	;;
 esac
 
 case $IPTABLES in
-    [Yy][Ee][Ss]|[Yy]|"") 
+    [Yy][Ee][Ss]|[Yy]|"")
 	service iptables stop
 	chkconfig iptables off
 	service firewalld stop
@@ -351,7 +360,7 @@ case $IPTABLES in
 esac
 
 case $DOMAIN in
-    [Nn][Oo]|"") 
+    [Nn][Oo]|"")
 	;;
     *.*)
 	if
@@ -364,7 +373,7 @@ case $DOMAIN in
 esac
 
 case $INSTALL in
-    [Yy][Ee][Ss]|[Yy]|"") 
+    [Yy][Ee][Ss]|[Yy]|"")
 
 	if [ ! -z $REPO ]; then
 	    info Configuring Clusterlabs repo: $REPO
@@ -407,7 +416,7 @@ if [ $CMAN = 1 ]; then
 	info "Turning on CMAN init-script logging"
 	sed -i.sed "s/function=/logger\ -p\ daemon.info\ cman\ init\ \\\$1\\\nfunction=/g" /etc/init.d/cman
     fi
-    
+
     sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman
 fi
 END
@@ -461,7 +470,7 @@ function patch_cs_config() {
     ssh -l root ${host} -- sed -i.sed "s/.*bindnetaddr:.*/bindnetaddr:\ $ip/g" $cs_conf
     ssh -l root ${host} -- sed -i.sed "s/.*syslog_facility:.*/syslog_facility:\ daemon/g" $cs_conf
     ssh -l root ${host} -- sed -i.sed "s/.*logfile_priority:.*/logfile_priority:\ $priority/g" $cs_conf
-    
+
     if [ ! -z $token ]; then
 	ssh -l root ${host} -- sed -i.sed "s/.*token:.*/token:\ $token/g" $cs_conf
     fi
@@ -592,7 +601,7 @@ amf {
         mode: disabled
 }
 END
-    
+
     # Corosync Variant
 
     if [ $plugin_ver -ge 0 ]; then
@@ -613,7 +622,7 @@ END
 	for peer in $host_list; do
 	    p_name=`name_for_node $peer`
 	    p_id=`id_for_node $peer`
-	    
+
 	    cat <<-END >>$cs_tmp
                 clusternode {
                         votes: 1
@@ -651,7 +660,7 @@ END
 	    p_name=`name_for_node $peer`
 	    p_id=`id_for_node $peer`
 	    p_ip=`ip_for_node $peer`
-	    
+
 	    cat <<-END >>$cs_tmp
     node {
         ring0_addr: $p_ip
@@ -714,11 +723,11 @@ END
 END
 	lpc=`expr $lpc + 1`
     done
-    
+
     test $num_hosts != 2
     two_node=$?
     extra=""
-    
+
     if [ $two_node = 1 ]; then
 	extra="\n  <cman two_node=\"1\" expected_votes=\"1\"/>"
     fi
@@ -737,7 +746,7 @@ for host in $host_list; do
     echo ""
     echo ""
     echo "* Configuring $host"
-    
+
     cs_short_host=`name_for_node $host`
     ip=`ip_for_node $host`
     id=`id_for_node $host`
@@ -777,14 +786,14 @@ for host in $host_list; do
 	ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
 	new_config=$?
 	new_config=1
-	
+
 	if [ $new_config = 0 ]; then
             printf "%-10s  Updating $cs_conf\n" ${host}:
 	    patch_cs_config
-	    
+
 	else
             printf "%-10s  Installing $cs_conf\n" ${host}:
 	    create_cs_config
 	fi
     fi
-done    
+done
