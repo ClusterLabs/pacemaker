@@ -2944,7 +2944,6 @@ xpath_search(xmlNode * xml_top, const char *path)
 
     doc = getDocPtr(xml_top);
 
-    crm_trace("Evaluating: %s", path);
     xpathCtx = xmlXPathNewContext(doc);
     CRM_ASSERT(xpathCtx != NULL);
 
