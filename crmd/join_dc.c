@@ -641,6 +641,9 @@ void crmd_join_phase_log(int level)
             case crm_join_nack:
                 state = "nack";
                 break;
+            case crm_join_none:
+                state = "none";
+                break;
             case crm_join_welcomed:
                 state = "welcomed";
                 break;
@@ -652,9 +655,6 @@ void crmd_join_phase_log(int level)
                 break;
             case crm_join_confirmed:
                 state = "confirmed";
-                break;
-            case crm_join_none:
-                state = "none";
                 break;
         }
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname, state);
