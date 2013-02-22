@@ -464,8 +464,8 @@ do_dc_join_ack(long long action,
     crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
 
     if (peer->join != crm_join_finalized) {
-        crm_err("Join not in progress: ignoring join-%d from %s (phase = %d)",
-                join_id, join_from, peer->join);
+        crm_info("Join not in progress: ignoring join-%d from %s (phase = %d)",
+                 join_id, join_from, peer->join);
         return;
 
     } else if (join_id != current_join_id) {
