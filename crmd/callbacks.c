@@ -104,6 +104,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 {
     uint32_t old = 0;
     uint32_t changed = 0;
+    bool appeared = FALSE;
     const char *status = NULL;
 
     set_bit(fsa_input_register, R_PEER_DATA);
@@ -121,6 +122,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             if (safe_str_eq(data, node->state)) {
                 /* State did not change */
                 return;
+            } else if(safe_str_eq(CRM_NODE_MEMBER, node->state)) {
+                appeared = TRUE;
             }
             break;
         case crm_status_processes:
@@ -147,6 +150,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
             }
 
+            appeared = (node->processes & proc_flags) != 0;
             if (safe_str_eq(node->uname, fsa_our_uname) && (node->processes & proc_flags) == 0) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
@@ -163,9 +167,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     if (AM_I_DC) {
         xmlNode *update = NULL;
         gboolean alive = crm_is_peer_active(node);
-        crm_action_t *down = match_down_event(0, node->uuid, NULL, alive);
+        crm_action_t *down = match_down_event(0, node->uuid, NULL, appeared);
 
-        crm_trace("Alive=%d, down=%p", alive, down);
+        crm_trace("Alive=%d, appear=%d, down=%p", alive, appeared, down);
 
         if (alive && type == crm_status_processes) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
@@ -201,7 +205,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_trace("Other %p", down);
             }
 
-        } else if (alive == FALSE) {
+        } else if (appeared == FALSE) {
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
             erase_node_from_join(node->uname);
@@ -210,6 +214,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             abort_transition(INFINITY, tg_restart, "Node failure", NULL);
             fail_incompletable_actions(transition_graph, node->uuid);
+
         } else {
             crm_trace("Other %p", down);
         }
