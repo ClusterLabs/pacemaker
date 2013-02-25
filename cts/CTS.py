@@ -1150,7 +1150,14 @@ class ClusterManager(UserDict):
             if peer != node and self.ShouldBeStatus[peer] != "up":
                 stonithPats.append(self["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self["Pat:Fencing_start"] % peer)
-            elif peer != node and not upnode and self.ShouldBeStatus[peer] == "up":
+            elif self.Env["Stack"] == "corosync (cman)":
+                # There is a delay between gaining quorum and CMAN starting fencing
+                # This can mean that even nodes that are fully up get fenced
+                # There is no use fighting it, just look for everyone so that CTS doesn't get confused
+                stonithPats.append(self["Pat:Fencing_ok"] % peer)
+                stonithPats.append(self["Pat:Fencing_start"] % peer)
+
+            if peer != node and not upnode and self.ShouldBeStatus[peer] == "up":
                 upnode = peer
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
@@ -1210,7 +1217,7 @@ class ClusterManager(UserDict):
 
         for peer in peer_list:
 
-            self.ShouldBeStatus[peer]="down"
+            self.ShouldBeStatus[peer] = "down"
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
 
             self.ns.WaitForNodeToComeUp(peer, self["DeadTime"])
@@ -1224,7 +1231,7 @@ class ClusterManager(UserDict):
                     self.log("ERROR: Peer %s failed to restart after being fenced" % peer)
                     return None
 
-                self.ShouldBeStatus[peer]="up"
+                self.ShouldBeStatus[peer] = "up"
 
         return peer_list
 
