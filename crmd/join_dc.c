@@ -356,10 +356,15 @@ do_dc_join_finalize(long long action,
     crm_debug("Finializing join-%d for %d clients",
               current_join_id, crmd_join_phase_count(crm_join_integrated));
 
-    if (crmd_join_phase_count(crm_join_integrated) == 0) {
-        /* If we don't even have ourself, start again */
-        crmd_join_phase_log(LOG_NOTICE);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
+    crmd_join_phase_log(LOG_INFO);
+    if (crmd_join_phase_count(crm_join_welcomed) != 0) {
+        crm_info("Waiting for %d more nodes", crmd_join_phase_count(crm_join_welcomed));
+        /* crmd_fsa_stall(FALSE); Needed? */
+        return;
+
+    } else if (crmd_join_phase_count(crm_join_integrated) == 0) {
+        /* Nothing to do */
+        check_join_state(fsa_state, __FUNCTION__);
         return;
     }
 
@@ -595,6 +600,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         } else {
             crm_debug("join-%d complete: %s", current_join_id, source);
             register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
+            return TRUE;
         }
     }
 
