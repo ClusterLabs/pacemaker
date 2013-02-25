@@ -53,6 +53,8 @@ typedef struct remote_fencing_op_s {
     gboolean notify_sent;
     /*! The number of query replies received */
     guint replies;
+    /*! The number of query replies expected */
+    guint replies_expected;
     /*! Does this node own control of this operation */
     gboolean owner;
     /*! After query is complete, This the high level timer that expires the entire operation */
@@ -150,6 +152,8 @@ extern int stonith_fence_history(xmlNode * msg, xmlNode ** output);
 extern void free_device(gpointer data);
 
 extern void free_topology_entry(gpointer data);
+
+bool fencing_peer_active(crm_node_t *peer);
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;

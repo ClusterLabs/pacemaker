@@ -454,6 +454,21 @@ merge_duplicates(remote_fencing_op_t * op)
     }
 }
 
+static uint32_t fencing_active_peers(void)
+{
+    uint32_t count = 0;
+    crm_node_t *entry;
+    GHashTableIter gIter;
+
+    g_hash_table_iter_init(&gIter, crm_peer_cache);
+    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+        if(fencing_peer_active(entry)) {
+            count++;
+        }
+    }
+    return count;
+}
+
 /*!
  * \internal
  * \brief Create a new remote stonith op
@@ -502,6 +517,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     CRM_LOG_ASSERT(g_hash_table_lookup(remote_op_list, op->id) != NULL);
 
     op->state = st_query;
+    op->replies_expected = fencing_active_peers();
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
 
@@ -993,6 +1009,7 @@ process_remote_stonith_query(xmlNode * msg)
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
     st_query_result_t *result = NULL;
+    uint32_t active = fencing_active_peers();
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
     xmlNode *child = NULL;
 
@@ -1018,6 +1035,10 @@ process_remote_stonith_query(xmlNode * msg)
     if (devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
         crm_trace("Query result from %s (%d devices)", host, devices);
+        if(op->state == st_query && (op->replies >= op->replies_expected || op->replies >= active)) {
+            crm_info("All queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+            call_remote_stonith(op, NULL);
+        }
         return pcmk_ok;
 
     } else if (host_is_target) {
@@ -1030,7 +1051,7 @@ process_remote_stonith_query(xmlNode * msg)
         }
     }
 
-    crm_debug("Query result from %s (%d devices)", host, devices);
+    crm_info("Query result %d of %d from %s (%d devices)", op->replies, op->replies_expected, host, devices);
     result = calloc(1, sizeof(st_query_result_t));
     result->host = strdup(host);
     result->devices = devices;
@@ -1080,9 +1101,15 @@ process_remote_stonith_query(xmlNode * msg)
         if (host_is_target == FALSE && g_hash_table_size(result->verified_devices)) {
             /* we have a verified device living on a peer that is not the target */
             call_remote_stonith(op, result);
+
         } else if (safe_str_eq(op->action, "on")) {
             /* unfencing. */
             call_remote_stonith(op, result);
+
+        } else if(op->replies >= op->replies_expected || op->replies >= active) {
+            crm_info("All queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+            call_remote_stonith(op, NULL);
+
         } else {
             crm_trace("Waiting for more peer results before launching fencing operation");
         }

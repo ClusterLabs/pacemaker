@@ -1646,6 +1646,18 @@ stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode
     return reply;
 }
 
+bool fencing_peer_active(crm_node_t *peer)
+{
+    if (peer == NULL) {
+        return FALSE;
+    } else if (peer->uname == NULL) {
+        return FALSE;
+    } else if(peer->processes & (crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /*!
  * \internal
  * \brief Determine if we need to use an alternate node to
@@ -1662,12 +1674,11 @@ check_alternate_host(const char *target)
     if (g_hash_table_lookup(topology, target) && safe_str_eq(target, stonith_our_uname)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;
-        int membership = crm_proc_plugin | crm_proc_heartbeat | crm_proc_cpg;
 
         g_hash_table_iter_init(&gIter, crm_peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             crm_trace("Checking for %s.%d != %s", entry->uname, entry->id, target);
-            if (entry->uname && (entry->processes & membership)
+            if (fencing_peer_active(entry)
                 && safe_str_neq(entry->uname, target)) {
                 alternate_host = entry->uname;
                 break;
