@@ -547,6 +547,21 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     clear_bit(rsc->flags, pe_rsc_allocating);
     print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
+    if (rsc->is_remote_node) {
+        node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+
+        CRM_ASSERT(remote_node != NULL);
+        if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
+            crm_trace("Setting remote node %s to ONLINE", remote_node->details->id);
+            remote_node->details->online = TRUE;
+
+        } else {
+            crm_trace("Setting remote node %s to SHUTDOWN.  next role = %s, allocated=%s",
+                remote_node->details->id, role2text(rsc->next_role), rsc->allocated_to ? "true" : "false");
+            remote_node->details->shutdown = TRUE;
+        }
+    }
+
     return rsc->allocated_to;
 }
 
@@ -1171,6 +1186,9 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     resource_t *top = uber_parent(rsc);
     int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
+    gboolean is_stonith =
+        (rsc->xml && safe_str_eq(crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS), "stonith")) ?
+        TRUE : FALSE;
 
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
@@ -1240,6 +1258,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->container) {
+        crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
         custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
@@ -1250,6 +1269,19 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
                            NULL, data_set);
+    }
+
+    if (rsc->is_remote_node || is_stonith) {
+        GHashTableIter iter;
+        node_t *node = NULL;
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            /* don't allow remote nodes to run stonith devices
+             * or remote connection resources.*/
+            if (node->details->remote_rsc) {
+                node->weight = -INFINITY;
+            }
+        }
     }
 }
 
@@ -2339,7 +2371,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
         return any_created;
 
-    } else if (rsc->container) {
+    } else if (rsc->container && rsc->is_remote_node == FALSE) {
         pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
         return FALSE;
     }

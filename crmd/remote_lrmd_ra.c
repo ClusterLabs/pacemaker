@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -350,7 +351,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (safe_str_eq(tmp->key, "server")) {
+        if (safe_str_eq(tmp->key, "addr") || safe_str_eq(tmp->key, "server")) {
             server = tmp->value;
         }
         if (safe_str_eq(tmp->key, "port")) {
@@ -387,6 +388,16 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
+            xmlNode *status = create_xml_node(NULL, XML_CIB_TAG_STATE);
+
+            /* clear node status in cib */
+            crm_xml_add(status, XML_ATTR_ID, lrm_state->node_name);
+            lrm_state_reset_tables(lrm_state);
+            fsa_cib_delete(XML_CIB_TAG_STATUS, status, cib_quorum_override, rc, NULL);
+            crm_info("Forced a remote LRM refresh before connection start: call=%d", rc);
+            crm_log_xml_trace(status, "CLEAR LRM");
+            free(status);
+
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                 /* take care of this later when we get async connection result */
@@ -426,6 +437,15 @@ handle_remote_ra_exec(gpointer user_data)
             lrm_state_disconnect(lrm_state);
             cmd->rc = PCMK_EXECRA_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
+
+            if (ra_data->cmds) {
+                g_list_free_full(ra_data->cmds, free_cmd);
+            }
+            if (ra_data->recurring_cmds) {
+                g_list_free_full(ra_data->recurring_cmds, free_cmd);
+            }
+            ra_data->cmds = NULL;
+            ra_data->recurring_cmds = NULL;
             report_remote_ra_result(cmd);
 
         } else if (!strcmp(cmd->action, "migrate_to")) {
@@ -468,7 +488,7 @@ remote_ra_cleanup(lrm_state_t * lrm_state)
         g_list_free_full(ra_data->cmds, free_cmd);
     }
 
-    if (ra_data->cmds) {
+    if (ra_data->recurring_cmds) {
         g_list_free_full(ra_data->recurring_cmds, free_cmd);
     }
     mainloop_destroy_trigger(ra_data->work);
@@ -554,7 +574,7 @@ remote_ra_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
 
     ra_data = connection_rsc->remote_ra_data;
     ra_data->cmds = remove_cmd(ra_data->cmds, action, interval);
-    ra_data->recurring_cmds = remove_cmd(ra_data->cmds, action, interval);
+    ra_data->recurring_cmds = remove_cmd(ra_data->recurring_cmds, action, interval);
     if (ra_data->cur_cmd &&
         (ra_data->cur_cmd->interval == interval) &&
         (safe_str_eq(ra_data->cur_cmd->action, action))) {

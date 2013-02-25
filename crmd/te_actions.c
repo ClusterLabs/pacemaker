@@ -179,6 +179,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     const char *task = NULL;
     const char *value = NULL;
     const char *on_node = NULL;
+    const char *router_node = NULL;
 
     gboolean rc = TRUE;
     gboolean no_wait = FALSE;
@@ -186,6 +187,11 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     id = ID(action->xml);
     task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+
+    if (!router_node) {
+        router_node = on_node;
+    }
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
               crm_err("Corrupted command (id=%s) %s: no node", crm_str(id), crm_str(task));
@@ -195,7 +201,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
              crm_str(id), crm_str(task), on_node,
              is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 
-    if (safe_str_eq(on_node, fsa_our_uname)) {
+    if (safe_str_eq(router_node, fsa_our_uname)) {
         is_local = TRUE;
     }
 
@@ -215,18 +221,17 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         return TRUE;
 
     } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
-        crm_node_t *peer = crm_get_peer(0, on_node);
-
+        crm_node_t *peer = crm_get_peer(0, router_node);
         crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     }
 
-    cmd = create_request(task, action->xml, on_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+    cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
 
     counter =
         generate_transition_key(transition_graph->id, action->id, get_target_rc(action), te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
-    rc = send_cluster_message(crm_get_peer(0, on_node), crm_msg_crmd, cmd, TRUE);
+    rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
     free(counter);
     free_xml(cmd);
 
@@ -370,6 +375,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     const char *task = NULL;
     const char *value = NULL;
     const char *on_node = NULL;
+    const char *router_node = NULL;
     const char *task_uuid = NULL;
 
     CRM_ASSERT(action != NULL);
@@ -385,12 +391,17 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
     task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-    on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+    router_node = crm_element_value(rsc_op, XML_LRM_ATTR_ROUTER_NODE);
+
+    if (!router_node) {
+        router_node = on_node;
+    }
+
     counter =
         generate_transition_key(transition_graph->id, action->id, get_target_rc(action), te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-    if (safe_str_eq(on_node, fsa_our_uname)) {
+    if (safe_str_eq(router_node, fsa_our_uname)) {
         is_local = TRUE;
     }
 
@@ -403,7 +414,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
              action->id, task, task_uuid, on_node,
              is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
 
-    cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
+    cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, router_node,
                          CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 
     if (is_local) {
@@ -426,7 +437,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
 
     } else {
-        rc = send_cluster_message(crm_get_peer(0, on_node), crm_msg_lrmd, cmd, TRUE);
+        rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_lrmd, cmd, TRUE);
     }
 
     free(counter);

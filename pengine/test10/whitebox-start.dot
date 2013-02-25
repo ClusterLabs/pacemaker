@@ -1,0 +1,17 @@
+digraph "g" {
+"M-clone_running_0" [ style=bold color="green" fontcolor="orange"]
+"M-clone_start_0" -> "M-clone_running_0" [ style = bold]
+"M-clone_start_0" -> "M_start_0 lxc1" [ style = bold]
+"M-clone_start_0" [ style=bold color="green" fontcolor="orange"]
+"M_monitor_10000 lxc1" [ style=bold color="green" fontcolor="black"]
+"M_start_0 lxc1" -> "M-clone_running_0" [ style = bold]
+"M_start_0 lxc1" -> "M_monitor_10000 lxc1" [ style = bold]
+"M_start_0 lxc1" [ style=bold color="green" fontcolor="black"]
+"container1_start_0 18node1" -> "lxc1_start_0 18node1" [ style = bold]
+"container1_start_0 18node1" [ style=bold color="green" fontcolor="black"]
+"lxc1_monitor_30000 18node1" [ style=bold color="green" fontcolor="black"]
+"lxc1_start_0 18node1" -> "M_monitor_10000 lxc1" [ style = bold]
+"lxc1_start_0 18node1" -> "M_start_0 lxc1" [ style = bold]
+"lxc1_start_0 18node1" -> "lxc1_monitor_30000 18node1" [ style = bold]
+"lxc1_start_0 18node1" [ style=bold color="green" fontcolor="black"]
+}

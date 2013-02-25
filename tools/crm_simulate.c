@@ -38,6 +38,7 @@
 cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
+gboolean bringing_nodes_online = FALSE;
 
 #define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
@@ -85,7 +86,7 @@ find_resource(xmlNode * cib_node, const char *resource)
 }
 
 static void
-create_node_entry(cib_t * cib_conn, char *node)
+create_node_entry(cib_t * cib_conn, const char *node)
 {
     int rc = pcmk_ok;
     int max = strlen(new_node_template) + strlen(node) + 1;
@@ -114,7 +115,7 @@ create_node_entry(cib_t * cib_conn, char *node)
 }
 
 static xmlNode *
-inject_node_state(cib_t * cib_conn, char *node)
+inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
     int max = strlen(rsc_template) + strlen(node) + 1;
@@ -123,7 +124,9 @@ inject_node_state(cib_t * cib_conn, char *node)
 
     xpath = calloc(1, max);
 
-    create_node_entry(cib_conn, node);
+    if (bringing_nodes_online) {
+        create_node_entry(cib_conn, node);
+    }
 
     snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
@@ -136,20 +139,25 @@ inject_node_state(cib_t * cib_conn, char *node)
     }
 
     if (rc == -ENXIO) {
-        char *uuid = NULL;
+        char *found_uuid = NULL;
 
-        query_node_uuid(cib_conn, node, &uuid);
+        if (uuid == NULL) {
+            query_node_uuid(cib_conn, node, &found_uuid);
+        } else {
+            found_uuid = strdup(uuid);
+        }
 
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        crm_xml_add(cib_object, XML_ATTR_UUID, uuid);
+        crm_xml_add(cib_object, XML_ATTR_UUID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call | cib_scope_local);
         free_xml(cib_object);
-        free(uuid);
+        free(found_uuid);
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath | cib_sync_call | cib_scope_local);
+        crm_trace("injecting node state for %s. rc is %d", node, rc);
     }
 
     free(xpath);
@@ -160,7 +168,7 @@ inject_node_state(cib_t * cib_conn, char *node)
 static xmlNode *
 modify_node(cib_t * cib_conn, char *node, gboolean up)
 {
-    xmlNode *cib_node = inject_node_state(cib_conn, node);
+    xmlNode *cib_node = inject_node_state(cib_conn, node, NULL);
 
     if (up) {
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES);
@@ -354,6 +362,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     GListPtr gIter = NULL;
     lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
+    gboolean uname_is_uuid = TRUE;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -367,6 +376,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *router_node = crm_element_value_copy(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (safe_str_eq(operation, "probe_complete")) {
         crm_info("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
@@ -408,7 +418,11 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
                pcmk_ok);
 
-    cib_node = inject_node_state(global_cib, node);
+    if (router_node) {
+        uname_is_uuid = TRUE;
+    }
+
+    cib_node = inject_node_state(global_cib, node, uname_is_uuid ? node : NULL);
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
@@ -1015,7 +1029,7 @@ modify_configuration(pe_working_set_t * data_set,
             rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
             rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 
-            cib_node = inject_node_state(global_cib, node);
+            cib_node = inject_node_state(global_cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
             update_failcounts(cib_node, resource, interval, outcome);
@@ -1315,6 +1329,7 @@ main(int argc, char **argv)
                 break;
             case 'u':
                 modified++;
+                bringing_nodes_online = TRUE;
                 node_up = g_list_append(node_up, optarg);
                 break;
             case 'd':

@@ -638,6 +638,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     xmlNode *cmd = NULL;
     xmlNode *xml_rsc = NULL;
     const char *value = NULL;
+    const char *router_node = host_uname;
     xmlNode *params = NULL;
     xmlNode *msg_data = NULL;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
@@ -653,6 +654,18 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     } else if (host_uname == NULL) {
         CMD_ERR("Please supply a hostname with -H\n");
         return -EINVAL;
+    } else {
+        node_t *node = pe_find_node(data_set->nodes, host_uname);
+
+        if (node && node->details->remote_rsc) {
+            if (node->details->remote_rsc->running_on) {
+                node = node->details->remote_rsc->running_on->data;
+                router_node = node->details->uname;
+            } else {
+                CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
+                return -ENXIO;
+            }
+        }
     }
 
     key = generate_transition_key(0, getpid(), 0, __FILE__);
@@ -660,6 +673,11 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
     crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
     free(key);
+
+    crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
+    if (safe_str_eq(router_node, host_uname)) {
+        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+    }
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
     if (rsc->clone_name) {
@@ -694,7 +712,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    cmd = create_request(op, msg_data, host_uname, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+    cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
     free_xml(msg_data);
