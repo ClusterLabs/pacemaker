@@ -1282,6 +1282,7 @@ class ClusterManager(UserDict):
 
         if self.rsh(node, startCmd) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
+            self.fencing_cleanup(node, stonith)
             return None
 
         self.ShouldBeStatus[node]="up"
