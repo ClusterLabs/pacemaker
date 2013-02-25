@@ -202,7 +202,7 @@ ais_error2text(int error)
 #  if SUPPORT_COROSYNC
     switch (error) {
         case CS_OK:
-            text = "None";
+            text = "OK";
             break;
         case CS_ERR_LIBRARY:
             text = "Library error";
