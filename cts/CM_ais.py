@@ -338,8 +338,8 @@ class crm_cs_v0(crm_ais):
             r"error: process_lrm_event: LRM operation Fencing.*",
             r"error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy.* received in state",
             r"error: do_log: FSA: Input I_ERROR from do_shutdown_req.* received in state",
-            r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
-            r"warning: do_state_transition: State transition .* S_RECOVERY .*origin=do_shutdown_req",
+            r"do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
+            r"do_state_transition: State transition .* S_RECOVERY .*origin=do_shutdown_req",
 
             r"crmd.*error: cib_native_perform_op_delegate: Couldn't perform cib_slave operation",
             r"crmd.*error: cib_native_perform_op_delegate: CIB disconnected",
