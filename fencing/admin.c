@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -75,6 +75,8 @@ static struct crm_option long_options[] = {
     {"agent",       1, 0, 'a', "The agent (eg. fence_xvm) to instantiate when calling with --register"},
     {"env-option",  1, 0, 'e'},
     {"option",      1, 0, 'o'},
+    {"tag",         1, 0, 'T', "Identify fencing operations with the specified tag.\n\t"
+     "Useful when there are multiple entities that might be invoking stonith_admin(8)"},
 
     {"device",      1, 0, 'v', "A device to associate with a given host and stonith level"},
     {"index",       1, 0, 'i', "The stonith level (1-9)"},
@@ -95,6 +97,7 @@ struct {
     stonith_t *st;
     const char *target;
     const char *action;
+    char *name;
     int timeout;
     int tolerance;
     int rc;
@@ -109,7 +112,8 @@ try_mainloop_connect(void)
     int rc = 0;
 
     for (i = 0; i < tries; i++) {
-        rc = st->cmds->connect(st, crm_system_name, NULL);
+        crm_debug("Connecting as %s", async_fence_data.name);
+        rc = st->cmds->connect(st, async_fence_data.name, NULL);
 
         if (!rc) {
             crm_debug("stonith client connection established");
@@ -232,6 +236,8 @@ main(int argc, char **argv)
                     "Provides access to the stonith-ng API.\n"
                     "\nAllows the administrator to add/remove/list devices, check device and host status and fence hosts\n");
 
+    async_fence_data.name = strdup(crm_system_name);
+
     while (1) {
         flag = crm_get_option_long(argc, argv, &option_index, &longname);
         if (flag == -1)
@@ -260,6 +266,10 @@ main(int argc, char **argv)
             case 'D':
                 action = flag;
                 device = optarg;
+                break;
+            case 'T':
+                free(async_fence_data.name);
+                async_fence_data.name = g_strdup_printf("%s.%s", crm_system_name, optarg);
                 break;
             case 'a':
                 agent = optarg;
@@ -345,9 +355,12 @@ main(int argc, char **argv)
 
     crm_debug("Create");
     st = stonith_api_new();
+    crm_debug("Created");
 
     if (!no_connect) {
-        rc = st->cmds->connect(st, crm_system_name, NULL);
+        crm_debug("Connecting as %s", async_fence_data.name);
+        rc = st->cmds->connect(st, async_fence_data.name, NULL);
+
         crm_debug("Connect: %d", rc);
 
         if (rc < 0) {
@@ -497,6 +510,7 @@ main(int argc, char **argv)
     }                           /* closing bracket for switch case */
 
   done:
+    free(async_fence_data.name);
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
     if (rc < 0) {
         printf("Command failed: %s\n", pcmk_strerror(rc));
