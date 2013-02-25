@@ -279,7 +279,7 @@ if __name__ == '__main__':
                Environment["stonith-type"] = "fence_rhevm"
 
                print "Obtaining RHEV-M credentials from the current environment"
-               Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1" % (
+               Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
                    os.environ['RHEVM_USERNAME'],
                    os.environ['RHEVM_PASSWORD'],
                    os.environ['RHEVM_SERVER'],
@@ -392,7 +392,14 @@ if __name__ == '__main__':
            Environment["Schema"] = "hae"
 
        elif args[i] == "--stack":
-           Environment["Stack"] = args[i+1]
+           if args[i+1] == "fedora" or args[i+1] == "fedora-17" or args[i+1] == "fedora-18":
+               Environment["Stack"] = "corosync"
+           elif args[i+1] == "rhel-6":
+               Environment["Stack"] = "cman"
+           elif args[i+1] == "rhel-7":
+               Environment["Stack"] = "corosync"
+           else:
+               Environment["Stack"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--once":
