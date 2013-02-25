@@ -725,25 +725,33 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     return FALSE;
 }
 
-static xmlNode *
+xmlNode *
 do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
 {
     xmlNode *xml_result = NULL;
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
+    const char *uuid = NULL;
 
-    crm_node_t *peer = crm_get_peer(0, lrm_state->node_name);
+    if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
+        crm_node_t *peer = crm_get_peer(0, lrm_state->node_name);
+        xml_state = do_update_node_cib(peer, node_update_cluster|node_update_peer, NULL, __FUNCTION__);
+        /* The next two lines shouldn't be necessary for newer DCs */
+        crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
+        crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+        uuid = fsa_our_uuid;
 
-    xml_state =
-        do_update_node_cib(peer, node_update_cluster | node_update_peer, NULL, __FUNCTION__);
-
-    /* The next two lines shouldn't be necessary for newer DCs */
-    crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-    crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+    } else {
+        xml_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+        crm_xml_add(xml_state, XML_NODE_IS_REMOTE, "true");
+        crm_xml_add(xml_state, XML_ATTR_ID, lrm_state->node_name);
+        crm_xml_add(xml_state, XML_ATTR_UNAME, lrm_state->node_name);
+        uuid = lrm_state->node_name;
+    }
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
-    crm_xml_add(xml_data, XML_ATTR_ID, fsa_our_uuid);
+    crm_xml_add(xml_data, XML_ATTR_ID, uuid);
     rsc_list = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
     /* Build a list of active (not always running) resources */
@@ -1181,11 +1189,21 @@ do_lrm_invoke(long long action,
     const char *operation = NULL;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
+    const char *remote_node = NULL;
 
-    /* TODO lrm_state. Once lrmd connection resources are enabled and controlled by the
-     * pengine, the input xml should tell us what lrm_state object we should be using here.
-     * Until that work is done, we assume the local connection for now. */
-    lrm_state = lrm_state_find(fsa_our_uname);
+    if (input->xml != NULL) {
+        /* Remote node operations are routed here to their remote connections */
+        remote_node = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+    }
+    lrm_state = lrm_state_find(remote_node ? remote_node : fsa_our_uname);
+
+    if (lrm_state == NULL && remote_node) {
+        crm_err("no lrmd connection for remote node %s found on cluster node %s. Can not process request.",
+            remote_node, fsa_our_uname);
+        return;
+    }
+
+    CRM_ASSERT(lrm_state != NULL);
 
 #if ENABLE_ACL
     user_name = crm_element_value(input->msg, F_CRM_USER);
@@ -1804,6 +1822,7 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     int rc = pcmk_ok;
     xmlNode *update, *iter = NULL;
     int call_opt = cib_quorum_override;
+    const char *uuid = NULL;
 
     CRM_CHECK(op != NULL, return 0);
 
@@ -1816,12 +1835,19 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    set_uuid(iter, XML_ATTR_UUID, lrm_state->node_name);
+    if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
+        set_uuid(iter, XML_ATTR_UUID, lrm_state->node_name);
+        uuid = fsa_our_uuid;
+    } else {
+        /* remote nodes uuid and uname are equal */
+        crm_xml_add(iter, XML_ATTR_UUID, lrm_state->node_name);
+        uuid = lrm_state->node_name;
+    }
     crm_xml_add(iter, XML_ATTR_UNAME, lrm_state->node_name);
     crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
 
     iter = create_xml_node(iter, XML_CIB_TAG_LRM);
-    crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
+    crm_xml_add(iter, XML_ATTR_ID, uuid);
 
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
@@ -1981,7 +2007,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
 
     if (op->output) {
         char *prefix =
-            g_strdup_printf("%s_%s_%d:%d", op->rsc_id, op->op_type, op->interval, op->call_id);
+            g_strdup_printf("%s-%s_%s_%d:%d", lrm_state->node_name, op->rsc_id, op->op_type, op->interval, op->call_id);
 
         if (op->rc) {
             crm_log_output(LOG_NOTICE, prefix, op->output);

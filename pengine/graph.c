@@ -536,6 +536,65 @@ stonith_constraints(node_t * node, action_t * stonith_op, pe_working_set_t * dat
     return TRUE;
 }
 
+static node_t *
+get_router_node(action_t *action)
+{
+    node_t *began_on = NULL;
+    node_t *ended_on = NULL;
+    node_t *router_node = NULL;
+
+    if (action->node->details->remote_rsc == NULL) {
+        return NULL;
+    }
+
+    if (action->node->details->remote_rsc->running_on) {
+        began_on = action->node->details->remote_rsc->running_on->data;
+    }
+    ended_on = action->node->details->remote_rsc->allocated_to;
+
+    /* if there is only one location to choose from,
+     * this is easy. Check for those conditions first */
+    if (!began_on || !ended_on) {
+        /* remote rsc is either shutting down or starting up */
+        return began_on ? began_on : ended_on;
+    } else if (began_on->details == ended_on->details) {
+        /* remote rsc didn't move nodes. */
+        return began_on;
+    }
+
+    /* If we have get here, we know the remote resource
+     * began on one node and is moving to another node.
+     *
+     * This means some actions will get routed through the cluster
+     * node the connection rsc began on, and others are routed through
+     * the cluster node the connection rsc ends up on.
+     * 
+     * 1. stop, demote, migrate actions of resources living in the remote
+     *    node _MUST_ occur _BEFORE_ the connection can move (these actions
+     *    are all required before the remote rsc stop action can occur.) In
+     *    this case, we know these actions have to be routed through the initial
+     *    cluster node the connection resource lived on before the move takes place.
+     *
+     * 2. Everything else (start, promote, monitor, probe, refresh, clear failcount
+     *    delete ....) must occur after the resource starts on the node it is
+     *    moving to.
+     */
+
+    /* 1. before connection rsc moves. */
+    if (safe_str_eq(action->task, "stop") ||
+        safe_str_eq(action->task, "demote") ||
+        safe_str_eq(action->task, "migrate_from") ||
+        safe_str_eq(action->task, "migrate_to")) {
+
+        router_node = began_on;
+
+    /* 2. after connection rsc moves. */
+    } else {
+        router_node = ended_on;
+    }
+    return router_node;
+}
+
 xmlNode *
 action2xml(action_t * action, gboolean as_input)
 {
@@ -605,9 +664,13 @@ action2xml(action_t * action, gboolean as_input)
     }
 
     if (needs_node_info && action->node != NULL) {
-        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
+        node_t *router_node = get_router_node(action);
 
+        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
+        if (router_node) {
+            crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        }
     }
 
     if (is_set(action->flags, pe_action_failure_is_fatal) == FALSE) {

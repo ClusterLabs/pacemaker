@@ -336,6 +336,14 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     const char *prov = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
+    if (rsc->meta) {
+        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        if (crm_is_true(is_internal)) {
+            crm_trace("skipping print of internal resource %s", rsc->id);
+            return;
+        }
+    }
+
     if (pre_text == NULL && (options & pe_print_printf)) {
         pre_text = " ";
     }

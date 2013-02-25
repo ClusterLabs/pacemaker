@@ -37,7 +37,8 @@ typedef enum no_quorum_policy_e {
 
 enum node_type {
     node_ping,
-    node_member
+    node_member,
+    node_remote
 };
 
 enum pe_restart {
@@ -69,6 +70,7 @@ enum pe_find {
 
 #  define pe_flag_startup_probes		0x00010000ULL
 #  define pe_flag_have_status		0x00020000ULL
+#  define pe_flag_have_remote_nodes		0x00040000ULL
 
 typedef struct pe_working_set_s {
     xmlNode *input;
@@ -129,6 +131,8 @@ struct node_shared_s {
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
     GListPtr allocated_rsc;     /* resource_t* */
+
+    resource_t *remote_rsc;
 
     GHashTable *attrs;          /* char* => char* */
     enum node_type type;
@@ -227,6 +231,8 @@ struct resource_s {
     int failure_timeout;
     int effective_priority;
     int migration_threshold;
+
+    gboolean is_remote_node;
 
     unsigned long long flags;
 
