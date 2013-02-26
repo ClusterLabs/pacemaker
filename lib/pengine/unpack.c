@@ -1614,9 +1614,8 @@ process_rsc_state(resource_t * rsc, node_t * node,
          * get reset in the crmd freeing up this resource to run again once we
          * are sure we know the resources state. */
         if (node->details->remote_rsc && node->details->remote_rsc->container) {
-            crm_warn("Resource %s on remote node %s marked as unmanaged until container resource %s can recover",
-                rsc->id, node->details->id, node->details->remote_rsc->container->id);
-            clear_bit(rsc->flags, pe_rsc_managed);
+            set_bit(rsc->flags, pe_rsc_failed);
+
             should_fence = TRUE;
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             should_fence = TRUE;
