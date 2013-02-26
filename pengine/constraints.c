@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -521,11 +521,10 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
         if (location_rule->role_filter == RSC_ROLE_SLAVE) {
-            /* Fold slave back into Started for simplicity
-             * At the point Slave location constraints are evaluated,
-             * all resources are still either stopped or started
+            /* Any master/slave cannot be promoted without being a slave first
+             * Ergo, any constraint for the slave role applies to every role
              */
-            location_rule->role_filter = RSC_ROLE_STARTED;
+            location_rule->role_filter = RSC_ROLE_UNKNOWN;
         }
     }
     if (do_and) {
@@ -932,7 +931,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     *rsc = NULL;
     /*
      *end = get_pseudo_op(end_id, data_set);
-     *begin = get_pseudo_op(begin_id, data_set);    
+     *begin = get_pseudo_op(begin_id, data_set);
 
      free(pseudo_id);
      free(begin_id);
@@ -1242,7 +1241,7 @@ expand_templates_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_
                 xmlNode *new_rsc_ref = NULL;
                 xmlNode *last_ref = xml_rsc;
 
-                /* A sample: 
+                /* A sample:
 
                    Original XML:
 
