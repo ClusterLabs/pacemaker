@@ -376,7 +376,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
-    char *router_node = crm_element_value_copy(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (safe_str_eq(operation, "probe_complete")) {
         crm_info("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
