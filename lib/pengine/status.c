@@ -95,6 +95,7 @@ cluster_status(pe_working_set_t * data_set)
 
     unpack_nodes(cib_nodes, data_set);
     unpack_domains(cib_domains, data_set);
+    unpack_remote_nodes(cib_resources, data_set);
     unpack_resources(cib_resources, data_set);
     unpack_status(cib_status, data_set);
 

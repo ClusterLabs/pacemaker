@@ -820,6 +820,10 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
+        } else if (node->details->remote_rsc) {
+            /* TODO need to figure out how to probe remote resources */
+            continue;
+
         } else if (probe_complete == NULL) {
             probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
         }
@@ -899,7 +903,7 @@ stage2(pe_working_set_t * data_set)
             /* error */
 
         } else if (node->weight >= 0.0  /* global weight */
-                   && node->details->online && node->details->type == node_member) {
+                   && node->details->online && node->details->type != node_ping) {
             data_set->max_valid_nodes++;
         }
     }
@@ -1080,6 +1084,35 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     return rc;
 }
 
+static void
+allocate_resources(pe_working_set_t * data_set)
+{
+    GListPtr gIter = data_set->resources;
+
+    if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+        /* Force remote connection resources to be allocated first. This
+         * also forces any colocation dependencies to be allocated as well */
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            resource_t *rsc = (resource_t *) gIter->data;
+            if (rsc->is_remote_node == FALSE) {
+                continue;
+            }
+            pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
+            rsc->cmds->allocate(rsc, NULL, data_set);
+        }
+    }
+
+    /* now do the rest of the resources */
+    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc = (resource_t *) gIter->data;
+        if (rsc->is_remote_node == TRUE) {
+            continue;
+        }
+        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
+        rsc->cmds->allocate(rsc, NULL, data_set);
+    }
+}
+
 gboolean
 stage5(pe_working_set_t * data_set)
 {
@@ -1106,13 +1139,7 @@ stage5(pe_working_set_t * data_set)
     crm_trace("Allocating services");
     /* Take (next) highest resource, assign it and create its actions */
 
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-        rsc->cmds->allocate(rsc, NULL, data_set);
-    }
+    allocate_resources(data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1257,6 +1284,10 @@ stage6(pe_working_set_t * data_set)
 
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
+
+        if (node->details->remote_rsc) {
+            continue;
+        }
 
         stonith_op = NULL;
         if (node->details->unclean && need_stonith) {
@@ -1504,11 +1535,57 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 
 extern gboolean update_action(action_t * action);
 
+static void
+apply_remote_node_ordering(pe_working_set_t *data_set)
+{
+    GListPtr gIter = data_set->actions;
+
+    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
+        return;
+    }
+    for (; gIter != NULL; gIter = gIter->next) {
+        action_t *action = (action_t *) gIter->data;
+        resource_t *remote_rsc = NULL;
+
+        if (!action->node || !action->node->details->remote_rsc || !action->rsc) {
+            continue;
+        }
+
+        remote_rsc = action->node->details->remote_rsc;
+        if (safe_str_eq(action->task, "monitor") ||
+            safe_str_eq(action->task, "start") ||
+            safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
+            safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT) ||
+            safe_str_eq(action->task, "delete")) {
+
+            custom_action_order(remote_rsc,
+                generate_op_key(remote_rsc->id, RSC_START, 0),
+                NULL,
+                action->rsc,
+                NULL,
+                action,
+                pe_order_implies_then | pe_order_runnable_left,
+                data_set);
+        } else if (safe_str_eq(action->task, "stop")) {
+
+            custom_action_order(action->rsc,
+                NULL,
+                action,
+                remote_rsc,
+                generate_op_key(remote_rsc->id, RSC_STOP, 0),
+                NULL,
+                pe_order_implies_first,
+                data_set);
+        }
+    }
+}
+
 gboolean
 stage7(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
+    apply_remote_node_ordering(data_set);
     crm_trace("Applying ordering constraints");
 
     /* Don't ask me why, but apparently they need to be processed in

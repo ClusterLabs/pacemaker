@@ -1021,6 +1021,9 @@ init_cs_connection_classic(crm_cluster_t * cluster)
         crm_notice("If this node was part of the cluster with a different name,"
                    " you will need to remove the old entry with crm_node --remove");
     }
+    
+    cluster->nodeid = pcmk_nodeid;
+
     return TRUE;
 }
 

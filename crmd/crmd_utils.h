@@ -25,6 +25,17 @@
 #  define CLIENT_EXIT_WAIT 30
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
+
+#  define fsa_cib_delete(section, data, options, call_id, user_name)	\
+	if(fsa_cib_conn != NULL) {					\
+	    call_id = cib_internal_op(                                  \
+		fsa_cib_conn, CIB_OP_DELETE, NULL, section, data,	\
+		NULL, options, user_name);				\
+									\
+	} else {							\
+		crm_err("No CIB connection available");			\
+	}
+
 #  define fsa_cib_update(section, data, options, call_id, user_name)	\
 	if(fsa_cib_conn != NULL) {					\
 	    call_id = cib_internal_op(                                  \

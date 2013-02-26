@@ -201,9 +201,11 @@
 #  define XML_RSC_ATTR_PRIORITY		"priority"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
 #  define XML_RSC_ATTR_CONTAINER	"container"
+#  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
+#  define XML_OP_ATTR_DEPENDENT "dependent-on"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
 
@@ -230,6 +232,7 @@
 #  define XML_NODE_EXPECTED     	"expected"
 #  define XML_NODE_IN_CLUSTER        	"in_ccm"
 #  define XML_NODE_IS_PEER    	"crmd"
+#  define XML_NODE_IS_REMOTE    	"remote_node"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #  define XML_CIB_ATTR_STONITH	    	"stonith"
@@ -238,6 +241,12 @@
 #  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
+/*! used for remote nodes.
+ *  For remote nodes the action is routed to the 'on_node'
+ *  node location, and then from there if 'exec_on' is set
+ *  the host will execute the action on the remote node
+ *  it controls. */
+#  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 #  define XML_LRM_ATTR_RSCID		"rsc-id"
 #  define XML_LRM_ATTR_OPSTATUS		"op-status"
