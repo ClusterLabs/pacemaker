@@ -671,6 +671,8 @@ do_test container-group-3 "Container in group - stop failed"
 do_test container-group-4 "Container in group - reached migration-threshold"
 
 echo ""
+do_test whitebox-fail1 "Fail whitebox container rsc."
+do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."
 do_test whitebox-start "Start whitebox container with resources assigned to it"
 do_test whitebox-stop "Stop whitebox container with resources assigned to it"
 do_test whitebox-move "Move whitebox container with resources assigned to it"
