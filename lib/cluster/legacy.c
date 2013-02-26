@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -711,7 +711,7 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 
         case CMAN_REASON_TRY_SHUTDOWN:
             /* Always reply with a negative - pacemaker needs to be stopped first */
-            crm_info("CMAN wants to shut down: %s", arg ? "forced" : "optional");
+            crm_notice("CMAN wants to shut down: %s", arg ? "forced" : "optional");
             cman_replyto_shutdown(pcmk_cman_handle, 0);
             break;
 
@@ -779,6 +779,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 
 #  ifdef SUPPORT_COROSYNC
 gboolean(*pcmk_cpg_dispatch_fn) (int kind, const char *from, const char *data) = NULL;
+static bool cpg_evicted = FALSE;
 
 static int
 pcmk_cpg_dispatch(gpointer user_data)
@@ -790,6 +791,10 @@ pcmk_cpg_dispatch(gpointer user_data)
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
         pcmk_cpg_handle = 0;
+        return -1;
+
+    } else if(cpg_evicted) {
+        crm_err("Evicted from CPG membership");
         return -1;
     }
     return 0;
@@ -869,7 +874,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     if (!found) {
         crm_err("We're not part of CPG group %s anymore!", groupName->value);
-        /* Possibly re-call cpg_join() */
+        cpg_evicted = TRUE;
     }
 
     counter++;
@@ -895,6 +900,7 @@ init_cpg_connection(crm_cluster_t * cluster)
         .destroy = cluster->destroy,
     };
 
+    cpg_evicted = FALSE;
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
 

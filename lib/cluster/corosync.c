@@ -543,6 +543,7 @@ ais_dispatch_message(AIS_Message * msg,
     goto done;
 }
 
+static bool cpg_evicted = FALSE;
 gboolean(*pcmk_cpg_dispatch_fn) (int kind, const char *from, const char *data) = NULL;
 
 static int
@@ -555,6 +556,10 @@ pcmk_cpg_dispatch(gpointer user_data)
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %d", rc);
         pcmk_cpg_handle = 0;
+        return -1;
+
+    } else if(cpg_evicted) {
+        crm_err("Evicted from CPG membership");
         return -1;
     }
     return 0;
@@ -634,7 +639,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     if (!found) {
         crm_err("We're not part of CPG group %s anymore!", groupName->value);
-        /* Possibly re-call cpg_join() */
+        cpg_evicted = TRUE;
     }
 
     counter++;
@@ -659,6 +664,7 @@ init_cpg_connection(gboolean(*dispatch) (int kind, const char *from, const char 
         .destroy = destroy,
     };
 
+    cpg_evicted = FALSE;
     strncpy(pcmk_cpg_group.value, crm_system_name, 128);
     pcmk_cpg_group.length = strlen(crm_system_name) + 1;
 
