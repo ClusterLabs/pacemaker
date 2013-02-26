@@ -225,16 +225,19 @@ lrm_op_callback(lrmd_event_data_t * op)
 
     /* determine the node name for this connection. */
     nodename = op->remote_nodename ? op->remote_nodename : fsa_our_uname;
-    lrm_state = lrm_state_find(nodename);
 
-    CRM_ASSERT(lrm_state != NULL);
-
-    if (op->type == lrmd_event_disconnect && (safe_str_eq(lrm_state->node_name, fsa_our_uname))) {
+    if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, fsa_our_uname))) {
+        /* if this is the local lrmd ipc connection, set the right bits in the
+         * crmd when the connection goes down */
         lrm_connection_destroy();
         return;
     } else if (op->type != lrmd_event_exec_complete) {
+        /* we only need to process execution results */
         return;
     }
+
+    lrm_state = lrm_state_find(nodename);
+    CRM_ASSERT(lrm_state != NULL);
 
     process_lrm_event(lrm_state, op);
 }
