@@ -69,9 +69,7 @@ do_ha_control(long long action,
         crm_cluster_disconnect(cluster);
         crm_info("Disconnected from the cluster");
 
-#if SUPPORT_HEARTBEAT
         set_bit(fsa_input_register, R_HA_DISCONNECTED);
-#endif
     }
 
     if (action & A_HA_CONNECT) {
