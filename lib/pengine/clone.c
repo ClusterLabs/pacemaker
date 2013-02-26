@@ -410,7 +410,8 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         } else if (is_set(child_rsc->flags, pe_rsc_unique)
                    || is_set(child_rsc->flags, pe_rsc_orphan)
                    || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
-                   || is_set(child_rsc->flags, pe_rsc_failed)) {
+                   || is_set(child_rsc->flags, pe_rsc_failed)
+                   || is_set(child_rsc->flags, pe_rsc_failure_ignored)) {
 
             /* Unique, unmanaged or failed clone */
             print_full = TRUE;
