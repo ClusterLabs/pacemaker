@@ -349,6 +349,36 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     free(child_text);
 }
 
+static bool is_set_recursive(resource_t * rsc, long long flag, bool any)
+{
+    GListPtr gIter;
+    bool all = !any;
+
+    if(is_set(rsc->flags, flag)) {
+        if(any) {
+            return TRUE;
+        }
+    } else if(all) {
+        return FALSE;
+    }
+
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        if(is_set_recursive(gIter->data, flag, any)) {
+            if(any) {
+                return TRUE;
+            }
+
+        } else if(all) {
+            return FALSE;
+        }
+    }
+
+    if(all) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void
 clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -407,10 +437,10 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
                 stopped_list = add_list_element(stopped_list, child_rsc->id);
             }
 
-        } else if (is_set(child_rsc->flags, pe_rsc_unique)
-                   || is_set(child_rsc->flags, pe_rsc_orphan)
-                   || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
-                   || is_set(child_rsc->flags, pe_rsc_failed)) {
+        } else if (is_set_recursive(child_rsc, pe_rsc_unique, TRUE)
+                   || is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
+                   || is_set_recursive(child_rsc, pe_rsc_managed, FALSE) == FALSE
+                   || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
 
             /* Unique, unmanaged or failed clone */
             print_full = TRUE;
