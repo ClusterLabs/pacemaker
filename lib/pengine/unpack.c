@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -896,6 +896,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             } else if (this_node == NULL) {
                 crm_config_warn("Node %s in status section no longer exists", uname);
                 continue;
+
             } else if (this_node->details->remote_rsc) {
                 /* online state for remote nodes is determined by the rsc state
                  * after all the unpacking is done. */
@@ -921,17 +922,14 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
             if (this_node->details->online && data_set->no_quorum_policy == no_quorum_suicide) {
                 /* Everything else should flow from this automatically
-                 * At least until the PE becomes able to migrate off healthy resources 
+                 * At least until the PE becomes able to migrate off healthy resources
                  */
                 pe_fence_node(data_set, this_node, "because the cluster does not have quorum");
             }
         }
     }
 
-    /* Now that we know all node states, we can safely handle migration ops
-     * But, for now, only process healthy nodes
-     *  - this is necessary for the logic in bug lf#2508 to function correctly 
-     */
+    /* Now that we know all node states, we can safely handle migration ops */
     for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
             continue;
@@ -950,40 +948,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             /* online status of remote node can not be determined until all other
              * resource status is unpacked. */
             continue;
-        } else if (this_node->details->online) {
+        } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_trace("Processing lrm resource entries on healthy node: %s",
-                      this_node->details->uname);
-            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-            unpack_lrm_resources(this_node, lrm_rsc, data_set);
-        }
-    }
-
-    /* Now handle failed nodes - but only if stonith is enabled
-     *
-     * By definition, offline nodes run no resources so there is nothing to do.
-     * Only when stonith is enabled do we need to know what is on the node to
-     * ensure rsc start events happen after the stonith
-     */
-    for (state = __xml_first_child(status);
-         state != NULL && is_set(data_set->flags, pe_flag_stonith_enabled);
-         state = __xml_next(state)) {
-
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
-            continue;
-        }
-
-        id = crm_element_value(state, XML_ATTR_ID);
-        uname = crm_element_value(state, XML_ATTR_UNAME);
-        this_node = pe_find_node_any(data_set->nodes, id, uname);
-
-        if (this_node == NULL || this_node->details->online) {
-            continue;
-        } else if (this_node->details->remote_rsc) {
-            /* online status can not be determined for remote node until all unpacking is done */
-            continue;
-        } else {
-            crm_trace("Processing lrm resource entries on unhealthy node: %s",
                       this_node->details->uname);
             lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
@@ -2395,7 +2361,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                  * This would also imply we're no longer running on the source
                  *
                  * Without the stop, and without a migrate_from op we make sure the resource
-                 * gets stopped on both source and target (assuming the target is up) 
+                 * gets stopped on both source and target (assuming the target is up)
                  *
                  */
                 int stop_id = 0;
