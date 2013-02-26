@@ -1087,12 +1087,12 @@ process_remote_stonith_query(xmlNode * msg)
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
 
-    /* All the query results are in for the topology, start the fencing ops. */
     if (is_set(op->call_options, st_opt_topology)) {
         /* If we start the fencing before all the topology results are in,
          * it is possible fencing levels will be skipped because of the missing
          * query results. */
         if (op->state == st_query && all_topology_devices_found(op)) {
+            /* All the query results are in for the topology, start the fencing ops. */
             call_remote_stonith(op, result);
         }
     } else if (op->state == st_query) {
