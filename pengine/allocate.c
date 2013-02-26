@@ -1546,12 +1546,17 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
         resource_t *remote_rsc = NULL;
+        resource_t *container = NULL;
 
-        if (!action->node || !action->node->details->remote_rsc || !action->rsc) {
+        if (!action->node ||
+            !action->node->details->remote_rsc ||
+            !action->rsc ||
+            is_set(action->flags, pe_action_pseudo)) {
             continue;
         }
 
         remote_rsc = action->node->details->remote_rsc;
+        container = remote_rsc->container;
         if (safe_str_eq(action->task, "monitor") ||
             safe_str_eq(action->task, "start") ||
             safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
@@ -1566,8 +1571,26 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 action,
                 pe_order_implies_then | pe_order_runnable_left,
                 data_set);
-        } else if (safe_str_eq(action->task, "stop")) {
 
+        } else if (safe_str_eq(action->task, "stop") &&
+                   container &&
+                   is_set(container->flags, pe_rsc_failed)) {
+
+            /* when the container representing a remote node fails, the stop
+             * action for all the resources living in that container is implied
+             * by the container stopping.  This is similar to how fencing operations 
+             * work for cluster nodes. */
+            pe_set_action_bit(action, pe_action_pseudo);
+            custom_action_order(container,
+                generate_op_key(container->id, RSC_STOP, 0),
+                NULL,
+                action->rsc,
+                NULL,
+                action,
+                pe_order_implies_then | pe_order_runnable_left,
+                data_set);
+
+        } else if (safe_str_eq(action->task, "stop")) {
             custom_action_order(action->rsc,
                 NULL,
                 action,
