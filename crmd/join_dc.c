@@ -383,16 +383,19 @@ do_dc_join_finalize(long long action,
     if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
-        crm_log_xml_debug(max_generation_xml, "Requesting version");
         set_bit(fsa_input_register, R_CIB_ASKED);
+        crm_notice("join-%d: Syncing the CIB from %s to the rest of the cluster",
+                   current_join_id, sync_from);
+        crm_log_xml_notice(max_generation_xml, "Requested version");
 
     } else {
         /* Send _our_ CIB out to everyone */
         sync_from = strdup(fsa_our_uname);
+        crm_info("join-%d: Syncing our CIB to the rest of the cluster",
+                 current_join_id);
+        crm_log_xml_debug(max_generation_xml, "Requested version");
     }
 
-    crm_info("join-%d: Syncing the CIB from %s to the rest of the cluster",
-             current_join_id, sync_from);
 
     rc = fsa_cib_conn->cmds->sync_from(fsa_cib_conn, sync_from, NULL, cib_quorum_override);
     fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
