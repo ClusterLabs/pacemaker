@@ -3,7 +3,7 @@
 op=""
 options=""
 lifetime=0
-target=`uname -n`
+target=`crm_node -n`
 
 TEMP=`getopt -o qDGQVN:U:v:i:l: --long version,help,node:,uname:,id:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_standby' -- "$@"`
@@ -24,13 +24,13 @@ while true ; do
 	    -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
 	    -Q|-q|--quiet|-V)    options="$options $1"; shift;;
 	    --version) crm_attribute --version; exit 0;;
-	    --help) 
-		echo "crm_standby - A convenience wrapper for crm_attribute"; 
-		echo ""; 
-		echo ""; 
-		echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources"; 
-		echo ""; 
-		echo "Usage: crm_standby crm_standby command [options]"; 
+	    --help)
+		echo "crm_standby - A convenience wrapper for crm_attribute";
+		echo "";
+		echo "";
+		echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources";
+		echo "";
+		echo "Usage: crm_standby crm_standby command [options]";
 		echo "Options:"
 		echo " --help 		This text"
 		echo " --version 		Version information"
@@ -68,10 +68,10 @@ if [ $lifetime = 0 ]; then
 		options="$options -l reboot -d off"
 	    fi
 	    ;;
-	u) 
+	u)
 	    options="$options -l forever"
 	    ;;
-	d) 
+	d)
 	    crm_attribute $options -l forever
 	    crm_attribute $options -l reboot
 	    exit 0
@@ -79,5 +79,5 @@ if [ $lifetime = 0 ]; then
     esac
 fi
 
-#echo crm_attribute $options 
-crm_attribute $options 
+#echo crm_attribute $options
+crm_attribute $options

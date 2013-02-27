@@ -1,7 +1,7 @@
 #!/bin/bash
 
 options=""
-target=`uname -n`
+target=`crm_node -n`
 
 TEMP=`getopt -o DGQVN:U:v:i:l:r: --long help,version,resource-id:,node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_failcount' -- "$@"`
@@ -19,12 +19,12 @@ while true ; do
 	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
 	-r|--resource-id) options="$options -n fail-count-$2"; shift; shift;;
 	--version) crm_attribute --version; exit 0;;
-	--help) 
-	    echo "crm_failcount - A convenience wrapper for crm_attribute"; 
+	--help)
+	    echo "crm_failcount - A convenience wrapper for crm_attribute";
 	    echo "";
-	    echo "Set, update or remove the failcount for the specified resource on the named node"; 
-	    echo ""; 
-	    echo "Usage: crm_failcount -r resource_name command [options]"; 
+	    echo "Set, update or remove the failcount for the specified resource on the named node";
+	    echo "";
+	    echo "Usage: crm_failcount -r resource_name command [options]";
 	    echo "Options:"
 	    echo " --help 		This text"
 	    echo " --version 		Version information"
