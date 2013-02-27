@@ -267,7 +267,7 @@ expand_time(char *val)
  * @param timeout	Timeout (not used)
  * @param interval	Time interval for status/monitor
  * @return		0 on success, -1 on failure
- * 
+ *
  */
 int
 store_action(resource_act_t ** actsp, char *name, int depth, int timeout, int interval)
@@ -576,7 +576,7 @@ _get_rule_attrs(xmlDocPtr doc, xmlXPathContextPtr ctx, const char *base, resourc
         }
 
         /*
-           See if this can be reconfigured on the fly without a 
+           See if this can be reconfigured on the fly without a
            stop/start
          */
         snprintf(xpath, sizeof(xpath), "%s/parameter[%d]/@reconfig", base, x);
@@ -883,7 +883,7 @@ load_resource_rulefile(char *filename, resource_rule_t ** rules)
 }
 
 /**
-   Load all the resource rules we can find from our resource root 
+   Load all the resource rules we can find from our resource root
    directory.
 
    @param rules		Rule list to create/add to
@@ -943,7 +943,6 @@ load_resource_rules(const char *rpath, resource_rule_t ** rules)
             load_resource_rulefile(path, rules);
         }
     }
-    xmlCleanupParser();
 
     closedir(dir);
 

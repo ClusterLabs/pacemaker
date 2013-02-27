@@ -96,7 +96,6 @@ conf_open(void)
 {
     xmlInitParser();
     conf_doc = xmlParseFile(conffile);
-    xmlCleanupParser();
     if (!conf_doc)
         return -1;
     return 0;
