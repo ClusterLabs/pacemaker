@@ -1810,6 +1810,7 @@ fencing/Makefile                                                \
         fencing/regression.py                                   \
 lrmd/Makefile                                                   \
         lrmd/regression.py                                      \
+        lrmd/lrm.service					\
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\

@@ -1,0 +1,21 @@
+[Unit]
+Description=Local Resource Management Daemon
+After=network.target
+Requires=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+KillMode=process
+NotifyAccess=none
+SysVStartPriority=99
+
+ExecStart=@libexecdir@/pacemaker/lrmd -t
+
+TimeoutStopSec=30s
+TimeoutStartSec=30s
+
+# Restart options include: no, on-success, on-failure, on-abort or always
+Restart=on-failure
