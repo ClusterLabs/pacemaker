@@ -101,7 +101,7 @@ text2msg_type(const char *text)
          */
         int scan_rc = sscanf(text, "%d", &type);
 
-        if (scan_rc != 1) {
+        if (scan_rc != 1 || type <= crm_msg_stonith_ng) {
             /* Ensure its sane */
             type = crm_msg_none;
         }
