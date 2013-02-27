@@ -49,6 +49,9 @@ typedef struct remote_fencing_op_s {
     /*! The fencing action to perform on the target. (reboot, on, off) */
     char *action;
 
+    /*! When was the fencing action recorded (seconds since epoch) */
+    time_t created;
+
     /*! Marks if the final notifications have been sent to local stonith clients. */
     gboolean notify_sent;
     /*! The number of query replies received */

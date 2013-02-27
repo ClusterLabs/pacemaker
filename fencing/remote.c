@@ -417,8 +417,12 @@ merge_duplicates(remote_fencing_op_t * op)
     GHashTableIter iter;
     remote_fencing_op_t *other = NULL;
 
+    time_t now = time(NULL);
+
     g_hash_table_iter_init(&iter, remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
+        crm_node_t *peer = NULL;
+
         if (other->state > st_exec) {
             /* Must be in-progress */
             continue;
@@ -433,6 +437,20 @@ merge_duplicates(remote_fencing_op_t * op)
             continue;
         } else if (safe_str_eq(other->target, other->originator)) {
             crm_trace("Can't be a suicide operation: %s", other->target);
+            continue;
+        }
+
+        peer = crm_get_peer(0, other->originator);
+        if(fencing_peer_active(peer) == FALSE) {
+            crm_notice("Failing stonith action %s for node %s originating from %s@%s.%.8s: Originator is dead",
+                       other->action, other->target, other->client_name, other->originator, other->id);
+            other->state = st_failed;
+            continue;
+
+        } else if(other->total_timeout > 0 && now > (other->total_timeout + other->created)) {
+            crm_info("Stonith action %s for node %s originating from %s@%s.%.8s is too old: %d vs. %d + %d",
+                     other->action, other->target, other->client_name, other->originator, other->id,
+                     now, other->created, other->total_timeout);
             continue;
         }
 
@@ -520,6 +538,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op->replies_expected = fencing_active_peers();
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
+    op->created = time(NULL);
 
     if (op->originator == NULL) {
         /* Local or relayed request */
