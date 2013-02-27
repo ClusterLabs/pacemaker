@@ -1493,6 +1493,7 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
     if (mutable->host.local) {
         void *conn = NULL;
         const char *lookup = NULL;
+        int children_index = 0;
 
         if (dest == crm_msg_ais) {
             process_ais_message(mutable);
@@ -1530,10 +1531,15 @@ route_ais_message(const AIS_Message * msg, gboolean local_origin)
         }
 
         lookup = msg_type2text(dest);
-        conn = pcmk_children[dest].async_conn;
 
-        /* the cluster fails in weird and wonderfully obscure ways when this is not true */
-        AIS_ASSERT(ais_str_eq(lookup, pcmk_children[dest].name));
+        if (dest == crm_msg_pe && ais_str_eq(pcmk_children[7].name, lookup)) {
+            children_index = 7;
+
+        } else {
+            children_index = dest;
+        }
+
+        conn = pcmk_children[children_index].async_conn;
 
         if (mutable->header.id == service_id) {
             mutable->header.id = 0;     /* reset this back to zero for IPC messages */
