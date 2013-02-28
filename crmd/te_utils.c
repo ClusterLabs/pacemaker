@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -105,6 +105,11 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 static void
 tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 {
+    static char *client_id = NULL;
+    if(client_id == NULL) {
+        client_id = g_strdup_printf("%s.%d", crm_system_name, getpid());
+    }
+
     if (st_event == NULL) {
         crm_err("Notify data not found");
         return;
@@ -166,7 +171,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
         } else if (AM_I_DC &&
                    st_event->client_origin &&
-                   safe_str_neq(st_event->client_origin, crm_system_name)) {
+                   safe_str_neq(st_event->client_origin, client_id)) {
             const char *uuid = get_uuid(st_event->target);
 
             /* If a remote process outside of pacemaker invoked stonith to
