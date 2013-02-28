@@ -425,7 +425,10 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     status_print("%s", buffer);
 
 #if CURSES_ENABLED
-    if (options & pe_print_ncurses) {
+    if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
+        /* Done */
+
+    } else if (options & pe_print_ncurses) {
         /* coverity[negative_returns] False positive */
         move(-1, 0);
     }
