@@ -1488,7 +1488,7 @@ static gint
 sort_device_priority(gconstpointer a, gconstpointer b)
 {
     const stonith_device_t *dev_a = a;
-    const stonith_device_t *dev_b = a;
+    const stonith_device_t *dev_b = b;
 
     if (dev_a->priority > dev_b->priority) {
         return -1;
