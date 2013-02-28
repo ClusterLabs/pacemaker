@@ -495,6 +495,27 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
     }
 }
 
+static bool filter_cib_device(const char *rsc_id, xmlNode *device)
+{
+    xmlNode *attr;
+    xmlNode *attributes = find_xml_node(device, XML_TAG_META_SETS, FALSE);
+
+    for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
+        const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+        const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+
+        if (name
+            && value
+            && strcmp(XML_RSC_ATTR_TARGET_ROLE, name) == 0
+            && strcmp(RSC_STOPPED, value) == 0) {
+            crm_trace("Device %s has been disabled", rsc_id);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 static void
 register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
 {
@@ -533,20 +554,21 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         device_path = g_strdup_printf("//%s[@id='%s']", XML_CIB_TAG_RESOURCE, rsc_id);
         device = get_xpath_object(device_path, local_cib, LOG_ERR);
 
-        attributes = find_xml_node(device, XML_TAG_ATTR_SETS, FALSE);
+        if(filter_cib_device(rsc_id, device) == FALSE) {
+            attributes = find_xml_node(device, XML_TAG_ATTR_SETS, FALSE);
+            for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
+                const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+                const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
 
-        for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
-            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-
-            if (!name || !value) {
-                continue;
+                if (!name || !value) {
+                    continue;
+                }
+                params = stonith_key_value_add(params, name, value);
             }
-            params = stonith_key_value_add(params, name, value);
-        }
 
-        data = create_device_registration_xml(rsc_id, provider, agent, params);
-        stonith_device_register(data, NULL, TRUE);
+            data = create_device_registration_xml(rsc_id, provider, agent, params);
+            stonith_device_register(data, NULL, TRUE);
+        }
     }
 }
 
