@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -329,12 +329,19 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     }
 }
 
+
 void
 native_print(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     node_t *node = NULL;
-    const char *prov = NULL;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+
+    int offset = 0;
+    char buffer[LINE_MAX];
+
+    CRM_ASSERT(rsc->variant == pe_native);
+    CRM_ASSERT(kind != NULL);
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
@@ -353,12 +360,11 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         return;
     }
 
-    if (safe_str_eq(class, "ocf")) {
-        prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    }
-
     if (rsc->running_on != NULL) {
         node = rsc->running_on->data;
+    }
+    if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
+        node = NULL;
     }
 
     if (options & pe_print_html) {
@@ -382,40 +388,48 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         }
     }
 
+    if(pre_text) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", pre_text);
+    }
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc->id);
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
+    if (safe_str_eq(class, "ocf")) {
+        const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+    }
+    offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s):\t", kind);
+    if(is_set(rsc->flags, pe_rsc_orphan)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
+    }
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", role2text(rsc->role));
+    if(node) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
+    }
+    if(is_not_set(rsc->flags, pe_rsc_managed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "(unmanaged) ");
+    }
+    if(is_set(rsc->flags, pe_rsc_failed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
+    }
+    if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "(failure ignored)");
+    }
+
     if ((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
-        const char *desc = NULL;
+        const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+        if(desc) {
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", desc);
+        }
+    }
 
-        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-        status_print("%s%s\t(%s%s%s:%s%s):\t%s %s%s%s%s%s",
-                     pre_text ? pre_text : "", rsc->id,
-                     class, prov ? "::" : "", prov ? prov : "",
-                     crm_element_value(rsc->xml, XML_ATTR_TYPE),
-                     is_set(rsc->flags, pe_rsc_orphan) ? " ORPHANED" : "",
-                     (rsc->variant != pe_native) ? "" : role2text(rsc->role),
-                     is_set(rsc->flags, pe_rsc_managed) ? "" : "(unmanaged) ",
-                     is_set(rsc->flags, pe_rsc_failed) ? "FAILED " : "",
-                     is_set(rsc->flags, pe_rsc_failure_ignored) ? "(failure ignored) " : "",
-                     desc ? ": " : "", desc ? desc : "");
-
-    } else {
-        status_print("%s%s\t(%s%s%s:%s):\t%s%s %s%s%s%s",
-                     pre_text ? pre_text : "", rsc->id,
-                     class, prov ? "::" : "", prov ? prov : "",
-                     crm_element_value(rsc->xml, XML_ATTR_TYPE),
-                     is_set(rsc->flags, pe_rsc_orphan) ? " ORPHANED " : "",
-                     (rsc->variant != pe_native) ? "" : role2text(rsc->role),
-                     (rsc->variant != pe_native) ? "" : node != NULL ? node->details->uname : "",
-                     is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                     is_set(rsc->flags, pe_rsc_failed) ? " FAILED" : "",
-                     is_set(rsc->flags, pe_rsc_failure_ignored) ? " (failure ignored)" : "");
+    status_print("%s", buffer);
 
 #if CURSES_ENABLED
-        if (options & pe_print_ncurses) {
-            /* coverity[negative_returns] False positive */
-            move(-1, 0);
-        }
-#endif
+    if (options & pe_print_ncurses) {
+        /* coverity[negative_returns] False positive */
+        move(-1, 0);
     }
+#endif
 
     if (options & pe_print_html) {
         status_print(" </font> ");
