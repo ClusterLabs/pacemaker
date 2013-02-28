@@ -972,7 +972,7 @@ delete_op_entry(lrm_state_t * lrm_state, lrmd_event_data_t * op, const char *rsc
 }
 
 void
-lrm_clear_last_failure(const char *rsc_id)
+lrm_clear_last_failure(const char *rsc_id, const char *node_name)
 {
     char *attr = NULL;
     GHashTableIter iter;
@@ -982,9 +982,16 @@ lrm_clear_last_failure(const char *rsc_id)
 
     attr = generate_op_key(rsc_id, "last_failure", 0);
 
-    /* This clears last failure for every lrm state that has this rsc. */
+    /* This clears last failure for every lrm state that has this rsc.*/
     for (state_entry = lrm_state_list; state_entry != NULL; state_entry = state_entry->next) {
         lrm_state_t *lrm_state = state_entry->data;
+
+        if (node_name != NULL) {
+            if (strcmp(node_name, lrm_state->node_name) != 0) {
+                /* filter by node_name if node_name is present */
+                continue;
+            }
+        }
 
         delete_op_entry(lrm_state, NULL, rsc_id, attr, 0);
 
@@ -1192,17 +1199,24 @@ do_lrm_invoke(long long action,
     const char *operation = NULL;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
-    const char *remote_node = NULL;
+    const char *target_node = NULL;
+    gboolean is_remote_node = FALSE;
 
     if (input->xml != NULL) {
         /* Remote node operations are routed here to their remote connections */
-        remote_node = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+        target_node = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
     }
-    lrm_state = lrm_state_find(remote_node ? remote_node : fsa_our_uname);
+    if (target_node == NULL) {
+        target_node = fsa_our_uname;
+    } else if (safe_str_neq(target_node, fsa_our_uname)) {
+        is_remote_node = TRUE;
+    }
 
-    if (lrm_state == NULL && remote_node) {
+    lrm_state = lrm_state_find(target_node);
+
+    if (lrm_state == NULL && is_remote_node) {
         crm_err("no lrmd connection for remote node %s found on cluster node %s. Can not process request.",
-            remote_node, fsa_our_uname);
+            target_node, fsa_our_uname);
         return;
     }
 
@@ -1311,7 +1325,7 @@ do_lrm_invoke(long long action,
         free_xml(data);
 
     } else if (safe_str_eq(operation, CRM_OP_PROBED)) {
-        update_attrd(NULL, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name);
+        update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name, is_remote_node);
 
     } else if (safe_str_eq(crm_op, CRM_OP_REPROBE)) {
         GHashTableIter gIter;
@@ -1331,7 +1345,7 @@ do_lrm_invoke(long long action,
         /* And finally, _delete_ the value in attrd
          * Setting it to FALSE results in the PE sending us back here again
          */
-        update_attrd(NULL, CRM_OP_PROBED, NULL, user_name);
+        update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
@@ -1845,6 +1859,7 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
         /* remote nodes uuid and uname are equal */
         crm_xml_add(iter, XML_ATTR_UUID, lrm_state->node_name);
         uuid = lrm_state->node_name;
+        crm_xml_add(iter, XML_NODE_IS_REMOTE, "true");
     }
     crm_xml_add(iter, XML_ATTR_UNAME, lrm_state->node_name);
     crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
