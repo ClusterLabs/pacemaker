@@ -904,7 +904,7 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
         printf
-            ("    <shortdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</shortdesc>\n");
+            ("    <shortdesc lang=\"en\">The priority of the stonith resource. Devices are tried in order of highest priority to lowest.</shortdesc>\n");
         printf("    <content type=\"integer\" default=\"0\"/>\n");
         printf("  </parameter>\n");
 
