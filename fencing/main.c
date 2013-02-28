@@ -497,9 +497,21 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 
 static bool filter_cib_device(const char *rsc_id, xmlNode *device)
 {
-    xmlNode *attr;
-    xmlNode *attributes = find_xml_node(device, XML_TAG_META_SETS, FALSE);
+    int max = 0, lpc = 0;
+    char *rule_path = NULL;
+    const char *parent = NULL;
+    xmlXPathObjectPtr rules = NULL;
 
+    xmlNode *attr;
+    xmlNode *attributes = NULL;
+
+    while(strcmp(XML_CIB_TAG_RESOURCES, (const char *)device->parent->name) != 0) {
+        device = device->parent;
+    }
+
+    parent = ID(device);
+    crm_trace("Testing target role for %s", parent);
+    attributes = find_xml_node(device, XML_TAG_META_SETS, FALSE);
     for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
         const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
         const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
@@ -508,16 +520,96 @@ static bool filter_cib_device(const char *rsc_id, xmlNode *device)
             && value
             && strcmp(XML_RSC_ATTR_TARGET_ROLE, name) == 0
             && strcmp(RSC_STOPPED, value) == 0) {
-            crm_trace("Device %s has been disabled", rsc_id);
+            crm_info("Device %s has been disabled", rsc_id);
             return TRUE;
         }
     }
 
+    rule_path = g_strdup_printf("//" XML_CONS_TAG_RSC_LOCATION "[@rsc='%s' and @node='%s' and @"XML_RULE_ATTR_SCORE"='-INFINITY']", rsc_id, stonith_our_uname);
+    crm_trace("Testing simple constraint: %s", rule_path);
+    rules = xpath_search(local_cib, rule_path);
+    free(rule_path);
+    if (rules && rules->nodesetval && rules->nodesetval->nodeNr) {
+        crm_info("Device %s has been disabled on %s with %d simple location constraints", rsc_id, stonith_our_uname, rules->nodesetval->nodeNr);
+        xmlXPathFreeObject(rules);
+        return TRUE;
+    }
+
+    rule_path = g_strdup_printf("//" XML_CONS_TAG_RSC_LOCATION "[@rsc='%s']//"XML_TAG_RULE"[@"XML_RULE_ATTR_SCORE"='-INFINITY']//"XML_TAG_EXPRESSION, rsc_id);
+    crm_trace("Testing rule-based constraint: %s", rule_path);
+    rules = xpath_search(local_cib, rule_path);
+    free(rule_path);
+
+    if (rules && rules->nodesetval) {
+        max = rules->nodesetval->nodeNr;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = getXpathResult(rules, lpc);
+        const char *attr = crm_element_value(match, XML_EXPR_ATTR_ATTRIBUTE);
+        const char *op = crm_element_value(match, XML_EXPR_ATTR_OPERATION);
+        const char *value = crm_element_value(match, XML_EXPR_ATTR_VALUE);
+
+        if(!attr || !op || !value){
+            continue;
+
+        } else if(strcmp("#uname", attr) != 0) {
+            continue;
+
+        } else if(strcmp("eq", op) == 0 && strcmp(value, stonith_our_uname) == 0) {
+            crm_info("Device %s has been disabled on %s by 'eq' expression %s", rsc_id, stonith_our_uname, ID(match));
+            xmlXPathFreeObject(rules);
+            return TRUE;
+
+        } else if(strcmp("ne", op) == 0 && strcmp(value, stonith_our_uname) != 0) {
+            crm_info("Device %s has been disabled on %s by 'ne' expression %s", rsc_id, stonith_our_uname, ID(match));
+            xmlXPathFreeObject(rules);
+            return TRUE;
+        }
+    }
+    crm_trace("All done");
     return FALSE;
 }
 
 static void
-register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
+update_cib_device(xmlNode *device, gboolean force)
+{
+    const char *rsc_id = NULL;
+    const char *agent = NULL;
+    const char *provider = NULL;
+    stonith_key_value_t *params = NULL;
+    xmlNode *attributes;
+    xmlNode *attr;
+    xmlNode *data;
+
+    CRM_CHECK(device != NULL, return);
+
+    rsc_id = crm_element_value(device, XML_ATTR_ID);
+    stonith_device_remove(rsc_id, TRUE);
+
+    if(filter_cib_device(rsc_id, device) == FALSE) {
+        agent = crm_element_value(device, XML_EXPR_ATTR_TYPE);
+        provider = crm_element_value(device, XML_AGENT_ATTR_PROVIDER);
+
+        attributes = find_xml_node(device, XML_TAG_ATTR_SETS, FALSE);
+        for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
+            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+
+            if (!name || !value) {
+                continue;
+            }
+            params = stonith_key_value_add(params, name, value);
+        }
+
+        data = create_device_registration_xml(rsc_id, provider, agent, params);
+
+        stonith_device_register(data, NULL, TRUE);
+    }
+}
+
+static void
+register_cib_devices(xmlXPathObjectPtr xpathObj, gboolean force)
 {
     int max = 0, lpc = 0;
 
@@ -526,48 +618,14 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
     }
 
     for (lpc = 0; lpc < max; lpc++) {
-        char *device_path;
-        const char *rsc_id = NULL;
-        const char *agent = NULL;
-        const char *standard = NULL;
-        const char *provider = NULL;
-        stonith_key_value_t *params = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
-        xmlNode *attributes;
-        xmlNode *attr;
-        xmlNode *data;
-        xmlNode *device;
+        const char *rsc_id = crm_element_value(match, XML_ATTR_ID);
+        const char *standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
 
-        CRM_CHECK(match != NULL, continue);
-
-        standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
-        agent = crm_element_value(match, XML_EXPR_ATTR_TYPE);
-        provider = crm_element_value(match, XML_AGENT_ATTR_PROVIDER);
-
-        if (safe_str_neq(standard, "stonith") || !agent) {
-            continue;
-        }
-
-        rsc_id = crm_element_value(match, XML_ATTR_ID);
-        stonith_device_remove(rsc_id, TRUE);
-
-        device_path = g_strdup_printf("//%s[@id='%s']", XML_CIB_TAG_RESOURCE, rsc_id);
-        device = get_xpath_object(device_path, local_cib, LOG_ERR);
-
-        if(filter_cib_device(rsc_id, device) == FALSE) {
-            attributes = find_xml_node(device, XML_TAG_ATTR_SETS, FALSE);
-            for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
-                const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-                const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-
-                if (!name || !value) {
-                    continue;
-                }
-                params = stonith_key_value_add(params, name, value);
-            }
-
-            data = create_device_registration_xml(rsc_id, provider, agent, params);
-            stonith_device_register(data, NULL, TRUE);
+        if (strcmp("stonith", standard) == 0) {
+            char *device_path = g_strdup_printf("//%s[@id='%s']", XML_CIB_TAG_RESOURCE, rsc_id);
+            xmlNode *device = get_xpath_object(device_path, local_cib, LOG_ERR);
+            update_cib_device(device, force);
         }
     }
 }
@@ -666,32 +724,97 @@ cib_stonith_devices_init(xmlNode * msg)
     xpathObj = xpath_search(msg, xpath);
 
     if (xpathObj) {
-        register_cib_device(xpathObj, TRUE);
+        register_cib_devices(xpathObj, TRUE);
         xmlXPathFreeObject(xpathObj);
     }
 }
 
+static void update_cib_device_recursive(xmlNode *device)
+{
+    const char *kind = NULL;
+
+    if(device) {
+        kind = (const char *)device->name;
+    }
+
+    if(kind == NULL) {
+        return;
+
+    } else if(strcmp(XML_CIB_TAG_RESOURCE, kind) == 0) {
+        update_cib_device(device, TRUE);
+
+    } else if(strcmp(XML_CIB_TAG_GROUP, kind) == 0
+              || strcmp(XML_CIB_TAG_INCARNATION, kind) == 0
+              || strcmp(XML_CIB_TAG_MASTER, kind) == 0) {
+        xmlNode *xIter = NULL;
+        for(xIter = device->children; xIter; xIter = xIter->next) {
+            update_cib_device_recursive(xIter);
+        }
+
+    } else {
+        crm_err("Unknown resource kind: %s", kind);
+    }
+}
+
+
 static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
-
-    const char *xpath_add =
-        "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE;
-    const char *xpath_del =
-        "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE;
     xmlXPathObjectPtr xpath_obj = NULL;
+    const char *kinds[] =
+        {
+            XML_CIB_TAG_RESOURCE,
+            XML_CIB_TAG_INCARNATION,
+            XML_CIB_TAG_GROUP,
+            XML_CIB_TAG_MASTER
+        };
+    int max_kinds = DIMOF(kinds);
+
+    /* process new constraints */
+    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
+    if (xpath_obj) {
+        int max = 0, lpc = 0;
+
+        if (xpath_obj && xpath_obj->nodesetval) {
+            max = xpath_obj->nodesetval->nodeNr;
+        }
+
+        for (lpc = 0; lpc < max; lpc++) {
+            int kind = 0;
+            const char *rsc_id = NULL;
+            char *device_path = NULL;
+            xmlNode *device = NULL;
+            xmlNode *match = getXpathResult(xpath_obj, lpc);
+
+            CRM_CHECK(match != NULL, continue);
+
+            rsc_id = crm_element_value(match, XML_ATTR_ID);
+
+            for(kind = 0; kind < max_kinds && device == NULL; kind++) {
+                device_path = g_strdup_printf("//%s[@id='%s']", kinds[kind], rsc_id);
+                crm_trace("Looking for %s", device_path);
+                device = get_xpath_object(device_path, local_cib, LOG_DEBUG);
+                free(device_path);
+            }
+
+            if(device) {
+                update_cib_device_recursive(device);
+            }
+        }
+        xmlXPathFreeObject(xpath_obj);
+    }
 
     /* process deletions */
-    xpath_obj = xpath_search(msg, xpath_del);
+    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE);
     if (xpath_obj) {
         remove_cib_device(xpath_obj);
         xmlXPathFreeObject(xpath_obj);
     }
 
     /* process additions */
-    xpath_obj = xpath_search(msg, xpath_add);
+    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
     if (xpath_obj) {
-        register_cib_device(xpath_obj, FALSE);
+        register_cib_devices(xpath_obj, FALSE);
         xmlXPathFreeObject(xpath_obj);
     }
 }
