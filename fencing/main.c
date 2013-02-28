@@ -56,6 +56,10 @@ gboolean no_cib_connect = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
 qb_ipcs_service_t *ipcs = NULL;
+xmlNode *local_cib = NULL;
+
+static cib_t *cib_api = NULL;
+static void *cib_library = NULL;
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -501,6 +505,7 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
     }
 
     for (lpc = 0; lpc < max; lpc++) {
+        char *device_path;
         const char *rsc_id = NULL;
         const char *agent = NULL;
         const char *standard = NULL;
@@ -510,6 +515,7 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         xmlNode *attributes;
         xmlNode *attr;
         xmlNode *data;
+        xmlNode *device;
 
         CRM_CHECK(match != NULL, continue);
 
@@ -522,7 +528,12 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         }
 
         rsc_id = crm_element_value(match, XML_ATTR_ID);
-        attributes = find_xml_node(match, XML_TAG_ATTR_SETS, FALSE);
+        stonith_device_remove(rsc_id, TRUE);
+
+        device_path = g_strdup_printf("//%s[@id='%s']", XML_CIB_TAG_RESOURCE, rsc_id);
+        device = get_xpath_object(device_path, local_cib, LOG_ERR);
+
+        attributes = find_xml_node(device, XML_TAG_ATTR_SETS, FALSE);
 
         for (attr = __xml_first_child(attributes); attr; attr = __xml_next(attr)) {
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
@@ -535,13 +546,7 @@ register_cib_device(xmlXPathObjectPtr xpathObj, gboolean force)
         }
 
         data = create_device_registration_xml(rsc_id, provider, agent, params);
-
-        if (force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
-            stonith_device_register(data, NULL, TRUE);
-        } else {
-            stonith_device_remove(rsc_id, TRUE);
-            stonith_device_register(data, NULL, TRUE);
-        }
+        stonith_device_register(data, NULL, TRUE);
     }
 }
 
@@ -695,10 +700,52 @@ update_fencing_topology(const char *event, xmlNode * msg)
         xmlXPathFreeObject(xpathObj);
     }
 }
+static bool have_cib_devices = FALSE;
 
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
+    int rc = pcmk_ok;
+    static int (*cib_apply_patch_event)(xmlNode *, xmlNode *, xmlNode **, int) = NULL;
+
+    if(!have_cib_devices) {
+        crm_trace("Skipping updates until we get a full dump");
+        return;
+    }
+    if (cib_apply_patch_event == NULL) {
+        cib_apply_patch_event = find_library_function(&cib_library, CIB_LIBRARY, "cib_apply_patch_event", TRUE);
+    }
+
+    CRM_ASSERT(cib_apply_patch_event);
+
+    /* Maintain a local copy of the CIB so that we have full access to the device definitions and location constraints */
+    if (local_cib != NULL) {
+        xmlNode *cib_last = local_cib;
+
+        local_cib = NULL;
+        rc = (*cib_apply_patch_event)(msg, cib_last, &local_cib, LOG_DEBUG);
+        free_xml(cib_last);
+
+        switch (rc) {
+            case -pcmk_err_diff_resync:
+            case -pcmk_err_diff_failed:
+                crm_warn("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+            case pcmk_ok:
+                break;
+            default:
+                crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+        }
+    }
+
+    if (local_cib == NULL) {
+        crm_trace("Re-requesting the full cib after diff failure");
+        rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
+        if(rc != pcmk_ok) {
+            crm_err("Couldnt retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
+        }
+        CRM_ASSERT(local_cib != NULL);
+    }
+
     update_fencing_topology(event, msg);
     update_cib_stonith_devices(event, msg);
 }
@@ -706,6 +753,10 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
+    have_cib_devices = TRUE;
+    crm_log_xml_info(output, __FUNCTION__);
+    local_cib = copy_xml(output);
+
     fencing_topology_init(msg);
     cib_stonith_devices_init(msg);
 }
@@ -723,8 +774,6 @@ stonith_shutdown(int nsig)
     }
 }
 
-cib_t *cib = NULL;
-
 static void
 cib_connection_destroy(gpointer user_data)
 {
@@ -734,8 +783,8 @@ cib_connection_destroy(gpointer user_data)
     } else {
         crm_notice("Connection to the CIB terminated. Shutting down.");
     }
-    if (cib) {
-        cib->cmds->signoff(cib);
+    if (cib_api) {
+        cib_api->cmds->signoff(cib_api);
     }
     stonith_shutdown(0);
 }
@@ -743,8 +792,8 @@ cib_connection_destroy(gpointer user_data)
 static void
 stonith_cleanup(void)
 {
-    if (cib) {
-        cib->cmds->signoff(cib);
+    if (cib_api) {
+        cib_api->cmds->signoff(cib_api);
     }
 
     if (ipcs) {
@@ -770,47 +819,39 @@ static struct crm_option long_options[] = {
 static void
 setup_cib(void)
 {
-    static void *cib_library = NULL;
-    static cib_t *(*cib_new_fn) (void) = NULL;
-    static const char *(*cib_err_fn) (int) = NULL;
-
     int rc, retries = 0;
+    static cib_t *(*cib_new_fn) (void) = NULL;
 
-    if (cib_library == NULL) {
-        cib_library = dlopen(CIB_LIBRARY, RTLD_LAZY);
+    if (cib_new_fn == NULL) {
+        cib_new_fn = find_library_function(&cib_library, CIB_LIBRARY, "cib_new", TRUE);
     }
-    if (cib_library && cib_new_fn == NULL) {
-        cib_new_fn = dlsym(cib_library, "cib_new");
-    }
-    if (cib_library && cib_err_fn == NULL) {
-        cib_err_fn = dlsym(cib_library, "pcmk_strerror");
-    }
+
     if (cib_new_fn != NULL) {
-        cib = (*cib_new_fn) ();
+        cib_api = (*cib_new_fn) ();
     }
 
-    if (cib == NULL) {
+    if (cib_api == NULL) {
         crm_err("No connection to the CIB");
         return;
     }
 
     do {
         sleep(retries);
-        rc = cib->cmds->signon(cib, CRM_SYSTEM_CRMD, cib_command);
+        rc = cib_api->cmds->signon(cib_api, CRM_SYSTEM_CRMD, cib_command);
     } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB service: %d %p", rc, cib_err_fn);
+        crm_err("Could not connect to the CIB service: %s (%d)", pcmk_strerror(rc), rc);
 
     } else if (pcmk_ok !=
-               cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
+               cib_api->cmds->add_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
         crm_err("Could not set CIB notification callback");
 
     } else {
-        rc = cib->cmds->query(cib, NULL, NULL, cib_scope_local);
-        cib->cmds->register_callback(cib, rc, 120, FALSE, NULL, "init_cib_cache_cb",
-                                     init_cib_cache_cb);
-        cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
+        rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_scope_local);
+        cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL, "init_cib_cache_cb",
+                                         init_cib_cache_cb);
+        cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
         crm_notice("Watching for stonith topology changes");
     }
 }
