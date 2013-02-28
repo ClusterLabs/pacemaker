@@ -466,6 +466,10 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 #if SUPPORT_COROSYNC
         if (is_openais_cluster()) {
             dest = text2msg_type(sys_to);
+
+            if (dest == crm_msg_none || dest > crm_msg_stonith_ng) {
+                dest = crm_msg_crmd;
+            }
         }
 #endif
         ROUTER_RESULT("Message result: External relay");
