@@ -1,17 +1,17 @@
 
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -318,7 +318,7 @@ static struct crm_option long_options[] = {
     {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
     {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
     {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
-    
+
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
     {"group-by-node",  0, 0, 'n', "\tGroup resources by node"     },
     {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
@@ -341,7 +341,7 @@ static struct crm_option long_options[] = {
     {"external-agent",    1, 0, 'E', "A program to run when resource operations take place."},
     {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
 
-    
+
     {"xml-file",       1, 0, 'x', NULL, 1},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
@@ -359,7 +359,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send SNMP alerts:", pcmk_option_paragraph|!ENABLE_SNMP},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --snmp-traps snmptrapd.example.com", pcmk_option_example|!ENABLE_SNMP},
-    
+
     {NULL, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -2127,7 +2127,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 {
     int rc = -1;
     long now = time(NULL);
-    const char *op = NULL;
+    static bool stale = FALSE;
 
     print_dot();
 
@@ -2142,11 +2142,11 @@ crm_diff_update(const char *event, xmlNode * msg)
         switch (rc) {
             case pcmk_err_diff_resync:
             case pcmk_err_diff_failed:
-                crm_warn("[%s] %s Patch aborted: %s (%d)", event, op, pcmk_strerror(rc), rc);
+                crm_warn("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
             case pcmk_ok:
                 break;
             default:
-                crm_warn("[%s] %s ABORTED: %s (%d)", event, op, pcmk_strerror(rc), rc);
+                crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
                 return;
         }
     }
@@ -2174,6 +2174,15 @@ crm_diff_update(const char *event, xmlNode * msg)
         }
     }
 
+    if (current_cib == NULL) {
+        if(!stale) {
+            print_as("--- Stale data ---");
+        }
+        stale = TRUE;
+        return;
+    }
+
+    stale = FALSE;
     if ((now - last_refresh) > (reconnect_msec / 1000)) {
         /* Force a refresh */
         mon_refresh_display(NULL);
