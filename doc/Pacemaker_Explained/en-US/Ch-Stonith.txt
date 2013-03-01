@@ -38,6 +38,38 @@ from a network fault.
 Likewise, any device that relies on the machine being active (such as
 SSH-based "devices" used during testing) are inappropriate.
 
+== Differences of STONITH Resources ==
+
+Stonith resources are somewhat special in Pacemaker.
+
+In previous versions, only "running" resources could be used by
+Pacemaker for fencing.  This requirement has been relaxed to allow
+other parts of the cluster (such as resources like DRBD) to reliably
+initiate fencing. footnote:[Fencing a node while Pacemaker was moving
+stonith resources around would otherwise fail]
+
+Now all nodes have access to their definitions and instantiate them
+on-the-fly when needed.
+
+[NOTE]
+===========
+To disable a fencing device/resource, 'target-role' can be set as you would for a normal resource.
+===========
+
+[NOTE]
+===========
+To prevent a specific node from using a fencing device, location constraints will work as expected.
+===========
+
+[IMPORTANT]
+===========
+
+Currently there is a limitation that fencing resources may only have a
+one set of meta-attributes and one set of instance-attributes.  This
+can be revisited if it becomes a significant limitation for people.
+
+===========
+
 == Configuring STONITH ==
 
 [NOTE]
