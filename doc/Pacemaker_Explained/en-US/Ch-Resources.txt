@@ -12,7 +12,7 @@ The cluster doesn't need to understand how the resource works because
 it relies on the resource agent to do the right thing when given a
 +start+, +stop+ or +monitor+ command.
 
-For this reason it is crucial that resource agents are well tested. 
+For this reason it is crucial that resource agents are well tested.
 
 Typically resource agents come in the form of shell scripts, however
 they can be written using any technology (such as C, Python or Perl)
@@ -83,7 +83,7 @@ of as ip it will be passed to the script as +OCF_RESKEY_ip+.  The
 number and purpose of the parameters is completely arbitrary, however
 your script should advertise any that it supports using the
 +meta-data+ command.
-        
+
 
 The OCF class is the most preferred one as it is an industry standard,
 highly flexible (allowing parameters to be passed to agents in a
@@ -235,7 +235,7 @@ might produce:
 <primitive id="Email" class="service" type="exim"/>
 =====
 
-[NOTE] 
+[NOTE]
 =====
 One of the main drawbacks to system services (such as LSB, Systemd and
 Upstart) resources is that they do not allow any parameters!
@@ -267,7 +267,7 @@ behave and can be easily set using the `--meta` option of the
 |Field
 |Default
 |Description
-            
+
 |priority
 |+0+
 |If not all resources can be active, the cluster will stop lower
@@ -428,7 +428,7 @@ The list of instance attributes supported by an OCF script can be
 found by calling the resource script with the `meta-data` command.
 The output contains an XML description of all the supported
 attributes, their purpose and default values.
-      
+
 .Displaying the metadata for the Dummy resource agent template
 =====
 [source,C]
@@ -442,14 +442,14 @@ attributes, their purpose and default values.
   <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
   <resource-agent name="Dummy" version="0.9">
     <version>1.0</version>
-  
+
     <longdesc lang="en-US">
       This is a Dummy Resource Agent. It does absolutely nothing except
       keep track of whether its running or not.
       Its purpose in life is for testing and to serve as a template for RA writers.
     </longdesc>
     <shortdesc lang="en-US">Dummy resource agent</shortdesc>
-  
+
     <parameters>
       <parameter name="state" unique="1">
         <longdesc lang="en-US">
@@ -458,7 +458,7 @@ attributes, their purpose and default values.
         <shortdesc lang="en-US">State file</shortdesc>
         <content type="string" default="/var/run/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
       </parameter>
-  
+
       <parameter name="dummy" unique="0">
         <longdesc lang="en-US">
           Dummy attribute that can be changed to cause a reload
@@ -467,7 +467,7 @@ attributes, their purpose and default values.
         <content type="string" default="blah" />
       </parameter>
     </parameters>
-  
+
     <actions>
       <action name="start"        timeout="90" />
       <action name="stop"         timeout="100" />
@@ -491,7 +491,7 @@ indexterm:[Resource,Action]
 By default, the cluster will not ensure your resources are still
 healthy.  To instruct the cluster to do this, you need to add a
 +monitor+ operation to the resource's definition.
-        
+
 .An OCF resource with a recurring health check
 =====
 [source,XML]
@@ -575,7 +575,7 @@ To set a default value for a operation option, simply add it to the
 would default each operation's +timeout+ to 20 seconds.  If an
 operation's definition also includes a value for +timeout+, then that
 value would be used instead (for that operation only).
-      
+
 ==== When Resources Take a Long Time to Start/Stop ====
 
 There are a number of implicit operations that the cluster will always
@@ -584,7 +584,7 @@ perform - +start+, +stop+ and a non-recurring +monitor+ operation
 of these is taking too long, then you can create an entry for them and
 simply specify a new value.
 
-.An OCF resource with custom timeouts for its implicit actions     
+.An OCF resource with custom timeouts for its implicit actions
 =====
 [source,XML]
 -------
@@ -613,11 +613,11 @@ provide each monitor with a different value for a common parameter.
 The OCF standard creates a special parameter called +OCF_CHECK_LEVEL+
 for this purpose and dictates that it is _"made available to the
 resource agent without the normal +OCF_RESKEY+ prefix"_.
-        
+
 Whatever name you choose, you can specify it by adding an
 +instance_attributes+ block to the op tag.  Note that it is up to each
 resource agent to look for the parameter and decide how to use it.
-        
+
 .An OCF resource with two recurring health checks, performing different levels of checks - specified via +OCF_CHECK_LEVEL+.
 =====
 [source,XML]
@@ -649,7 +649,7 @@ However, there can be times when you only want to disable it
 temporarily.  In such cases, simply add +enabled="false"+ to the
 operation's definition.
 
-.Example of an OCF resource with a disabled health check     
+.Example of an OCF resource with a disabled health check
 =====
 [source,XML]
 -------

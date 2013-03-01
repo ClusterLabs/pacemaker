@@ -1,6 +1,6 @@
 = Configure STONITH =
 
-//// 
+////
 We prefer [[ch-stonith]], but older versions of asciidoc dont deal well
 with that construct for chapter headings
 ////
@@ -8,7 +8,6 @@ anchor:ch-stonith[Chapter 13, STONITH]
 indexterm:[STONITH, Configuration]
 
 == What Is STONITH ==
-
 
 STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it
 protects your data from being corrupted by rogue nodes or concurrent
@@ -41,36 +40,24 @@ SSH-based "devices" used during testing) are inappropriate.
 
 == Configuring STONITH ==
 
-ifdef::pcs[]
-. Find the correct driver: +pcs stonith list+
+[NOTE]
+===========
 
-. Find the parameters associated with the device: +pcs stonith describe <agent name>+
+Both configuration shells include functionality to simplify the
+process below, particularly the step for deciding which parameters are
+required.  However since this document deals only with core
+components, you should refer to the Stonith chapter of +Clusters from
+Scratch+ for those details.
 
-. Create a local config to make changes to +pcs cluster cib stonith_cfg+
+===========
 
-. Create the fencing resource using +pcs -f stonith_cfg stonith create <stonith_id>
-  <stonith device type> [stonith device options]+
-
-. Set stonith-enable to true. +pcs -f stonith_cfg property set stonith-enabled=true+
-endif::pcs[]
-
-ifdef::crmsh[]
 . Find the correct driver: +stonith_admin --list-installed+
 
-. Since every device is different, the parameters needed to configure
-  it will vary. To find out the parameters associated with the device,
-  run: +stonith_admin --metadata --agent type+
+. Find the required parameters associated with the device: +stonith_admin --metadata --agent <agent name>+
 
-  The output should be XML formatted text containing additional
-  parameter descriptions. We will endevor to make the output more
-  friendly in a later version.
-
-. Enter the shell crm Create an editable copy of the existing
-  configuration +cib new stonith+ Create a fencing resource containing a
-  primitive resource with a class of stonith, a type of type and a
-  parameter for each of the values returned in step 2: +configure
-  primitive ...+
-endif::crmsh[]
+. Create a file called +stonith.xml+ containing a primitive resource
+  with a class of 'stonith', a type of <agent name> and a parameter
+  for each of the values returned in step 2.
 
 . If the device does not know how to fence nodes based on their uname,
   you may also need to set the special +pcmk_host_map+ parameter.  See
@@ -84,19 +71,15 @@ endif::crmsh[]
   port parameter, you may also need to set the special
   +pcmk_host_argument+ parameter. See +man stonithd+ for details.
 
-ifdef::crmsh[]
-. Upload it into the CIB from the shell: +cib commit stonith+
-endif::crmsh[]
+. Upload it into the CIB using cibadmin: +cibadmin -C -o resources --xml-file stonith.xml+
 
-ifdef::pcs[]
-. Commit the new configuration. +pcs cluster push cib stonith_cfg+
-endif::pcs[]
+. Set stonith-enabled to true. +crm_attribute -t crm_config -n stonith-enabled -v true+
 
 . Once the stonith resource is running, you can test it by executing:
   +stonith_admin --reboot nodename+. Although you might want to stop the
   cluster on that machine first.
 
-== Example ==
+=== Example ===
 
 Assuming we have an chassis containing four nodes and an IPMI device
 active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
@@ -104,33 +87,11 @@ active on 10.0.0.1, then we would chose the fence_ipmilan driver in step
 
 .Obtaining a list of STONITH Parameters
 
-ifdef::pcs[]
-[source,Bash]
-----
-# pcs stonith describe fence_ipmilan
-Stonith options for: fence_ipmilan
-  auth: IPMI Lan Auth type (md5, password, or none)
-  ipaddr: IPMI Lan IP to talk to
-  passwd: Password (if required) to control power on IPMI device
-  passwd_script: Script to retrieve password (if required)
-  lanplus: Use Lanplus
-  login: Username/Login (if required) to control power on IPMI device
-  action: Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata
-  timeout: Timeout (sec) for IPMI operation
-  cipher: Ciphersuite to use (same as ipmitool -C parameter)
-  method: Method to fence (onoff or cycle)
-  power_wait: Wait X seconds after on/off operation
-  delay: Wait X seconds before fencing is started
-  privlvl: Privilege level on IPMI device
-  verbose: Verbose mode
-----
-endif::pcs[]
-
-ifdef::crmsh[]
 [source,C]
 ----
 # stonith_admin --metadata -a fence_ipmilan
 ----
+
 [source,XML]
 ----
 <?xml version="1.0" ?>
@@ -218,97 +179,29 @@ To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / 
 </actions>
 </resource-agent>
 ----
-endif::crmsh[]
 
 from which we would create a STONITH resource fragment that might look
-like this
+like this:
 
 .Sample STONITH Resource
-ifdef::pcs[]
-[source,Bash]
+[source,XML]
 ----
-# pcs cluster cib stonith_cfg
-# pcs -f stonith_cfg stonith create impi-fencing fence_ipmilan \
- pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
- passwd=acd123 op monitor interval=60s
-# pcs -f stonith_cfg stonith
- impi-fencing	(stonith:fence_ipmilan) Stopped
+<primitive id="Fencing" class="stonith" type="fence_ipmilan" >
+  <instance_attributes id="Fencing-params" >
+    <nvpair id="Fencing-passwd" name="passwd" value="testuser" />
+    <nvpair id="Fencing-login" name="login" value="abc123" />
+    <nvpair id="Fencing-ipaddr" name="ipaddr" value="10.0.0.1" />
+    <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2" />
+  </instance_attributes>
+  <operations >
+    <op id="Fencing-monitor-60s" interval="60s" name="monitor" timeout="300s" />
+  </operations>
+</primitive>
 ----
-endif::pcs[]
-
-ifdef::crmsh[]
-[source,Bash]
-----
-# crm crm(live)# cib new stonith
-INFO: stonith shadow CIB created
-crm(stonith)# configure primitive impi-fencing stonith::fence_ipmilan \
- params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \
- op monitor interval="60s"
-----
-endif::crmsh[]
 
 And finally, since we disabled it earlier, we need to re-enable STONITH.
-At this point we should have the following configuration.
 
-ifdef::pcs[]
 [source,Bash]
 ----
-# pcs -f stonith_cfg property set stonith-enabled=true
-# pcs -f stonith_cfg property
-dc-version: 1.1.8-1.el7-60a19ed12fdb4d5c6a6b6767f52e5391e447fec0
-cluster-infrastructure: corosync
-no-quorum-policy: ignore
-stonith-enabled: true
+# crm_attribute -t crm_config -n stonith-enabled -v true
 ----
-endif::pcs[]
-
-Now push the configuration into the cluster.
-
-ifdef::pcs[]
-[source,C]
-----
-# pcs cluster push cib stonith_cfg
-----
-endif::pcs[]
-
-ifdef::crmsh[]
-[source,Bash]
-----
-crm(stonith)# configure property stonith-enabled="true"
-crm(stonith)# configure shownode pcmk-1
-node pcmk-2
-primitive WebData ocf:linbit:drbd \
-    params drbd_resource="wwwdata" \
-    op monitor interval="60s"
-primitive WebFS ocf:heartbeat:Filesystem \
-    params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
-primitive WebSite ocf:heartbeat:apache \
-    params configfile="/etc/httpd/conf/httpd.conf" \
-    op monitor interval="1min"
-primitive ClusterIP ocf:heartbeat:IPaddr2 \
-    params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
-    op monitor interval="30s"primitive ipmi-fencing stonith::fence_ipmilan \ params pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser passwd=abc123 \ op monitor interval="60s"ms WebDataClone WebData \
-    meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
-clone WebFSClone WebFS
-clone WebIP ClusterIP \
-    meta globally-unique="true" clone-max="2" clone-node-max="2"
-clone WebSiteClone WebSite
-colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
-colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
-colocation website-with-ip inf: WebSiteClone WebIP
-order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
-order WebSite-after-WebFS inf: WebFSClone WebSiteClone
-order apache-after-ip inf: WebIP WebSiteClone
-property $id="cib-bootstrap-options" \
-    dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
-    cluster-infrastructure="openais" \
-    expected-quorum-votes="2" \
-    stonith-enabled="true" \
-    no-quorum-policy="ignore"
-rsc_defaults $id="rsc-options" \
-    resource-stickiness="100"
-crm(stonith)# cib commit stonithINFO: commited 'stonith' shadow CIB to the cluster
-crm(stonith)# quit
-bye
-----
-endif::crmsh[]
