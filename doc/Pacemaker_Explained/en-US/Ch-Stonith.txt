@@ -49,7 +49,13 @@ initiate fencing. footnote:[Fencing a node while Pacemaker was moving
 stonith resources around would otherwise fail]
 
 Now all nodes have access to their definitions and instantiate them
-on-the-fly when needed.
+on-the-fly when needed, however preference is given to 'verified'
+instances which are the ones the cluster has explicitly started.
+
+In the case of a cluster split, the partition with a verified instance
+will have a slight advantage as stonith-ng in the other partition will
+have to hear from all its current peers before choosing a node to
+perform the fencing.
 
 [NOTE]
 ===========
@@ -300,11 +306,11 @@ Some suggested uses of topologies include:
   <configuration>
     ...
     <fencing-topology>
-      <!-- try poison-pill and fail back to power -->
+      <!-- For pcmk-1, try poison-pill and fail back to power -->
       <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill"/>
       <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power"/>
 
-      <!-- try disk and network, and fail back to power -->
+      <!-- For pcmk-2, try disk and network, and fail back to power -->
       <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,network"/>
       <fencing-level id="f-p2.2" target="pcmk-2" index="2" devices="power"/>
     </fencing-topology>
