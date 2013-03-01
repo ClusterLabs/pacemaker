@@ -226,7 +226,7 @@ like this:
     <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="pcmk-1 pcmk-2" />
   </instance_attributes>
   <operations >
-    <op id="Fencing-monitor-60s" interval="60s" name="monitor" timeout="300s" />
+    <op id="Fencing-monitor-10m" interval="10m" name="monitor" timeout="300s" />
   </operations>
 </primitive>
 ----
@@ -236,4 +236,80 @@ And finally, since we disabled it earlier, we need to re-enable STONITH.
 [source,Bash]
 ----
 # crm_attribute -t crm_config -n stonith-enabled -v true
+----
+
+== Advanced Fencing Configurations ==
+
+Some people consider that having one fencing device is a single point
+of failure footnote:[Not true, since a node or resource must fail
+before fencing even has a chance to], others prefer removing the node
+from the storage and network instead of turning it off.
+
+Whatever the reason, Pacemaker supports fencing nodes with multiple
+devices through a feature called fencing topologies.
+
+Simply create the individual devices as you normally would and then
+define one or more fencing levels in the fencing-topology section in
+the configuration.
+
+* Each level is attempted in +ascending index+ order
+* If a device fails, +processing terminates+ for the current level (optimized boolean logic) and the next is attempted
+* If the operation succeeds for all the listed devices in a level, the level is deemed to have passed
+* Processing stops +when a level has passed+ or there are no more levels to try
+
+Some suggested uses of topologies include:
+
+* try poison-pill and fail back to power
+* try disk and network, and fall back to power if either fails
+* initiate a kdump and then poweroff the node
+
+.Properties of Fencing Levels
+[width="95%",cols="1m,6<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|Your name for the level
+ indexterm:[id,fencing-level]
+ indexterm:[Fencing,fencing-level,id]
+
+|target
+|The node to which this level applies
+ indexterm:[target,fencing-level]
+ indexterm:[Fencing,fencing-level,target]
+
+|index
+|The order in which to attempt the levels.
+ Levels are attempted in +ascending index+ order +until one succeeds+.
+ indexterm:[index,fencing-level]
+ indexterm:[Fencing,fencing-level,index]
+
+|devices
+|A comma separated list of devices for which the
+ indexterm:[devices,fencing-level]
+ indexterm:[Fencing,fencing-level,devices]
+
+|=========================================================
+
+.Example use of Fencing Topologies
+[source,XML]
+----
+ <cib crm_feature_set="3.0.6" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
+  <configuration>
+    ...
+    <fencing-topology>
+      <!-- try poison-pill and fail back to power -->
+      <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill"/>
+      <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power"/>
+
+      <!-- try disk and network, and fail back to power -->
+      <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,network"/>
+      <fencing-level id="f-p2.2" target="pcmk-2" index="2" devices="power"/>
+    </fencing-topology>
+    ...
+  <configuration>
+  <status/>
+</cib>
 ----
