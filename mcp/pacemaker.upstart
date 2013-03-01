@@ -1,0 +1,27 @@
+# pacemaker - High-Availability cluster resource manager
+#
+# Starts pacemakerd
+
+stop on runlevel [016]
+kill timeout 3600
+respawn
+
+env prog=pacemakerd
+env LOCK_FILE=/var/lock/subsys/pacemaker
+
+script
+    [ -f /etc/sysconfig/pacemaker ] && {
+        . /etc/sysconfig/pacemaker
+    }
+    exec $prog
+end script
+
+post-start script
+    touch $LOCK_FILE
+    pidof $prog > /var/run/$prog.pid
+end script
+
+post-stop script
+    rm -f $LOCK_FILE
+    rm -f /var/run/$prog.pid
+end script
