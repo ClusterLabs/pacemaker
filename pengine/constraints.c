@@ -258,7 +258,12 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         action_first = RSC_START;
     }
     if (action_then == NULL) {
-        action_then = action_first;
+        if (safe_str_eq(action_first, RSC_PROMOTE)) {
+            action_then = RSC_START;
+
+        } else {
+            action_then = action_first;
+        }
     }
 
     if (id_then == NULL || id_first == NULL) {
