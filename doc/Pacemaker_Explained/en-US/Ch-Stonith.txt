@@ -261,7 +261,8 @@ the configuration.
 * Each level is attempted in +ascending index+ order
 * If a device fails, +processing terminates+ for the current level (optimized boolean logic) and the next is attempted
 * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed
-* Processing stops +when a level has passed+ or there are no more levels to try
+* The operation is finished +when a level has passed+ (success), or all levels have been attempted (failed)
+* If the operation failed, the next step is determined by the Policy Engine and/or crmd.
 
 Some suggested uses of topologies include:
 
