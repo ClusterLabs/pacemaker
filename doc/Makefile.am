@@ -7,12 +7,12 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -26,8 +26,8 @@ docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
 publican_docs   =
-generated_docs	= 
-generated_mans	= 
+generated_docs	=
+generated_mans	=
 
 DOCBOOK_FORMATS := html-desktop
 DOCBOOK_LANGS   := en-US
@@ -62,7 +62,7 @@ publican_docs	+= $(docbook)
 endif
 endif
 
-EXTRA_DIST	= $(docbook:%=%.xml) 
+EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
@@ -80,11 +80,11 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 	sed -i.sed 's///' $@
 	sed -i.sed 's///' $@                 # Fix line endings
 	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
-	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara 
+	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
 	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
 	sed -i.sed 's/.*preface>//g' $@        # Remove preface elements
 	sed -i.sed 's:<title></title>::g' $@   # Remove empty title
-	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters 
+	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
 	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
 	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
 	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
@@ -94,7 +94,7 @@ CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
 CFS_XML=$(CFS_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
-# With '%' the test for 'newness' fails 
+# With '%' the test for 'newness' fails
 Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
@@ -106,7 +106,7 @@ PE_TXT=$(wildcard Pacemaker_Explained/en-US/*.txt)
 PE_XML=$(PE_TXT:%.txt=%.xml)
 
 # We have to hardcode the book name
-# With '%' the test for 'newness' fails 
+# With '%' the test for 'newness' fails
 Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
@@ -161,7 +161,7 @@ pdf:
 	make DOCBOOK_FORMATS="pdf" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
 
 # Make sure www-(pcs|crmsh) happen in serial
-www:    
+www:
 	make www-pcs
 	make www-crmsh
 	make $(generated_docs) $(ascii)
@@ -183,7 +183,6 @@ www-cli:
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
-		echo "Requires <b>Corosync 2.x</b> and optimized for the <b>$(ASCIIDOC_CLI_TYPE)</b> CLI<br/>" > $$book/publish/build-$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE).txt;	\
 		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE).txt;	\
 		for lang in `ls -1 $$book/publish | grep [a-z][a-z]-[A-Z][A-Z]`; do							\
 			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/epub/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.epub;	\
