@@ -874,7 +874,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         switch (rc) {
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_warn("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
             case pcmk_ok:
                 break;
             default:
@@ -899,7 +899,6 @@ static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     have_cib_devices = TRUE;
-    crm_log_xml_info(output, __FUNCTION__);
     local_cib = copy_xml(output);
 
     fencing_topology_init(msg);

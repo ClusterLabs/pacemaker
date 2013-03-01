@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -614,9 +614,9 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
         } else {
             apply_diff = FALSE;
-            log_level = LOG_ERR;
+            log_level = LOG_NOTICE;
             reason = "+ and - versions in the diff did not change";
-            log_cib_diff(LOG_ERR, input, __FUNCTION__);
+            log_cib_diff(LOG_NOTICE, input, __FUNCTION__);
         }
     }
 
@@ -628,7 +628,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff && diff_del_admin_epoch < this_admin_epoch) {
         apply_diff = FALSE;
-        log_level = LOG_WARNING;
+        log_level = LOG_NOTICE;
         reason = "current \"" XML_ATTR_GENERATION_ADMIN "\" is greater than required";
 
     } else if (apply_diff && diff_del_epoch > this_epoch) {
@@ -639,7 +639,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff && diff_del_epoch < this_epoch) {
         apply_diff = FALSE;
-        log_level = LOG_WARNING;
+        log_level = LOG_NOTICE;
         reason = "current \"" XML_ATTR_GENERATION "\" is greater than required";
 
     } else if (apply_diff && diff_del_updates > this_updates) {
@@ -650,7 +650,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff && diff_del_updates < this_updates) {
         apply_diff = FALSE;
-        log_level = LOG_WARNING;
+        log_level = LOG_NOTICE;
         reason = "current \"" XML_ATTR_NUMUPDATES "\" is greater than required";
     }
 
@@ -658,7 +658,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         free_xml(*result_cib);
         *result_cib = NULL;
         if (apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
-            log_level = LOG_NOTICE;
+            log_level = LOG_WARNING;
             reason = "Failed application of an update diff";
 
             if (options & cib_force_diff) {

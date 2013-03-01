@@ -2142,11 +2142,11 @@ crm_diff_update(const char *event, xmlNode * msg)
         switch (rc) {
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_warn("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
             case pcmk_ok:
                 break;
             default:
-                crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
         }
     }
 
