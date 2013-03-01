@@ -121,6 +121,7 @@ do_test one-or-more-4 "D cannot start because of target-role"
 do_test one-or-more-5 "Start A and F even though C and D are stopped"
 do_test one-or-more-6 "Leave A running even though B is stopped"
 do_test one-or-more-7 "Leave A running even though C is stopped"
+do_test one-or-more-stop "cl#5140 - Resources are not required to be runnable for stop ordering"
 
 echo ""
 do_test order1 "Order start 1     "
