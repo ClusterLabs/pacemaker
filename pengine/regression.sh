@@ -305,6 +305,7 @@ do_test bug-lf-2544 "Balanced clone placement"
 do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
 do_test bug-lf-2574 "Avoid clone shuffle"
 do_test bug-lf-2581 "Avoid group restart due to unrelated clone (re)start"
+do_test orphaned-clone-children "cl#5142 - Do not delete orphaned children of an anonymous clone"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
