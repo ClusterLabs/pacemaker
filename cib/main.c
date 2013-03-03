@@ -522,29 +522,22 @@ cib_init(void)
         cib_our_uname = strdup("localhost");
     }
 
-    ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, &ipc_ro_callbacks);
-    ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, &ipc_rw_callbacks);
-    ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, &ipc_rw_callbacks);
+    cib_ipc_servers_init(&ipcs_ro,
+                         &ipcs_rw,
+                         &ipcs_shm,
+                         &ipc_ro_callbacks,
+                         &ipc_rw_callbacks);
 
     if (stand_alone) {
         cib_is_master = TRUE;
     }
 
-    if (ipcs_ro != NULL && ipcs_rw != NULL && ipcs_shm != NULL) {
-        /* Create the mainloop and run it... */
-        mainloop = g_main_new(FALSE);
-        crm_info("Starting %s mainloop", crm_system_name);
+    /* Create the mainloop and run it... */
+    mainloop = g_main_new(FALSE);
+    crm_info("Starting %s mainloop", crm_system_name);
 
-        g_main_run(mainloop);
-
-    } else {
-        crm_err("Failed to create IPC servers: shutting down and inhibiting respawn");
-        crm_exit(100);
-    }
-
-    qb_ipcs_destroy(ipcs_ro);
-    qb_ipcs_destroy(ipcs_rw);
-    qb_ipcs_destroy(ipcs_shm);
+    g_main_run(mainloop);
+    cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
 
     return crm_exit(0);
 }

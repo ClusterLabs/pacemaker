@@ -42,6 +42,7 @@ typedef struct lrmd_key_value_s {
 
 #define F_LRMD_OPERATION        "lrmd_op"
 #define F_LRMD_CLIENTNAME       "lrmd_clientname"
+#define F_LRMD_IS_IPC_PROVIDER  "lrmd_is_ipc_provider"
 #define F_LRMD_CLIENTID         "lrmd_clientid"
 #define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
 #define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
@@ -83,9 +84,17 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_RSC_METADATA      "lrmd_rsc_metadata"
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
 
+#define F_LRMD_IPC_OP           "lrmd_ipc_op"
+#define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
+#define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
+#define F_LRMD_IPC_MSG          "lrmd_ipc_msg"
+#define F_LRMD_IPC_MSG_ID       "lrmd_ipc_msg_id"
+#define F_LRMD_IPC_MSG_FLAGS    "lrmd_ipc_msg_flags"
+
 #define T_LRMD           "lrmd"
 #define T_LRMD_REPLY     "lrmd_reply"
 #define T_LRMD_NOTIFY    "lrmd_notify"
+#define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
 /* *INDENT-ON* */
 
 /*!
