@@ -316,9 +316,16 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     gboolean is_probe = FALSE;
     gboolean did_change = FALSE;
 
+    resource_t *parent = NULL;
+
     CRM_CHECK(node != NULL, return);
 
-    if (is_set(rsc->flags, pe_rsc_orphan)) {
+    parent = uber_parent(rsc);
+
+    if (is_set(rsc->flags, pe_rsc_orphan) &&
+        (parent == NULL ||
+         parent->variant < pe_clone ||
+         is_set(parent->flags, pe_rsc_unique))) {
         pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
         DeleteRsc(rsc, node, FALSE, data_set);
         return;

@@ -1,0 +1,73 @@
+
+Current cluster status:
+Online: [ hex-1 hex-2 hex-3 ]
+
+ fencing	(stonith:external/sbd):	Started hex-1 
+ Clone Set: baseclone [basegrp]
+     Started: [ hex-1 hex-2 hex-3 ]
+ fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-2 
+ Clone Set: fs2 [fs-ocfs-2]
+     Started: [ hex-1 hex-2 hex-3 ]
+ Master/Slave Set: ms-r0 [drbd-r0]
+     Slaves: [ hex-1 hex-2 ]
+ Master/Slave Set: ms-r1 [drbd-r1]
+     Stopped: [ drbd-r1:0 drbd-r1:1 ]
+ Resource Group: md0-group
+     md0	(ocf::heartbeat:Raid1):	Started hex-3 
+     vg-md0	(ocf::heartbeat:LVM):	Started hex-3 
+     fs-md0	(ocf::heartbeat:Filesystem):	Started hex-3 
+     dummy1	(ocf::heartbeat:Delay):	Started hex-3 
+ dummy3	(ocf::heartbeat:Delay):	Started hex-1 
+ dummy4	(ocf::heartbeat:Delay):	Started hex-2 
+ dummy5	(ocf::heartbeat:Delay):	Started hex-1 
+ dummy6	(ocf::heartbeat:Delay):	Started hex-2 
+ Resource Group: r0-group
+     fs-r0	(ocf::heartbeat:Filesystem):	Stopped 
+     dummy2	(ocf::heartbeat:Delay):	Stopped 
+
+Transition Summary:
+ * Promote drbd-r0:0	(Slave -> Master hex-1)
+
+Executing cluster transition:
+ * Pseudo action:   ms-r0_pre_notify_promote_0
+ * Resource action: drbd-r0         notify on hex-1
+ * Resource action: drbd-r0         notify on hex-2
+ * Pseudo action:   ms-r0_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms-r0_promote_0
+ * Resource action: drbd-r0         promote on hex-1
+ * Pseudo action:   ms-r0_promoted_0
+ * Pseudo action:   ms-r0_post_notify_promoted_0
+ * Resource action: drbd-r0         notify on hex-1
+ * Resource action: drbd-r0         notify on hex-2
+ * Pseudo action:   ms-r0_confirmed-post_notify_promoted_0
+ * Pseudo action:   r0-group_start_0
+ * Resource action: drbd-r0         monitor=31000 on hex-1
+ * Resource action: drbd-r0         monitor=29000 on hex-2
+
+Revised cluster status:
+Online: [ hex-1 hex-2 hex-3 ]
+
+ fencing	(stonith:external/sbd):	Started hex-1 
+ Clone Set: baseclone [basegrp]
+     Started: [ hex-1 hex-2 hex-3 ]
+ fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-2 
+ Clone Set: fs2 [fs-ocfs-2]
+     Started: [ hex-1 hex-2 hex-3 ]
+ Master/Slave Set: ms-r0 [drbd-r0]
+     Masters: [ hex-1 ]
+     Slaves: [ hex-2 ]
+ Master/Slave Set: ms-r1 [drbd-r1]
+     Stopped: [ drbd-r1:0 drbd-r1:1 ]
+ Resource Group: md0-group
+     md0	(ocf::heartbeat:Raid1):	Started hex-3 
+     vg-md0	(ocf::heartbeat:LVM):	Started hex-3 
+     fs-md0	(ocf::heartbeat:Filesystem):	Started hex-3 
+     dummy1	(ocf::heartbeat:Delay):	Started hex-3 
+ dummy3	(ocf::heartbeat:Delay):	Started hex-1 
+ dummy4	(ocf::heartbeat:Delay):	Started hex-2 
+ dummy5	(ocf::heartbeat:Delay):	Started hex-1 
+ dummy6	(ocf::heartbeat:Delay):	Started hex-2 
+ Resource Group: r0-group
+     fs-r0	(ocf::heartbeat:Filesystem):	Stopped 
+     dummy2	(ocf::heartbeat:Delay):	Stopped 
+
