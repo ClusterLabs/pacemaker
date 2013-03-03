@@ -1,0 +1,259 @@
+<cib epoch="29" num_updates="43" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Feb 26 14:37:52 2013" update-origin="hex-1" update-client="crmd" update-user="hacluster" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="hex-1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-5b6364d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="classic openais (with plugin)"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1361885331"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="hex-1" uname="hex-1"/>
+      <node id="hex-2" uname="hex-2"/>
+      <node id="hex-3" uname="hex-3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fencing" type="external/sbd"/>
+      <clone id="baseclone">
+        <meta_attributes id="baseclone-meta_attributes">
+          <nvpair id="baseclone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="basegrp">
+          <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
+            <meta_attributes id="dlm-meta_attributes">
+              <nvpair id="dlm-meta_attributes-target-role" name="target-role" value="Started"/>
+            </meta_attributes>
+          </primitive>
+          <primitive class="ocf" id="clvmd" provider="lvm2" type="clvmd"/>
+          <primitive class="ocf" id="o2cb" provider="ocfs2" type="o2cb"/>
+          <primitive class="ocf" id="vg1" provider="heartbeat" type="LVM">
+            <instance_attributes id="vg1-instance_attributes">
+              <nvpair id="vg1-instance_attributes-volgrpname" name="volgrpname" value="cluster-vg"/>
+            </instance_attributes>
+          </primitive>
+          <primitive class="ocf" id="fs-ocfs-1" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="fs-ocfs-1-instance_attributes">
+              <nvpair id="fs-ocfs-1-instance_attributes-device" name="device" value="/dev/cluster-vg/data"/>
+              <nvpair id="fs-ocfs-1-instance_attributes-directory" name="directory" value="/cluster/fs1"/>
+              <nvpair id="fs-ocfs-1-instance_attributes-fstype" name="fstype" value="ocfs2"/>
+            </instance_attributes>
+            <meta_attributes id="fs-ocfs-1-meta_attributes">
+              <nvpair id="fs-ocfs-1-meta_attributes-target-role" name="target-role" value="Started"/>
+            </meta_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <primitive class="ocf" id="fs-xfs-1" provider="heartbeat" type="Filesystem">
+        <instance_attributes id="fs-xfs-1-instance_attributes">
+          <nvpair id="fs-xfs-1-instance_attributes-device" name="device" value="/dev/cluster-vg/fs2"/>
+          <nvpair id="fs-xfs-1-instance_attributes-directory" name="directory" value="/cluster/xfs1"/>
+          <nvpair id="fs-xfs-1-instance_attributes-fstype" name="fstype" value="xfs"/>
+        </instance_attributes>
+        <meta_attributes id="fs-xfs-1-meta_attributes">
+          <nvpair id="fs-xfs-1-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <clone id="fs2">
+        <meta_attributes id="fs2-meta_attributes">
+          <nvpair id="fs2-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="fs-ocfs-2" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs-ocfs-2-instance_attributes">
+            <nvpair id="fs-ocfs-2-instance_attributes-device" name="device" value="/dev/cluster-vg/data-m1"/>
+            <nvpair id="fs-ocfs-2-instance_attributes-directory" name="directory" value="/cluster/fs2"/>
+            <nvpair id="fs-ocfs-2-instance_attributes-fstype" name="fstype" value="ocfs2"/>
+          </instance_attributes>
+          <meta_attributes id="fs-ocfs-2-meta_attributes">
+            <nvpair id="fs-ocfs-2-meta_attributes-target-role" name="target-role" value="Started"/>
+          </meta_attributes>
+        </primitive>
+      </clone>
+      <master id="ms-r0">
+        <meta_attributes id="ms-r0-meta_attributes">
+          <nvpair id="ms-r0-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-r0-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-r0-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-r0-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms-r0-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-r0-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="ms-r0-meta_attributes-target-role" name="target-role" value="Master"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-r0" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-r0-instance_attributes">
+            <nvpair id="drbd-r0-instance_attributes-drbd_resource" name="drbd_resource" value="r0"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-r0-monitor-29" interval="29" name="monitor" role="Slave"/>
+            <op id="drbd-r0-monitor-31" interval="31" name="monitor" role="Master"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="fs-r0" provider="heartbeat" type="Filesystem">
+        <instance_attributes id="fs-r0-instance_attributes">
+          <nvpair id="fs-r0-instance_attributes-device" name="device" value="/dev/drbd0"/>
+          <nvpair id="fs-r0-instance_attributes-directory" name="directory" value="/cluster/r0"/>
+          <nvpair id="fs-r0-instance_attributes-fstype" name="fstype" value="ext3"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order id="order-fs" kind="Mandatory">
+        <resource_set id="order-fs-0">
+          <resource_ref id="baseclone"/>
+        </resource_set>
+        <resource_set id="order-fs-1" require-all="false" sequential="false">
+          <resource_ref id="fs-xfs-1"/>
+          <resource_ref id="fs2"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_colocation id="colo-fs-1" rsc="fs-xfs-1" score="INFINITY" with-rsc="baseclone"/>
+      <rsc_colocation id="colo-fs-2" rsc="fs2" score="INFINITY" with-rsc="baseclone"/>
+      <rsc_location id="loc-drbd-r0" node="hex-3" rsc="ms-r0" score="-INFINITY"/>
+      <rsc_colocation id="colo-r0" rsc="fs-r0" score="INFINITY" with-rsc="ms-r0" with-rsc-role="Master"/>
+      <rsc_order first="ms-r0" first-action="promote" id="order-r0" score="INFINITY" then="fs-r0"/>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair id="op-options-timeout" name="timeout" value="120s"/>
+        <nvpair id="op-options-record-pending" name="record-pending" value="true"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="hex-2" uname="hex-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="hex-2">
+        <lrm_resources>
+          <lrm_resource id="fencing" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="fencing_last_0" operation_key="fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;7:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="6" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1361885856" last-rc-change="0" exec-time="1" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="48:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;48:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="61" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1361885862" last-rc-change="0" exec-time="1153" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvmd" class="ocf" provider="lvm2">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="49:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;49:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="66" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1361885863" last-rc-change="0" exec-time="7813" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="o2cb" type="o2cb" class="ocf" provider="ocfs2">
+            <lrm_rsc_op id="o2cb_last_0" operation_key="o2cb_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;10:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="21" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1361885856" last-rc-change="1361885856" exec-time="100" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="vg1" type="LVM" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vg1_last_0" operation_key="vg1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="11:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;11:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="26" rc-code="7" op-status="0" interval="0" op-digest="e2a23e2e2efe766e88607f1aef681c1b" last-run="1361885856" last-rc-change="1361885856" exec-time="105" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-1_last_0" operation_key="fs-ocfs-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="12:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;12:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="31" rc-code="7" op-status="0" interval="0" op-digest="66ea645cf81ac939da882bba2b0f57be" last-run="1361885856" last-rc-change="1361885856" exec-time="132" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="fs-xfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-xfs-1_last_0" operation_key="fs-xfs-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="13:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;13:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="35" rc-code="7" op-status="0" interval="0" op-digest="274ca61e38b55eb1229abe7cb07bc150" last-run="1361885856" last-rc-change="1361885856" exec-time="131" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-2" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-2_last_0" operation_key="fs-ocfs-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="14:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;14:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="40" rc-code="7" op-status="0" interval="0" op-digest="b76b8464ec59070ca738ebe427a48fc5" last-run="1361885856" last-rc-change="1361885856" exec-time="130" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-r0_last_0" operation_key="drbd-r0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="74:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;74:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="63" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e" last-run="1361885862" last-rc-change="0" exec-time="1316" queue-time="0"/>
+            <lrm_rsc_op id="drbd-r0_post_notify_start_0" operation_key="drbd-r0_notify_0" operation="notify" crm-debug-origin="cib_action_update" crm_feature_set="3.0.7" transition-key="108:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;108:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="-1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+          <lrm_resource id="fs-r0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-r0_last_0" operation_key="fs-r0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="16:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;16:16:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="49" rc-code="7" op-status="0" interval="0" op-digest="96f01a97dece136bf054ebda38b8ff33" last-run="1361885856" last-rc-change="1361885856" exec-time="127" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="hex-2">
+        <instance_attributes id="status-hex-2">
+          <nvpair id="status-hex-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-hex-2-master-drbd-r0" name="master-drbd-r0" value="10000"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="hex-3" uname="hex-3" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="hex-3">
+        <instance_attributes id="status-hex-3">
+          <nvpair id="status-hex-3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-hex-3-last-failure-drbd-r0" name="last-failure-drbd-r0" value="1361881444"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="hex-3">
+        <lrm_resources>
+          <lrm_resource id="o2cb" type="o2cb" class="ocf" provider="ocfs2">
+            <lrm_rsc_op id="o2cb_last_0" operation_key="o2cb_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="20:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;20:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="98" rc-code="0" op-status="0" interval="0" last-run="1361880519" last-rc-change="0" exec-time="2090" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-xfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-xfs-1_last_0" operation_key="fs-xfs-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="44:10:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;44:10:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="135" rc-code="0" op-status="0" interval="0" last-run="1361885238" last-rc-change="0" exec-time="188" queue-time="0" op-digest="274ca61e38b55eb1229abe7cb07bc150"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvmd" class="ocf" provider="lvm2">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="19:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;19:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="95" rc-code="0" op-status="0" interval="0" last-run="1361880513" last-rc-change="0" exec-time="5224" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="18:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;18:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="92" rc-code="0" op-status="0" interval="0" last-run="1361880511" last-rc-change="0" exec-time="1039" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-r0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-r0_last_0" operation_key="fs-r0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="11:40:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:7;11:40:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="132" rc-code="7" op-status="0" interval="0" last-run="1361881974" last-rc-change="1361881974" exec-time="46" queue-time="0" op-digest="96f01a97dece136bf054ebda38b8ff33"/>
+          </lrm_resource>
+          <lrm_resource id="vg1" type="LVM" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vg1_last_0" operation_key="vg1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="21:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;21:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="101" rc-code="0" op-status="0" interval="0" last-run="1361880522" last-rc-change="0" exec-time="1396" queue-time="0" op-digest="e2a23e2e2efe766e88607f1aef681c1b"/>
+            <lrm_rsc_op id="vg1_last_failure_0" operation_key="vg1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:4:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;8:4:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1361879322" last-rc-change="0" exec-time="24" queue-time="0" op-digest="e2a23e2e2efe766e88607f1aef681c1b"/>
+          </lrm_resource>
+          <lrm_resource id="fencing" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="fencing_last_0" operation_key="fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:1:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:7;8:1:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1361878813" last-rc-change="0" exec-time="962" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-1_last_0" operation_key="fs-ocfs-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="22:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;22:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="104" rc-code="0" op-status="0" interval="0" last-run="1361880525" last-rc-change="0" exec-time="204" queue-time="0" op-digest="66ea645cf81ac939da882bba2b0f57be"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-2" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-2_last_0" operation_key="fs-ocfs-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="41:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;41:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="107" rc-code="0" op-status="0" interval="0" last-run="1361880526" last-rc-change="0" exec-time="184" queue-time="0" op-digest="b76b8464ec59070ca738ebe427a48fc5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-r0_last_0" operation_key="drbd-r0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="9:22:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:7;9:22:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="127" rc-code="7" op-status="0" interval="0" last-run="1361881444" last-rc-change="1361881444" exec-time="32" queue-time="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="hex-1" uname="hex-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="hex-1">
+        <instance_attributes id="status-hex-1">
+          <nvpair id="status-hex-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-hex-1-last-failure-fs-r0" name="last-failure-fs-r0" value="1361885190"/>
+          <nvpair id="status-hex-1-last-failure-drbd-r0" name="last-failure-drbd-r0" value="1361885282"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="hex-1">
+        <lrm_resources>
+          <lrm_resource id="o2cb" type="o2cb" class="ocf" provider="ocfs2">
+            <lrm_rsc_op id="o2cb_last_0" operation_key="o2cb_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="29:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;29:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="101" rc-code="0" op-status="0" interval="0" last-run="1361880519" last-rc-change="0" exec-time="2089" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-xfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-xfs-1_last_0" operation_key="fs-xfs-1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="51:7:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;51:7:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1361880003" last-rc-change="0" exec-time="117" queue-time="0" op-digest="274ca61e38b55eb1229abe7cb07bc150"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvmd" class="ocf" provider="lvm2">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="28:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;28:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="98" rc-code="0" op-status="0" interval="0" last-run="1361880513" last-rc-change="0" exec-time="5224" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="27:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;27:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="95" rc-code="0" op-status="0" interval="0" last-run="1361880511" last-rc-change="0" exec-time="1039" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-r0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-r0_last_0" operation_key="fs-r0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="6:15:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:7;6:15:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="275" rc-code="7" op-status="0" interval="0" last-run="1361885331" last-rc-change="1361885331" exec-time="41" queue-time="0" op-digest="96f01a97dece136bf054ebda38b8ff33"/>
+          </lrm_resource>
+          <lrm_resource id="vg1" type="LVM" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vg1_last_0" operation_key="vg1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="30:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;30:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="104" rc-code="0" op-status="0" interval="0" last-run="1361880522" last-rc-change="0" exec-time="1570" queue-time="0" op-digest="e2a23e2e2efe766e88607f1aef681c1b"/>
+            <lrm_rsc_op id="vg1_last_failure_0" operation_key="vg1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="4:4:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;4:4:7:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1361879322" last-rc-change="0" exec-time="22" queue-time="0" op-digest="e2a23e2e2efe766e88607f1aef681c1b"/>
+          </lrm_resource>
+          <lrm_resource id="fencing" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="fencing_last_0" operation_key="fencing_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="9:1:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;9:1:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1361878814" last-rc-change="0" exec-time="2141" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-1_last_0" operation_key="fs-ocfs-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="31:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;31:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="107" rc-code="0" op-status="0" interval="0" last-run="1361880525" last-rc-change="0" exec-time="224" queue-time="0" op-digest="66ea645cf81ac939da882bba2b0f57be"/>
+          </lrm_resource>
+          <lrm_resource id="fs-ocfs-2" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-ocfs-2_last_0" operation_key="fs-ocfs-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="42:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" transition-magic="0:0;42:16:0:7ad21cc1-872e-4788-89da-5ad2c6d1c380" call-id="110" rc-code="0" op-status="0" interval="0" last-run="1361880526" last-rc-change="0" exec-time="3031" queue-time="0" op-digest="b76b8464ec59070ca738ebe427a48fc5"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-r0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd-r0_last_failure_0" operation_key="drbd-r0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="5:13:7:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;5:13:7:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="265" rc-code="0" op-status="0" interval="0" last-run="1361885326" last-rc-change="0" exec-time="52" queue-time="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0_monitor_29000" operation_key="drbd-r0_monitor_29000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="56:14:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;56:14:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="268" rc-code="0" op-status="0" interval="29000" last-rc-change="0" exec-time="50" queue-time="0" op-digest="26df256b9a96874f6099bf369aef5a74"/>
+            <lrm_rsc_op id="drbd-r0_pre_notify_start_0" operation_key="drbd-r0_notify_0" operation="notify" crm-debug-origin="cib_action_update" crm_feature_set="3.0.7" transition-key="106:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;106:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="-1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd-r0_post_notify_start_0" operation_key="drbd-r0_notify_0" operation="notify" crm-debug-origin="cib_action_update" crm_feature_set="3.0.7" transition-key="107:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" transition-magic="0:0;107:16:0:660964a2-57f9-436d-8cde-07e29cf5165c" call-id="-1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
