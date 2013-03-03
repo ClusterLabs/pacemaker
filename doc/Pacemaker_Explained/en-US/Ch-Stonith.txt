@@ -436,12 +436,13 @@ define one or more fencing levels in the fencing-topology section in
 the configuration.
 
 * Each level is attempted in +ascending index+ order
-* If a device fails, +processing terminates+ for the current level (optimized boolean logic) and the next is attempted
+* If a device fails, +processing terminates+ for the current level.
+  No further devices in that level are exercised and the next level is attempted instead.
 * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed
 * The operation is finished +when a level has passed+ (success), or all levels have been attempted (failed)
 * If the operation failed, the next step is determined by the Policy Engine and/or crmd.
 
-Some suggested uses of topologies include:
+Some possible uses of topologies include:
 
 * try poison-pill and fail back to power
 * try disk and network, and fall back to power if either fails
