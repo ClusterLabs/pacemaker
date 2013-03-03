@@ -1,12 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
-"apache2:0_delete_0 wc01" [ style=bold color="green" fontcolor="black"]
-"apache2:0_delete_0 wc02" [ style=bold color="green" fontcolor="black"]
-"apache2:0_delete_0 wc03" [ style=bold color="green" fontcolor="black"]
 "apache2:0_stop_0 wc02" -> "all_stopped" [ style = bold]
-"apache2:0_stop_0 wc02" -> "apache2:0_delete_0 wc01" [ style = bold]
-"apache2:0_stop_0 wc02" -> "apache2:0_delete_0 wc02" [ style = bold]
-"apache2:0_stop_0 wc02" -> "apache2:0_delete_0 wc03" [ style = bold]
 "apache2:0_stop_0 wc02" -> "group_webservice:2_stopped_0" [ style = bold]
 "apache2:0_stop_0 wc02" [ style=bold color="green" fontcolor="black"]
 "clone_webservice_stop_0" -> "clone_webservice_stopped_0" [ style = bold]
