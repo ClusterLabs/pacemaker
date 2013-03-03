@@ -1,0 +1,68 @@
+
+Current cluster status:
+Online: [ hex-1 hex-2 hex-3 ]
+
+ fencing	(stonith:external/sbd):	Started hex-1 
+ Clone Set: baseclone [basegrp]
+     Resource Group: basegrp:0
+         dlm:0	(ocf::pacemaker:controld):	Started hex-2 
+         clvmd:0	(ocf::lvm2:clvmd):	Started hex-2 
+         o2cb:0	(ocf::ocfs2:o2cb):	Stopped 
+         vg1:0	(ocf::heartbeat:LVM):	Stopped 
+         fs-ocfs-1:0	(ocf::heartbeat:Filesystem):	Stopped 
+     Started: [ hex-1 hex-3 ]
+ fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-3 
+ Clone Set: fs2 [fs-ocfs-2]
+     Started: [ hex-1 hex-3 ]
+     Stopped: [ fs-ocfs-2:2 ]
+ Master/Slave Set: ms-r0 [drbd-r0]
+     Slaves: [ hex-1 hex-2 ]
+ fs-r0	(ocf::heartbeat:Filesystem):	Stopped 
+
+Transition Summary:
+ * Start   o2cb:0	(hex-2)
+ * Start   vg1:0	(hex-2)
+ * Start   fs-ocfs-1:0	(hex-2)
+ * Start   fs-ocfs-2:2	(hex-2)
+ * Promote drbd-r0:0	(Slave -> Master hex-2)
+ * Start   fs-r0	(hex-2)
+
+Executing cluster transition:
+ * Pseudo action:   baseclone_start_0
+ * Pseudo action:   ms-r0_pre_notify_promote_0
+ * Pseudo action:   basegrp:0_start_0
+ * Resource action: o2cb            start on hex-2
+ * Resource action: vg1             start on hex-2
+ * Resource action: fs-ocfs-1       start on hex-2
+ * Resource action: drbd-r0         notify on hex-2
+ * Resource action: drbd-r0         notify on hex-1
+ * Pseudo action:   ms-r0_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms-r0_promote_0
+ * Pseudo action:   basegrp:0_running_0
+ * Pseudo action:   baseclone_running_0
+ * Pseudo action:   fs2_start_0
+ * Resource action: drbd-r0         promote on hex-2
+ * Pseudo action:   ms-r0_promoted_0
+ * Resource action: fs-ocfs-2       start on hex-2
+ * Pseudo action:   fs2_running_0
+ * Pseudo action:   ms-r0_post_notify_promoted_0
+ * Resource action: drbd-r0         notify on hex-2
+ * Resource action: drbd-r0         notify on hex-1
+ * Pseudo action:   ms-r0_confirmed-post_notify_promoted_0
+ * Resource action: fs-r0           start on hex-2
+ * Resource action: drbd-r0         monitor=31000 on hex-2
+
+Revised cluster status:
+Online: [ hex-1 hex-2 hex-3 ]
+
+ fencing	(stonith:external/sbd):	Started hex-1 
+ Clone Set: baseclone [basegrp]
+     Started: [ hex-1 hex-2 hex-3 ]
+ fs-xfs-1	(ocf::heartbeat:Filesystem):	Started hex-3 
+ Clone Set: fs2 [fs-ocfs-2]
+     Started: [ hex-1 hex-2 hex-3 ]
+ Master/Slave Set: ms-r0 [drbd-r0]
+     Masters: [ hex-2 ]
+     Slaves: [ hex-1 ]
+ fs-r0	(ocf::heartbeat:Filesystem):	Started hex-2 
+
