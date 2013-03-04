@@ -22,10 +22,8 @@ Executing cluster transition:
  * Resource action: mysql-proxy:1   stop on webcluster01
  * Pseudo action:   grrr:2_stop_0
  * Resource action: mysql-proxy:0   stop on webcluster01
- * Resource action: mysql-proxy:0   delete on webcluster01
  * Resource action: apache2:1       stop on webcluster01
  * Resource action: apache2:0       stop on webcluster01
- * Resource action: apache2:0       delete on webcluster01
  * Pseudo action:   all_stopped
  * Pseudo action:   grrr:0_stopped_0
  * Pseudo action:   grrr:2_stopped_0

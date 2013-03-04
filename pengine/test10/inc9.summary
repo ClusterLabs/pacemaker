@@ -17,13 +17,8 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   rsc1_stop_0
  * Resource action: child_rsc1:1    stop on node1
- * Resource action: child_rsc1:1    delete on node2
- * Resource action: child_rsc1:1    delete on node1
  * Resource action: child_rsc1:2    stop on node1
- * Resource action: child_rsc1:2    delete on node1
  * Resource action: child_rsc1:1    stop on node2
- * Resource action: child_rsc1:1    delete on node2
- * Resource action: child_rsc1:1    delete on node1
  * Pseudo action:   rsc1_stopped_0
  * Pseudo action:   all_stopped
 

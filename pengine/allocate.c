@@ -319,8 +319,15 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     CRM_CHECK(node != NULL, return);
 
     if (is_set(rsc->flags, pe_rsc_orphan)) {
-        pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
-        DeleteRsc(rsc, node, FALSE, data_set);
+        resource_t *parent = uber_parent(rsc);
+        if(parent == NULL
+           || parent->variant < pe_clone
+           || is_set(parent->flags, pe_rsc_unique)) {
+            pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
+            DeleteRsc(rsc, node, FALSE, data_set);
+        } else {
+            pe_rsc_trace(rsc, "Skipping param check for %s (orphan clone)", rsc->id);
+        }
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
@@ -1578,7 +1585,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
             /* when the container representing a remote node fails, the stop
              * action for all the resources living in that container is implied
-             * by the container stopping.  This is similar to how fencing operations 
+             * by the container stopping.  This is similar to how fencing operations
              * work for cluster nodes. */
             pe_set_action_bit(action, pe_action_pseudo);
             custom_action_order(container,
