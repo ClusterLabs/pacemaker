@@ -1066,6 +1066,14 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_2 = invert_action(action_2);
     }
 
+    if(safe_str_eq(RSC_STOP, action_1) || safe_str_eq(RSC_DEMOTE, action_1)) {
+        /* Assuming: A -> ( B || C) -> D
+         * The one-or-more logic only applies during the start/promote phase
+         * During shutdown neither B nor can shutdown until D is down, so simply turn require_all back on.
+         */
+        require_all = TRUE;
+    }
+
     if (symmetrical == FALSE) {
         flags = get_asymmetrical_flags(kind);
     } else {

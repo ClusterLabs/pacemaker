@@ -1,17 +1,17 @@
 #!/bin/bash
 
  # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- # 
+ #
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
  # version 2 of the License, or (at your option) any later version.
- # 
+ #
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  # General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -121,6 +121,7 @@ do_test one-or-more-4 "D cannot start because of target-role"
 do_test one-or-more-5 "Start A and F even though C and D are stopped"
 do_test one-or-more-6 "Leave A running even though B is stopped"
 do_test one-or-more-7 "Leave A running even though C is stopped"
+do_test bug-5140-require-all-false "Allow basegrp:0 to stop"
 
 echo ""
 do_test order1 "Order start 1     "
@@ -274,8 +275,8 @@ echo ""
 do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
 do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
 do_test clone-anon-failcount "Merge failcounts for anonymous clones"
-do_test inc0 "Incarnation start" 
-do_test inc1 "Incarnation start order" 
+do_test inc0 "Incarnation start"
+do_test inc1 "Incarnation start order"
 do_test inc2 "Incarnation silent restart, stop, move"
 do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
 do_test inc4 "Inter-incarnation ordering, silent restart, stop, move (ordered)"
@@ -285,8 +286,8 @@ do_test inc7 "Clone colocation"
 do_test inc8 "Clone anti-colocation"
 do_test inc9 "Non-unique clone"
 do_test inc10 "Non-unique clone (stop)"
-do_test inc11 "Primitive colocation with clones" 
-do_test inc12 "Clone shutdown" 
+do_test inc11 "Primitive colocation with clones"
+do_test inc12 "Clone shutdown"
 do_test cloned-group "Make sure only the correct number of cloned groups are started"
 do_test clone-no-shuffle "Dont prioritize allocation of instances that must be moved"
 do_test clone-max-zero "Orphan processing with clone-max=0"
@@ -300,7 +301,7 @@ do_test clone-colocate-instance-1 "Colocation with a specific clone instance (ne
 do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
 do_test clone-order-instance "Ordering with specific clone instances"
 do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
-do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups"
 do_test bug-lf-2544 "Balanced clone placement"
 do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
 do_test bug-lf-2574 "Avoid clone shuffle"
@@ -323,7 +324,7 @@ do_test novell-239082 "Demote/Promote ordering"
 do_test novell-239087 "Stable master placement"
 do_test master-12 "Promotion based solely on rsc_location constraints"
 do_test master-13 "Include preferences of colocated resources when placing master"
-do_test master-demote "Ordering when actions depends on demoting a slave resource" 
+do_test master-demote "Ordering when actions depends on demoting a slave resource"
 do_test master-ordering "Prevent resources from starting that need a master"
 do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
 do_test master-group "Promotion of cloned groups"
@@ -341,7 +342,7 @@ do_test master-promotion-constraint "Mandatory master colocation constraints"
 do_test unmanaged-master "Ensure role is preserved for unmanaged resources"
 do_test master-unmanaged-monitor "Start the correct monitor operation for unmanaged masters"
 do_test master-demote-2 "Demote does not clear past failure"
-do_test master-move "Move master based on failure of colocated group"   
+do_test master-move "Move master based on failure of colocated group"
 do_test master-probed-score "Observe the promotion score of probed resources"
 do_test colocation_constraint_stops_master "cl#5054 - Ensure master is demoted when stopped by colocation constraint"
 do_test colocation_constraint_stops_slave  "cl#5054 - Ensure slave is not demoted when stopped by colocation constraint"
@@ -567,7 +568,7 @@ do_test ticket-group-21 "Ticket - Group (loss-policy=fence, standby, revoked)"
 do_test ticket-group-22 "Ticket - Group (loss-policy=freeze, standby, granted)"
 do_test ticket-group-23 "Ticket - Group (loss-policy=freeze, granted, standby)"
 do_test ticket-group-24 "Ticket - Group (loss-policy=freeze, standby, revoked)"
- 
+
 echo""
 do_test ticket-clone-1 "Ticket - Clone (loss-policy=stop, initial)"
 do_test ticket-clone-2 "Ticket - Clone (loss-policy=stop, granted)"
@@ -594,8 +595,8 @@ do_test ticket-clone-21 "Ticket - Clone (loss-policy=fence, standby, revoked)"
 do_test ticket-clone-22 "Ticket - Clone (loss-policy=freeze, standby, granted)"
 do_test ticket-clone-23 "Ticket - Clone (loss-policy=freeze, granted, standby)"
 do_test ticket-clone-24 "Ticket - Clone (loss-policy=freeze, standby, revoked)"
- 
-echo""  
+
+echo""
 do_test ticket-master-1 "Ticket - Master (loss-policy=stop, initial)"
 do_test ticket-master-2 "Ticket - Master (loss-policy=stop, granted)"
 do_test ticket-master-3 "Ticket - Master (loss-policy-stop, revoked)"
