@@ -97,8 +97,34 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     return FALSE;
 }
 
+static const char *
+get_uname_from_event(xmlNode * event)
+{
+    xmlNode *node = event;
+
+    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+        node = node->parent;
+    }
+
+    CRM_CHECK(node != NULL, return NULL);
+    return crm_element_value(node, XML_ATTR_UNAME);
+}
+
 static gboolean
-update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc, gboolean do_update)
+get_is_remote_from_event(xmlNode * event)
+{
+    xmlNode *node = event;
+
+    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+        node = node->parent;
+    }
+
+    CRM_CHECK(node != NULL, return FALSE);
+    return crm_element_value(node, XML_NODE_IS_REMOTE) ? TRUE : FALSE;
+}
+
+static gboolean
+update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int target_rc, gboolean do_update)
 {
     int interval = 0;
 
@@ -108,7 +134,7 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
 
     const char *value = NULL;
     const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
-    const char *on_uname = get_uname(event_node);
+    const char *on_uname = get_uname_from_event(event);
 
     if (rc == 99) {
         /* this is an internal code for "we're busy, try again" */
@@ -126,7 +152,12 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
         failed_start_offset = strdup(INFINITY_S);
     }
 
-    CRM_CHECK(on_uname != NULL, return TRUE);
+    if (on_uname == NULL) {
+        /* uname not in event, check cache */
+        on_uname = get_uname(event_node_uuid);
+        CRM_CHECK(on_uname != NULL, return TRUE);
+    }
+
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval), crm_err("Couldn't parse: %s", ID(event));
               goto bail);
     CRM_CHECK(task != NULL, goto bail);
@@ -160,16 +191,17 @@ update_failcount(xmlNode * event, const char *event_node, int rc, int target_rc,
 
     if (do_update) {
         char *now = crm_itoa(time(NULL));
+        gboolean is_remote_node = get_is_remote_from_event(event);
 
         crm_warn("Updating failcount for %s on %s after failed %s:"
                  " rc=%d (update=%s, time=%s)", rsc_id, on_uname, task, rc, value, now);
 
         attr_name = crm_concat("fail-count", rsc_id, '-');
-        update_attrd(on_uname, attr_name, value, NULL);
+        update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
         free(attr_name);
 
         attr_name = crm_concat("last-failure", rsc_id, '-');
-        update_attrd(on_uname, attr_name, now, NULL);
+        update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
 
         free(now);

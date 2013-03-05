@@ -119,6 +119,7 @@ extern const char *crm_system_name;
 #  define CRM_OP_TETIMEOUT	"te_timeout"
 #  define CRM_OP_TRANSITION	"transition"
 #  define CRM_OP_REGISTER		"register"
+#  define CRM_OP_IPC_FWD		"ipc_fwd"
 #  define CRM_OP_DEBUG_UP		"debug_inc"
 #  define CRM_OP_DEBUG_DOWN	"debug_dec"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"

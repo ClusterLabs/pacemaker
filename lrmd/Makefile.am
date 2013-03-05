@@ -29,11 +29,12 @@ if HAVE_SYSTEMD
 systemdunit_DATA = lrm.service
 endif
 
-lrmd_SOURCES	= main.c lrmd.c tls_backend.c
+lrmd_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la \
+			$(top_builddir)/lib/cib/libcib.la
 
 lrmd_test_SOURCES	= test.c
 lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\

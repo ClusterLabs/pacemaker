@@ -521,7 +521,7 @@ process_hello_message(xmlNode * hello,
 }
 
 gboolean
-crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
+crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client, const char *proxy_session)
 {
     char *client_name = NULL;
     char *major_version = NULL;
@@ -530,8 +530,9 @@ crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
 
     xmlNode *xml = NULL;
     const char *op = crm_element_value(client_msg, F_CRM_TASK);
+    const char *uuid = curr_client ? curr_client->id : proxy_session;
 
-    if (curr_client == NULL) {
+    if (uuid == NULL) {
         crm_warn("Message [%s] not authorized", crm_element_value(client_msg, XML_ATTR_REFERENCE));
         return FALSE;
 
@@ -545,7 +546,7 @@ crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
     if (auth_result == TRUE) {
         if (client_name == NULL) {
             crm_err("Bad client details (client_name=%s, uuid=%s)",
-                    crm_str(client_name), curr_client->id);
+                    crm_str(client_name), uuid);
             auth_result = FALSE;
         }
     }
@@ -563,15 +564,19 @@ crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client)
     }
 
     if (auth_result == TRUE) {
-        crm_trace("Accepted client %s", crm_client_name(curr_client));
-        curr_client->userdata = strdup(client_name);
+        crm_trace("Accepted client %s", client_name);
+        if (curr_client) {
+            curr_client->userdata = strdup(client_name);
+        }
 
         crm_trace("Triggering FSA: %s", __FUNCTION__);
         mainloop_set_trigger(fsa_source);
 
     } else {
         crm_warn("Rejected client logon request");
-        qb_ipcs_disconnect(curr_client->ipcs);
+        if (curr_client) {
+            qb_ipcs_disconnect(curr_client->ipcs);
+        }
     }
 
     free(minor_version);
@@ -606,10 +611,17 @@ static enum crmd_fsa_input
 handle_failcount_op(xmlNode * stored_msg)
 {
     const char *rsc = NULL;
+    const char *uname = NULL;
+    gboolean is_remote_node = FALSE;
     xmlNode *xml_rsc = get_xpath_object("//" XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
 
     if (xml_rsc) {
         rsc = ID(xml_rsc);
+    }
+
+    uname = crm_element_value(stored_msg, XML_LRM_ATTR_TARGET);
+    if (crm_element_value(stored_msg, XML_LRM_ATTR_ROUTER_NODE)) {
+        is_remote_node = TRUE;
     }
 
     if (rsc) {
@@ -618,14 +630,14 @@ handle_failcount_op(xmlNode * stored_msg)
         crm_info("Removing failcount for %s", rsc);
 
         attr = crm_concat("fail-count", rsc, '-');
-        update_attrd(NULL, attr, NULL, NULL);
+        update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 
         attr = crm_concat("last-failure", rsc, '-');
-        update_attrd(NULL, attr, NULL, NULL);
+        update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 
-        lrm_clear_last_failure(rsc);
+        lrm_clear_last_failure(rsc, uname);
     } else {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
     }
@@ -855,7 +867,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = crm_itoa(now);
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL);
+    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */
@@ -903,6 +915,9 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         crm_trace("Invoking action A_LRM_INVOKE (%.16llx)", A_LRM_INVOKE);
 #endif
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
+
+    } else if (sys != NULL && crmd_is_proxy_session(sys)) {
+        crmd_proxy_send(sys, msg);
 
     } else {
         crm_err("Unknown Sub-system (%s)... discarding message.", crm_str(sys));

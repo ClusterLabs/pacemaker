@@ -1742,6 +1742,24 @@ crm_help(char cmd, int exit_code)
     }
 }
 
+qb_ipcs_service_t *
+crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb)
+{
+    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, cb);
+}
+
+void
+attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(100);
+    }
+}
+
 int
 attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
@@ -2081,7 +2099,7 @@ uid2username(uid_t uid)
 }
 
 void
-determine_request_user(char *user, xmlNode * request, const char *field)
+determine_request_user(const char *user, xmlNode * request, const char *field)
 {
     /* Get our internal validation out of the way first */
     CRM_CHECK(user != NULL && request != NULL && field != NULL, return);
