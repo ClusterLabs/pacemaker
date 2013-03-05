@@ -606,10 +606,17 @@ static enum crmd_fsa_input
 handle_failcount_op(xmlNode * stored_msg)
 {
     const char *rsc = NULL;
+    const char *uname = NULL;
+    gboolean is_remote_node = FALSE;
     xmlNode *xml_rsc = get_xpath_object("//" XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
 
     if (xml_rsc) {
         rsc = ID(xml_rsc);
+    }
+
+    uname = crm_element_value(stored_msg, XML_LRM_ATTR_TARGET);
+    if (crm_element_value(stored_msg, XML_LRM_ATTR_ROUTER_NODE)) {
+        is_remote_node = TRUE;
     }
 
     if (rsc) {
@@ -618,14 +625,14 @@ handle_failcount_op(xmlNode * stored_msg)
         crm_info("Removing failcount for %s", rsc);
 
         attr = crm_concat("fail-count", rsc, '-');
-        update_attrd(NULL, attr, NULL, NULL);
+        update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 
         attr = crm_concat("last-failure", rsc, '-');
-        update_attrd(NULL, attr, NULL, NULL);
+        update_attrd(uname, attr, NULL, NULL, is_remote_node);
         free(attr);
 
-        lrm_clear_last_failure(rsc);
+        lrm_clear_last_failure(rsc, uname);
     } else {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
     }
@@ -855,7 +862,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = crm_itoa(now);
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL);
+    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

@@ -122,6 +122,7 @@ main(int argc, char **argv)
     int flag;
 
     int option_index = 0;
+    int is_remote_node = 0;
 
     crm_log_cli_init("crm_attribute");
     crm_set_options(NULL, "command -n attribute [options]", long_options,
@@ -234,12 +235,22 @@ main(int argc, char **argv)
         if (dest_uname == NULL) {
             dest_uname = get_local_node_name();
         }
-        if (pcmk_ok != query_node_uuid(the_cib, dest_uname, &dest_node)) {
+        if (pcmk_ok != query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node)) {
             fprintf(stderr, "Could not map name=%s to a UUID\n", dest_uname);
         }
     }
 
+    if (is_remote_node && safe_str_neq(type, XML_CIB_TAG_STATUS)) {
+        /* Only the status section can exists for remote_nodes */
+        type = XML_CIB_TAG_STATUS;
+        if (command == 'v') {
+            fprintf(stderr, "Remote-nodes do not maintain permanent attributes, '%s=%s' will be removed after %s reboots.\n",
+                attr_name, attr_value, dest_uname);
+        }
+    }
+
     if ((command == 'v' || command == 'D')
+        && is_remote_node == FALSE /* always send remote node attr directly to cib */
         && safe_str_eq(type, XML_CIB_TAG_STATUS)
         && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
                                  NULL, NULL)) {
