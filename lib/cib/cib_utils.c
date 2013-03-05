@@ -916,7 +916,7 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create IPC servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(100);
     }

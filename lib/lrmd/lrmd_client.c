@@ -1443,6 +1443,9 @@ lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
 int
 lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
 {
+    if (lrmd == NULL) {
+        return -ENOTCONN;
+    }
     crm_xml_add(msg, F_LRMD_OPERATION, CRM_OP_IPC_FWD);
 
     crm_log_xml_trace(msg, "PROXY_OUTBOUND");

@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -33,6 +34,8 @@ void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*call
 typedef struct remote_proxy_s {
     char *node_name;
     char *session_id;
+
+    gboolean is_local;
 
     crm_ipc_t *ipc;
     mainloop_io_t *source;
@@ -376,17 +379,62 @@ remote_proxy_new(const char *node_name, const char *session_id, const char *chan
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
-    proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , proxy, &proxy_callbacks);
-    proxy->ipc = mainloop_get_ipc_client(proxy->source);
 
-    if (proxy->source == NULL) {
-        remote_proxy_free(proxy);
-        return NULL;
+    if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
+        proxy->is_local = TRUE;
+    } else {
+        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , proxy, &proxy_callbacks);
+        proxy->ipc = mainloop_get_ipc_client(proxy->source);
+
+        if (proxy->source == NULL) {
+            remote_proxy_free(proxy);
+            return NULL;
+        }
     }
 
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;
+}
+
+gboolean
+crmd_is_proxy_session(const char *session)
+{
+    return g_hash_table_lookup(proxy_table, session) ? TRUE : FALSE;
+}
+
+void
+crmd_proxy_send(const char *session, xmlNode *msg)
+{
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    lrm_state_t *lrm_state = NULL;
+
+    if (!proxy) {
+        return;
+    }
+    lrm_state = lrm_state_find(proxy->node_name);
+    if (lrm_state) {
+        remote_proxy_relay_event(lrm_state->conn, session, msg);
+    }
+}
+
+static void
+crmd_proxy_dispatch(const char *user,
+                    const char *session,
+                    xmlNode *msg)
+{
+
+#if ENABLE_ACL
+    determine_request_user(user, msg, F_CRM_USER);
+#endif
+    crm_log_xml_trace(msg, "CRMd-PROXY[inbound]");
+
+    crm_xml_add(msg, F_CRM_SYS_FROM, session);
+    if (crmd_authorize_message(msg, NULL, session)) {
+        route_message(C_IPC_MESSAGE, msg);
+    }
+
+    trigger_fsa(fsa_source);
 }
 
 static void
@@ -396,6 +444,8 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     xmlNode *op_reply = NULL;
     const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
     const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *user = crm_element_value(msg, F_LRMD_IPC_USER);
+    int msg_id = 0;
 
     /* sessions are raw ipc connections to IPC,
      * all we do is proxy requests/responses exactly
@@ -403,6 +453,8 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
+
+    crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
 
     /* This is msg from remote ipc client going to real ipc server */
     if (safe_str_eq(op, "new")) {
@@ -428,19 +480,29 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             /* proxy connection no longer exists */
             remote_proxy_notify_destroy(lrmd, session);
             return;
-        } else if (crm_ipc_connected(proxy->ipc) == FALSE) {
+        } else if ((proxy->is_local == FALSE) && (crm_ipc_connected(proxy->ipc) == FALSE)) {
             g_hash_table_remove(proxy_table, session);
             return;
         }
-        /* TODO make this async. */
         crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
-        crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
+
+        if (proxy->is_local) {
+            /* this is for the crmd, which we are, so don't try
+             * and connect/send to ourselves over ipc. instead
+             * do it directly. */
+            if (flags & crm_ipc_client_response) {
+                op_reply = create_xml_node(NULL, "ack");
+                crm_xml_add(op_reply, "function", __FUNCTION__);
+                crm_xml_add_int(op_reply, "line", __LINE__);
+            }
+            crmd_proxy_dispatch(user, session, request);
+        } else {
+            /* TODO make this async. */
+            crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
+        }
     }
 
     if (op_reply) {
-        int msg_id = 0;
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
-
         remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
         free_xml(op_reply);
     }

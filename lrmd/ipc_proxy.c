@@ -37,6 +37,9 @@ static qb_ipcs_service_t *cib_ro = NULL;
 static qb_ipcs_service_t *cib_rw = NULL;
 static qb_ipcs_service_t *cib_shm = NULL;
 
+static qb_ipcs_service_t *attrd_ipcs = NULL;
+static qb_ipcs_service_t *crmd_ipcs = NULL;
+
 GHashTable *ipc_providers;
 GHashTable *ipc_clients;
 
@@ -50,7 +53,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     GHashTableIter iter;
     xmlNode *msg;
 
-    crm_trace("Connection %p", c);
+    crm_trace("Connection %p on channel %s", c, ipc_channel);
 
     if (g_hash_table_size(ipc_providers) == 0) {
         crm_err("No ipc providers available for uid %d gid %d", uid, gid);
@@ -89,6 +92,18 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     free_xml(msg);
     crm_debug("created new ipc proxy with session id %s", client->id);
     return 0;
+}
+
+static int32_t
+crmd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+{
+    return ipc_proxy_accept(c, uid, gid, CRM_SYSTEM_CRMD);
+}
+
+static int32_t
+attrd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+{
+    return ipc_proxy_accept(c, uid, gid, T_ATTRD);
 }
 
 static int32_t
@@ -195,6 +210,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(msg, F_LRMD_IPC_OP, "request");
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
+    crm_xml_add(msg, F_LRMD_IPC_USER, client->user);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_ID, id);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_FLAGS, flags);
     add_message_xml(msg, F_LRMD_IPC_MSG, request);
@@ -233,6 +249,22 @@ ipc_proxy_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
 }
+
+static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {
+    .connection_accept = crmd_proxy_accept,
+    .connection_created = ipc_proxy_created,
+    .msg_process = ipc_proxy_dispatch,
+    .connection_closed = ipc_proxy_closed,
+    .connection_destroyed = ipc_proxy_destroy
+};
+
+static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
+    .connection_accept = attrd_proxy_accept,
+    .connection_created = ipc_proxy_created,
+    .msg_process = ipc_proxy_dispatch,
+    .connection_closed = ipc_proxy_closed,
+    .connection_destroyed = ipc_proxy_destroy
+};
 
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
     .connection_accept = cib_proxy_accept_ro,
@@ -287,6 +319,14 @@ ipc_proxy_init(void)
                          &cib_shm,
                          &cib_proxy_callbacks_ro,
                          &cib_proxy_callbacks_rw);
+
+    attrd_ipc_server_init(&attrd_ipcs, &attrd_proxy_callbacks);
+    crmd_ipcs = crmd_ipc_server_init(&crmd_proxy_callbacks);
+    if (crmd_ipcs == NULL) {
+        crm_err("Failed to create crmd server: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(100);
+    }
 }
 
 void
@@ -299,6 +339,8 @@ ipc_proxy_cleanup(void)
         g_hash_table_destroy(ipc_clients);
     }
     cib_ipc_servers_destroy(cib_ro, cib_rw, cib_shm);
+    qb_ipcs_destroy(attrd_ipcs);
+    qb_ipcs_destroy(crmd_ipcs);
     cib_ro = NULL;
     cib_rw = NULL;
     cib_shm = NULL;

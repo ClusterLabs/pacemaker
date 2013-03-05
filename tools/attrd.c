@@ -565,11 +565,7 @@ main(int argc, char **argv)
     crm_info("Cluster connection active");
 
     if (was_err == FALSE) {
-        ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, &ipc_callbacks);
-        if (ipcs == NULL) {
-            crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-            crm_exit(100);
-        }
+        attrd_ipc_server_init(&ipcs, &ipc_callbacks);
     }
 
     crm_info("Accepting attribute updates");
