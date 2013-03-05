@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -57,7 +57,7 @@ gboolean NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_s
 
 /* *INDENT-OFF* */
 enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current State */	
+/* Current State */
 /*       Next State:    Unknown 	  Stopped	     Started	        Slave	          Master */
     /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
     /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
@@ -67,7 +67,7 @@ enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 };
 
 gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gboolean,pe_working_set_t*) = {
-/* Current State */	
+/* Current State */
 /*       Next State:       Unknown	Stopped		Started		Slave		Master */
     /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
     /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
@@ -2175,10 +2175,6 @@ NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * da
 gboolean
 DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set)
 {
-#if DELETE_THEN_REFRESH
-    action_t *delete = NULL;
-    action_t *refresh = NULL;
-#endif
     if (is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed", rsc->id, node->details->uname);
         return FALSE;
@@ -2195,26 +2191,13 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
 
     crm_notice("Removing %s from %s", rsc->id, node->details->uname);
 
-#if DELETE_THEN_REFRESH
-    delete = delete_action(rsc, node, optional);
-#else
     delete_action(rsc, node, optional);
-#endif
 
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
                   optional ? pe_order_implies_then : pe_order_optional, data_set);
 
     new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
                   optional ? pe_order_implies_then : pe_order_optional, data_set);
-
-#if DELETE_THEN_REFRESH
-    refresh = custom_action(NULL, strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
-                            node, FALSE, TRUE, data_set);
-
-    add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-    order_actions(delete, refresh, pe_order_optional);
-#endif
 
     return TRUE;
 }
@@ -2541,7 +2524,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
              *
              * The extra notification here changes
              *  + C.healthy depends on C.notify
-             * into: 
+             * into:
              *  + C.healthy depends on C.notify'
              *  + C.notify' depends on STONITH'
              * thus breaking the loop
@@ -2560,7 +2543,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
 
 /* From Bug #1601, successful fencing must be an input to a failed resources stop action.
 
-   However given group(rA, rB) running on nodeX and B.stop has failed, 
+   However given group(rA, rB) running on nodeX and B.stop has failed,
    A := stop healthy resource (rA.stop)
    B := stop failed resource (pseudo operation B.stop)
    C := stonith nodeX
@@ -2574,12 +2557,12 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
    (marked as a pseudo op depending on the STONITH).
 
    TODO: Break the "A requires B" dependency in update_action() and re-enable this block
-   
+
    } else if(is_stonith == FALSE) {
    crm_info("Moving healthy resource %s"
    " off %s before fencing",
    rsc->id, node->details->uname);
-			
+
    * stop healthy resources before the
    * stonith op
    *
