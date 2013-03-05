@@ -760,8 +760,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
             }
         }
 
-        /* Stonith automatically registers devices from the CIB when changes occur,
-         * but to avoid a possible race condition between stonith receiving the CIB update
+        /* Stonith automatically registers devices from the IPC when changes occur,
+         * but to avoid a possible race condition between stonith receiving the IPC update
          * and the lrmd requesting that resource, the lrmd still registers the device as well.
          * Stonith knows how to handle duplicate device registrations correctly. */
         rc = stonith_api->cmds->register_device(stonith_api,
@@ -996,10 +996,16 @@ static int
 process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     xmlNode *reply = create_xml_node(NULL, "reply");
+    const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
 
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
     lrmd_server_send_reply(client, id, reply);
+
+    if (crm_is_true(is_ipc_provider)) {
+        /* this is a remote connection from a cluster nodes crmd */
+        ipc_proxy_add_provider(client);
+    }
 
     free_xml(reply);
     return pcmk_ok;
@@ -1255,7 +1261,10 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
-    if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+    if (crm_str_eq(op, CRM_OP_IPC_FWD, TRUE)) {
+        ipc_proxy_forward_client(client, request);
+        do_reply = 1;
+    } else if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
         rc = process_lrmd_signon(client, id, request);
     } else if (crm_str_eq(op, LRMD_OP_RSC_REG, TRUE)) {
         rc = process_lrmd_rsc_register(client, id, request);

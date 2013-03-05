@@ -539,7 +539,7 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_log_xml_trace(msg, "CRMd[inbound]");
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
-    if (crmd_authorize_message(msg, client)) {
+    if (crmd_authorize_message(msg, client, NULL)) {
         route_message(C_IPC_MESSAGE, msg);
     }
 
@@ -671,7 +671,7 @@ do_started(long long action,
     }
 
     crm_debug("Init server comms");
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, &crmd_callbacks);
+    ipcs = crmd_ipc_server_init(&crmd_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);

@@ -142,7 +142,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         char *found_uuid = NULL;
 
         if (uuid == NULL) {
-            query_node_uuid(cib_conn, node, &found_uuid);
+            query_node_uuid(cib_conn, node, &found_uuid, NULL);
         } else {
             found_uuid = strdup(uuid);
         }

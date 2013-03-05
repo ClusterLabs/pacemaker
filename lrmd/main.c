@@ -32,7 +32,7 @@
 #include <lrmd_private.h>
 
 GMainLoop *mainloop = NULL;
-qb_ipcs_service_t *ipcs = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
 static gboolean enable_remote = FALSE;
 static int remote_port = 0;
@@ -149,6 +149,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 
     crm_trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
+    ipc_proxy_remove_provider(client);
     crm_client_destroy(client);
     return 0;
 }
@@ -290,6 +291,7 @@ main(int argc, char **argv)
             crm_err("Failed to create TLS server: shutting down and inhibiting respawn");
             crm_exit(100);
         }
+        ipc_proxy_init();
 #else
         crm_err("GNUTLS not enabled in this build, can not establish remote server");
         crm_exit(100);
@@ -302,12 +304,13 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     mainloop_del_ipc_server(ipcs);
-    crm_client_cleanup();
     if (enable_remote) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         lrmd_tls_server_destroy();
+        ipc_proxy_cleanup();
 #endif
     }
+    crm_client_cleanup();
 
     g_hash_table_destroy(rsc_list);
 

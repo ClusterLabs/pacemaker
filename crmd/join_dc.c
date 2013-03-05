@@ -617,7 +617,7 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
-    update_attrd(NULL, NULL, NULL, NULL);
+    update_attrd(NULL, NULL, NULL, NULL, FALSE);
     crm_update_quorum(crm_have_quorum, TRUE);
 }
 

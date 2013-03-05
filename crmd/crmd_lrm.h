@@ -17,7 +17,7 @@
  */
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
-extern void lrm_clear_last_failure(const char *rsc_id);
+extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name);
 void lrm_op_callback(lrmd_event_data_t * op);
 
 typedef struct resource_history_s {
@@ -46,7 +46,9 @@ struct recurring_op_s {
 
 typedef struct lrm_state_s {
     const char *node_name;
+    /* reserved for lrm_state.c usage only */
     void *conn;
+    /* reserved for remote_lrmd_ra.c usage only */
     void *remote_ra_data;
 
     GHashTable *resource_history;

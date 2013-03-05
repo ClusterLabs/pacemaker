@@ -137,6 +137,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
+    ipc_proxy_remove_provider(client);
     client_disconnect_cleanup(client->id);
 
     crm_notice("LRMD client disconnecting remote client - name: %s id: %s",

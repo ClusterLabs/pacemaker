@@ -413,17 +413,49 @@ delete_attr_delegate(cib_t * the_cib, int options,
     return rc;
 }
 
-int
-query_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
+static int
+get_remote_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
+{
+#define REMOTE_NODE_XPATH "//nvpair[@name='remote-node'][@value='%s']"
+#define REMOTE_NODE_XPATH2 "//primitive[@type='remote'][@provider='pacemaker'][@id='%s']"
+    int rc = pcmk_ok;
+    char *xpath_string = NULL;
+    size_t len = strlen(REMOTE_NODE_XPATH) + strlen(uname) + 1;
+    xmlNode *xml_search = NULL;
+
+    xpath_string = calloc(1, len);
+    sprintf(xpath_string, REMOTE_NODE_XPATH, uname);
+    rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
+                         cib_sync_call | cib_scope_local | cib_xpath, NULL);
+    free(xpath_string);
+    free(xml_search);
+
+    if (rc != pcmk_ok) {
+        len = strlen(REMOTE_NODE_XPATH2) + strlen(uname) + 1;
+        xpath_string = calloc(1, len);
+        sprintf(xpath_string, REMOTE_NODE_XPATH2, uname);
+        rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
+                             cib_sync_call | cib_scope_local | cib_xpath, NULL);
+
+        free(xpath_string);
+        free(xml_search);
+    }
+
+    if (rc == pcmk_ok) {
+        *uuid = strdup(uname);
+    }
+
+    return rc;
+}
+
+static int
+get_cluster_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
 {
     int rc = pcmk_ok;
     xmlNode *a_child = NULL;
     xmlNode *xml_obj = NULL;
     xmlNode *fragment = NULL;
     const char *child_name = NULL;
-
-    CRM_ASSERT(uname != NULL);
-    CRM_ASSERT(uuid != NULL);
 
     rc = the_cib->cmds->query(the_cib, XML_CIB_TAG_NODES, &fragment,
                               cib_sync_call | cib_scope_local);
@@ -453,13 +485,36 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
         }
     }
 
+    free_xml(fragment);
+    return rc;
+}
+
+int
+query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)
+{
+    int rc = pcmk_ok;
+
+    CRM_ASSERT(uname != NULL);
+    CRM_ASSERT(uuid != NULL);
+
+    rc = get_cluster_node_uuid(the_cib, uname, uuid);
+    if (rc != pcmk_ok) {
+        crm_debug("%s is not a cluster node, checking to see if remote-node", uname);
+        rc = get_remote_node_uuid(the_cib, uname, uuid);
+        if (rc != pcmk_ok) {
+            crm_debug("%s is not a remote node either", uname);
+
+        } else if (is_remote_node) {
+            *is_remote_node = TRUE;
+        }
+    }
+
     if (rc != pcmk_ok) {
         crm_debug("Could not map name=%s to a UUID: %s\n", uname, pcmk_strerror(rc));
     } else {
         crm_info("Mapped %s to %s", uname, *uuid);
     }
 
-    free_xml(fragment);
     return rc;
 }
 
