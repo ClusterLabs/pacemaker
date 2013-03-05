@@ -40,7 +40,9 @@ static qb_ipcs_service_t *cib_shm = NULL;
 static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
 
+/* ipc providers == crmd clients connecting from cluster nodes */
 GHashTable *ipc_providers;
+/* ipc clients == things like cibadmin, crm_resource, connecting locally */
 GHashTable *ipc_clients;
 
 static int32_t
@@ -57,7 +59,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
 
     if (g_hash_table_size(ipc_providers) == 0) {
         crm_err("No ipc providers available for uid %d gid %d", uid, gid);
-        return -EIO;
+        return -EREMOTEIO;
     }
 
     g_hash_table_iter_init(&iter, ipc_providers);
@@ -68,14 +70,14 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
         ipc_proxy = value;
     } else {
         crm_err("No ipc providers available for uid %d gid %d", uid, gid);
-        return -EIO;
+        return -EREMOTEIO;
     }
 
     /* this new client is a local ipc client on a remote
      * guest wanting to access the ipc on any available cluster nodes */
     client = crm_client_new(c, uid, gid);
     if (client == NULL) {
-        return -EIO;
+        return -EREMOTEIO;
     }
 
     /* This ipc client is bound to a single ipc provider. If the
@@ -147,8 +149,8 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      *
      * Looking at the chain of events.
      *
-     * -----remote node-----------|---- cluster node ------
-     * ipc_client <--1--> lrmd <--2--> crmd <----3----> ipc server
+     * -----remote node----------------|---- cluster node ------
+     * ipc_client <--1--> this code <--2--> crmd <----3----> ipc server
      *
      * This function is receiving a msg from connection 2
      * and forwarding it to connection 1.
@@ -190,8 +192,8 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      *
      * Looking at the chain of events.
      *
-     * -----remote node-----------|---- cluster node ------
-     * ipc_client <--1--> lrmd <--2--> crmd <----3----> ipc server
+     * -----remote node----------------|---- cluster node ------
+     * ipc_client <--1--> this code <--2--> crmd <----3----> ipc server
      *
      * This function is receiving a request from connection
      * 1 and forwarding it to connection 2.
@@ -285,6 +287,9 @@ static struct qb_ipcs_service_handlers cib_proxy_callbacks_rw = {
 void
 ipc_proxy_add_provider(crm_client_t *ipc_proxy)
 {
+    if (ipc_providers == NULL) {
+        return;
+    }
     g_hash_table_insert(ipc_providers, ipc_proxy->id, ipc_proxy);
 }
 
@@ -294,6 +299,10 @@ ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
     GHashTableIter iter;
     crm_client_t *ipc_client = NULL;
     char *key = NULL;
+
+    if (ipc_providers == NULL) {
+        return;
+    }
 
     g_hash_table_remove(ipc_providers, ipc_proxy->id);
 
