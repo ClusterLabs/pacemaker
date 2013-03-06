@@ -83,7 +83,6 @@ AutoReqProv:   on
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
-Requires:      %{name}-remote = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      python >= 2.4
 
@@ -384,6 +383,7 @@ rm -rf %{buildroot}
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker stop &>/dev/null || :
+    /sbin/service pacemaker_remote stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
 fi
 
