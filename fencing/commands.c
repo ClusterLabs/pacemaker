@@ -42,6 +42,10 @@
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
 
+#if SUPPORT_CIBSECRETS
+#  include <crm/common/cib_secrets.h>
+#endif
+
 #include <internal.h>
 
 GHashTable *device_list = NULL;
@@ -228,6 +232,23 @@ stonith_device_execute(stonith_device_t * device)
         crm_trace("Nothing further to do for %s", device->id);
         return TRUE;
     }
+
+#if SUPPORT_CIBSECRETS
+    if (replace_secret_params(device->id, device->params) < 0) {
+        /* replacing secrets failed! */
+        if (safe_str_eq(cmd->action,"stop")) {
+            /* don't fail on stop! */
+            crm_info("proceeding with the stop operation for %s", device->id);
+
+        } else {
+            crm_err("failed to get secrets for %s, "
+                    "considering resource not configured", device->id);
+            exec_rc = PCMK_EXECRA_NOT_CONFIGURED;
+            cmd->done_cb(0, exec_rc, NULL, cmd);
+            return TRUE;
+        }
+    }
+#endif
 
     action = stonith_action_create(device->agent,
                                    cmd->action,

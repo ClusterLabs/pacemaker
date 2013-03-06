@@ -4,7 +4,7 @@ dnl
 dnl License: GNU General Public License (GPL)
 
 dnl ===============================================
-dnl Bootstrap 
+dnl Bootstrap
 dnl ===============================================
 AC_PREREQ(2.59)
 
@@ -61,7 +61,7 @@ AC_SUBST(PACKAGE_SERIES)
 AC_SUBST(PACKAGE_VERSION)
 
 dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
-dnl normal compilation.  When a failure occurs, it will then display the full 
+dnl normal compilation.  When a failure occurs, it will then display the full
 dnl command line
 dnl Wrap in m4_ifdef to avoid breaking on older platforms
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
@@ -102,7 +102,7 @@ AC_CHECK_SIZEOF(long long)
 AC_STRUCT_TIMEZONE
 
 dnl ===============================================
-dnl Helpers 
+dnl Helpers
 dnl ===============================================
 cc_supports_flag() {
          local CFLAGS="$@"
@@ -164,7 +164,7 @@ AC_ARG_ENABLE([fatal-warnings],
      [default=yes]])
 
 AC_ARG_ENABLE([quiet],
-[  --enable-quiet 
+[  --enable-quiet
      Supress make output unless there is an error
      [default=no]])
 
@@ -173,7 +173,7 @@ AC_ARG_ENABLE([thread-safe],
      [default=no]])
 
 AC_ARG_ENABLE([bundled-ltdl],
-[  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]]) 
+[  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]])
 LTDL_LIBS=""
 
 AC_ARG_ENABLE([no-stack],
@@ -189,14 +189,14 @@ AC_ARG_ENABLE([systemd],
        Do not build support for the Systemd init system [default=yes]])
 
 AC_ARG_WITH(ais,
-    [  --with-ais     
+    [  --with-ais
        Support the Corosync messaging and membership layer ],
     [ SUPPORT_CS=$withval ],
     [ SUPPORT_CS=try ],
 )
 
 AC_ARG_WITH(corosync,
-    [  --with-corosync     
+    [  --with-corosync
        Support the Corosync messaging and membership layer ],
     [ SUPPORT_CS=$withval ]
 dnl	initialized in AC_ARG_WITH(ais...) already,
@@ -204,21 +204,21 @@ dnl	don't reset to try if it was given as --without-ais
 )
 
 AC_ARG_WITH(heartbeat,
-    [  --with-heartbeat     
+    [  --with-heartbeat
        Support the Heartbeat messaging and membership layer ],
     [ SUPPORT_HEARTBEAT=$withval ],
     [ SUPPORT_HEARTBEAT=try ],
 )
 
 AC_ARG_WITH(cman,
-    [  --with-cman     
+    [  --with-cman
        Support the consumption of membership and quorum from cman ],
     [ SUPPORT_CMAN=$withval ],
     [ SUPPORT_CMAN=try ],
 )
 
 AC_ARG_WITH(cpg,
-    [  --with-cs-quorum     
+    [  --with-cs-quorum
        Support the consumption of membership and quorum from corosync ],
     [ SUPPORT_CS_QUORUM=$withval ],
     [ SUPPORT_CS_QUORUM=try ],
@@ -230,7 +230,7 @@ AC_ARG_WITH(nagios,
     [ SUPPORT_NAGIOS=$withval ],
     [ SUPPORT_NAGIOS=try ],
 )
-   
+
 AC_ARG_WITH(nagios-plugin-dir,
     [  --with-nagios-plugin-dir=DIR
        Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}]],
@@ -244,14 +244,14 @@ AC_ARG_WITH(nagios-metadata-dir,
 )
 
 AC_ARG_WITH(snmp,
-    [  --with-snmp     
+    [  --with-snmp
        Support the SNMP protocol ],
     [ SUPPORT_SNMP=$withval ],
     [ SUPPORT_SNMP=try ],
 )
 
 AC_ARG_WITH(esmtp,
-    [  --with-esmtp  
+    [  --with-esmtp
        Support the sending mail notifications with the esmtp library ],
     [ SUPPORT_ESMTP=$withval ],
     [ SUPPORT_ESMTP=try ],
@@ -264,14 +264,21 @@ AC_ARG_WITH(acl,
     [ SUPPORT_ACL=no ],
 )
 
+AC_ARG_WITH(cibsecrets,
+    [  --with-cibsecrets
+       Support CIB secrets ],
+    [ SUPPORT_CIBSECRETS=$withval ],
+    [ SUPPORT_CIBSECRETS=no ],
+)
+
 CSPREFIX=""
 AC_ARG_WITH(ais-prefix,
     [  --with-ais-prefix=DIR  Prefix used when Corosync was installed [$prefix]],
-    [ CSPREFIX=$withval ], 
+    [ CSPREFIX=$withval ],
     [ CSPREFIX=$prefix ])
 
 LCRSODIR=""
-AC_ARG_WITH(lcrso-dir, 
+AC_ARG_WITH(lcrso-dir,
     [  --with-lcrso-dir=DIR   Corosync lcrso files. ],
     [ LCRSODIR="$withval" ])
 
@@ -282,7 +289,7 @@ AC_ARG_WITH(initdir,
 
 SUPPORT_PROFILING=0
 AC_ARG_WITH(profiling,
-    [  --with-profiling     
+    [  --with-profiling
        Support gprof profiling ],
     [ SUPPORT_PROFILING=$withval ])
 
@@ -381,7 +388,7 @@ case $libdir in
     ;;
 esac
 
-dnl Expand autoconf variables so that we dont end up with '${prefix}' 
+dnl Expand autoconf variables so that we dont end up with '${prefix}'
 dnl in #defines and python scripts
 dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
 dnl    make exec_prefix=/foo install
@@ -414,7 +421,7 @@ AC_SUBST(docdir)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
     mandir INITDIR docdir
-do 
+do
   dirname=`eval echo '${'${j}'}'`
   if
     test ! -d "$dirname"
@@ -426,7 +433,7 @@ done
 dnl This OS-based decision-making is poor autotools practice;
 dnl feature-based mechanisms are strongly preferred.
 dnl
-dnl So keep this section to a bare minimum; regard as a "necessary evil". 
+dnl So keep this section to a bare minimum; regard as a "necessary evil".
 
 case "$host_os" in
 *bsd*)		LIBS="-L/usr/local/lib"
@@ -435,18 +442,18 @@ case "$host_os" in
 		;;
 *solaris*)
 		;;
-*linux*)	
+*linux*)
 		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
   		CFLAGS="$CFLAGS -I${prefix}/include"
  		;;
-darwin*)	
+darwin*)
 		AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
   		LIBS="$LIBS -L${prefix}/lib"
   		CFLAGS="$CFLAGS -I${prefix}/include"
 		;;
 esac
 
-dnl Eventually remove this 
+dnl Eventually remove this
 CFLAGS="$CFLAGS -I${prefix}/include/heartbeat"
 
 AC_SUBST(INIT_EXT)
@@ -475,14 +482,14 @@ AC_COMPILE_IFELSE(
 #include <stdlib.h>
       ],
       [
-int max = 512;	
+int max = 512;
 uint64_t bignum = 42;
 char *buffer = malloc(max);
 const char *random = "random";
 snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
 fprintf(stderr, "Result: %s\n", buffer);
       ]
-    )], 
+    )],
     [U64T="%lu"],
     [U64T="%llu"]
 )
@@ -641,7 +648,7 @@ else
         GPKGNAME="glib-2.0"
 fi
 
-if 
+if
    $PKGCONFIG --exists $GPKGNAME
 then
 	GLIBCONFIG="$PKGCONFIG $GPKGNAME"
@@ -652,7 +659,7 @@ else
 	$PKGCONFIG --cflags $GPKGNAME; echo $?
 	$PKGCONFIG $GPKGNAME; echo $?
 	set +x
-        
+
 	AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
@@ -667,7 +674,7 @@ if test "x$ac_cv_lib_glib_2_0_g_list_free_full" != x""yes; then
    AC_DEFINE_UNQUOTED(NEED_G_LIST_FREE_FULL, 1, glib-2.0 has no g_list_free_full)
 fi
 
-if 
+if
     $PKGCONFIG --exists systemd
 then
     systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
@@ -770,7 +777,7 @@ AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(winsock.h)
 
-dnl These headers need prerequisits before the tests will pass 
+dnl These headers need prerequisits before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
 dnl AC_CHECK_HEADERS(netinet/icmp6.h)
 dnl AC_CHECK_HEADERS(netinet/ip6.h)
@@ -920,7 +927,7 @@ if test "x$CURSESLIBS" != "x"; then
 fi
 
 dnl Check for printw() prototype compatibility
-if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then 
+if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
     AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS  $LIBS"
@@ -939,7 +946,7 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 #endif
 	      ],
 	      [printw((const char *)"Test");]
-	    )], 
+	    )],
 	    [ac_cv_compatible_printw=yes],
 	    [ac_cv_compatible_printw=no]
     )
@@ -963,7 +970,7 @@ dnl    Profiling and GProf
 dnl ========================================================================
 
 case $SUPPORT_PROFILING in
-     1|yes|true) 
+     1|yes|true)
 	SUPPORT_PROFILING=1
 
         dnl Enable gprof
@@ -983,7 +990,7 @@ esac
 AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for gprof profiling)
 
 case $SUPPORT_GCOV in
-     1|yes|true) 
+     1|yes|true)
 	SUPPORT_GCOV=1
 
         dnl Enable gprof
@@ -995,10 +1002,10 @@ case $SUPPORT_GCOV in
 
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
-	AC_MSG_NOTICE(Old CFLAGS: $CFLAGS) 
+	AC_MSG_NOTICE(Old CFLAGS: $CFLAGS)
 	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g'`
 	CFLAGS="$CFLAGS -O0"
-	AC_MSG_NOTICE(New CFLAGS: $CFLAGS) 
+	AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 
 	dnl Update features
 	PCMK_FEATURES="$PCMK_FEATURES gcov"
@@ -1160,7 +1167,7 @@ elif test -x $GIT -a -d .git; then
 
 else
    # The current directory name make a reasonable default
-   # Most generated archives will include the hash or tag 
+   # Most generated archives will include the hash or tag
    BASE=`basename $PWD`
    BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
    AC_MSG_RESULT(directory based hash: $BUILD_VERSION)
@@ -1201,7 +1208,7 @@ AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
         SUPPORT_NAGIOS=1;;
-     *) 
+     *)
         SUPPORT_NAGIOS=0;;
 esac
 
@@ -1295,13 +1302,13 @@ else
         SUPPORT_CS=1
 	CFLAGS="$CFLAGS $oldipc_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $oldipc_LIBS $cpg_LIBS $cfg_LIBS"
-    
+
     elif test $HAVE_libqb = 1; then
         SUPPORT_CS=1
         CS_USES_LIBQB=1
 	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
         COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
-        AC_CHECK_LIB(corosync_common, cs_strerror) 
+        AC_CHECK_LIB(corosync_common, cs_strerror)
 
     else
         aisreason="corosync/libqb IPC libraries not found by pkg_config"
@@ -1318,7 +1325,7 @@ if test $SUPPORT_CS = 1 -a x$HAVE_oldipc = x0 ; then
     dnl The only option now is the built-in quorum API
     CFLAGS="$CFLAGS $cmap_CFLAGS $quorum_CFLAGS"
     COROSYNC_LIBS="$COROSYNC_LIBS $cmap_LIBS $quorum_LIBS"
-	
+
     STACKS="$STACKS corosync-native"
     AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
 fi
@@ -1352,9 +1359,9 @@ if test $SUPPORT_CS = 1; then
 elif test $SUPPORT_CS != 0; then
     SUPPORT_CS=0
     if test $missingisfatal = 0; then
-        AC_MSG_WARN(Unable to support Corosync: $aisreason) 
+        AC_MSG_WARN(Unable to support Corosync: $aisreason)
     else
-        AC_MSG_FAILURE(Unable to support Corosync: $aisreason) 
+        AC_MSG_FAILURE(Unable to support Corosync: $aisreason)
     fi
 fi
 
@@ -1453,9 +1460,9 @@ else
    	SNMPLIBS=""
    	SUPPORT_SNMP=0
      	if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support SNMP) 
+	    AC_MSG_WARN(Unable to support SNMP)
         else
-	    AC_MSG_FAILURE(Unable to support SNMP) 
+	    AC_MSG_FAILURE(Unable to support SNMP)
         fi
     else
    	SUPPORT_SNMP=1
@@ -1512,9 +1519,9 @@ else
    if test $SUPPORT_ESMTP = no; then
    	SUPPORT_ESMTP=0
      	if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support ESMTP) 
+	    AC_MSG_WARN(Unable to support ESMTP)
         else
-	    AC_MSG_FAILURE(Unable to support ESMTP) 
+	    AC_MSG_FAILURE(Unable to support ESMTP)
         fi
    else
    	SUPPORT_ESMTP=1
@@ -1527,7 +1534,7 @@ AM_CONDITIONAL(ENABLE_ESMTP, test "$SUPPORT_ESMTP" = "1")
 AC_DEFINE_UNQUOTED(ENABLE_ESMTP, $SUPPORT_ESMTP, Build in support for sending mail notifications with ESMTP)
 
 dnl ========================================================================
-dnl    ACL 
+dnl    ACL
 dnl ========================================================================
 
 case $SUPPORT_ACL in
@@ -1551,9 +1558,9 @@ else
 
     if test $SUPPORT_ACL = 0; then
         if test $missingisfatal = 0; then
-            AC_MSG_WARN(Unable to support ACL. You need to use libqb > 0.13.0) 
+            AC_MSG_WARN(Unable to support ACL. You need to use libqb > 0.13.0)
         else
-            AC_MSG_FAILURE(Unable to support ACL. You need to use libqb > 0.13.0) 
+            AC_MSG_FAILURE(Unable to support ACL. You need to use libqb > 0.13.0)
         fi
     fi
 fi
@@ -1564,6 +1571,32 @@ fi
 
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
 AC_DEFINE_UNQUOTED(ENABLE_ACL, $SUPPORT_ACL, Build in support for CIB ACL)
+
+dnl ========================================================================
+dnl    CIB secrets
+dnl ========================================================================
+
+case $SUPPORT_CIBSECRETS in
+     1|yes|true|try)
+        SUPPORT_CIBSECRETS=1;;
+     *)
+        SUPPORT_CIBSECRETS=0;;
+esac
+
+AC_DEFINE_UNQUOTED(SUPPORT_CIBSECRETS, $SUPPORT_CIBSECRETS, Support CIB secrets)
+AM_CONDITIONAL(BUILD_CIBSECRETS, test $SUPPORT_CIBSECRETS = 1)
+
+if test $SUPPORT_CIBSECRETS = 1; then
+    PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
+
+    LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
+    AC_DEFINE_UNQUOTED(LRM_CIBSECRETS_DIR,"$LRM_CIBSECRETS_DIR", Location for CIB secrets)
+    AC_SUBST(LRM_CIBSECRETS_DIR)
+
+    LRM_LEGACY_CIBSECRETS_DIR="${localstatedir}/lib/heartbeat/lrm/secrets"
+    AC_DEFINE_UNQUOTED(LRM_LEGACY_CIBSECRETS_DIR,"$LRM_LEGACY_CIBSECRETS_DIR", Legacy location for CIB secrets)
+    AC_SUBST(LRM_LEGACY_CIBSECRETS_DIR)
+fi
 
 dnl ========================================================================
 dnl    GnuTLS
@@ -1652,21 +1685,21 @@ else
 		-fstack-protector-all
 		-Wall
 		-Waggregate-return
-		-Wbad-function-cast 
-		-Wcast-align 
+		-Wbad-function-cast
+		-Wcast-align
 		-Wdeclaration-after-statement
 		-Wendif-labels
 		-Wfloat-equal
 		-Wformat=2
 		-Wformat-security
 		-Wformat-nonliteral
-		-Wmissing-prototypes 
-		-Wmissing-declarations 
+		-Wmissing-prototypes
+		-Wmissing-declarations
 		-Wnested-externs
 		-Wno-long-long
 		-Wno-strict-aliasing
 		-Wunused-but-set-variable
-		-Wpointer-arith 
+		-Wpointer-arith
 		-Wstrict-prototypes
     		-Wunsigned-char
 		-Wwrite-strings"
@@ -1740,7 +1773,7 @@ AC_SUBST(LIBADD_INTL)	dnl extra flags for GNU gettext stuff...
 
 AC_SUBST(LOCALE)
 
-dnl Options for cleaning up the compiler output 
+dnl Options for cleaning up the compiler output
 QUIET_LIBTOOL_OPTS=""
 QUIET_MAKE_OPTS=""
 if test "x${enable_quiet}" = "xyes"; then
@@ -1817,11 +1850,12 @@ extra/Makefile							\
 tools/Makefile							\
 	tools/crm_report					\
         tools/report.common                                     \
+	tools/cibsecret						\
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)
 
-dnl Now process the entire list of files added by previous 
+dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()
 AC_OUTPUT()
 
@@ -1852,4 +1886,3 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([  CFLAGS                   = ${CFLAGS}])
 AC_MSG_RESULT([  Libraries                = ${LIBS}])
 AC_MSG_RESULT([  Stack Libraries          = ${CLUSTERLIBS}])
-
