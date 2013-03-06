@@ -312,6 +312,8 @@ typedef struct {
 
 void
 attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
+void
+stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
 
 qb_ipcs_service_t *
 crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb);

@@ -1760,6 +1760,18 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     }
 }
 
+void
+stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(100);
+    }
+}
+
 int
 attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const char *name,
                       const char *value, const char *section, const char *set, const char *dampen,
