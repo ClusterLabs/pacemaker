@@ -778,7 +778,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     if (total != len) {
         crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
         if (ret >= 0) {
-            rc = -EREMOTEIO;
+            rc = -ECOMM;
         }
         goto fail;
     }

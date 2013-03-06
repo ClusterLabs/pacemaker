@@ -1040,7 +1040,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
         if (rc > 0) {
             break;
 
-        } else if (rc != -EAGAIN && rc != -EREMOTEIO) {
+        } else if (rc != -EAGAIN && rc != -EALREADY) {
             crm_info("Disconnecting from attrd: %s (%d)", pcmk_strerror(rc), rc);
             crm_ipc_close(attrd_ipc);
         }

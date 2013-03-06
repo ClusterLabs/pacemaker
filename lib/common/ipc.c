@@ -820,7 +820,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         if (rc != BZ_OK) {
             crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
             free(uncompressed);
-            return -EREMOTEIO;
+            return -EILSEQ;
         }
 
         CRM_ASSERT((header->size_uncompressed + hdr_offset) >= ipc_buffer_max);
@@ -996,7 +996,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
             crm_warn("Sending to %s (%p) is disabled until pending reply is recieved", client->name,
                      client->ipc);
             free(buffer);
-            return -EREMOTEIO;
+            return -EALREADY;
 
         } else {
             crm_notice("Lost reply from %s (%p) finally arrived, sending re-enabled", client->name,

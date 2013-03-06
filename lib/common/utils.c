@@ -1822,7 +1822,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
         } else if (rc > 0) {
             break;
 
-        } else if (rc == -EAGAIN || rc == -EREMOTEIO) {
+        } else if (rc == -EAGAIN || rc == -EALREADY) {
             sleep(5 - max);
             max--;
 
