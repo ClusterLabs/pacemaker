@@ -530,6 +530,7 @@ exit 0
 %files -n %{name}-remote
 %defattr(-,root,root)
 
+%config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker_remote.service
 %endif
