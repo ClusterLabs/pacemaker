@@ -264,6 +264,13 @@ AC_ARG_WITH(acl,
     [ SUPPORT_ACL=no ],
 )
 
+AC_ARG_WITH(cibsecrets,
+    [  --with-cibsecrets
+       Support CIB secrets ],
+    [ SUPPORT_CIBSECRETS=$withval ],
+    [ SUPPORT_CIBSECRETS=no ],
+)
+
 CSPREFIX=""
 AC_ARG_WITH(ais-prefix,
     [  --with-ais-prefix=DIR  Prefix used when Corosync was installed [$prefix]],
@@ -1566,6 +1573,32 @@ AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
 AC_DEFINE_UNQUOTED(ENABLE_ACL, $SUPPORT_ACL, Build in support for CIB ACL)
 
 dnl ========================================================================
+dnl    CIB secrets 
+dnl ========================================================================
+
+case $SUPPORT_CIBSECRETS in
+     1|yes|true|try)
+        SUPPORT_CIBSECRETS=1;;
+     *) 
+        SUPPORT_CIBSECRETS=0;;
+esac
+
+AC_DEFINE_UNQUOTED(SUPPORT_CIBSECRETS, $SUPPORT_CIBSECRETS, Support CIB secrets)
+AM_CONDITIONAL(BUILD_CIBSECRETS, test $SUPPORT_CIBSECRETS = 1)
+
+if test $SUPPORT_CIBSECRETS = 1; then
+    PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
+
+    LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
+    AC_DEFINE_UNQUOTED(LRM_CIBSECRETS_DIR,"$LRM_CIBSECRETS_DIR", Location for CIB secrets)
+    AC_SUBST(LRM_CIBSECRETS_DIR)
+
+    LRM_LEGACY_CIBSECRETS_DIR="${localstatedir}/lib/heartbeat/lrm/secrets"
+    AC_DEFINE_UNQUOTED(LRM_LEGACY_CIBSECRETS_DIR,"$LRM_LEGACY_CIBSECRETS_DIR", Legacy location for CIB secrets)
+    AC_SUBST(LRM_LEGACY_CIBSECRETS_DIR)
+fi
+
+dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
@@ -1816,6 +1849,7 @@ extra/Makefile							\
 	extra/rgmanager/Makefile				\
 tools/Makefile							\
 	tools/crm_report					\
+	tools/cibsecret                                         \
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)

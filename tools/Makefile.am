@@ -32,6 +32,9 @@ pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
 sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
+if BUILD_CIBSECRETS
+sbin_SCRIPTS		+= cibsecret
+endif
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
