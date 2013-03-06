@@ -29,7 +29,7 @@ patterns="-e CTS:"
 while true; do
     case $1 in
 	-x) set -x; shift;;
-	-a) 
+	-a)
 	screen -ls | grep cts
 	exit 0;;
 	-c|-g) cluster_name=$2; shift; shift;;
@@ -54,7 +54,7 @@ while true; do
 		/*) local_root=`dirname $cts_root`;;
 		*)  local_root=`dirname $PWD/$cts_root`;;
 	    esac
-	    
+
 	    cat << EOF > $cts_root/CTSvars.py
 class CTSvars:
         CTS_home="$local_root/cts"
@@ -69,6 +69,9 @@ EOF
 	    for f in $files; do
 		cp $local_root/$f $cts_root/
 	    done
+
+	    cp $local_root/report_common.in $local_root/report_common
+	    sed -i.sed s:@localstatedir@:/var: $local_root/report_common
 
 	    cp $cts_root/crm_report.in $cts_root/crm_report
 	    sed -i.sed s:@datadir@/@PACKAGE@:$local_root/tools: $cts_root/crm_report
@@ -114,7 +117,7 @@ fi
 
 if [ "x$cluster_name" = x -o "x$cluster_name" = xpick ]; then
     clusters=`ls -1 ~/.dsh/group/[a-z]+[0-9] | sed s/.*group.// | tr '\n' ' ' `
-    
+
     echo "custom) interactively define a cluster"
     for i in $clusters; do
 	echo "$i) `cluster-helper --list short -g $i`"
@@ -130,11 +133,11 @@ fi
 
 
 case $cluster_name in
-  *) 
+  *)
     cluster_hosts=`cluster-helper --list short -g $cluster_name`
     cluster_log=~/cluster-$cluster_name.log;
     ;;
-  custom) 
+  custom)
     read -p "Cluster name: " cluster_name
     read -p "Cluster hosts: " cluster_hosts
     read -p "Cluster log file: " cluster_log
@@ -199,7 +202,7 @@ elif [ $summary = 1 ]; then
     if [ $saved = 1 ]; then
 	files=`ls -1tr ~/CTS-*/cluster-log.txt`
     fi
-    for f in $files; do 
+    for f in $files; do
 	echo $f
 	case $verbose in
 	    0) cat -n $f | grep $patterns | grep -v "CTS: debug:"
