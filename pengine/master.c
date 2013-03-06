@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -394,7 +394,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static gboolean
-anonymous_known_on(resource_t * rsc, node_t * node)
+filter_anonymous_instance(resource_t * rsc, node_t * node)
 {
     GListPtr rIter = NULL;
     char *key = clone_strip(rsc->id);
@@ -402,10 +402,35 @@ anonymous_known_on(resource_t * rsc, node_t * node)
 
     for (rIter = parent->children; rIter; rIter = rIter->next) {
         resource_t *child = rIter->data;
+        resource_t *active = parent->fns->find_rsc(child, key, node, pe_find_clone|pe_find_current);
 
-        /* ->find_rsc() because we might be a cloned group
-         * and knowing that other members of the group are
-         * known here implies nothing
+        /*
+         * Look for an active instance on $node, if there is one, only it recieves the master score
+         * Use ->find_rsc() because we might be a cloned group
+         */
+        if(rsc == active) {
+            pe_rsc_trace(rsc, "Found %s for %s active on %s: done", active->id, key, node->details->uname);
+            free(key);
+            return TRUE;
+        } else if(active) {
+            pe_rsc_trace(rsc, "Found %s for %s on %s: not %s", active->id, key, node->details->uname, rsc->id);
+            free(key);
+            return FALSE;
+        } else {
+            pe_rsc_trace(rsc, "%s on %s: not active", key, node->details->uname);
+        }
+    }
+
+    for (rIter = parent->children; rIter; rIter = rIter->next) {
+        resource_t *child = rIter->data;
+
+        /*
+         * We know its not running, but any score will still count if
+         * the instance has been probed on $node
+         *
+         * Again use ->find_rsc() because we might be a cloned group
+         * and knowing that other members of the group are known here
+         * implies nothing
          */
         rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
         pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
@@ -452,11 +477,11 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         node_t *match = pe_find_node_id(rsc->running_on, node->details->id);
         node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
-        if (is_not_set(rsc->flags, pe_rsc_unique) && anonymous_known_on(rsc, node)) {
-            pe_rsc_trace(rsc, "Anonymous clone %s is known on %s", rsc->id, node->details->uname);
+        if (is_not_set(rsc->flags, pe_rsc_unique) && filter_anonymous_instance(rsc, node)) {
+            pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
 
         } else if (match == NULL && known == NULL) {
-            pe_rsc_trace(rsc, "%s (aka. %s) is not known on %s - ignoring", rsc->id,
+            pe_rsc_trace(rsc, "%s (aka. %s) has been filtered on %s - ignoring", rsc->id,
                          rsc->clone_name, node->details->uname);
             return score;
         }
