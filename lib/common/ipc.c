@@ -583,7 +583,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_server_flags f
             crm_trace("Response %d sent, %d bytes to %p[%d]", header->qb.id, rc, c->ipcs, c->pid);
         }
 
-        if (header->flags & crm_ipc_server_free) {
+        if (flags & crm_ipc_server_free) {
             free(iov[0].iov_base);
             free(iov[1].iov_base);
             free(iov);

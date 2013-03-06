@@ -2,18 +2,18 @@
  #			Almost everything as part of hb_report
  # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
  #			Cleanups, refactoring, extensions
- # 
- # 
+ #
+ #
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
  # version 2.1 of the License, or (at your option) any later version.
- # 
+ #
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  # General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,7 +53,7 @@ stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeed
 start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
-PACKAGES="pacemaker pacemaker-libs libpacemaker3 
+PACKAGES="pacemaker pacemaker-libs libpacemaker3
 pacemaker-pygui pacemaker-pymgmt pymgmt-client
 openais libopenais2 libopenais3 corosync libcorosync4
 resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
@@ -103,7 +103,7 @@ detect_host() {
         depth="-maxdepth $maxdepth"
     fi
 
-    local_state_dir=/var
+    local_state_dir=@localstatedir@
 
     if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
@@ -120,7 +120,7 @@ detect_host() {
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
     CRM_DAEMON_DIR=
-    for p in /usr /usr/local /opt/local; do
+    for p in /usr /usr/local /opt/local @exec_prefix@; do
 	for d in libexec lib64 lib; do
 	    if [ -e $p/$d/pacemaker/pengine ]; then
 		CRM_DAEMON_DIR=$p/$d/pacemaker
@@ -266,7 +266,7 @@ get_time_format() {
 }
 
 get_first_time() {
-    l="" 
+    l=""
     format=$1
     while read l; do
 	t=$(echo $l | get_time_$format)
@@ -346,7 +346,7 @@ shrink() {
     olddir=$PWD
     dir=`dirname $1`
     base=`basename $1`
-    
+
     target=$1.tar
     tar_options="cf"
 
@@ -634,7 +634,7 @@ getcfvar() {
 	    sed 's/#.*//' < $cf_file |
 		grep -w "^$cf_var" |
 		sed 's/^[^[:space:]]*[[:space:]]*//'
-	    
+
 	    ;;
     esac
 }
@@ -654,7 +654,7 @@ pickfirst() {
 # and existence of configuration files
 #
 get_cluster_type() {
-    if 
+    if
 	ps -ef | egrep -qs '[c]orosync'
     then
 	tool=`pickfirst corosync-objctl corosync-cmapctl`
@@ -751,4 +751,3 @@ t=`get_time "12:00"`
 if [ "$t" = "" ]; then
 	fatal "please install the perl Date::Parse module (perl-DateTime-Format-DateParse on Fedora/Red Hat)"
 fi
-
