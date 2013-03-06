@@ -39,7 +39,7 @@ void *convert_const_pointer(const void *ptr);
 
 /* For ACLs */
 char *uid2username(uid_t uid);
-void determine_request_user(char *user, xmlNode * request, const char *field);
+void determine_request_user(const char *user, xmlNode * request, const char *field);
 
 #  if ENABLE_ACL
 #    include <string.h>
