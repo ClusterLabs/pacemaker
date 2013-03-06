@@ -83,7 +83,7 @@ AutoReqProv:   on
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
-Requires:      %{name}-lrm = %{version}-%{release}
+Requires:      %{name}-remote = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      python >= 2.4
 
@@ -243,18 +243,21 @@ manager for Linux-HA (Heartbeat) and/or Corosync.
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
-%package -n %{name}-lrm
+%package -n %{name}-remote
 License:      GPLv2+ and LGPLv2+
-Summary:      Local Resource Management Daemon used by Pacemaker
+Summary:      Pacemaker remote daemon for remote pacemaker nodes.
 Group:        System Environment/Daemons
 Requires:     %{name}-libs = %{version}-%{release}
+Requires:      %{name}-cli = %{version}-%{release}
+Requires:      resource-agents
 
-%description -n %{name}-lrm
+%description -n %{name}-remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Linux-HA (Heartbeat) and/or Corosync.
 
-The %{name}-lrm package contains the Local Resource Management Daemon
-pacemaker component.
+The %{name}-remote package contains the Pacemaker Remote daemon
+which is capable of extending pacemaker functionality to remote
+nodes outside the corosync cluster.
 
 %package -n %{name}-libs-devel 
 License:      GPLv2+ and LGPLv2+
@@ -376,14 +379,12 @@ rm -rf %{buildroot}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
 /sbin/chkconfig --add pacemaker || :
-/sbin/chkconfig --add lrm || :
 
 %preun
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
-    /sbin/chkconfig --del lrm || :
 fi
 
 %pre -n %{name}-libs
@@ -419,7 +420,7 @@ exit 0
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
-%exclude %{_libexecdir}/pacemaker/lrmd
+%exclude %{_libexecdir}/pacemaker/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
 %if %{with heartbeat}
@@ -526,14 +527,14 @@ exit 0
 %doc COPYING.LIB
 %doc AUTHORS
 
-%files -n %{name}-lrm
+%files -n %{name}-remote
 %defattr(-,root,root)
 
 %if %{defined _unitdir}
-%{_unitdir}/lrm.service
+%{_unitdir}/pacemaker_remote.service
 %endif
 
-%{_libexecdir}/pacemaker/lrmd
+%{_libexecdir}/pacemaker/pacemaker_remoted
 %doc COPYING.LIB
 %doc AUTHORS
 

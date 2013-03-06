@@ -23,18 +23,28 @@ test_SCRIPTS		= regression.py
 lrmdlibdir	= $(CRM_DAEMON_DIR)
 
 ## binary progs
-lrmdlib_PROGRAMS = lrmd lrmd_test
+lrmdlib_PROGRAMS = lrmd lrmd_test pacemaker_remoted
 
 if HAVE_SYSTEMD
-systemdunit_DATA = lrm.service
+systemdunit_DATA = pacemaker_remote.service
 endif
 
-lrmd_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c
+lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
 			$(top_builddir)/lib/fencing/libstonithd.la \
 			$(top_builddir)/lib/cib/libcib.la
+
+
+pacemaker_remoted_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c
+pacemaker_remoted_CFLAGS = -DSUPPORT_REMOTE
+pacemaker_remoted_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/services/libcrmservice.la \
+			$(top_builddir)/lib/lrmd/liblrmd.la  \
+			$(top_builddir)/lib/fencing/libstonithd.la \
+			$(top_builddir)/lib/cib/libcib.la
+
 
 lrmd_test_SOURCES	= test.c
 lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\

@@ -37,7 +37,7 @@ typedef struct lrmd_key_value_s {
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
 #define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
-#define DEFAULT_REMOTE_PORT 1984
+#define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
 #define F_LRMD_OPERATION        "lrmd_op"

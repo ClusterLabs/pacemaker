@@ -1004,7 +1004,9 @@ process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
 
     if (crm_is_true(is_ipc_provider)) {
         /* this is a remote connection from a cluster nodes crmd */
+#ifdef SUPPORT_REMOTE
         ipc_proxy_add_provider(client);
+#endif
     }
 
     free_xml(reply);
@@ -1262,7 +1264,9 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (crm_str_eq(op, CRM_OP_IPC_FWD, TRUE)) {
+#ifdef SUPPORT_REMOTE
         ipc_proxy_forward_client(client, request);
+#endif
         do_reply = 1;
     } else if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
         rc = process_lrmd_signon(client, id, request);

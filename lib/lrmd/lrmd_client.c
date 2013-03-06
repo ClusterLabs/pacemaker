@@ -937,6 +937,10 @@ lrmd_tls_set_key(gnutls_datum_t * key, const char *location)
     static size_t key_cache_len = 0;
     static time_t key_cache_updated;
 
+    if (location == NULL) {
+        return -1;
+    }
+
     if (key_cache) {
         time_t now = time(NULL);
 
@@ -1001,6 +1005,12 @@ static int
 lrmd_tls_key_cb(gnutls_session_t session, char **username, gnutls_datum_t * key)
 {
     int rc = 0;
+    const char *specific_location = getenv("PCMK_authkey_location");
+
+    if (lrmd_tls_set_key(key, specific_location) == 0) {
+        crm_debug("Using custom authkey location %s", specific_location);
+        return 0;
+    }
 
     if (lrmd_tls_set_key(key, DEFAULT_REMOTE_KEY_LOCATION)) {
         rc = lrmd_tls_set_key(key, ALT_REMOTE_KEY_LOCATION);
@@ -1932,7 +1942,12 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
     native->type = CRM_CLIENT_TLS;
     native->remote_nodename = nodename ? strdup(nodename) : strdup(server);
     native->server = server ? strdup(server) : strdup(nodename);
-    native->port = port ? port : DEFAULT_REMOTE_PORT;
+    native->port = port;
+    if (native->port == 0) {
+        const char *remote_port_str = getenv("PCMK_remote_port");
+        native->port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+    }
+
     return new_lrmd;
 #else
     crm_err("GNUTLS is not enabled for this build, remote LRMD client can not be created");
