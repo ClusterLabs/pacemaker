@@ -2251,7 +2251,10 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
         max = (length * 1.1) + 600; /* recomended size */
     }
 
+#ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &before_t);
+#endif
+
     /* coverity[returned_null] Ignore */
     compressed = malloc(max);
 
@@ -2267,7 +2270,10 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
         return FALSE;
     }
 
+#ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
+#endif
+
     crm_info("Compressed %d bytes into %d (ratio %d:1) in %dms",
              length, *result_len, length / (*result_len),
              (after_t.tv_sec - before_t.tv_sec) * 1000 + (after_t.tv_nsec -
