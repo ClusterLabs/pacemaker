@@ -14,8 +14,8 @@ clone_color: fence_node:1 allocation score on cxb1: 1
 clone_color: named_drbd allocation score on cxa1: 200
 clone_color: named_drbd allocation score on cxb1: 210
 clone_color: named_drbd_node:0 allocation score on cxa1: 76
-clone_color: named_drbd_node:0 allocation score on cxb1: 75
-clone_color: named_drbd_node:1 allocation score on cxa1: 75
+clone_color: named_drbd_node:0 allocation score on cxb1: 0
+clone_color: named_drbd_node:1 allocation score on cxa1: 0
 clone_color: named_drbd_node:1 allocation score on cxb1: 76
 clone_color: pingd_clone allocation score on cxa1: 0
 clone_color: pingd_clone allocation score on cxb1: 0
@@ -52,7 +52,7 @@ native_color: named_daemon allocation score on cxa1: -INFINITY
 native_color: named_daemon allocation score on cxb1: -INFINITY
 native_color: named_drbd_node:0 allocation score on cxa1: 76
 native_color: named_drbd_node:0 allocation score on cxb1: -INFINITY
-native_color: named_drbd_node:1 allocation score on cxa1: 75
+native_color: named_drbd_node:1 allocation score on cxa1: 0
 native_color: named_drbd_node:1 allocation score on cxb1: 76
 native_color: named_filesys allocation score on cxa1: -INFINITY
 native_color: named_filesys allocation score on cxb1: -INFINITY

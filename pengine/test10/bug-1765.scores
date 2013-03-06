@@ -1,9 +1,9 @@
 Allocation scores:
 clone_color: drbd0:0 allocation score on sles236: 76
 clone_color: drbd0:0 allocation score on sles238: 75
-clone_color: drbd0:1 allocation score on sles236: 10
+clone_color: drbd0:1 allocation score on sles236: 0
 clone_color: drbd0:1 allocation score on sles238: 5
-clone_color: drbd1:0 allocation score on sles236: 10
+clone_color: drbd1:0 allocation score on sles236: 0
 clone_color: drbd1:0 allocation score on sles238: 76
 clone_color: drbd1:1 allocation score on sles236: 76
 clone_color: drbd1:1 allocation score on sles238: 0
@@ -21,7 +21,7 @@ native_color: drbd0:0 allocation score on sles236: 76
 native_color: drbd0:0 allocation score on sles238: 75
 native_color: drbd0:1 allocation score on sles236: -INFINITY
 native_color: drbd0:1 allocation score on sles238: 5
-native_color: drbd1:0 allocation score on sles236: 10
+native_color: drbd1:0 allocation score on sles236: 0
 native_color: drbd1:0 allocation score on sles238: 76
 native_color: drbd1:1 allocation score on sles236: 76
 native_color: drbd1:1 allocation score on sles238: -INFINITY
