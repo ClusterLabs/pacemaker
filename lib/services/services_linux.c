@@ -37,6 +37,10 @@
 
 #include "services_private.h"
 
+#if SUPPORT_CIBSECRETS
+#  include "crm/common/cib_secrets.h"
+#endif
+
 static inline void
 set_fd_opts(int fd, int opts)
 {
@@ -349,6 +353,20 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 close(lpc);
             }
 
+#if SUPPORT_CIBSECRETS
+            if (replace_secret_params(op->rsc, op->params) < 0) {
+                /* replacing secrets failed! */
+                if (safe_str_eq(op->action,"stop")) {
+                    /* don't fail on stop! */
+                    crm_info("proceeding with the stop operation for %s", op->rsc);
+
+                } else {
+                    crm_err("failed to get secrets for %s, "
+                            "considering resource not configured", op->rsc);
+                    _exit(PCMK_OCF_NOT_CONFIGURED);
+                }
+            }
+#endif
             /* Setup environment correctly */
             add_OCF_env_vars(op);
 
