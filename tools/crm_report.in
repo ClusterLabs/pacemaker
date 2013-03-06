@@ -20,8 +20,8 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lp:c:dSACHu:MVs	\
-    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    -o hv?xl:f:t:n:T:Lp:c:dSACHu:D:MVs	\
+    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features	\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
@@ -71,6 +71,7 @@ Options:
   -C, --corosync	force the cluster type to be CoroSync
   -H, --heartbeat	force the cluster type to be Heartbeat
   -u, --user user	ssh username for cluster nodes (default: root)
+  -D, --depth           search depth to use when attempting to locate files
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
@@ -115,6 +116,7 @@ while true; do
 	-H|--heartbeat) cluster="heartbeat"; shift;;
 	-c|--cluster)   cluster="$2"; shift; shift;;
 	-u|--user)      ssh_user="$2"; shift; shift;;
+        -D|--max-depth)     maxdepth="$2"; shift; shift;;
 	-M) search_logs=0; shift;;
 	--dest) DESTDIR=$2; shift; shift;;
 	--) if [ ! -z $2 ]; then DESTDIR=$2; fi; break;;
@@ -171,6 +173,7 @@ LOG_PATTERNS="$log_patterns"
 EXTRA_LOGS="$extra_logs"
 SEARCH_LOGS=$search_logs
 verbose=$verbose
+maxdepth=$maxdepth
 EOF
 
 	if [ $host = $node ]; then
