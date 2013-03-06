@@ -675,7 +675,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     free(key);
 
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, host_uname);
-    if (safe_str_eq(router_node, host_uname)) {
+    if (safe_str_neq(router_node, host_uname)) {
         crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
     }
 
@@ -730,7 +730,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 }
 
 static int
-delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
+delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname,
                resource_t * rsc, pe_working_set_t * data_set)
 {
     int rc = pcmk_ok;
@@ -744,7 +744,7 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             resource_t *child = (resource_t *) lpc->data;
 
-            delete_lrm_rsc(crmd_channel, host_uname, child, data_set);
+            delete_lrm_rsc(cib_conn, crmd_channel, host_uname, child, data_set);
         }
         return pcmk_ok;
 
@@ -755,7 +755,7 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
             node_t *node = (node_t *) lpc->data;
 
             if (node->details->online) {
-                delete_lrm_rsc(crmd_channel, node->details->uname, rsc, data_set);
+                delete_lrm_rsc(cib_conn, crmd_channel, node->details->uname, rsc, data_set);
             }
         }
 
@@ -767,14 +767,22 @@ delete_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
     if (rc == pcmk_ok) {
         char *attr_name = NULL;
         const char *id = rsc->id;
+        node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (rsc->clone_name) {
             id = rsc->clone_name;
         }
 
         attr_name = crm_concat("fail-count", id, '-');
-        attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
+        if (node && node->details->remote_rsc) {
+            /* TODO talk directly to cib for remote nodes until we can re-write 
+             * attrd to handle remote-nodes */
+            delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
+                                  NULL, attr_name, NULL, FALSE, NULL);
+        } else {
+            attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
                               NULL, NULL);
+        }
         free(attr_name);
     }
     return rc;
@@ -1703,7 +1711,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'C') {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
-        rc = delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
+        rc = delete_lrm_rsc(cib_conn, crmd_channel, host_uname, rsc, &data_set);
         if (rc == pcmk_ok) {
             start_mainloop();
         }

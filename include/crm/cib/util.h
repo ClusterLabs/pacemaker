@@ -59,7 +59,7 @@ int delete_attr_delegate(cib_t * the_cib, int options,
                          const char *attr_id, const char *attr_name,
                          const char *attr_value, gboolean to_console, const char *user_name);
 
-int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid);
+int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node);
 
 int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
 

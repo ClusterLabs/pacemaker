@@ -1018,11 +1018,35 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
 crm_ipc_t *attrd_ipc = NULL;
 
+static int
+update_without_attrd(const char *host_uuid, const char *name, const char *value, const char *user_name)
+{
+    if (fsa_cib_conn == NULL) {
+        return -1;
+    }
+
+    crm_trace("updating status for host_uuid %s, %s=%s", host_uuid, name ? name : "<null>", value ? value : "<null>");
+    return update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, host_uuid, NULL, NULL,
+                              NULL, name, value, FALSE, user_name);
+}
+
 void
-update_attrd(const char *host, const char *name, const char *value, const char *user_name)
+update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node)
 {
     gboolean rc;
     int max = 5;
+
+    /* TODO eventually we will want to update/replace the attrd with
+     * something that can handle remote nodes as well as cluster nodes */
+    if (is_remote_node) {
+        /* host is required for updating a remote node */
+        CRM_CHECK(host != NULL, return;);
+        /* remote node uname and uuid are equal */
+        if (update_without_attrd(host, name, value, user_name) < pcmk_ok) {
+            crm_err("Could not update attribute %s for remote-node %s", name, host);
+        }
+        return;
+    }
 
     if (attrd_ipc == NULL) {
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);

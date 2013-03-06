@@ -31,6 +31,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
+#  include <crm/common/ipcs.h>
 
 /* Dynamic loading of libraries */
 void *find_library_function(void **handle, const char *lib, const char *fn, int fatal);
@@ -308,5 +309,12 @@ typedef struct {
 } __attribute__ ((aligned(8))) cs_ipc_header_response_t;
 
 #  endif
+
+void
+attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb);
+
+qb_ipcs_service_t *
+crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb);
+
 
 #endif                          /* CRM_INTERNAL__H */

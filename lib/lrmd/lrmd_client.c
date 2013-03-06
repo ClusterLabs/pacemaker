@@ -58,6 +58,11 @@ static stonith_t *stonith_api = NULL;
 static int lrmd_api_disconnect(lrmd_t * lrmd);
 static int lrmd_api_is_connected(lrmd_t * lrmd);
 
+/* IPC proxy functions */
+int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
+static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
+void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
+
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define LRMD_CLIENT_HANDSHAKE_TIMEOUT 5000    /* 5 seconds */
 gnutls_psk_client_credentials_t psk_cred_s;
@@ -92,6 +97,9 @@ typedef struct lrmd_private_s {
 
     lrmd_event_callback callback;
 
+    /* Internal IPC proxy msg passing for remote guests */
+    void (*proxy_callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg);
+    void *proxy_callback_userdata;
 } lrmd_private_t;
 
 static lrmd_list_t *
@@ -227,8 +235,15 @@ static int
 lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 {
     const char *type;
+    const char *proxy_session = crm_element_value(msg, F_LRMD_IPC_SESSION);
     lrmd_private_t *native = lrmd->private;
     lrmd_event_data_t event = { 0, };
+
+    if (proxy_session != NULL) {
+        /* this is proxy business */
+        lrmd_internal_proxy_dispatch(lrmd, msg);
+        return 1;
+    }
 
     if (!native->callback) {
         /* no callback set */
@@ -835,6 +850,11 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
 
+    /* advertise that we are a proxy provider */
+    if (native->proxy_callback) {
+        crm_xml_add(hello, F_LRMD_IS_IPC_PROVIDER, "true");
+    }
+
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
@@ -1398,6 +1418,38 @@ lrmd_api_set_callback(lrmd_t * lrmd, lrmd_event_callback callback)
     lrmd_private_t *native = lrmd->private;
 
     native->callback = callback;
+}
+
+void
+lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg))
+{
+    lrmd_private_t *native = lrmd->private;
+
+    native->proxy_callback = callback;
+    native->proxy_callback_userdata = userdata;
+}
+
+void
+lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
+{
+    lrmd_private_t *native = lrmd->private;
+
+    if (native->proxy_callback) {
+        crm_log_xml_trace(msg, "PROXY_INBOUND");
+        native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
+    }
+}
+
+int
+lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
+{
+    if (lrmd == NULL) {
+        return -ENOTCONN;
+    }
+    crm_xml_add(msg, F_LRMD_OPERATION, CRM_OP_IPC_FWD);
+
+    crm_log_xml_trace(msg, "PROXY_OUTBOUND");
+    return lrmd_send_xml_no_reply(lrmd, msg);
 }
 
 static int

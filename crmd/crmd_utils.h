@@ -90,7 +90,7 @@ xmlNode *do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, cons
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void erase_status_tag(const char *uname, const char *tag, int options);
-void update_attrd(const char *host, const char *name, const char *value, const char *user_name);
+void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
 
 int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);

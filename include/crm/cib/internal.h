@@ -18,6 +18,7 @@
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
+#  include <crm/common/ipcs.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"
@@ -187,5 +188,16 @@ int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
                     xmlNode ** output_data, int call_options, const char *user_name);
+
+
+void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
+        qb_ipcs_service_t **ipcs_rw,
+        qb_ipcs_service_t **ipcs_shm,
+        struct qb_ipcs_service_handlers *ro_cb,
+        struct qb_ipcs_service_handlers *rw_cb);
+
+void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
+        qb_ipcs_service_t *ipcs_rw,
+        qb_ipcs_service_t *ipcs_shm);
 
 #endif
