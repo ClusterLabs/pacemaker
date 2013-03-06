@@ -97,6 +97,12 @@ fatal() {
 }
 
 detect_host() {
+    if [ -z "$maxdepth" ]; then
+        depth="-maxdepth 5"
+    else
+        depth="-maxdepth $maxdepth"
+    fi
+    local_state_dir=@localstatedir@
 
     depth="-maxdepth 5"
     local_state_dir=/var
