@@ -33,6 +33,7 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
+#define LRMD_PROTOCOL_VERSION "1.0"
 
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
@@ -44,6 +45,7 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_CLIENTNAME       "lrmd_clientname"
 #define F_LRMD_IS_IPC_PROVIDER  "lrmd_is_ipc_provider"
 #define F_LRMD_CLIENTID         "lrmd_clientid"
+#define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
 #define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
 #define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
 #define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"

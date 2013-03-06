@@ -849,6 +849,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, F_TYPE, T_LRMD);
     crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
+    crm_xml_add(hello, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
     if (native->proxy_callback) {
@@ -867,7 +868,14 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
 
-        if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+        crm_element_value_int(reply, F_LRMD_RC, &rc);
+
+        if (rc == -EPROTO) {
+            crm_err("LRMD protocol mismatch client version %s, server version %s",
+                LRMD_PROTOCOL_VERSION, crm_element_value(reply, F_LRMD_PROTOCOL_VERSION));
+            crm_log_xml_err(reply, "Protocol Error");
+
+        } else if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
             crm_err("Invalid registration message: %s", msg_type);
             crm_log_xml_err(reply, "Bad reply");
             rc = -EPROTO;

@@ -997,6 +997,12 @@ process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
 {
     xmlNode *reply = create_xml_node(NULL, "reply");
     const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
+    const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
+
+    if (safe_str_neq(protocol_version, LRMD_PROTOCOL_VERSION)) {
+        crm_xml_add_int(reply, F_LRMD_RC, -EPROTO);
+        crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    }
 
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
