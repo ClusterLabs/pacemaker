@@ -1816,6 +1816,7 @@ extra/Makefile							\
 	extra/rgmanager/Makefile				\
 tools/Makefile							\
 	tools/crm_report					\
+        tools/report.common                                     \
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)

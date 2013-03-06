@@ -99,7 +99,7 @@ fatal() {
 detect_host() {
 
     depth="-maxdepth 5"
-    local_state_dir=/var
+    local_state_dir=@localstatedir@
 
     if [ -d $local_state_dir/run ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
@@ -116,7 +116,7 @@ detect_host() {
     debug "Pacemaker runtime data located in: $CRM_STATE_DIR"
 
     CRM_DAEMON_DIR=
-    for p in /usr /usr/local /opt/local; do
+    for p in /usr /usr/local /opt/local @exec_prefix@; do
 	for d in libexec lib64 lib; do
 	    if [ -e $p/$d/pacemaker/pengine ]; then
 		CRM_DAEMON_DIR=$p/$d/pacemaker
