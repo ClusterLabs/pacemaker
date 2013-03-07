@@ -17,6 +17,10 @@
 # The default value is 'daemon'
 # PCMK_logfacility=none|daemon|user|local0|local1|local2|local3|local4|local5|local6|local7
 
+# Specify syslog priority
+# The default value is 'notice'
+# PCMK_logpriority=emerg|alert|crit|error|warning|notice|info
+
 # Log all messages from a comma-separated list of functions
 # PCMK_trace_functions=function1,function2,function3
 

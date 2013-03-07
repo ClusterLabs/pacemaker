@@ -42,6 +42,7 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 
+unsigned int crm_log_priority = LOG_NOTICE;
 unsigned int crm_log_level = LOG_INFO;
 static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
@@ -461,7 +462,7 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
         }
 
     } else if (source == QB_LOG_SYSLOG) {       /* No tracing to syslog */
-        if (cs->priority <= LOG_NOTICE && cs->priority <= crm_log_level) {
+        if (cs->priority <= crm_log_priority && cs->priority <= crm_log_level) {
             qb_bit_set(cs->targets, source);
         }
         /* Log file tracing options... */
@@ -584,6 +585,34 @@ crm_tracing_enabled(void)
     return FALSE;
 }
 
+static int
+crm_priority2int(const char *name)
+{
+    struct syslog_names {
+        const char *name;
+        int priority;
+    };
+    static struct syslog_names p_names[] = {
+        {"emerg", LOG_EMERG},
+        {"alert", LOG_ALERT},
+        {"crit", LOG_CRIT},
+        {"error", LOG_ERR},
+        {"warning", LOG_WARNING},
+        {"notice", LOG_NOTICE},
+        {"info", LOG_INFO},
+        {"debug", LOG_DEBUG},
+        {NULL, -1}
+    };
+    int lpc;
+
+    for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
+        if (crm_str_eq(p_names[lpc].name, name, TRUE)) {
+            return p_names[lpc].priority;
+        }
+    }
+    return crm_log_priority;
+}
+
 gboolean
 crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
              int argc, char **argv, gboolean quiet)
@@ -641,6 +670,8 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         /* Override the default setting */
         to_stderr = TRUE;
     }
+
+    crm_log_priority = crm_priority2int(daemon_option("logpriority"));
 
     crm_log_level = level;
     qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
