@@ -265,6 +265,8 @@ crmd_exit(int rc)
     cib_delete(fsa_cib_conn);
     fsa_cib_conn = NULL;
 
+    verify_stopped(fsa_state, LOG_WARNING);
+    clear_bit(fsa_input_register, R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
     free(transition_timer);
