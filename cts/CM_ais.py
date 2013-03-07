@@ -330,6 +330,9 @@ class crm_cs_v0(crm_ais):
             r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated...",
             r"error: send_ais_text: Sending message .* via cpg: FAILED",
 
+            r"error: crmd_quorum_destroy: connection terminated",
+            r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect.",
+
             r"error: crm_ipc_read: Connection to stonith-ng failed",
             r"crit: tengine_stonith_connection_destroy: Fencing daemon connection failed",
             r"error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
