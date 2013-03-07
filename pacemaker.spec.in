@@ -244,7 +244,7 @@ libraries needed for nodes that will form part of the cluster nodes.
 
 %package -n %{name}-remote
 License:      GPLv2+ and LGPLv2+
-Summary:      Pacemaker remote daemon for remote pacemaker nodes.
+Summary:      Pacemaker remote daemon for non-cluster nodes.
 Group:        System Environment/Daemons
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
@@ -256,9 +256,9 @@ manager for Linux-HA (Heartbeat) and/or Corosync.
 
 The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
-nodes outside the corosync cluster.
+nodes not running the full corosync/cluster stack.
 
-%package -n %{name}-libs-devel 
+%package -n %{name}-libs-devel
 License:      GPLv2+ and LGPLv2+
 Summary:      Pacemaker development package
 Group:        Development/Libraries
@@ -266,7 +266,7 @@ Requires:     %{name}-cts = %{version}-%{release}
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:     %{name}-cluster-libs = %{version}-%{release}
 Requires:     libtool-ltdl-devel libqb-devel libuuid-devel
-Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel 
+Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel
 %if %{with corosync}
 Requires:     corosynclib-devel
 %endif
@@ -310,7 +310,7 @@ manager for Linux-HA (Heartbeat) and/or Corosync.
 #
 # 'git' sets the file date to the date of the last commit.
 # This can result in files having been created in the future
-# when building on machines in timezones 'behind' the one the 
+# when building on machines in timezones 'behind' the one the
 # commit occurred in - which seriously confuses 'make'
 find . -exec touch \{\} \;
 
@@ -352,7 +352,7 @@ find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.xsl' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.rng' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.dtd' -type f -print0 | xargs -0 chmod a-x
- 
+
 # Dont package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
@@ -697,7 +697,7 @@ fi
 - No longer remove RPATH data, it prevents us finding libperl.so and no other
   libraries were being hardcoded
 - Compile in support for heartbeat
-- Conditionally add heartbeat-devel and corosynclib-devel to the -devel requirements 
+- Conditionally add heartbeat-devel and corosynclib-devel to the -devel requirements
   depending on which stacks are supported
 
 * Mon Aug 17 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-1
@@ -729,7 +729,7 @@ fi
 * Fri Jul  24 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.4-3
 - Initial Fedora checkin
 - Include an AUTHORS and license file in each package
-- Change the library package name to pacemaker-libs to be more 
+- Change the library package name to pacemaker-libs to be more
   Fedora compliant
 - Remove execute permissions from xml related files
 - Reference the new cluster-glue devel package name
