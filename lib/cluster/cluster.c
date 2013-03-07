@@ -615,6 +615,7 @@ get_cluster_type(void)
 
     } else {
         cluster_type = pcmk_cluster_invalid;
+        goto done; /* Keep the compiler happy when no stacks are supported */
     }
 
   done:

@@ -18,9 +18,8 @@
  */
 
 
-#include <lrmd_private.h>
-
 #include <crm_internal.h>
+#include <lrmd_private.h>
 
 #include <glib.h>
 #include <unistd.h>
