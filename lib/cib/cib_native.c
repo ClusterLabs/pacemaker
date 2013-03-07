@@ -385,8 +385,8 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     free_xml(op_msg);
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op,
-                   cib->call_timeout, rc);
+        crm_err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
+                cib->call_timeout, pcmk_strerror(rc), rc);
         rc = -ECOMM;
         goto done;
     }
