@@ -209,7 +209,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             crm_notice("Stonith/shutdown of %s not matched", node->uname);
 
             erase_node_from_join(node->uname);
-            crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
             check_join_state(fsa_state, __FUNCTION__);
 
             abort_transition(INFINITY, tg_restart, "Node failure", NULL);
