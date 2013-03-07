@@ -31,11 +31,13 @@
 
 #include <lrmd_private.h>
 
+#if defined(HAVE_GNUTLS_GNUTLS_H) && defined(SUPPORT_REMOTE)
+#  define ENABLE_PCMK_REMOTE
+#endif
+
 GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 stonith_t *stonith_api = NULL;
-static gboolean enable_remote = FALSE;
-static int remote_port = 0;
 int lrmd_call_id = 0;
 
 static void
@@ -149,7 +151,9 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 
     crm_trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
+#ifdef ENABLE_PCMK_REMOTE
     ipc_proxy_remove_provider(client);
+#endif
     crm_client_destroy(client);
     return 0;
 }
@@ -176,7 +180,7 @@ lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
     switch (client->kind) {
         case CRM_CLIENT_IPC:
             return crm_ipcs_send(client, id, reply, FALSE);
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef ENABLE_PCMK_REMOTE
         case CRM_CLIENT_TLS:
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
@@ -197,7 +201,7 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
                 return -1;
             }
             return crm_ipcs_send(client, 0, msg, TRUE);
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef ENABLE_PCMK_REMOTE
         case CRM_CLIENT_TLS:
             if (client->remote == NULL) {
                 crm_trace("Asked to send event to disconnected remote client");
@@ -227,8 +231,6 @@ static struct crm_option long_options[] = {
     {"help",    0, 0,    '?', "\tThis text"},
     {"version", 0, 0,    '$', "\tVersion information"  },
     {"verbose", 0, 0,    'V', "\tIncrease debug output"},
-    {"tls_enable", 0, 0, 't', "\tEnable TLS connection."},
-    {"tls_port", 1, 0,   'p', "\tTLS port to listen to, defaults to 1984"},
 
     {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
     {0, 0, 0, 0}
@@ -242,9 +244,15 @@ main(int argc, char **argv)
     int flag = 0;
     int index = 0;
 
-    crm_log_init("lrmd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+#ifdef ENABLE_PCMK_REMOTE
+    crm_log_init("pacemaker_remoted", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for controlling services confirming to different standards");
+#else
+    crm_log_init("lrmd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_set_options(NULL, "[options]", long_options,
+                    "Pacemaker Remote daemon for extending pacemaker functionality to remote nodes.");
+#endif
 
     while (1) {
         flag = crm_get_option(argc, argv, &index);
@@ -256,11 +264,6 @@ main(int argc, char **argv)
             case 'l':
                 crm_add_logfile(optarg);
                 break;
-            case 't':
-                enable_remote = TRUE;
-                break;
-            case 'p':
-                remote_port = atoi(optarg);
             case 'V':
                 set_crm_log_level(crm_log_level + 1);
                 break;
@@ -274,10 +277,6 @@ main(int argc, char **argv)
         }
     }
 
-    if (enable_remote && !remote_port) {
-        remote_port = DEFAULT_REMOTE_PORT;
-    }
-
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
@@ -285,18 +284,18 @@ main(int argc, char **argv)
         crm_exit(100);
     }
 
-    if (enable_remote) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef ENABLE_PCMK_REMOTE
+    {
+        const char *remote_port_str = getenv("PCMK_remote_port");
+        int remote_port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+
         if (lrmd_init_remote_tls_server(remote_port) < 0) {
-            crm_err("Failed to create TLS server: shutting down and inhibiting respawn");
+            crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);
             crm_exit(100);
         }
         ipc_proxy_init();
-#else
-        crm_err("GNUTLS not enabled in this build, can not establish remote server");
-        crm_exit(100);
-#endif
     }
+#endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_new(FALSE);
@@ -304,12 +303,10 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     mainloop_del_ipc_server(ipcs);
-    if (enable_remote) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        lrmd_tls_server_destroy();
-        ipc_proxy_cleanup();
+#ifdef ENABLE_PCMK_REMOTE
+    lrmd_tls_server_destroy();
+    ipc_proxy_cleanup();
 #endif
-    }
     crm_client_cleanup();
 
     g_hash_table_destroy(rsc_list);

@@ -39,6 +39,7 @@ static qb_ipcs_service_t *cib_shm = NULL;
 
 static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
+static qb_ipcs_service_t *stonith_ipcs = NULL;
 
 /* ipc providers == crmd clients connecting from cluster nodes */
 GHashTable *ipc_providers;
@@ -106,6 +107,12 @@ static int32_t
 attrd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, T_ATTRD);
+}
+
+static int32_t
+stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+{
+    return ipc_proxy_accept(c, uid, gid, "stonith-ng");
 }
 
 static int32_t
@@ -268,6 +275,14 @@ static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
     .connection_destroyed = ipc_proxy_destroy
 };
 
+static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
+    .connection_accept = stonith_proxy_accept,
+    .connection_created = ipc_proxy_created,
+    .msg_process = ipc_proxy_dispatch,
+    .connection_closed = ipc_proxy_closed,
+    .connection_destroyed = ipc_proxy_destroy
+};
+
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
     .connection_accept = cib_proxy_accept_ro,
     .connection_created = ipc_proxy_created,
@@ -330,6 +345,7 @@ ipc_proxy_init(void)
                          &cib_proxy_callbacks_rw);
 
     attrd_ipc_server_init(&attrd_ipcs, &attrd_proxy_callbacks);
+    stonith_ipc_server_init(&stonith_ipcs, &stonith_proxy_callbacks);
     crmd_ipcs = crmd_ipc_server_init(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
         crm_err("Failed to create crmd server: exiting and inhibiting respawn.");
@@ -349,6 +365,7 @@ ipc_proxy_cleanup(void)
     }
     cib_ipc_servers_destroy(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
+    qb_ipcs_destroy(stonith_ipcs);
     qb_ipcs_destroy(crmd_ipcs);
     cib_ro = NULL;
     cib_rw = NULL;
