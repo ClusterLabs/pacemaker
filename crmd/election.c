@@ -180,22 +180,6 @@ struct election_data_s {
     unsigned int winning_bornon;
 };
 
-static void
-log_member_name(gpointer key, gpointer value, gpointer user_data)
-{
-    const crm_node_t *node = value;
-
-    if (crm_is_peer_active(node)) {
-        crm_err("%s: %s proc=%.32x", (char *)user_data, (char *)key, node->processes);
-    }
-}
-
-static void
-log_node(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_err("%s: %s", (char *)user_data, (char *)key);
-}
-
 void
 do_election_check(long long action,
                   enum crmd_fsa_cause cause,
@@ -220,15 +204,21 @@ do_election_check(long long action,
         crm_timer_stop(election_timeout);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
         if (voted_size > num_members) {
-            char *data = NULL;
+            GHashTableIter gIter;
+            const crm_node_t *node;
+            char *key = NULL;
 
-            data = strdup("member");
-            g_hash_table_foreach(crm_peer_cache, log_member_name, data);
-            free(data);
+            g_hash_table_iter_init(&gIter, crm_peer_cache);
+            while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
+                if (crm_is_peer_active(node)) {
+                    crm_err("member: %s proc=%.32x", node->uname, node->processes);
+                }
+            }
 
-            data = strdup("voted");
-            g_hash_table_foreach(voted, log_node, data);
-            free(data);
+            g_hash_table_iter_init(&gIter, voted);
+            while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
+                crm_err("voted: %s", key);
+            }
 
         }
         crm_debug("Destroying voted hash");
