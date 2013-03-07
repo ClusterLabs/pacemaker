@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -320,7 +320,11 @@ static char *blackbox_file_prefix = NULL;
 static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const char *msg)
 {
-    crm_write_blackbox(0, cs);
+    if(cs && cs->priority < LOG_ERR) {
+        crm_write_blackbox(SIGABRT, cs); /* Bypass the over-dumping logic */
+    } else {
+        crm_write_blackbox(0, cs);
+    }
 }
 
 void
@@ -342,7 +346,7 @@ crm_enable_blackbox(int nsig)
         crm_signal(SIGSEGV, crm_trigger_blackbox);
         crm_update_callsites();
 
-        /* Original meanings from signal(7) 
+        /* Original meanings from signal(7)
          *
          * Signal       Value     Action   Comment
          * SIGTRAP        5        Core    Trace/breakpoint trap
