@@ -342,38 +342,6 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 }
 
 void
-crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
-{
-    enum crm_join_phase last = 0;
-
-    if(node == NULL) {
-        crm_err("%s: Could not set join to %d for NULL", source, phase);
-        return;
-    }
-
-    last = node->join;
-
-    if(phase == last) {
-        crm_trace("%s: Node %s[%u] - join phase still %u",
-                  source, node->uname, node->id, last);
-
-    } else if (phase <= crm_join_none) {
-        node->join = phase;
-        crm_info("%s: Node %s[%u] - join phase %u -> %u",
-                 source, node->uname, node->id, last, phase);
-
-    } else if(phase == last + 1) {
-        node->join = phase;
-        crm_info("%s: Node %s[%u] - join phase %u -> %u",
-                 source, node->uname, node->id, last, phase);
-    } else {
-        crm_err("%s: Node %s[%u] - join phase cannot transition from %u to %u",
-                source, node->uname, node->id, last, phase);
-
-    }
-}
-
-void
 crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const char *status)
 {
     uint32_t last = 0;
@@ -470,7 +438,7 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
     }
 
     if (changed) {
-        crm_notice("%s: Node %s[%u] - state is now %s", source, node->uname, node->id, state);
+        crm_notice("%s: Node %s[%u] - state is now %s (was %s)", source, node->uname, node->id, state, last);
         if (crm_status_callback) {
             crm_status_callback(crm_status_nstate, node, last);
         }

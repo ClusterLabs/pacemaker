@@ -39,6 +39,38 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 static int current_join_id = 0;
 unsigned long long saved_ccm_membership_id = 0;
 
+static void
+crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
+{
+    enum crm_join_phase last = 0;
+
+    if(node == NULL) {
+        crm_err("%s: Could not set join-%u to %d for NULL", source, current_join_id, phase);
+        return;
+    }
+
+    last = node->join;
+
+    if(phase == last) {
+        crm_trace("%s: Node %s[%u] - join-%u phase still %u",
+                  source, node->uname, node->id, current_join_id, last);
+
+    } else if (phase <= crm_join_none) {
+        node->join = phase;
+        crm_info("%s: Node %s[%u] - join-%u phase %u -> %u",
+                 source, node->uname, node->id, current_join_id, last, phase);
+
+    } else if(phase == last + 1) {
+        node->join = phase;
+        crm_info("%s: Node %s[%u] - join-%u phase %u -> %u",
+                 source, node->uname, node->id, current_join_id, last, phase);
+    } else {
+        crm_err("%s: Node %s[%u] - join-%u phase cannot transition from %u to %u",
+                source, node->uname, node->id, current_join_id, last, phase);
+
+    }
+}
+
 void
 initialize_join(gboolean before)
 {

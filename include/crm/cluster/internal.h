@@ -379,8 +379,6 @@ enum crm_quorum_source {
 
 enum crm_quorum_source get_quorum_source(void);
 
-void crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase);
-
 void crm_update_peer_proc(const char *source, crm_node_t * peer, uint32_t flag, const char *status);
 
 crm_node_t *crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen,
