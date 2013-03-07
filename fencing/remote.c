@@ -1190,7 +1190,7 @@ process_remote_stonith_exec(xmlNode * msg)
     if (safe_str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast")) {
         crm_debug("Marking call to %s for %s on behalf of %s@%s.%.8s: %s (%d)",
                   op->action, op->target, op->client_name, op->id, op->originator,
-                  rc == pcmk_ok ? "passed" : "failed", rc);
+                  pcmk_strerror(rc), rc);
         if (rc == pcmk_ok) {
             op->state = st_done;
         } else {
@@ -1212,7 +1212,7 @@ process_remote_stonith_exec(xmlNode * msg)
 
         crm_notice("Call to %s for %s on behalf of %s@%s: %s (%d)",
                    device, op->target, op->client_name, op->originator,
-                   rc == pcmk_ok ? "passed" : "failed", rc);
+                   pcmk_strerror(rc), rc);
 
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
