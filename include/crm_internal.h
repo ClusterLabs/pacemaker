@@ -318,5 +318,14 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
 qb_ipcs_service_t *
 crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb);
 
+void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
+        qb_ipcs_service_t **ipcs_rw,
+        qb_ipcs_service_t **ipcs_shm,
+        struct qb_ipcs_service_handlers *ro_cb,
+        struct qb_ipcs_service_handlers *rw_cb);
+
+void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
+        qb_ipcs_service_t *ipcs_rw,
+        qb_ipcs_service_t *ipcs_shm);
 
 #endif                          /* CRM_INTERNAL__H */

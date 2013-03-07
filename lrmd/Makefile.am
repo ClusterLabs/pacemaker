@@ -33,17 +33,12 @@ lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
-			$(top_builddir)/lib/fencing/libstonithd.la \
-			$(top_builddir)/lib/cib/libcib.la
+			$(top_builddir)/lib/fencing/libstonithd.la
 
 
 pacemaker_remoted_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c
 pacemaker_remoted_CFLAGS = -DSUPPORT_REMOTE
-pacemaker_remoted_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/services/libcrmservice.la \
-			$(top_builddir)/lib/lrmd/liblrmd.la  \
-			$(top_builddir)/lib/fencing/libstonithd.la \
-			$(top_builddir)/lib/cib/libcib.la
+pacemaker_remoted_LDADD		= $(lrmd_LDADD)
 
 
 lrmd_test_SOURCES	= test.c

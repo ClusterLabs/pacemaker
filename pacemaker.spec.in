@@ -383,7 +383,6 @@ rm -rf %{buildroot}
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker stop &>/dev/null || :
-    /sbin/service pacemaker_remote stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
 fi
 
@@ -400,6 +399,17 @@ exit 0
 %post -n %{name}-cluster-libs -p /sbin/ldconfig
 
 %postun -n %{name}-cluster-libs -p /sbin/ldconfig
+
+%post -n %{name}-remote
+%if %{defined _unitdir}
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%endif
+
+%preun -n %{name}-remote
+if [ $1 -eq 0 ]; then
+    # Package removal, not upgrade
+    /sbin/service pacemaker_remote stop &>/dev/null || :
+fi
 
 %files
 ###########################################################
