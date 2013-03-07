@@ -47,6 +47,7 @@
 #include <crm/lrmd.h>
 #include <crm/services.h>
 #include <crm/msg_xml.h>
+#include <crm/cib/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/common/ipc.h>
@@ -1742,6 +1743,32 @@ crm_help(char cmd, int exit_code)
     }
 }
 
+void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
+        qb_ipcs_service_t **ipcs_rw,
+        qb_ipcs_service_t **ipcs_shm,
+        struct qb_ipcs_service_handlers *ro_cb,
+        struct qb_ipcs_service_handlers *rw_cb)
+{
+    *ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, ro_cb);
+    *ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, rw_cb);
+    *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
+
+    if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
+        crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(100);
+    }
+}
+
+void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
+        qb_ipcs_service_t *ipcs_rw,
+        qb_ipcs_service_t *ipcs_shm)
+{
+    qb_ipcs_destroy(ipcs_ro);
+    qb_ipcs_destroy(ipcs_rw);
+    qb_ipcs_destroy(ipcs_shm);
+}
+
 qb_ipcs_service_t *
 crmd_ipc_server_init(struct qb_ipcs_service_handlers *cb)
 {
@@ -1755,6 +1782,18 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
 
     if (*ipcs == NULL) {
         crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_exit(100);
+    }
+}
+
+void
+stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(100);
     }

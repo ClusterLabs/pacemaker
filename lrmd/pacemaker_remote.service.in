@@ -1,5 +1,5 @@
 [Unit]
-Description=Local Resource Management Daemon
+Description=Pacemaker Remote Service
 After=network.target
 Requires=network.target
 
@@ -11,8 +11,9 @@ Type=simple
 KillMode=process
 NotifyAccess=none
 SysVStartPriority=99
+EnvironmentFile=-/etc/sysconfig/pacemaker
 
-ExecStart=@libexecdir@/pacemaker/lrmd -t
+ExecStart=@libexecdir@/pacemaker/pacemaker_remoted
 
 TimeoutStopSec=30s
 TimeoutStartSec=30s

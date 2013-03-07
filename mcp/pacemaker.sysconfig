@@ -54,6 +54,13 @@
 # Mostly only useful for developer testing
 # PCMK_schema_directory=/some/path
 
+#==#==# Pacemaker Remote
+# Use a custom directory for finding the authkey.
+# PCMK_authkey_location=/etc/pacemaker/authkey
+#
+# Specify a custom port for Pacemaker Remote connections
+# PCMK_remote_port=3121
+
 #==#==# IPC
 
 # Force use of a particular class of IPC connection

@@ -692,7 +692,7 @@ check_connect_finished(gpointer userdata)
         if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
             goto reschedule;
         }
-        crm_err("fd %d: timeout during select", sock);
+        crm_debug("fd %d: timeout during select", sock);
         rc = -ETIMEDOUT;
         goto dispatch_done;
     } else {

@@ -849,6 +849,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, F_TYPE, T_LRMD);
     crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
+    crm_xml_add(hello, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
     if (native->proxy_callback) {
@@ -867,7 +868,14 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
 
-        if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+        crm_element_value_int(reply, F_LRMD_RC, &rc);
+
+        if (rc == -EPROTO) {
+            crm_err("LRMD protocol mismatch client version %s, server version %s",
+                LRMD_PROTOCOL_VERSION, crm_element_value(reply, F_LRMD_PROTOCOL_VERSION));
+            crm_log_xml_err(reply, "Protocol Error");
+
+        } else if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
             crm_err("Invalid registration message: %s", msg_type);
             crm_log_xml_err(reply, "Bad reply");
             rc = -EPROTO;
@@ -937,6 +945,10 @@ lrmd_tls_set_key(gnutls_datum_t * key, const char *location)
     static size_t key_cache_len = 0;
     static time_t key_cache_updated;
 
+    if (location == NULL) {
+        return -1;
+    }
+
     if (key_cache) {
         time_t now = time(NULL);
 
@@ -1001,6 +1013,12 @@ static int
 lrmd_tls_key_cb(gnutls_session_t session, char **username, gnutls_datum_t * key)
 {
     int rc = 0;
+    const char *specific_location = getenv("PCMK_authkey_location");
+
+    if (lrmd_tls_set_key(key, specific_location) == 0) {
+        crm_debug("Using custom authkey location %s", specific_location);
+        return 0;
+    }
 
     if (lrmd_tls_set_key(key, DEFAULT_REMOTE_KEY_LOCATION)) {
         rc = lrmd_tls_set_key(key, ALT_REMOTE_KEY_LOCATION);
@@ -1932,7 +1950,12 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
     native->type = CRM_CLIENT_TLS;
     native->remote_nodename = nodename ? strdup(nodename) : strdup(server);
     native->server = server ? strdup(server) : strdup(nodename);
-    native->port = port ? port : DEFAULT_REMOTE_PORT;
+    native->port = port;
+    if (native->port == 0) {
+        const char *remote_port_str = getenv("PCMK_remote_port");
+        native->port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+    }
+
     return new_lrmd;
 #else
     crm_err("GNUTLS is not enabled for this build, remote LRMD client can not be created");
