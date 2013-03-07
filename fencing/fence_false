@@ -77,7 +77,7 @@ def main():
     if options.has_key("-R"):
         val = int(options["-R"])
         ran = random.randint(1, val)
-        print "random sleep for %d seconds" % ran
+        sys.stderr.write("random sleep for %d seconds" % ran)
         time.sleep(ran)
 
     if options.has_key("-o") and (options["-o"] == "monitor"):
