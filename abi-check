@@ -31,7 +31,7 @@ function extract() {
     elif [ -f abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz ]; then
 	return
     fi
-    
+
     echo "Building ABI dump for $*"
     BUILD_ROOT=.ABI-build
 
@@ -64,10 +64,10 @@ EOF
 	echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
 	echo ""
 	echo "To find libraries after building:"
-	echo "  find $BUILD_ROOT/root -name "*.so" -print"    
+	echo "  find $BUILD_ROOT/root -name "*.so" -print"
 
     else
-	find $BUILD_ROOT/root -name "*.so" -print >> $DESC    
+	find $BUILD_ROOT/root -name "*.so" -print >> $DESC
     fi
 
     cat<<EOF>>$DESC
@@ -89,7 +89,7 @@ for arg in $*; do
     extract $T $V
 done
 
-if [ $# -gte 2 ]; then
+if [ $# = 2 ]; then
     V1=`version $1`
     V2=`version $2`
 
@@ -98,6 +98,6 @@ if [ $# -gte 2 ]; then
 	-d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
 
     if [ $UPLOAD = 1 -a -d compat_reports/pacemaker/${V1}_to_${V2} ]; then
-	rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} root@www.clusterlabs.org:/var/www/html/abi/
+	rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} root@www.clusterlabs.org:/var/www/html/abi/pacemaker/
     fi
 fi
