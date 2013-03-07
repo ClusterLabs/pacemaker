@@ -270,6 +270,7 @@ do_lrm_control(long long action,
         }
 
         clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        crm_info("Disconnecting from the LRM");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state);
         crm_notice("Disconnected from the LRM");
@@ -300,7 +301,7 @@ do_lrm_control(long long action,
         }
 
         set_bit(fsa_input_register, R_LRM_CONNECTED);
-        crm_debug("LRM connection established");
+        crm_info("LRM connection established");
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
