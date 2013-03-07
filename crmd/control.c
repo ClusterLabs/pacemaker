@@ -209,6 +209,7 @@ crmd_exit(int rc)
 {
     GListPtr gIter = NULL;
 
+    crm_trace("Preparing to exit");
     if (attrd_ipc) {
         crm_ipc_close(attrd_ipc);
         crm_ipc_destroy(attrd_ipc);
