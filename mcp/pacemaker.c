@@ -809,7 +809,6 @@ main(int argc, char **argv)
     const char *facility = daemon_option("logfacility");
 
     setenv("LC_ALL", "C", 1);
-    setenv("HA_LOGFACILITY", facility, 1);
     setenv("HA_LOGD", "no", 1);
 
     set_daemon_option("mcp", "true");
