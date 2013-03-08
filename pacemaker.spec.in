@@ -512,6 +512,7 @@ fi
 %if %{with corosync}
 %exclude %{_mandir}/man8/pacemakerd.*
 %endif
+%exclude %{_mandir}/man8/pacemaker_remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
 
 %doc COPYING
@@ -549,6 +550,7 @@ fi
 %endif
 
 %{_sbindir}/pacemaker_remoted
+%{_mandir}/man8/pacemaker_remoted.*
 %doc COPYING.LIB
 %doc AUTHORS
 

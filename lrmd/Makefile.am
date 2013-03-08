@@ -31,6 +31,15 @@ if HAVE_SYSTEMD
 systemdunit_DATA = pacemaker_remote.service
 endif
 
+if BUILD_HELP
+man8_MANS =	$(sbin_PROGRAMS:%=%.8)
+endif
+
+%.8:	%
+	echo Creating $@
+	chmod a+x $(top_builddir)/lrmd/$<
+	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/lrmd/$<
+
 lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
