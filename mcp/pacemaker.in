@@ -8,7 +8,7 @@
 
 # chkconfig: - 99 01
 # description: Pacemaker Cluster Manager
-# processname: pacemaker
+# processname: pacemakerd
 #
 ### BEGIN INIT INFO
 # Provides:		pacemaker
