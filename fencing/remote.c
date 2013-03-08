@@ -878,7 +878,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
     const char *device = NULL;
     int timeout = op->base_timeout;
 
-    crm_trace("State for %s.%.8s: %d", op->target, op->client_name, op->id, op->state);
+    crm_trace("State for %s.%.8s: %s %d", op->target, op->client_name, op->id, op->state);
     if (peer == NULL && !is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
     }
@@ -1112,9 +1112,10 @@ process_remote_stonith_query(xmlNode * msg)
          * query results. */
         if (op->state == st_query && all_topology_devices_found(op)) {
             /* All the query results are in for the topology, start the fencing ops. */
+            crm_trace("All topology devices found");
             call_remote_stonith(op, result);
 
-        } else if(op->replies >= op->replies_expected || op->replies >= active) {
+        } else if(op->state == st_query && (op->replies >= op->replies_expected || op->replies >= active)) {
             crm_info("All topology queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
             call_remote_stonith(op, NULL);
         }
@@ -1124,10 +1125,11 @@ process_remote_stonith_query(xmlNode * msg)
          * go ahead and start fencing before query timeout */
         if (host_is_target == FALSE && g_hash_table_size(result->verified_devices)) {
             /* we have a verified device living on a peer that is not the target */
+            crm_trace("Found %d verified devices", g_hash_table_size(result->verified_devices));
             call_remote_stonith(op, result);
 
         } else if (safe_str_eq(op->action, "on")) {
-            /* unfencing. */
+            crm_trace("Unfencing %s", op->target);
             call_remote_stonith(op, result);
 
         } else if(op->replies >= op->replies_expected || op->replies >= active) {
@@ -1187,8 +1189,8 @@ process_remote_stonith_exec(xmlNode * msg)
 
     if (op->devices && device && safe_str_neq(op->devices->data, device)) {
         crm_err
-            ("Received outdated reply for device %s to %s node %s. Operation already timed out at remote level.",
-             device, op->action, op->target);
+            ("Received outdated reply for device %s (instead of %s) to %s node %s. Operation already timed out at remote level.",
+             device, op->devices->data, op->action, op->target);
         return rc;
     }
 
