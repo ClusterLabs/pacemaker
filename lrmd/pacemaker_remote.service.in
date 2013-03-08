@@ -13,7 +13,7 @@ NotifyAccess=none
 SysVStartPriority=99
 EnvironmentFile=-/etc/sysconfig/pacemaker
 
-ExecStart=@libexecdir@/pacemaker/pacemaker_remoted
+ExecStart=@sbindir@/pacemaker_remoted
 
 TimeoutStopSec=30s
 TimeoutStartSec=30s

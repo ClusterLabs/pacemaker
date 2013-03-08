@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# Authors:
+#  Andrew Beekhof <abeekhof@redhat.com>
+#
+# License: Revised BSD
+
+# chkconfig: - 99 01
+# description: Pacemaker Cluster Manager
+# processname: pacemaker_remoted
+#
+### BEGIN INIT INFO
+# Provides:		pacemaker_remoted
+# Required-Start:	$network
+# Should-Start:		$syslog
+# Required-Stop:	$network
+# Default-Start:
+# Default-Stop:
+# Short-Description:	Starts and stops the Pacemaker remote agent for non-cluster nodes
+# Description:		Starts and stops the Pacemaker remote agent for non-cluster nodes
+### END INIT INFO
+
+desc="Pacemaker Remote Agent"
+prog="pacemaker_remoted"
+cman=0
+
+# set secure PATH
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
+
+checkrc() {
+    if [ $? = 0 ]; then
+	success
+    else
+	failure
+    fi
+}
+
+success()
+{
+	echo -ne "[  OK  ]\r"
+}
+
+failure()
+{
+	echo -ne "[FAILED]\r"
+}
+
+status()
+{
+	pid=$(pidof $1 2>/dev/null)
+	rtrn=$?
+	if [ $rtrn -ne 0 ]; then
+		echo "$1 is stopped"
+	else
+		echo "$1 (pid $pid) is running..."
+	fi
+	return $rtrn
+}
+
+# rpm based distros
+if [ -d @sysconfdir@/sysconfig ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker_remote"
+fi
+
+# deb based distros
+if [ -d @sysconfdir@/default ]; then
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker_remote"
+fi
+
+start()
+{
+	echo -n "Starting $desc: "
+
+	# most recent distributions use tmpfs for $@localstatedir@/run
+	# to avoid to clean it up on every boot.
+	# they also assume that init scripts will create
+	# required subdirectories for proper operations
+	mkdir -p @localstatedir@/run
+
+	if status $prog > /dev/null 2>&1; then
+		success
+	else
+		$prog > /dev/null 2>&1 &
+
+		# Time to connect to corosync and fail
+		sleep 5
+
+		if status $prog > /dev/null 2>&1; then
+			touch $LOCK_FILE
+			pidof $prog > @localstatedir@/run/$prog.pid
+			success
+		else
+			failure
+			rtrn=1
+		fi
+	fi
+	echo
+}
+
+stop()
+{
+	if status $prog > /dev/null 2>&1; then
+	    echo -n "Signaling $desc to terminate: "
+	    kill -TERM $(pidof $prog) > /dev/null 2>&1
+	    success
+	    echo
+
+	    echo -n "Waiting for $desc to unload:"
+	    while status $prog > /dev/null 2>&1; do
+		sleep 1
+		echo -n "."
+	    done
+	fi
+
+	rm -f $LOCK_FILE
+	rm -f @localstatedir@/run/$prog.pid
+	success
+	echo
+}
+
+rtrn=0
+
+case "$1" in
+start)
+	start
+;;
+restart|reload|force-reload)
+	stop
+	start
+;;
+condrestart|try-restart)
+	if status $prog > /dev/null 2>&1; then
+	    stop
+	    start
+	    rtrn=$?
+	fi
+;;
+status)
+	status $prog
+	rtrn=$?
+;;
+stop)
+	stop
+	rtrn=$?
+;;
+*)
+	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
+	rtrn=2
+;;
+esac
+
+exit $rtrn

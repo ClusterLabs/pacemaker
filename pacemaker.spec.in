@@ -244,7 +244,7 @@ libraries needed for nodes that will form part of the cluster nodes.
 
 %package -n %{name}-remote
 License:      GPLv2+ and LGPLv2+
-Summary:      Pacemaker remote daemon for non-cluster nodes.
+Summary:      Pacemaker remote daemon for non-cluster nodes
 Group:        System Environment/Daemons
 Requires:     %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
@@ -404,11 +404,13 @@ exit 0
 %if %{defined _unitdir}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
+/sbin/chkconfig --add pacemaker-remote || :
 
 %preun -n %{name}-remote
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/service pacemaker_remote stop &>/dev/null || :
+    /sbin/chkconfig --del pacemaker_remote || :
 fi
 
 %files
@@ -430,7 +432,7 @@ fi
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %exclude %{_libexecdir}/pacemaker/lrmd_test
-%exclude %{_libexecdir}/pacemaker/pacemaker_remoted
+%exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
 %if %{with heartbeat}
@@ -541,11 +543,12 @@ fi
 %defattr(-,root,root)
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
+%{_initrddir}/pacemaker_remote
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker_remote.service
 %endif
 
-%{_libexecdir}/pacemaker/pacemaker_remoted
+%{_sbindir}/pacemaker_remoted
 %doc COPYING.LIB
 %doc AUTHORS
 

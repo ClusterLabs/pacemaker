@@ -4,12 +4,12 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -21,9 +21,11 @@ testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
 
 lrmdlibdir	= $(CRM_DAEMON_DIR)
+lrmdlib_PROGRAMS = lrmd lrmd_test
 
-## binary progs
-lrmdlib_PROGRAMS = lrmd lrmd_test pacemaker_remoted
+initdir		 = $(INITDIR)
+init_SCRIPTS	 = pacemaker_remote
+sbin_PROGRAMS	 = pacemaker_remoted
 
 if HAVE_SYSTEMD
 systemdunit_DATA = pacemaker_remote.service
@@ -37,7 +39,7 @@ lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 
 
 pacemaker_remoted_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c
-pacemaker_remoted_CFLAGS = -DSUPPORT_REMOTE
+pacemaker_remoted_CFLAGS	= -DSUPPORT_REMOTE
 pacemaker_remoted_LDADD		= $(lrmd_LDADD)
 
 
