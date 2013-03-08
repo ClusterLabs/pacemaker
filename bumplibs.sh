@@ -13,7 +13,7 @@ headers[lrmd]="include/crm/lrmd.h"
 
 LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1`
 for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pengine lrmd; do
-    git diff $LAST_RELEASE..HEAD ${headers[$lib]}
+    git diff -w $LAST_RELEASE..HEAD ${headers[$lib]}
     echo ""
 
     am=`find . -name Makefile.am -exec grep -lr "lib${lib}_la.*version-info" \{\} \;`
@@ -29,7 +29,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
     sources=`grep "lib${lib}_la_SOURCES" $am | sed s/.*=// | sed 's:$(top_builddir)/::' | sed 's:$(top_srcdir)/::' | sed 's:\\\::' | sed 's:$(libpe_rules_la_SOURCES):rules.c\ common.c:'`
     full_sources=""
     for f in $sources; do
-	if 
+	if
 	    echo $f | grep -q "/"
 	then
 	    full_sources="$full_sources $f"
@@ -38,17 +38,17 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	fi
     done
 
-    lines=`git diff $LAST_RELEASE..HEAD ${headers[$lib]} $full_sources | wc -l`
+    lines=`git diff -w $LAST_RELEASE..HEAD ${headers[$lib]} $full_sources | wc -l`
 
     if [ $lines -gt 0 ]; then
 	echo "- Headers: ${headers[$lib]}"
 	echo "- Sources: $full_sources"
 	echo "- Changed Sources since $LAST_RELEASE:"
-	git diff $LAST_RELEASE..HEAD --stat $full_sources
+	git diff -w $LAST_RELEASE..HEAD --stat $full_sources
 	echo ""
 	read -p "Are the changes to lib$lib: [a]dditions, [r]emovals or [f]ixes? [None]: " CHANGE
 
-	git show $LAST_RELEASE:$am | grep version-info 
+	git show $LAST_RELEASE:$am | grep version-info
 	VER=`git show $LAST_RELEASE:$am | grep "lib.*${lib}_la.*version-info" | sed s/.*version-info// | awk '{print $1}'`
 	VER_NOW=`grep "lib.*${lib}_la.*version-info" $am | sed s/.*version-info// | awk '{print $1}'`
 	VER_1=`echo $VER | awk -F: '{print $1}'`
@@ -56,7 +56,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	VER_3=`echo $VER | awk -F: '{print $3}'`
 
 	case $CHANGE in
-	    A|a) 
+	    A|a)
 		echo "New version with backwards compatible extensions: x+1:0:z+1"
 		VER_1=`expr $VER_1 + 1`
 		VER_2=0
@@ -68,13 +68,13 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 		VER_2=0
 		VER_3=0
 		;;
-	    F|f) 
+	    F|f)
 		echo "Bugfix: x:y+1:z"
 		VER_2=`expr $VER_2 + 1`
 		;;
 	esac
 	VER_NEW=$VER_1:$VER_2:$VER_3
-	
+
 	if [ ! -z $CHANGE ]; then
 	    if [ $VER_NEW != $VER_NOW ]; then
 		echo "Updating $lib library version: $VER -> $VER_NEW"
@@ -93,4 +93,4 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
     echo ""
 done
 
-git diff
+git diff -w
