@@ -1113,7 +1113,12 @@ process_remote_stonith_query(xmlNode * msg)
         if (op->state == st_query && all_topology_devices_found(op)) {
             /* All the query results are in for the topology, start the fencing ops. */
             call_remote_stonith(op, result);
+
+        } else if(op->replies >= op->replies_expected || op->replies >= active) {
+            crm_info("All topology queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+            call_remote_stonith(op, NULL);
         }
+
     } else if (op->state == st_query) {
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
