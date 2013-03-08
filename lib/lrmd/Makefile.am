@@ -25,7 +25,7 @@ INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
 lib_LTLIBRARIES = liblrmd.la
 
 liblrmd_la_SOURCES = lrmd_client.c
-liblrmd_la_LDFLAGS = -version-info 1:0:0
+liblrmd_la_LDFLAGS = -version-info 2:0:1
 liblrmd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/fencing/libstonithd.la
