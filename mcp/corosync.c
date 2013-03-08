@@ -624,6 +624,7 @@ read_config(void)
     }
 
     set_daemon_option("logfacility", logging_syslog_facility);
+    setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
 
     free(logging_debug);
     free(logging_logfile);
