@@ -240,8 +240,10 @@ changes:
 	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog
 	@printf "  Diff:      " >> ChangeLog
 	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1 >> ChangeLog
+	@printf "\n- Features added in $(NEXT_RELEASE)\n" >> ChangeLog
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf >> ChangeLog
 	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: | sed -e s@High:@@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
