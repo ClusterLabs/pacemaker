@@ -247,6 +247,7 @@ crm_cs_flush_cb(gpointer data)
     return FALSE;
 }
 
+#define CS_SEND_MAX 200
 static ssize_t
 crm_cs_flush(void)
 {
@@ -256,16 +257,25 @@ crm_cs_flush(void)
     static unsigned int last_sent = 0;
 
     if (pcmk_cpg_handle == 0) {
+        crm_trace("Connection is dead");
         return pcmk_ok;
+    }
 
-    } else if (cs_message_timer) {
+    if ((queue_len % 1000) == 0 && queue_len > 1) {
+        crm_err("CPG queue has grown to %d", queue_len);
+
+    } else if (queue_len == CS_SEND_MAX) {
+        crm_warn("CPG queue has grown to %d", queue_len);
+    }
+
+    if (cs_message_timer) {
         /* There is already a timer, wait until it goes off */
         crm_trace("Timer active %d", cs_message_timer);
         return pcmk_ok;
     }
 
     queue_len = g_list_length(cs_message_queue);
-    while (cs_message_queue && sent < 100) {
+    while (cs_message_queue && sent < CS_SEND_MAX) {
         AIS_Message *header = NULL;
         struct iovec *iov = cs_message_queue->data;
 
@@ -302,11 +312,12 @@ crm_cs_flush(void)
     }
 
     if (cs_message_queue) {
-        if (queue_len % 100 == 0 && queue_len > 99) {
-            crm_err("CPG queue has grown to %d", queue_len);
+        uint32_t delay_ms = 100;
+        if(rc != CS_OK) {
+            /* Proportionally more if sending failed but cap at 1s */
+            delay_ms = QB_MIN(1000, CS_SEND_MAX + (10 * queue_len));
         }
-
-        cs_message_timer = g_timeout_add(1000 + 100 * queue_len, crm_cs_flush_cb, NULL);
+        cs_message_timer = g_timeout_add(delay_ms, crm_cs_flush_cb, NULL);
     }
 
     return rc;
