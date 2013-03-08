@@ -581,8 +581,20 @@ fi
 
 %changelog
 
-* Wed Jun 20 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-0.1
-- 1.1.8 pre-releases
+* Fri Mar 08 2013 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.9-1
+- Update source tarball to revision: 7e42d77
+- Statistics:
+  Changesets: 731
+  Diff:       1301 files changed, 92909 insertions(+), 57455 deletions(-)
+- See included ChangeLog file or https://github.com/ClusterLabs/pacemaker/blob/master/ChangeLog for details
+
+* Thu Sep 20 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8-1
+- Update source tarball to revision: 1a5341f
+- Statistics:
+  Changesets: 1019
+  Diff:       2107 files changed, 117258 insertions(+), 73606 deletions(-)
+- See included ChangeLog file or https://github.com/ClusterLabs/pacemaker/blob/master/ChangeLog for details
+
 
 * Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7-1
 - Update source tarball to revision: bc7ff2c

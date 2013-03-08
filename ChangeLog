@@ -1,14 +1,12 @@
-
 * Fri Mar 08 2013 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.9-1
-- Update source tarball to revision: 2f2d2db
+- Update source tarball to revision: 7e42d77
 - Statistics:
-  Changesets: 712
-  Diff:       1298 files changed, 92548 insertions(+), 57427 deletions(-)
+  Changesets: 731
+  Diff:       1301 files changed, 92909 insertions(+), 57455 deletions(-)
 
 - Features added in Pacemaker-1.1.9
   + corosync: Allow cman and corosync 2.0 nodes to use a name other than uname()
   + corosync: Use queues to avoid blocking when sending CPG messages
-  + Drop per-user core directories
   + ipc: Compress messages that exceed the configured IPC message limit
   + ipc: Use queues to prevent slow clients from blocking the server
   + ipc: Use shared memory by default
@@ -33,7 +31,7 @@
   + cluster: Preserve corosync membership state when matching node name/id entries
   + cman: Force fenced to terminate on shutdown
   + cman: Ignore qdisk 'nodes'
-  + core: Provide a sane default for the compression target in crm_compress_string()
+  + core: Drop per-user core directories
   + corosync: Avoid errors when closing failed connections
   + corosync: Ensure peer state is preserved when matching names to nodeids
   + corosync: Clean up CMAP connections after querying node name
