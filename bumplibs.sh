@@ -54,6 +54,7 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 	VER_1=`echo $VER | awk -F: '{print $1}'`
 	VER_2=`echo $VER | awk -F: '{print $2}'`
 	VER_3=`echo $VER | awk -F: '{print $3}'`
+	VER_1_NOW=`echo $VER_NOW | awk -F: '{print $1}'`
 
 	case $CHANGE in
 	    A|a)
@@ -67,6 +68,9 @@ for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pen
 		VER_1=`expr $VER_1 + 1`
 		VER_2=0
 		VER_3=0
+		for h in ${headers[$lib]}; do
+		    sed -i.sed  "s/lib${lib}.so.${VER_1_NOW}/lib${lib}.so.${VER_1}/" $h
+		done
 		;;
 	    F|f)
 		echo "Bugfix: x:y+1:z"
