@@ -1082,6 +1082,9 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         crm_info("Request was %.120s", buffer);
     }
 
+    free(header);
+    free(iov[1].iov_base);
+    free(iov);
     free(buffer);
     return rc;
 }
