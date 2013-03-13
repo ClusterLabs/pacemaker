@@ -562,12 +562,6 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
             rsc->container = container;
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
-            if (rsc->is_remote_node) {
-                node_t *node = g_hash_table_lookup(container->allowed_nodes, rsc->id);
-                if (node) {
-                    node->weight = -INFINITY;
-                }
-            }
         } else {
             pe_err("Resource %s: Unknown resource container (%s)", rsc->id, container_id);
         }
