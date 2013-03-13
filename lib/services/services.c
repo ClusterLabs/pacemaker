@@ -311,6 +311,7 @@ services_action_free(svc_action_t * op)
         free(op->opaque->args[i]);
     }
 
+    free(op->opaque);
     free(op->rsc);
     free(op->action);
 
