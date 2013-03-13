@@ -1,0 +1,64 @@
+Allocation scores:
+W:0 promotion score on dvossel-laptop2: 10
+W:1 promotion score on 18builder: -1
+W:2 promotion score on none: 0
+X:0 promotion score on dvossel-laptop2: 10
+X:1 promotion score on 18builder: -1
+X:2 promotion score on none: 0
+clone_color: W-master allocation score on 18builder: 0
+clone_color: W-master allocation score on 18node1: 0
+clone_color: W-master allocation score on dvossel-laptop2: 0
+clone_color: W:0 allocation score on 18builder: 0
+clone_color: W:0 allocation score on 18node1: 0
+clone_color: W:0 allocation score on dvossel-laptop2: 11
+clone_color: W:1 allocation score on 18builder: 0
+clone_color: W:1 allocation score on 18node1: 0
+clone_color: W:1 allocation score on dvossel-laptop2: 0
+clone_color: W:2 allocation score on 18builder: 0
+clone_color: W:2 allocation score on 18node1: 0
+clone_color: W:2 allocation score on dvossel-laptop2: 0
+clone_color: X-master allocation score on 18builder: 0
+clone_color: X-master allocation score on 18node1: 0
+clone_color: X-master allocation score on dvossel-laptop2: 0
+clone_color: X:0 allocation score on 18builder: 0
+clone_color: X:0 allocation score on 18node1: 0
+clone_color: X:0 allocation score on dvossel-laptop2: 11
+clone_color: X:1 allocation score on 18builder: 0
+clone_color: X:1 allocation score on 18node1: 0
+clone_color: X:1 allocation score on dvossel-laptop2: 0
+clone_color: X:2 allocation score on 18builder: 0
+clone_color: X:2 allocation score on 18node1: 0
+clone_color: X:2 allocation score on dvossel-laptop2: 0
+native_color: 18builder allocation score on 18builder: -INFINITY
+native_color: 18builder allocation score on 18node1: -INFINITY
+native_color: 18builder allocation score on dvossel-laptop2: 0
+native_color: 18node1 allocation score on 18builder: -INFINITY
+native_color: 18node1 allocation score on 18node1: -INFINITY
+native_color: 18node1 allocation score on dvossel-laptop2: -INFINITY
+native_color: FAKE allocation score on 18builder: 0
+native_color: FAKE allocation score on 18node1: 0
+native_color: FAKE allocation score on dvossel-laptop2: 0
+native_color: W:0 allocation score on 18builder: 0
+native_color: W:0 allocation score on 18node1: -INFINITY
+native_color: W:0 allocation score on dvossel-laptop2: 11
+native_color: W:1 allocation score on 18builder: 0
+native_color: W:1 allocation score on 18node1: -INFINITY
+native_color: W:1 allocation score on dvossel-laptop2: -INFINITY
+native_color: W:2 allocation score on 18builder: -INFINITY
+native_color: W:2 allocation score on 18node1: -INFINITY
+native_color: W:2 allocation score on dvossel-laptop2: -INFINITY
+native_color: X:0 allocation score on 18builder: 0
+native_color: X:0 allocation score on 18node1: -INFINITY
+native_color: X:0 allocation score on dvossel-laptop2: 11
+native_color: X:1 allocation score on 18builder: 0
+native_color: X:1 allocation score on 18node1: -INFINITY
+native_color: X:1 allocation score on dvossel-laptop2: -INFINITY
+native_color: X:2 allocation score on 18builder: -INFINITY
+native_color: X:2 allocation score on 18node1: -INFINITY
+native_color: X:2 allocation score on dvossel-laptop2: -INFINITY
+native_color: vm allocation score on 18builder: -INFINITY
+native_color: vm allocation score on 18node1: -INFINITY
+native_color: vm allocation score on dvossel-laptop2: 0
+native_color: vm2 allocation score on 18builder: -INFINITY
+native_color: vm2 allocation score on 18node1: -INFINITY
+native_color: vm2 allocation score on dvossel-laptop2: -INFINITY
