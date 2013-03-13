@@ -23,7 +23,7 @@ that the author is comfortable with.
 
 indexterm:[Resource,class]
 
-There are five classes of agents supported by Pacemaker:
+There are six classes of agents supported by Pacemaker:
 
 * OCF
 * LSB
@@ -31,6 +31,7 @@ There are five classes of agents supported by Pacemaker:
 * Systemd
 * Fencing
 * Service
+* Nagios
 
 indexterm:[Resource,Heartbeat]
 indexterm:[Heartbeat,Resources]
@@ -182,6 +183,23 @@ indexterm:[STONITH,Resources]
 There is also an additional class, STONITH, which is used exclusively
 for fencing related resources.  This is discussed later in
 <<ch-stonith>>.
+
+=== Nagios Plugins ===
+indexterm:[Resource,Nagios Plugins]
+indexterm:[Nagios Plugins,Resources]
+
+Nagios plugins allow us to monitor services on the remote hosts.
+http://nagiosplugins.org[Nagios Plugins].
+
+Pacemaker is able to do remote monitoring with the plugins _if they are
+present_.
+
+An use case is to configure them as resources belonging to a resource
+container, which usually is a VM, and the container will be restarted
+if any of them has failed. While they can also be configured as ordinary
+resources to be just used for monitoring hosts or services via network.
+
+The supported parameters are same as the long options of a nagios plugin.
 
 [[primitive-resource]]
 == Resource Properties ==
