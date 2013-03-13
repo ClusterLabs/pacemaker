@@ -452,6 +452,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         read_output(op->opaque->stdout_fd, op);
         read_output(op->opaque->stderr_fd, op);
 
+        close(op->opaque->stdout_fd);
+        close(op->opaque->stderr_fd);
+
     } else {
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
         mainloop_add_child(op->pid, op->timeout, op->id, op, operation_finished);
