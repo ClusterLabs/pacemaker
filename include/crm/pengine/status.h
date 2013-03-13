@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -58,19 +58,21 @@ enum pe_find {
 #  define pe_flag_is_managed_default	0x00000004ULL
 #  define pe_flag_maintenance_mode	0x00000008ULL
 
-#  define pe_flag_stonith_enabled		0x00000010ULL
+#  define pe_flag_stonith_enabled	0x00000010ULL
 #  define pe_flag_have_stonith_resource	0x00000020ULL
 
 #  define pe_flag_stop_rsc_orphans	0x00000100ULL
 #  define pe_flag_stop_action_orphans	0x00000200ULL
-#  define pe_flag_stop_everything		0x00000400ULL
+#  define pe_flag_stop_everything	0x00000400ULL
 
 #  define pe_flag_start_failure_fatal	0x00001000ULL
 #  define pe_flag_remove_after_stop	0x00002000ULL
 
-#  define pe_flag_startup_probes		0x00010000ULL
+#  define pe_flag_startup_probes	0x00010000ULL
 #  define pe_flag_have_status		0x00020000ULL
-#  define pe_flag_have_remote_nodes		0x00040000ULL
+#  define pe_flag_have_remote_nodes	0x00040000ULL
+
+#  define pe_flag_quick_location  	0x00100000ULL
 
 typedef struct pe_working_set_s {
     xmlNode *input;

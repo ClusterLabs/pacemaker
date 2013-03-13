@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -73,7 +73,9 @@ cluster_status(pe_working_set_t * data_set)
         data_set->now = crm_time_new(NULL);
     }
 
-    if (data_set->input != NULL && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
+    if (data_set->dc_uuid == NULL
+        && data_set->input != NULL
+        && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
         /* this should always be present */
         data_set->dc_uuid = crm_element_value_copy(data_set->input, XML_ATTR_DC_UUID);
     }
@@ -95,9 +97,16 @@ cluster_status(pe_working_set_t * data_set)
 
     unpack_nodes(cib_nodes, data_set);
     unpack_domains(cib_domains, data_set);
-    unpack_remote_nodes(cib_resources, data_set);
+
+    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+        unpack_remote_nodes(cib_resources, data_set);
+    }
+
     unpack_resources(cib_resources, data_set);
-    unpack_status(cib_status, data_set);
+
+    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+        unpack_status(cib_status, data_set);
+    }
 
     set_bit(data_set->flags, pe_flag_have_status);
     return TRUE;
@@ -225,6 +234,7 @@ set_working_set_defaults(pe_working_set_t * data_set)
     pe_dataset = data_set;
     memset(data_set, 0, sizeof(pe_working_set_t));
 
+    data_set->dc_uuid = NULL;
     data_set->order_id = 1;
     data_set->action_id = 1;
     data_set->no_quorum_policy = no_quorum_freeze;

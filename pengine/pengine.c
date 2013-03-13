@@ -210,28 +210,36 @@ do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * n
         set_working_set_defaults(data_set);
         data_set->input = xml_input;
         data_set->now = now;
-        if (data_set->now == NULL) {
-            data_set->now = crm_time_new(NULL);
-        }
+
     } else {
         crm_trace("Already have status - reusing");
+    }
+
+    if (data_set->now == NULL) {
+        data_set->now = crm_time_new(NULL);
     }
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
 
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *rsc = (resource_t *) gIter->data;
+    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+        gIter = data_set->resources;
+        for (; gIter != NULL; gIter = gIter->next) {
+            resource_t *rsc = (resource_t *) gIter->data;
 
-        if (is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
-            continue;
+            if (is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
+                continue;
+            }
+            rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
         }
-        rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
     }
 
     crm_trace("Applying placement constraints");
     stage2(data_set);
+
+    if(is_set(data_set->flags, pe_flag_quick_location)){
+        return NULL;
+    }
 
     crm_trace("Create internal constraints");
     stage3(data_set);
