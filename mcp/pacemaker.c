@@ -843,8 +843,8 @@ main(int argc, char **argv)
                 shutdown = TRUE;
                 break;
             case 'F':
-                printf("Pacemaker %s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION,
-                       CRM_FEATURES);
+                printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", VERSION, BUILD_VERSION,
+                       CRM_FEATURE_SET, CRM_FEATURES);
                 crm_exit(0);
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
