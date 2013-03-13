@@ -1,0 +1,56 @@
+
+Current cluster status:
+Online: [ dvossel-laptop2 ]
+OFFLINE: [ 18builder 18node1 ]
+
+ vm	(ocf::heartbeat:VirtualDomain):	Stopped 
+ vm2	(ocf::heartbeat:VirtualDomain):	Stopped 
+ FAKE	(ocf::pacemaker:Dummy):	Started dvossel-laptop2 
+ Master/Slave Set: W-master [W]
+     Masters: [ dvossel-laptop2 ]
+     Stopped: [ W:1 W:2 ]
+ Master/Slave Set: X-master [X]
+     Masters: [ dvossel-laptop2 ]
+     Stopped: [ X:1 X:2 ]
+
+Transition Summary:
+ * Start   vm	(dvossel-laptop2)
+ * Move    FAKE	(Started dvossel-laptop2 -> 18builder)
+ * Start   W:1	(18builder)
+ * Start   X:1	(18builder)
+ * Start   18builder	(dvossel-laptop2)
+
+Executing cluster transition:
+ * Resource action: vm              start on dvossel-laptop2
+ * Pseudo action:   W-master_start_0
+ * Pseudo action:   X-master_start_0
+ * Resource action: 18builder       monitor on dvossel-laptop2
+ * Pseudo action:   probe_complete
+ * Resource action: FAKE            stop on dvossel-laptop2
+ * Resource action: 18builder       start on dvossel-laptop2
+ * Pseudo action:   all_stopped
+ * Resource action: FAKE            start on 18builder
+ * Resource action: W               start on 18builder
+ * Pseudo action:   W-master_running_0
+ * Resource action: X               start on 18builder
+ * Pseudo action:   X-master_running_0
+ * Resource action: 18builder       monitor=30000 on dvossel-laptop2
+ * Resource action: W               monitor=10000 on 18builder
+ * Resource action: X               monitor=10000 on 18builder
+
+Revised cluster status:
+Online: [ 18builder dvossel-laptop2 ]
+OFFLINE: [ 18node1 ]
+
+ vm	(ocf::heartbeat:VirtualDomain):	Started dvossel-laptop2 
+ vm2	(ocf::heartbeat:VirtualDomain):	Stopped 
+ FAKE	(ocf::pacemaker:Dummy):	Started 18builder 
+ Master/Slave Set: W-master [W]
+     Masters: [ dvossel-laptop2 ]
+     Slaves: [ 18builder ]
+     Stopped: [ W:2 ]
+ Master/Slave Set: X-master [X]
+     Masters: [ dvossel-laptop2 ]
+     Slaves: [ 18builder ]
+     Stopped: [ X:2 ]
+
