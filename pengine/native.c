@@ -1179,6 +1179,19 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+static void
+rsc_avoids_remote_nodes(resource_t *rsc)
+{
+    GHashTableIter iter;
+    node_t *node = NULL;
+    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        if (node->details->remote_rsc) {
+            node->weight = -INFINITY;
+        }
+    }
+}
+
 void
 native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1272,16 +1285,17 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->is_remote_node || is_stonith) {
-        GHashTableIter iter;
-        node_t *node = NULL;
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            /* don't allow remote nodes to run stonith devices
-             * or remote connection resources.*/
-            if (node->details->remote_rsc) {
-                node->weight = -INFINITY;
-            }
-        }
+        /* don't allow remote nodes to run stonith devices
+         * or remote connection resources.*/
+        rsc_avoids_remote_nodes(rsc);
+    }
+
+    /* If this rsc is a remote connection resource associated
+     * with a container ( which will most likely be a virtual guest )
+     * do not allow the container to live on any remote-nodes.
+     * remote-nodes managing nested remote-nodes should not be allowed. */
+    if (rsc->is_remote_node && rsc->container) {
+        rsc_avoids_remote_nodes(rsc->container);
     }
 }
 
