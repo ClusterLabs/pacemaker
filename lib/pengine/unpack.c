@@ -292,6 +292,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     const char *remote_name = NULL;
     const char *remote_server = NULL;
     const char *remote_port = NULL;
+    const char *connect_timeout = "60s";
     char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
@@ -309,6 +310,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
                 remote_server = value;
             } else if (safe_str_eq(name, "remote-port")) {
                 remote_port = value;
+            } else if (safe_str_eq(name, "remote-connect-timeout")) {
+                connect_timeout = value;
             }
         }
     }
@@ -368,6 +371,16 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
     free(tmp_id);
+
+    if (connect_timeout) {
+        attr = create_xml_node(xml_tmp, XML_ATTR_OP);
+        tmp_id = crm_concat(remote_name, "start-interval-0", '_');
+        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
+        crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
+        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
+        free(tmp_id);
+    }
 
     if (remote_port || remote_server) {
         xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
