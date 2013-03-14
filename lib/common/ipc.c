@@ -256,11 +256,25 @@ crm_client_cleanup(void)
 crm_client_t *
 crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
+    static gid_t crm_gid = 0;
     crm_client_t *client = NULL;
 
     CRM_LOG_ASSERT(c);
     if (c == NULL) {
         return NULL;
+    }
+
+    if (crm_gid == 0 && crm_user_lookup(CRM_DAEMON_USER, NULL, &crm_gid) < 0) {
+        static bool have_error = FALSE;
+        if(have_error == FALSE) {
+            crm_warn("Could not find group for user %s", CRM_DAEMON_USER);
+            have_error = TRUE;
+        }
+    }
+
+    if(crm_gid != 0 && gid != 0) {
+        crm_trace("Giving access to group %u", crm_gid);
+        qb_ipcs_connection_auth_set(c, -1, crm_gid, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
 
     crm_client_init();
@@ -276,16 +290,7 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     crm_info("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid, gid, client->pid, client->id);
 
 #if ENABLE_ACL
-    {
-        struct group *crm_grp = NULL;
-
-        crm_grp = getgrnam(CRM_DAEMON_GROUP);
-        if (crm_grp) {
-            qb_ipcs_connection_auth_set(c, -1, crm_grp->gr_gid,
-                                        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        }
-        client->user = uid2username(uid);
-    }
+    client->user = uid2username(uid);
 #endif
 
     g_hash_table_insert(client_connections, c, client);
@@ -975,7 +980,6 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     struct iovec *iov;
     static uint32_t id = 0;
     struct crm_ipc_response_header *header;
-    char *buffer = NULL;
 
     crm_ipc_init();
 
@@ -995,7 +999,6 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         if (rc < 0) {
             crm_warn("Sending to %s (%p) is disabled until pending reply is recieved", client->name,
                      client->ipc);
-            free(buffer);
             return -EALREADY;
 
         } else {
@@ -1017,21 +1020,21 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         ms_timeout = 5000;
     }
 
-    crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg: %.200s...",
-              client->name, header->qb.id, header->qb.size, ms_timeout, buffer);
+    crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg...",
+              client->name, header->qb.id, header->qb.size, ms_timeout);
 
     if (ms_timeout > 0) {
 
         rc = internal_ipc_send_request(client, iov, ms_timeout);
 
         if (rc <= 0) {
-            crm_trace("Failed to send from client %s request %d with %u bytes: %.200s...",
-                      client->name, header->qb.id, header->qb.size, buffer);
+            crm_trace("Failed to send from client %s request %d with %u bytes...",
+                      client->name, header->qb.id, header->qb.size);
             goto send_cleanup;
 
         } else if (is_not_set(flags, crm_ipc_client_response)) {
-            crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes: %.200s...",
-                      header->qb.id, client->name, header->qb.size, buffer);
+            crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes...",
+                      header->qb.id, client->name, header->qb.size);
 
             goto send_cleanup;
         }
@@ -1073,19 +1076,16 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     } else if (rc == -ETIMEDOUT) {
         crm_warn("Request %d to %s (%p) failed: %s (%ld) after %dms",
                  header->qb.id, client->name, client->ipc, pcmk_strerror(rc), rc, ms_timeout);
-        crm_info("Request was %.120s", buffer);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
         crm_warn("Request %d to %s (%p) failed: %s (%ld)",
                  header->qb.id, client->name, client->ipc, pcmk_strerror(rc), rc);
-        crm_info("Request was %.120s", buffer);
     }
 
     free(header);
     free(iov[1].iov_base);
     free(iov);
-    free(buffer);
     return rc;
 }
 

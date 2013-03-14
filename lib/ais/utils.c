@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -63,7 +63,7 @@ log_ais_message(int level, const AIS_Message * msg)
 }
 
 /*
-static gboolean ghash_find_by_uname(gpointer key, gpointer value, gpointer user_data) 
+static gboolean ghash_find_by_uname(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
     int id = GPOINTER_TO_INT(user_data);
@@ -140,6 +140,7 @@ spawn_child(crm_child_t * child)
 {
     int lpc = 0;
     uid_t uid = 0;
+    gid_t gid = 0;
     struct rlimit oflimits;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
@@ -174,10 +175,11 @@ spawn_child(crm_child_t * child)
     }
 
     if (child->uid) {
-        if (pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
+        if (pcmk_user_lookup(child->uid, &uid, &gid) < 0) {
             ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
             return FALSE;
         }
+        ais_info("Using uid=%u and group=%u for process %s", uid, gid, child->name);
     }
 
     child->pid = fork();
@@ -206,22 +208,8 @@ spawn_child(crm_child_t * child)
         }
         opts_default[0] = ais_strdup(child->command);;
 
-#if 0
-        /* Dont set the group for now - it prevents connection to the cluster */
-        if (gid && setgid(gid) < 0) {
-            ais_perror("Could not set group to %d", gid);
-        }
-#endif
-
-        if (uid) {
-            struct passwd *pwent = getpwuid(uid);
-
-            if (pwent == NULL) {
-                ais_perror("Cannot get password entry of uid: %d", uid);
-
-            } else if (initgroups(pwent->pw_name, pwent->pw_gid) < 0) {
-                ais_perror("Cannot initalize groups for %s (uid=%d)", pwent->pw_name, uid);
-            }
+        if (uid && initgroups(child->uid, gid) < 0) {
+            ais_perror("Cannot initalize groups for %s", child->uid);
         }
 
         if (uid && setuid(uid) < 0) {

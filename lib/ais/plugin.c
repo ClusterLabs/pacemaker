@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USAA
@@ -203,14 +203,14 @@ struct corosync_service_engine pcmk_service_handler = {
     .name			= (char *)"Pacemaker Cluster Manager "PACKAGE_VERSION,
     .id				= PCMK_SERVICE_ID,
     .private_data_size		= 0,
-    .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
+    .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
     .allow_inquorate		= CS_LIB_ALLOW_INQUORATE,
     .lib_init_fn		= pcmk_ipc_connect,
     .lib_exit_fn		= pcmk_ipc_exit,
     .exec_init_fn		= pcmk_startup,
     .exec_exit_fn		= pcmk_shutdown,
     .config_init_fn		= pcmk_config_init,
-    .priority			= 50,    
+    .priority			= 50,
     .lib_engine			= pcmk_lib_service,
     .lib_engine_count		= sizeof (pcmk_lib_service) / sizeof (struct corosync_lib_handler),
     .exec_engine		= pcmk_exec_service,
@@ -492,7 +492,7 @@ pcmk_wait_dispatch(void *arg)
                 }
 
                 /* Broadcast the fact that one of our processes died
-                 * 
+                 *
                  * Try to get some logging of the cause out first though
                  * because we're probably about to get fenced
                  *
@@ -674,13 +674,13 @@ pcmk_startup(struct corosync_api_v1 *init_with)
 }
 
 /*
-  static void ais_print_node(const char *prefix, struct totem_ip_address *host) 
+  static void ais_print_node(const char *prefix, struct totem_ip_address *host)
   {
   int len = 0;
   char *buffer = NULL;
 
   ais_malloc0(buffer, INET6_ADDRSTRLEN+1);
-	
+
   inet_ntop(host->family, host->addr, buffer, INET6_ADDRSTRLEN);
 
   len = strlen(buffer);
@@ -1026,7 +1026,7 @@ pcmk_ipc(void *conn, ais_void_ptr * msg)
         transient = FALSE;
     }
 #if 0
-    /* If this check fails, the order of pcmk_children probably 
+    /* If this check fails, the order of pcmk_children probably
      *   doesn't match that of the crm_ais_msg_types enum
      */
     AIS_CHECK(transient || mutable->sender.pid == pcmk_children[type].pid,

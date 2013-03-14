@@ -20,6 +20,7 @@
 #include <pacemaker.h>
 
 #include <pwd.h>
+#include <grp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -226,12 +227,14 @@ start_child(pcmk_child_t * child)
 {
     int lpc = 0;
     uid_t uid = 0;
+    gid_t gid = 0;
     struct rlimit oflimits;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
     const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
+    enum cluster_type_e stack = get_cluster_type();
 
     child->active_before_startup = FALSE;
 
@@ -259,6 +262,14 @@ start_child(pcmk_child_t * child)
         crm_warn("Cannot enable valgrind for %s:"
                  " The location of the valgrind binary is unknown", child->name);
         use_valgrind = FALSE;
+    }
+
+    if (child->uid) {
+        if (crm_user_lookup(child->uid, &uid, &gid) < 0) {
+            crm_err("Invalid user (%s) for %s: not found", child->uid, child->name);
+            return FALSE;
+        }
+        crm_info("Using uid=%u and group=%u for process %s", uid, gid, child->name);
     }
 
     child->pid = fork();
@@ -292,17 +303,21 @@ start_child(pcmk_child_t * child)
         }
         opts_default[0] = strdup(child->command);;
 
-#if 0
-        /* Dont set the group for now - it prevents connection to the cluster */
-        if (gid && setgid(gid) < 0) {
-            crm_perror("Could not set group to %d", gid);
-        }
-#endif
+        if(gid) {
+            if(stack == pcmk_cluster_corosync) {
+                /* Drop root privileges completely
+                 *
+                 * We can do this because we set uidgid.gid.${gid}=1
+                 * via CMAP which allows these processes to connect to
+                 * corosync
+                 */
+                if (setgid(gid) < 0) {
+                    crm_perror(LOG_ERR, "Could not set group to %d", gid);
+                }
 
-        if (child->uid) {
-            if (crm_user_lookup(child->uid, &uid, NULL) < 0) {
-                crm_err("Invalid uid (%s) specified for %s", child->uid, child->name);
-                return TRUE;
+                /* Keep the root group (so we can access corosync), but add the haclient group (so we can access ipc) */
+            } else if (initgroups(child->uid, gid) < 0) {
+                crm_err("Cannot initalize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
             }
         }
 

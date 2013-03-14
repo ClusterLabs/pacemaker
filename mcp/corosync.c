@@ -581,6 +581,19 @@ read_config(void)
 #if HAVE_CONFDB
     confdb_finalize(config);
 #elif HAVE_CMAP
+    if(local_handle){
+        gid_t gid = 0;
+        if (crm_user_lookup(CRM_DAEMON_USER, NULL, &gid) < 0) {
+            crm_warn("No group found for user %s", CRM_DAEMON_USER);
+
+        } else {
+            char key[PATH_MAX];
+            snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
+            rc = cmap_set_uint8(local_handle, key, 1);
+            crm_notice("Configured corosync to accept connections from group %u: %s (%d)",
+                       gid, ais_error2text(rc), rc);
+        }
+    }
     cmap_finalize(local_handle);
 #endif
 
