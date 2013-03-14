@@ -38,6 +38,7 @@ endif
 %.8:	%
 	echo Creating $@
 	chmod a+x $(top_builddir)/lrmd/$<
+	$(top_builddir)/lrmd/$< --help
 	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/lrmd/$<
 
 lrmd_SOURCES	= main.c lrmd.c

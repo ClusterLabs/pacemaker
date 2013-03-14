@@ -47,7 +47,8 @@ if BUILD_HELP
 man8_MANS +=	$(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 %.8:	%
 	echo Creating $@
-	chmod a+x $<
+	chmod a+x $(top_builddir)/fencing/$<
+	$(top_builddir)/fencing/$< --help
 	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/fencing/$<
 endif
 

@@ -5,17 +5,17 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in 
+MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
@@ -23,10 +23,10 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
-		$(CURSESLIBS) $(CLUSTERLIBS) 
+		$(CURSESLIBS) $(CLUSTERLIBS)
 
 headerdir               = $(pkgincludedir)/crm
-header_HEADERS		= 
+header_HEADERS		=
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -63,7 +63,7 @@ endif
 
 ## SOURCES
 
-noinst_HEADERS		= 
+noinst_HEADERS		=
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
@@ -76,10 +76,10 @@ crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(COMMONLIBS) 
+cibadmin_LDADD		= $(COMMONLIBS)
 
 crm_shadow_SOURCES	= cib_shadow.c
-crm_shadow_LDADD	= $(COMMONLIBS) 
+crm_shadow_LDADD	= $(COMMONLIBS)
 
 crm_node_SOURCES	= crm_node.c
 crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
@@ -111,7 +111,7 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			$(COMMONLIBS)
 
 crm_attribute_SOURCES	= crm_attribute.c
-crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS) 
+crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
@@ -122,7 +122,7 @@ crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
 			$(COMMONLIBS)
 
 iso8601_SOURCES		= test.iso8601.c
-iso8601_LDADD		= $(COMMONLIBS) 
+iso8601_LDADD		= $(COMMONLIBS)
 
 attrd_SOURCES		= attrd.c
 attrd_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
@@ -147,13 +147,14 @@ endif
 
 if BUILD_OPENIPMI_SERVICELOG
 ipmiservicelogd_SOURCES	= ipmiservicelogd.c
-ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS) 
+ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
 
 %.8:	% crm_attribute
 	echo Creating $@
 	chmod a+x $(top_builddir)/tools/$<
+	$(top_builddir)/tools/$< --help
 	PATH=$(top_builddir)/tools:$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
