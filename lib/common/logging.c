@@ -222,9 +222,8 @@ crm_add_logfile(const char *filename)
         return FALSE;           /* Nothing to do */
     }
 
+    /* Check the parent directory */
     filename_cp = strdup(filename);
-
-    /* Check the parent directory and attempt to open */
     parent_dir = dirname(filename_cp);
     rc = stat(parent_dir, &parent);
 
@@ -232,27 +231,19 @@ crm_add_logfile(const char *filename)
         crm_err("Directory '%s' does not exist: logging to '%s' is disabled", parent_dir, filename);
         free(filename_cp);
         return FALSE;
-
-    } else if (parent.st_uid == geteuid() && (parent.st_mode & (S_IRUSR | S_IWUSR))) {
-        /* all good - user */
-        logfile = fopen(filename, "a");
-
-    } else if (parent.st_gid == getegid() && (parent.st_mode & S_IXGRP)) {
-        /* all good - group */
-        logfile = fopen(filename, "a");
-
-    } else {
-        crm_err
-            ("We (uid=%u, gid=%u) do not have permission to access '%s': logging to '%s' is disabled",
-             geteuid(), getegid(), parent_dir, filename);
-        free(filename_cp);
-        return FALSE;
     }
     free(filename_cp);
-    filename_cp = NULL;
+
+    errno = 0;
+    logfile = fopen(filename, "a");
+    if(logfile == NULL) {
+        crm_err("%s (%d): Logging to '%s' as uid=%u, gid=%u is disabled",
+                pcmk_strerror(errno), errno, filename, geteuid(), getegid());
+        return FALSE;
+    }
 
     /* Check/Set permissions if we're root */
-    if (logfile && geteuid() == 0) {
+    if (geteuid() == 0) {
         struct stat st;
         uid_t pcmk_uid = 0;
         gid_t pcmk_gid = 0;
@@ -294,11 +285,9 @@ crm_add_logfile(const char *filename)
             }
         }
     }
-    if (logfile) {
-        fclose(logfile);
-    }
 
-    /* Now open with libqb */
+    /* Close and reopen with libqb */
+    fclose(logfile);
     fd = qb_log_file_open(filename);
 
     if (fd < 0) {
