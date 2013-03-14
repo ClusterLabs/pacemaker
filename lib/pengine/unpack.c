@@ -292,7 +292,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     const char *remote_name = NULL;
     const char *remote_server = NULL;
     const char *remote_port = NULL;
-    const char *connect_timeout = NULL;
+    const char *connect_timeout = "60s";
     char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
