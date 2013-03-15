@@ -535,6 +535,10 @@ static bool filter_cib_device(const char *rsc_id, xmlNode *device)
         return TRUE;
     }
 
+    if (rules) {
+        xmlXPathFreeObject(rules);
+    }
+
     rule_path = g_strdup_printf("//" XML_CONS_TAG_RSC_LOCATION "[@rsc='%s']//"XML_TAG_RULE"[@"XML_RULE_ATTR_SCORE"='-INFINITY']//"XML_TAG_EXPRESSION, rsc_id);
     crm_trace("Testing rule-based constraint: %s", rule_path);
     rules = xpath_search(local_cib, rule_path);
@@ -567,6 +571,11 @@ static bool filter_cib_device(const char *rsc_id, xmlNode *device)
             return TRUE;
         }
     }
+
+    if (rules) {
+        xmlXPathFreeObject(rules);
+    }
+
     crm_trace("All done");
     return FALSE;
 }
@@ -605,6 +614,8 @@ update_cib_device(xmlNode *device, gboolean force)
         data = create_device_registration_xml(rsc_id, provider, agent, params);
 
         stonith_device_register(data, NULL, TRUE);
+        free_xml(data);
+        stonith_key_value_freeall(params, 1, 1);
     }
 }
 
@@ -625,6 +636,7 @@ register_cib_devices(xmlXPathObjectPtr xpathObj, gboolean force)
         if (strcmp("stonith", standard) == 0) {
             char *device_path = g_strdup_printf("//%s[@id='%s']", XML_CIB_TAG_RESOURCE, rsc_id);
             xmlNode *device = get_xpath_object(device_path, local_cib, LOG_ERR);
+            free(device_path);
             update_cib_device(device, force);
         }
     }
