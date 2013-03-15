@@ -164,7 +164,7 @@
     <action_set>
       <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="18builder" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
