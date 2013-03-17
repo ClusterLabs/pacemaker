@@ -526,7 +526,14 @@ is_nodeid_required(xmlNode * xml)
     }
     xpath = xpath_search(xml, "//parameter[@name='nodeid']");
     if (!xpath || xpath->nodesetval->nodeNr <= 0) {
+        if (xpath) {
+            xmlXPathFreeObject(xpath);
+        }
         return FALSE;
+    }
+
+    if (xpath) {
+        xmlXPathFreeObject(xpath);
     }
 
     return TRUE;
@@ -547,6 +554,9 @@ get_on_target_actions(xmlNode * xml)
     xpath = xpath_search(xml, "//action");
 
     if (!xpath || !xpath->nodesetval) {
+        if (xpath) {
+            xmlXPathFreeObject(xpath);
+        }
         return NULL;
     }
 
@@ -570,6 +580,10 @@ get_on_target_actions(xmlNode * xml)
             }
             g_strlcat(actions, action, 512);
         }
+    }
+
+    if (xpath) {
+        xmlXPathFreeObject(xpath);
     }
 
     if (!strlen(actions)) {

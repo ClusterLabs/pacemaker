@@ -178,6 +178,8 @@ te_update_diff(const char *event, xmlNode * msg)
             }
         }
 
+        xmlXPathFreeObject(xpathObj);
+
     } else if (xpathObj) {
         xmlXPathFreeObject(xpathObj);
     }
