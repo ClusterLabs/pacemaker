@@ -1028,18 +1028,16 @@ fi
 
 PKG_CHECK_MODULES(libqb, libqb, HAVE_libqb=1, HAVE_libqb=0)
 AC_CHECK_HEADERS(qb/qbipc_common.h)
-AC_CHECK_LIB(qb, qb_ipcc_is_connected)
-AC_CHECK_FUNCS(qb_ipcc_is_connected)
+AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
 LIBQB_LOG=1
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
-if test $ac_cv_lib_qb_qb_ipcc_is_connected != yes; then
-   AC_MSG_FAILURE(Version of IPC in libqb is not new enough)
+if
+   !pkg-config --atleast-version 0.13 libqb
+then
+   AC_MSG_FAILURE(Version of libqb is too old: v0.13 or greater requried)
 fi
-
-AC_DEFINE_UNQUOTED(LIBQB_LOGGING, $LIBQB_LOG, Use libqb for logging)
-AC_DEFINE_UNQUOTED(LIBQB_IPC, 0, Use libqb for IPC)
 
 LIBS="$LIBS $libqb_LIBS"
 
