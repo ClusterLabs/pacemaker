@@ -1,10 +1,35 @@
-# 
+#
 # Suppress (verified) bogus or unrelated errors reported by Valgrind
 #
 
 # Don't care
 
 # Non-recurring
+
+{
+   libqb-dynamic-callsite
+   Memcheck:Leak
+   fun:calloc
+   fun:qb_log_callsites_register
+}
+
+{
+   libqb-init-1
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   fun:qb_log_filter_ctl2
+   fun:crm_log_init
+}
+
+{
+   pacemaker-init-1
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   fun:crm_log_init
+}
+
 {
    glib-1
    Memcheck:Leak
@@ -51,25 +76,6 @@
    fun:g_main_context_dispatch
    obj:/lib64/libglib-2.0.so.0.2200.2
    fun:g_main_loop_run
-}
-
-{
-   glib-5
-   Memcheck:Leak
-   fun:malloc
-   fun:g_malloc
-   fun:g_slice_alloc
-   fun:g_slist_prepend
-   fun:g_source_add_poll
-   fun:G_main_add_IPC_WaitConnection
-   fun:init_server_ipc_comms
-}
-
-{
-   glue-1
-   Memcheck:Leak
-   fun:malloc
-   fun:ipc_bufpool_new
 }
 
 # Not verified as bogus
