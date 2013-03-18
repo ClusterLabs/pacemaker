@@ -704,7 +704,7 @@ try_openais(int command, enum cluster_type_e stack)
         switch (command) {
             case 'R':
                 send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
-                cib_remove_node(atoi(target_uname), NULL);
+                cib_remove_node(0, target_uname);
                 crm_exit(0);
 
             case 'e':
