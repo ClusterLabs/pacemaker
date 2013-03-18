@@ -79,22 +79,18 @@ void mainloop_del_fd(mainloop_io_t * client);
  * Create a new tracked process
  * To track a process group, use -pid
  */
-void
+void mainloop_child_add(pid_t pid,
+                        int timeout,
+                        const char *desc,
+                        void *userdata,
+                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
 
+void *mainloop_child_userdata(mainloop_child_t * child);
+int mainloop_child_timeout(mainloop_child_t * child);
+const char *mainloop_child_name(mainloop_child_t * child);
 
-mainloop_add_child(pid_t pid,
-                   int timeout,
-                   const char *desc,
-                   void *userdata,
-                   void (*callback) (mainloop_child_t * p, int status, int signo, int exitcode));
-
-void *mainloop_get_child_userdata(mainloop_child_t * child);
-int
- mainloop_get_child_timeout(mainloop_child_t * child);
-
-pid_t mainloop_get_child_pid(mainloop_child_t * child);
-void
- mainloop_clear_child_userdata(mainloop_child_t * child);
+pid_t mainloop_child_pid(mainloop_child_t * child);
+void mainloop_clear_child_userdata(mainloop_child_t * child);
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 

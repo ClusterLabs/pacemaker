@@ -254,10 +254,9 @@ operation_finalize(svc_action_t * op)
 }
 
 static void
-operation_finished(mainloop_child_t * p, int status, int signo, int exitcode)
+operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    svc_action_t *op = mainloop_get_child_userdata(p);
-    pid_t pid = mainloop_get_child_pid(p);
+    svc_action_t *op = mainloop_child_userdata(p);
     char *prefix = g_strdup_printf("%s:%d", op->id, op->pid);
 
     mainloop_clear_child_userdata(p);
@@ -279,7 +278,7 @@ operation_finished(mainloop_child_t * p, int status, int signo, int exitcode)
     }
 
     if (signo) {
-        if (mainloop_get_child_timeout(p)) {
+        if (mainloop_child_timeout(p)) {
             crm_warn("%s - timed out after %dms", prefix, op->timeout);
             op->status = PCMK_LRM_OP_TIMEOUT;
             op->rc = PCMK_OCF_TIMEOUT;
@@ -457,7 +456,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
     } else {
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
-        mainloop_add_child(op->pid, op->timeout, op->id, op, operation_finished);
+        mainloop_child_add(op->pid, op->timeout, op->id, op, operation_finished);
 
         op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                      G_PRIORITY_LOW,

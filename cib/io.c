@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -533,19 +533,13 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 }
 
 static void
-cib_diskwrite_complete(GPid pid, gint status, gpointer user_data)
+cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    int exitcode = -1;
-
-    if (WIFSIGNALED(status)) {
-        int signo = WTERMSIG(status);
-        int core = WCOREDUMP(status);
-
+    if (signo) {
         crm_notice("Disk write process terminated with signal %d (pid=%d, core=%d)", signo, pid,
                    core);
 
-    } else if (WIFEXITED(status)) {
-        exitcode = WEXITSTATUS(status);
+    } else  {
         do_crm_log(exitcode == 0 ? LOG_TRACE : LOG_ERR, "Disk write process exited (pid=%d, rc=%d)",
                    pid, exitcode);
     }
@@ -608,7 +602,7 @@ write_cib_contents(gpointer p)
 
         if (pid) {
             /* Parent */
-            g_child_watch_add(pid, cib_diskwrite_complete, NULL);
+            mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
             if (bb_state == QB_LOG_STATE_ENABLED) {
                 /* Re-enable now that it it safe */
                 qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);

@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -45,26 +45,19 @@
 #include <crm/common/util.h>
 
 static void
-crmdManagedChildDied(GPid pid, gint status, gpointer user_data)
+crmd_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    struct crm_subsystem_s *the_subsystem = user_data;
+    /* struct crm_subsystem_s *the_subsystem = mainloop_child_userdata(p); */
+    const char *name = mainloop_child_name(p);
 
-    if (WIFSIGNALED(status)) {
-        int signo = WTERMSIG(status);
-        int core = WCOREDUMP(status);
-
+    if (signo) {
         crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
-                   the_subsystem->name, signo, the_subsystem->pid, core);
-
-    } else if (WIFEXITED(status)) {
-        int exitcode = WEXITSTATUS(status);
-
-        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s exited (pid=%d, rc=%d)", the_subsystem->name,
-                   the_subsystem->pid, exitcode);
+                   name, signo, pid, core);
 
     } else {
-        crm_err("Process %s:[%d] exited?", the_subsystem->name, the_subsystem->pid);
+        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
+                   "Child process %s exited (pid=%d, rc=%d)", name,
+                   pid, exitcode);
     }
 }
 
@@ -150,7 +143,7 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
             return FALSE;
 
         default:               /* Parent */
-            g_child_watch_add(pid, crmdManagedChildDied, the_subsystem);
+            mainloop_child_add(pid, 0, the_subsystem->name, the_subsystem, crmd_child_exit);
             crm_trace("Client %s is has pid: %d", the_subsystem->name, pid);
             the_subsystem->pid = pid;
             return TRUE;

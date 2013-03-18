@@ -635,10 +635,9 @@ update_remaining_timeout(stonith_action_t * action)
 }
 
 static void
-stonith_action_async_done(GPid pid, gint status, gpointer user_data)
+stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    int rc = -pcmk_err_generic;
-    stonith_action_t *action = user_data;
+    stonith_action_t *action = mainloop_child_userdata(p);
 
     if (action->timer_sigterm > 0) {
         g_source_remove(action->timer_sigterm);
@@ -648,26 +647,25 @@ stonith_action_async_done(GPid pid, gint status, gpointer user_data)
     }
 
     if (action->last_timeout_signo) {
-        rc = -ETIME;
+        action->rc = -ETIME;
         crm_notice("Child process %d performing action '%s' timed out with signal %d",
                    pid, action->action, action->last_timeout_signo);
-    } else if (WIFSIGNALED(status)) {
-        int signo = WTERMSIG(status);
 
-        rc = -ECONNABORTED;
+    } else if (signo) {
+        action->rc = -ECONNABORTED;
         crm_notice("Child process %d performing action '%s' timed out with signal %d",
                    pid, action->action, signo);
-    } else if (WIFEXITED(status)) {
-        rc = WEXITSTATUS(status);
+
+    } else {
+        action->rc = exitcode;
         crm_debug("Child process %d performing action '%s' exited with rc %d",
-                  pid, action->action, rc);
+                  pid, action->action, exitcode);
     }
 
-    action->rc = rc;
     action->output = read_output(action->fd_stdout);
 
     if (action->rc != pcmk_ok && update_remaining_timeout(action)) {
-        rc = internal_stonith_action_execute(action);
+        int rc = internal_stonith_action_execute(action);
         if (rc == pcmk_ok) {
             return;
         }
@@ -788,7 +786,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     /* async */
     if (action->async) {
         action->fd_stdout = p_read_fd;
-        g_child_watch_add(pid, stonith_action_async_done, action);
+        mainloop_child_add(pid, 0/* Move the timeout here? */, action->action, action, stonith_action_async_done);
         crm_trace("Op: %s on %s, pid: %d, timeout: %ds", action->action, action->agent, pid,
                   action->remaining_timeout);
         action->last_timeout_signo = 0;

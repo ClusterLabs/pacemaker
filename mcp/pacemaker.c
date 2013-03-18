@@ -161,27 +161,23 @@ pcmk_process_exit(pcmk_child_t * child)
 }
 
 static void
-pcmk_child_exit(GPid pid, gint status, gpointer user_data)
+pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    int exitcode = 0;
-    pcmk_child_t *child = user_data;
+    pcmk_child_t *child = mainloop_child_userdata(p);
+    const char *name = mainloop_child_name(p);
 
-    if (WIFSIGNALED(status)) {
-        int signo = WTERMSIG(status);
-        int core = WCOREDUMP(status);
-
+    if (signo) {
         crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
-                   child->name, signo, child->pid, core);
+                   name, signo, pid, core);
 
-    } else if (WIFEXITED(status)) {
-        exitcode = WEXITSTATUS(status);
+    } else {
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
+                   "Child process %s exited (pid=%d, rc=%d)", name, pid, exitcode);
     }
 
     if (exitcode == 100) {
         crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
-                 "Shutting ourselves down.", child->name);
+                 "Shutting ourselves down.", name);
         child->respawn = FALSE;
         fatal_error = TRUE;
         pcmk_shutdown(15);
@@ -277,7 +273,7 @@ start_child(pcmk_child_t * child)
 
     if (child->pid > 0) {
         /* parent */
-        g_child_watch_add(child->pid, pcmk_child_exit, child);
+        mainloop_child_add(child->pid, 0, child->name, child, pcmk_child_exit);
 
         crm_info("Forked child %d for process %s%s", child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
