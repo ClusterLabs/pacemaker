@@ -204,7 +204,7 @@ class Tests:
 		self.tests = []
 		self.verbose = verbose
 		self.tls = tls;
-		self.rsc_classes = output_from_command("crm_resource --list-standards")		
+		self.rsc_classes = output_from_command("crm_resource --list-standards")
 		self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
 		print "Testing "+repr(self.rsc_classes)
 
@@ -715,7 +715,7 @@ if __name__ == "__main__":
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" ")
 		test.add_cmd("-c exec -r \"test_rsc\" -a \"monitor\" -i \"100\" -t 3000 -n "
 			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
-		# this will fail because the monitor notifications should only go to the original caller, which no longer exists. 
+		# this will fail because the monitor notifications should only go to the original caller, which no longer exists.
 		test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" -t 3000")
 		test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"3000\" ")
 		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 3000 "
@@ -732,7 +732,7 @@ if __name__ == "__main__":
 		### get metadata ###
 		test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
 		test.add_cmd_check_stdout("-c metadata -C \"lsb\" -T \"lrmd_dummy_daemon\""
-			,"resource-agent name=\"lrmd_dummy_daemon\"")
+			,"resource-agent name='lrmd_dummy_daemon'")
 
 		### get stonith metadata ###
 		test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
