@@ -22,7 +22,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_fencing.txt acls.txt
-docbook		= Pacemaker_Explained Clusters_from_Scratch
+docbook		= Pacemaker_Explained Clusters_from_Scratch Pacemaker_Remote
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
 publican_docs   =
@@ -35,8 +35,10 @@ DOTs = $(wildcard */en-US/images/*.dot)
 SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
 
 PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
-	Pacemaker_Explained/en-US/images/Policy-Engine-big.png
-	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
+	Pacemaker_Explained/en-US/images/Policy-Engine-big.png  \
+	Pacemaker_Explained/en-US/images/Policy-Engine-small.png \
+	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png \
+	Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png
 
 BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 	publican-clusterlabs/en-US/images/image_left.png			\
@@ -108,6 +110,19 @@ PE_XML=$(PE_TXT:%.txt=%.xml)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
+	@echo Building $(@:%.build=%) because of $?
+	rm -rf $(@:%.build=%)/publish/*
+	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.build=%)/tmp
+	touch $@
+
+
+PR_TXT=$(wildcard Pacemaker_Remote/en-US/*.txt)
+PR_XML=$(PR_TXT:%.txt=%.xml)
+
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails
+Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML)
 	@echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
 	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
@@ -194,7 +209,7 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(CFS_XML) $(PE_XML)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(CFS_XML) $(PE_XML) $(PR_XML)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
 
 foo:

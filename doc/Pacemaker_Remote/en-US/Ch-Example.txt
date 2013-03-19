@@ -1,0 +1,107 @@
+= Quick Example =
+
+If you already know how to use pacemaker, you'll likely be able to grasp this new concept of remote-nodes by reading through this quick example without having to sort through all the detailed walk-through steps. Here are the key configuration ingredients that make this possible using libvirt and KVM virtual guests.  These steps strip everything down to the very basics.
+
+== Mile High View of Configuration Steps ==
+
+* +Put an authkey with this path, /etc/pacemaker/authkey, on every cluster-node and virtual machine+.  This secures remote communication and authentication.
+
+Run this command if you want to make a somewhat random authkey.
+
+[source,C]
+----
+dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+----
+
+* +Install pacemaker_remote packages every virtual machine, enable pacemaker_remote on startup, and poke hole in firewall for tcp port 3121.+
+
+[source,C]
+----
+yum install pacemaker-remote resource-agents
+systemctl enable pacemaker_remote
+# If you just want to see this work, disable iptables and ip6tables on most distros.
+# You may have to put selinux in permissive mode as well for the time being.
+firewall-cmd --add-port 3121/tcp --permanent
+----
+
+* +Give each virtual machine a static network address and unique hostname+
+
+* +Tell pacemaker to launch a virtual machine and that the virtual machine is a remote-node capable of running resources by using the "remote-node" meta-attribute.+
+
+with pcs
+
+[source,C]
+----
+# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta +remote-node=guest1+
+----
+
+raw xml
+[source,XML]
+----
+      <primitive class="ocf" id="vm-guest1" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="vm-guest-instance_attributes">
+          <nvpair id="vm-guest1-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+          <nvpair id="vm-guest1-instance_attributes-config" name="config" value="guest1.xml"/>
+        </instance_attributes>
+        <operations>
+          <op id="vm-guest1-interval-30s" interval="30s" name="monitor"/>
+        </operations>
+        <meta_attributes id="vm-guest1-meta_attributes">
+          <nvpair id="vm-guest1-meta_attributes-remote-node" name="remote-node" value="guest1"/>
+        </meta_attributes>
+      </primitive>
+----
+
+In the example above the meta-attribute 'remote-node=guest1' tells pacemaker that this resource is a remote-node with the hostname 'guest1' that is capable of being integrated into the cluster.  The cluster will attempt to contact the virtual machine's pacemaker_remote service at the hostname 'guest1' after it launches.
+
+== What those steps just did ==
+
+Those steps just told pacemaker to launch a virtual machine called vm-guest1 and integrate that virtual machine as a remote-node called 'guest1'.
+
+Example crm_mon output after guest1 is integrated into cluster.
+
+[source,C]
+----
+Last updated: Wed Mar 13 13:52:39 2013
+Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
+Stack: corosync
+Current DC: node1 (24815808) - partition with quorum
+Version: 1.1.9
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ node1 guest1]
+
+vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
+----
+
+Now, you could place a resource, such as a webserver on guest1.
+
+[source,C]
+----
+# pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
+# pcs constraint webserver prefers guest1
+----
+
+Now the crm_mon output would show a webserver launched on the guest1 remote-node.
+
+[source,C]
+----
+Last updated: Wed Mar 13 13:52:39 2013
+Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
+Stack: corosync
+Current DC: node1 (24815808) - partition with quorum
+Version: 1.1.9
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+Online: [ node1 guest1]
+
+vm-guest1     (ocf::heartbeat:VirtualDomain): Started node1
+webserver     (ocf::heartbeat::apache):       Started guest1
+----
+
+== Accessing Cluster from Remote-node ==
+
+It is worth noting that after 'guest1' is integrated into the cluster, all the pacemaker cli tools immediately become available to the remote node.  This means things like crm_mon, crm_resource, and crm_attribute will work natively on the remote-node as long as the connection between the remote-node and cluster-node exists.  This is particularly important for any master/slave resources executing on the remote-node that need access to crm_master to set the nodes transient attributes.
+

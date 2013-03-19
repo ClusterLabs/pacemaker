@@ -1,0 +1,483 @@
+= KVM Walk-through =
+
++What this tutorial is:+ This tutorial is an in-depth walk-through of how to get pacemaker to manage a KVM guest instance and integrate that guest into the cluster as a remote-node.
+
++What this tutorial is not:+ This tutorial is not a realistic deployment scenario.  The steps shown here are meant to get users familiar with the concept of remote-nodes as quickly as possible.
+
+== Step 1: Setup the Host ==
+
+This tutorial assumes you are using some rpm based distro.  In my case I'm using Fedora 18 on the host.  Anything that is capable of running libvirt and pacemaker v1.1.9.1 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
+
+Fedora 18 (or similar distro) host preparation steps.
+
+=== SElinux and Firewall ===
+In order to simply this tutorial we will disable the selinux and the firewall on the host.
+WARNING: These actions pose a significant security issues to machines exposed to the outside world.  Basically, just don't do this on your production system.
+[source,C]
+----
+setenforce 0
+sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+systemctl disable iptables.service
+systemctl disable ip6tables.service
+rm '/etc/systemd/system/basic.target.wants/iptables.service'
+rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
+systemctl stop iptables.service
+systemctl stop ip6tables.service
+----
+
+=== Install Cluster Software ===
+
+[source,C]
+----
+yum install -y pacemaker corosync pcs resource-agents
+----
+
+=== Setup Corosync ===
+
+Running the command below will attempt to detect the network address corosync should bind to.
+
+[source,C]
+----
+export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
+----
+
+Display and verify that address is correct
+
+[source,C]
+----
+echo $corosync_addr
+----
+
+In most cases the address will be 192.168.1.0 if you are behind a standard home router.
+
+Now copy over the example corosync.conf.  This code will inject your bindaddress and enable the vote quorum api which is required by pacemaker.
+
+[source,C]
+----
+cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
+sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
+cat << END >> /etc/corosync/corosync.conf
+quorum {
+           provider: corosync_votequorum
+           expected_votes: 2
+}
+END
+----
+
+=== Verify Cluster Software ===
+
+Start the cluster
+
+[source,C]
+----
+pcs cluster start
+----
+
+Verify corosync membership
+
+[source,C]
+----
+pcs status corosync
+
+Membership information
+    Nodeid      Votes Name
+1795270848          1 example-host (local)
+----
+
+Verify pacemaker status.  At first the 'pcs cluster status' output will look like this.
+
+[source,C]
+----
+pcs status
+
+ Last updated: Thu Mar 14 12:26:00 2013
+ Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
+ Stack: corosync
+ Current DC:
+ Version: 1.1.9.1
+ 1 Nodes configured, unknown expected votes
+ 0 Resources configured.
+----
+
+After about a minute you should see your host as a single node in the cluster.
+
+[source,C]
+----
+pcs status
+
+ Last updated: Thu Mar 14 12:28:23 2013
+ Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
+ Stack: corosync
+ Current DC: example-host (1795270848) - partition WITHOUT quorum
+ Version: 1.1.8-9b13ea1
+ 1 Nodes configured, unknown expected votes
+ 0 Resources configured.
+
+ Online: [ example-host ]
+----
+
+Go ahead and stop the cluster for now after verifying everything is in order.
+
+[source,C]
+----
+pcs cluster stop
+----
+
+=== Install Virtualization Software ===
+
+[source,C]
+----
+yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
+systemctl enable libvirtd.service
+----
+
+reboot the host
+
+== Step2: Create the KVM guest ==
+
+I am not going to outline the installation steps required to create a kvm guest.  There are plenty of tutorials available elsewhere that do that.  I recommend using a Fedora 18 or greater distro as your guest as that is what I am testing this tutorial with.
+
+=== Setup Guest Network ===
+
+Run the commands below to set up a static ip address (192.168.122.10) and hostname (guest1).
+
+[source,C]
+----
+export remote_hostname=guest1
+export remote_ip=192.168.122.10
+export remote_gateway=192.168.122.1
+
+yum remove -y NetworkManager
+
+rm -f /etc/hostname
+cat << END >> /etc/hostname
+$remote_hostname
+END
+
+hostname $remote_hostname
+
+cat << END >> /etc/sysconfig/network
+HOSTNAME=$remote_hostname
+GATEWAY=$remote_gateway
+END
+
+sed -i.bak "s/.*BOOTPROTO=.*/BOOTPROTO=none/g" /etc/sysconfig/network-scripts/ifcfg-eth0
+
+cat << END >> /etc/sysconfig/network-scripts/ifcfg-eth0
+IPADDR0=$remote_ip
+PREFIX0=24
+GATEWAY0=$remote_gateway
+DNS1=$remote_gateway
+END
+
+systemctl restart network
+systemctl enable network.service
+systemctl enable sshd
+systemctl start sshd
+
+echo "checking connectivity"
+ping www.google.com
+----
+
+To simplify the tutorial we'll go ahead and disable selinux on the guest.  We'll also need to poke a hole through the firewall on port 3121 (the default port for pacemaker_remote) so the host can contact the guest.
+
+[source,C]
+----
+setenforce 0
+sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+
+firewall-cmd --add-port 3121/tcp --permanent
+----
+
+If you still encounter connection issues just disable iptables and ipv6tables on the guest like we did on the host to guarantee you'll be able to contact the guest from the host.
+
+At this point you should be able to ssh into the guest from the host.
+
+=== Setup Pacemaker Remote ===
+
+On the +HOST+ machine run these commands to generate an authkey and copy it to the /etc/pacemaker folder on both the host and guest.
+
+[source,C]
+----
+mkdir /etc/pacemaker
+dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+scp -r /etc/pacemaker root@192.168.122.10:/etc/
+----
+
+Now on the +GUEST+ install pacemaker-remote package and enable the daemon to run at startup.  In the commands below you will notice the 'pacemaker' and 'pacemaker_remote' packages are being installed.  The 'pacemaker' package is not required. The only reason it is being installed for this tutorial is because it contains the a 'Dummy' resource agent we will be using later on to test the remote-node.
+
+[source,C]
+----
+yum install -y pacemaker paceamaker-remote resource-agents
+systemctl enable pacemaker_remote.service
+----
+
+Now start pacemaker_remote on the guest and verify the start was successful.
+
+[source,C]
+----
+systemctl start pacemaker_remote.service
+
+systemctl status pacemaker_remote
+
+  pacemaker_remote.service - Pacemaker Remote Service
+	  Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
+	  Active: active (running) since Thu 2013-03-14 18:24:04 EDT; 2min 8s ago
+	Main PID: 1233 (pacemaker_remot)
+	  CGroup: name=systemd:/system/pacemaker_remote.service
+		  └─1233 /usr/sbin/pacemaker_remoted
+
+  Mar 14 18:24:04 guest1 systemd[1]: Starting Pacemaker Remote Service...
+  Mar 14 18:24:04 guest1 systemd[1]: Started Pacemaker Remote Service.
+  Mar 14 18:24:04 guest1 pacemaker_remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
+----
+
+=== Verify Host Connection to Guest ===
+
+Before moving forward it's worth going ahead and verifying the host can contact the guest on port 3121. Here's a trick you can use. Connect using telnet from the host.  The connection will get destroyed, but how it is destroyed tells you whether it worked or not.
+
+First add guest1 to the host machines /etc/hosts file if you haven't already.  This is required unless you have dns setup in a way where guest1's address can be discovered.
+
+[source,C]
+----
+cat << END >> /etc/hosts
+192.168.122.10    guest1 
+END
+----
+
+If running the telnet command on the host results in this output before disconnecting, the connection works.
+[source,C]
+----
+telnet guest1 3121
+ Trying 192.168.122.10...
+ Connected to guest1.
+ Escape character is '^]'.
+ Connection closed by foreign host.
+----
+
+If you see this, the connection is not working.
+[source,C]
+----
+telnet guest1 3121
+Trying 192.168.122.10...
+telnet: connect to address 192.168.122.10: No route to host
+----
+
+Once you can successfully connect to the guest from the host, shutdown the guest.  Pacemaker will be managing the virtual machine from this point forward.
+
+== Step3: Integrate KVM guest into Cluster. ==
+
+Now the fun part, integrating the virtual machine you've just created into the cluster.  It is incredibly simple.
+
+=== Start the Cluster ===
+On the host, start pacemaker.
+
+[source,C]
+----
+pcs cluster start
+----
+
+Wait for the host to become the DC. The output of 'pcs status' should look similar to this after about a minute.
+
+[source,C]
+----
+Last updated: Thu Mar 14 16:41:22 2013
+Last change: Thu Mar 14 16:41:08 2013 via crmd on example-host
+Stack: corosync
+Current DC: example-host (1795270848) - partition WITHOUT quorum
+Version: 1.1.9.1
+1 Nodes configured, unknown expected votes
+0 Resources configured.
+
+
+Online: [ example-host ]
+----
+
+Now enable the cluster to work without quorum or stonith.  This is required just for the sake of getting this tutorial to work with a single cluster-node.
+
+[source,C]
+----
+pcs property set stonith-enabled=false
+pcs property set no-quorum-policy=ignore
+----
+
+=== Integrate KVM Guest as remote-node ===
+
+If you didn't already do this earlier in the verify host to guest connection section, add the KVM guest's ip to the host's /etc/hosts file so we can connect by hostname.  The command below will do that if you used the same ip address I used earlier.
+
+[source,C]
+----
+cat << END >> /etc/hosts
+192.168.122.10    guest1 
+END
+----
+
+We will use the +VirtualDomain+ resource agent for the management of the virtual machine.  This agent requires the virtual machines xml config to be dumped to a file on disk.  To do this pick out the name of the virtual machine you just created from the output of this list.
+
+[source,C]
+----
+virsh list --all
+ Id    Name                           State
+______________________________________________
+ -     guest1                         shut off
+----
+
+In my case I named it guest1. Dump the xml to a file somewhere on the host using the following command.
+
+[source,C]
+----
+virsh dumpxml guest1 > /root/guest1.xml
+----
+
+Now just register the resource with pacemaker and you're set!
+
+[source,C]
+----
+pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="/root/guest1.xml" meta remote-node=guest1
+----
+
+Once the 'vm-guest1' resource is started you will see 'guest1' appear in the 'pcs status' output as a node.  The final 'pcs status' output should look something like this.
+
+[source,C]
+----
+Last updated: Fri Mar 15 09:30:30 2013
+Last change: Thu Mar 14 17:21:35 2013 via cibadmin on example-host
+Stack: corosync
+Current DC: example-host (1795270848) - partition WITHOUT quorum
+Version: 1.1.9.1
+2 Nodes configured, unknown expected votes
+2 Resources configured.
+
+
+Online: [ example-host guest1 ]
+
+Full list of resources:
+
+ vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+----
+
+=== Starting Resources on KVM Guest ===
+
+The commands below demonstrate how resources can be executed on both the remote-node and the cluster-node.
+
+Create a few Dummy resources.  Dummy resources are real resource agents used just for testing purposes.  They actually execute on the host they are assigned to just like an apache server or database would, except their execution just means a file was created.  When the resource is stopped, that the file it created is removed.
+
+[source,C]
+----
+pcs resource create FAKE1 ocf:pacemaker:Dummy
+pcs resource create FAKE2 ocf:pacemaker:Dummy
+pcs resource create FAKE3 ocf:pacemaker:Dummy
+pcs resource create FAKE4 ocf:pacemaker:Dummy
+pcs resource create FAKE5 ocf:pacemaker:Dummy
+----
+
+Now check your 'pcs status' output.  In the resource section you should see something like the following, where some of the resources got started on the cluster-node, and some started on the remote-node.
+
+[source,C]
+----
+Full list of resources:
+
+ vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+ FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE3	(ocf::pacemaker:Dummy):	Started example-host
+ FAKE4	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+----
+
+
+The remote-node, 'guest1', reacts just like any other node in the cluster.  For example, pick out a resouce that is running on your cluster-node.  For my purposes I am picking FAKE3 from the output above.  We can force FAKE3 to run on 'guest1' in the exact same way we would any other node.
+
+[source,C]
+----
+pcs constraint FAKE3 prefers guest1
+----
+
+Now looking at the bottom of the 'pcs status' output you'll see FAKE3 is on 'guest1'.
+
+[source,C]
+----
+Full list of resources:
+
+ vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+ FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE3	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE4	(ocf::pacemaker:Dummy):	Started example-host
+ FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+----
+
+=== Testing Remote-node Recovery and Fencing ===
+
+Pacemaker's policy engine is smart enough to know fencing remote-nodes associated with a virtual machine means shutting off/rebooting the virtual machine.  No special configuration is necessary to make this happen.  If you are interested in testing this functionality out, trying stopping the guest's pacemaker_remote daemon.  This would be equivalent of abruptly terminating a cluster-node's corosync membership without properly shutting it down.
+
+ssh into the guest and run this command.
+
+[source,C]
+----
+kill -9 `pidof pacemaker_remoted`
+----
+
+After a few seconds or so you'll see this in your 'pcs status' output.  The 'guest1' node will be show as offline as it is being recovered.
+
+[source,C]
+----
+Last updated: Fri Mar 15 11:00:31 2013
+Last change: Fri Mar 15 09:54:16 2013 via cibadmin on example-host
+Stack: corosync
+Current DC: example-host (1795270848) - partition WITHOUT quorum
+Version: 1.1.9.1
+2 Nodes configured, unknown expected votes
+7 Resources configured.
+
+
+Online: [ example-host ]
+OFFLINE: [ guest1 ]
+
+Full list of resources:
+
+ vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host 
+ FAKE1	(ocf::pacemaker:Dummy):	Stopped 
+ FAKE2	(ocf::pacemaker:Dummy):	Stopped 
+ FAKE3	(ocf::pacemaker:Dummy):	Stopped 
+ FAKE4	(ocf::pacemaker:Dummy):	Started example-host
+ FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+
+Failed actions:
+    guest1_monitor_30000 (node=example-host, call=3, rc=7, status=complete): not running
+----
+
+Once recovery of the guest is complete, you'll see it automatically get re-integrated into the cluster.  The final 'pcs status' output should look something like this.
+
+[source,C]
+----
+Last updated: Fri Mar 15 11:03:17 2013
+Last change: Fri Mar 15 09:54:16 2013 via cibadmin on example-host
+Stack: corosync
+Current DC: example-host (1795270848) - partition WITHOUT quorum
+Version: 1.1.9.1
+2 Nodes configured, unknown expected votes
+7 Resources configured.
+
+
+Online: [ example-host guest1 ]
+
+Full list of resources:
+
+ vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+ FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE3	(ocf::pacemaker:Dummy):	Started guest1 
+ FAKE4	(ocf::pacemaker:Dummy):	Started example-host
+ FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+
+Failed actions:
+    guest1_monitor_30000 (node=example-host, call=3, rc=7, status=complete): not running
+----
+
+=== Accessing Cluster Tools from Remote-node ===
+
+Besides just allowing the cluster to manage resources on a remote-node, pacemaker_remote has one other trick.  +The pacemaker_remote daemon allows nearly all the pacemaker tools (crm_resource, crm_mon, crm_attribute, crm_master) to work on remote nodes natively.+
+
+Try it, run +crm_mon+ or +pcs status+ on the guest after pacemaker has integrated the remote-node into the cluster.  These tools just work.  These means resource agents such as master/slave resources which need access to tools like crm_master work seamlessly on the remote-nodes.
+
