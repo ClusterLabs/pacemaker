@@ -85,8 +85,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     verify_pe_options(data_set->config_hash);
 
     set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
-    crm_info("Startup probes: %s",
-             is_set(data_set->flags, pe_flag_startup_probes) ? "enabled" : "disabled (dangerous)");
+    if(is_not_set(data_set->flags, pe_flag_startup_probes)) {
+        crm_info("Startup probes: disabled (dangerous)");
+    }
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = crm_get_msec(value);
@@ -190,7 +191,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     node_score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
     node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
 
-    crm_info("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
+    crm_debug("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
              pe_pref(data_set->config_hash, "node-health-red"),
              pe_pref(data_set->config_hash, "node-health-yellow"),
              pe_pref(data_set->config_hash, "node-health-green"));
@@ -491,7 +492,7 @@ unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set)
     xmlNode *xml_node = NULL;
     xmlNode *xml_domain = NULL;
 
-    crm_info("Unpacking domains");
+    crm_debug("Unpacking domains");
     data_set->domains =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                               g_hash_destroy_node_list);
