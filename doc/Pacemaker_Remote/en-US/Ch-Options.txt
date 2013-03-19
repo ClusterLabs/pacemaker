@@ -1,0 +1,51 @@
+= Configuration Explained =
+
+The walk-through examples use some of these options, but don't explain exactly what they mean or do.  This section is meant to be the go-to resource for all the options available for configuring remote-nodes.
+
+== Resource Options ==
+
+When configuring a virtual machine or lxc resource to act as a remote-node, these are the metadata options available to both enable the resource as a remote-node and define the connection parameters.
+
+.Metadata Options for configurint KVM/LXC resources as remote-nodes
+[width="95%",cols="1m,1,4<",options="header",align="center"]
+|=========================================================
+
+|Option
+|Default
+|Description
+
+|+remote-node+
+|<none>
+|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121.
+
+|+remote-port+
+|3121
+|Configure a custom port to use for the guest connection to pacemaker_remote.
+
+|+remote-addr+
+|node name
+|The ip address or hostname to connect to if remote-node's name is not the hostname of the guest.
+
+|+remote-connect-timeout+
+|60s
+|How long to before a pending guest connection will time out.
+
+|=========================================================
+
+== Host and Guest Authentication ==
+
+Authentication and encryption of the connection between cluster-nodes (pacemaker) to remote-nodes (pacemaker_remote) is achieved using TLS with PSK encryption/authentication on +tcp port 3121+.  This means both the cluster-node and remote-node must share the same private key.   By default this +key must be placed at "/etc/pacemaker/authkey" on both cluster-nodes and remote-nodes+.
+
+== Pacemaker and pacemaker_remote Options ==
+
+If you need to change the default port or authkey location for either pacemaker or pacemaker_remote, there are environment variables you can set that affect both of those daemons. These environment variables can be enabled by placing them in the /etc/sysconfig/pacemaker file.
+[source,C]
+----
+#==#==# Pacemaker Remote
+# Use a custom directory for finding the authkey.
+PCMK_authkey_location=/etc/pacemaker/authkey
+#
+# Specify a custom port for Pacemaker Remote connections
+PCMK_remote_port=3121
+----
+
