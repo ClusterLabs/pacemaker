@@ -519,6 +519,10 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
         key = NULL;
         reload->metadata = get_rsc_metadata(rsc->type, rsc->class, provider);
 
+        if(reload->metadata == NULL) {
+            goto cleanup;
+        }
+
         metadata = string2xml(reload->metadata);
         if (metadata == NULL) {
             crm_err("Metadata for %s::%s:%s is not valid XML",
