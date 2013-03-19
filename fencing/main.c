@@ -576,7 +576,7 @@ fencing_topology_init(xmlNode * msg)
     register_fencing_topology(xpathObj, TRUE);
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 }
 
@@ -698,7 +698,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
         /* Safest and simplest to always recompute */
         needs_update = TRUE;
-        xmlXPathFreeObject(xpath_obj);
+        freeXpathObject(xpath_obj);
         reason = "new location constraint";
     }
 
@@ -706,7 +706,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE);
     if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
         remove_cib_device(xpath_obj);
-        xmlXPathFreeObject(xpath_obj);
+        freeXpathObject(xpath_obj);
     }
 
     /* process additions */
@@ -722,7 +722,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
             crm_info("resource[%d] = %s", lpc, path);
         }
 
-        xmlXPathFreeObject(xpath_obj);
+        freeXpathObject(xpath_obj);
         reason = "new resource";
     }
 
@@ -745,7 +745,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
     remove_fencing_topology(xpathObj);
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /* Process additions and changes */
@@ -755,7 +755,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
     register_fencing_topology(xpathObj, FALSE);
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 }
 static bool have_cib_devices = FALSE;

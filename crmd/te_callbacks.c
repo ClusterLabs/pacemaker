@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -137,7 +137,7 @@ te_update_diff(const char *event, xmlNode * msg)
         goto bail;
 
     } else if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /* Tickets Attributes - Removed */
@@ -151,7 +151,7 @@ te_update_diff(const char *event, xmlNode * msg)
         goto bail;
 
     } else if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /* Transient Attributes - Added/Updated */
@@ -177,11 +177,10 @@ te_update_diff(const char *event, xmlNode * msg)
                 goto bail;
             }
         }
+    }
 
-        xmlXPathFreeObject(xpathObj);
-
-    } else if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+    if (xpathObj) {
+        freeXpathObject(xpathObj);
     }
 
     /* Transient Attributes - Removed */
@@ -196,7 +195,7 @@ te_update_diff(const char *event, xmlNode * msg)
         goto bail;
 
     } else if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /*
@@ -204,7 +203,7 @@ te_update_diff(const char *event, xmlNode * msg)
      * In large clusters this can result in _huge_ speedups
      *
      * Unfortunately we can only do so when there are no pending actions
-     * Otherwise we could miss updates we're waiting for and stall 
+     * Otherwise we could miss updates we're waiting for and stall
      *
      */
     xpathObj = NULL;
@@ -228,7 +227,7 @@ te_update_diff(const char *event, xmlNode * msg)
             abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
             goto bail;
         }
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /* Process operation updates */
@@ -237,7 +236,7 @@ te_update_diff(const char *event, xmlNode * msg)
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
     if (xpathObj) {
         process_resource_updates(xpathObj);
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
@@ -271,7 +270,7 @@ te_update_diff(const char *event, xmlNode * msg)
                               node);
                     abort_transition(INFINITY, tg_restart, "Resource op removal", match);
                     if (op_match) {
-                        xmlXPathFreeObject(op_match);
+                        freeXpathObject(op_match);
                     }
                     free(rsc_op_xpath);
                     goto bail;
@@ -283,7 +282,7 @@ te_update_diff(const char *event, xmlNode * msg)
             }
 
             if (op_match) {
-                xmlXPathFreeObject(op_match);
+                freeXpathObject(op_match);
             }
             free(rsc_op_xpath);
         }
@@ -291,7 +290,7 @@ te_update_diff(const char *event, xmlNode * msg)
 
   bail:
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 }
 
@@ -327,7 +326,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
         if (xpathObj) {
             process_resource_updates(xpathObj);
-            xmlXPathFreeObject(xpathObj);
+            freeXpathObject(xpathObj);
             xpathObj = NULL;
 
         } else {

@@ -794,7 +794,7 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
         goto done;
 
     } else if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     /*
@@ -839,7 +839,7 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 
   done:
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
     return config_changes;
 }
@@ -992,7 +992,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
     }
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     return rc;

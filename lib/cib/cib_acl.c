@@ -546,7 +546,7 @@ search_xpath_objects(GListPtr * objects, xmlNode * xml_obj, const char *xpath)
     }
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
     return match_found;
 }

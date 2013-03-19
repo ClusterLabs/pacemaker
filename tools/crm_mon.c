@@ -2169,7 +2169,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             }
         }
         if (xpathObj) {
-            xmlXPathFreeObject(xpathObj);
+            freeXpathObject(xpathObj);
         }
     }
 

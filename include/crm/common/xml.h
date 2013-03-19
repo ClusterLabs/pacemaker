@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -68,7 +68,7 @@ xmlDoc *getDocPtr(xmlNode * node);
  *
  * Copy all the attributes/properties from src into target.
  *
- * Not recursive, does not return anything. 
+ * Not recursive, does not return anything.
  *
  */
 void copy_in_properties(xmlNode * target, xmlNode * src);
@@ -108,7 +108,7 @@ const char *crm_xml_add_int(xmlNode * node, const char *name, int value);
 void unlink_xml_node(xmlNode * node);
 
 /*
- * 
+ *
  */
 void purge_diff_markers(xmlNode * a_node);
 
@@ -238,6 +238,7 @@ xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
+void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 
 #endif

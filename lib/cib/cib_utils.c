@@ -886,7 +886,7 @@ cib_internal_config_changed(xmlNode * diff)
     }
 
     if (xpathObj) {
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     return changed;

@@ -527,13 +527,13 @@ is_nodeid_required(xmlNode * xml)
     xpath = xpath_search(xml, "//parameter[@name='nodeid']");
     if (!xpath || xpath->nodesetval->nodeNr <= 0) {
         if (xpath) {
-            xmlXPathFreeObject(xpath);
+            freeXpathObject(xpath);
         }
         return FALSE;
     }
 
     if (xpath) {
-        xmlXPathFreeObject(xpath);
+        freeXpathObject(xpath);
     }
 
     return TRUE;
@@ -555,7 +555,7 @@ get_on_target_actions(xmlNode * xml)
 
     if (!xpath || !xpath->nodesetval) {
         if (xpath) {
-            xmlXPathFreeObject(xpath);
+            freeXpathObject(xpath);
         }
         return NULL;
     }
@@ -583,7 +583,7 @@ get_on_target_actions(xmlNode * xml)
     }
 
     if (xpath) {
-        xmlXPathFreeObject(xpath);
+        freeXpathObject(xpath);
     }
 
     if (!strlen(actions)) {

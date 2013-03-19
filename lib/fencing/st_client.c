@@ -1080,7 +1080,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             }
 
             if (xpathObj) {
-                xmlXPathFreeObject(xpathObj);
+                freeXpathObject(xpathObj);
             }
 
             /* Now fudge the metadata so that the start/stop actions appear */
@@ -1098,7 +1098,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             }
 
             if (xpathObj) {
-                xmlXPathFreeObject(xpathObj);
+                freeXpathObject(xpathObj);
             }
 
             /* Now fudge the metadata so that the port isn't required in the configuration */
@@ -1111,7 +1111,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             }
 
             if (xpathObj) {
-                xmlXPathFreeObject(xpathObj);
+                freeXpathObject(xpathObj);
             }
             free(buffer);
             buffer = dump_xml_formatted(xml);
@@ -1252,7 +1252,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
             *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
         }
 
-        xmlXPathFreeObject(xpathObj);
+        freeXpathObject(xpathObj);
     }
 
     free_xml(output);
