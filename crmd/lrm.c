@@ -418,6 +418,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 static char *
 get_rsc_metadata(const char *type, const char *class, const char *provider)
 {
+    int rc = 0;
     char *metadata = NULL;
 
     /* Always use a local connection for this operation */
@@ -432,7 +433,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
     }
 
     crm_trace("Retreiving metadata for %s::%s:%s", type, class, provider);
-    lrm_state_get_metadata(lrm_state, class, provider, type, &metadata, 0);
+    rc = lrm_state_get_metadata(lrm_state, class, provider, type, &metadata, 0);
 
     if (metadata) {
         /* copy the metadata because the LRM likes using
@@ -444,7 +445,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
         metadata = m_copy;
 
     } else {
-        crm_warn("No metadata found for %s::%s:%s", type, class, provider);
+        crm_warn("No metadata found for %s::%s:%s: %s (%d)", type, class, provider, pcmk_strerror(rc), rc);
     }
 
     return metadata;

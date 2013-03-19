@@ -1555,11 +1555,15 @@ lsb_get_metadata(const char *type, char **output)
     char *xml_l_dscrpt = NULL;
     GString *l_dscrpt = NULL;
 
-    snprintf(ra_pathname, sizeof(ra_pathname), "%s%s%s",
-             type[0] == '/' ? "" : LSB_ROOT_DIR, type[0] == '/' ? "" : "/", type);
+    if(type[0] == '/') {
+        snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
+    } else {
+        snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s", LSB_ROOT_DIR, type);
+    }
 
+    crm_trace("Looking into %s", ra_pathname);
     if (!(fp = fopen(ra_pathname, "r"))) {
-        return -EIO;
+        return -errno;
     }
 
     /* Enter into the lsb-compliant comment block */
@@ -1628,6 +1632,7 @@ lsb_get_metadata(const char *type, char **output)
     *output = strdup(meta_data->str);
     g_string_free(meta_data, TRUE);
 
+    crm_trace("Created fake metadata: %d", strlen(*output));
     return pcmk_ok;
 }
 
