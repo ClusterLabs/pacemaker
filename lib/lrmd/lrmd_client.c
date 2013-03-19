@@ -1482,40 +1482,36 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
     return rc;
 }
 
-static int
-lsb_get_metadata(const char *type, char **output)
-{
-
 #define lsb_metadata_template  \
-"<?xml version=\"1.0\"?>\n"\
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
-"<resource-agent name=\"%s\" version=\"0.1\">\n"\
-"  <version>1.0</version>\n"\
-"  <longdesc lang=\"en\">\n"\
-"    %s"\
-"  </longdesc>\n"\
-"  <shortdesc lang=\"en\">%s</shortdesc>\n"\
-"  <parameters>\n"\
-"  </parameters>\n"\
-"  <actions>\n"\
-"    <action name=\"start\"   timeout=\"15\" />\n"\
-"    <action name=\"stop\"    timeout=\"15\" />\n"\
-"    <action name=\"status\"  timeout=\"15\" />\n"\
-"    <action name=\"restart\"  timeout=\"15\" />\n"\
-"    <action name=\"force-reload\"  timeout=\"15\" />\n"\
-"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" />\n"\
-"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
-"  </actions>\n"\
-"  <special tag=\"LSB\">\n"\
-"    <Provides>%s</Provides>\n"\
-"    <Required-Start>%s</Required-Start>\n"\
-"    <Required-Stop>%s</Required-Stop>\n"\
-"    <Should-Start>%s</Should-Start>\n"\
-"    <Should-Stop>%s</Should-Stop>\n"\
-"    <Default-Start>%s</Default-Start>\n"\
-"    <Default-Stop>%s</Default-Stop>\n"\
-"  </special>\n"\
-"</resource-agent>\n"
+    "<?xml version='1.0'?>\n"                                           \
+    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"                 \
+    "<resource-agent name='%s' version='0.1'>\n"                        \
+    "  <version>1.0</version>\n"                                        \
+    "  <longdesc lang='en'>\n"                                          \
+    "    %s\n"                                                          \
+    "  </longdesc>\n"                                                   \
+    "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
+    "  <parameters>\n"                                                  \
+    "  </parameters>\n"                                                 \
+    "  <actions>\n"                                                     \
+    "    <action name='meta-data'    timeout='5' />\n"                  \
+    "    <action name='start'        timeout='15' />\n"                 \
+    "    <action name='stop'         timeout='15' />\n"                 \
+    "    <action name='status'       timeout='15' />\n"                 \
+    "    <action name='restart'      timeout='15' />\n"                 \
+    "    <action name='force-reload' timeout='15' />\n"                 \
+    "    <action name='monitor'      timeout='15' interval='15' />\n"   \
+    "  </actions>\n"                                                    \
+    "  <special tag='LSB'>\n"                                           \
+    "    <Provides>%s</Provides>\n"                                     \
+    "    <Required-Start>%s</Required-Start>\n"                         \
+    "    <Required-Stop>%s</Required-Stop>\n"                           \
+    "    <Should-Start>%s</Should-Start>\n"                             \
+    "    <Should-Stop>%s</Should-Stop>\n"                               \
+    "    <Default-Start>%s</Default-Start>\n"                           \
+    "    <Default-Stop>%s</Default-Stop>\n"                             \
+    "  </special>\n"                                                    \
+    "</resource-agent>\n"
 
 #define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
 #define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
@@ -1541,6 +1537,9 @@ lsb_get_metadata(const char *type, char **output)
         continue;                                                       \
     }
 
+static int
+lsb_get_metadata(const char *type, char **output)
+{
     char ra_pathname[PATH_MAX] = { 0, };
     FILE *fp;
     GString *meta_data = NULL;
