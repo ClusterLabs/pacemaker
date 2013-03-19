@@ -1065,8 +1065,8 @@ log_data_element(int log_level, const char *file, const char *function, int line
 
     /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
     if (data == NULL) {
-        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix,
-                         ": No data to dump as XML");
+        do_crm_log_alias(log_level, file, function, line, "%s: %s", prefix,
+                         "No data to dump as XML");
         return;
 
     } else if (is_set(options, xml_log_option_diff_short)
@@ -1128,7 +1128,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
         buffer_print(buffer, max, offset, "/>");
     }
 
-    do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
+    do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
 
     if (data->children) {
         offset = 0;
@@ -1143,7 +1143,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
         insert_prefix(options, &buffer, &offset, &max, depth);
         buffer_print(buffer, max, offset, "</%s>", name);
 
-        do_crm_log_alias(log_level, file, function, line, "%s%s", prefix, buffer);
+        do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
     }
 
     free(prefix_m);
