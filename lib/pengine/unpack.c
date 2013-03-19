@@ -473,6 +473,11 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
         }
     }
 
+    if (data_set->localhost && pe_find_node(data_set->nodes, data_set->localhost) == NULL) {
+        crm_info("Creating a fake local node");
+        create_node(data_set->localhost, data_set->localhost, NULL, 0, data_set);
+    }
+
     return TRUE;
 }
 

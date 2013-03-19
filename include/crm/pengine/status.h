@@ -116,6 +116,7 @@ typedef struct pe_working_set_s {
     xmlNode *graph;
 
     GHashTable *template_rsc_sets;
+    const char *localhost;
 
 } pe_working_set_t;
 

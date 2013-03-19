@@ -50,6 +50,7 @@
 #include <standalone_config.h>
 
 char *stonith_our_uname = NULL;
+char *stonith_our_uuid = NULL;
 
 GMainLoop *mainloop = NULL;
 
@@ -608,15 +609,32 @@ static void cib_device_update(resource_t *rsc)
     if(value && strcmp(RSC_STOPPED, value) == 0) {
         crm_info("Device %s has been disabled", rsc->id);
         return;
+
+    } else if(stonith_our_uname) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if(node && strcmp(node->details->uname, stonith_our_uname) == 0) {
+                break;
+            }
+            node = NULL;
+        }
     }
 
-    node = g_hash_table_lookup(rsc->allowed_nodes, stonith_our_uname);
     if(node == NULL) {
+        GHashTableIter iter;
+
         crm_info("Device %s has been disabled on %s: unknown", rsc->id, stonith_our_uname);
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            crm_trace("Available: %s = %d", node->details->uname, node->weight);
+        }
+
         return;
 
-    } else if(node->weight <= 0) {
-        crm_info("Device %s has been disabled on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
+    } else if(node->weight < 0) {
+        crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score2char(node->weight));
         return;
 
     } else {
@@ -644,6 +662,7 @@ static void cib_device_update(resource_t *rsc)
 }
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
+extern node_t *create_node(const char *id, const char *uname, const char *type, const char *score, pe_working_set_t * data_set);
 
 static void
 cib_devices_update(void)
@@ -655,6 +674,7 @@ cib_devices_update(void)
     data_set.input = local_cib;
     data_set.now = crm_time_new(NULL);
     data_set.flags |= pe_flag_quick_location;
+    data_set.localhost = stonith_our_uname;
 
     cluster_status(&data_set);
     do_calculations(&data_set, NULL, NULL);
@@ -669,32 +689,45 @@ cib_devices_update(void)
 static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
+    const char *reason = "none";
     gboolean needs_update = FALSE;
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process new constraints */
      xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
-    if (xpath_obj) {
+    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
         /* Safest and simplest to always recompute */
         needs_update = TRUE;
         xmlXPathFreeObject(xpath_obj);
+        reason = "new location constraint";
     }
 
     /* process deletions */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE);
-    if (xpath_obj) {
+    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
         remove_cib_device(xpath_obj);
         xmlXPathFreeObject(xpath_obj);
     }
 
     /* process additions */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
-    if (xpath_obj) {
+    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
+        int lpc;
+
         needs_update = TRUE;
+
+        for(lpc = 0; lpc < xpath_obj->nodesetval->nodeNr; lpc++) {
+            xmlNode *match = getXpathResult(xpath_obj, lpc);
+            const char *path = (char *)xmlGetNodePath(match);
+            crm_info("resource[%d] = %s", lpc, path);
+        }
+
         xmlXPathFreeObject(xpath_obj);
+        reason = "new resource";
     }
 
     if(needs_update) {
+        crm_info("Updating device list from the cib: %s", reason);
         cib_devices_update();
     }
 }
@@ -778,6 +811,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
+    crm_info("Updating device list from the cib: init");
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 
@@ -1077,10 +1111,9 @@ main(int argc, char **argv)
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(100);
-        } else {
-            stonith_our_uname = cluster.uname;
         }
         stonith_our_uname = cluster.uname;
+        stonith_our_uuid = cluster.uuid;
 
         if (no_cib_connect == FALSE) {
             setup_cib();
