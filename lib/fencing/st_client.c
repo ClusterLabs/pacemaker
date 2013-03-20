@@ -819,12 +819,18 @@ internal_stonith_action_execute(stonith_action_t * action)
         }
 
         if (timeout == 0) {
-            int killrc = kill(pid, 9 /*SIGKILL*/);
+            int killrc = kill(pid, SIGKILL);
 
             if (killrc && errno != ESRCH) {
                 crm_err("kill(%d, KILL) failed: %s (%d)", pid, pcmk_strerror(errno), errno);
             }
-            p = waitpid(pid, &status, WNOHANG);
+            /*
+             * From sigprocmask(2):
+             * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
+             *
+             * This makes it safe to skip WNOHANG here
+             */
+            p = waitpid(pid, &status, 0);
         }
 
         if (p <= 0) {

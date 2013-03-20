@@ -421,7 +421,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
         crm_trace("Child done: %d", op->pid);
         if (timeout == 0) {
-            int killrc = kill(op->pid, 9 /*SIGKILL*/);
+            int killrc = kill(op->pid, SIGKILL);
 
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
             op->status = PCMK_LRM_OP_TIMEOUT;
@@ -430,6 +430,13 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
             if (killrc && errno != ESRCH) {
                 crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
             }
+            /*
+             * From sigprocmask(2):
+             * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
+             *
+             * This makes it safe to skip WNOHANG here
+             */
+            waitpid(op->pid, &status, 0);
 
         } else if (WIFEXITED(status)) {
             op->status = PCMK_LRM_OP_DONE;
