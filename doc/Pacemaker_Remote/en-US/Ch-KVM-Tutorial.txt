@@ -6,30 +6,30 @@
 
 == Step 1: Setup the Host ==
 
-This tutorial assumes you are using some rpm based distro.  In my case I'm using Fedora 18 on the host.  Anything that is capable of running libvirt and pacemaker v1.1.9.1 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
+This tutorial was created using Fedora 18 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.9.1 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
 
 Fedora 18 (or similar distro) host preparation steps.
 
 === SElinux and Firewall ===
 In order to simply this tutorial we will disable the selinux and the firewall on the host.
-WARNING: These actions pose a significant security issues to machines exposed to the outside world.  Basically, just don't do this on your production system.
++WARNING:+ These actions will open a significant security threat to machines exposed to the outside world.
 [source,C]
 ----
-setenforce 0
-sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-systemctl disable iptables.service
-systemctl disable ip6tables.service
-rm '/etc/systemd/system/basic.target.wants/iptables.service'
-rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
-systemctl stop iptables.service
-systemctl stop ip6tables.service
+# setenforce 0
+# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+# systemctl disable iptables.service
+# systemctl disable ip6tables.service
+# rm '/etc/systemd/system/basic.target.wants/iptables.service'
+# rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
+# systemctl stop iptables.service
+# systemctl stop ip6tables.service
 ----
 
 === Install Cluster Software ===
 
 [source,C]
 ----
-yum install -y pacemaker corosync pcs resource-agents
+# yum install -y pacemaker corosync pcs resource-agents
 ----
 
 === Setup Corosync ===
@@ -38,25 +38,25 @@ Running the command below will attempt to detect the network address corosync sh
 
 [source,C]
 ----
-export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
+# export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
 ----
 
 Display and verify that address is correct
 
 [source,C]
 ----
-echo $corosync_addr
+# echo $corosync_addr
 ----
 
-In most cases the address will be 192.168.1.0 if you are behind a standard home router.
+In many cases the address will be 192.168.1.0 if you are behind a standard home router.
 
 Now copy over the example corosync.conf.  This code will inject your bindaddress and enable the vote quorum api which is required by pacemaker.
 
 [source,C]
 ----
-cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
-sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
-cat << END >> /etc/corosync/corosync.conf
+# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
+# sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
+# cat << END >> /etc/corosync/corosync.conf
 quorum {
            provider: corosync_votequorum
            expected_votes: 2
@@ -70,14 +70,14 @@ Start the cluster
 
 [source,C]
 ----
-pcs cluster start
+# pcs cluster start
 ----
 
 Verify corosync membership
 
 [source,C]
 ----
-pcs status corosync
+# pcs status corosync
 
 Membership information
     Nodeid      Votes Name
@@ -88,7 +88,7 @@ Verify pacemaker status.  At first the 'pcs cluster status' output will look lik
 
 [source,C]
 ----
-pcs status
+# pcs status
 
  Last updated: Thu Mar 14 12:26:00 2013
  Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
@@ -103,7 +103,7 @@ After about a minute you should see your host as a single node in the cluster.
 
 [source,C]
 ----
-pcs status
+# pcs status
 
  Last updated: Thu Mar 14 12:28:23 2013
  Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
@@ -120,15 +120,15 @@ Go ahead and stop the cluster for now after verifying everything is in order.
 
 [source,C]
 ----
-pcs cluster stop
+# pcs cluster stop
 ----
 
 === Install Virtualization Software ===
 
 [source,C]
 ----
-yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
-systemctl enable libvirtd.service
+# yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
+# systemctl enable libvirtd.service
 ----
 
 reboot the host
@@ -183,10 +183,10 @@ To simplify the tutorial we'll go ahead and disable selinux on the guest.  We'll
 
 [source,C]
 ----
-setenforce 0
-sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+# setenforce 0
+# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
 
-firewall-cmd --add-port 3121/tcp --permanent
+# firewall-cmd --add-port 3121/tcp --permanent
 ----
 
 If you still encounter connection issues just disable iptables and ipv6tables on the guest like we did on the host to guarantee you'll be able to contact the guest from the host.
@@ -199,26 +199,26 @@ On the +HOST+ machine run these commands to generate an authkey and copy it to t
 
 [source,C]
 ----
-mkdir /etc/pacemaker
-dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
-scp -r /etc/pacemaker root@192.168.122.10:/etc/
+# mkdir /etc/pacemaker
+# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+# scp -r /etc/pacemaker root@192.168.122.10:/etc/
 ----
 
 Now on the +GUEST+ install pacemaker-remote package and enable the daemon to run at startup.  In the commands below you will notice the 'pacemaker' and 'pacemaker_remote' packages are being installed.  The 'pacemaker' package is not required. The only reason it is being installed for this tutorial is because it contains the a 'Dummy' resource agent we will be using later on to test the remote-node.
 
 [source,C]
 ----
-yum install -y pacemaker paceamaker-remote resource-agents
-systemctl enable pacemaker_remote.service
+# yum install -y pacemaker paceamaker-remote resource-agents
+# systemctl enable pacemaker_remote.service
 ----
 
 Now start pacemaker_remote on the guest and verify the start was successful.
 
 [source,C]
 ----
-systemctl start pacemaker_remote.service
+# systemctl start pacemaker_remote.service
 
-systemctl status pacemaker_remote
+# systemctl status pacemaker_remote
 
   pacemaker_remote.service - Pacemaker Remote Service
 	  Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
@@ -236,11 +236,11 @@ systemctl status pacemaker_remote
 
 Before moving forward it's worth going ahead and verifying the host can contact the guest on port 3121. Here's a trick you can use. Connect using telnet from the host.  The connection will get destroyed, but how it is destroyed tells you whether it worked or not.
 
-First add guest1 to the host machines /etc/hosts file if you haven't already.  This is required unless you have dns setup in a way where guest1's address can be discovered.
+First add guest1 to the host machine's /etc/hosts file if you haven't already.  This is required unless you have dns setup in a way where guest1's address can be discovered.
 
 [source,C]
 ----
-cat << END >> /etc/hosts
+# cat << END >> /etc/hosts
 192.168.122.10    guest1 
 END
 ----
@@ -248,7 +248,7 @@ END
 If running the telnet command on the host results in this output before disconnecting, the connection works.
 [source,C]
 ----
-telnet guest1 3121
+# telnet guest1 3121
  Trying 192.168.122.10...
  Connected to guest1.
  Escape character is '^]'.
@@ -258,7 +258,7 @@ telnet guest1 3121
 If you see this, the connection is not working.
 [source,C]
 ----
-telnet guest1 3121
+# telnet guest1 3121
 Trying 192.168.122.10...
 telnet: connect to address 192.168.122.10: No route to host
 ----
@@ -274,7 +274,7 @@ On the host, start pacemaker.
 
 [source,C]
 ----
-pcs cluster start
+# pcs cluster start
 ----
 
 Wait for the host to become the DC. The output of 'pcs status' should look similar to this after about a minute.
@@ -297,8 +297,8 @@ Now enable the cluster to work without quorum or stonith.  This is required just
 
 [source,C]
 ----
-pcs property set stonith-enabled=false
-pcs property set no-quorum-policy=ignore
+# pcs property set stonith-enabled=false
+# pcs property set no-quorum-policy=ignore
 ----
 
 === Integrate KVM Guest as remote-node ===
@@ -307,16 +307,16 @@ If you didn't already do this earlier in the verify host to guest connection sec
 
 [source,C]
 ----
-cat << END >> /etc/hosts
+# cat << END >> /etc/hosts
 192.168.122.10    guest1 
 END
 ----
 
-We will use the +VirtualDomain+ resource agent for the management of the virtual machine.  This agent requires the virtual machines xml config to be dumped to a file on disk.  To do this pick out the name of the virtual machine you just created from the output of this list.
+We will use the +VirtualDomain+ resource agent for the management of the virtual machine.  This agent requires the virtual machine's xml config to be dumped to a file on disk.  To do this pick out the name of the virtual machine you just created from the output of this list.
 
 [source,C]
 ----
-virsh list --all
+# virsh list --all
  Id    Name                           State
 ______________________________________________
  -     guest1                         shut off
@@ -326,14 +326,14 @@ In my case I named it guest1. Dump the xml to a file somewhere on the host using
 
 [source,C]
 ----
-virsh dumpxml guest1 > /root/guest1.xml
+# virsh dumpxml guest1 > /root/guest1.xml
 ----
 
 Now just register the resource with pacemaker and you're set!
 
 [source,C]
 ----
-pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="/root/guest1.xml" meta remote-node=guest1
+# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="/root/guest1.xml" meta remote-node=guest1
 ----
 
 Once the 'vm-guest1' resource is started you will see 'guest1' appear in the 'pcs status' output as a node.  The final 'pcs status' output should look something like this.
@@ -364,11 +364,11 @@ Create a few Dummy resources.  Dummy resources are real resource agents used jus
 
 [source,C]
 ----
-pcs resource create FAKE1 ocf:pacemaker:Dummy
-pcs resource create FAKE2 ocf:pacemaker:Dummy
-pcs resource create FAKE3 ocf:pacemaker:Dummy
-pcs resource create FAKE4 ocf:pacemaker:Dummy
-pcs resource create FAKE5 ocf:pacemaker:Dummy
+# pcs resource create FAKE1 ocf:pacemaker:Dummy
+# pcs resource create FAKE2 ocf:pacemaker:Dummy
+# pcs resource create FAKE3 ocf:pacemaker:Dummy
+# pcs resource create FAKE4 ocf:pacemaker:Dummy
+# pcs resource create FAKE5 ocf:pacemaker:Dummy
 ----
 
 Now check your 'pcs status' output.  In the resource section you should see something like the following, where some of the resources got started on the cluster-node, and some started on the remote-node.
@@ -386,11 +386,11 @@ Full list of resources:
 ----
 
 
-The remote-node, 'guest1', reacts just like any other node in the cluster.  For example, pick out a resouce that is running on your cluster-node.  For my purposes I am picking FAKE3 from the output above.  We can force FAKE3 to run on 'guest1' in the exact same way we would any other node.
+The remote-node, 'guest1', reacts just like any other node in the cluster.  For example, pick out a resource that is running on your cluster-node.  For my purposes I am picking FAKE3 from the output above.  We can force FAKE3 to run on 'guest1' in the exact same way we would any other node.
 
 [source,C]
 ----
-pcs constraint FAKE3 prefers guest1
+# pcs constraint FAKE3 prefers guest1
 ----
 
 Now looking at the bottom of the 'pcs status' output you'll see FAKE3 is on 'guest1'.
@@ -415,7 +415,7 @@ ssh into the guest and run this command.
 
 [source,C]
 ----
-kill -9 `pidof pacemaker_remoted`
+# kill -9 `pidof pacemaker_remoted`
 ----
 
 After a few seconds or so you'll see this in your 'pcs status' output.  The 'guest1' node will be show as offline as it is being recovered.

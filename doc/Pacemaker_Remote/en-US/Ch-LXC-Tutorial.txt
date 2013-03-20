@@ -15,23 +15,23 @@ In order to simply this tutorial we will disable the selinux and the firewall on
 WARNING: These actions pose a significant security issues to machines exposed to the outside world.  Basically, just don't do this on your production system.
 [source,C]
 ----
-setenforce 0
-sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-firewall-cmd --add-port 3121/tcp --permanent
+# setenforce 0
+# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+# firewall-cmd --add-port 3121/tcp --permanent
 
-systemctl disable iptables.service
-systemctl disable ip6tables.service
-rm '/etc/systemd/system/basic.target.wants/iptables.service'
-rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
-systemctl stop iptables.service
-systemctl stop ip6tables.service
+# systemctl disable iptables.service
+# systemctl disable ip6tables.service
+# rm '/etc/systemd/system/basic.target.wants/iptables.service'
+# rm '/etc/systemd/system/basic.target.wants/ip6tables.service'
+# systemctl stop iptables.service
+# systemctl stop ip6tables.service
 ----
 
 === Install Cluster Software on Host ===
 
 [source,C]
 ----
-yum install -y pacemaker pacemaker-remote corosync pcs resource-agents
+# yum install -y pacemaker pacemaker-remote corosync pcs resource-agents
 ----
 
 === Configure Corosync ===
@@ -40,14 +40,14 @@ Running the command below will attempt to detect the network address corosync sh
 
 [source,C]
 ----
-export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
+# export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
 ----
 
 Display and verify the address is correct
 
 [source,C]
 ----
-echo $corosync_addr
+# echo $corosync_addr
 ----
 
 In most cases the address will be 192.168.1.0 if you are behind a standard home router.
@@ -56,9 +56,9 @@ Now copy over the example corosync.conf.  This code will inject your bindaddress
 
 [source,C]
 ----
-cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
-sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
-cat << END >> /etc/corosync/corosync.conf
+# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
+# sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
+# cat << END >> /etc/corosync/corosync.conf
 quorum {
            provider: corosync_votequorum
            expected_votes: 2
@@ -72,14 +72,14 @@ Start the cluster
 
 [source,C]
 ----
-pcs cluster start
+# pcs cluster start
 ----
 
 Verify corosync membership
 
 [source,C]
 ----
-pcs status corosync
+# pcs status corosync
 
 Membership information
     Nodeid      Votes Name
@@ -90,7 +90,7 @@ Verify pacemaker status.  At first the 'pcs cluster status' output will look lik
 
 [source,C]
 ----
-pcs status
+# pcs status
 
  Last updated: Thu Mar 14 12:26:00 2013
  Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
@@ -105,7 +105,7 @@ After about a minute you should see your host as a single node in the cluster.
 
 [source,C]
 ----
-pcs status
+# pcs status
 
  Last updated: Thu Mar 14 12:28:23 2013
  Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
@@ -122,7 +122,7 @@ Go ahead and stop the cluster for now after verifying everything is in order.
 
 [source,C]
 ----
-pcs cluster stop
+# pcs cluster stop
 ----
 
 == Step 2: Setup LXC Environment ==
@@ -131,8 +131,8 @@ pcs cluster stop
 
 [source,C]
 ----
-yum install -y libvirt libvirt-daemon-lxc wget
-systemctl enable libvirtd
+# yum install -y libvirt libvirt-daemon-lxc wget
+# systemctl enable libvirtd
 ----
 
 At this point, restart the host.
@@ -145,17 +145,17 @@ Download the script to whatever directory you want the containers to live in.  I
 
 [source,C]
 ----
-mkdir /root/lxc/
-cd /root/lxc/
-wget https://raw.github.com/davidvossel/pcmk-lxc-autogen/master/lxc-autogen
-chmod 755 lxc-autogen
+# mkdir /root/lxc/
+# cd /root/lxc/
+# wget https://raw.github.com/davidvossel/pcmk-lxc-autogen/master/lxc-autogen
+# chmod 755 lxc-autogen
 ----
 
 Now execute the script.
 
 [source,C]
 ----
-./lxc-autogen
+# ./lxc-autogen
 ----
 
 After executing the script you will see a bunch of directories and xml files are generated. Those xml files are the libvirt-lxc domain definitions, and the directories are used as some special mount points for each container.  If you open up one of the xml files you'll be able to see how the cpu, memory, and filesystem resources for the container are defined.  You can use the libvirt-lxc driver's documentation found here, http://libvirt.org/drvlxc.html, as a reference to help understand all the parts of the xml file.  The lxc-autogen script is not complicated and is worth exploring in order to grasp how the environment is generated.
@@ -180,7 +180,7 @@ Generate the authkey used to secure connections between the host and the lxc gue
 
 [source,C]
 ----
-dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
 
 == Step 3: Integrate LXC guests into Cluster. ==
@@ -322,8 +322,7 @@ In order to see how the cluster reacts to a failed lxc guest. Try killing one of
 
 [source,C]
 ----
-kill -9 9142
+# kill -9 9142
 ----
 
 After a few moments the lxc guest that was running that instance of pacemaker_remote will be recovered along with all the resources running within that container.
-
