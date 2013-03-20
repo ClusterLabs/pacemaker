@@ -8,12 +8,12 @@ The recent addition of the +pacemaker_remote+ service supported by +Pacemaker ve
 
 +remote-node+  - A virtual guest node running the pacemaker_remote service.
 
-+pacemaker_remote+ - A service daemon capable of performing remote application management within virtual guests (kvm and lxc) in both pacemaker cluster environments and standalone (non-cluster) environments. This service is an enhanced version of pacemaker's local resource manage daemon (LRMD) that is capable of managing and monitoring LSB, OCF, upstart, and systemd resources on a guest remotely.  It also allows for most of pacemaker's cli tools (crm_mon, crm_resource, crm_master, crm_attribut, ect..) to work natively on remote-nodes.
++pacemaker_remote+ - A service daemon capable of performing remote application management within virtual guests (kvm and lxc) in both pacemaker cluster environments and standalone (non-cluster) environments. This service is an enhanced version of pacemaker's local resource manage daemon (LRMD) that is capable of managing and monitoring LSB, OCF, upstart, and systemd resources on a guest remotely.  It also allows for most of pacemaker's cli tools (crm_mon, crm_resource, crm_master, crm_attribute, ect..) to work natively on remote-nodes.
 
 +LXC+ - A Linux Container defined by the libvirt-lxc Linux container driver. http://libvirt.org/drvlxc.html
 
 == Virtual Machine Use Case ==
-The use of pacemaker_remote in virtual machines solves a deployment scenario that has traditionally been difficult to execute.
+The use of pacemaker_remote in virtual machines solves a deployment scenario that has traditionally been difficult to solve.
 
 +"I want a pacemaker cluster to manage virtual machine resources, but I also want pacemaker to be able to manage the resources that live within those virtual machines."+
 

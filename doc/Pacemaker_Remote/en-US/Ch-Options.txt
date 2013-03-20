@@ -16,7 +16,7 @@ When configuring a virtual machine or lxc resource to act as a remote-node, thes
 
 |+remote-node+
 |<none>
-|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121.
+|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121. +WARNING+ This value cannot overlap with any resource or node IDs.
 
 |+remote-port+
 |3121
@@ -28,7 +28,7 @@ When configuring a virtual machine or lxc resource to act as a remote-node, thes
 
 |+remote-connect-timeout+
 |60s
-|How long to before a pending guest connection will time out.
+|How long before a pending guest connection will time out.
 
 |=========================================================
 
