@@ -120,7 +120,7 @@ te_update_diff(const char *event, xmlNode * msg)
     crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d (%s)", op,
               diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
               diff_add_admin_epoch, diff_add_epoch, diff_add_updates, fsa_state2string(fsa_state));
-    log_cib_diff(LOG_DEBUG_2, diff, op);
+    log_cib_diff(LOG_DEBUG_2, diff, __FUNCTION__);
 
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, tg_restart, "Non-status change", diff);
