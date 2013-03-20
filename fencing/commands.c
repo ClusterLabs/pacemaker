@@ -524,18 +524,14 @@ is_nodeid_required(xmlNode * xml)
     if (!xml) {
         return FALSE;
     }
+
     xpath = xpath_search(xml, "//parameter[@name='nodeid']");
-    if (!xpath || xpath->nodesetval->nodeNr <= 0) {
-        if (xpath) {
-            freeXpathObject(xpath);
-        }
+    if (numXpathResults(xpath)  <= 0) {
+        freeXpathObject(xpath);
         return FALSE;
     }
 
-    if (xpath) {
-        freeXpathObject(xpath);
-    }
-
+    freeXpathObject(xpath);
     return TRUE;
 }
 
@@ -552,15 +548,12 @@ get_on_target_actions(xmlNode * xml)
     }
 
     xpath = xpath_search(xml, "//action");
+    max = numXpathResults(xpath);
 
-    if (!xpath || !xpath->nodesetval) {
-        if (xpath) {
-            freeXpathObject(xpath);
-        }
+    if (max <= 0) {
+        freeXpathObject(xpath);
         return NULL;
     }
-
-    max = xpath->nodesetval->nodeNr;
 
     actions = calloc(1, 512);
 
@@ -582,9 +575,7 @@ get_on_target_actions(xmlNode * xml)
         }
     }
 
-    if (xpath) {
-        freeXpathObject(xpath);
-    }
+    freeXpathObject(xpath);
 
     if (!strlen(actions)) {
         free(actions);

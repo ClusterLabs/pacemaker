@@ -2159,18 +2159,14 @@ crm_diff_update(const char *event, xmlNode * msg)
         xmlXPathObject *xpathObj = xpath_search(msg,
                                                 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
                                                 "//" XML_LRM_TAG_RSC_OP);
-        if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-            int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+        int lpc = 0, max = numXpathResults(xpathObj);
 
-            for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+        for (lpc = 0; lpc < max; lpc++) {
+            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
 
-                handle_rsc_op(rsc_op);
-            }
+            handle_rsc_op(rsc_op);
         }
-        if (xpathObj) {
-            freeXpathObject(xpathObj);
-        }
+        freeXpathObject(xpathObj);
     }
 
     if (current_cib == NULL) {

@@ -439,11 +439,7 @@ topology_register_helper(const char *node, int level, stonith_key_value_t * devi
 static void
 remove_cib_device(xmlXPathObjectPtr xpathObj)
 {
-    int max = 0, lpc = 0;
-
-    if (xpathObj && xpathObj->nodesetval) {
-        max = xpathObj->nodesetval->nodeNr;
-    }
+    int max = numXpathResults(xpathObj), lpc = 0;
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *rsc_id = NULL;
@@ -467,11 +463,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = 0, lpc = 0;
-
-    if (xpathObj && xpathObj->nodesetval) {
-        max = xpathObj->nodesetval->nodeNr;
-    }
+    int max = numXpathResults(xpathObj), lpc = 0;
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -501,11 +493,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 {
-    int max = 0, lpc = 0;
-
-    if (xpathObj && xpathObj->nodesetval) {
-        max = xpathObj->nodesetval->nodeNr;
-    }
+    int max = numXpathResults(xpathObj), lpc = 0;
 
     for (lpc = 0; lpc < max; lpc++) {
         int index = 0;
@@ -575,9 +563,7 @@ fencing_topology_init(xmlNode * msg)
 
     register_fencing_topology(xpathObj, TRUE);
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 }
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
@@ -694,37 +680,28 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process new constraints */
-     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
-    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
+    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
+    if (numXpathResults(xpath_obj) > 0) {
         /* Safest and simplest to always recompute */
         needs_update = TRUE;
-        freeXpathObject(xpath_obj);
         reason = "new location constraint";
     }
+    freeXpathObject(xpath_obj);
 
     /* process deletions */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE);
-    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
-        freeXpathObject(xpath_obj);
     }
+    freeXpathObject(xpath_obj);
 
     /* process additions */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
-    if (xpath_obj && xpath_obj->nodesetval->nodeNr > 0) {
-        int lpc;
-
+    if (numXpathResults(xpath_obj) > 0) {
         needs_update = TRUE;
-
-        for(lpc = 0; lpc < xpath_obj->nodesetval->nodeNr; lpc++) {
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-            const char *path = (char *)xmlGetNodePath(match);
-            crm_info("resource[%d] = %s", lpc, path);
-        }
-
-        freeXpathObject(xpath_obj);
         reason = "new resource";
     }
+    freeXpathObject(xpath_obj);
 
     if(needs_update) {
         crm_info("Updating device list from the cib: %s", reason);
@@ -743,20 +720,14 @@ update_fencing_topology(const char *event, xmlNode * msg)
     xpathObj = xpath_search(msg, xpath);
 
     remove_fencing_topology(xpathObj);
-
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 
     /* Process additions and changes */
     xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
     xpathObj = xpath_search(msg, xpath);
 
     register_fencing_topology(xpathObj, FALSE);
-
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 }
 static bool have_cib_devices = FALSE;
 

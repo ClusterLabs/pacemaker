@@ -241,4 +241,12 @@ xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 
+static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
+{
+    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
+        return 0;
+    }
+    return xpathObj->nodesetval->nodeNr;
+}
+
 #endif

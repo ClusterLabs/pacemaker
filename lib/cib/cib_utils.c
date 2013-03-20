@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -497,7 +497,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     /* The diff calculation in cib_config_changed() accounts for 25% of the
      * CIB's total CPU usage on the DC
      *
-     * RNG validation on the otherhand, accounts for only 9%... 
+     * RNG validation on the otherhand, accounts for only 9%...
      */
     *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
@@ -537,7 +537,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
      static filter_t filter[] = {
      { 0, XML_ATTR_ORIGIN },
-     { 0, XML_CIB_ATTR_WRITTEN },               
+     { 0, XML_CIB_ATTR_WRITTEN },
      { 0, XML_ATTR_UPDATE_ORIG },
      { 0, XML_ATTR_UPDATE_CLIENT },
      { 0, XML_ATTR_UPDATE_USER },
@@ -881,13 +881,11 @@ cib_internal_config_changed(xmlNode * diff)
     }
 
     xpathObj = xpath_search(diff, config_xpath);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpathObj) > 0) {
         changed = TRUE;
     }
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 
     return changed;
 }
@@ -904,4 +902,3 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
-

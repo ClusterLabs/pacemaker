@@ -63,7 +63,7 @@ process_resource_updates(xmlXPathObject * xpathObj)
              <lrm_resources>
         	<rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
-    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    int lpc = 0, max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
@@ -76,6 +76,7 @@ process_resource_updates(xmlXPathObject * xpathObj)
 void
 te_update_diff(const char *event, xmlNode * msg)
 {
+    int lpc, max;
     int rc = -1;
     const char *op = NULL;
 
@@ -130,73 +131,65 @@ te_update_diff(const char *event, xmlNode * msg)
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_TICKETS);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(INFINITY, tg_restart, "Ticket attribute: update", aborted);
         goto bail;
 
-    } else if (xpathObj) {
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 
     /* Tickets Attributes - Removed */
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_TICKETS);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(INFINITY, tg_restart, "Ticket attribute: removal", aborted);
         goto bail;
-
-    } else if (xpathObj) {
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 
     /* Transient Attributes - Added/Updated */
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//"
                      XML_TAG_TRANSIENT_NODEATTRS "//" XML_CIB_TAG_NVPAIR);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-        int lpc;
+    max = numXpathResults(xpathObj);
 
-        for (lpc = 0; lpc < xpathObj->nodesetval->nodeNr; lpc++) {
-            xmlNode *attr = getXpathResult(xpathObj, lpc);
-            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-            const char *value = NULL;
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *attr = getXpathResult(xpathObj, lpc);
+        const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+        const char *value = NULL;
 
-            if (safe_str_eq(CRM_OP_PROBED, name)) {
-                value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-            }
+        if (safe_str_eq(CRM_OP_PROBED, name)) {
+            value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+        }
 
-            if (crm_is_true(value) == FALSE) {
-                abort_transition(INFINITY, tg_restart, "Transient attribute: update", attr);
-                crm_log_xml_trace(attr, "Abort");
-                goto bail;
-            }
+        if (crm_is_true(value) == FALSE) {
+            abort_transition(INFINITY, tg_restart, "Transient attribute: update", attr);
+            crm_log_xml_trace(attr, "Abort");
+            goto bail;
         }
     }
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 
     /* Transient Attributes - Removed */
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//"
                      XML_TAG_TRANSIENT_NODEATTRS);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
         goto bail;
 
-    } else if (xpathObj) {
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 
     /*
      * Check for and fast-track the processing of LRM refreshes
@@ -214,84 +207,71 @@ te_update_diff(const char *event, xmlNode * msg)
                          XML_LRM_TAG_RESOURCE);
     }
 
-    if (xpathObj) {
-        int updates = xpathObj->nodesetval->nodeNr;
-
-        if (updates > 1) {
-            /* Updates by, or in response to, TE actions will never contain updates
-             * for more than one resource at a time
-             */
-            crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events",
-                      updates);
-            crm_log_xml_trace(diff, "lrm-refresh");
-            abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
-            goto bail;
-        }
-        freeXpathObject(xpathObj);
+    max = numXpathResults(xpathObj);
+    if (max > 1) {
+        /* Updates by, or in response to, TE actions will never contain updates
+         * for more than one resource at a time
+         */
+        crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events", max);
+        crm_log_xml_trace(diff, "lrm-refresh");
+        abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
+        goto bail;
     }
+    freeXpathObject(xpathObj);
 
     /* Process operation updates */
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
-    if (xpathObj) {
+    if (numXpathResults(xpathObj)) {
         process_resource_updates(xpathObj);
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
     xpathObj = xpath_search(diff, "//" XML_TAG_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
-    if (xpathObj) {
-        int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    max = numXpathResults(xpathObj);
+    for (lpc = 0; lpc < max; lpc++) {
+        int path_max = 0;
+        const char *op_id = NULL;
+        char *rsc_op_xpath = NULL;
+        xmlXPathObject *op_match = NULL;
+        xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        for (lpc = 0; lpc < max; lpc++) {
-            int max = 0;
-            const char *op_id = NULL;
-            char *rsc_op_xpath = NULL;
-            xmlXPathObject *op_match = NULL;
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+        CRM_CHECK(match != NULL, continue);
 
-            CRM_CHECK(match != NULL, continue);
+        op_id = ID(match);
 
-            op_id = ID(match);
+        path_max = strlen(rsc_op_template) + strlen(op_id) + 1;
+        rsc_op_xpath = calloc(1, path_max);
+        snprintf(rsc_op_xpath, path_max, rsc_op_template, op_id);
 
-            max = strlen(rsc_op_template) + strlen(op_id) + 1;
-            rsc_op_xpath = calloc(1, max);
-            snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
+        op_match = xpath_search(diff, rsc_op_xpath);
+        if (numXpathResults(op_match) == 0) {
+            /* Prevent false positives by matching cancelations too */
+            const char *node = get_node_id(match);
+            crm_action_t *cancelled = get_cancel_action(op_id, node);
 
-            op_match = xpath_search(diff, rsc_op_xpath);
-            if (op_match == NULL || op_match->nodesetval->nodeNr == 0) {
-                /* Prevent false positives by matching cancelations too */
-                const char *node = get_node_id(match);
-                crm_action_t *cancelled = get_cancel_action(op_id, node);
-
-                if (cancelled == NULL) {
-                    crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
-                              node);
-                    abort_transition(INFINITY, tg_restart, "Resource op removal", match);
-                    if (op_match) {
-                        freeXpathObject(op_match);
-                    }
-                    free(rsc_op_xpath);
-                    goto bail;
-
-                } else {
-                    crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
-                              op_id, node, cancelled->id);
-                }
-            }
-
-            if (op_match) {
+            if (cancelled == NULL) {
+                crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
+                          node);
+                abort_transition(INFINITY, tg_restart, "Resource op removal", match);
                 freeXpathObject(op_match);
+                free(rsc_op_xpath);
+                goto bail;
+
+            } else {
+                crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
+                          op_id, node, cancelled->id);
             }
-            free(rsc_op_xpath);
         }
+
+        freeXpathObject(op_match);
+        free(rsc_op_xpath);
     }
 
   bail:
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
 }
 
 gboolean
@@ -324,13 +304,13 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, F_CRM_REFERENCE), from);
 
         xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
-        if (xpathObj) {
+        if (numXpathResults(xpathObj)) {
             process_resource_updates(xpathObj);
             freeXpathObject(xpathObj);
-            xpathObj = NULL;
 
         } else {
             crm_log_xml_err(msg, "Invalid (N)ACK");
+            freeXpathObject(xpathObj);
             return FALSE;
         }
 

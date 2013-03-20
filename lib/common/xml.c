@@ -2897,13 +2897,13 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
 void
 freeXpathObject(xmlXPathObjectPtr xpathObj)
 {
-    int lpc;
+    int lpc, max = numXpathResults(xpathObj);
 
-    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
+    if(xpathObj == NULL) {
         return;
     }
 
-    for(lpc = 0; lpc < xpathObj->nodesetval->nodeNr; lpc++) {
+    for(lpc = 0; lpc < max; lpc++) {
         if (xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
             xpathObj->nodesetval->nodeTab[lpc] = NULL;
         }
@@ -2917,12 +2917,13 @@ xmlNode *
 getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 {
     xmlNode *match = NULL;
+    int max = numXpathResults(xpathObj);
 
     CRM_CHECK(index >= 0, return NULL);
     CRM_CHECK(xpathObj != NULL, return NULL);
 
-    if (index >= xpathObj->nodesetval->nodeNr) {
-        crm_err("Requested index %d of only %d items", index, xpathObj->nodesetval->nodeNr);
+    if (index >= max) {
+        crm_err("Requested index %d of only %d items", index, max);
         return NULL;
     }
 
@@ -3107,6 +3108,7 @@ get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
 xmlNode *
 get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 {
+    int max;
     xmlNode *result = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     char *nodePath = NULL;
@@ -3118,12 +3120,14 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 
     xpathObj = xpath_search(xml_obj, xpath);
     nodePath = (char *)xmlGetNodePath(xml_obj);
-    if (xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
+    max = numXpathResults(xpathObj);
+
+    if (max < 1) {
         do_crm_log(error_level, "No match for %s in %s", xpath, crm_str(nodePath));
         crm_log_xml_explicit(xml_obj, "Unexpected Input");
 
-    } else if (xpathObj->nodesetval->nodeNr > 1) {
-        int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    } else if (max > 1) {
+        int lpc = 0;
 
         do_crm_log(error_level, "Too many matches for %s in %s", xpath, crm_str(nodePath));
 
@@ -3142,9 +3146,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         result = getXpathResult(xpathObj, 0);
     }
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
     free(nodePath);
 
     return result;

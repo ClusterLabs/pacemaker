@@ -1075,17 +1075,15 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             xmlXPathObject *xpathObj = NULL;
 
             xpathObj = xpath_search(xml, "//actions");
-            if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+            if (numXpathResults(xpathObj) > 0) {
                 actions = getXpathResult(xpathObj, 0);
             }
 
-            if (xpathObj) {
-                freeXpathObject(xpathObj);
-            }
+            freeXpathObject(xpathObj);
 
             /* Now fudge the metadata so that the start/stop actions appear */
             xpathObj = xpath_search(xml, "//action[@name='stop']");
-            if (xpathObj == NULL || xpathObj->nodesetval->nodeNr <= 0) {
+            if (numXpathResults(xpathObj) <= 0) {
                 xmlNode *tmp = NULL;
 
                 tmp = create_xml_node(actions, "action");
@@ -1097,22 +1095,18 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
                 crm_xml_add(tmp, "timeout", "20s");
             }
 
-            if (xpathObj) {
-                freeXpathObject(xpathObj);
-            }
+            freeXpathObject(xpathObj);
 
             /* Now fudge the metadata so that the port isn't required in the configuration */
             xpathObj = xpath_search(xml, "//parameter[@name='port']");
-            if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+            if (numXpathResults(xpathObj) > 0) {
                 /* We'll fill this in */
                 xmlNode *tmp = getXpathResult(xpathObj, 0);
 
                 crm_xml_add(tmp, "required", "0");
             }
 
-            if (xpathObj) {
-                freeXpathObject(xpathObj);
-            }
+            freeXpathObject(xpathObj);
             free(buffer);
             buffer = dump_xml_formatted(xml);
             free_xml(xml);
@@ -1241,7 +1235,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
     xpathObj = xpath_search(output, "//@agent");
     if (xpathObj) {
-        max = xpathObj->nodesetval->nodeNr;
+        max = numXpathResults(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);

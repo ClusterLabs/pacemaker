@@ -775,6 +775,7 @@ apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
 gboolean
 cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 {
+    int lpc = 0, max = 0;
     gboolean config_changes = FALSE;
     xmlXPathObject *xpathObj = NULL;
 
@@ -789,13 +790,11 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     }
 
     xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
-    if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+    if (numXpathResults(xpathObj) > 0) {
         config_changes = TRUE;
         goto done;
-
-    } else if (xpathObj) {
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 
     /*
      * Do not check XML_TAG_DIFF_ADDED "//" XML_TAG_CIB
@@ -803,44 +802,40 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
      * every time if the checked value existed
      */
     xpathObj = xpath_search(*diff, "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_CIB);
-    if (xpathObj) {
-        int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    max = numXpathResults(xpathObj);
 
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *top = getXpathResult(xpathObj, lpc);
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *top = getXpathResult(xpathObj, lpc);
 
-            if (crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
-            if (crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
+        if (crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
+            config_changes = TRUE;
+            goto done;
+        }
+        if (crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
+            config_changes = TRUE;
+            goto done;
+        }
 
-            if (crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
-            if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
-            if (crm_element_value(top, "remote-clear-port") != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
-            if (crm_element_value(top, "remote-tls-port") != NULL) {
-                config_changes = TRUE;
-                goto done;
-            }
+        if (crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
+            config_changes = TRUE;
+            goto done;
+        }
+        if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
+            config_changes = TRUE;
+            goto done;
+        }
+        if (crm_element_value(top, "remote-clear-port") != NULL) {
+            config_changes = TRUE;
+            goto done;
+        }
+        if (crm_element_value(top, "remote-tls-port") != NULL) {
+            config_changes = TRUE;
+            goto done;
         }
     }
 
   done:
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
     return config_changes;
 }
 
@@ -874,9 +869,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         xpathObj = xpath_search(*result_cib, section);
     }
 
-    if (xpathObj != NULL && xpathObj->nodesetval != NULL) {
-        max = xpathObj->nodesetval->nodeNr;
-    }
+    max = numXpathResults(xpathObj);
 
     if (max < 1 && safe_str_eq(op, CIB_OP_DELETE)) {
         crm_debug("%s was already removed", section);
@@ -991,10 +984,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
     }
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
-
+    freeXpathObject(xpathObj);
     return rc;
 }
 

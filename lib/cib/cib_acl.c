@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Yan Gao <ygao@novell.com>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -518,6 +518,7 @@ search_xml_children(GListPtr * children, xmlNode * root,
 static int
 search_xpath_objects(GListPtr * objects, xmlNode * xml_obj, const char *xpath)
 {
+    int lpc = 0, max = 0;
     int match_found = 0;
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -526,28 +527,24 @@ search_xpath_objects(GListPtr * objects, xmlNode * xml_obj, const char *xpath)
     }
 
     xpathObj = xpath_search(xml_obj, xpath);
+    max = numXpathResults(xpathObj);
 
-    if (xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
+    if (max <= 0) {
         crm_debug("No match for %s in %s", xpath, xmlGetNodePath(xml_obj));
+    }
 
-    } else if (xpathObj->nodesetval->nodeNr > 0) {
-        int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
-
-            if (match == NULL) {
-                continue;
-            }
-
-            *objects = g_list_append(*objects, match);
-            match_found++;
+        if (match == NULL) {
+            continue;
         }
+
+        *objects = g_list_append(*objects, match);
+        match_found++;
     }
 
-    if (xpathObj) {
-        freeXpathObject(xpathObj);
-    }
+    freeXpathObject(xpathObj);
     return match_found;
 }
 
