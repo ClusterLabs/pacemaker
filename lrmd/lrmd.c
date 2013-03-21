@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -870,10 +870,11 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     action->cb_data = cmd;
 
-    /* 'cmd' may not be valid after this point
+    /* 'cmd' may not be valid after this point if
+     * services_action_async() returned TRUE
      *
      * Upstart and systemd both synchronously determine monitor/status
-     * results and call action_complete (which may free 'cmd') if necessary
+     * results and call action_complete (which may free 'cmd') if necessary.
      */
     if (services_action_async(action, action_complete)) {
         return TRUE;

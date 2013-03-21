@@ -70,27 +70,27 @@ resources_action_create(const char *name, const char *standard, const char *prov
 
     if (crm_strlen_zero(name)) {
         crm_err("A service or resource action must have a name.");
-        return NULL;
+        goto return_error;
     }
 
     if (crm_strlen_zero(standard)) {
         crm_err("A service action must have a valid standard.");
-        return NULL;
+        goto return_error;
     }
 
     if (!strcasecmp(standard, "ocf") && crm_strlen_zero(provider)) {
         crm_err("An OCF resource action must have a provider.");
-        return NULL;
+        goto return_error;
     }
 
     if (crm_strlen_zero(agent)) {
         crm_err("A service or resource action must have an agent.");
-        return NULL;
+        goto return_error;
     }
 
     if (crm_strlen_zero(action)) {
         crm_err("A service or resource action must specify an action.");
-        return NULL;
+        goto return_error;
     }
 
     if (safe_str_eq(action, "monitor")
@@ -163,6 +163,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     if (strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
+        params = NULL;
 
         if (asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT_DIR, provider, agent) == -1) {
             goto return_error;
@@ -253,9 +254,15 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op = NULL;
     }
 
+    if(params) {
+        g_hash_table_destroy(params);
+    }
     return op;
 
   return_error:
+    if(params) {
+        g_hash_table_destroy(params);
+    }
     services_action_free(op);
 
     return NULL;
