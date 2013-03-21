@@ -651,6 +651,8 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
         stonith_device_register(data, NULL, TRUE);
 
+        stonith_key_value_freeall(params, 1, 1);
+        free_xml(data);
     }
 }
 
