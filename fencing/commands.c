@@ -148,6 +148,7 @@ free_async_command(async_command_t * cmd)
     free(cmd->client);
     free(cmd->client_name);
     free(cmd->origin);
+    free(cmd->mode);
     free(cmd->op);
     free(cmd);
 }

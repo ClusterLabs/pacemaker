@@ -76,6 +76,7 @@ free_remote_query(gpointer data)
 
         crm_trace("Free'ing query result from %s", query->host);
         free(query->host);
+        g_list_free_full(query->device_list, free);
         g_hash_table_destroy(query->custom_action_timeouts);
         g_hash_table_destroy(query->verified_devices);
         free(query);
