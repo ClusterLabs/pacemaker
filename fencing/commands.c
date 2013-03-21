@@ -407,15 +407,12 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
 }
 
 static void
-parse_host_line(const char *line, GListPtr * output)
+parse_host_line(const char *line, int max, GListPtr * output)
 {
     int lpc = 0;
-    int max = 0;
     int last = 0;
 
-    if (line) {
-        max = strlen(line);
-    } else {
+    if (max <= 0) {
         return;
     }
 
@@ -425,7 +422,7 @@ parse_host_line(const char *line, GListPtr * output)
         return;
     }
 
-    crm_trace("Processing: [%s]", line);
+    crm_trace("Processing %d bytes: [%s]", max, line);
     /* Skip initial whitespace */
     for (lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
         last = lpc + 1;
@@ -482,10 +479,10 @@ parse_host_list(const char *hosts)
             int len = lpc - last;
 
             if(len > 1) {
-                line = calloc(1, 2 + len);
+                line = malloc(1 + len);
                 snprintf(line, 1 + len, "%s", hosts + last);
-                line[len] = 0;
-                parse_host_line(line, &output);
+                line[len] = 0; /* Because it might be '\n' */
+                parse_host_line(line, len, &output);
                 free(line);
             }
 
@@ -493,6 +490,7 @@ parse_host_list(const char *hosts)
         }
     }
 
+    crm_trace("Parsed %d entries from '%s'", g_list_length(output), hosts);
     return output;
 }
 
@@ -690,6 +688,8 @@ string_in_list(GListPtr list, const char *item)
 
         if (safe_str_eq(item, value)) {
             return TRUE;
+        } else {
+            crm_trace("%d: '%s' != '%s'", lpc, item, value);
         }
     }
     return FALSE;
