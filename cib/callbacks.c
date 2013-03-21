@@ -745,6 +745,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
         if ((now + 1) < time(NULL)) {
+            crm_trace("%s operation took %ds to complete", op, time(NULL) - now);
             crm_write_blackbox(0, NULL);
         }
 
