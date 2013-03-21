@@ -23,6 +23,14 @@
 }
 
 {
+   libqb-init-2
+   Memcheck:Leak
+   fun:calloc
+   fun:qb_log_filter_ctl2
+   fun:crm_log_init
+}
+
+{
    pacemaker-init-1
    Memcheck:Leak
    fun:malloc
