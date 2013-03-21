@@ -151,6 +151,7 @@ destroy_crm_node(gpointer data)
     free(node->uname);
     free(node->state);
     free(node->uuid);
+    free(node->expected);
     free(node);
 }
 
