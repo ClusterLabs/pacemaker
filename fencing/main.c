@@ -831,6 +831,7 @@ stonith_cleanup(void)
     crm_peer_destroy();
     crm_client_cleanup();
     free(stonith_our_uname);
+    free_xml(local_cib);
 }
 
 /* *INDENT-OFF* */
