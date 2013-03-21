@@ -233,6 +233,7 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if (id > 0 && node->id != id) {
+        unsigned int previous_id = node->id;
         crm_node_t *old = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 
         node->id = id;
@@ -244,6 +245,13 @@ crm_get_peer(unsigned int id, const char *uname)
              */
             crm_update_peer_state(__FUNCTION__, node, old->state, 0);
             crm_update_peer_proc(__FUNCTION__, node, old->processes, NULL);
+        }
+
+        if (previous_id > 0) {
+            crm_node_t *node_entry = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(previous_id));
+            if (node_entry != NULL && node_entry == node) {
+                g_hash_table_steal(crm_peer_id_cache, GUINT_TO_POINTER(previous_id));
+            }
         }
         g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
     }

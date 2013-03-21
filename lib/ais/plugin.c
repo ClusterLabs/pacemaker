@@ -1725,24 +1725,30 @@ ais_remove_peer_by_name(const char *node_name)
     GHashTableIter iter;
     gpointer key = 0;
     crm_node_t *node = NULL;
-    uint32_t node_id = 0;
+    GList *node_list = NULL;
 
     g_hash_table_iter_init(&iter, membership_list);
 
     while (g_hash_table_iter_next(&iter, &key, (void **)&node)) {
         if (ais_str_eq(node_name, node->uname)) {
-            node_id = GPOINTER_TO_UINT(key);
-            break;
+            uint32_t node_id = GPOINTER_TO_UINT(key);
+            char *node_id_s = NULL;
+
+            ais_malloc0(node_id_s, 32);
+            snprintf(node_id_s, 31, "%u", node_id);
+            node_list = g_list_append(node_list, node_id_s);
         }
     }
 
-    if (node_id) {
-        char *node_id_s = NULL;
+    if (node_list) {
+        GList *gIter = NULL;
 
-        ais_malloc0(node_id_s, 32);
-        snprintf(node_id_s, 31, "%u", node_id);
-        ais_remove_peer(node_id_s);
-        ais_free(node_id_s);
+        for (gIter = node_list; gIter != NULL; gIter = gIter->next) {
+            char *node_id_s = gIter->data;
+
+            ais_remove_peer(node_id_s);
+        }
+        g_list_free_full(node_list, free);
 
     } else {
         ais_warn("Peer %s is unkown", node_name);
