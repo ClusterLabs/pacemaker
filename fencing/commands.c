@@ -425,7 +425,7 @@ parse_host_line(const char *line, GListPtr * output)
         return;
     }
 
-    crm_trace("Processing: %s", line);
+    crm_trace("Processing: [%s]", line);
     /* Skip initial whitespace */
     for (lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
         last = lpc + 1;
@@ -479,11 +479,15 @@ parse_host_list(const char *hosts)
     for (lpc = 0; lpc <= max; lpc++) {
         if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
             char *line = NULL;
+            int len = lpc - last;
 
-            line = calloc(1, 2 + lpc - last);
-            snprintf(line, 1 + lpc - last, "%s", hosts + last);
-            parse_host_line(line, &output);
-            free(line);
+            if(len > 1) {
+                line = calloc(1, 2 + len);
+                snprintf(line, 1 + len, "%s", hosts + last);
+                line[len] = 0;
+                parse_host_line(line, &output);
+                free(line);
+            }
 
             last = lpc + 1;
         }
