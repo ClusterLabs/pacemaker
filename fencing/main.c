@@ -568,7 +568,7 @@ fencing_topology_init(xmlNode * msg)
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
 
-static void cib_device_update(resource_t *rsc)
+static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     const char *value = NULL;
@@ -577,7 +577,11 @@ static void cib_device_update(resource_t *rsc)
     if(rsc->children) {
         GListPtr gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            cib_device_update(gIter->data);
+            cib_device_update(gIter->data, data_set);
+            if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+                crm_trace("Only adding one copy of the clone %s", rsc->id);
+                break;
+            }
         }
         return;
     }
@@ -633,6 +637,7 @@ static void cib_device_update(resource_t *rsc)
         const char *provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 
         crm_info("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
+        get_rsc_attributes(rsc->parameters, rsc, node, data_set);
 
         g_hash_table_iter_init(&gIter, rsc->parameters);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
@@ -645,6 +650,7 @@ static void cib_device_update(resource_t *rsc)
 
         data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
         stonith_device_register(data, NULL, TRUE);
+
     }
 }
 
@@ -667,7 +673,7 @@ cib_devices_update(void)
     do_calculations(&data_set, NULL, NULL);
 
     for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
-        cib_device_update(gIter->data);
+        cib_device_update(gIter->data, &data_set);
     }
     data_set.input = NULL; /* Wasn't a copy */
     cleanup_alloc_calculations(&data_set);
