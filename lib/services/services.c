@@ -61,7 +61,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
                         const char *agent, const char *action, int interval, int timeout,
                         GHashTable * params)
 {
-    svc_action_t *op;
+    svc_action_t *op = NULL;
 
     /*
      * Do some up front sanity checks before we go off and

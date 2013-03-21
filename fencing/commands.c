@@ -699,6 +699,8 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
     gboolean can = FALSE;
 
+    free_async_command(cmd);
+
     if (!dev) {
         search_devices_record_result(search, NULL, FALSE);
         return;
@@ -727,6 +729,8 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     struct device_search_s *search = cmd->internal_user_data;
     stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
     gboolean can_fence = FALSE;
+
+    free_async_command(cmd);
 
     /* Host/alias must be in the list output to be eligable to be fenced
      *
