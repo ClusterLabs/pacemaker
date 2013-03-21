@@ -640,6 +640,7 @@ static void cib_device_update(resource_t *rsc)
                 continue;
             }
             params = stonith_key_value_add(params, name, value);
+            crm_trace(" %s=%s", name, value);
         }
 
         data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
