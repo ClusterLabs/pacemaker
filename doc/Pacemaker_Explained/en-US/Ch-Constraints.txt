@@ -484,6 +484,49 @@ limit to the number of sets that can be specified.
 .Visual representation of the start order for the three sets defined above
 image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",align="center"]
 
+
+== Resource Set OR Logic ==
+
+The unordered set logic discussed so far has all been "AND" logic.
+To illustrate this take the 3 resource set figure in the previous section.
+Those sets can be expressed, +(A and B) then (C) then (D) then (E and F)+
+
+Say for example we want change the first set, (A and B), to use "OR" logic
+so the sets look like this, +(A or B) then (C) then (D) then (E and F)+.
+This functionality can be achieved through the use of the +require-all+
+option.  By default this option is 'require-all=true' which is why the
+"AND" logic is used by default.  Changing +require-all=false+ means only one
+resource in the set needs to be started before continuing on to the next set.
+
+Note that the 'require-all=false' option only makes sense to use in conjunction
+with unordered sets, 'sequential=false'.  Think of it like this, 'sequential=false'
+modifies the set to be an unordered set that uses "AND" logic by default, by adding
+'require-all=false' the unordered set's "AND" logic is flipped to "OR" logic.
+
+.Resource Set "OR" logic. Three ordered sets, where the first set is internally unordered with "OR" logic.
+======
+[source,XML]
+-------
+<constraints>
+    <rsc_order id="order-1">
+      <resource_set id="ordered-set-1" sequential="false" require-all="false">
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
+      </resource_set>
+      <resource_set id="ordered-set-2" sequential="true">
+        <resource_ref id="C"/>
+        <resource_ref id="D"/>
+      </resource_set>
+      <resource_set id="ordered-set-3" sequential="false">
+        <resource_ref id="E"/>
+        <resource_ref id="F"/>
+      </resource_set>
+    </rsc_order>
+</constraints>
+-------
+======
+
+
 [[s-resource-sets-collocation]]
 == Collocating Sets of Resources ==
 
