@@ -2904,7 +2904,7 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
     }
 
     for(lpc = 0; lpc < max; lpc++) {
-        if (xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
+        if (xpathObj->nodesetval->nodeTab[lpc] && xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
             xpathObj->nodesetval->nodeTab[lpc] = NULL;
         }
     }
@@ -2925,10 +2925,19 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     if (index >= max) {
         crm_err("Requested index %d of only %d items", index, max);
         return NULL;
+
+    } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
+        /* Previously requested */
+        return NULL;
     }
 
     match = xpathObj->nodesetval->nodeTab[index];
     CRM_CHECK(match != NULL, return NULL);
+
+    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
+        /* See the comment for freeXpathObject() */
+        xpathObj->nodesetval->nodeTab[index] = NULL;
+    }
 
     if (match->type == XML_DOCUMENT_NODE) {
         /* Will happen if section = '/' */
