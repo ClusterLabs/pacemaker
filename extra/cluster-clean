@@ -38,7 +38,7 @@ if [ $kill != 0 ]; then
     echo "Cleaning processes"
     cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd pacemaker-remoted ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
 
-    cluster-helper $target -- 'kill -q -9 `pidof valgrind`' &> /dev/null
+    cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
 
     # Bah. Force systemd to actually look at the process and realize its dead"
     cluster-helper $target -- "service corosync stop" &> /dev/null
@@ -60,6 +60,7 @@ log_files="$log_files pacemaker.log"
 
 state_files=""
 state_files="$state_files 'cib.xml*'"
+state_files="$state_files 'valgrind-*'"
 state_files="$state_files 'cib-*'"
 state_files="$state_files 'core.*'"
 state_files="$state_files hostcache"
@@ -76,7 +77,7 @@ done
 
 cluster-helper $target -- "find /dev/shm -name 'qb-*' -exec rm -f \{\} \;"
 cluster-helper $target -- "find /var/lib/pacemaker/blackbox -name '*.*' -exec rm -f \{\} \;"
-cluster-helper $target -- "find /tmp -name 'cts-*.valgrind' -exec rm -f \{\} \;"
+cluster-helper $target -- "find /tmp -name '*.valgrind' -exec rm -f \{\} \;"
 
 cluster-helper $target -- service rsyslog restart  2>&1 > /dev/null
 cluster-helper $target -- logger -i -p daemon.info __clean_logs__
