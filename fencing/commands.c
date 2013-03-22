@@ -1561,7 +1561,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 
     /* no device found! */
-    stonith_send_async_reply(cmd, NULL, -EHOSTUNREACH, 0);
+    stonith_send_async_reply(cmd, NULL, -ENODEV, 0);
 
     free_async_command(cmd);
     g_list_free_full(devices, free);
@@ -1571,7 +1571,6 @@ static int
 stonith_fence(xmlNode * msg)
 {
     const char *device_id = NULL;
-    int rc = -EHOSTUNREACH;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
@@ -1585,10 +1584,10 @@ stonith_fence(xmlNode * msg)
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
-        } else {
-            schedule_stonith_command(cmd, device);
-            rc = -EINPROGRESS;
+            return -ENODEV;
         }
+        schedule_stonith_command(cmd, device);
+
     } else {
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
 
@@ -1602,10 +1601,9 @@ stonith_fence(xmlNode * msg)
         }
         get_capable_devices(host, cmd->action, cmd->default_timeout, cmd,
                             stonith_fence_get_devices_cb);
-        rc = -EINPROGRESS;
     }
 
-    return rc;
+    return -EINPROGRESS;
 }
 
 xmlNode *
