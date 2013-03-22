@@ -70,8 +70,8 @@ EOF
 		cp $local_root/$f $cts_root/
 	    done
 
-	    cp $local_root/report_common.in $local_root/report_common
-	    sed -i.sed s:@localstatedir@:/var: $local_root/report_common
+	    cp $local_root/tools/report.common.in $local_root/tools/report.common
+	    sed -i.sed s:@localstatedir@:/var: $local_root/tools/report.common
 
 	    cp $cts_root/crm_report.in $cts_root/crm_report
 	    sed -i.sed s:@datadir@/@PACKAGE@:$local_root/tools: $cts_root/crm_report
