@@ -201,6 +201,8 @@ gboolean validate_xml_verbose(xmlNode * xml_blob);
 int update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean to_logs);
 int get_schema_version(const char *name);
 const char *get_schema_name(int version);
+
+void crm_xml_init(void);
 void crm_xml_cleanup(void);
 
 static inline xmlNode *

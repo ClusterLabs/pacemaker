@@ -2546,6 +2546,22 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
 }
 
 void
+crm_xml_init(void)
+{
+    static bool init = TRUE;
+
+    if(init) {
+        init = FALSE;
+        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
+         * realloc()s and it can take upwards of 18 seconds (yes, seconds)
+         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
+         * less than 1 second.
+         */
+        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
+    }
+}
+
+void
 crm_xml_cleanup(void)
 {
     int lpc = 0;

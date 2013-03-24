@@ -753,6 +753,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
     }
 
+    crm_xml_init(); /* Sets buffer allocation strategy */
     return TRUE;
 }
 
