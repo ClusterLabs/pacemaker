@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2008 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -336,11 +336,13 @@ cib_op_can_run(int call_type, int call_options, gboolean privileged, gboolean gl
 int
 cib_op_prepare(int call_type, xmlNode * request, xmlNode ** input, const char **section)
 {
+    crm_trace("Prepare %d", call_type);
     return cib_server_ops[call_type].prepare(request, input, section);
 }
 
 int
 cib_op_cleanup(int call_type, int options, xmlNode ** input, xmlNode ** output)
 {
+    crm_trace("Cleanup %d", call_type);
     return cib_server_ops[call_type].cleanup(options, input, output);
 }

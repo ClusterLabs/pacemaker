@@ -850,6 +850,7 @@ cib_construct_reply(xmlNode * request, xmlNode * output, int rc)
         crm_trace("Attaching reply output");
         add_message_xml(reply, F_CIB_CALLDATA, output);
     }
+    crm_trace("Done");
     return reply;
 }
 
@@ -1038,6 +1039,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         const char *call_id = crm_element_value(request, F_CIB_CALLID);
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
+        crm_trace("Sending notifications");
 #ifdef SUPPORT_POSTNOTIFY
         cib_post_notify(call_options, op, input, rc, the_cib);
 #endif
@@ -1074,6 +1076,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         *reply = cib_construct_reply(request, output, rc);
         crm_log_xml_explicit(*reply, "cib:reply");
     }
+
+    crm_trace("cleanup");
 #if ENABLE_ACL
     if (filtered_current_cib != NULL) {
         free_xml(filtered_current_cib);
@@ -1083,6 +1087,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (call_type >= 0) {
         cib_op_cleanup(call_type, call_options, &input, &output);
     }
+    crm_trace("done");
     return rc;
 }
 
