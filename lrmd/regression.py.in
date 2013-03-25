@@ -36,7 +36,12 @@ class Test:
 		self.name = name
 		self.description = description
 		self.cmds = []
-		self.daemon_location = "@CRM_DAEMON_DIR@/lrmd"
+
+		if tls:
+			self.daemon_location = "/usr/sbin/pacemaker_remoted"
+		else:
+			self.daemon_location = "@CRM_DAEMON_DIR@/lrmd"
+
 		self.test_tool_location = "@CRM_DAEMON_DIR@/lrmd_test"
 		self.verbose = verbose
 		self.tls = tls
@@ -72,15 +77,15 @@ class Test:
 
 	def start_environment(self):
 		### make sure we are in full control here ###
-		cmd = shlex.split("killall -q -9 stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test")
+		cmd = shlex.split("killall -q -9 stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
 		additional_args = ""
 
-		self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
-		if self.tls:
-			additional_args = additional_args + " -t "
+		if self.tls == 0:
+			self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
+
 		if self.verbose:
 			additional_args = additional_args + " -VVV "
 
@@ -170,6 +175,12 @@ class Test:
 	def run(self):
 		res = 0
 		i = 1
+
+		if self.tls and self.name.count("stonith") != 0:
+			self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
+			print self.result_txt
+			return res
+
 		self.start_environment()
 
 		if self.verbose:
@@ -206,11 +217,11 @@ class Tests:
 		self.tls = tls;
 		self.rsc_classes = output_from_command("crm_resource --list-standards")		
 		self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
-		print "Testing "+repr(self.rsc_classes)
+		self.need_authkey = 0
+		if self.tls:
+			self.rsc_classes.remove("stonith")
 
-		if not os.path.isfile("/etc/pacemaker/authkey"):
-			os.system("mkdir -p /etc/pacemaker")
-			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
+		print "Testing "+repr(self.rsc_classes)
 
 		self.common_cmds = {
 			"ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc -t 3000 -C ocf -P pacemaker -T Dummy",
@@ -298,7 +309,13 @@ class Tests:
 		return test
 
 	def setup_test_environment(self):
+		os.system("service pacemaker_remote stop")
 		self.cleanup_test_environment()
+
+		if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
+			self.need_authkey = 1
+			os.system("mkdir -p /etc/pacemaker")
+			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
 		### Make fake systemd daemon and unit file ###
 		dummy_daemon = "#!/bin/bash\nwhile true\ndo\nsleep 5\ndone"
@@ -376,6 +393,9 @@ if __name__ == "__main__":
 		os.system("systemctl daemon-reload")
 
 	def cleanup_test_environment(self):
+		if self.need_authkey:
+		    os.system("rm -f /etc/pacemaker/authkey")
+
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /etc/init.d/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
@@ -855,7 +875,7 @@ class TestOptions:
 		self.options['verbose'] = 0
 		self.options['invalid-arg'] = ""
 		self.options['show-usage'] = 0
-		self.options['tls-backend'] = 0
+		self.options['pacemaker-remote'] = 0
 
 	def build_options(self, argv):
 		args = argv[1:]
@@ -870,8 +890,8 @@ class TestOptions:
 				self.options['list-tests'] = 1
 			elif args[i] == "-V" or args[i] == "--verbose":
 				self.options['verbose'] = 1
-			elif args[i] == "-S" or args[i] == "--tls-backend":
-				self.options['tls-backend'] = 1
+			elif args[i] == "-R" or args[i] == "--pacemaker-remote":
+				self.options['pacemaker-remote'] = 1
 			elif args[i] == "-r" or args[i] == "--run-only":
 				self.options['run-only'] = args[i+1]
 				skip = 1
@@ -887,7 +907,7 @@ class TestOptions:
 		print "\t [--list-tests | -l]                  Print out all registered tests."
 		print "\t [--run-only | -r 'testname']         Run a specific test"
 		print "\t [--verbose | -V]                     Verbose output"
-		print "\t [--tls-backend | -S                  Use tls backend"
+		print "\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd."
 		print "\t [--run-only-pattern | -p 'string']   Run only tests containing the string value"
 		print "\n\tExample: Run only the test 'start_top'"
 		print "\t\t python ./regression.py --run-only start_stop"
@@ -899,7 +919,7 @@ def main(argv):
 	o = TestOptions()
 	o.build_options(argv)
 
-	tests = Tests(o.options['verbose'], o.options['tls-backend'])
+	tests = Tests(o.options['verbose'], o.options['pacemaker-remote'])
 
 	tests.build_generic_tests()
 	tests.build_multi_rsc_tests()
