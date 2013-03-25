@@ -217,14 +217,11 @@ class Tests:
 		self.tls = tls;
 		self.rsc_classes = output_from_command("crm_resource --list-standards")		
 		self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
+		self.need_authkey = 0
 		if self.tls:
 			self.rsc_classes.remove("stonith")
 
 		print "Testing "+repr(self.rsc_classes)
-
-		if not os.path.isfile("/etc/pacemaker/authkey"):
-			os.system("mkdir -p /etc/pacemaker")
-			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
 		self.common_cmds = {
 			"ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc -t 3000 -C ocf -P pacemaker -T Dummy",
@@ -314,6 +311,11 @@ class Tests:
 	def setup_test_environment(self):
 		self.cleanup_test_environment()
 
+		if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
+			self.need_authkey = 1
+			os.system("mkdir -p /etc/pacemaker")
+			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
+
 		### Make fake systemd daemon and unit file ###
 		dummy_daemon = "#!/bin/bash\nwhile true\ndo\nsleep 5\ndone"
 		dummy_service_file = ("[Unit]\n"
@@ -390,6 +392,9 @@ if __name__ == "__main__":
 		os.system("systemctl daemon-reload")
 
 	def cleanup_test_environment(self):
+		if self.need_authkey:
+		    os.system("rm -f /etc/pacemaker/authkey")
+
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /etc/init.d/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
