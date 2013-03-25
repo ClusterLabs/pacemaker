@@ -77,7 +77,7 @@ class Test:
 
 	def start_environment(self):
 		### make sure we are in full control here ###
-		cmd = shlex.split("killall -q -9 stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test")
+		cmd = shlex.split("killall -q -9 stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
 		test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		test.wait()
 
@@ -177,7 +177,7 @@ class Test:
 		i = 1
 
 		if self.tls and self.name.count("stonith") != 0:
-			self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remoted" % (self.name)
+			self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
 			print self.result_txt
 			return res
 
@@ -309,6 +309,7 @@ class Tests:
 		return test
 
 	def setup_test_environment(self):
+		os.system("service pacemaker_remote stop")
 		self.cleanup_test_environment()
 
 		if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
