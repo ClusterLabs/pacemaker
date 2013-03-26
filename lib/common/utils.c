@@ -316,7 +316,7 @@ crm_concat(const char *prefix, const char *suffix, char join)
     CRM_ASSERT(suffix != NULL);
     len = strlen(prefix) + strlen(suffix) + 2;
 
-    new_str = calloc(1, (len));
+    new_str = malloc(len);
     sprintf(new_str, "%s%c%s", prefix, join, suffix);
     new_str[len - 1] = 0;
     return new_str;
@@ -337,7 +337,7 @@ crm_itoa(int an_int)
     int len = 32;
     char *buffer = NULL;
 
-    buffer = calloc(1, (len + 1));
+    buffer = malloc(len + 1);
     if (buffer != NULL) {
         snprintf(buffer, len, "%d", an_int);
     }
@@ -694,7 +694,7 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 
     len += strlen(op_type);
     len += strlen(rsc_id);
-    op_id = calloc(1, len);
+    op_id = malloc(len);
     CRM_CHECK(op_id != NULL, return NULL);
     sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
     return op_id;
@@ -786,7 +786,7 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
     len += strlen(op_type);
     len += strlen(rsc_id);
     len += strlen(notify_type);
-    op_id = calloc(1, len);
+    op_id = malloc(len);
     if (op_id != NULL) {
         sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
     }
@@ -803,7 +803,7 @@ generate_transition_magic_v202(const char *transition_key, int op_status)
 
     len += strlen(transition_key);
 
-    fail_state = calloc(1, len);
+    fail_state = malloc(len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%s", op_status, transition_key);
     }
@@ -820,7 +820,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 
     len += strlen(transition_key);
 
-    fail_state = calloc(1, len);
+    fail_state = malloc(len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%d;%s", op_status, op_rc, transition_key);
     }
@@ -865,7 +865,7 @@ generate_transition_key(int transition_id, int action_id, int target_rc, const c
 
     len += strlen(node);
 
-    fail_state = calloc(1, len);
+    fail_state = malloc(len);
     if (fail_state != NULL) {
         snprintf(fail_state, len, "%d:%d:%d:%s", action_id, transition_id, target_rc, node);
     }
@@ -1026,7 +1026,7 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
             name = NULL;
             len = strlen(prop_name) + 3;
 
-            name = calloc(1, len);
+            name = malloc(len);
             sprintf(name, " %s ", prop_name);
             name[len - 1] = 0;
 
@@ -1102,7 +1102,7 @@ generate_series_filename(const char *directory, const char *series, int sequence
 
     len += strlen(directory);
     len += strlen(series);
-    filename = calloc(1, len);
+    filename = malloc(len);
     CRM_CHECK(filename != NULL, return NULL);
 
     if (bzip) {
@@ -1128,7 +1128,7 @@ get_last_sequence(const char *directory, const char *series)
 
     len += strlen(directory);
     len += strlen(series);
-    series_file = calloc(1, len);
+    series_file = malloc(len);
     CRM_CHECK(series_file != NULL, return 0);
     sprintf(series_file, "%s/%s.last", directory, series);
 
@@ -1194,7 +1194,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
 
     len += strlen(directory);
     len += strlen(series);
-    series_file = calloc(1, len);
+    series_file = malloc(len);
     sprintf(series_file, "%s/%s.last", directory, series);
 
     file_strm = fopen(series_file, "w");
