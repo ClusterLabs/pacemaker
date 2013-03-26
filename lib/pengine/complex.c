@@ -22,7 +22,6 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 
-extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -220,9 +219,9 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         return FALSE;
     }
 
-    cib_resources = get_object_root(XML_CIB_TAG_RESOURCES, data_set->input);
+    cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
     if (cib_resources == NULL) {
-        pe_err("Cannot get the root of object '%s'", XML_CIB_TAG_RESOURCES);
+        pe_err("No resources configured");
         return FALSE;
     }
 

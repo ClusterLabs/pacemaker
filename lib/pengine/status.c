@@ -29,8 +29,6 @@
 #include <crm/pengine/internal.h>
 #include <unpack.h>
 
-extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
-
 #define MEMCHECK_STAGE_0 0
 
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\
@@ -52,11 +50,11 @@ extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 gboolean
 cluster_status(pe_working_set_t * data_set)
 {
-    xmlNode *config = get_object_root(XML_CIB_TAG_CRMCONFIG, data_set->input);
-    xmlNode *cib_nodes = get_object_root(XML_CIB_TAG_NODES, data_set->input);
-    xmlNode *cib_resources = get_object_root(XML_CIB_TAG_RESOURCES, data_set->input);
-    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
-    xmlNode *cib_domains = get_object_root(XML_CIB_TAG_DOMAINS, data_set->input);
+    xmlNode *config = get_xpath_object("//"XML_CIB_TAG_CRMCONFIG, data_set->input, LOG_TRACE);
+    xmlNode *cib_nodes = get_xpath_object("//"XML_CIB_TAG_NODES, data_set->input, LOG_TRACE);
+    xmlNode *cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
+    xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
+    xmlNode *cib_domains = get_xpath_object("//"XML_CIB_TAG_DOMAINS, data_set->input, LOG_TRACE);
     const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
     crm_trace("Beginning unpack");
@@ -85,8 +83,8 @@ cluster_status(pe_working_set_t * data_set)
         set_bit(data_set->flags, pe_flag_have_quorum);
     }
 
-    data_set->op_defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
-    data_set->rsc_defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
+    data_set->op_defaults = get_xpath_object("//"XML_CIB_TAG_OPCONFIG, data_set->input, LOG_TRACE);
+    data_set->rsc_defaults = get_xpath_object("//"XML_CIB_TAG_RSCCONFIG, data_set->input, LOG_TRACE);
 
     unpack_config(config, data_set);
 
