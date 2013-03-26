@@ -2293,7 +2293,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
 
     static struct qb_log_callsite *digest_cs = NULL;
 
-    crm_trace("Begin digest");
+    crm_trace("Begin digest %s", do_filter?"filtered":"");
     if (do_filter && BEST_EFFORT_STATUS) {
         /* Exclude the status calculation from the digest
          *

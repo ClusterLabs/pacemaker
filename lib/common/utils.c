@@ -2259,13 +2259,17 @@ crm_generate_uuid(void)
 char *
 crm_md5sum(const char *buffer)
 {
-    int lpc = 0;
+    int lpc = 0, len = 0;
     char *digest = NULL;
     unsigned char raw_digest[MD5_DIGEST_SIZE];
 
-    crm_trace("Beginning digest");
+    if(buffer != NULL) {
+        len = strlen(buffer);
+    }
+
+    crm_trace("Beginning digest of %d bytes", len);
     digest = malloc(2 * MD5_DIGEST_SIZE + 1);
-    md5_buffer(buffer, strlen(buffer), raw_digest);
+    md5_buffer(buffer, len, raw_digest);
     for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
         sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
     }
