@@ -692,12 +692,28 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     if (cib_status != pcmk_ok) {
+        const char *call = crm_element_value(request, F_CIB_CALLID);
+
         rc = cib_status;
         crm_err("Operation ignored, cluster configuration is invalid."
                 " Please repair and restart: %s", pcmk_strerror(cib_status));
-        op_reply = cib_construct_reply(request, the_cib, cib_status);
+
+        op_reply = create_xml_node(NULL, "cib-reply");
+        crm_xml_add(op_reply, F_TYPE, T_CIB);
+        crm_xml_add(op_reply, F_CIB_OPERATION, op);
+        crm_xml_add(op_reply, F_CIB_CALLID, call);
+        crm_xml_add(op_reply, F_CIB_CLIENTID, client_id);
+        crm_xml_add_int(op_reply, F_CIB_CALLOPTS, call_options);
+        crm_xml_add_int(op_reply, F_CIB_RC, rc);
+
+        crm_trace("Attaching reply output");
+        add_message_xml(op_reply, F_CIB_CALLDATA, the_cib);
+
+        crm_log_xml_explicit(op_reply, "cib:reply");
 
     } else if (process) {
+        time_t finished = 0;
+
         int now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
@@ -744,8 +760,9 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
-        if ((now + 1) < time(NULL)) {
-            crm_trace("%s operation took %ds to complete", op, time(NULL) - now);
+        finished = time(NULL);
+        if (finished - now > 3) {
+            crm_trace("%s operation took %ds to complete", op, finished - now);
             crm_write_blackbox(0, NULL);
         }
 
@@ -818,42 +835,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     return;
 }
 
-xmlNode *
-cib_construct_reply(xmlNode * request, xmlNode * output, int rc)
-{
-    int lpc = 0;
-    xmlNode *reply = NULL;
-    const char *name = NULL;
-    const char *value = NULL;
-
-    const char *names[] = {
-        F_CIB_OPERATION,
-        F_CIB_CALLID,
-        F_CIB_CLIENTID,
-        F_CIB_CALLOPTS
-    };
-    static int max = DIMOF(names);
-
-    crm_trace("Creating a basic reply");
-    reply = create_xml_node(NULL, "cib-reply");
-    crm_xml_add(reply, F_TYPE, T_CIB);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        name = names[lpc];
-        value = crm_element_value(request, name);
-        crm_xml_add(reply, name, value);
-    }
-
-    crm_xml_add_int(reply, F_CIB_RC, rc);
-
-    if (output != NULL) {
-        crm_trace("Attaching reply output");
-        add_message_xml(reply, F_CIB_CALLDATA, output);
-    }
-    crm_trace("Done");
-    return reply;
-}
-
 int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
@@ -872,6 +853,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     const char *op = NULL;
     const char *section = NULL;
+    const char *call_id = crm_element_value(request, F_CIB_CALLID);
 
     int rc = pcmk_ok;
     int rc2 = pcmk_ok;
@@ -1036,7 +1018,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if ((call_options & cib_inhibit_notify) == 0) {
-        const char *call_id = crm_element_value(request, F_CIB_CALLID);
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
         crm_trace("Sending notifications");
@@ -1073,7 +1054,21 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
   done:
     if ((call_options & cib_discard_reply) == 0) {
-        *reply = cib_construct_reply(request, output, rc);
+        const char *caller = crm_element_value(request, F_CIB_CLIENTID);
+
+        *reply = create_xml_node(NULL, "cib-reply");
+        crm_xml_add(*reply, F_TYPE, T_CIB);
+        crm_xml_add(*reply, F_CIB_OPERATION, op);
+        crm_xml_add(*reply, F_CIB_CALLID, call_id);
+        crm_xml_add(*reply, F_CIB_CLIENTID, caller);
+        crm_xml_add_int(*reply, F_CIB_CALLOPTS, call_options);
+        crm_xml_add_int(*reply, F_CIB_RC, rc);
+
+        if (output != NULL) {
+            crm_trace("Attaching reply output");
+            add_message_xml(*reply, F_CIB_CALLDATA, output);
+        }
+
         crm_log_xml_explicit(*reply, "cib:reply");
     }
 
