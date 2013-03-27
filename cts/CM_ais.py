@@ -316,9 +316,12 @@ class crm_cs_v0(crm_ais):
         self.ais_components()
 
         corosync_ignore = [
+            r"error: crmd_quorum_destroy: connection terminated",
+            r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect",
+
             r"pacemakerd.*error: pcmk_child_exit: Child process .* exited",
             r"error: send_cpg_message: Sending message via cpg FAILED",
-            r"crmd.*error: verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
+            r"error: verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             r"error: pcmk_cpg_dispatch: Connection to the CPG API failed:",
             r"error: pcmk_cman_dispatch: Connection to cman failed: -1",
             r"error: crm_ipc_read: Connection to cib_shm failed",
