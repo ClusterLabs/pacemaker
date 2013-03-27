@@ -1,17 +1,17 @@
 
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -148,7 +148,7 @@ static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\t\tThis text"},
     {"version", 0, 0, '$', "\t\tVersion information"  },
     {"verbose", 0, 0, 'V', "\t\tIncrease debug output"},
-    
+
     {"-spacer-",	1, 0, '-', "\nQueries:"},
     {"which",   no_argument,       NULL, 'w', "\t\tIndicate the active shadow copy"},
     {"display", no_argument,       NULL, 'p', "\t\tDisplay the contents of the active shadow copy"},
@@ -163,7 +163,7 @@ static struct crm_option long_options[] = {
     {"delete",  required_argument, NULL, 'D', "\tDelete the contents of the named shadow copy"},
     {"reset",   required_argument, NULL, 'r', "\tRecreate the named shadow copy from the active cluster configuration"},
     {"switch",  required_argument, NULL, 's', "\t(Advanced) Switch to the named shadow copy"},
-    
+
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
     {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
@@ -180,7 +180,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_shadow --delete myShadow", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Upload the current shadow configuration (named myShadow) to the running cluster:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_shadow --commit myShadow", pcmk_option_example},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -226,7 +226,16 @@ main(int argc, char **argv)
             case 'F':
                 command = flag;
                 free(shadow);
-                shadow = strdup(getenv("CIB_shadow"));
+                shadow = NULL;
+                {
+                    const char *env = getenv("CIB_shadow");
+                    if(env) {
+                        shadow = strdup(env);
+                    } else {
+                        fprintf(stderr, "No active shadow configuration defined\n");
+                        crm_exit(ENOENT);
+                    }
+                }
                 break;
             case 'e':
             case 'c':
