@@ -1218,7 +1218,7 @@ AC_DEFINE_UNQUOTED(SUPPORT_NAGIOS, $SUPPORT_NAGIOS, Support nagios plugins)
 AM_CONDITIONAL(BUILD_NAGIOS, test $SUPPORT_NAGIOS = 1)
 
 if test x"$NAGIOS_PLUGIN_DIR" = x""; then
-    NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"
+    NAGIOS_PLUGIN_DIR="${prefix}/lib/nagios/plugins"
 fi
 
 AC_DEFINE_UNQUOTED(NAGIOS_PLUGIN_DIR, "$NAGIOS_PLUGIN_DIR", Directory for nagios plugins)
