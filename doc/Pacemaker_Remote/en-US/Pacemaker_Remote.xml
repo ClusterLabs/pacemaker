@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Pacemaker_Remote.ent">
+%BOOK_ENTITIES;
+]>
+<book>
+    <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
+
+	<xi:include href="Ch-Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-Example.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-KVM-Tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-LXC-Tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
+    <index></index>
+</book>

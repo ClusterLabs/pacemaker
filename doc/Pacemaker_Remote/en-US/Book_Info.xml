@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Pacemaker_Remote.ent">
+%BOOK_ENTITIES;
+]>
+<bookinfo id="book-Pacemaker_Remote-Pacemaker_Remote">
+	<title>Pacemaker Remote</title>
+	<subtitle>Extending High Availablity into Virtual Nodes</subtitle>
+	<edition>1</edition>
+	<pubsnumber>0</pubsnumber>
+	<abstract>
+		<para>
+			The document exists as both a reference and deployment guide for the Pacemaker Remote service.
+		</para>
+		<para>
+			The KVM and Linux Container walk-through tutorials will use:
+			<orderedlist>
+				<listitem>
+					<para>
+						&DISTRO; &DISTRO_VERSION; as the host operating system
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Pacemaker Remote to perform resource management within virtual nodes
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						libvirt to manage KVM and LXC virtual nodes
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Corosync to provide messaging and membership services on the host nodes
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Pacemaker to perform resource management on host nodes
+					</para>
+				</listitem>
+			</orderedlist>
+		</para>
+	</abstract>
+	<corpauthor>
+		<inlinemediaobject>
+			<imageobject>
+				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+			</imageobject>
+		</inlinemediaobject>
+	</corpauthor>
+	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</bookinfo>
+

@@ -140,6 +140,7 @@ void pcmk_quorum(void *conn, ais_void_ptr * msg);
 void pcmk_cluster_id_swab(void *msg);
 void pcmk_cluster_id_callback(ais_void_ptr * message, unsigned int nodeid);
 void ais_remove_peer(char *node_id);
+void ais_remove_peer_by_name(const char *node_name);
 
 static uint32_t
 get_process_list(void)
@@ -1718,6 +1719,36 @@ ais_remove_peer(char *node_id)
     }
 }
 
+void
+ais_remove_peer_by_name(const char *node_name)
+{
+    GHashTableIter iter;
+    gpointer key = 0;
+    crm_node_t *node = NULL;
+    uint32_t node_id = 0;
+
+    g_hash_table_iter_init(&iter, membership_list);
+
+    while (g_hash_table_iter_next(&iter, &key, (void **)&node)) {
+        if (ais_str_eq(node_name, node->uname)) {
+            node_id = GPOINTER_TO_UINT(key);
+            break;
+        }
+    }
+
+    if (node_id) {
+        char *node_id_s = NULL;
+
+        ais_malloc0(node_id_s, 32);
+        snprintf(node_id_s, 31, "%u", node_id);
+        ais_remove_peer(node_id_s);
+        ais_free(node_id_s);
+
+    } else {
+        ais_warn("Peer %s is unkown", node_name);
+    }
+}
+
 gboolean
 process_ais_message(const AIS_Message * msg)
 {
@@ -1734,7 +1765,7 @@ process_ais_message(const AIS_Message * msg)
     if (data && len > 12 && strncmp("remove-peer:", data, 12) == 0) {
         char *node = data + 12;
 
-        ais_remove_peer(node);
+        ais_remove_peer_by_name(node);
     }
 
     ais_free(data);
