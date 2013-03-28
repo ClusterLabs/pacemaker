@@ -876,6 +876,12 @@ pcmk_strerror(int rc)
             return "Application of an update diff failed";
         case pcmk_err_diff_resync:
             return "Application of an update diff failed, requesting a full refresh";
+        case pcmk_err_cib_modified:
+            return "The on-disk configuration was manually modified";
+        case pcmk_err_cib_backup:
+            return "Could not archive the previous configuration";
+        case pcmk_err_cib_save:
+            return "Could not save the new configuration to disk";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */

@@ -556,7 +556,7 @@ int
 write_cib_contents(gpointer p)
 {
     int fd = -1;
-    int exit_rc = EX_OK;
+    int exit_rc = pcmk_ok;
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
 
@@ -613,9 +613,6 @@ write_cib_contents(gpointer p)
 
         /* A-synchronous write out after a fork() */
 
-        /* Don't log anything unless strictly necessary */
-        set_crm_log_level(LOG_ERR);
-
         /* In theory we can scribble on "the_cib" here and not affect the parent
          * But lets be safe anyway
          */
@@ -639,7 +636,7 @@ write_cib_contents(gpointer p)
         /* check the admin didnt modify it underneath us */
         if (validate_on_disk_cib(primary_file, NULL) == FALSE) {
             crm_err("%s was manually modified while the cluster was active!", primary_file);
-            exit_rc = 1;
+            exit_rc = pcmk_err_cib_modified;
             goto cleanup;
         }
 
@@ -651,14 +648,14 @@ write_cib_contents(gpointer p)
 
         rc = link(primary_file, backup_file);
         if (rc < 0) {
-            exit_rc = 4;
+            exit_rc = pcmk_err_cib_backup;
             crm_perror(LOG_ERR, "Cannot link %s to %s", primary_file, backup_file);
             goto cleanup;
         }
 
         rc = link(digest_file, backup_digest);
         if (rc < 0 && errno != ENOENT) {
-            exit_rc = 5;
+            exit_rc = pcmk_err_cib_backup;
             crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
             goto cleanup;
         }
@@ -692,7 +689,7 @@ write_cib_contents(gpointer p)
     tmp_cib_fd = mkstemp(tmp_cib);
     if (write_xml_fd(cib_local, tmp_cib, tmp_cib_fd, FALSE) <= 0) {
         crm_err("Changes couldn't be written to %s", tmp_cib);
-        exit_rc = 2;
+        exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
 
@@ -704,7 +701,7 @@ write_cib_contents(gpointer p)
     tmp_digest_fd = mkstemp(tmp_digest);
     if (write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
         crm_err("Digest couldn't be written to %s", tmp_digest);
-        exit_rc = 3;
+        exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     crm_debug("Wrote digest %s to disk", digest);
