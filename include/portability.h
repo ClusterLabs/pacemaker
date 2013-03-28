@@ -10,12 +10,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -180,27 +180,27 @@ g_list_free_full(GList * list, GDestroyNotify free_func)
 
 /* Replacement error codes for non-linux */
 #  ifndef ENOTUNIQ
-#    define ENOTUNIQ  900
+#    define ENOTUNIQ  190
 #  endif
 
 #  ifndef ECOMM
-#    define ECOMM     901
+#    define ECOMM     191
 #  endif
 
 #  ifndef ELIBACC
-#    define ELIBACC   902
+#    define ELIBACC   192
 #  endif
 
 #  ifndef EREMOTEIO
-#    define EREMOTEIO 903
+#    define EREMOTEIO 193
 #  endif
 
 #  ifndef EUNATCH
-#    define EUNATCH   904
+#    define EUNATCH   194
 #  endif
 
 #  ifndef ENOKEY
-#    define ENOKEY    905
+#    define ENOKEY    195
 #  endif
 
 /*
