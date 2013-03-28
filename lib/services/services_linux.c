@@ -30,6 +30,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/signalfd.h>
 
 #include "crm/crm.h"
 #include "crm/common/mainloop.h"
@@ -307,6 +308,8 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     int rc, lpc;
     int stdout_fd[2];
     int stderr_fd[2];
+    sigset_t mask;
+    sigset_t old_mask;
 
     if (pipe(stdout_fd) < 0) {
         crm_err("pipe() failed");
@@ -314,6 +317,16 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
     if (pipe(stderr_fd) < 0) {
         crm_err("pipe() failed");
+    }
+
+    if (synchronous) {
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigemptyset(&old_mask);
+
+        if (sigprocmask(SIG_BLOCK, &mask, &old_mask) < 0) {
+            crm_perror(LOG_ERR, "sigprocmask() failed");
+        }
     }
 
     op->pid = fork();
@@ -409,23 +422,90 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
     if (synchronous) {
         int status = 0;
-        int timeout = (1 + op->timeout) / 1000;
+        int timeout = op->timeout;
+        int sfd = -1;
+        time_t start = -1;
+        struct pollfd fds[3];
+        int wait_rc = 0;
 
-        crm_trace("Waiting for %d", op->pid);
-        while ((op->timeout < 0 || timeout > 0) && waitpid(op->pid, &status, WNOHANG) <= 0) {
-            sleep(1);
-            read_output(op->opaque->stdout_fd, op);
-            read_output(op->opaque->stderr_fd, op);
-            timeout--;
+        sfd = signalfd(-1, &mask, 0);
+        if (sfd < 0) {
+            crm_perror(LOG_ERR, "signalfd() failed");
         }
 
+        fds[0].fd = op->opaque->stdout_fd;
+        fds[0].events = POLLIN;
+        fds[0].revents = 0;
+
+        fds[1].fd = op->opaque->stderr_fd;
+        fds[1].events = POLLIN;
+        fds[1].revents = 0;
+
+        fds[2].fd = sfd;
+        fds[2].events = POLLIN;
+        fds[2].revents = 0;
+
+        crm_trace("Waiting for %d", op->pid);
+        start = time(NULL);
+        do {
+            int poll_rc = poll(fds, 3, timeout);
+
+            if (poll_rc > 0) {
+                if (fds[0].revents & POLLIN) {
+                    read_output(op->opaque->stdout_fd, op);
+                }
+
+                if (fds[1].revents & POLLIN) {
+                    read_output(op->opaque->stderr_fd, op);
+                }
+
+                if (fds[2].revents & POLLIN) {
+                    struct signalfd_siginfo fdsi;
+                    ssize_t s;
+
+                    s = read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
+                    if (s != sizeof(struct signalfd_siginfo)) {
+                        crm_perror(LOG_ERR, "Read from signal fd %d failed", sfd);
+
+                    } else if (fdsi.ssi_signo == SIGCHLD) {
+                        wait_rc = waitpid(op->pid, &status, WNOHANG);
+                        
+                        if (wait_rc < 0){
+                            crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
+
+                        } else if (wait_rc > 0) {
+                            break;
+                        }
+                    }
+                }
+
+            } else if (poll_rc == 0) {
+                timeout = 0;
+                break;
+
+            } else if (poll_rc < 0) {
+                if (errno != EINTR) {
+                    crm_perror(LOG_ERR, "poll() failed");
+                    break;
+                }
+            }
+
+            timeout = op->timeout - (time(NULL) - start) * 1000;
+
+        } while ((op->timeout < 0 || timeout > 0));
+
         crm_trace("Child done: %d", op->pid);
-        if (timeout == 0) {
+        if (wait_rc <= 0) {
             int killrc = kill(op->pid, SIGKILL);
 
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_LRM_OP_TIMEOUT;
-            crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+            if (op->timeout > 0 && timeout <= 0) {
+                op->status = PCMK_LRM_OP_TIMEOUT;
+                crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+
+            } else {
+                op->status = PCMK_LRM_OP_ERROR;
+            }
 
             if (killrc && errno != ESRCH) {
                 crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
@@ -460,6 +540,12 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
         close(op->opaque->stdout_fd);
         close(op->opaque->stderr_fd);
+
+        if (sigismember(&old_mask, SIGCHLD) == 0) {
+            if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
+                crm_perror(LOG_ERR, "sigprocmask() to unblocked failed");
+            }
+        }
 
     } else {
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
