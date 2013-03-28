@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -38,6 +38,16 @@ extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
 extern unsigned int crm_trace_nonlog;
+
+enum xml_log_options
+{
+    xml_log_option_filtered   = 0x001,
+    xml_log_option_formatted  = 0x002,
+    xml_log_option_diff_plus  = 0x010,
+    xml_log_option_diff_minus = 0x020,
+    xml_log_option_diff_short = 0x040,
+    xml_log_option_diff_all   = 0x100,
+};
 
 void crm_enable_blackbox(int nsig);
 void crm_enable_blackbox_tracing(int nsig);
@@ -123,7 +133,7 @@ unsigned int get_crm_log_level(void);
             xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
         }                                                               \
         if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
-            log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
+            log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 1, xml_log_option_formatted); \
         }                                                               \
     } while(0)
 

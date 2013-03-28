@@ -89,15 +89,6 @@ typedef struct {
 } filter_t;
 
 /* *INDENT-OFF* */
-enum xml_log_options
-{
-    xml_log_option_filtered   = 0x001,
-    xml_log_option_formatted  = 0x002,
-    xml_log_option_diff_plus  = 0x010,
-    xml_log_option_diff_minus = 0x020,
-    xml_log_option_diff_short = 0x040,
-    xml_log_option_diff_all   = 0x100,
-};
 
 struct schema_s known_schemas[] = {
     /* 0 */    { 0, NULL, NULL, NULL, 1 },
