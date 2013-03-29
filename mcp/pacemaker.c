@@ -956,7 +956,7 @@ main(int argc, char **argv)
     build_path(CRM_RSCTMP_DIR, 0755);
 
     /* Used to store core files in */
-    build_path(CRM_CORE_DIR, 0755);
+    build_path(CRM_CORE_DIR, 0775);
     mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store blackbox dumps in */
