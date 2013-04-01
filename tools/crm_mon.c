@@ -810,16 +810,20 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
             value = crm_element_value(xml_op, attr);
             if (value) {
                 int_value = crm_parse_int(value, NULL);
-                print_as(" %s=", attr);
-                print_date(int_value);
+                if (int_value > 0) {
+                    print_as(" %s=", attr);
+                    print_date(int_value);
+                }
             }
 
             attr = "last-run";
             value = crm_element_value(xml_op, attr);
             if (value) {
                 int_value = crm_parse_int(value, NULL);
-                print_as(" %s=", attr);
-                print_date(int_value);
+                if (int_value > 0) {
+                    print_as(" %s=", attr);
+                    print_date(int_value);
+                }
             }
 
             attr = "exec-time";
