@@ -953,7 +953,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         remote_op_timeout(op);
 
     } else if(op->replies >= op->replies_expected || op->replies >= fencing_active_peers()) {
-        crm_info("None of the %d peers is capable of terminating %s for %s (%d)",
+        crm_info("None of the %d peers are capable of terminating %s for %s (%d)",
                  op->replies, op->target, op->client_name, op->state);
 
         op->state = st_failed;

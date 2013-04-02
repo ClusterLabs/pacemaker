@@ -55,7 +55,7 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
         mainloop_iter++;   \
         mainloop_set_trigger(trig);  \
     } else { \
-        crm_info("FAILURE = %s async_callback %d", __PRETTY_FUNCTION__, callback_rc); \
+        crm_err("FAILURE = %s async_callback %d", __PRETTY_FUNCTION__, callback_rc); \
         crm_exit(-1); \
     } \
     callback_rc = 0; \
@@ -161,10 +161,10 @@ passive_test(void)
         dispatch_helper(500);  \
     } \
     if (rc != expected_rc) { \
-        crm_info("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
+        crm_err("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
         crm_exit(-1); \
     } else if (expected_notifications) { \
-        crm_info("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
+        crm_err("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
             num_notifications, num_notifications - expected_notifications, str); \
         crm_exit(-1); \
     } else { \
@@ -251,7 +251,7 @@ run_standard_test(void)
                 "Status false_1_node1", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "unknown-host", "off", 1, 0),
-                "Fence unknown-host (expected failure)", 0, -113);
+                "Fence unknown-host (expected failure)", 0, -19);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1, 0),
                 "Fence false_1_node1", 1, 0);
@@ -427,7 +427,7 @@ test_async_fence_timeout(int check_event)
     int rc = 0;
 
     if (check_event) {
-        if (callback_rc != -ETIME) {
+        if (callback_rc != -EHOSTUNREACH) {
             mainloop_test_done(FALSE);
         } else {
             mainloop_test_done(TRUE);
