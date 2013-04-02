@@ -211,6 +211,7 @@
 		  <value>restart</value>
 		  <value>standby</value>
 		  <value>fence</value>
+		  <value>restart-container</value>
 		</choice>
 	      </attribute>
 	    </optional>
