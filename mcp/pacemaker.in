@@ -166,7 +166,7 @@ rtrn=0
 case "$1" in
 start)
 	# For consistency with stop
-	[ -f @INITDIR@/cman ] && service cman start
+	[ $PCMK_STACK = cman ] && service cman start
 	start
 ;;
 restart|reload|force-reload)
@@ -195,9 +195,9 @@ stop)
 	# 4. stop pacemaker
 	# 5. stop the rest of cman (so it doesn't end up half up/down)
 	#
-	[ -f @INITDIR@/cman ] && cman_pre_stop
+	[ $PCMK_STACK = cman ] && cman_pre_stop
 	stop
-	[ -f @INITDIR@/cman ] && service cman stop
+	[ $PCMK_STACK = cman ] && service cman stop
 ;;
 *)
 	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
