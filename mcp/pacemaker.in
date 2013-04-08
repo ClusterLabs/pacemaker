@@ -14,9 +14,9 @@
 # Provides:		pacemaker
 # Required-Start:	$network corosync
 # Should-Start:		$syslog
-# Required-Stop:	$network
-# Default-Start:
-# Default-Stop:
+# Required-Stop:	$network corosync
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
 # Short-Description:	Starts and stops Pacemaker Cluster Manager.
 # Description:		Starts and stops Pacemaker Cluster Manager.
 ### END INIT INFO
