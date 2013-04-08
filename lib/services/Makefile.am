@@ -25,7 +25,7 @@ noinst_HEADERS  = upstart.h systemd.h services_private.h
 
 libcrmservice_la_SOURCES = services.c services_linux.c
 libcrmservice_la_LDFLAGS = -version-info 1:0:0
-libcrmservice_la_CFLAGS  = $(GIO_CFLAGS)
+libcrmservice_la_CFLAGS  = $(GIO_CFLAGS) -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\"
 libcrmservice_la_LIBADD   = $(GIO_LIBS)
 
 if BUILD_UPSTART
