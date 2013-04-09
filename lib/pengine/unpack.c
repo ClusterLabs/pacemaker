@@ -1478,7 +1478,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     }
 
     if (safe_str_neq(rsc_id, rsc->id)) {
-        pe_rsc_info(rsc, "Internally renamed %s on %s to %s%s",
+        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                     rsc_id, node->details->uname, rsc->id,
                     is_set(rsc->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
     }
