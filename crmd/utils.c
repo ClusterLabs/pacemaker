@@ -131,6 +131,7 @@ crm_timer_popped(gpointer data)
 
     if (timer == election_trigger && election_trigger->counter > 5) {
         crm_notice("We appear to be in an election loop, something may be wrong");
+        crm_write_blackbox(0, NULL);
         election_trigger->counter = 0;
     }
 
