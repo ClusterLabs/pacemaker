@@ -1448,17 +1448,15 @@ do_lrm_invoke(long long action,
             free(op_key);
             lrmd_free_event(op);
 
-        } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
-            int cib_rc = pcmk_ok;
+        } else if (rsc != NULL && safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 
-            CRM_ASSERT(rsc != NULL);
-
-            cib_rc = delete_rsc_status(lrm_state, rsc->id, cib_dryrun | cib_sync_call, user_name);
+#if ENABLE_ACL
+            int cib_rc = delete_rsc_status(lrm_state, rsc->id, cib_dryrun | cib_sync_call, user_name);
             if (cib_rc != pcmk_ok) {
                 lrmd_event_data_t *op = NULL;
 
                 crm_err
-                    ("Attempt of deleting resource status '%s' from CIB for %s (user=%s) on %s failed: (rc=%d) %s",
+                    ("Attempted deletion of resource status '%s' from CIB for %s (user=%s) on %s failed: (rc=%d) %s",
                      rsc->id, from_sys, user_name ? user_name : "unknown", from_host, cib_rc,
                      pcmk_strerror(cib_rc));
 
@@ -1474,7 +1472,7 @@ do_lrm_invoke(long long action,
                 lrmd_free_event(op);
                 return;
             }
-
+#endif
             delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host, user_name, input);
 
         } else if (rsc != NULL) {
