@@ -652,8 +652,8 @@ static struct crm_option long_options[] = {
     {"features",       0, 0, 'F', "\tDisplay the full version and list of features Pacemaker was built with"},
 
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
-    {"foreground",     0, 0, 'f', "\tRun in the foreground instead of as a daemon"},
-    {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
+    {"foreground",     0, 0, 'f', "\t(Ignored) Pacemaker always runs in the foreground"},
+    {"pid-file",       1, 0, 'p', "\t(Ignored) Daemon pid file location"},
 
     {NULL, 0, 0, 0}
 };
