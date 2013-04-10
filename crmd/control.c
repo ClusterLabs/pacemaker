@@ -700,7 +700,7 @@ do_recover(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     set_bit(fsa_input_register, R_IN_RECOVERY);
-    crm_err("Action %s (%.16llx) not supported", fsa_action2string(action), action);
+    crm_warn("Fast-tracking shutdown in response to errors");
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
