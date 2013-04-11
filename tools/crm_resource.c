@@ -775,7 +775,7 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
 
         attr_name = crm_concat("fail-count", id, '-');
         if (node && node->details->remote_rsc) {
-            /* TODO talk directly to cib for remote nodes until we can re-write 
+            /* TODO talk directly to cib for remote nodes until we can re-write
              * attrd to handle remote-nodes */
             delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
                                   NULL, attr_name, NULL, FALSE, NULL);
@@ -1515,7 +1515,7 @@ main(int argc, char **argv)
     }
 
     set_working_set_defaults(&data_set);
-    if (rsc_cmd != 'P') {
+    if (rsc_cmd != 'P' || rsc_id) {
         resource_t *rsc = NULL;
 
         cib_conn = cib_new();
@@ -1878,10 +1878,25 @@ main(int argc, char **argv)
         /* coverity[var_deref_model] False positive */
         rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
 
+    } else if (rsc_cmd == 'P' && rsc_id) {
+        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        crm_debug("Re-checking the state of %s on %s", rsc_id, host_uname);
+        if(rsc) {
+            rc = delete_lrm_rsc(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+        } else {
+            rc = -ENODEV;
+        }
+
+        if (rc == pcmk_ok) {
+            start_mainloop();
+        }
+
     } else if (rsc_cmd == 'P') {
         xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
                                       CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
+        crm_debug("Re-checking the state of all resources on %s", host_uname);
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
         }
