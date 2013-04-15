@@ -797,22 +797,6 @@ fail_lrm_rsc(crm_ipc_t * crmd_channel, const char *host_uname,
 }
 
 static int
-refresh_lrm(crm_ipc_t * crmd_channel, const char *host_uname)
-{
-    xmlNode *cmd = NULL;
-    int rc = -ECOMM;
-
-    cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
-                         CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-
-    if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
-        rc = 0;
-    }
-    free_xml(cmd);
-    return rc;
-}
-
-static int
 move_resource(const char *rsc_id,
               const char *existing_node, const char *preferred_node, cib_t * cib_conn)
 {
@@ -1191,6 +1175,7 @@ static struct crm_option long_options[] = {
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
+    {"cleanup",    0, 0, 'C', "\t\tDelete the resource history and re-check the current state (Optional: --resource)"},
     {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
     {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
@@ -1205,9 +1190,6 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
-    {"refresh",    0, 0, 'R', "\t\t(Advanced) Refresh the CIB from the LRM"},
-    {"cleanup",    0, 0, 'C', "\t\t(Advanced) Delete a resource from the LRM"},
-    {"reprobe",    0, 0, 'P', "\t\t(Advanced) Re-check for resources started outside of the CRM\n"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node"},
     {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node"},
     {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node\n"},
@@ -1232,6 +1214,9 @@ static struct crm_option long_options[] = {
     {"host-uname", 1, 0, 'H', NULL, 1},
     {"migrate",    0, 0, 'M', NULL, 1},
     {"un-migrate", 0, 0, 'U', NULL, 1},
+
+    {"refresh",    0, 0, 'R', NULL, 1},
+    {"reprobe",    0, 0, 'P', NULL, 1},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "List the configured resources:", pcmk_option_paragraph},
@@ -1443,9 +1428,10 @@ main(int argc, char **argv)
             case 't':
                 rsc_type = optarg;
                 break;
+            case 'C':
             case 'R':
             case 'P':
-                rsc_cmd = flag;
+                rsc_cmd = 'C';
                 break;
             case 'L':
             case 'c':
@@ -1454,7 +1440,6 @@ main(int argc, char **argv)
             case 'w':
             case 'D':
             case 'F':
-            case 'C':
             case 'W':
             case 'M':
             case 'U':
@@ -1708,14 +1693,6 @@ main(int argc, char **argv)
         }
         print_cts_constraints(&data_set);
 
-    } else if (rsc_cmd == 'C') {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-
-        rc = delete_lrm_rsc(cib_conn, crmd_channel, host_uname, rsc, &data_set);
-        if (rc == pcmk_ok) {
-            start_mainloop();
-        }
-
     } else if (rsc_cmd == 'F') {
         rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
         if (rc == pcmk_ok) {
@@ -1878,7 +1855,7 @@ main(int argc, char **argv)
         /* coverity[var_deref_model] False positive */
         rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'P' && rsc_id) {
+    } else if (rsc_cmd == 'C' && rsc_id) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         crm_debug("Re-checking the state of %s on %s", rsc_id, host_uname);
@@ -1892,7 +1869,7 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
-    } else if (rsc_cmd == 'P') {
+    } else if (rsc_cmd == 'C') {
         xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
                                       CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
@@ -1902,12 +1879,6 @@ main(int argc, char **argv)
         }
 
         free_xml(cmd);
-
-    } else if (rsc_cmd == 'R') {
-        rc = refresh_lrm(crmd_channel, host_uname);
-        if (rc == pcmk_ok) {
-            start_mainloop();
-        }
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
