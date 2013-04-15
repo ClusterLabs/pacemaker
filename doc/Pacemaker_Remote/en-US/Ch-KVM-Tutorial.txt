@@ -6,7 +6,7 @@
 
 == Step 1: Setup the Host ==
 
-This tutorial was created using Fedora 18 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.9.1 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
+This tutorial was created using Fedora 18 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.10 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
 
 Fedora 18 (or similar distro) host preparation steps.
 
@@ -94,7 +94,7 @@ Verify pacemaker status.  At first the 'pcs cluster status' output will look lik
  Last change: Thu Mar 14 12:25:55 2013 via crmd on example-host
  Stack: corosync
  Current DC:
- Version: 1.1.9.1
+ Version: 1.1.10
  1 Nodes configured, unknown expected votes
  0 Resources configured.
 ----
@@ -285,7 +285,7 @@ Last updated: Thu Mar 14 16:41:22 2013
 Last change: Thu Mar 14 16:41:08 2013 via crmd on example-host
 Stack: corosync
 Current DC: example-host (1795270848) - partition WITHOUT quorum
-Version: 1.1.9.1
+Version: 1.1.10
 1 Nodes configured, unknown expected votes
 0 Resources configured.
 
@@ -344,7 +344,7 @@ Last updated: Fri Mar 15 09:30:30 2013
 Last change: Thu Mar 14 17:21:35 2013 via cibadmin on example-host
 Stack: corosync
 Current DC: example-host (1795270848) - partition WITHOUT quorum
-Version: 1.1.9.1
+Version: 1.1.10
 2 Nodes configured, unknown expected votes
 2 Resources configured.
 
@@ -426,7 +426,7 @@ Last updated: Fri Mar 15 11:00:31 2013
 Last change: Fri Mar 15 09:54:16 2013 via cibadmin on example-host
 Stack: corosync
 Current DC: example-host (1795270848) - partition WITHOUT quorum
-Version: 1.1.9.1
+Version: 1.1.10
 2 Nodes configured, unknown expected votes
 7 Resources configured.
 
@@ -455,7 +455,7 @@ Last updated: Fri Mar 15 11:03:17 2013
 Last change: Fri Mar 15 09:54:16 2013 via cibadmin on example-host
 Stack: corosync
 Current DC: example-host (1795270848) - partition WITHOUT quorum
-Version: 1.1.9.1
+Version: 1.1.10
 2 Nodes configured, unknown expected votes
 7 Resources configured.
 
