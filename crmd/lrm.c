@@ -1353,6 +1353,20 @@ do_lrm_invoke(long long action,
          */
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 
+        if(strcmp(CRM_SYSTEM_CRMD, from_sys) != 0) {
+            xmlNode *reply = create_request(
+                CRM_OP_INVOKE_LRM, NULL,
+                from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
+
+            crm_debug("ACK'ing re-probe from %s: %s", from_host,
+                      crm_element_value(reply, XML_ATTR_REFERENCE));
+
+            if (relay_message(reply, TRUE) == FALSE) {
+                crm_log_xml_err(reply, "Unable to route reply");
+            }
+            free_xml(reply);
+        }
+
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *params = NULL;
