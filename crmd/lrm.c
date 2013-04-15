@@ -1317,6 +1317,20 @@ do_lrm_invoke(long long action,
 
         fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
         crm_info("Forced a local LRM refresh: call=%d", rc);
+
+        if(strcmp(CRM_SYSTEM_CRMD, from_sys) != 0) {
+            xmlNode *reply = create_request(
+                CRM_OP_INVOKE_LRM, fragment,
+                from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
+
+            crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
+
+            if (relay_message(reply, TRUE) == FALSE) {
+                crm_log_xml_err(reply, "Unable to route reply");
+            }
+            free_xml(reply);
+        }
+
         free_xml(fragment);
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
@@ -1358,8 +1372,7 @@ do_lrm_invoke(long long action,
                 CRM_OP_INVOKE_LRM, NULL,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
 
-            crm_debug("ACK'ing re-probe from %s: %s", from_host,
-                      crm_element_value(reply, XML_ATTR_REFERENCE));
+            crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
             if (relay_message(reply, TRUE) == FALSE) {
                 crm_log_xml_err(reply, "Unable to route reply");
