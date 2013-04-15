@@ -66,7 +66,7 @@ Last updated: Wed Mar 13 13:52:39 2013
 Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
 Stack: corosync
 Current DC: node1 (24815808) - partition with quorum
-Version: 1.1.9
+Version: 1.1.10
 2 Nodes configured, unknown expected votes
 2 Resources configured.
 
@@ -91,7 +91,7 @@ Last updated: Wed Mar 13 13:52:39 2013
 Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
 Stack: corosync
 Current DC: node1 (24815808) - partition with quorum
-Version: 1.1.9
+Version: 1.1.10
 2 Nodes configured, unknown expected votes
 2 Resources configured.
 

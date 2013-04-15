@@ -23,7 +23,7 @@ When configuring a virtual machine or lxc resource to act as a remote-node, thes
 |Configure a custom port to use for the guest connection to pacemaker_remote.
 
 |+remote-addr+
-|node name
+|+remote-node+ value used as hostname
 |The ip address or hostname to connect to if remote-node's name is not the hostname of the guest.
 
 |+remote-connect-timeout+
