@@ -1,0 +1,57 @@
+# pacemaker-corosync - High-Availability cluster
+#
+# Starts Corosync cluster engine and Pacemaker cluster manager.
+
+kill timeout 3600
+
+env prog=pacemakerd
+env rpm_sysconf=@sysconfdir@/sysconfig/pacemaker
+env rpm_lockfile=@localstatedir@/lock/subsys/pacemaker
+env deb_sysconf=@sysconfdir@/default/pacemaker
+env deb_lockfile=@localstatedir@/lock/pacemaker
+
+script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    exec $prog
+end script
+
+pre-start script
+    # setup the software watchdog which corosync uses in post-stop.
+    # rewrite according to environment.
+    modprobe softdog soft_margin=60
+    start corosync
+
+    # if you use corosync-notifyd, uncomment the line below.
+    #start corosync-notifyd
+
+    # give it time to fail.
+    sleep 2
+    pidof corosync || { exit 1; }
+end script
+
+post-start script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
+    touch $LOCK_FILE
+    pidof $prog > @localstatedir@/run/$prog.pid
+end script
+
+post-stop script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
+    rm -f $LOCK_FILE
+    rm -f @localstatedir@/run/$prog.pid
+
+    # when pacemakerd disappeared unexpectedly, a machine is rebooted
+    # by the watchdog of corosync.
+    pidof crmd && killall -q -9 corosync
+    stop corosync || true
+
+    # if you use corosync-notifyd, uncomment the line below.
+    #stop corosync-notifyd || true
+end script
