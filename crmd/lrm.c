@@ -1014,7 +1014,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name)
         }
     }
     free(attr);
-
+    g_list_free(lrm_state_list);
 }
 
 static gboolean
