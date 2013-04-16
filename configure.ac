@@ -1838,6 +1838,7 @@ lib/Makefile							\
 mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
+	mcp/pacemaker.upstart					\
 fencing/Makefile                                                \
         fencing/regression.py                                   \
 lrmd/Makefile                                                   \
