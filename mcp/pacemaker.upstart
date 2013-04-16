@@ -2,26 +2,36 @@
 #
 # Starts pacemakerd
 
-stop on runlevel [016]
+stop on runlevel [0123456]
 kill timeout 3600
 respawn
 
 env prog=pacemakerd
-env LOCK_FILE=/var/lock/subsys/pacemaker
+env rpm_sysconf=@sysconfdir@/sysconfig/pacemaker
+env rpm_lockfile=@localstatedir@/lock/subsys/pacemaker
+env deb_sysconf=@sysconfdir@/default/pacemaker
+env deb_lockfile=@localstatedir@/lock/pacemaker
 
 script
-    [ -f /etc/sysconfig/pacemaker ] && {
-        . /etc/sysconfig/pacemaker
-    }
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
     exec $prog
 end script
 
 post-start script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
     touch $LOCK_FILE
-    pidof $prog > /var/run/$prog.pid
+    pidof $prog > @localstatedir@/run/$prog.pid
 end script
 
 post-stop script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
     rm -f $LOCK_FILE
-    rm -f /var/run/$prog.pid
+    rm -f @localstatedir@/run/$prog.pid
 end script
