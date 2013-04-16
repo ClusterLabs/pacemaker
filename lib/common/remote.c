@@ -821,12 +821,12 @@ int
 crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
                              void *userdata, void (*callback) (void *userdata, int sock))
 {
-    struct addrinfo *res;
-    struct addrinfo *rp;
+    struct addrinfo *res = NULL;
+    struct addrinfo *rp = NULL;
     struct addrinfo hints;
     const char *server = host;
     int ret_ga;
-    int sock;
+    int sock = -1;
 
     /* getaddrinfo */
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -843,7 +843,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
 
     if (!res || !res->ai_addr) {
         crm_err("getaddrinfo failed");
-        return -1;
+        goto async_cleanup;
     }
 
     for (rp = res; rp != NULL; rp = rp->ai_next) {
@@ -879,7 +879,8 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
         if (callback) {
             if (internal_tcp_connect_async
                 (sock, rp->ai_addr, rp->ai_addrlen, timeout, userdata, callback) == 0) {
-                return 0;       /* Success for now, we'll hear back later in the callback */
+                sock = 0;
+                goto async_cleanup; /* Success for now, we'll hear back later in the callback */
             }
 
         } else {
@@ -891,8 +892,12 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
         close(sock);
         sock = -1;
     }
-    freeaddrinfo(res);
 
+async_cleanup:
+
+    if (res) {
+        freeaddrinfo(res);
+    }
     return sock;
 }
 
