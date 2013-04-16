@@ -681,6 +681,8 @@ write_cib_contents(gpointer p)
         }
     }
 
+    strip_text_nodes(cib_local);
+
     tmp_cib = g_strdup_printf("%s/cib.XXXXXX", cib_root);
     tmp_digest = g_strdup_printf("%s/cib.XXXXXX", cib_root);
 
