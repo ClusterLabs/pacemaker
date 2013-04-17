@@ -556,6 +556,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int *)&(op->call_options));
+    crm_element_value_int(request, F_STONITH_CALLID, (int *)&(op->client_callid));
 
     crm_trace("%s new stonith op: %s - %s of %s for %s",
               (peer
@@ -622,7 +623,7 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
                        op->id, op->state);
     }
 
-    query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
+    query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY, NULL, 0);
 
     if (!manual_ack) {
         int query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
@@ -855,7 +856,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 
     /* The client is connected to another node, relay this update to them */
-    update = stonith_create_op(0, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
+    update = stonith_create_op(op->client_callid, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
     crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(update, F_STONITH_CLIENTID, client_id);
     crm_xml_add(update, F_STONITH_CALLID, call_id);
@@ -906,7 +907,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 
     if (peer) {
         int timeout_one = 0;
-        xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);
+        xmlNode *query = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
 
         crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
         crm_xml_add(query, F_STONITH_TARGET, op->target);

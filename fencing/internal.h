@@ -93,6 +93,8 @@ typedef struct remote_fencing_op_s {
     char *originator;
     /*! The local client id that initiated the fencing request */
     char *client_id;
+    /*! The client's call_id that initiated the fencing request */
+    int client_callid;
     /*! The name of client that initiated the fencing request */
     char *client_name;
     /*! List of the received query results for all the nodes in the cpg group */
