@@ -71,6 +71,8 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 gboolean force_flag = FALSE;
+gboolean quiet = FALSE;
+int bump_log_num = 0;
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -227,7 +229,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
+    crm_system_name = "cibadmin";
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
@@ -266,6 +268,7 @@ main(int argc, char **argv)
                 break;
             case 'Q':
                 cib_action = CIB_OP_QUERY;
+                quiet = TRUE;
                 break;
             case 'P':
                 cib_action = CIB_OP_APPLY_DIFF;
@@ -316,7 +319,7 @@ main(int argc, char **argv)
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;
-                crm_bump_log_level(argc, argv);
+                bump_log_num++;
                 break;
             case '?':
             case '$':
@@ -383,6 +386,15 @@ main(int argc, char **argv)
                 ++argerr;
                 break;
         }
+    }
+    
+    if (bump_log_num > 0) {
+        quiet = FALSE;
+    }
+    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, quiet);
+    while (bump_log_num > 0) {
+        crm_bump_log_level(argc, argv);
+        bump_log_num--;
     }
 
     if (optind < argc) {

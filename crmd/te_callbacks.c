@@ -350,6 +350,20 @@ too_many_st_failures(void)
 }
 
 void
+reset_st_fail_count(const char *target)
+{
+    struct st_fail_rec *rec = NULL;
+
+    if (stonith_failures) {
+        rec = g_hash_table_lookup(stonith_failures, target);
+    }
+
+    if (rec) {
+        rec->count = 0;
+    }
+}
+
+void
 tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
     char *uuid = NULL;

@@ -374,6 +374,22 @@ indexterm:[Resource,Option,target-role]
 indexterm:[multiple-active,Resource Option]
 indexterm:[Resource,Option,multiple-active]
 
+|remote-node
+|+<none>+ (disabled)
+|The name of the remote-node this resource defines.  This both enables the resource as a remote-node and defines the unique name used to identify the remote-node. If no other parameters are set, this value will also be assumed as the hostname to connect to at port 3121. +WARNING+ This value cannot overlap with any resource or node IDs.
+
+|remote-port
+|+3121+
+|Configure a custom port to use for the guest connection to pacemaker_remote.
+
+|remote-addr
+|+remote-node+ value used as hostname
+|The ip address or hostname to connect to if remote-node's name is not the hostname of the guest.
+
+|+remote-connect-timeout+
+|+60s+
+|How long before a pending guest connection will time out.
+
 |=========================================================
 
 If you performed the following commands on the previous LSB Email resource

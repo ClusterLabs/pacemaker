@@ -396,7 +396,7 @@ handle_remote_ra_exec(gpointer user_data)
             fsa_cib_delete(XML_CIB_TAG_STATUS, status, cib_quorum_override, rc, NULL);
             crm_info("Forced a remote LRM refresh before connection start: call=%d", rc);
             crm_log_xml_trace(status, "CLEAR LRM");
-            free(status);
+            free_xml(status);
 
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {

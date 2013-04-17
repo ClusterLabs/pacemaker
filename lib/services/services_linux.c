@@ -540,6 +540,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
         close(op->opaque->stdout_fd);
         close(op->opaque->stderr_fd);
+        close(sfd);
 
         if (sigismember(&old_mask, SIGCHLD) == 0) {
             if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
