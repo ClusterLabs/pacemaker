@@ -434,7 +434,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             } else if (is_set(rsc->flags, pe_rsc_unique)) {
                 print_full = TRUE;
             } else {
-                stopped_list = add_list_element(stopped_list, child_rsc->id);
+                stopped_list = add_list_element(stopped_list, get_print_rsc_id(child_rsc));
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_unique, TRUE)

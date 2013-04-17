@@ -256,5 +256,6 @@ typedef struct op_digest_cache_s {
 
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
+char *get_print_rsc_id(resource_t * rsc);
 
 #endif
