@@ -101,6 +101,14 @@ start()
 	echo
 }
 
+cman_pre_start()
+{
+    pid=$(pidof corosync 2>/dev/null)
+    if [ $? -ne 0 ]; then
+	service cman start
+    fi
+}
+
 cman_pre_stop()
 {
     cname=`crm_node --name`
@@ -166,7 +174,7 @@ rtrn=0
 case "$1" in
 start)
 	# For consistency with stop
-	[ $PCMK_STACK = cman ] && service cman start
+	[ $PCMK_STACK = cman ] && cman_pre_start
 	start
 ;;
 restart|reload|force-reload)
