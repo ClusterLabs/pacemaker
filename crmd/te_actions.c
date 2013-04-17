@@ -509,6 +509,8 @@ notify_crmd(crm_graph_t * graph)
                     crm_timer_start(transition_timer);
                 } else if (too_many_st_failures() == FALSE) {
                     event = I_PE_CALC;
+                } else {
+                    event = I_TE_SUCCESS;
                 }
 
             } else if (fsa_state == S_POLICY_ENGINE) {

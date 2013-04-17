@@ -395,6 +395,8 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
             crm_timer_start(transition_timer);
         } else if (too_many_st_failures() == FALSE) {
             register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+        } else {
+            register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
         }
         return;
     }
