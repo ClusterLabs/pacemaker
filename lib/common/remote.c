@@ -728,11 +728,11 @@ check_connect_finished(gpointer userdata)
     } else {
         close(sock);
     }
-    free(cb_data);
 
     if (cb_data->callback) {
         cb_data->callback(cb_data->userdata, rc);
     }
+    free(cb_data);
     return FALSE;
 
   reschedule:
