@@ -240,11 +240,11 @@ grep -e "^*" $test_home/regression.out
 
 if [ $num_errors != 0 ]; then
     echo $num_errors tests failed
-    diff -u $test_home/regression.exp $test_home/regression.out
+    diff -wu $test_home/regression.exp $test_home/regression.out
     exit 1
 fi
 
-diff -u $test_home/regression.exp $test_home/regression.out
+diff -wu $test_home/regression.exp $test_home/regression.out
 if [ $? != 0 ]; then
     echo $num_passed tests passed but diff failed
     exit 2
