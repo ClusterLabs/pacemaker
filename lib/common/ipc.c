@@ -302,7 +302,7 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     crm_info("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
 #if ENABLE_ACL
-    client->user = uid2username(uid);
+    client->user = uid2username(uid_client);
 #endif
 
     g_hash_table_insert(client_connections, c, client);
