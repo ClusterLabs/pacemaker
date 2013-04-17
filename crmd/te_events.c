@@ -135,12 +135,19 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
     const char *value = NULL;
     const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     const char *on_uname = get_uname_from_event(event);
+    const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
 
     if (rc == 99) {
         /* this is an internal code for "we're busy, try again" */
         return FALSE;
 
     } else if (rc == target_rc) {
+        return FALSE;
+    }
+
+    if (safe_str_eq(origin, "build_active_RAs")) {
+        crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
+                  id, rc, on_uname);
         return FALSE;
     }
 
