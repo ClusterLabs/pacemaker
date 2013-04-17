@@ -48,14 +48,14 @@ char *fsa_our_uname = NULL;
 ll_cluster_t *fsa_cluster_conn;
 #endif
 
-fsa_timer_t *wait_timer = NULL;
-fsa_timer_t *recheck_timer = NULL;
-fsa_timer_t *election_trigger = NULL;
-fsa_timer_t *election_timeout = NULL;
-fsa_timer_t *transition_timer = NULL;
+fsa_timer_t *wait_timer = NULL;        /* How long to wait before retrying to connect to the cib/lrmd/ccm */
+fsa_timer_t *recheck_timer = NULL;     /* Periodically re-run the PE to account for time based rules/preferences */
+fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
+fsa_timer_t *election_timeout = NULL;  /* How long to declare an election over - even if not everyone voted */
+fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
-fsa_timer_t *shutdown_escalation_timer = NULL;
+fsa_timer_t *shutdown_escalation_timer = NULL; /* How long to wait for the DC to stop all resources and give us the all-clear to shut down */
 
 volatile gboolean do_fsa_stall = FALSE;
 volatile long long fsa_input_register = 0;
