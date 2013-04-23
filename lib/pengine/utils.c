@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -385,7 +385,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
   Implied by calloc()...
   action->actions_before   = NULL;
   action->actions_after    = NULL;
-		
+
   action->pseudo     = FALSE;
   action->dumped     = FALSE;
   action->processed  = FALSE;
@@ -1347,25 +1347,18 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 }
 
 time_t
-get_timet_now(pe_working_set_t * data_set)
+get_effective_time(pe_working_set_t * data_set)
 {
-    time_t now = 0;
-
-    /* if (data_set && data_set->now) { */
-    /*     now = data_set->now->tm_now; */
-    /* } */
-
-    if (now == 0) {
-        /* eventually we should convert data_set->now into time_tm
-         * for now, its only triggered by PE regression tests
-         */
-        now = time(NULL);
-        crm_crit("Defaulting to 'now'");
-        /* if (data_set && data_set->now) { */
-        /*     data_set->now->tm_now = now; */
-        /* } */
+    if(data_set) {
+        if (data_set->now == NULL) {
+            crm_trace("Recording a new 'now'");
+            data_set->now = crm_time_new(NULL);
+        }
+        return crm_time_get_seconds_since_epoch(data_set->now);
     }
-    return now;
+
+    crm_trace("Defaulting to 'now'");
+    return time(NULL);
 }
 
 struct fail_search {
@@ -1431,7 +1424,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
 
     if (search.count != 0 && search.last != 0 && rsc->failure_timeout) {
         if (search.last > 0) {
-            time_t now = get_timet_now(data_set);
+            time_t now = get_effective_time(data_set);
 
             if (now > (search.last + rsc->failure_timeout)) {
                 crm_debug("Failcount for %s on %s has expired (limit was %ds)",

@@ -2079,7 +2079,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         int last_run = 0;
 
         if (crm_element_value_int(xml_op, "last-rc-change", &last_run) == 0) {
-            time_t now = get_timet_now(data_set);
+            time_t now = get_effective_time(data_set);
 
             if (now > (last_run + rsc->failure_timeout)) {
                 expired = TRUE;
