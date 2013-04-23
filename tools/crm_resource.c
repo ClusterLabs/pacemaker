@@ -1529,7 +1529,7 @@ main(int argc, char **argv)
         if (rsc_id) {
             rsc = find_rsc_or_clone(rsc_id, &data_set);
         }
-        if (rsc == NULL) {
+        if (rsc == NULL && rsc_cmd != 'C') {
             rc = -ENXIO;
         }
     }
