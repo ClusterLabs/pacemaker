@@ -111,6 +111,11 @@ cman_pre_start()
 
 cman_pre_stop()
 {
+    pid=$(pidof fenced 2>/dev/null)
+    if [ $? -ne 0 ]; then
+	: CMAN is not running, nothing to do here
+	return
+    fi
     cname=`crm_node --name`
     crm_attribute -N $cname -n standby -v true -l reboot
     logger -t pacemaker -p daemon.notice "Waiting for shutdown of managed resources"
