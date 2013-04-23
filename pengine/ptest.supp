@@ -31,3 +31,13 @@
    fun:qb_log_dcs_get
    fun:_qb_log_callsite_get
 }
+
+{
+   glib types
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   fun:*
+   fun:g_type_register_static
+}
