@@ -7,7 +7,7 @@ xml_lang: en-US
 type: Book
 version: @PACKAGE_SERIES@
 brand: @PUBLICAN_BRAND@
-product: Pacemaker Remote
+product: Pacemaker
 
 chunk_first: 0
 chunk_section_depth: 3
