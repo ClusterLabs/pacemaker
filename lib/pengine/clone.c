@@ -390,6 +390,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     GListPtr master_list = NULL;
     GListPtr started_list = NULL;
     GListPtr gIter = rsc->children;
+    GListPtr knownon_list = NULL;
 
     clone_variant_data_t *clone_data = NULL;
 
@@ -433,8 +434,6 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
             } else if (is_set(rsc->flags, pe_rsc_unique)) {
                 print_full = TRUE;
-            } else {
-                stopped_list = add_list_element(stopped_list, get_print_rsc_id(child_rsc));
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_unique, TRUE)
@@ -510,6 +509,23 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     list_text = NULL;
 
     /* Stopped */
+    for (knownon_list = g_hash_table_get_values(rsc->known_on); knownon_list != NULL;
+         knownon_list = knownon_list->next) {
+        node_t *knownon = (node_t *)knownon_list->data;
+        gboolean running_on = FALSE;
+
+        GListPtr runningon_list = rsc->running_on;
+        for (; runningon_list != NULL; runningon_list = runningon_list->next) {
+            node_t *runningon = (node_t *)runningon_list->data;
+            if (crm_str_eq(knownon->details->uname, runningon->details->uname, TRUE)) {
+                running_on = TRUE;
+                break;
+            }
+        }
+        if (running_on == FALSE) {
+            stopped_list = add_list_element(stopped_list, knownon->details->uname);
+        }
+    }
     short_print(stopped_list, child_text, "Stopped", options, print_data);
     free(stopped_list);
 
