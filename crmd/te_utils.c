@@ -158,7 +158,20 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
-        if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
+        if (AM_I_DC &&
+                   st_event->client_origin &&
+                   safe_str_neq(st_event->client_origin, client_id)) {
+            const char *uuid = get_uuid(st_event->target);
+
+            /* If a remote process outside of pacemaker invoked stonith to
+             * fence someone, report the fencing result to the cib
+             * and abort the transition graph. */
+            crm_info("External fencing operation from %s fenced %s", st_event->client_origin,
+                     st_event->target);
+            send_stonith_update(NULL, st_event->target, uuid);
+            abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
+
+        } else if (fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, st_event->target)) {
             crm_notice("Target %s our leader %s (recorded: %s)",
                        fsa_our_dc ? "was" : "may have been", st_event->target,
                        fsa_our_dc ? fsa_our_dc : "<unset>");
@@ -172,20 +185,19 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
                 send_stonith_update(NULL, st_event->target, uuid);
             }
-            stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
 
-        } else if (AM_I_DC &&
-                   st_event->client_origin &&
-                   safe_str_neq(st_event->client_origin, client_id)) {
-            const char *uuid = get_uuid(st_event->target);
-
-            /* If a remote process outside of pacemaker invoked stonith to
-             * fence someone, report the fencing result to the cib
-             * and abort the transition graph. */
-            crm_info("External fencing operation from %s fenced %s", st_event->client_origin,
-                     st_event->target);
-            send_stonith_update(NULL, st_event->target, uuid);
-            abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
+            /* If it's now during the state transition: 
+             *     S_ELECTION -> S_INTEGRATION -> S_FINALIZE_JOIN
+             * we may have just missed A_DC_TAKEOVER, in which it does fencing cleanup.
+             * Since tengine_stonith_callback() calls send_stonith_update(),
+             * if we still store the node into stonith_cleanup_list,
+             * the node will be cleaned up again after the next DC election in the furture by mistake.
+             * So we do _not_ add the node into stonith_cleanup_list in this case:
+             * Even if fsa_our_dc is NULL, but AM_I_DC is already TRUE.
+             */
+            if (AM_I_DC == FALSE) {
+                stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
+            }
         }
     }
 }
