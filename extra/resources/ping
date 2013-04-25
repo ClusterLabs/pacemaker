@@ -112,6 +112,15 @@ A catch all for any other options that need to be passed to ping.
 <content type="string" default=""/>
 </parameter>
 
+<parameter name="failure_score" unique="0">
+<longdesc lang="en">
+Resource is failed if the score is less than failure_score.
+Default never fails.
+</longdesc>
+<shortdesc lang="en">failure_score</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
 <parameter name="debug" unique="0">
 <longdesc lang="en">
 Enables to use default attrd_updater verbose logging on every call.
@@ -172,7 +181,10 @@ ping_stop() {
 ping_monitor() {
     if [ -f ${OCF_RESKEY_pidfile} ]; then
 	ping_update
-	return $OCF_SUCCESS
+        if [ $? -eq 0 ]; then
+            return $OCF_SUCCESS
+        fi
+        return $OCF_ERR_GENERIC
     fi
     return $OCF_NOT_RUNNING
 }
@@ -277,7 +289,15 @@ ping_update() {
 	0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;
 	*) ocf_log warn "Could not update $OCF_RESKEY_name = $score: rc=$rc";;
     esac
-    return $rc
+    if [ $rc -ne 0 ]; then
+        return $rc
+    fi
+
+    if [ -n "$OCF_RESKEY_failure_score" -a "$score" -lt "$OCF_RESKEY_failure_score" ]; then
+        ocf_log warn "$OCF_RESKEY_name is less than failure_score($OCF_RESKEY_failure_score)"
+        return 1
+    fi
+    return 0
 }
 
 : ${OCF_RESKEY_name:="pingd"}
