@@ -1,17 +1,17 @@
 #!/bin/sh
 
  # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
- # 
+ #
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
  # version 2.1 of the License, or (at your option) any later version.
- # 
+ #
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  # General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -44,7 +44,7 @@ usage() {
 
 cat<<EOF
 crm_report - Create a tarball containing everything needed when reporting cluster problems
- 
+
 
 Usage: `basename $0` -f "YYYY-M-D H:M:S" [-t "YYYY-M-D H:M:S"] [additional options] [dest]
 
@@ -75,10 +75,10 @@ Options:
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
-Examples: 
+Examples:
    crm_report -f "2011-12-14 13:05:00" unexplained-apache-failure
    crm_report -f 2011-12-14 -t 2011-12-15 something-that-took-multiple-days
-   crm_report -f 13:05:00   -t 13:12:00   brief-outage 
+   crm_report -f 13:05:00   -t 13:12:00   brief-outage
 EOF
 }
 
@@ -307,7 +307,7 @@ do_cts() {
 
 	end_time=0
 	end_test=`echo $test_set | tr '-' ' ' | awk '{print $2}'`
-	
+
 	if [ x$end_test = x ]; then
 	    msg="Extracting test $start_test"
 	    label="CTS-$start_test-`date +"%b-%d-%Y"`"
@@ -348,7 +348,7 @@ do_cts() {
 	    nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
 	    log "Calculated node list: $nodes"
 	fi
-	
+
 	if [ $end_time -lt $start_time ]; then
 	    debug "Test didn't complete, grabbing everything up to now"
 	    end_time=`date +%s`
@@ -360,12 +360,14 @@ do_cts() {
 	else
 	    fatal "$msg failed: not found"
 	fi
-    done 
+    done
 }
 
 getnodes() {
     if [ -z $1 ]; then
 	cluster=`get_cluster_type`
+    elif [ $1 = any ]; then
+        cluster=`get_cluster_type`
     else
 	cluster=$1
     fi
@@ -376,7 +378,7 @@ getnodes() {
 
     cluster_cf=`find_cluster_cf $cluster`
     # 1. Live
-    if 
+    if
 	ps -ef | egrep -qs "[c]ib"
     then
 	debug "Querying CIB for nodes"
@@ -457,14 +459,14 @@ elif [ "x$start_time" != "x" ]; then
     fi
 
     if
-	echo $nodes | grep -qs $host 
+	echo $nodes | grep -qs $host
     then
 	debug "We are a cluster node"
     else
 	debug "We are a log master"
 	masterlog=`findmsg 1 "crmd\\|CTS"`
     fi
-    
+
 
     if [ -z $end_time ]; then
 	end_time=`perl -e 'print time()'`
@@ -475,4 +477,3 @@ elif [ "x$start_time" != "x" ]; then
 else
     fatal "Not sure what to do, no tests or time ranges to extract"
 fi
-
