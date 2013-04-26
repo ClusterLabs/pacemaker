@@ -738,7 +738,12 @@ for l in $logfiles $EXTRA_LOGS; do
     fi
 done
 
-if [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
+if [ -e $REPORT_HOME/.env ]; then
+    debug "Localhost: $REPORT_MASTER $REPORT_TARGET"
+    # Need to send something back or tar on the caller will complain
+    (cd $REPORT_HOME && tar cf - .env)
+
+elif [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
     debug "Streaming report back to $REPORT_MASTER"
     (cd $REPORT_HOME && tar cf - $REPORT_TARGET)
     if [ "$REMOVE" = "1" ]; then
