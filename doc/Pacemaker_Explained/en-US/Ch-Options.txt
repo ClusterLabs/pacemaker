@@ -7,7 +7,7 @@ with the rest of cluster options is simply a matter of parsing.  These
 options are used by the configuration database which is, by design,
 mostly ignorant of the content it holds.  So the decision was made to
 place them in an easy to find location.
-      
+
 == Configuration Version ==
 
 indexterm:[Configuration Version,Cluster]
@@ -34,7 +34,7 @@ _Never set this value to zero_, in such cases the cluster cannot tell
 the difference between your configuration and the "empty" one used
 when nothing is found on disk.
 
-| epoch | 
+| epoch |
 indexterm:[epoch,Cluster Option]
 indexterm:[Cluster,Option,epoch]
 Incremented every time the configuration is updated (usually by the admin)
@@ -43,7 +43,7 @@ Incremented every time the configuration is updated (usually by the admin)
 indexterm:[num_updates,Cluster Option]
 indexterm:[Cluster,Option,num_updates]
 Incremented every time the configuration or status is updated (usually by the cluster)
-  
+
 |=========================================================
 
 == Other Fields ==
@@ -51,7 +51,7 @@ Incremented every time the configuration or status is updated (usually by the cl
 [width="95%",cols="2m,5<",options="header",align="center"]
 |=========================================================
 |Field |Description
-      
+
 | validate-with |
 indexterm:[validate-with,Cluster Option]
 indexterm:[Cluster,Option,validate-with]
@@ -59,7 +59,7 @@ Determines the type of validation being done on the configuration.  If
 set to "none", the cluster will not verify that updates conform to the
 DTD (nor reject ones that don't). This option can be useful when
 operating a mixed version cluster during an upgrade.
-	
+
 |=========================================================
 
 == Fields Maintained by the Cluster ==
@@ -69,7 +69,7 @@ operating a mixed version cluster during an upgrade.
 |=========================================================
 |Field |Description
 
-|cib-last-written | 
+|cib-last-written |
 indexterm:[cib-last-written,Cluster Property]
 indexterm:[Cluster,Property,cib-last-written]
 Indicates when the configuration was last written to disk. Informational purposes only.
@@ -87,7 +87,7 @@ indexterm:[Cluster,Property,have-quorum]
 Indicates if the cluster has quorum. If false, this may mean that the
 cluster cannot start resources or fence other nodes. See
 +no-quorum-policy+ below.
-  
+
 |=========================================================
 
 Note that although these fields can be written to by the admin, in
@@ -130,7 +130,7 @@ For now we will describe the simple case where each option is present at most on
 [width="95%",cols="5m,2,11<",options="header",align="center"]
 |=========================================================
 |Option |Default |Description
-      
+
 | batch-limit | 30 |
 indexterm:[batch-limit,Cluster Option]
 indexterm:[Cluster,Option,batch-limit]
@@ -157,7 +157,7 @@ What to do when the cluster does not have quorum.  Allowed values:
 
  * suicide - fence all nodes in the affected cluster partition
 
-| symmetric-cluster | TRUE | 
+| symmetric-cluster | TRUE |
 indexterm:[symmetric-cluster,Cluster Option]
 indexterm:[Cluster,Option,symmetric-cluster]
 Can all resources run on any node by default?
@@ -170,7 +170,7 @@ shot? If you value your data, set up a STONITH device and enable this.
 
 If true, or unset, the cluster will refuse to start resources unless
 one or more STONITH resources have been configured also.
-	
+
 | stonith-action | reboot |
 indexterm:[stonith-action,Cluster Option]
 indexterm:[Cluster,Option,stonith-action]
@@ -185,28 +185,33 @@ Round trip delay over the network (excluding action execution). The
 "correct" value will depend on the speed and load of your network and
 cluster nodes.
 
-| stop-orphan-resources | TRUE |
+| stop-all-resources | FALSE |
+indexterm:[stop-all-resources,Cluster Option]
+indexterm:[Cluster,Option,stop-all-resources]
+Should the cluster stop all stop
+
+| resources-orphan-resources | TRUE |
 indexterm:[stop-orphan-resources,Cluster Option]
 indexterm:[Cluster,Option,stop-orphan-resources]
 Should deleted resources be stopped?
 
-| stop-orphan-actions | TRUE | 
+| stop-orphan-actions | TRUE |
 indexterm:[stop-orphan-actions,Cluster Option]
 indexterm:[Cluster,Option,stop-orphan-actions]
 Should deleted actions be cancelled?
 
-| start-failure-is-fatal | TRUE | 
+| start-failure-is-fatal | TRUE |
 indexterm:[start-failure-is-fatal,Cluster Option]
 indexterm:[Cluster,Option,start-failure-is-fatal]
 When set to FALSE, the cluster will instead use the resource's
 +failcount+ and value for +resource-failure-stickiness+.
 
-| pe-error-series-max | -1 (all) | 
+| pe-error-series-max | -1 (all) |
 indexterm:[pe-error-series-max,Cluster Option]
 indexterm:[Cluster,Option,pe-error-series-max]
 The number of PE inputs resulting in ERRORs to save. Used when reporting problems.
 
-| pe-warn-series-max | -1 (all) | 
+| pe-warn-series-max | -1 (all) |
 indexterm:[pe-warn-series-max,Cluster Option]
 indexterm:[Cluster,Option,pe-warn-series-max]
 The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.
@@ -215,7 +220,7 @@ The number of PE inputs resulting in WARNINGs to save. Used when reporting probl
 indexterm:[pe-input-series-max,Cluster Option]
 indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
-  
+
 |=========================================================
 
 You can always obtain an up-to-date list of cluster options, including
