@@ -29,10 +29,34 @@
 #######################################################################
 # Initialization:
 
+desc="Dummy LSB service"
 . @OCF_ROOT_DIR@/resource.d/heartbeat/.ocf-directories
-: ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist 
+: ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist
 
 #######################################################################
+
+success()
+{
+	echo -ne "[  OK  ]\r"
+}
+
+failure()
+{
+	echo -ne "[FAILED]\r"
+}
+
+# rpm based distros
+if [ -d @sysconfdir@/sysconfig ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
+fi
+
+# deb based distros
+if [ -d @sysconfdir@/default ]; then
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
+fi
 
 dummy_usage() {
 	cat <<END
@@ -43,22 +67,26 @@ END
 }
 
 dummy_start() {
+    echo -n "Starting $desc: "
     touch ${state}
     if [ -f ${state} ]; then
-	echo "Success"
+	success
 	return 0
     fi
-    echo "Failed"
+
+    failure
     return 1
 }
 
 dummy_stop() {
+    echo -n "Stopping $desc: "
     rm -f ${state}
     if [ ! -f ${state} ]; then
-	echo "Success"
+	success
 	return 0
     fi
-    echo "Failed"
+
+    failure
     return 1
 }
 
@@ -67,7 +95,7 @@ dummy_monitor() {
 	echo "Running OK"
 	return 0
     fi
-    echo "Stopped"
+    echo "$desc is stopped"
     return 3
 }
 
