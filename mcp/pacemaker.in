@@ -71,6 +71,11 @@ if [ -d @sysconfdir@/default ]; then
 	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
 fi
 
+# Unless specified otherwise, assume cman is in use if cluster.conf exists
+if [ x = "x$PCMK_STACK" -a -f @sysconfdir@/cluster/cluster.conf ]; then
+    PCMK_STACK=cman
+fi
+
 start()
 {
 	echo -n "Starting $desc: "
