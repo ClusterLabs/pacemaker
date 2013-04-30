@@ -1719,3 +1719,13 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     return data;
 }
+
+char *
+get_print_rsc_id(resource_t * rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_UNIQUE);
+    if (crm_is_true(value) == FALSE && rsc->clone_name != NULL) {
+        return rsc->clone_name;
+    }
+    return rsc->id;
+}

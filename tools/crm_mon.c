@@ -698,6 +698,7 @@ print_simple_status(pe_working_set_t * data_set)
 
 extern int get_failcount(node_t * node, resource_t * rsc, int *last_failure,
                          pe_working_set_t * data_set);
+extern char *get_print_rsc_id(resource_t * rsc);
 
 static void
 print_date(time_t time)
@@ -730,7 +731,7 @@ print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, 
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;
-        print_as("   %s: migration-threshold=%d", rsc->id, rsc->migration_threshold);
+        print_as("   %s: migration-threshold=%d", get_print_rsc_id(rsc), rsc->migration_threshold);
     }
 
     if (failcount > 0) {

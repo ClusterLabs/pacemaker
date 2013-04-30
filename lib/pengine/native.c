@@ -287,7 +287,7 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
 
     /* resource information. */
     status_print("%s<resource ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
+    status_print("id=\"%s\" ", get_print_rsc_id(rsc));
     status_print("resource_agent=\"%s%s%s:%s\" ",
                  class,
                  prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
@@ -391,7 +391,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     if(pre_text) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", pre_text);
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", rsc->id);
+    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", get_print_rsc_id(rsc));
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
     if (safe_str_eq(class, "ocf")) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
