@@ -867,7 +867,7 @@ generate_transition_key(int transition_id, int action_id, int target_rc, const c
 
     fail_state = malloc(len);
     if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%d:%d:%s", action_id, transition_id, target_rc, node);
+        snprintf(fail_state, len, "%d:%d:%d:%-*s", action_id, transition_id, target_rc, 36, node);
     }
     return fail_state;
 }
