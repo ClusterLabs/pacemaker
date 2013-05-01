@@ -1345,9 +1345,12 @@ crm_lock_pidfile(const char *filename)
     mypid = (unsigned long)getpid();
 
     rc = crm_pidfile_inuse(filename, 0);
-    if (rc != pcmk_ok && rc != -ENOENT) {
+    if (rc == -ENOENT) {
+        /* exists but the process is not active */
+
+    } else if (rc != pcmk_ok) {
         /* locked by existing process - give up */
-        return -1;
+        return rc;
     }
 
     if ((fd = open(filename, O_CREAT | O_WRONLY | O_EXCL, 0644)) < 0) {
@@ -1362,7 +1365,6 @@ crm_lock_pidfile(const char *filename)
     if (rc != LOCKSTRLEN) {
         crm_perror(LOG_ERR, "Incomplete write to %s", filename);
         return -errno;
-
     }
 
     return crm_pidfile_inuse(filename, mypid);
@@ -1371,11 +1373,21 @@ crm_lock_pidfile(const char *filename)
 void
 crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
+    int rc;
     long pid;
     const char *devnull = "/dev/null";
 
     if (daemonize == FALSE) {
         return;
+    }
+
+    /* Check before we even try... */
+    rc = crm_pidfile_inuse(pidfile, 1);
+    if(rc < pcmk_ok && rc != -ENOENT) {
+        pid = crm_read_pidfile(pidfile);
+        crm_err("%s: already running [pid %ld in %s]", name, pid, pidfile);
+        printf("%s: already running [pid %ld in %s]\n", name, pid, pidfile);
+        crm_exit(rc);
     }
 
     pid = fork();
@@ -1388,12 +1400,11 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         crm_exit(EX_OK);
     }
 
-    if (crm_lock_pidfile(pidfile) < 0) {
-        pid = crm_read_pidfile(pidfile);
-        if (crm_pid_active(pid) > 0) {
-            crm_warn("%s: already running [pid %ld] (%s).\n", name, pid, pidfile);
-            crm_exit(EX_OK);
-        }
+    rc = crm_lock_pidfile(pidfile);
+    if(rc < pcmk_ok) {
+        crm_err("Could not lock '%s' for %s: %s (%d)", pidfile, name, pcmk_strerror(rc), rc);
+        printf("Could not lock '%s' for %s: %s (%d)\n", pidfile, name, pcmk_strerror(rc), rc);
+        crm_exit(rc);
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
