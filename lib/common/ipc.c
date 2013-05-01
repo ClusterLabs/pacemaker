@@ -375,7 +375,7 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
     struct crm_ipc_response_header *header = data;
 
     if (id) {
-        *id = ((struct qb_ipc_request_header *)data)->id;
+        *id = ((struct qb_ipc_response_header *)data)->id;
     }
     if (flags) {
         *flags = header->flags;
