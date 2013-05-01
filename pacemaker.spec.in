@@ -405,7 +405,7 @@ exit 0
 %if %{defined _unitdir}
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
-/sbin/chkconfig --add pacemaker-remote || :
+/sbin/chkconfig --add pacemaker_remote || :
 
 %preun -n %{name}-remote
 if [ $1 -eq 0 ]; then
