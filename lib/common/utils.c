@@ -1309,15 +1309,22 @@ crm_pidfile_inuse(const char *filename, long mypid)
         }
         if (read(fd, buf, sizeof(buf)) > 0) {
             if (sscanf(buf, "%lu", &pid) > 0) {
+                crm_trace("Got pid %lu from %s\n", pid, filename);
                 if (pid <= 1) {
                     /* Invalid pid */
                     rc = -ENOENT;
+                    unlink(filename);
 
                 } else if (mypid && pid == mypid) {
                     /* In use by us */
                     rc = pcmk_ok;
 
-                } else if (mypid && pid != mypid && crm_pid_active(pid)) {
+                } else if (crm_pid_active(pid) == FALSE) {
+                    /* Contains a stale value */
+                    unlink(filename);
+                    rc = -ENOENT;
+
+                } else if (mypid && pid != mypid) {
                     /* locked by existing process - give up */
                     rc = -EEXIST;
                 }
