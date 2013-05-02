@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -568,7 +568,7 @@ get_router_node(action_t *action)
      * This means some actions will get routed through the cluster
      * node the connection rsc began on, and others are routed through
      * the cluster node the connection rsc ends up on.
-     * 
+     *
      * 1. stop, demote, migrate actions of resources living in the remote
      *    node _MUST_ occur _BEFORE_ the connection can move (these actions
      *    are all required before the remote rsc stop action can occur.) In
@@ -595,8 +595,8 @@ get_router_node(action_t *action)
     return router_node;
 }
 
-xmlNode *
-action2xml(action_t * action, gboolean as_input)
+static xmlNode *
+action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
     gboolean needs_node_info = TRUE;
     xmlNode *action_xml = NULL;
@@ -752,7 +752,14 @@ action2xml(action_t * action, gboolean as_input)
     crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
     g_hash_table_foreach(action->extra, hash2field, args_xml);
-    if (action->rsc != NULL) {
+    if (action->rsc != NULL && action->node) {
+        GHashTable *p = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        get_rsc_attributes(p, action->rsc, action->node, data_set);
+        g_hash_table_foreach(p, hash2smartfield, args_xml);
+
+        g_hash_table_destroy(p);
+    } else if(action->rsc) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
     }
 
@@ -800,7 +807,7 @@ should_dump_action(action_t * action)
          * probe_complete from running (presumably because it is only
          * partially up)
          *
-         * For these reasons we tolerate such perversions 
+         * For these reasons we tolerate such perversions
          */
 
         for (lpc = action->actions_after; lpc != NULL; lpc = lpc->next) {
@@ -940,7 +947,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
             /* Remove the orders like :
              *     "load_stopped_node2" -> "rscA_migrate_to node1"
-             * which were created from: pengine/native.c: MigrateRsc() 
+             * which were created from: pengine/native.c: MigrateRsc()
              *     order_actions(other, then, other_w->type);
              */
             wrapper->type = pe_order_none;
@@ -1045,7 +1052,7 @@ graph_element_from_action(action_t * action, pe_working_set_t * data_set)
         crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
     }
 
-    xml_action = action2xml(action, FALSE);
+    xml_action = action2xml(action, FALSE, data_set);
     add_node_nocopy(set, crm_element_name(xml_action), xml_action);
 
     action->actions_before = g_list_sort(action->actions_before, sort_action_id);
@@ -1063,7 +1070,7 @@ graph_element_from_action(action_t * action, pe_working_set_t * data_set)
         last_action = wrapper->action->id;
         input = create_xml_node(in, "trigger");
 
-        xml_action = action2xml(wrapper->action, TRUE);
+        xml_action = action2xml(wrapper->action, TRUE, data_set);
         add_node_nocopy(input, crm_element_name(xml_action), xml_action);
     }
 }

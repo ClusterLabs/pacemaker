@@ -136,9 +136,6 @@ extern GListPtr node_list_minus(GListPtr list1, GListPtr list2, gboolean filter)
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
-/* For creating the transition graph */
-extern xmlNode *action2xml(action_t * action, gboolean as_input);
-
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);
 
