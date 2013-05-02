@@ -1428,6 +1428,29 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
         *last_failure = search.last;
     }
 
+    if(search.count && rsc->failure_timeout) {
+        /* Never time-out if blocking failures are configured */
+        char *xml_name = clone_strip(rsc->id);
+        char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
+        xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+
+        free(xml_name);
+        free(xpath);
+
+        if (numXpathResults(xpathObj) > 0) {
+            xmlNode *pref = getXpathResult(xpathObj, 0);
+            pe_warn("Setting %s.failure_timeout=%d in %s conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout, ID(pref));
+            rsc->failure_timeout = 0;
+#if 0
+            /* A good idea? */
+        } else if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            /* In this case, stop.on-fail defaults to block in unpack_operation() */
+            rsc->failure_timeout = 0;
+#endif
+        }
+        freeXpathObject(xpathObj);
+    }
+
     if (effective && search.count != 0 && search.last != 0 && rsc->failure_timeout) {
         if (search.last > 0) {
             time_t now = get_effective_time(data_set);
