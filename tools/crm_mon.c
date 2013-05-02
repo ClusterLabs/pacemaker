@@ -696,9 +696,6 @@ print_simple_status(pe_working_set_t * data_set)
     return 0;
 }
 
-extern int get_failcount(node_t * node, resource_t * rsc, int *last_failure,
-                         pe_working_set_t * data_set);
-
 static void
 print_date(time_t time)
 {
@@ -714,19 +711,14 @@ print_date(time_t time)
     print_as("'%s'", date_str);
 }
 
+#include <crm/pengine/internal.h>
 static void
 print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, gboolean all)
 {
     gboolean printed = FALSE;
+
     time_t last_failure = 0;
-
-    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
-    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
-
-    int failcount = char2score(value);  /* Get the true value, not the effective one from get_failcount() */
-
-    get_failcount(node, rsc, (int *)&last_failure, data_set);
-    free(fail_attr);
+    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;

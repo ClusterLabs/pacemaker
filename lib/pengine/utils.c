@@ -1388,7 +1388,13 @@ get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 }
 
 int
-get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set_t * data_set)
+get_failcount(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
+{
+    return get_failcount_full(node, rsc, last_failure, TRUE, data_set);
+}
+
+int
+get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool effective, pe_working_set_t * data_set)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -1422,7 +1428,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
         *last_failure = search.last;
     }
 
-    if (search.count != 0 && search.last != 0 && rsc->failure_timeout) {
+    if (effective && search.count != 0 && search.last != 0 && rsc->failure_timeout) {
         if (search.last > 0) {
             time_t now = get_effective_time(data_set);
 
@@ -1446,7 +1452,7 @@ get_failcount(node_t * node, resource_t * rsc, int *last_failure, pe_working_set
 
 /* If it's a resource container, get its failcount plus all the failcounts of the resources within it */
 int
-get_failcount_all(node_t * node, resource_t * rsc, int *last_failure, pe_working_set_t * data_set)
+get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
 {
     int failcount_all = 0;
 
@@ -1457,7 +1463,7 @@ get_failcount_all(node_t * node, resource_t * rsc, int *last_failure, pe_working
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
             resource_t *filler = (resource_t *) gIter->data;
-            int filler_last_failure = 0;
+            time_t filler_last_failure = 0;
 
             failcount_all += get_failcount(node, filler, &filler_last_failure, data_set);
 

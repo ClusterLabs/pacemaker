@@ -2035,7 +2035,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     int task_status_i = -2;
     int actual_rc_i = 0;
     int target_rc = -1;
-    int last_failure = 0;
+    time_t last_failure = 0;
     int clear_failcount = 0;
 
     action_t *action = NULL;

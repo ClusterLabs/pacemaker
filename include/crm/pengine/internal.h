@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -102,9 +102,11 @@ extern pe_working_set_t *pe_dataset;
 
 extern node_t *node_copy(node_t * this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
-extern int get_failcount(node_t * node, resource_t * rsc, int *last_failure,
+extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
-extern int get_failcount_all(node_t * node, resource_t * rsc, int *last_failure,
+extern int get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
+                              bool effective, pe_working_set_t * data_set);
+extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
                              pe_working_set_t * data_set);
 
 /* Binary like operators for lists of nodes */
