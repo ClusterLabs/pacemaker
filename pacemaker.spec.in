@@ -381,9 +381,9 @@ rm -rf %{buildroot}
 /sbin/chkconfig --add pacemaker || :
 
 %preun
+/sbin/service pacemaker stop || :
 if [ $1 -eq 0 ]; then
     # Package removal, not upgrade
-    /sbin/service pacemaker stop &>/dev/null || :
     /sbin/chkconfig --del pacemaker || :
 fi
 
