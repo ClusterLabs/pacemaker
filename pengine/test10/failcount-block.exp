@@ -1,0 +1,74 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="10" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <crm_event id="6" operation="clear_failcount" operation_key="rsc_pcmk-1_clear_failcount_0" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_timeout="90000" cidr_netmask="12" crm_feature_set="3.0.7" ip="192.168.122.107"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="rsc_pcmk-1_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="90000" cidr_netmask="12" crm_feature_set="3.0.7" ip="192.168.122.107"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="1" operation="cancel" operation_key="rsc_pcmk-1_start_5000" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-1" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_call_id="37" CRM_meta_interval="5000" CRM_meta_operation="start" CRM_meta_timeout="90000" cidr_netmask="12" crm_feature_set="3.0.7" ip="192.168.122.107"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="15" operation="monitor" operation_key="rsc_pcmk-3_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="90000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.107"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="rsc_pcmk-3_start_0" on_node="pcmk-1" on_node_uuid="101"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="14" operation="start" operation_key="rsc_pcmk-3_start_0" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_timeout="90000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.107"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="17" operation="monitor" operation_key="rsc_pcmk-4_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-4" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="block" CRM_meta_timeout="90000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.108"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="rsc_pcmk-4_start_0" on_node="pcmk-1" on_node_uuid="101"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="16" operation="start" operation_key="rsc_pcmk-4_start_0" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-4" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_timeout="90000" cidr_netmask="32" crm_feature_set="3.0.7" ip="192.168.122.108"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
+

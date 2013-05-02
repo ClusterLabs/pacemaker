@@ -1,0 +1,9 @@
+Allocation scores:
+native_color: rsc_pcmk-1 allocation score on pcmk-1: 0
+native_color: rsc_pcmk-1 allocation score on pcmk-4: 0
+native_color: rsc_pcmk-2 allocation score on pcmk-1: INFINITY
+native_color: rsc_pcmk-2 allocation score on pcmk-4: 0
+native_color: rsc_pcmk-3 allocation score on pcmk-1: 0
+native_color: rsc_pcmk-3 allocation score on pcmk-4: 0
+native_color: rsc_pcmk-4 allocation score on pcmk-1: 0
+native_color: rsc_pcmk-4 allocation score on pcmk-4: 0
