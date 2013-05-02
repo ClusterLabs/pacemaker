@@ -1,0 +1,21 @@
+
+Current cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+ dummy	(ocf::heartbeat:IPaddr2):	Stopped 
+
+Transition Summary:
+ * Start   dummy	(pcmk-1)
+
+Executing cluster transition:
+ * Resource action: dummy           monitor on pcmk-3
+ * Resource action: dummy           monitor on pcmk-2
+ * Resource action: dummy           monitor on pcmk-1
+ * Pseudo action:   probe_complete
+ * Resource action: dummy           start on pcmk-1
+
+Revised cluster status:
+Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+ dummy	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
+

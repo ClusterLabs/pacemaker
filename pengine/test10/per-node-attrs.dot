@@ -1,0 +1,17 @@
+digraph "g" {
+"dummy_monitor_0 pcmk-1" -> "probe_complete pcmk-1" [ style = bold]
+"dummy_monitor_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"dummy_monitor_0 pcmk-2" -> "probe_complete pcmk-2" [ style = bold]
+"dummy_monitor_0 pcmk-2" [ style=bold color="green" fontcolor="black"]
+"dummy_monitor_0 pcmk-3" -> "probe_complete pcmk-3" [ style = bold]
+"dummy_monitor_0 pcmk-3" [ style=bold color="green" fontcolor="black"]
+"dummy_start_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"probe_complete pcmk-1" -> "probe_complete" [ style = bold]
+"probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
+"probe_complete pcmk-2" -> "probe_complete" [ style = bold]
+"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
+"probe_complete pcmk-3" -> "probe_complete" [ style = bold]
+"probe_complete pcmk-3" [ style=bold color="green" fontcolor="black"]
+"probe_complete" -> "dummy_start_0 pcmk-1" [ style = bold]
+"probe_complete" [ style=bold color="green" fontcolor="orange"]
+}

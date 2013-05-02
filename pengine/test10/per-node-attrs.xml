@@ -1,0 +1,54 @@
+ <cib crm_feature_set="2.0.6" validate-with="pacemaker-1.1" admin_epoch="1" epoch="28" num_updates="259" have-quorum="1" dc-uuid="101">
+  <configuration>
+   <crm_config>
+    <cluster_property_set id="cib-bootstrap-options">
+     <nvpair id="cts-stonith-enabled" name="stonith-enabled" value="0"/>
+     <nvpair id="cts-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+     <nvpair id="cts-pe-input-series-max" name="pe-input-series-max" value="5000"/>
+     <nvpair id="cts-default-action-timeout" name="default-action-timeout" value="90s"/>
+     <nvpair id="cts-shutdown-escalation" name="shutdown-escalation" value="5min"/>
+     <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
+     <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
+     <nvpair id="cts-no-quorum-policy" name="no-quorum-policy" value="stop"/>
+     <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+     <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-0.802.02f118f.git.fc17-02f118f"/>
+     <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+    </cluster_property_set>
+   </crm_config>
+   <nodes>
+    <node id="101" uname="pcmk-1"/>
+    <node id="102" uname="pcmk-2"/>
+    <node id="103" uname="pcmk-3"/>
+   </nodes>
+   <resources>
+    <primitive id="dummy" class="ocf" type="IPaddr2" provider="heartbeat">
+       <instance_attributes id="dummy-pcmk-1" score="3">
+	 <rule id="dummy-on-pcmk-1" score="0">
+           <expression id="dummy-on-pcmk-1-expr" attribute="#uname" operation="eq" value="pcmk-1"/>
+         </rule>
+         <nvpair id="dummy-pcmk-1-nic" name="nic" value="eth1"/>
+       </instance_attributes>
+       <instance_attributes id="dummy-pcmk-2" score="2">
+	 <rule id="dummy-on-pcmk-2" score="1">
+           <expression id="dummy-on-pcmk-2-expr" attribute="#uname" operation="eq" value="pcmk-2"/>
+         </rule>
+         <nvpair id="dummy-pcmk-2-nic" name="nic" value="eth2"/>
+       </instance_attributes>
+       <instance_attributes id="p_npiv_target_test-instance_attributes" score="1">
+         <nvpair id="dummy-netmask" name="netmask" value="32"/>
+         <nvpair id="dummy-ip" name="ip" value="127.0.0.1"/>
+         <nvpair id="dummy-nic" name="nic" value="eth0"/>
+       </instance_attributes>
+       <operations>
+         <op id="p_npiv_target_test-stop-0" interval="0" name="stop" timeout="40s"/>
+       </operations>
+    </primitive>
+   </resources>
+   <constraints/>
+  </configuration>
+  <status>
+   <node_state id="101" uname="pcmk-1" in_ccm="true" crmd="online" join="member" expected="member"/>
+   <node_state id="102" uname="pcmk-2" in_ccm="true" crmd="online" join="member" expected="member"/>
+   <node_state id="103" uname="pcmk-3" in_ccm="true" crmd="online" join="member" expected="member"/>
+  </status>
+ </cib>
