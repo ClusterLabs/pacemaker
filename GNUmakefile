@@ -157,6 +157,9 @@ srpm:	srpm-$(DISTRO)
 mock:   mock-$(MOCK_CFG)
 	echo "Done"
 
+yumdep: $(PACKAGE)-$(DISTRO).spec
+	sudo yum-builddep $(PACKAGE)-$(DISTRO).spec
+
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
@@ -243,7 +246,7 @@ changes:
 	@printf "\n- Features added in $(NEXT_RELEASE)\n" >> ChangeLog
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf >> ChangeLog
 	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e s@PE:@pengine:@ | sort -uf >> ChangeLog
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf >> ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
