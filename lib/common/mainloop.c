@@ -903,6 +903,7 @@ void
 mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
+    static bool need_init = TRUE;
     mainloop_child_t *child = g_new(mainloop_child_t, 1);
 
     child->pid = pid;
@@ -919,7 +920,15 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
         child->timerid = g_timeout_add(timeout, child_timeout_callback, child);
     }
 
-    /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
-    mainloop_add_signal(SIGCHLD, child_death_dispatch);
     child_list = g_list_append(child_list, child);
+
+    if(need_init) {
+        need_init = FALSE;
+
+        /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
+        mainloop_add_signal(SIGCHLD, child_death_dispatch);
+
+        /* In case they terminated before the signal handler was installed */
+        child_death_dispatch(SIGCHLD);
+    }
 }
