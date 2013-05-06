@@ -164,6 +164,9 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
+release:
+	make TAG=$(LAST_RELEASE) rpm
+
 dirty:
 	make TAG=dirty mock
 
@@ -237,16 +240,14 @@ summary:
 	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1
 
 changes:
-	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1" > ChangeLog
-	@printf "\n- Update source tarball to revision: `git id`" >> ChangeLog
-	@printf "\n- Statistics:\n">> ChangeLog
-	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n" >> ChangeLog
-	@printf "  Diff:      " >> ChangeLog
-	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1 >> ChangeLog
-	@printf "\n- Features added in $(NEXT_RELEASE)\n" >> ChangeLog
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf >> ChangeLog
-	@printf "\n- Changes since $(LAST_RELEASE)\n" >> ChangeLog
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf >> ChangeLog
+	@make summary
+	@printf "\n- Features added in $(NEXT_RELEASE)\n"
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
+	@printf "\n- Changes since $(LAST_RELEASE)\n"
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf
+
+changelog:
+	@make changes > ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
