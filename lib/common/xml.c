@@ -635,9 +635,13 @@ string2xml(const char *input)
 
         } else {
             int len = strlen(input);
+            int lpc = 0;
 
-            crm_warn("String start: %.50s", input);
-            crm_warn("String start+%d: %s", len - 50, input + len - 50);
+            while(lpc < len) {
+                crm_warn("Parse error[+%.3d]: %.80s", lpc, input+lpc);
+                lpc += 80;
+            }
+
             crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "String parsing error", TRUE, TRUE);
         }
     }
@@ -991,6 +995,8 @@ crm_xml_escape(const char *text)
 
     for (index = 0; index < length; index++) {
         switch (copy[index]) {
+            case 0:
+                break;
             case '<':
                 copy = crm_xml_escape_shuffle(copy, index, &length, "&lt;");
                 changes++;
@@ -1011,6 +1017,16 @@ crm_xml_escape(const char *text)
                 copy = crm_xml_escape_shuffle(copy, index, &length, "&amp;");
                 changes++;
                 break;
+            default:
+                /* Check for and replace non-printing characters with their octal equivalent */
+                if(copy[index] < ' ' || copy[index] > '~') {
+                    char *replace = g_strdup_printf("\\%.3o", copy[index]);
+
+                    /* crm_trace("Convert to octal: \\%.3o", copy[index]); */
+                    copy = crm_xml_escape_shuffle(copy, index, &length, replace);
+                    free(replace);
+                    changes++;
+                }
         }
     }
 
