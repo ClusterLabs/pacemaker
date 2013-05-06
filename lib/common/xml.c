@@ -1017,6 +1017,25 @@ crm_xml_escape(const char *text)
                 copy = crm_xml_escape_shuffle(copy, index, &length, "&amp;");
                 changes++;
                 break;
+            case '\t':
+                /* Might as well just expand to a few spaces... */
+                copy = crm_xml_escape_shuffle(copy, index, &length, "    ");
+                changes++;
+                break;
+            case '\n':
+                /* crm_trace("Convert: \\%.3o", copy[index]); */
+                copy = crm_xml_escape_shuffle(copy, index, &length, "\\n");
+                changes++;
+                break;
+            case '\r':
+                copy = crm_xml_escape_shuffle(copy, index, &length, "\\r");
+                changes++;
+                break;
+                /* For debugging...
+            case '\\':
+                crm_trace("Passthrough: \\%c", copy[index+1]);
+                break;
+                */
             default:
                 /* Check for and replace non-printing characters with their octal equivalent */
                 if(copy[index] < ' ' || copy[index] > '~') {
