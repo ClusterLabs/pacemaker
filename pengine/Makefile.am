@@ -59,7 +59,7 @@ endif
 noinst_HEADERS	= allocate.h utils.h pengine.h
 #utils.h pengine.h
 
-libpengine_la_LDFLAGS	= -version-info 5:0:1
+libpengine_la_LDFLAGS	= -version-info 5:1:1
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version 
 libpengine_la_SOURCES	= pengine.c allocate.c utils.c constraints.c
 libpengine_la_SOURCES  += native.c group.c clone.c master.c graph.c
