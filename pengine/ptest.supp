@@ -38,6 +38,66 @@
    fun:malloc
    fun:realloc
    fun:g_realloc
-   fun:*
+   obj:*/libgobject-*
    fun:g_type_register_static
+}
+
+{
+   glib types 2
+   Memcheck:Leak
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_static
+   fun:g_param_type_register_static
+}
+
+{
+   glib types 3
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
+}
+
+{
+   glib types 4
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
+}
+
+{
+   glib - the return
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:_dl_init
+}
+
+{
+   glib - seriously?
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:_dl_init
+}
+
+{
+   glib - this isnt funny anymore
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
 }

@@ -1,15 +1,15 @@
  # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- # 
+ #
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
  # version 2.1 of the License, or (at your option) any later version.
- # 
+ #
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  # General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,12 +53,12 @@ single_test=
 while true ; do
     case "$1" in
 	-V|--verbose) verbose=1; shift;;
-	-v|--valgrind) 
+	-v|--valgrind)
 	    export G_SLICE=always-malloc
-	    VALGRIND_CMD="valgrind -q --log-file=%q{valgrind_output} --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/ptest.supp"
+	    VALGRIND_CMD="valgrind -q --gen-suppressions=all --log-file=%q{valgrind_output} --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/ptest.supp"
 	    test_binary=
 	    shift;;
-	--valgrind-dhat) 
+	--valgrind-dhat)
 	    VALGRIND_CMD="valgrind --log-file=%q{valgrind_output} --show-top-n=100 --num-callers=4 --time-stamp=yes --trace-children=no --tool=exp-dhat --suppressions=$test_home/ptest.supp"
 	    test_binary=
 	    shift;;
@@ -243,7 +243,7 @@ function do_test {
 	cp "$dot_output" "$dot_expected"
 	cp "$score_output" "$scores"
 	cp "$summary_output" "$summary"
-	info "	Created expected outputs" 
+	info "	Created expected outputs"
     fi
 
     diff $diff_opts $summary $summary_output >/dev/null
@@ -262,7 +262,7 @@ function do_test {
 	diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
 	echo "" >> $failed
 	did_fail=1
-    else 
+    else
 	rm -f $dot_output
     fi
 
@@ -274,7 +274,7 @@ function do_test {
 	echo "" >> $failed
 	did_fail=1
     fi
-    
+
     diff $diff_opts $scores $score_output >/dev/null
     rc=$?
     if [ $rc != 0 ]; then
