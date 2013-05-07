@@ -102,6 +102,15 @@ Create helper scripts on a local host
 
     END
 
+Some images do not allow root to log in by default and insist on a
+'fedora' user. Create a script to disable this "feature":
+
+    cat << EOF > fix-guest.sh
+    #!/bin/bash
+    # Re-allow root to log in
+    sudo sed -i s/.*ssh-/ssh-/ /root/.ssh/authorized_keys
+    EOF
+
 ## CTS master (Fedora-18)
 
 Create and update the master
@@ -109,8 +118,8 @@ Create and update the master
     nova boot --poll --image "Fedora 18" --key_name Cluster --flavor m1.tiny cts-master
     nova add-floating-ip cts-master `nth_ipaddr 0`
 
-Some images do not allow root to log in by default and insist on a 'fedora' user.
-Disable this "feature".
+If your image does not allow root to log in by default, disable this
+"feature" with the script we created earlier:
 
     scp fix-guest.sh $IMAGE_USER@cts-master:
     ssh -l $IMAGE_USER -t cts-master -- bash ./fix-guest.sh
@@ -136,15 +145,8 @@ Then wait for everything to settle
 
 ### Fix the Guests
 
-This script re-allows root logins and adds the node's peers to /etc/hosts
-
-    cat << EOF > fix-guest.sh
-    #!/bin/bash
-    # Re-allow root to log in
-    sudo sed -i s/.*ssh-/ssh-/ /root/.ssh/authorized_keys
-    EOF
-
-Now install and run scripts:
+If your image does not allow root to log in by default, disable this
+"feature" with the script we created earlier:
 
     for n in `seq 1 4`; do
        scp fix-guest.sh $IMAGE_USER@`nth_ipaddr $n`:
@@ -163,6 +165,7 @@ Clone Pacemaker for the latest version of CTS:
 
     git clone --depth 0 git://github.com/ClusterLabs/pacemaker.git
     echo 'export PATH=$PATH:/root/pacemaker/extra:/root/pacemaker/cts' >> ~/.bashrc
+    echo alias c=\'cluster-helper\' >> ~/.bashrc
     . ~/.bashrc
 
 Now set up CTS to run from the local source tree
