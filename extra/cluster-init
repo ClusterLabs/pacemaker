@@ -12,6 +12,7 @@ nodelist=0
 pkgs="corosync xinetd nmap abrt-cli fence-agents perl-TimeDate gdb"
 
 transport="multicast"
+inaddr_any="no"
 
 INSTALL=
 cs_conf=
@@ -112,7 +113,7 @@ while true; do
 	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
 	-o|--openais) CTYPE=openais; shift;;
 	--plugin|-p) CTYPE=plugin; plugin_ver=$2; shift; shift;;
-	-u|--unicast) nodelist=1; transport=udpu; shift;;
+	-u|--unicast) nodelist=1; transport=udpu; inaddr_any="yes"; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
 	-t|--test)  rpm_repo=rpm-test-next; pkgs="$pkgs valgrind"; shift;;
 
@@ -544,6 +545,7 @@ totem {
         secauth:        off
 
 	transport:      $transport
+	inaddr_any:     $inaddr_any
 
         # interface: define at least one interface to communicate
         # over. If you define more than one interface stanza, you must
