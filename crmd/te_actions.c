@@ -464,7 +464,9 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     }
 
     value = crm_meta_value(action->params, XML_OP_ATTR_PENDING);
-    if (crm_is_true(value) && safe_str_neq(task, CRMD_ACTION_CANCEL)) {
+    if (crm_is_true(value)
+        && safe_str_neq(task, CRMD_ACTION_CANCEL)
+        && safe_str_neq(task, CRMD_ACTION_DELETE)) {
         /* write a "pending" entry to the CIB, inhibit notification */
         crm_debug("Recording pending op %s in the CIB", task_uuid);
         cib_action_update(action, PCMK_LRM_OP_PENDING, PCMK_EXECRA_STATUS_UNKNOWN);
