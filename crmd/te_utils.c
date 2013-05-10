@@ -129,7 +129,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
                st_event->target, st_event->result == pcmk_ok ? "" : " not",
-               st_event->operation,
+               st_event->action,
                st_event->executioner ? st_event->executioner : "<anyone>",
                st_event->origin, pcmk_strerror(st_event->result), st_event->id,
                st_event->client_origin ? st_event->client_origin : "<unknown>");
