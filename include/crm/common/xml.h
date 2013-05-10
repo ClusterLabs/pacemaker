@@ -212,7 +212,7 @@ __xml_first_child(xmlNode * parent)
 
     if (parent) {
         child = parent->children;
-        while (child && child->type != XML_ELEMENT_NODE) {
+        while (child && child->type == XML_TEXT_NODE) {
             child = child->next;
         }
     }
@@ -224,7 +224,7 @@ __xml_next(xmlNode * child)
 {
     if (child) {
         child = child->next;
-        while (child && child->type != XML_ELEMENT_NODE) {
+        while (child && child->type == XML_TEXT_NODE) {
             child = child->next;
         }
     }
