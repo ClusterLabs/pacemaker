@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -45,8 +45,6 @@ gboolean bringing_nodes_online = FALSE;
 #define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 #define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
 /* #define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']" */
-
-#define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 #define quiet_log(fmt, args...) do {		\
 	if(quiet == FALSE) {			\
@@ -294,6 +292,8 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
     op->rc = outcome;
     op->op_status = 0;
     op->params = NULL;          /* TODO: Fill me in */
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
 
     op->call_id = 0;
     for (xop = __xml_first_child(cib_resource); xop != NULL; xop = __xml_next(xop)) {
@@ -1158,13 +1158,13 @@ static struct crm_option long_options[] = {
     {"ticket-activate",  1, 0, 'e', "Activate a ticket"},
 
     {"-spacer-",     0, 0, '-', "\nOutput Options:"},
-    
+
     {"save-input",   1, 0, 'I', "\tSave the input configuration to the named file"},
     {"save-output",  1, 0, 'O', "Save the output configuration to the named file"},
     {"save-graph",   1, 0, 'G', "\tSave the transition graph (XML format) to the named file"},
     {"save-dotfile", 1, 0, 'D', "Save the transition graph (DOT format) to the named file"},
     {"all-actions",  0, 0, 'a', "\tDisplay all possible actions in the DOT graph - even ones not part of the transition"},
-    
+
     {"-spacer-",    0, 0, '-', "\nData Source:"},
     {"live-check",  0, 0, 'L', "\tConnect to the CIB and use the current contents as input"},
     {"xml-file",    1, 0, 'x', "\tRetrieve XML from the named file"},
@@ -1175,7 +1175,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', " crm_simulate -LS --op-inject memcached:0_monitor_20000@bart.example.com=7 --op-fail memcached:0_stop_0@fred.example.com=1 --save-output /tmp/memcached-test.xml", pcmk_option_example},
     {"-spacer-",    0, 0, '-', "Now see what the reaction to the stop failure would be", pcmk_option_paragraph},
     {"-spacer-",    0, 0, '-', " crm_simulate -S --xml-file /tmp/memcached-test.xml", pcmk_option_example},
-    
+
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
