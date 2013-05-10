@@ -16,7 +16,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-default: $(shell test ! -e configure && echo initialize) $(shell test -e configure && echo core)
+default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
 
 -include Makefile
 
@@ -55,9 +55,13 @@ BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
 COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
-initialize:
+init:
 	./autogen.sh
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
+	if [ -e `which rpm` ]; then					\
+		echo "Suggested invocation:"; 				\
+		rpm --eval %{configure} | grep -v program-prefix`;	\
+	fi
 
 export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
