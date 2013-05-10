@@ -1104,7 +1104,11 @@ print_status(pe_working_set_t * data_set)
         const char *node_mode = NULL;
         char *node_name = NULL;
 
-        node_name = g_strdup_printf("%s", node->details->uname);
+        if(node->details->remote_rsc) {
+            node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
+        } else {
+            node_name = g_strdup_printf("%s", node->details->uname);
+        }
 
         if (node->details->unclean) {
             if (node->details->online && node->details->unclean) {

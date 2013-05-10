@@ -528,6 +528,13 @@ print_cluster_status(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
+        char *node_name = NULL;
+
+        if(node->details->remote_rsc) {
+            node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
+        } else {
+            node_name = g_strdup_printf("%s", node->details->uname);
+        }
 
         if (node->details->unclean) {
             if (node->details->online && node->details->unclean) {
@@ -555,20 +562,21 @@ print_cluster_status(pe_working_set_t * data_set)
 
         } else if (node->details->online) {
             node_mode = "online";
-            online_nodes = add_list_element(online_nodes, node->details->uname);
+            online_nodes = add_list_element(online_nodes, node_name);
             continue;
 
         } else {
             node_mode = "OFFLINE";
-            offline_nodes = add_list_element(offline_nodes, node->details->uname);
+            offline_nodes = add_list_element(offline_nodes, node_name);
             continue;
         }
 
-        if (safe_str_eq(node->details->uname, node->details->id)) {
-            printf("Node %s: %s\n", node->details->uname, node_mode);
+        if (safe_str_eq(node_name, node->details->id)) {
+            printf("Node %s: %s\n", node_name, node_mode);
         } else {
-            printf("Node %s (%s): %s\n", node->details->uname, node->details->id, node_mode);
+            printf("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
         }
+        free(node_name);
     }
 
     if (online_nodes) {

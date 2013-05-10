@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ 18node1 18node2 18node3 lxc1 lxc2 ]
+Online: [ 18node1 18node2 18node3 lxc1:container1 lxc2:container2 ]
 
  container1	(ocf::heartbeat:VirtualDomain):	Started 18node1
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
@@ -34,7 +34,7 @@ Executing cluster transition:
  * Resource action: lxc1            monitor=30000 on 18node2
 
 Revised cluster status:
-Online: [ 18node1 18node2 18node3 lxc1 lxc2 ]
+Online: [ 18node1 18node2 18node3 lxc1:container1 lxc2:container2 ]
 
  container1	(ocf::heartbeat:VirtualDomain):	Started 18node2
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
