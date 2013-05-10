@@ -1124,7 +1124,14 @@ log_data_element(int log_level, const char *file, const char *function, int line
     }
 
     insert_prefix(options, &buffer, &offset, &max, depth);
-    buffer_print(buffer, max, offset, "<%s", name);
+    if(data->type == XML_COMMENT_NODE) {
+        buffer_print(buffer, max, offset, "<!--");
+        buffer_print(buffer, max, offset, "%s", data->content);
+        buffer_print(buffer, max, offset, "-->");
+
+    } else {
+        buffer_print(buffer, max, offset, "<%s", name);
+    }
 
     hidden = crm_element_value(data, "hidden");
     for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
@@ -1156,7 +1163,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
 
     do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
 
-    if (data->children) {
+    if (data->children && data->type != XML_COMMENT_NODE) {
         offset = 0;
         max = 0;
         free(buffer);
@@ -1303,7 +1310,7 @@ static void
 dump_xml(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth)
 {
 #if 0
-    if (is_not_set(xml_log_option_filtered)) {
+    if (is_not_set(options, xml_log_option_filtered)) {
         /* Turning this code on also changes the PE tests for some reason
          * (not just newlines).  Figure out why before considering to
          * enable this permanently.
