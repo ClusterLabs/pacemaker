@@ -8,13 +8,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="6" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml" crm_feature_set="3.0.7" force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
@@ -68,7 +68,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="34" operation="stop" operation_key="M-clone_stop_0"/>
@@ -165,7 +165,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -196,7 +196,7 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="6" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
@@ -215,7 +215,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="stop" operation_key="M_stop_0" internal_operation_key="M:4_stop_0"/>

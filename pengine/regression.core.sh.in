@@ -312,5 +312,6 @@ else
     failed=.single
     > $failed
     do_test $single_test "Single shot" $*
+    cat $failed
     exit $?
 fi

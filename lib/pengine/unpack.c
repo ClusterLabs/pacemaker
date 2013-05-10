@@ -2078,7 +2078,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     if (rsc->failure_timeout > 0) {
         int last_run = 0;
 
-        if (crm_element_value_int(xml_op, "last-rc-change", &last_run) == 0) {
+        if (crm_element_value_int(xml_op, XML_RSC_OP_LAST_CHANGE, &last_run) == 0) {
             time_t now = get_effective_time(data_set);
 
             if (now > (last_run + rsc->failure_timeout)) {
@@ -2343,6 +2343,12 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
             if (actual_rc_i == PCMK_EXECRA_NOT_RUNNING) {
                 clear_past_failure = TRUE;
 
+            } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+                clear_past_failure = TRUE;
+                if (rsc->role < RSC_ROLE_STARTED) {
+                    set_active(rsc);
+                }
+
             } else if (safe_str_eq(task, CRMD_ACTION_START)) {
                 rsc->role = RSC_ROLE_STARTED;
                 clear_past_failure = TRUE;
@@ -2450,7 +2456,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 }
 
             } else if (rsc->role < RSC_ROLE_STARTED) {
-                /* start, migrate_to and migrate_from will land here */
+                /* migrate_to and migrate_from will land here */
                 pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
                 set_active(rsc);
             }
@@ -2458,7 +2464,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
             /* clear any previous failure actions */
             if (clear_past_failure) {
                 switch (*on_fail) {
-                    case action_fail_block:
                     case action_fail_stop:
                     case action_fail_fence:
                     case action_fail_migrate:
@@ -2467,6 +2472,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                                      rsc->id, fail2text(*on_fail));
                         break;
 
+                    case action_fail_block:
                     case action_fail_ignore:
                     case action_fail_recover:
                         *on_fail = action_fail_ignore;

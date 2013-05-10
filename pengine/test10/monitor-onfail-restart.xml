@@ -30,7 +30,7 @@
       <lrm id="fc16-builder">
         <lrm_resources>
           <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="A_monitor_20000" operation_key="A_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="5:2:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" transition-magic="0:0;5:2:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" call-id="7" rc-code="0" op-status="0" interval="20000" last-rc-change="1334242313" exec-time="10" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+            <lrm_rsc_op id="A_monitor_20000" operation_key="A_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="5:2:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" transition-magic="0:0;5:2:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" call-id="4" rc-code="0" op-status="0" interval="20000" last-rc-change="1334242312" exec-time="10" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
             <lrm_rsc_op id="A_last_failure_0" operation_key="A_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:0:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" transition-magic="0:7;6:0:0:3fda26dc-7465-44d0-8b73-35bd2847ee00" call-id="4" rc-code="7" op-status="0" interval="20000" last-rc-change="1334242313" exec-time="10" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
           </lrm_resource>
         </lrm_resources>
