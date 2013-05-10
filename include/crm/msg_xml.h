@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -255,6 +255,11 @@
 #  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
 #  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
 #  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
+
+#  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
+#  define XML_RSC_OP_LAST_RUN           "last-run"
+#  define XML_RSC_OP_T_EXEC             "exec-time"
+#  define XML_RSC_OP_T_QUEUE            "queue-time"
 
 #  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
 #  define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"

@@ -797,7 +797,7 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
 
         if (print_timing) {
             int int_value;
-            const char *attr = "last-rc-change";
+            const char *attr = XML_RSC_OP_LAST_CHANGE;
 
             value = crm_element_value(xml_op, attr);
             if (value) {
@@ -808,7 +808,7 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
                 }
             }
 
-            attr = "last-run";
+            attr = XML_RSC_OP_LAST_RUN;
             value = crm_element_value(xml_op, attr);
             if (value) {
                 int_value = crm_parse_int(value, NULL);
@@ -818,14 +818,14 @@ print_rsc_history(pe_working_set_t * data_set, node_t * node, xmlNode * rsc_entr
                 }
             }
 
-            attr = "exec-time";
+            attr = XML_RSC_OP_T_EXEC;
             value = crm_element_value(xml_op, attr);
             if (value) {
                 int_value = crm_parse_int(value, NULL);
                 print_as(" %s=%dms", attr, int_value);
             }
 
-            attr = "queue-time";
+            attr = XML_RSC_OP_T_QUEUE;
             value = crm_element_value(xml_op, attr);
             if (value) {
                 int_value = crm_parse_int(value, NULL);
@@ -1102,6 +1102,9 @@ print_status(pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
         const char *node_mode = NULL;
+        char *node_name = NULL;
+
+        node_name = g_strdup_printf("%s", node->details->uname);
 
         if (node->details->unclean) {
             if (node->details->online && node->details->unclean) {
@@ -1130,22 +1133,26 @@ print_status(pe_working_set_t * data_set)
         } else if (node->details->online) {
             node_mode = "online";
             if (group_by_node == FALSE) {
-                online_nodes = add_list_element(online_nodes, node->details->uname);
+                online_nodes = add_list_element(online_nodes, node_name);
                 continue;
             }
 
         } else {
             node_mode = "OFFLINE";
             if (group_by_node == FALSE) {
-                offline_nodes = add_list_element(offline_nodes, node->details->uname);
+                offline_nodes = add_list_element(offline_nodes, node_name);
                 continue;
             }
         }
 
+        if(node->details->remote_rsc) {
+            online_nodes = add_list_element(online_nodes, node->details->remote_rsc->id);
+        }
+
         if (safe_str_eq(node->details->uname, node->details->id)) {
-            print_as("Node %s: %s\n", node->details->uname, node_mode);
+            print_as("Node %s: %s\n", node_name, node_mode);
         } else {
-            print_as("Node %s (%s): %s\n", node->details->uname, node->details->id, node_mode);
+            print_as("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
         }
 
         if (group_by_node) {
@@ -1157,6 +1164,7 @@ print_status(pe_working_set_t * data_set)
                 rsc->fns->print(rsc, "\t", print_opts | pe_print_rsconly, stdout);
             }
         }
+        free(node_name);
     }
 
     if (online_nodes) {
@@ -1225,7 +1233,7 @@ print_status(pe_working_set_t * data_set)
             int val = 0;
             const char *id = ID(xml_op);
             const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-            const char *last = crm_element_value(xml_op, "last_run");
+            const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
             const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
             const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
             const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
@@ -1238,10 +1246,10 @@ print_status(pe_working_set_t * data_set)
             if (last) {
                 time_t run_at = crm_parse_int(last, "0");
 
-                print_as(", last-run=%s, queued=%sms, exec=%sms\n",
+                print_as(", last-rc-change=%s, queued=%sms, exec=%sms\n",
                          ctime(&run_at),
-                         crm_element_value(xml_op, "exec_time"),
-                         crm_element_value(xml_op, "queue_time"));
+                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
             }
 
             val = crm_parse_int(rc, "0");

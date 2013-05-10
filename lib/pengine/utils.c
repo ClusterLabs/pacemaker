@@ -1281,9 +1281,10 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         int last_a = -1;
         int last_b = -1;
 
-        crm_element_value_const_int(xml_a, "last-rc-change", &last_a);
-        crm_element_value_const_int(xml_b, "last-rc-change", &last_b);
+        crm_element_value_const_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
+        crm_element_value_const_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
 
+        crm_trace("rc-change: %d vs %d", last_a, last_b);
         if (last_a >= 0 && last_a < last_b) {
             sort_return(-1, "rc-change");
 

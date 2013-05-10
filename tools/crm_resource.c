@@ -979,7 +979,7 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
         xmlNode *xml_op = (xmlNode *) lpc->data;
 
         const char *op_rsc = crm_element_value(xml_op, "resource");
-        const char *last = crm_element_value(xml_op, "last_run");
+        const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
         const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
         const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
         int status = crm_parse_int(status_s, "0");
@@ -995,8 +995,8 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
         if (last) {
             time_t run_at = crm_parse_int(last, "0");
 
-            fprintf(stdout, ", last-run=%s, exec=%sms\n",
-                    ctime(&run_at), crm_element_value(xml_op, "exec_time"));
+            fprintf(stdout, ", last-rc-change=%s, exec=%sms\n",
+                    ctime(&run_at), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
