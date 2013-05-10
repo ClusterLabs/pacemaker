@@ -1273,19 +1273,19 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     }
 
     if (this_node->details->type == node_ping) {
-        crm_info("Node %s is not a pacemaker node", this_node->details->uname);
+        crm_info("Node %s[%s] is not a pacemaker node", this_node->details->uname, this_node->details->id);
 
     } else if (this_node->details->unclean) {
-        pe_proc_warn("Node %s is unclean", this_node->details->uname);
+        pe_proc_warn("Node %s[%s] is unclean", this_node->details->uname, this_node->details->id);
 
     } else if (this_node->details->online) {
-        crm_info("Node %s is %s", this_node->details->uname,
+        crm_info("Node %s[%s] is %s", this_node->details->uname, this_node->details->id,
                  this_node->details->shutdown ? "shutting down" :
                  this_node->details->pending ? "pending" :
                  this_node->details->standby ? "standby" : "online");
 
     } else {
-        crm_trace("Node %s is offline", this_node->details->uname);
+        crm_trace("Node %s[%s] is offline", this_node->details->uname, this_node->details->id);
     }
 
     return online;
