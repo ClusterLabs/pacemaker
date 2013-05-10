@@ -664,16 +664,6 @@ else
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
 
-AC_CHECK_LIB(glib-2.0, g_hash_table_get_values)
-if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
-   AC_DEFINE_UNQUOTED(NEED_G_HASH_ITER, 1, glib-2.0 has no hashtable iterators)
-fi
-
-AC_CHECK_LIB(glib-2.0, g_list_free_full)
-if test "x$ac_cv_lib_glib_2_0_g_list_free_full" != x""yes; then
-   AC_DEFINE_UNQUOTED(NEED_G_LIST_FREE_FULL, 1, glib-2.0 has no g_list_free_full)
-fi
-
 if
     $PKGCONFIG --exists systemd
 then

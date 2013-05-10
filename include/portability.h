@@ -74,9 +74,9 @@ char *strndup(const char *str, size_t len);
 #    	define USE_GNU
 #  endif
 
-#  if NEED_G_HASH_ITER
+#  include <glib.h>
+#  if !GLIB_CHECK_VERSION(2,14,0)
 
-#    include <glib.h>
 typedef struct fake_ghi {
     GHashTable *hash;
     int nth;                    /* current index over the iteration */
@@ -102,6 +102,9 @@ g_hash_table_get_values(GHashTable * hash_table)
     g_hash_table_foreach(hash_table, g_hash_prepend_value, &values);
     return values;
 }
+#  endif
+
+#  if !GLIB_CHECK_VERSION(2,16,0)
 
 static inline gboolean
 g_hash_table_nth_data(gpointer key, gpointer value, gpointer user_data)
@@ -116,7 +119,6 @@ g_hash_table_nth_data(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-/* Since: 2.16 */
 static inline void
 g_hash_table_iter_init(GHashTableIter * iter, GHashTable * hash_table)
 {
@@ -146,7 +148,6 @@ g_hash_table_iter_next(GHashTableIter * iter, gpointer * key, gpointer * value)
     return found;
 }
 
-/* Since: 2.16 */
 static inline void
 g_hash_table_iter_remove(GHashTableIter * iter)
 {
@@ -154,7 +155,6 @@ g_hash_table_iter_remove(GHashTableIter * iter)
     iter->nth--;                /* Or zero to be safe? */
 }
 
-/* Since: 2.16 */
 static inline int
 g_strcmp0(const char *str1, const char *str2)
 {
@@ -166,8 +166,7 @@ g_strcmp0(const char *str1, const char *str2)
 }
 #  endif                        /* !HAVE_LIBGLIB_2_0 */
 
-#  ifdef NEED_G_LIST_FREE_FULL
-#    include <glib.h>
+#  if !GLIB_CHECK_VERSION(2,28,0)
 #    include <string.h>
 /* Since: 2.28 */
 static inline void
