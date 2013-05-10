@@ -1,7 +1,0 @@
-# Valgrind suppressions file for CLI tools
-{
-   Valgrind bug
-   Memcheck:Addr8
-   fun:__strspn_sse42
-   fun:crm_get_msec
-}

@@ -34,6 +34,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 testdir			= $(datadir)/$(PACKAGE)/tests/
 test_SCRIPTS		= coverage.sh BasicSanity.sh
+test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
 scratch_SOURCES	= scratch.c
