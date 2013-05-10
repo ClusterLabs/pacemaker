@@ -1265,6 +1265,8 @@ do_lrm_invoke(long long action,
          * we want to fail.  We then pass that event to the lrmd client callback
          * so it will be processed as if it actually came from the lrmd. */
         op = construct_op(lrm_state, input->xml, ID(xml_rsc), "asyncmon");
+        CRM_ASSERT(op != NULL);
+
         free((char *)op->user_data);
         op->user_data = NULL;
         entry = g_hash_table_lookup(lrm_state->resource_history, op->rsc_id);
@@ -1280,7 +1282,8 @@ do_lrm_invoke(long long action,
         op->interval = 0;
         op->op_status = PCMK_LRM_OP_DONE;
         op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
-        CRM_ASSERT(op != NULL);
+        op->t_run = time(NULL);
+        op->t_rcchange = op->t_run;
 
 #if ENABLE_ACL
         if (user_name && is_privileged(user_name) == FALSE) {
