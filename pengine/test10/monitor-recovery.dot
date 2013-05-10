@@ -1,0 +1,10 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"cl_tomcat_stop_0" -> "cl_tomcat_stopped_0" [ style = bold]
+"cl_tomcat_stop_0" -> "d_tomcat_stop_0 CSE-1" [ style = bold]
+"cl_tomcat_stop_0" [ style=bold color="green" fontcolor="orange"]
+"cl_tomcat_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"d_tomcat_stop_0 CSE-1" -> "all_stopped" [ style = bold]
+"d_tomcat_stop_0 CSE-1" -> "cl_tomcat_stopped_0" [ style = bold]
+"d_tomcat_stop_0 CSE-1" [ style=bold color="green" fontcolor="black"]
+}

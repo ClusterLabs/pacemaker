@@ -1,0 +1,107 @@
+<cib epoch="40" num_updates="19" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue May  7 07:05:03 2013" update-origin="CSE-1" update-client="cibadmin" crm_feature_set="3.0.7" have-quorum="0" dc-uuid="CSE-1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.9-1512.el6-2a917dd"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1367584187"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="CSE-1" uname="CSE-1"/>
+      <node id="CSE-2" uname="CSE-2"/>
+    </nodes>
+    <resources>
+      <group id="svc-cse">
+        <primitive class="ocf" id="ip_19" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_19-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_19-instance_attributes">
+            <nvpair id="ip_19-instance_attributes-broadcast" name="broadcast" value="172.18.19.31"/>
+            <nvpair id="ip_19-instance_attributes-ip" name="ip" value="172.18.19.31"/>
+            <nvpair id="ip_19-instance_attributes-nic" name="nic" value="bond0.119"/>
+            <nvpair id="ip_19-instance_attributes-iflabel" name="iflabel" value="ha"/>
+          </instance_attributes>
+          <meta_attributes id="ip_19-meta_attributes">
+            <nvpair id="ip_19-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+            <nvpair id="ip_19-meta_attributes-failure-timeout" name="failure-timeout" value="10"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="ip_11" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_11-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_11-instance_attributes">
+            <nvpair id="ip_11-instance_attributes-broadcast" name="broadcast" value="172.16.11.31"/>
+            <nvpair id="ip_11-instance_attributes-ip" name="ip" value="172.16.11.31"/>
+            <nvpair id="ip_11-instance_attributes-nic" name="nic" value="bond0.111"/>
+            <nvpair id="ip_11-instance_attributes-iflabel" name="iflabel" value="ha"/>
+          </instance_attributes>
+          <meta_attributes id="ip_11-meta_attributes">
+            <nvpair id="ip_11-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+            <nvpair id="ip_11-meta_attributes-failure-timeout" name="failure-timeout" value="10"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+      <clone id="cl_tomcat">
+        <primitive class="ocf" id="d_tomcat" provider="ntc" type="tomcat">
+          <operations>
+            <op id="d_tomcat-monitor-15s" interval="15s" name="monitor" on-fail="block" timeout="510s"/>
+            <op id="d_tomcat-start-0" interval="0" name="start" timeout="510s"/>
+          </operations>
+          <instance_attributes id="d_tomcat-instance_attributes">
+            <nvpair id="d_tomcat-instance_attributes-instance_name" name="instance_name" value="NMS"/>
+            <nvpair id="d_tomcat-instance_attributes-monitor_use_ssl" name="monitor_use_ssl" value="no"/>
+            <nvpair id="d_tomcat-instance_attributes-monitor_urls" name="monitor_urls" value="/cse/health"/>
+            <nvpair id="d_tomcat-instance_attributes-monitor_timeout" name="monitor_timeout" value="120"/>
+          </instance_attributes>
+          <meta_attributes id="d_tomcat-meta_attributes">
+            <nvpair id="d_tomcat-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="cl_tomcat-meta_attributes">
+          <nvpair id="cl_tomcat-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="cl_tomcat" id="order_tomcat" score="INFINITY" then="svc-cse"/>
+      <rsc_colocation id="colo_tomcat" rsc="svc-cse" score="INFINITY" with-rsc="cl_tomcat"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="CSE-1" uname="CSE-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="CSE-1">
+        <lrm_resources>
+          <lrm_resource id="ip_19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_19_last_0" operation_key="ip_19_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:363:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;10:363:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="88" rc-code="0" op-status="0" interval="0" last-run="1367909258" last-rc-change="0" exec-time="24" queue-time="0" op-digest="f3a56bbd6e7322c756bf7e0756cb1b8c"/>
+            <lrm_rsc_op id="ip_19_monitor_10000" operation_key="ip_19_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="6:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;6:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="50" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="58" queue-time="0" op-digest="1d30fcc8144611e3baef88a40a9914a1"/>
+          </lrm_resource>
+          <lrm_resource id="ip_11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_11_last_0" operation_key="ip_11_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="12:363:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;12:363:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="78" rc-code="0" op-status="0" interval="0" last-run="1367909258" last-rc-change="0" exec-time="28" queue-time="0" op-digest="30745205fe327cd875ddd16c10f44a2f"/>
+            <lrm_rsc_op id="ip_11_monitor_10000" operation_key="ip_11_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;10:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="62" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="43" queue-time="0" op-digest="8d2a8c02b719405539d7b3da9a36a0d2"/>
+          </lrm_resource>
+          <lrm_resource id="d_tomcat" type="tomcat" class="ocf" provider="ntc">
+            <lrm_rsc_op id="d_tomcat_last_0" operation_key="d_tomcat_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;17:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1367909154" last-rc-change="0" exec-time="40975" queue-time="0" op-digest="67ae2bfa184db1812da14e1dbb43fb0e" op-force-restart=" state  instance_name  monitor_urls  monitor_use_ssl  monitor_timeout  cleanup " op-restart-digest="67ae2bfa184db1812da14e1dbb43fb0e"/>
+            <lrm_rsc_op id="d_tomcat_monitor_15000" operation_key="d_tomcat_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="18:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:0;18:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="44" rc-code="0" op-status="0" interval="15000" last-rc-change="1367910303" exec-time="0" queue-time="0" op-digest="0c738dfc69f09a62b7ebf32344fddcf6"/>
+            <lrm_rsc_op id="d_tomcat_last_failure_0" operation_key="d_tomcat_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="18:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" transition-magic="0:1;18:360:0:ade789ed-b68e-4f0d-9092-684d0aaa0e89" call-id="44" rc-code="1" op-status="0" interval="15000" last-rc-change="1367909258" exec-time="0" queue-time="0" op-digest="0c738dfc69f09a62b7ebf32344fddcf6"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="CSE-1">
+        <instance_attributes id="status-CSE-1">
+          <nvpair id="status-CSE-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-CSE-1-fail-count-d_tomcat" name="fail-count-d_tomcat" value="1"/>
+          <nvpair id="status-CSE-1-last-failure-d_tomcat" name="last-failure-d_tomcat" value="1367909258"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="CSE-2" uname="CSE-2" in_ccm="false" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+  </status>
+</cib>
