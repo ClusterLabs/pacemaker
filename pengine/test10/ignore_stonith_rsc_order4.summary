@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ fc16-builder ]
 
  Clone Set: S_CLONE [S_A]
-     Stopped: [ S_A:0 ]
+     Stopped: [ fc16-builder ]
  Clone Set: S_CLONE2 [MIXED_GROUP]
-     Stopped: [ MIXED_GROUP:0 ]
+     Stopped: [ fc16-builder ]
 
 Transition Summary:
  * Start   S_A:0	(fc16-builder)

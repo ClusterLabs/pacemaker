@@ -4,7 +4,7 @@ Online: [ sles236 sles238 ]
 
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ sles236 ]
-     Stopped: [ drbd0:1 ]
+     Stopped: [ sles238 ]
  Master/Slave Set: ms-drbd1 [drbd1]
      Masters: [ sles236 ]
      Slaves: [ sles238 ]

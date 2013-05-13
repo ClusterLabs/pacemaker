@@ -31,5 +31,5 @@ OFFLINE: [ node1 ]
  rsc_stonith	(stonith:null):	Started node2
  Master/Slave Set: ms1 [rsc1]
      Slaves: [ node2 ]
-     Stopped: [ rsc1:1 ]
+     Stopped: [ node1 ]
 

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ yingying.site ]
 
  Clone Set: rsc1 [rsc1_child]
-     Stopped: [ rsc1_child:0 ]
+     Stopped: [ yingying.site ]
 
 Transition Summary:
  * Start   rsc1_child:0	(yingying.site)

@@ -5,7 +5,7 @@ Online: [ dktest1sles10 dktest2sles10 ]
  stonith-1	(stonith:dummy):	Stopped 
  Master/Slave Set: ms-drbd1 [drbd1]
      Masters: [ dktest2sles10 ]
-     Stopped: [ drbd1:1 ]
+     Stopped: [ dktest1sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Started dktest2sles10
 
 Transition Summary:
@@ -56,6 +56,6 @@ Online: [ dktest1sles10 dktest2sles10 ]
  stonith-1	(stonith:dummy):	Started dktest1sles10
  Master/Slave Set: ms-drbd1 [drbd1]
      Slaves: [ dktest1sles10 ]
-     Stopped: [ drbd1:1 ]
+     Stopped: [ dktest2sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Stopped 
 

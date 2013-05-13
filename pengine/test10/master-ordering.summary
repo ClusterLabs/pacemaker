@@ -3,23 +3,23 @@ Current cluster status:
 Online: [ webcluster01 ]
 OFFLINE: [ webcluster02 ]
 
- mysql-server	(ocf::heartbeat:mysql):	Stopped 
- extip_1	(ocf::heartbeat:IPaddr2):	Stopped 
- extip_2	(ocf::heartbeat:IPaddr2):	Stopped 
+ mysql-server	(ocf::heartbeat:mysql):	Stopped
+ extip_1	(ocf::heartbeat:IPaddr2):	Stopped
+ extip_2	(ocf::heartbeat:IPaddr2):	Stopped
  Resource Group: group_main
-     intip_0_main	(ocf::heartbeat:IPaddr2):	Stopped 
- intip_1_master	(ocf::heartbeat:IPaddr2):	Stopped 
- intip_2_slave	(ocf::heartbeat:IPaddr2):	Stopped 
+     intip_0_main	(ocf::heartbeat:IPaddr2):	Stopped
+ intip_1_master	(ocf::heartbeat:IPaddr2):	Stopped
+ intip_2_slave	(ocf::heartbeat:IPaddr2):	Stopped
  Master/Slave Set: ms_drbd_www [drbd_www]
-     Stopped: [ drbd_www:0 drbd_www:1 ]
+     Stopped: [ webcluster01 webcluster02 ]
  Clone Set: clone_ocfs2_www [ocfs2_www] (unique)
-     ocfs2_www:0	(ocf::heartbeat:Filesystem):	Stopped 
-     ocfs2_www:1	(ocf::heartbeat:Filesystem):	Stopped 
+     ocfs2_www:0	(ocf::heartbeat:Filesystem):	Stopped
+     ocfs2_www:1	(ocf::heartbeat:Filesystem):	Stopped
  Clone Set: clone_webservice [group_webservice]
-     Stopped: [ group_webservice:0 group_webservice:1 ]
+     Stopped: [ webcluster01 webcluster02 ]
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
-     Stopped: [ drbd_mysql:0 drbd_mysql:1 ]
- fs_mysql	(ocf::heartbeat:Filesystem):	Stopped 
+     Stopped: [ webcluster01 webcluster02 ]
+ fs_mysql	(ocf::heartbeat:Filesystem):	Stopped
 
 Transition Summary:
  * Start   extip_1	(webcluster01)
@@ -73,23 +73,23 @@ Revised cluster status:
 Online: [ webcluster01 ]
 OFFLINE: [ webcluster02 ]
 
- mysql-server	(ocf::heartbeat:mysql):	Stopped 
+ mysql-server	(ocf::heartbeat:mysql):	Stopped
  extip_1	(ocf::heartbeat:IPaddr2):	Started webcluster01
  extip_2	(ocf::heartbeat:IPaddr2):	Started webcluster01
  Resource Group: group_main
-     intip_0_main	(ocf::heartbeat:IPaddr2):	Stopped 
+     intip_0_main	(ocf::heartbeat:IPaddr2):	Stopped
  intip_1_master	(ocf::heartbeat:IPaddr2):	Started webcluster01
  intip_2_slave	(ocf::heartbeat:IPaddr2):	Started webcluster01
  Master/Slave Set: ms_drbd_www [drbd_www]
      Slaves: [ webcluster01 ]
-     Stopped: [ drbd_www:1 ]
+     Stopped: [ webcluster02 ]
  Clone Set: clone_ocfs2_www [ocfs2_www] (unique)
-     ocfs2_www:0	(ocf::heartbeat:Filesystem):	Stopped 
-     ocfs2_www:1	(ocf::heartbeat:Filesystem):	Stopped 
+     ocfs2_www:0	(ocf::heartbeat:Filesystem):	Stopped
+     ocfs2_www:1	(ocf::heartbeat:Filesystem):	Stopped
  Clone Set: clone_webservice [group_webservice]
-     Stopped: [ group_webservice:0 group_webservice:1 ]
+     Stopped: [ webcluster01 webcluster02 ]
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
      Slaves: [ webcluster01 ]
-     Stopped: [ drbd_mysql:1 ]
- fs_mysql	(ocf::heartbeat:Filesystem):	Stopped 
+     Stopped: [ webcluster02 ]
+ fs_mysql	(ocf::heartbeat:Filesystem):	Stopped
 

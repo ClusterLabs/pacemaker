@@ -148,7 +148,7 @@ OFFLINE: [ hex-9 ]
  vm-00	(ocf::heartbeat:Xen):	Started hex-0
  Clone Set: base-clone [base-group]
      Started: [ hex-0 hex-7 hex-8 ]
-     Stopped: [ base-group:3 ]
+     Stopped: [ hex-9 ]
  vm-01	(ocf::heartbeat:Xen):	Started hex-7
  vm-02	(ocf::heartbeat:Xen):	Started hex-8
  vm-03	(ocf::heartbeat:Xen):	Stopped 

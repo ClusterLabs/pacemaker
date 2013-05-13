@@ -7,7 +7,7 @@ Online: [ x32c47 x32c48 ]
  Clone Set: imagestorecloneset [imagestoreclone]
      Started: [ x32c47 x32c48 ]
  Clone Set: configstorecloneset [configstoreclone]
-     Stopped: [ configstoreclone:0 configstoreclone:1 ]
+     Stopped: [ x32c47 x32c48 ]
 
 Transition Summary:
  * Start   configstoreclone:0	(x32c47)

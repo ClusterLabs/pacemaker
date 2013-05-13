@@ -41,7 +41,7 @@ Online: [ node2 ]
 
  Master/Slave Set: ms-rsc [rsc]
      Masters: [ node2 ]
-     Stopped: [ rsc:1 ]
+     Stopped: [ node1 ]
  rsc1	(ocf::pacemaker:Dummy):	Started node2
  rsc2	(ocf::pacemaker:Dummy):	Started node2
  rsc3	(ocf::pacemaker:Dummy):	Started node2

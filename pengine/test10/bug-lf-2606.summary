@@ -39,5 +39,5 @@ OFFLINE: [ node2 ]
  rsc2	(ocf::pacemaker:Dummy):	Started node1
  Master/Slave Set: ms3 [rsc3]
      Slaves: [ node1 ]
-     Stopped: [ rsc3:1 ]
+     Stopped: [ node2 ]
 

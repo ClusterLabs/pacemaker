@@ -8,7 +8,7 @@ OFFLINE: [ CSE-2 ]
      ip_11	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: cl_tomcat [d_tomcat]
      Started: [ CSE-1 ]
-     Stopped: [ d_tomcat:1 ]
+     Stopped: [ CSE-2 ]
 
 Transition Summary:
  * Stop    d_tomcat:0	(CSE-1)
@@ -27,5 +27,5 @@ OFFLINE: [ CSE-2 ]
      ip_19	(ocf::heartbeat:IPaddr2):	Stopped 
      ip_11	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: cl_tomcat [d_tomcat]
-     Stopped: [ d_tomcat:0 d_tomcat:1 ]
+     Stopped: [ CSE-1 CSE-2 ]
 

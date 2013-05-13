@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: clone1 [rsc1]
-     Stopped: [ rsc1:0 rsc1:1 ]
+     Stopped: [ node1 node2 ]
 
 Transition Summary:
  * Start   rsc1:0	(node1)

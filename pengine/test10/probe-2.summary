@@ -136,23 +136,23 @@ Online: [ wc01 ]
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
      Masters: [ wc01 ]
-     Stopped: [ drbd_mysql:1 ]
+     Stopped: [ wc02 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc01
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc01
      mysql-server	(ocf::heartbeat:mysql):	Started wc01
  Master/Slave Set: ms_drbd_www [drbd_www]
      Masters: [ wc01 ]
-     Stopped: [ drbd_www:1 ]
+     Stopped: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]
      Started: [ wc01 ]
-     Stopped: [ group_nfs-common:1 ]
+     Stopped: [ wc02 ]
  Clone Set: clone_mysql-proxy [group_mysql-proxy]
      Started: [ wc01 ]
-     Stopped: [ group_mysql-proxy:1 ]
+     Stopped: [ wc02 ]
  Clone Set: clone_webservice [group_webservice]
      Started: [ wc01 ]
-     Stopped: [ group_webservice:1 ]
+     Stopped: [ wc02 ]
  Resource Group: group_ftpd
      extip_ftp	(ocf::heartbeat:IPaddr2):	Started wc01
      pure-ftpd	(ocf::heartbeat:Pure-FTPd):	Started wc01

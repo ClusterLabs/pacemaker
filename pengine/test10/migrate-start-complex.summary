@@ -6,9 +6,9 @@ Online: [ dom0-01 dom0-02 ]
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-02
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]
      Started: [ dom0-02 ]
-     Stopped: [ dom0-iscsi1:1 ]
+     Stopped: [ dom0-01 ]
  Clone Set: clone-bottom [bottom]
-     Stopped: [ bottom:0 bottom:1 ]
+     Stopped: [ dom0-01 dom0-02 ]
 
 Transition Summary:
  * Move    top	(Started dom0-02 -> dom0-01)

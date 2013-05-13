@@ -11,19 +11,19 @@ Online: [ srv01 srv03 srv04 ]
      Dummy03	(ocf::heartbeat:Dummy):	Started srv03
  Clone Set: clnStonith1 [grpStonith1]
      Started: [ srv02 srv03 srv04 ]
-     Stopped: [ grpStonith1:3 ]
+     Stopped: [ srv01 ]
  Clone Set: clnStonith2 [grpStonith2]
      Started: [ srv01 srv03 srv04 ]
-     Stopped: [ grpStonith2:3 ]
+     Stopped: [ srv02 ]
  Clone Set: clnStonith3 [grpStonith3]
      Resource Group: grpStonith3:1
          prmStonith3-1:1	(stonith:external/stonith-helper):	Started srv01
          prmStonith3-3:1	(stonith:external/ssh):	Stopped 
      Started: [ srv02 srv04 ]
-     Stopped: [ grpStonith3:3 ]
+     Stopped: [ srv03 ]
  Clone Set: clnStonith4 [grpStonith4]
      Started: [ srv01 srv02 srv03 ]
-     Stopped: [ grpStonith4:3 ]
+     Stopped: [ srv04 ]
 
 Transition Summary:
  * Start   Dummy01	(srv01)
@@ -89,14 +89,14 @@ OFFLINE: [ srv02 ]
      Dummy03	(ocf::heartbeat:Dummy):	Started srv03
  Clone Set: clnStonith1 [grpStonith1]
      Started: [ srv03 srv04 ]
-     Stopped: [ grpStonith1:2 grpStonith1:3 ]
+     Stopped: [ srv01 srv02 ]
  Clone Set: clnStonith2 [grpStonith2]
      Started: [ srv01 srv03 srv04 ]
-     Stopped: [ grpStonith2:3 ]
+     Stopped: [ srv02 ]
  Clone Set: clnStonith3 [grpStonith3]
      Started: [ srv01 srv04 ]
-     Stopped: [ grpStonith3:2 grpStonith3:3 ]
+     Stopped: [ srv02 srv03 ]
  Clone Set: clnStonith4 [grpStonith4]
      Started: [ srv01 srv03 ]
-     Stopped: [ grpStonith4:2 grpStonith4:3 ]
+     Stopped: [ srv02 srv04 ]
 

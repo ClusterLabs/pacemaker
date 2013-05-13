@@ -12,14 +12,14 @@ Node hex-3: OFFLINE (standby)
          o2cb:0	(ocf::ocfs2:o2cb):	Started hex-2 
          vg1:0	(ocf::heartbeat:LVM):	Stopped 
          fs-ocfs-1:0	(ocf::heartbeat:Filesystem):	Stopped 
-     Stopped: [ basegrp:1 basegrp:2 ]
+     Stopped: [ hex-1 hex-3 ]
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Stopped 
  Clone Set: fs2 [fs-ocfs-2]
-     Stopped: [ fs-ocfs-2:0 fs-ocfs-2:1 fs-ocfs-2:2 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
-     Stopped: [ drbd-r0:0 drbd-r0:1 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
-     Stopped: [ drbd-r1:0 drbd-r1:1 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 
      vg-md0	(ocf::heartbeat:LVM):	Stopped 
@@ -56,14 +56,14 @@ Node hex-3: OFFLINE (standby)
 
  fencing	(stonith:external/sbd):	Stopped 
  Clone Set: baseclone [basegrp]
-     Stopped: [ basegrp:0 basegrp:1 basegrp:2 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Stopped 
  Clone Set: fs2 [fs-ocfs-2]
-     Stopped: [ fs-ocfs-2:0 fs-ocfs-2:1 fs-ocfs-2:2 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
-     Stopped: [ drbd-r0:0 drbd-r0:1 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
-     Stopped: [ drbd-r1:0 drbd-r1:1 ]
+     Stopped: [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 
      vg-md0	(ocf::heartbeat:LVM):	Stopped 

@@ -6,7 +6,7 @@ OFFLINE: [ hex-15 ]
  test-vm	(ocf::heartbeat:Xen):	Started hex-14 FAILED
  Clone Set: c-clusterfs [dlm]
      Started: [ hex-13 hex-14 ]
-     Stopped: [ dlm:2 ]
+     Stopped: [ hex-15 ]
 
 Transition Summary:
  * Recover test-vm	(Started hex-14 -> hex-13)
@@ -26,5 +26,5 @@ OFFLINE: [ hex-15 ]
  test-vm	(ocf::heartbeat:Xen):	Started hex-13
  Clone Set: c-clusterfs [dlm]
      Started: [ hex-13 hex-14 ]
-     Stopped: [ dlm:2 ]
+     Stopped: [ hex-15 ]
 

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ alice.demo bob.demo ]
 
  Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
-     Stopped: [ res_drbd_nfsexport:0 res_drbd_nfsexport:1 ]
+     Stopped: [ alice.demo bob.demo ]
  Resource Group: rg_nfs
      res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
      res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -14,7 +14,7 @@ Online: [ alice.demo bob.demo ]
      res_mysql1	(ocf::heartbeat:mysql):	Started bob.demo
  Master/Slave Set: ms_drbd_mysql1 [res_drbd_mysql1]
      Masters: [ bob.demo ]
-     Stopped: [ res_drbd_mysql1:1 ]
+     Stopped: [ alice.demo ]
  Master/Slave Set: ms_drbd_mysql2 [res_drbd_mysql2]
      Masters: [ alice.demo ]
      Slaves: [ bob.demo ]
@@ -42,7 +42,7 @@ Revised cluster status:
 Online: [ alice.demo bob.demo ]
 
  Master/Slave Set: ms_drbd_nfsexport [res_drbd_nfsexport]
-     Stopped: [ res_drbd_nfsexport:0 res_drbd_nfsexport:1 ]
+     Stopped: [ alice.demo bob.demo ]
  Resource Group: rg_nfs
      res_fs_nfsexport	(ocf::heartbeat:Filesystem):	Stopped 
      res_ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 

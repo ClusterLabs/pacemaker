@@ -8,7 +8,7 @@ OFFLINE: [ webcluster02 ]
          apache2:2	(ocf::heartbeat:apache):	 ORPHANED Started webcluster01
          mysql-proxy:2	(lsb:mysql-proxy):	 ORPHANED Started webcluster01
      Started: [ webcluster01 ]
-     Stopped: [ grrr:1 ]
+     Stopped: [ webcluster02 ]
 
 Transition Summary:
  * Restart apache2:0	(Started webcluster01)
@@ -43,5 +43,5 @@ OFFLINE: [ webcluster02 ]
 
  Clone Set: apache2_clone [grrr]
      Started: [ webcluster01 ]
-     Stopped: [ grrr:1 ]
+     Stopped: [ webcluster02 ]
 

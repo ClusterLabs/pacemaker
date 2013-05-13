@@ -10,9 +10,9 @@ Online: [ sys2 sys3 ]
  stonithsys3	(stonith:external/ipmi):	Started sys2
  Clone Set: baseclone [basegrp]
      Started: [ sys2 ]
-     Stopped: [ basegrp:1 ]
+     Stopped: [ sys3 ]
  Clone Set: fs1 [nfs1]
-     Stopped: [ nfs1:0 nfs1:1 ]
+     Stopped: [ sys2 sys3 ]
 
 Transition Summary:
  * Restart stonithsys3	(Started sys2)
@@ -80,5 +80,5 @@ Online: [ sys2 sys3 ]
  Clone Set: baseclone [basegrp]
      Started: [ sys2 sys3 ]
  Clone Set: fs1 [nfs1]
-     Stopped: [ nfs1:0 nfs1:1 ]
+     Stopped: [ sys2 sys3 ]
 

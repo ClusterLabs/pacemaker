@@ -8,7 +8,7 @@ Online: [ node1 node2 ]
      rsc2	(ocf::pacemaker:Dummy):	Started node1
      rsc3	(ocf::pacemaker:Dummy):	Started node1
  Clone Set: clone4 [rsc4]
-     Stopped: [ rsc4:0 rsc4:1 ]
+     Stopped: [ node1 node2 ]
  Master/Slave Set: ms5 [rsc5]
      Slaves: [ node1 node2 ]
 

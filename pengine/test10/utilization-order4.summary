@@ -53,8 +53,8 @@ Online: [ deglxen001 ]
  stonith_sbd	(stonith:external/sbd):	Started deglxen001
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 ]
-     Stopped: [ grp-nfs:1 ]
+     Stopped: [ deglxen002 ]
  Clone Set: clone-ping [prim-ping]
      Started: [ deglxen001 ]
-     Stopped: [ prim-ping:1 ]
+     Stopped: [ deglxen002 ]
 

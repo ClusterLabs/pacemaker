@@ -58,23 +58,23 @@ Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
      Resource Group: o2stage:0
          dlm:0	(ocf::pacemaker:controld):	Started qa-suse-1
          clvm:0	(ocf::lvm2:clvmd):	Started qa-suse-1
-         o2cb:0	(ocf::ocfs2:o2cb):	Stopped 
-         cmirror:0	(ocf::lvm2:cmirrord):	Stopped 
+         o2cb:0	(ocf::ocfs2:o2cb):	Stopped
+         cmirror:0	(ocf::lvm2:cmirrord):	Stopped
      Resource Group: o2stage:1
          dlm:1	(ocf::pacemaker:controld):	Started qa-suse-4
          clvm:1	(ocf::lvm2:clvmd):	Started qa-suse-4
-         o2cb:1	(ocf::ocfs2:o2cb):	Stopped 
-         cmirror:1	(ocf::lvm2:cmirrord):	Stopped 
+         o2cb:1	(ocf::ocfs2:o2cb):	Stopped
+         cmirror:1	(ocf::lvm2:cmirrord):	Stopped
      Resource Group: o2stage:2
          dlm:2	(ocf::pacemaker:controld):	Started qa-suse-3
          clvm:2	(ocf::lvm2:clvmd):	Started qa-suse-3
-         o2cb:2	(ocf::ocfs2:o2cb):	Stopped 
-         cmirror:2	(ocf::lvm2:cmirrord):	Stopped 
+         o2cb:2	(ocf::ocfs2:o2cb):	Stopped
+         cmirror:2	(ocf::lvm2:cmirrord):	Stopped
      Resource Group: o2stage:3
          dlm:3	(ocf::pacemaker:controld):	Started qa-suse-2
          clvm:3	(ocf::lvm2:clvmd):	Started qa-suse-2
-         o2cb:3	(ocf::ocfs2:o2cb):	Stopped 
-         cmirror:3	(ocf::lvm2:cmirrord):	Stopped 
+         o2cb:3	(ocf::ocfs2:o2cb):	Stopped
+         cmirror:3	(ocf::lvm2:cmirrord):	Stopped
  Clone Set: c-ocfs [ocfs]
-     Stopped: [ ocfs:0 ocfs:1 ocfs:2 ocfs:3 ]
+     Stopped: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
 

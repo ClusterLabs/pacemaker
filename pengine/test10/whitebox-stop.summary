@@ -38,7 +38,7 @@ OFFLINE: [ lxc1:container1 ]
  shoot1	(stonith:fence_xvm):	Started 18node3
  Clone Set: M-clone [M]
      Started: [ 18node1 18node2 18node3 lxc2 ]
-     Stopped: [ M:4 ]
+     Stopped: [ lxc1 ]
  A	(ocf::pacemaker:Dummy):	Started 18node1
  B	(ocf::pacemaker:Dummy):	Started lxc2
  C	(ocf::pacemaker:Dummy):	Started lxc2

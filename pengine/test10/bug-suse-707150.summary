@@ -12,7 +12,7 @@ OFFLINE: [ hex-7 hex-8 ]
          cmirrord:0	(ocf::lvm2:cmirrord):	Stopped 
          vg1:0	(ocf::heartbeat:LVM):	Stopped 
          ocfs2-1:0	(ocf::heartbeat:Filesystem):	Stopped 
-     Stopped: [ base-group:1 base-group:2 base-group:3 ]
+     Stopped: [ hex-7 hex-8 hex-9 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 
  fencing-sbd	(stonith:external/sbd):	Started hex-9
  dummy1	(ocf::heartbeat:Dummy):	Started hex-0
@@ -65,7 +65,7 @@ OFFLINE: [ hex-7 hex-8 ]
          cmirrord:1	(ocf::lvm2:cmirrord):	Started hex-9
          vg1:1	(ocf::heartbeat:LVM):	Stopped 
          ocfs2-1:1	(ocf::heartbeat:Filesystem):	Stopped 
-     Stopped: [ base-group:2 base-group:3 ]
+     Stopped: [ hex-7 hex-8 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 
  fencing-sbd	(stonith:external/sbd):	Started hex-9
  dummy1	(ocf::heartbeat:Dummy):	Started hex-0

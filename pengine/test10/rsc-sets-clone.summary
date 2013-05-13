@@ -33,5 +33,5 @@ Online: [ node2 ]
  rsc3	(ocf::pacemaker:Dummy):	Started node2
  Clone Set: clone-rsc [rsc]
      Started: [ node2 ]
-     Stopped: [ rsc:1 ]
+     Stopped: [ node1 ]
 

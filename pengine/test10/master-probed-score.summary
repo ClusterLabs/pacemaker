@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
 
  Master/Slave Set: AdminClone [AdminDrbd]
-     Stopped: [ AdminDrbd:0 AdminDrbd:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  CronAmbientTemperature	(ocf::heartbeat:symlink):	Stopped 
  StonithHypatia	(stonith:fence_nut):	Stopped 
  StonithOrestes	(stonith:fence_nut):	Stopped 
@@ -14,7 +14,7 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
      Dhcpd	(lsb:dhcpd):	Stopped 
      DhcpIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: CupsClone [CupsGroup]
-     Stopped: [ CupsGroup:0 CupsGroup:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: IPClone [IPGroup] (unique)
      Resource Group: IPGroup:0
          ClusterIP:0	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -25,13 +25,13 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
          ClusterIPLocal:1	(ocf::heartbeat:IPaddr2):	Stopped 
          ClusterIPSandbox:1	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: LibvirtdClone [LibvirtdGroup]
-     Stopped: [ LibvirtdGroup:0 LibvirtdGroup:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: TftpClone [TftpGroup]
-     Stopped: [ TftpGroup:0 TftpGroup:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: ExportsClone [ExportsGroup]
-     Stopped: [ ExportsGroup:0 ExportsGroup:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  Clone Set: FilesystemClone [FilesystemGroup]
-     Stopped: [ FilesystemGroup:0 FilesystemGroup:1 ]
+     Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  KVM-guest	(ocf::heartbeat:VirtualDomain):	Stopped 
  Proxy	(ocf::heartbeat:VirtualDomain):	Stopped 
 

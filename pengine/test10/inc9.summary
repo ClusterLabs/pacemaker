@@ -7,7 +7,6 @@ Online: [ node1 node2 ]
      child_rsc1:6	(heartbeat:apache):	 ORPHANED Started node1
      child_rsc1:7	(heartbeat:apache):	 ORPHANED Started node2
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc1:2 child_rsc1:3 child_rsc1:4 ]
 
 Transition Summary:
  * Stop    child_rsc1:5	(node1)
@@ -27,5 +26,4 @@ Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc1:2 child_rsc1:3 child_rsc1:4 ]
 

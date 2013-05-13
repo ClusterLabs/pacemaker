@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ mysql-01 mysql-02 ]
 
  Clone Set: ms-drbd0 [drbd0]
-     Stopped: [ drbd0:0 drbd0:1 ]
+     Stopped: [ mysql-01 mysql-02 ]
 
 Transition Summary:
  * Start   drbd0:0	(mysql-01)

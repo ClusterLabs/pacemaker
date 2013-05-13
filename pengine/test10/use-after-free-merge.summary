@@ -7,7 +7,7 @@ Online: [ hex-13 hex-14 ]
      d0	(ocf::heartbeat:Dummy):	Stopped 
      d1	(ocf::heartbeat:Dummy):	Stopped 
  Master/Slave Set: ms0 [s0]
-     Stopped: [ s0:0 s0:1 ]
+     Stopped: [ hex-13 hex-14 ]
 
 Transition Summary:
  * Start   fencing-sbd	(hex-14)

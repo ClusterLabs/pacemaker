@@ -8,10 +8,10 @@ OFFLINE: [ 18builder:vm 18node1:vm2 ]
  FAKE	(ocf::pacemaker:Dummy):	Started dvossel-laptop2 
  Master/Slave Set: W-master [W]
      Masters: [ dvossel-laptop2 ]
-     Stopped: [ W:1 W:2 ]
+     Stopped: [ 18builder 18node1 ]
  Master/Slave Set: X-master [X]
      Masters: [ dvossel-laptop2 ]
-     Stopped: [ X:1 X:2 ]
+     Stopped: [ 18builder 18node1 ]
 
 Transition Summary:
  * Start   vm	(dvossel-laptop2)
@@ -48,9 +48,9 @@ OFFLINE: [ 18node1:vm2 ]
  Master/Slave Set: W-master [W]
      Masters: [ dvossel-laptop2 ]
      Slaves: [ 18builder ]
-     Stopped: [ W:2 ]
+     Stopped: [ 18node1 ]
  Master/Slave Set: X-master [X]
      Masters: [ dvossel-laptop2 ]
      Slaves: [ 18builder ]
-     Stopped: [ X:2 ]
+     Stopped: [ 18node1 ]
 

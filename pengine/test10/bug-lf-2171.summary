@@ -29,7 +29,7 @@ Revised cluster status:
 Online: [ xenserver1 xenserver2 ]
 
  Clone Set: cl_res_Dummy1 [res_Dummy1]
-     Stopped: [ res_Dummy1:0 res_Dummy1:1 ]
+     Stopped: [ xenserver1 xenserver2 ]
  Resource Group: gr_Dummy
      res_Dummy2	(ocf::heartbeat:Dummy):	Stopped 
      res_Dummy3	(ocf::heartbeat:Dummy):	Stopped 

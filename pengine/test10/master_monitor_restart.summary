@@ -5,7 +5,7 @@ Online: [ node1 ]
 
  Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
      Masters: [ node1 ]
-     Stopped: [ MS_RSC_NATIVE:1 ]
+     Stopped: [ node2 ]
 
 Transition Summary:
 
@@ -18,5 +18,5 @@ Online: [ node1 ]
 
  Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
      Masters: [ node1 ]
-     Stopped: [ MS_RSC_NATIVE:1 ]
+     Stopped: [ node2 ]
 

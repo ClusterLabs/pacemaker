@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
 
  Clone Set: cups_clone [cups_lsb]
-     Stopped: [ cups_lsb:0 cups_lsb:1 ]
+     Stopped: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
  smb_lsb	(lsb:smb):	Stopped 
 
 Transition Summary:
@@ -23,5 +23,6 @@ Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709
 
  Clone Set: cups_clone [cups_lsb]
      Started: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk ]
+     Stopped: [ pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
  smb_lsb	(lsb:smb):	Started pcw2688.see.ed.ac.uk
 

@@ -206,7 +206,7 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         clone_data->ordered = TRUE;
     }
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
-        crm_config_err("Anonymous clones (%s) may only support one copy" " per node", rsc->id);
+        crm_config_err("Anonymous clones (%s) may only support one copy per node", rsc->id);
         clone_data->clone_node_max = 1;
     }
 
@@ -510,6 +510,31 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     list_text = NULL;
 
     /* Stopped */
+    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+
+        GListPtr nIter;
+        GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+
+        /* Custom stopped list for non-unique clones */
+        free(stopped_list); stopped_list = NULL;
+
+        if(g_list_length(list) == 0) {
+            /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
+             * If we've not probed for them yet, the Stopped list will be empty
+             */
+            list = g_hash_table_get_values(rsc->known_on);
+        }
+
+        list = g_list_sort(list, sort_node_uname);
+        for (nIter = list; nIter != NULL; nIter = nIter->next) {
+            node_t *node = (node_t *)nIter->data;
+
+            if(pe_find_node(rsc->running_on, node->details->uname) == NULL) {
+                stopped_list = add_list_element(stopped_list, node->details->uname);
+            }
+        }
+    }
+
     short_print(stopped_list, child_text, "Stopped", options, print_data);
     free(stopped_list);
 

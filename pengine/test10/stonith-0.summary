@@ -19,7 +19,7 @@ Online: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
  Clone Set: DoFencing [child_DoFencing]
      Started: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
-     Stopped: [ child_DoFencing:5 child_DoFencing:6 ]
+     Stopped: [ c001n03 c001n05 ]
  Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02
@@ -90,7 +90,7 @@ OFFLINE: [ c001n03 c001n05 ]
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08
  Clone Set: DoFencing [child_DoFencing]
      Started: [ c001n02 c001n04 c001n06 c001n07 c001n08 ]
-     Stopped: [ child_DoFencing:5 child_DoFencing:6 ]
+     Stopped: [ c001n03 c001n05 ]
  Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Started c001n02

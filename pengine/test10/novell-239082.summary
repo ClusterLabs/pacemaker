@@ -54,5 +54,5 @@ Online: [ xen-1 xen-2 ]
  fs_1	(ocf::heartbeat:Filesystem):	Started xen-2
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ xen-2 ]
-     Stopped: [ drbd0:1 ]
+     Stopped: [ xen-1 ]
 

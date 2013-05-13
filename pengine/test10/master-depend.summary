@@ -4,11 +4,11 @@ Online: [ vbox4 ]
 OFFLINE: [ vbox3 ]
 
  Master/Slave Set: drbd [drbd0]
-     Stopped: [ drbd0:0 drbd0:1 ]
+     Stopped: [ vbox3 vbox4 ]
  Clone Set: cman_clone [cman]
-     Stopped: [ cman:0 cman:1 ]
+     Stopped: [ vbox3 vbox4 ]
  Clone Set: clvmd_clone [clvmd]
-     Stopped: [ clvmd:0 clvmd:1 ]
+     Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
  vmnci37	(ocf::heartbeat:vm):	Stopped 
  vmnci38	(ocf::heartbeat:vm):	Stopped 
@@ -46,12 +46,12 @@ OFFLINE: [ vbox3 ]
 
  Master/Slave Set: drbd [drbd0]
      Slaves: [ vbox4 ]
-     Stopped: [ drbd0:1 ]
+     Stopped: [ vbox3 ]
  Clone Set: cman_clone [cman]
      Started: [ vbox4 ]
-     Stopped: [ cman:1 ]
+     Stopped: [ vbox3 ]
  Clone Set: clvmd_clone [clvmd]
-     Stopped: [ clvmd:0 clvmd:1 ]
+     Stopped: [ vbox3 vbox4 ]
  vmnci36	(ocf::heartbeat:vm):	Stopped 
  vmnci37	(ocf::heartbeat:vm):	Stopped 
  vmnci38	(ocf::heartbeat:vm):	Stopped 

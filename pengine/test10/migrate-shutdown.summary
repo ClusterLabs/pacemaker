@@ -15,11 +15,11 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  migrator	(ocf::pacemaker:Dummy):	Started pcmk-1
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-4 ]
-     Stopped: [ ping-1:3 ]
+     Stopped: [ pcmk-3 ]
  Master/Slave Set: master-1 [stateful-1]
      Masters: [ pcmk-2 ]
      Slaves: [ pcmk-1 pcmk-4 ]
-     Stopped: [ stateful-1:3 ]
+     Stopped: [ pcmk-3 ]
 
 Transition Summary:
  * Stop    Fencing	(pcmk-1)
@@ -85,7 +85,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Stopped 
  migrator	(ocf::pacemaker:Dummy):	Stopped 
  Clone Set: Connectivity [ping-1]
-     Stopped: [ ping-1:0 ping-1:1 ping-1:2 ping-1:3 ]
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Master/Slave Set: master-1 [stateful-1]
-     Stopped: [ stateful-1:0 stateful-1:1 stateful-1:2 stateful-1:3 ]
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
 

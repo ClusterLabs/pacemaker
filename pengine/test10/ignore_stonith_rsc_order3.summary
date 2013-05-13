@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ fc16-builder ]
 
  Clone Set: S_CLONE [S_A]
-     Stopped: [ S_A:0 ]
+     Stopped: [ fc16-builder ]
  Resource Group: MIXED_GROUP
      A	(ocf::pacemaker:Dummy):	Stopped 
      S_B	(stonith:fence_xvm):	Stopped 

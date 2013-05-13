@@ -38,8 +38,8 @@ Online: [ xen-1 xen-3 xen-4 ]
 
  Clone Set: DoFencing [child_DoFencing]
      Started: [ xen-1 xen-3 xen-4 ]
-     Stopped: [ child_DoFencing:3 ]
+     Stopped: [ xen-2 ]
  Clone Set: ocfs2-clone [ocfs2]
      Started: [ xen-1 xen-3 xen-4 ]
-     Stopped: [ ocfs2:3 ]
+     Stopped: [ xen-2 ]
 

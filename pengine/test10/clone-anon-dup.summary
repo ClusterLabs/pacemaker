@@ -2,12 +2,13 @@
 Current cluster status:
 Online: [ wc01 wc02 wc03 ]
 
- stonith-1	(stonith:dummy):	Stopped 
+ stonith-1	(stonith:dummy):	Stopped
  Clone Set: clone_webservice [group_webservice]
      Resource Group: group_webservice:2
-         fs_www:2	(ocf::heartbeat:Filesystem):	 ORPHANED Stopped 
+         fs_www:2	(ocf::heartbeat:Filesystem):	 ORPHANED Stopped
          apache2:2	(ocf::heartbeat:apache):	 ORPHANED Started wc02
      Started: [ wc01 wc02 ]
+     Stopped: [ wc03 ]
 
 Transition Summary:
  * Start   stonith-1	(wc01)
@@ -32,4 +33,5 @@ Online: [ wc01 wc02 wc03 ]
  stonith-1	(stonith:dummy):	Started wc01
  Clone Set: clone_webservice [group_webservice]
      Started: [ wc01 wc02 ]
+     Stopped: [ wc03 ]
 

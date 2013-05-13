@@ -4,7 +4,7 @@ Online: [ mysql-01 mysql-02 ]
 
  Clone Set: ms-drbd0 [drbd0]
      Started: [ mysql-02 ]
-     Stopped: [ drbd0:1 ]
+     Stopped: [ mysql-01 ]
 
 Transition Summary:
  * Start   drbd0:1	(mysql-01)

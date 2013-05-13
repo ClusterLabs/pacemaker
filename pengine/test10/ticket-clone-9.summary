@@ -27,5 +27,5 @@ OFFLINE: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Stopped 
  Clone Set: clone1 [rsc1]
-     Stopped: [ rsc1:0 rsc1:1 ]
+     Stopped: [ node1 node2 ]
 

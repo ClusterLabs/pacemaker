@@ -6,6 +6,7 @@ Online: [ sambuca.linbit ]
  ip_float_right	(ocf::heartbeat:IPaddr2):	Stopped 
  Master/Slave Set: ms_drbd_float [drbd_float]
      Slaves: [ sambuca.linbit ]
+     Stopped: [ raki.linbit ]
  Resource Group: nfsexport
      ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
      fs_float	(ocf::heartbeat:Filesystem):	Stopped 
@@ -54,6 +55,7 @@ Online: [ sambuca.linbit ]
  ip_float_right	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit
  Master/Slave Set: ms_drbd_float [drbd_float]
      Masters: [ sambuca.linbit ]
+     Stopped: [ raki.linbit ]
  Resource Group: nfsexport
      ip_nfs	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit
      fs_float	(ocf::heartbeat:Filesystem):	Stopped 

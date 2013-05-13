@@ -43,10 +43,10 @@ Online: [ alice ]
 
  Master/Slave Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01]
      Masters: [ alice ]
-     Stopped: [ res_drbd_iscsivg01:1 ]
+     Stopped: [ bob ]
  Clone Set: cl_tgtd [res_tgtd]
      Started: [ alice ]
-     Stopped: [ res_tgtd:1 ]
+     Stopped: [ bob ]
  Resource Group: rg_iscsivg01
      res_portblock_iscsivg01_block	(ocf::heartbeat:portblock):	Started alice
      res_lvm_iscsivg01	(ocf::heartbeat:LVM):	Started alice

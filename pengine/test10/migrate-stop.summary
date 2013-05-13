@@ -30,5 +30,5 @@ Online: [ dom0-01 ]
  domU-test01	(ocf::heartbeat:Xen):	Started dom0-01
  Clone Set: clone-dom0-iscsi1 [dom0-iscsi1]
      Started: [ dom0-01 ]
-     Stopped: [ dom0-iscsi1:1 ]
+     Stopped: [ dom0-02 ]
 

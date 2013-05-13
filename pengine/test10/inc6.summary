@@ -4,14 +4,12 @@ Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc1:2 ]
  Clone Set: rsc2 [child_rsc2] (unique)
      child_rsc2:0	(heartbeat:apache):	Started node1
      child_rsc2:1	(heartbeat:apache):	Started node1
      child_rsc2:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc3 [child_rsc3]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc3:2 ]
  Clone Set: rsc4 [child_rsc4] (unique)
      child_rsc4:0	(heartbeat:apache):	Started node1
      child_rsc4:1	(heartbeat:apache):	Started node1
@@ -22,14 +20,12 @@ Online: [ node1 node2 ]
      child_rsc5:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc6 [child_rsc6]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc6:2 ]
  Clone Set: rsc7 [child_rsc7] (unique)
      child_rsc7:0	(heartbeat:apache):	Started node2
      child_rsc7:1	(heartbeat:apache):	Started node2
      child_rsc7:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc8 [child_rsc8]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc8:2 ]
 
 Transition Summary:
  * Move    child_rsc2:1	(Started node1 -> node2)
@@ -79,14 +75,12 @@ Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc1:2 ]
  Clone Set: rsc2 [child_rsc2] (unique)
      child_rsc2:0	(heartbeat:apache):	Started node1
      child_rsc2:1	(heartbeat:apache):	Started [ node1 node2 ]
      child_rsc2:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc3 [child_rsc3]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc3:2 ]
  Clone Set: rsc4 [child_rsc4] (unique)
      child_rsc4:0	(heartbeat:apache):	Started node1
      child_rsc4:1	(heartbeat:apache):	Started [ node1 node2 ]
@@ -97,12 +91,10 @@ Online: [ node1 node2 ]
      child_rsc5:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc6 [child_rsc6]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc6:2 ]
  Clone Set: rsc7 [child_rsc7] (unique)
      child_rsc7:0	(heartbeat:apache):	Started node2
      child_rsc7:1	(heartbeat:apache):	Started node1
      child_rsc7:2	(heartbeat:apache):	Stopped 
  Clone Set: rsc8 [child_rsc8]
      Started: [ node1 node2 ]
-     Stopped: [ child_rsc8:2 ]
 

@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ fc16-builder ]
 
  Clone Set: clone1 [ClusterIP]
-     Stopped: [ ClusterIP:0 ]
+     Stopped: [ fc16-builder ]
  Clone Set: clone2 [ClusterIP2]
-     Stopped: [ ClusterIP2:0 ]
+     Stopped: [ fc16-builder ]
 
 Transition Summary:
  * Start   ClusterIP:0	(fc16-builder)

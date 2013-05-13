@@ -4,7 +4,8 @@ Online: [ dktest1 dktest2 ]
 
  Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
      drbd1:0	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
-     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
+     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged) 
+     Stopped: [ dktest1 dktest2 ]
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)
@@ -24,7 +25,8 @@ Online: [ dktest1 dktest2 ]
 
  Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
      drbd1:0	(ocf::heartbeat:drbd):	Master dktest1 (unmanaged)
-     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged)
+     drbd1:1	(ocf::heartbeat:drbd):	Slave dktest2 (unmanaged) 
+     Stopped: [ dktest1 dktest2 ]
  Resource Group: apache
      apache-vip	(ocf::heartbeat:IPaddr2):	Started dktest1 (unmanaged)
      mount	(ocf::heartbeat:Filesystem):	Started dktest1 (unmanaged)

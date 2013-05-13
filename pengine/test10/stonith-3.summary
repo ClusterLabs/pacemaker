@@ -5,7 +5,7 @@ Online: [ rh5node2 ]
 
  prmIpPostgreSQLDB	(ocf::heartbeat:IPaddr):	Stopped 
  Clone Set: clnStonith [grpStonith]
-     Stopped: [ grpStonith:0 grpStonith:1 ]
+     Stopped: [ rh5node1 rh5node2 ]
 
 Transition Summary:
  * Start   prmIpPostgreSQLDB	(rh5node2)
@@ -33,5 +33,5 @@ OFFLINE: [ rh5node1 ]
  prmIpPostgreSQLDB	(ocf::heartbeat:IPaddr):	Started rh5node2
  Clone Set: clnStonith [grpStonith]
      Started: [ rh5node2 ]
-     Stopped: [ grpStonith:1 ]
+     Stopped: [ rh5node1 ]
 

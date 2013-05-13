@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ fs1 fs2 web1 web2 ]
 
  Clone Set: cl-test [gr-test]
-     Stopped: [ gr-test:0 gr-test:1 gr-test:2 gr-test:3 ]
+     Stopped: [ fs1 fs2 web1 web2 ]
 
 Transition Summary:
  * Start   test:0	(web1)
@@ -24,5 +24,5 @@ Online: [ fs1 fs2 web1 web2 ]
 
  Clone Set: cl-test [gr-test]
      Started: [ web1 web2 ]
-     Stopped: [ gr-test:2 gr-test:3 ]
+     Stopped: [ fs1 fs2 ]
 

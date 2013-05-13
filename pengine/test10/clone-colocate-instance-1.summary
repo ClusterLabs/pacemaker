@@ -5,7 +5,7 @@ Online: [ alice.demo bob.demo ]
  dummy1	(ocf::heartbeat:Dummy):	Stopped 
  dummy2	(ocf::heartbeat:Dummy):	Stopped 
  Clone Set: cl_dummy [dummy]
-     Stopped: [ dummy:0 dummy:1 ]
+     Stopped: [ alice.demo bob.demo ]
 
 Transition Summary:
  * Start   dummy1	(alice.demo)

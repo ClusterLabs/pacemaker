@@ -4,7 +4,7 @@ Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
  Master/Slave Set: ms1 [rsc1]
-     Stopped: [ rsc1:0 rsc1:1 ]
+     Stopped: [ node1 node2 ]
 
 Transition Summary:
 
@@ -18,5 +18,5 @@ Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
  Master/Slave Set: ms1 [rsc1]
-     Stopped: [ rsc1:0 rsc1:1 ]
+     Stopped: [ node1 node2 ]
 

@@ -4,7 +4,7 @@ Online: [ mysql-01 mysql-02 ]
 
  Master/Slave Set: ms-drbd0 [drbd0]
      Masters: [ mysql-02 ]
-     Stopped: [ drbd0:1 ]
+     Stopped: [ mysql-01 ]
  Resource Group: fs_mysql_ip
      fs0	(ocf::heartbeat:Filesystem):	Started mysql-02
      mysqlid	(lsb:mysql):	Started mysql-02

@@ -20,7 +20,7 @@ Revised cluster status:
 Online: [ fc16-builder ]
 
  Clone Set: clone1 [ClusterIP]
-     Stopped: [ ClusterIP:0 ]
+     Stopped: [ fc16-builder ]
  Clone Set: clone2 [ClusterIP2]
      Started: [ fc16-builder ]
 
