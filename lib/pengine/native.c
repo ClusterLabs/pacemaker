@@ -34,7 +34,6 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     GListPtr gIter = rsc->running_on;
 
     CRM_CHECK(node != NULL, return);
-
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *a_node = (node_t *) gIter->data;
 
@@ -44,7 +43,8 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         }
     }
 
-    pe_rsc_trace(rsc, "Adding %s to %s", rsc->id, node->details->uname);
+    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, node->details->uname,
+                 is_set(rsc->flags, pe_rsc_managed)?"":"(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pe_native) {
@@ -52,8 +52,16 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        resource_t *p = rsc->parent;
+
         pe_rsc_info(rsc, "resource %s isnt managed", rsc->id);
         resource_location(rsc, node, INFINITY, "not_managed_default", data_set);
+
+        while(p && node->details->online) {
+            /* add without the additional location constraint */
+            p->running_on = g_list_append(p->running_on, node);
+            p = p->parent;
+        }
         return;
     }
 

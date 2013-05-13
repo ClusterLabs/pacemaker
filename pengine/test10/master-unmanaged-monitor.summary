@@ -19,12 +19,11 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
      ping-1	(ocf::pacemaker:ping):	Started pcmk-3 (unmanaged) 
      ping-1	(ocf::pacemaker:ping):	Started pcmk-4 (unmanaged) 
      ping-1	(ocf::pacemaker:ping):	Started pcmk-1 (unmanaged) 
-     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Master/Slave Set: master-1 [stateful-1] (unmanaged)
      stateful-1	(ocf::pacemaker:Stateful):	Slave pcmk-2 (unmanaged) 
      stateful-1	(ocf::pacemaker:Stateful):	Master pcmk-3 (unmanaged) 
      stateful-1	(ocf::pacemaker:Stateful):	Slave pcmk-4 (unmanaged) 
-     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+     Stopped: [ pcmk-1 ]
 
 Transition Summary:
 
@@ -61,10 +60,9 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
      ping-1	(ocf::pacemaker:ping):	Started pcmk-3 (unmanaged) 
      ping-1	(ocf::pacemaker:ping):	Started pcmk-4 (unmanaged) 
      ping-1	(ocf::pacemaker:ping):	Started pcmk-1 (unmanaged) 
-     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Master/Slave Set: master-1 [stateful-1] (unmanaged)
      stateful-1	(ocf::pacemaker:Stateful):	Slave pcmk-2 (unmanaged) 
      stateful-1	(ocf::pacemaker:Stateful):	Master pcmk-3 (unmanaged) 
      stateful-1	(ocf::pacemaker:Stateful):	Slave pcmk-4 (unmanaged) 
-     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+     Stopped: [ pcmk-1 ]
 

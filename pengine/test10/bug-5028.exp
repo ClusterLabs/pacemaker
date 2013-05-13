@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="14" operation="stop" operation_key="dummy-g_stop_0">
+      <pseudo_event id="12" operation="stop" operation_key="dummy-g_stop_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
@@ -9,7 +9,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="12" operation="start" operation_key="dummy-g_start_0">
+      <pseudo_event id="10" operation="start" operation_key="dummy-g_start_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>

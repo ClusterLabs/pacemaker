@@ -11,7 +11,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   dummy-g_stop_0
- * Pseudo action:   dummy-g_start_0
  * Resource action: dummy02         stop on bl460g6a
  * Pseudo action:   all_stopped
 
