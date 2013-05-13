@@ -1124,6 +1124,10 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         need_stop = TRUE;
 
+    } else if (is_set(rsc->flags, pe_rsc_block)) {
+        pe_rsc_trace(rsc, "Block %s", rsc->id);
+        need_stop = TRUE;
+
     } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
         /* Recovery of a promoted resource */
         start = start_action(rsc, chosen, TRUE);
@@ -1148,7 +1152,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         role = next_role;
     }
 
-    while (rsc->role <= rsc->next_role && role != rsc->role) {
+
+    while (rsc->role <= rsc->next_role && role != rsc->role && is_not_set(rsc->flags, pe_rsc_block)) {
         next_role = rsc_state_matrix[role][rsc->role];
         pe_rsc_trace(rsc, "Up:   Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
                      rsc->id, need_stop ? " required" : "");
@@ -1170,11 +1175,16 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         role = next_role;
     }
 
-    if (rsc->next_role != RSC_ROLE_STOPPED || is_set(rsc->flags, pe_rsc_managed) == FALSE) {
+    if(is_set(rsc->flags, pe_rsc_block)) {
+        pe_rsc_trace(rsc, "No monitor additional ops for blocked resource");
+
+    } else if (rsc->next_role != RSC_ROLE_STOPPED || is_set(rsc->flags, pe_rsc_managed) == FALSE) {
+        pe_rsc_trace(rsc, "Monitor ops for active resource");
         start = start_action(rsc, chosen, TRUE);
         Recurring(rsc, start, chosen, data_set);
         Recurring_Stopped(rsc, start, chosen, data_set);
     } else {
+        pe_rsc_trace(rsc, "Monitor ops for in-active resource");
         Recurring_Stopped(rsc, NULL, NULL, data_set);
     }
 }

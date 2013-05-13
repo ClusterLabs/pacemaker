@@ -1,0 +1,3 @@
+digraph "g" {
+"dummy:1_monitor_20000 dl380g5d" [ style=bold color="green" fontcolor="black"]
+}

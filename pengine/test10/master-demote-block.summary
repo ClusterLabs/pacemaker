@@ -1,0 +1,22 @@
+
+Current cluster status:
+Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
+Online: [ dl380g5d ]
+
+ Master/Slave Set: stateful [dummy]
+     dummy	(ocf::pacemaker:Stateful):	Master dl380g5c (unmanaged) FAILED 
+     Slaves: [ dl380g5d ]
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: dummy:1         monitor=20000 on dl380g5d
+
+Revised cluster status:
+Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
+Online: [ dl380g5d ]
+
+ Master/Slave Set: stateful [dummy]
+     dummy	(ocf::pacemaker:Stateful):	Master dl380g5c (unmanaged) FAILED 
+     Slaves: [ dl380g5d ]
+

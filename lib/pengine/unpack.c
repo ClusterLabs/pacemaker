@@ -2058,6 +2058,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
     key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
+    actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
 
@@ -2087,8 +2088,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         }
     }
 
-    pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%s) on %s (role=%s)",
-                 id, task, task_id, task_status, node->details->uname, role2text(rsc->role));
+    pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%s, rc=%s) on %s (role=%s)",
+                 id, task, task_id, task_status, actual_rc, node->details->uname, role2text(rsc->role));
 
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     interval = crm_parse_int(interval_s, "0");
@@ -2103,7 +2104,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                      node->details->uname, rsc->id);
     }
 
-    actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
     CRM_CHECK(actual_rc != NULL, return FALSE);
     actual_rc_i = crm_parse_int(actual_rc, NULL);
 
@@ -2591,9 +2591,14 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                  * setting role=slave is not dangerous because no master will be
                  * promoted until the failed resource has been fully stopped
                  */
-                crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
                 rsc->next_role = RSC_ROLE_STOPPED;
-                rsc->role = RSC_ROLE_SLAVE;
+                if (action->on_fail == action_fail_block) {
+                    rsc->role = RSC_ROLE_MASTER;
+
+                } else {
+                    crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
+                    rsc->role = RSC_ROLE_SLAVE;
+                }
 
             } else if (compare_version("2.0", op_version) > 0
                        && safe_str_eq(task, CRMD_ACTION_START)) {
