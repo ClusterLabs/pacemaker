@@ -6,7 +6,7 @@ The walk-through examples use some of these options, but don't explain exactly w
 
 When configuring a virtual machine or lxc resource to act as a remote-node, these are the metadata options available to both enable the resource as a remote-node and define the connection parameters.
 
-.Metadata Options for configurint KVM/LXC resources as remote-nodes
+.Metadata Options for configuring KVM/LXC resources as remote-nodes
 [width="95%",cols="1m,1,4<",options="header",align="center"]
 |=========================================================
 
