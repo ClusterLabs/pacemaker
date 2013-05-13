@@ -1742,3 +1742,11 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     return data;
 }
+
+const char *rsc_printable_id(resource_t *rsc)
+{
+    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+        return ID(rsc->xml);
+    }
+    return rsc->id;
+}

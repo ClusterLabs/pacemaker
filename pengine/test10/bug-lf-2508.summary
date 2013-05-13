@@ -17,8 +17,8 @@ Online: [ srv01 srv03 srv04 ]
      Stopped: [ srv02 ]
  Clone Set: clnStonith3 [grpStonith3]
      Resource Group: grpStonith3:1
-         prmStonith3-1:1	(stonith:external/stonith-helper):	Started srv01
-         prmStonith3-3:1	(stonith:external/ssh):	Stopped 
+         prmStonith3-1	(stonith:external/stonith-helper):	Started srv01 
+         prmStonith3-3	(stonith:external/ssh):	Stopped 
      Started: [ srv02 srv04 ]
      Stopped: [ srv03 ]
  Clone Set: clnStonith4 [grpStonith4]

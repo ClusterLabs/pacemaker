@@ -23,8 +23,8 @@ Online: [ srv01 srv02 srv03 srv04 ]
      prmStonithN4	(stonith:external/ssh):	Started srv03
  Clone Set: clnUMgroup01 [clnUmResource]
      Resource Group: clnUmResource:0
-         clnUMdummy01:0	(ocf::pacemaker:Dummy):	Started srv04 FAILED
-         clnUMdummy02:0	(ocf::pacemaker:Dummy):	Started srv04
+         clnUMdummy01	(ocf::pacemaker:Dummy):	Started srv04 FAILED 
+         clnUMdummy02	(ocf::pacemaker:Dummy):	Started srv04 
      Started: [ srv01 ]
      Stopped: [ srv02 srv03 ]
  Clone Set: clnPingd [clnPrmPingd]

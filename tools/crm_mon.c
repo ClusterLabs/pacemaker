@@ -722,7 +722,7 @@ print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, 
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;
-        print_as("   %s: migration-threshold=%d", rsc->id, rsc->migration_threshold);
+        print_as("   %s: migration-threshold=%d", rsc_printable_id(rsc), rsc->migration_threshold);
     }
 
     if (failcount > 0) {

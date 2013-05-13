@@ -344,6 +344,7 @@ struct action_wrapper_s {
     action_t *action;
 };
 
+const char *rsc_printable_id(resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);

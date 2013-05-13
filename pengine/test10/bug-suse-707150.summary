@@ -6,12 +6,12 @@ OFFLINE: [ hex-7 hex-8 ]
  vm-00	(ocf::heartbeat:Xen):	Stopped 
  Clone Set: base-clone [base-group]
      Resource Group: base-group:0
-         dlm:0	(ocf::pacemaker:controld):	Started hex-0
-         o2cb:0	(ocf::ocfs2:o2cb):	Stopped 
-         clvm:0	(ocf::lvm2:clvmd):	Stopped 
-         cmirrord:0	(ocf::lvm2:cmirrord):	Stopped 
-         vg1:0	(ocf::heartbeat:LVM):	Stopped 
-         ocfs2-1:0	(ocf::heartbeat:Filesystem):	Stopped 
+         dlm	(ocf::pacemaker:controld):	Started hex-0 
+         o2cb	(ocf::ocfs2:o2cb):	Stopped 
+         clvm	(ocf::lvm2:clvmd):	Stopped 
+         cmirrord	(ocf::lvm2:cmirrord):	Stopped 
+         vg1	(ocf::heartbeat:LVM):	Stopped 
+         ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Stopped: [ hex-7 hex-8 hex-9 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 
  fencing-sbd	(stonith:external/sbd):	Started hex-9
@@ -52,19 +52,19 @@ OFFLINE: [ hex-7 hex-8 ]
  vm-00	(ocf::heartbeat:Xen):	Stopped 
  Clone Set: base-clone [base-group]
      Resource Group: base-group:0
-         dlm:0	(ocf::pacemaker:controld):	Started hex-0
-         o2cb:0	(ocf::ocfs2:o2cb):	Started hex-0
-         clvm:0	(ocf::lvm2:clvmd):	Started hex-0
-         cmirrord:0	(ocf::lvm2:cmirrord):	Started hex-0
-         vg1:0	(ocf::heartbeat:LVM):	Stopped 
-         ocfs2-1:0	(ocf::heartbeat:Filesystem):	Stopped 
+         dlm	(ocf::pacemaker:controld):	Started hex-0 
+         o2cb	(ocf::ocfs2:o2cb):	Started hex-0 
+         clvm	(ocf::lvm2:clvmd):	Started hex-0 
+         cmirrord	(ocf::lvm2:cmirrord):	Started hex-0 
+         vg1	(ocf::heartbeat:LVM):	Stopped 
+         ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Resource Group: base-group:1
-         dlm:1	(ocf::pacemaker:controld):	Started hex-9
-         o2cb:1	(ocf::ocfs2:o2cb):	Started hex-9
-         clvm:1	(ocf::lvm2:clvmd):	Started hex-9
-         cmirrord:1	(ocf::lvm2:cmirrord):	Started hex-9
-         vg1:1	(ocf::heartbeat:LVM):	Stopped 
-         ocfs2-1:1	(ocf::heartbeat:Filesystem):	Stopped 
+         dlm	(ocf::pacemaker:controld):	Started hex-9 
+         o2cb	(ocf::ocfs2:o2cb):	Started hex-9 
+         clvm	(ocf::lvm2:clvmd):	Started hex-9 
+         cmirrord	(ocf::lvm2:cmirrord):	Started hex-9 
+         vg1	(ocf::heartbeat:LVM):	Stopped 
+         ocfs2-1	(ocf::heartbeat:Filesystem):	Stopped 
      Stopped: [ hex-7 hex-8 ]
  vm-01	(ocf::heartbeat:Xen):	Stopped 
  fencing-sbd	(stonith:external/sbd):	Started hex-9

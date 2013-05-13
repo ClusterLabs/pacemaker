@@ -16,7 +16,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Master/Slave Set: master-1 [stateful-1]
-     stateful-1:0	(ocf::pacemaker:Stateful):	Slave pcmk-1 FAILED 
+     stateful-1	(ocf::pacemaker:Stateful):	Slave pcmk-1 FAILED 
      Slaves: [ pcmk-2 pcmk-3 pcmk-4 ]
 
 Transition Summary:

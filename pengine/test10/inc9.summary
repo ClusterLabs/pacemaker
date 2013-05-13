@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1]
-     child_rsc1:5	(heartbeat:apache):	 ORPHANED Started node1
-     child_rsc1:6	(heartbeat:apache):	 ORPHANED Started node1
-     child_rsc1:7	(heartbeat:apache):	 ORPHANED Started node2
+     child_rsc1	(heartbeat:apache):	 ORPHANED Started node1 
+     child_rsc1	(heartbeat:apache):	 ORPHANED Started node1 
+     child_rsc1	(heartbeat:apache):	 ORPHANED Started node2 
      Started: [ node1 node2 ]
 
 Transition Summary:

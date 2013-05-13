@@ -5,8 +5,8 @@ OFFLINE: [ webcluster02 ]
 
  Clone Set: apache2_clone [grrr]
      Resource Group: grrr:2
-         apache2:2	(ocf::heartbeat:apache):	 ORPHANED Started webcluster01
-         mysql-proxy:2	(lsb:mysql-proxy):	 ORPHANED Started webcluster01
+         apache2	(ocf::heartbeat:apache):	 ORPHANED Started webcluster01 
+         mysql-proxy	(lsb:mysql-proxy):	 ORPHANED Started webcluster01 
      Started: [ webcluster01 ]
      Stopped: [ webcluster02 ]
 
