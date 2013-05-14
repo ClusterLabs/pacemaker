@@ -1,7 +1,7 @@
 digraph "g" {
-"Cancel rsc_pcmk-1_start_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
-"rsc_pcmk-1_clear_failcount_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"rsc_pcmk-1_clear_failcount pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-1_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"rsc_pcmk-3_clear_failcount pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-3_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-3_start_0 pcmk-1" -> "rsc_pcmk-3_monitor_5000 pcmk-1" [ style = bold]
 "rsc_pcmk-3_start_0 pcmk-1" [ style=bold color="green" fontcolor="black"]

@@ -2137,13 +2137,14 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     }
 
     if (expired) {
-        int fc = get_failcount(node, rsc, &last_failure, data_set);
-
-        if (rsc->failure_timeout > 0 && last_failure > 0 && fc == 0) {
-
-            clear_failcount = 1;
-            crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+        if (rsc->failure_timeout > 0) {
+            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
+            if(fc && get_failcount_full(node, rsc, &last_failure, TRUE, data_set) == 0) {
+                clear_failcount = 1;
+                crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+            }
         }
+
     } else if (strstr(id, "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
@@ -2173,8 +2174,16 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     if (expired
         && actual_rc_i != PCMK_EXECRA_NOT_RUNNING
         && actual_rc_i != PCMK_EXECRA_RUNNING_MASTER && actual_rc_i != PCMK_EXECRA_OK) {
-        crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
-                   id, actual_rc_i, magic, node->details->uname);
+        if(interval == 0) {
+            crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
+                       id, actual_rc_i, magic, node->details->uname);
+
+        } else if(node->details->online && node->details->unclean == FALSE) {
+            crm_notice("Re-initiated expired failure %s (rc=%d, magic=%s) on %s",
+                       id, actual_rc_i, magic, node->details->uname);
+            /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
+            crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "failure-timeout");
+        }
         goto done;
     }
 
@@ -2294,8 +2303,16 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
         action = custom_action(rsc, strdup(action_key), task, NULL, TRUE, FALSE, data_set);
         if (expired) {
-            crm_notice("Ignoring expired failure (calculated) %s (rc=%d, magic=%s) on %s",
-                       id, actual_rc_i, magic, node->details->uname);
+            if(interval == 0) {
+                crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
+                           id, actual_rc_i, magic, node->details->uname);
+
+            } else if(node->details->online && node->details->unclean == FALSE) {
+                crm_notice("Re-initiated expired calculated failure %s (rc=%d, magic=%s) on %s",
+                           id, actual_rc_i, magic, node->details->uname);
+                /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
+                crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
+            }
             goto done;
 
         } else if ((action->on_fail == action_fail_ignore) ||

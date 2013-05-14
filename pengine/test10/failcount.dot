@@ -17,6 +17,8 @@ digraph "g" {
 "re-named-103ns1-ip_delete_0 dresproddns02" [ style=bold color="green" fontcolor="black"]
 "re-named-103ns2-ip_delete_0 dresproddns01" [ style=bold color="green" fontcolor="black"]
 "re-named-103ns2-ip_delete_0 dresproddns02" [ style=bold color="green" fontcolor="black"]
+"re-named-lsb:0_monitor_10000 dresproddns02" [ style=bold color="green" fontcolor="black"]
+"re-named-lsb:1_monitor_10000 dresproddns01" [ style=bold color="green" fontcolor="black"]
 "re-openfire-lsb:0_clear_failcount dresproddns01" [ style=bold color="green" fontcolor="black"]
 "re-openfire-lsb:1_clear_failcount dresproddns02" [ style=bold color="green" fontcolor="black"]
 }
