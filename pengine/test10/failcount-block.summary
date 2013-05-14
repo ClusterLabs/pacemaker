@@ -7,6 +7,7 @@ OFFLINE: [ pcmk-4 ]
  rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	Started pcmk-1 (unmanaged) FAILED 
  rsc_pcmk-3	(ocf::heartbeat:IPaddr2):	Stopped 
  rsc_pcmk-4	(ocf::heartbeat:IPaddr2):	Stopped 
+ rsc_pcmk-5	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
 
 Transition Summary:
  * Start   rsc_pcmk-3	(pcmk-1)
@@ -18,6 +19,7 @@ Executing cluster transition:
  * Resource action: rsc_pcmk-3      start on pcmk-1
  * Cluster action:  clear_failcount for rsc_pcmk-3 on pcmk-1
  * Resource action: rsc_pcmk-4      start on pcmk-1
+ * Cluster action:  clear_failcount for rsc_pcmk-5 on pcmk-1
  * Resource action: rsc_pcmk-3      monitor=5000 on pcmk-1
  * Resource action: rsc_pcmk-4      monitor=5000 on pcmk-1
 
@@ -29,4 +31,5 @@ OFFLINE: [ pcmk-4 ]
  rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	Started pcmk-1 (unmanaged) FAILED 
  rsc_pcmk-3	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
  rsc_pcmk-4	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
+ rsc_pcmk-5	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
 

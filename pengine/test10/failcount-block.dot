@@ -8,4 +8,5 @@ digraph "g" {
 "rsc_pcmk-4_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-4_start_0 pcmk-1" -> "rsc_pcmk-4_monitor_5000 pcmk-1" [ style = bold]
 "rsc_pcmk-4_start_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"rsc_pcmk-5_clear_failcount pcmk-1" [ style=bold color="green" fontcolor="black"]
 }
