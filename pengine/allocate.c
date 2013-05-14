@@ -239,7 +239,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         did_change = TRUE;
         key = generate_op_key(rsc->id, task, interval);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
-        crm_info("Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
                  key, active_node->details->uname,
                  crm_str(digest_restart), digest_data->digest_restart_calc,
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -254,7 +254,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         did_change = TRUE;
         crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
-        crm_info("Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
                  key, active_node->details->uname,
                  crm_str(digest_all), digest_data->digest_all_calc, op_version,
                  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -1870,7 +1870,7 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
             if (interval == NULL || safe_str_eq(interval, "0")) {
                 pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
                 continue;
-            } else if (safe_str_eq(mon->task, "cancel")) {
+            } else if (safe_str_eq(mon->task, RSC_CANCEL)) {
                 pe_rsc_trace(rsc, "Skipping %s: cancel", mon->uuid);
                 continue;
             }
