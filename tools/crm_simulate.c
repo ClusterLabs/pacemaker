@@ -476,10 +476,15 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     action->confirmed = TRUE;
 
-    quiet_log(" * Cluster action:  %s on %s\n", task, node);
+    if(rsc) {
+        quiet_log(" * Cluster action:  %s for %s on %s\n", task, ID(rsc), node);
+    } else {
+        quiet_log(" * Cluster action:  %s on %s\n", task, node);
+    }
     update_graph(graph, action);
     return TRUE;
 }

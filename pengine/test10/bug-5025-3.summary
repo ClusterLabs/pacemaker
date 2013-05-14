@@ -12,7 +12,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: A               stop on fc16-builder
- * Cluster action:  clear_failcount on fc16-builder
+ * Cluster action:  clear_failcount for A on fc16-builder
  * Resource action: A               start on fc16-builder
  * Resource action: A               monitor=30000 on fc16-builder
  * Pseudo action:   all_stopped

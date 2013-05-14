@@ -39,8 +39,8 @@ Transition Summary:
  * Restart pingd:1	(Started cl-virt-2)
 
 Executing cluster transition:
- * Cluster action:  clear_failcount on cl-virt-1
- * Cluster action:  clear_failcount on cl-virt-2
+ * Cluster action:  clear_failcount for pingd on cl-virt-1
+ * Cluster action:  clear_failcount for pingd on cl-virt-2
  * Pseudo action:   pingdclone_stop_0
  * Resource action: pingd:0         stop on cl-virt-1
  * Resource action: pingd:0         stop on cl-virt-2

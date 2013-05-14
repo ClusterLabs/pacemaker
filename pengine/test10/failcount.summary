@@ -28,8 +28,8 @@ Online: [ dresproddns01 dresproddns02 ]
 Transition Summary:
 
 Executing cluster transition:
- * Cluster action:  clear_failcount on dresproddns01
- * Cluster action:  clear_failcount on dresproddns02
+ * Cluster action:  clear_failcount for re-openfire-lsb on dresproddns01
+ * Cluster action:  clear_failcount for re-openfire-lsb on dresproddns02
  * Resource action: re-named-103ns2-ip delete on dresproddns02
  * Resource action: re-named-103ns2-ip delete on dresproddns01
  * Resource action: re-monitoring-lv:0 delete on dresproddns02

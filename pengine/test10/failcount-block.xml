@@ -81,6 +81,12 @@
       <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-3" value="3"/>
       <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-2" value="2"/>
       <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-1" value="1"/>
+
+      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-4" value="4"/>
+      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-3" value="3"/>
+      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-2" value="2"/>
+      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-1" value="1"/>
+
      </instance_attributes>
     </transient_attributes>
     <lrm id="101" uname="pcmk-1" >

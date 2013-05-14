@@ -8,7 +8,7 @@ OFFLINE: [ fc16-builder fc16-builder3 ]
 Transition Summary:
 
 Executing cluster transition:
- * Cluster action:  clear_failcount on fc16-builder2
+ * Cluster action:  clear_failcount for A on fc16-builder2
  * Resource action: A               cancel=10000 on fc16-builder2
 
 Revised cluster status:
