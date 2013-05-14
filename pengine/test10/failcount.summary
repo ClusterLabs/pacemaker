@@ -32,24 +32,6 @@ Executing cluster transition:
  * Cluster action:  clear_failcount for re-openfire-lsb on dresproddns02
  * Resource action: re-named-lsb:1  monitor=10000 on dresproddns01
  * Resource action: re-named-lsb:0  monitor=10000 on dresproddns02
- * Resource action: re-named-103ns2-ip delete on dresproddns02
- * Resource action: re-named-103ns2-ip delete on dresproddns01
- * Resource action: re-monitoring-lv:0 delete on dresproddns02
- * Resource action: re-monitoring-lv:0 delete on dresproddns01
- * Resource action: re-dummy        delete on dresproddns02
- * Resource action: re-dummy        delete on dresproddns01
- * Resource action: re-dummy3       delete on dresproddns02
- * Resource action: re-dummy3       delete on dresproddns01
- * Resource action: re-dummy4       delete on dresproddns02
- * Resource action: re-dummy4       delete on dresproddns01
- * Resource action: re-dummy1       delete on dresproddns02
- * Resource action: re-dummy1       delete on dresproddns01
- * Resource action: re-monitoring-lv delete on dresproddns02
- * Resource action: re-monitoring-lv delete on dresproddns01
- * Resource action: re-dummy2       delete on dresproddns02
- * Resource action: re-dummy2       delete on dresproddns01
- * Resource action: re-named-103ns1-ip delete on dresproddns02
- * Resource action: re-named-103ns1-ip delete on dresproddns01
 
 Revised cluster status:
 Online: [ dresproddns01 dresproddns02 ]
