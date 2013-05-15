@@ -1,7 +1,7 @@
 = Extending High Availability Cluster into Virtual Nodes =
 
 == Overview ==
-The recent addition of the +pacemaker_remote+ service supported by +Pacemaker version 1.1.10 and greater+ allows nodes not running the cluster stack (pacemaker+corosync) to integrate into the cluster and have the cluster manage their resources just as if they were a real cluster node.  This means that pacemaker clusters are now capable of managing both launching virtual environments (KVM/LXC) as well as launching the resources that live withing those virtual environments without requiring the virtual environments to run pacemaker or corosync.
+The recent addition of the +pacemaker_remote+ service supported by +Pacemaker version 1.1.10 and greater+ allows nodes not running the cluster stack (pacemaker+corosync) to integrate into the cluster and have the cluster manage their resources just as if they were a real cluster node.  This means that pacemaker clusters are now capable of managing both launching virtual environments (KVM/LXC) as well as launching the resources that live within those virtual environments without requiring the virtual environments to run pacemaker or corosync.
 
 == Terms ==
 +cluster-node+ - A baremetal hardware node running the High Availability stack (pacemaker + corosync)
