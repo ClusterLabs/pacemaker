@@ -168,7 +168,6 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 void diff_filter_context(int context, int upper_bound, int lower_bound,
                          xmlNode * xml_node, xmlNode * parent);
 int in_upper_context(int depth, int context, xmlNode * xml_node);
-int write_file(const char *string, const char *filename);
 int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
 static inline const char *
@@ -506,44 +505,6 @@ copy_xml(xmlNode * src)
 static void
 crm_xml_err(void *ctx, const char *msg, ...)
 G_GNUC_PRINTF(2, 3);
-
-int
-write_file(const char *string, const char *filename)
-{
-    int rc = 0;
-    FILE *file_output_strm = NULL;
-
-    CRM_CHECK(filename != NULL, return -1);
-
-    if (string == NULL) {
-        crm_err("Cannot write NULL to %s", filename);
-        return -1;
-    }
-
-    file_output_strm = fopen(filename, "w");
-    if (file_output_strm == NULL) {
-        crm_perror(LOG_ERR, "Cannot open %s for writing", filename);
-        return -1;
-    }
-
-    rc = fprintf(file_output_strm, "%s", string);
-    if (rc < 0) {
-        crm_perror(LOG_ERR, "Cannot write output to %s", filename);
-    }
-
-    if (fflush(file_output_strm) != 0) {
-        crm_perror(LOG_ERR, "fflush for %s failed:", filename);
-        rc = -1;
-    }
-
-    if (fsync(fileno(file_output_strm)) < 0) {
-        crm_perror(LOG_ERR, "fsync for %s failed:", filename);
-        rc = -1;
-    }
-
-    fclose(file_output_strm);
-    return rc;
-}
 
 static void
 crm_xml_err(void *ctx, const char *msg, ...)
