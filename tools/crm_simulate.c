@@ -1508,20 +1508,7 @@ main(int argc, char **argv)
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            char *msg_buffer = dump_xml_formatted(data_set.graph);
-            FILE *graph_strm = fopen(graph_file, "w");
-
-            if (graph_strm == NULL) {
-                crm_perror(LOG_ERR, "Could not open %s for writing", graph_file);
-
-            } else {
-                if (fprintf(graph_strm, "%s\n", msg_buffer) < 0) {
-                    crm_perror(LOG_ERR, "Write to %s failed", graph_file);
-                }
-                fflush(graph_strm);
-                fclose(graph_strm);
-            }
-            free(msg_buffer);
+            write_xml_file(data_set.graph, graph_file, FALSE);
         }
 
         if (dot_file != NULL) {

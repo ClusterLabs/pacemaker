@@ -892,7 +892,9 @@ write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress
 int
 write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
 {
-    FILE *stream = fopen(filename, "w");
+    FILE *stream = NULL;
+
+    stream = fopen(filename, "w");
 
     return write_xml_stream(xml_node, filename, stream, compress);
 }
@@ -1515,9 +1517,6 @@ static void
 save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
 {
     char *f = NULL;
-    FILE *st = NULL;
-    xmlDoc *doc = getDocPtr(xml);
-    xmlBuffer *xml_buffer = xmlBufferCreate();
 
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
@@ -1528,17 +1527,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     }
 
     crm_info("Saving %s to %s", desc, filename);
-    xmlNodeDump(xml_buffer, doc, xml, 0, FALSE);
-
-    st = fopen(filename, "w");
-    if (st) {
-        fprintf(st, "%s", xml_buffer->content);
-        /* fflush(st); */
-        /* fsync(fileno(st)); */
-        fclose(st);
-    }
-
-    xmlBufferFree(xml_buffer);
+    write_xml_file(xml, filename, FALSE);
     g_free(f);
 }
 
