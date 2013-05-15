@@ -4,7 +4,7 @@ Basic KVM and Linux container integration was the first phase of development for
 
 == Libvirt Sandbox Support ==
 
-Once the libvirt-sandbox project is integrated with pacemaker_remote, we will gain the ability to preform per-resource linux container isolation with very little performance impact.  This functionality will allow resources living on a single node to be isolated from one another.  At that point CPU and memory limits could be set per-resource in the cluster.
+Once the libvirt-sandbox project is integrated with pacemaker_remote, we will gain the ability to preform per-resource linux container isolation with very little performance impact.  This functionality will allow resources living on a single node to be isolated from one another.  At that point CPU and memory limits could be set per-resource dynamically just using the cluster config.
 
 == Bare-metal Support ==
 
