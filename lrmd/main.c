@@ -233,6 +233,9 @@ static struct crm_option long_options[] = {
     {"verbose", 0, 0,    'V', "\tIncrease debug output"},
 
     {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
+
+    /* For compatibility with the original lrmd */
+    {"dummy",  0, 0, 'r', NULL, 1},
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -261,6 +264,8 @@ main(int argc, char **argv)
         }
 
         switch (flag) {
+            case 'r':
+                break;
             case 'l':
                 crm_add_logfile(optarg);
                 break;
