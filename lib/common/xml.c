@@ -792,9 +792,7 @@ static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
 {
     int res = 0;
-    time_t now;
     char *buffer = NULL;
-    char *now_str = NULL;
     unsigned int out = 0;
     static mode_t cib_mode = S_IRUSR | S_IWUSR;
 
@@ -807,15 +805,20 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
         return -1;
     }
 
-    /* establish the correct permissions */
-    fchmod(fileno(stream), cib_mode);
 
     crm_log_xml_trace(xml_node, "Writing out");
 
-    now = time(NULL);
-    now_str = ctime(&now);
-    now_str[24] = EOS;          /* replace the newline */
-    crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
+    if(strstr(filename, "cib") != NULL) {
+        /* Only CIB's need this field written */
+        time_t now = time(NULL);
+        char *now_str = ctime(&now);
+
+        now_str[24] = EOS;          /* replace the newline */
+        crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
+
+        /* establish the correct permissions */
+        fchmod(fileno(stream), cib_mode);
+    }
 
     buffer = dump_xml_formatted(xml_node);
     CRM_CHECK(buffer != NULL && strlen(buffer) > 0, crm_log_xml_warn(xml_node, "dump:failed");
