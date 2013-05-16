@@ -20,7 +20,7 @@ num_failed=0
 num_tests=0
 force_local=0
 VALGRIND_CMD=""
-diff_opts="--ignore-all-space -u -N"
+diff_opts="--ignore-all-space --ignore-blank-lines -u -N"
 
 test_home=`dirname $0`
 test_name=`basename $0`
