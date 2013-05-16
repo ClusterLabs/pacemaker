@@ -506,11 +506,13 @@ notify_crmd(crm_graph_t * graph)
         case tg_restart:
             type = "restart";
             if (fsa_state == S_TRANSITION_ENGINE) {
-                if (transition_timer->period_ms > 0) {
-                    crm_timer_stop(transition_timer);
-                    crm_timer_start(transition_timer);
-                } else if (too_many_st_failures() == FALSE) {
-                    event = I_PE_CALC;
+                if (too_many_st_failures() == FALSE) {
+                    if (transition_timer->period_ms > 0) {
+                        crm_timer_stop(transition_timer);
+                        crm_timer_start(transition_timer);
+                    } else {
+                        event = I_PE_CALC;
+                    }
                 } else {
                     event = I_TE_SUCCESS;
                 }
