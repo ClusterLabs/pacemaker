@@ -150,6 +150,7 @@ With roles:
     crmsh # cib commit drbd_cfg
     crmsh # quit
 
+
     pcs   # pcs cluster cib drbd_cfg
     pcs   # pcs -f drbd_cfg resource create WebData ocf:linbit:drbd drbd_resource=wwwdata \
             op monitor interval=60s
