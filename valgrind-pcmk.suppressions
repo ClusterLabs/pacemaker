@@ -101,3 +101,26 @@
    obj:*/libgobject-*
    fun:g_type_register_fundamental
 }
+
+{
+   glib - why do you hate me?
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:call_init.part.0
+   fun:_dl_init
+}
+
+{
+   dear glib - you suck at memory management
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:call_init.part.0
+   fun:_dl_init
+}
