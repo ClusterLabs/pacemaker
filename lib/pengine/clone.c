@@ -533,6 +533,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
                 stopped_list = add_list_element(stopped_list, node->details->uname);
             }
         }
+        g_list_free(list);
     }
 
     short_print(stopped_list, child_text, "Stopped", options, print_data);
