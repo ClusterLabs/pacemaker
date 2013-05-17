@@ -184,6 +184,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         if (is_repoke == FALSE && series_wrap != 0) {
+            unlink(filename);
             write_xml_file(xml_data, filename, HAVE_BZLIB_H);
             write_last_sequence(PE_STATE_DIR, series[series_id].name, seq + 1, series_wrap);
         } else {
