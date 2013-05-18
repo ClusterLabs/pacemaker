@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,6 +22,7 @@ void lrm_op_callback(lrmd_event_data_t * op);
 
 typedef struct resource_history_s {
     char *id;
+    uint32_t last_callid;
     lrmd_rsc_info_t rsc;
     lrmd_event_data_t *last;
     lrmd_event_data_t *failed;
@@ -66,7 +67,7 @@ struct pending_deletion_op_s {
 xmlNode *do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace);
 
 /*!
- * \brief Clear all state information from a single state entry. 
+ * \brief Clear all state information from a single state entry.
  * \note This does not close the lrmd connection
  */
 void lrm_state_reset_tables(lrm_state_t * lrm_state);

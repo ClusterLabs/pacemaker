@@ -141,6 +141,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         return;
     }
 
+    entry->last_callid = op->call_id;
     target_rc = rsc_op_expected_rc(op);
     if (op->op_status == PCMK_LRM_OP_CANCELLED) {
         if (op->interval > 0) {
@@ -1273,8 +1274,8 @@ do_lrm_invoke(long long action,
         /* Make sure the call id is greater than the last successful operation,
          * otherwise the failure will not result in a possible recovery of the resource
          * as it could appear the failure occurred before the successful start */
-        if (entry && entry->last) {
-            op->call_id = entry->last->call_id + 1;
+        if (entry) {
+            op->call_id = entry->last_callid + 1;
             if (op->call_id < 0) {
                 op->call_id = 1;
             }
