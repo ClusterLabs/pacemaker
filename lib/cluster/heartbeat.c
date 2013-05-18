@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -110,7 +110,7 @@ convert_ha_field(xmlNode * parent, void *msg_v, int lpc)
             memset(uncompressed, 0, size);
             used = size - 1;    /* always leave room for a trailing '\0'
                                  * BZ2_bzBuffToBuffDecompress wont say anything if
-                                 * the uncompressed data is exactly 'size' bytes 
+                                 * the uncompressed data is exactly 'size' bytes
                                  */
 
             rc = BZ2_bzBuffToBuffDecompress(uncompressed, &used, compressed, orig_len, 1, 0);
@@ -402,10 +402,13 @@ send_ha_message(ll_cluster_t * hb_conn, xmlNode * xml, const char *node, gboolea
         all_is_good = FALSE;
 
     } else if (node != NULL) {
-        if (hb_conn->llc_ops->send_ordered_nodemsg(hb_conn, msg, node) != HA_OK) {
+        char *host_lowercase = g_ascii_strdown(node, -1);
+
+        if (hb_conn->llc_ops->send_ordered_nodemsg(hb_conn, msg, host_lowercase) != HA_OK) {
             all_is_good = FALSE;
             crm_err("Send failed");
         }
+        free(host_lowercase);
 
     } else if (force_ordered) {
         if (hb_conn->llc_ops->send_ordered_clustermsg(hb_conn, msg) != HA_OK) {

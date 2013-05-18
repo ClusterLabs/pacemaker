@@ -155,6 +155,15 @@ destroy_crm_node(gpointer data)
     free(node);
 }
 
+static gboolean
+crm_strcase_equal (gconstpointer v1, gconstpointer v2)
+{
+    const gchar *string1 = v1;
+    const gchar *string2 = v2;
+
+    return strcasecmp (string1, string2) == 0;
+}
+
 void
 crm_peer_init(void)
 {
@@ -167,7 +176,7 @@ crm_peer_init(void)
 
     crm_peer_destroy();
     if (crm_peer_cache == NULL) {
-        crm_peer_cache = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, destroy_crm_node);
+        crm_peer_cache = g_hash_table_new_full(crm_str_hash, crm_strcase_equal, NULL, destroy_crm_node);
     }
 
     if (crm_peer_id_cache == NULL) {
