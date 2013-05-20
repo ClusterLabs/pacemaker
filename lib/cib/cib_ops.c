@@ -944,7 +944,10 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
                     path_len += extra;
                     new_path = malloc(path_len + 1);
-                    if (id) {
+                    if(new_path == NULL) {
+                        break;
+
+                    } else if (id) {
                         snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id,
                                  path ? path : "");
                     } else {
