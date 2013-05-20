@@ -248,7 +248,7 @@ changes:
 	@printf "\n- Features added in $(NEXT_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug: | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf
 
 changelog:
 	@make changes > ChangeLog
