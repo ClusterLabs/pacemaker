@@ -96,7 +96,10 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     xmlNode *request = NULL;
     crm_client_t *c = crm_client_get(qbc);
 
-    CRM_CHECK(c != NULL, goto cleanup);
+    if (c == NULL) {
+        crm_info("Invalid client: %p", qbc);
+        return 0;
+    }
 
     request = crm_ipcs_recv(c, data, size, &id, &flags);
     if (request == NULL) {
@@ -124,11 +127,6 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_log_xml_trace(request, "Client[inbound]");
     stonith_command(c, id, flags, request, NULL);
-
-  cleanup:
-    if (c == NULL) {
-        crm_log_xml_notice(request, "Invalid client");
-    }
 
     free_xml(request);
     return 0;
