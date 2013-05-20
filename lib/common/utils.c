@@ -317,8 +317,10 @@ crm_concat(const char *prefix, const char *suffix, char join)
     len = strlen(prefix) + strlen(suffix) + 2;
 
     new_str = malloc(len);
-    sprintf(new_str, "%s%c%s", prefix, join, suffix);
-    new_str[len - 1] = 0;
+    if(new_str) {
+        sprintf(new_str, "%s%c%s", prefix, join, suffix);
+        new_str[len - 1] = 0;
+    }
     return new_str;
 }
 
