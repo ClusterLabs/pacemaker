@@ -333,6 +333,26 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         update_action_flags(first, pe_action_print_always);     /* dont care about changed */
     }
 
+    if ((type & pe_order_implies_then
+         || type & pe_order_implies_first
+         || type & pe_order_restart)
+        && first->rsc
+        && safe_str_eq(first->task, RSC_STOP)
+        && is_not_set(first->rsc->flags, pe_rsc_managed)
+        && is_set(first->rsc->flags, pe_rsc_block)
+        && is_not_set(first->flags, pe_action_runnable)) {
+
+        if (update_action_flags(then, pe_action_runnable | pe_action_clear)) {
+            changed |= pe_graph_updated_then;
+        }
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "unmanaged left: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("unmanaged left: %s then %s", first->uuid, then->uuid);
+        }
+    }
+
     if (processed == FALSE) {
         crm_trace("Constraint 0x%.6x not applicable", type);
     }
