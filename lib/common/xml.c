@@ -116,8 +116,10 @@ static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none'
 #define CHUNK_SIZE 1024
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
-        int rc;                                                         \
-        rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
+        int rc = (max);                                                 \
+        if(buffer) {                                                    \
+            rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
+        }                                                               \
         if(rc < 0) {                                                    \
             crm_perror(LOG_ERR, "snprintf failed");                     \
             (buffer)[(offset)] = 0;                                     \
