@@ -481,6 +481,9 @@ parse_host_list(const char *hosts)
 
             if(len > 1) {
                 line = malloc(1 + len);
+            }
+
+            if(line) {
                 snprintf(line, 1 + len, "%s", hosts + last);
                 line[len] = 0; /* Because it might be '\n' */
                 parse_host_line(line, len, &output);
