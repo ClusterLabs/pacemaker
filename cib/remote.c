@@ -319,20 +319,6 @@ cib_remote_listen(gpointer data)
         return TRUE;
     }
 
-    if (ssock == remote_tls_fd) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        /* create gnutls session for the server socket */
-        new_client->remote->tls_session =
-            crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
-
-        if (new_client->remote->tls_session == NULL) {
-            crm_err("TLS session creation failed");
-            close(csock);
-            return TRUE;
-        }
-#endif
-    }
-
     num_clients++;
 
     crm_client_init();
@@ -343,18 +329,28 @@ cib_remote_listen(gpointer data)
 
     g_hash_table_insert(client_connections, new_client->id /* Should work */ , new_client);
 
-    /* clients have a few seconds to perform handshake. */
-    new_client->remote->auth_timeout =
-        g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
-
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         new_client->kind = CRM_CLIENT_TLS;
+
+        /* create gnutls session for the server socket */
+        new_client->remote->tls_session =
+            crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
+
+        if (new_client->remote->tls_session == NULL) {
+            crm_err("TLS session creation failed");
+            close(csock);
+            return TRUE;
+        }
 #endif
     } else {
         new_client->kind = CRM_CLIENT_TCP;
         new_client->remote->tcp_socket = csock;
     }
+
+    /* clients have a few seconds to perform handshake. */
+    new_client->remote->auth_timeout =
+        g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
