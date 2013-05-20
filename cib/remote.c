@@ -133,6 +133,11 @@ init_remote_listener(int port, gboolean encrypted)
 
     /* create server socket */
     ssock = malloc(sizeof(int));
+    if(ssock == NULL) {
+        crm_perror(LOG_ERR, "Can not create server socket." ERROR_SUFFIX);
+        return -1;
+    }
+
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
         crm_perror(LOG_ERR, "Can not create server socket." ERROR_SUFFIX);
