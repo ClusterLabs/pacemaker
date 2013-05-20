@@ -498,6 +498,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 
     CRM_ASSERT(result != NULL);
 
+    *result = NULL;
     iov = calloc(2, sizeof(struct iovec));
 
     crm_ipc_init();
@@ -631,7 +632,9 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
         rc = crm_ipcs_sendv(c, iov, flags | crm_ipc_server_free);
 
     } else {
-        crm_notice("Message to %p[%d] failed: %s (%d)", c->ipcs, c->pid, pcmk_strerror(rc), rc);
+        free(iov);
+        crm_notice("Message to %p[%d] failed: %s (%d)",
+                   c->ipcs, c->pid, pcmk_strerror(rc), rc);
     }
 
     return rc;
