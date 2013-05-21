@@ -261,6 +261,7 @@ crm_cs_flush(void)
         return pcmk_ok;
     }
 
+    queue_len = g_list_length(cs_message_queue);
     if ((queue_len % 1000) == 0 && queue_len > 1) {
         crm_err("CPG queue has grown to %d", queue_len);
 
@@ -274,7 +275,6 @@ crm_cs_flush(void)
         return pcmk_ok;
     }
 
-    queue_len = g_list_length(cs_message_queue);
     while (cs_message_queue && sent < CS_SEND_MAX) {
         AIS_Message *header = NULL;
         struct iovec *iov = cs_message_queue->data;
