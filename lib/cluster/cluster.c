@@ -568,7 +568,7 @@ get_cluster_type(void)
 
         hb = (*new_cluster) ("heartbeat");
 
-        crm_debug("Signing in with Heartbeat");
+        crm_debug("Testing with Heartbeat");
         if (hb->llc_ops->signon(hb, crm_system_name) == HA_OK) {
             hb->llc_ops->signoff(hb, FALSE);
 
@@ -582,6 +582,7 @@ get_cluster_type(void)
 #if SUPPORT_COROSYNC
     /* If nothing is defined in the environment, try corosync (if supported) */
     if(cluster == NULL) {
+        crm_debug("Testing with Corosync");
         cluster_type = find_corosync_variant();
         if (cluster_type != pcmk_cluster_unknown) {
             detected = TRUE;
