@@ -257,13 +257,14 @@ crm_add_logfile(const char *filename)
             return FALSE;
         }
 
-        crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid);
-        if (st.st_gid != pcmk_gid) {
-            /* Wrong group */
-            fix = TRUE;
-        } else if ((st.st_mode & S_IRWXG) != (S_IRGRP | S_IWGRP)) {
-            /* Not read/writable by the correct group */
-            fix = TRUE;
+        if(crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) == 0) {
+            if (st.st_gid != pcmk_gid) {
+                /* Wrong group */
+                fix = TRUE;
+            } else if ((st.st_mode & S_IRWXG) != (S_IRGRP | S_IWGRP)) {
+                /* Not read/writable by the correct group */
+                fix = TRUE;
+            }
         }
 
         if (fix) {
