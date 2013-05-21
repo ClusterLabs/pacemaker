@@ -1141,7 +1141,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     lrmd_gnutls_global_init();
 
     sock = crm_remote_tcp_connect(native->server, native->port);
-    if (sock <= 0) {
+    if (sock < 0) {
         crm_warn("Could not establish remote lrmd connection to %s", native->server);
         lrmd_tls_connection_destroy(lrmd);
         return -ENOTCONN;
