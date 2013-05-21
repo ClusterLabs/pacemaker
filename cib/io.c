@@ -699,7 +699,7 @@ write_cib_contents(gpointer p)
              admin_epoch ? admin_epoch : "0", epoch ? epoch : "0", digest);
 
     tmp_digest_fd = mkstemp(tmp_digest);
-    if (write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
+    if (tmp_digest_fd < 0 || write_cib_digest(cib_local, tmp_digest, tmp_digest_fd, digest) <= 0) {
         crm_err("Digest couldn't be written to %s", tmp_digest);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
