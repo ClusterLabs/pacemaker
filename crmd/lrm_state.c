@@ -85,13 +85,15 @@ free_recurring_op(gpointer value)
 lrm_state_t *
 lrm_state_create(const char *node_name)
 {
+    lrm_state_t *state = NULL;
 
-    lrm_state_t *state = calloc(1, sizeof(lrm_state_t));
-
-    if (!state) {
-        return NULL;
-    } else if (!node_name) {
+    if (!node_name) {
         crm_err("No node name given for lrm state object");
+        return NULL;
+    }
+
+    state = calloc(1, sizeof(lrm_state_t));
+    if (!state) {
         return NULL;
     }
 
