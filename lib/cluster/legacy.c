@@ -1080,10 +1080,9 @@ init_cs_connection(crm_cluster_t * cluster)
         int rc = init_cs_connection_once(cluster);
 
         retries++;
-
         switch (rc) {
             case CS_OK:
-                if (getenv("HA_mcp")) {
+                if (getenv("HA_mcp") && get_cluster_type() != pcmk_cluster_cman) {
                     xmlNode *poke = create_xml_node(NULL, "poke");
                     mainloop_io_t *ipc =
                         mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_MEDIUM, 0,
