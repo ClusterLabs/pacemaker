@@ -147,16 +147,21 @@ create_reply_adv(xmlNode * original_request, xmlNode * xml_response_data, const 
     const char *crm_msg_reference = crm_element_value(original_request, F_CRM_REFERENCE);
 
     if (type == NULL) {
-        crm_err("Cannot create new_message," " no message type in original message");
+        crm_err("Cannot create new_message, no message type in original message");
         CRM_ASSERT(type != NULL);
         return NULL;
 #if 0
     } else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
-        crm_err("Cannot create new_message," " original message was not a request");
+        crm_err("Cannot create new_message, original message was not a request");
         return NULL;
 #endif
     }
     reply = create_xml_node(NULL, __FUNCTION__);
+    if (reply == NULL) {
+        crm_err("Cannot create new_message, malloc failed");
+        return NULL;
+    }
+
     crm_xml_add(reply, F_CRM_ORIGIN, origin);
     crm_xml_add(reply, F_TYPE, T_CRM);
     crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);

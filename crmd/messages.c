@@ -782,7 +782,9 @@ handle_request(xmlNode * stored_msg)
         crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
 
         msg = create_reply(stored_msg, ping);
-        relay_message(msg, TRUE);
+        if(msg) {
+            relay_message(msg, TRUE);
+        }
 
         free_xml(ping);
         free_xml(msg);
