@@ -1739,7 +1739,7 @@ stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
     if (remote_peer) {
         send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng, reply, FALSE);
     } else {
-        do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote_peer != NULL);
+        do_local_reply(reply, client_id, is_set(call_options, st_opt_sync_call), remote_peer != NULL);
     }
 }
 
@@ -1834,8 +1834,12 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
             rc = stonith_fence(request);
 
         } else if (call_options & st_opt_manual_ack) {
-            remote_fencing_op_t *rop = initiate_remote_stonith_op(client, request, TRUE);
+            remote_fencing_op_t *rop = NULL;
+            xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
+            const char *target = crm_element_value(dev, F_STONITH_TARGET);
 
+            crm_notice("Recieved manual confirmation that %s is fenced", target);
+            rop = initiate_remote_stonith_op(client, request, TRUE);
             rc = stonith_manual_ack(request, rop);
 
         } else {
@@ -2015,8 +2019,8 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_debug("Processing %s%s from %s (%16x)", op, is_reply ? " reply" : "",
-              client ? client->name : remote_peer, call_options);
+    crm_debug("Processing %s%s %u from %s (%16x)", op, is_reply ? " reply" : "",
+              id, client ? client->name : remote_peer, call_options);
 
     if (is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);

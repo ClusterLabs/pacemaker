@@ -586,6 +586,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 remote_fencing_op_t *
 initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean manual_ack)
 {
+    int query_timeout = 0;
     xmlNode *query = NULL;
     const char *client_id = NULL;
     remote_fencing_op_t *op = NULL;
@@ -599,7 +600,12 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
     CRM_LOG_ASSERT(client_id != NULL);
     op = create_remote_stonith_op(client_id, request, FALSE);
     op->owner = TRUE;
-
+    if (manual_ack) {
+        crm_notice("Initiating manual confirmation for %s: %s",
+                   op->target, op->id);
+        return op;
+    }
+    
     CRM_CHECK(op->action, return NULL);
 
     if (stonith_topology_next(op) != pcmk_ok) {
@@ -625,15 +631,6 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY, NULL, 0);
 
-    if (!manual_ack) {
-        int query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
-
-        op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
-
-    } else {
-        crm_xml_add(query, F_STONITH_DEVICE, "manual_ack");
-    }
-
     crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);
@@ -643,8 +640,11 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
 
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
-
     free_xml(query);
+
+    query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
+    op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
+
     return op;
 }
 
