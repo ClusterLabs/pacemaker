@@ -1205,7 +1205,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
         file_strm = fopen(series_file, "w");
     }
 
-    if (file_strm == NULL) {
+    if (file_strm != NULL) {
         rc = fprintf(file_strm, "%d", sequence);
         if (rc < 0) {
             crm_perror(LOG_ERR, "Cannot write to series file %s", series_file);
