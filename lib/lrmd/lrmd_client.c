@@ -1948,6 +1948,7 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
     lrmd_private_t *native = new_lrmd->private;
 
     if (!nodename && !server) {
+        lrmd_api_delete(new_lrmd);
         return NULL;
     }
 
