@@ -985,8 +985,12 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
         int status = crm_parse_int(status_s, "0");
 
         rsc = pe_find_resource(data_set->resources, op_rsc);
-        rsc->fns->print(rsc, "", opts, stdout);
-
+        if(rsc) {
+            rsc->fns->print(rsc, "", opts, stdout);
+        } else {
+            fprintf(stdout, "Unknown resource %s", op_rsc);
+        }
+        
         fprintf(stdout, ": %s (node=%s, call=%s, rc=%s",
                 op_key ? op_key : ID(xml_op),
                 crm_element_value(xml_op, XML_ATTR_UNAME),
