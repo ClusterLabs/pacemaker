@@ -499,11 +499,11 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
     }
 
     len = strlen(rsc->type) + strlen(rsc->class) + strlen(provider) + 4;
-    /* coverity[returned_null] Ignore */
     key = malloc(len);
-    snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
-
-    reload = g_hash_table_lookup(reload_hash, key);
+    if(key) {
+        snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
+        reload = g_hash_table_lookup(reload_hash, key);
+    }
 
     if (reload && ((now - 9) > reload->last_query)
         && safe_str_eq(op->op_type, RSC_START)) {
