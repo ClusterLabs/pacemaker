@@ -362,7 +362,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     GListPtr gIter = NULL;
     lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
-    gboolean uname_is_uuid = TRUE;
+    gboolean uname_is_uuid = FALSE;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -376,6 +376,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
     const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (safe_str_eq(operation, "probe_complete")) {
@@ -422,7 +423,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         uname_is_uuid = TRUE;
     }
 
-    cib_node = inject_node_state(global_cib, node, uname_is_uuid ? node : NULL);
+    cib_node = inject_node_state(global_cib, node, uname_is_uuid ? node : uuid);
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
