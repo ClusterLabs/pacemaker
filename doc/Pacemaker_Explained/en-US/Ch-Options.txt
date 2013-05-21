@@ -88,6 +88,27 @@ Indicates if the cluster has quorum. If false, this may mean that the
 cluster cannot start resources or fence other nodes. See
 +no-quorum-policy+ below.
 
+| dc-version |
+indexterm:[dc-version,Cluster Peroperty]
+indexterm:[Cluster,Peroperty,dc-version]
+Version of Pacemaker on the cluster's DC.
+
+Often includes the hash which identifies the exact Git changeset it
+was built from.  Used for diagnostic purposes.
+
+| cluster-infrastructure |
+indexterm:[cluster-infrastructure,Cluster Peroperty]
+indexterm:[Cluster,Peroperty,cluster-infrastructure]
+The messaging stack on which Pacemaker is currently running.
+Used for informational and diagnostic purposes.
+
+| expected-quorum-votes |
+indexterm:[expected-quorum-votes,Cluster Peroperty]
+indexterm:[Cluster,Peroperty,expected-quorum-votes]
+The number of nodes expected to be in the cluster
+
+Used to calculate quorum in Corosync 1.x (not CMAN) based clusters.
+
 |=========================================================
 
 Note that although these fields can be written to by the admin, in
@@ -221,11 +242,86 @@ indexterm:[pe-input-series-max,Cluster Option]
 indexterm:[Cluster,Option,pe-input-series-max]
 The number of "normal" PE inputs to save. Used when reporting problems.
 
+|default-resource-stickiness  | 0 |
+indexterm:[default-resource-stickiness,Cluster Option]
+indexterm:[Cluster,Option,default-resource-stickiness]
++Deprecated:+ See <<s-resource-defaults>> instead
+
+| is-managed-default | TRUE |
+indexterm:[is-managed-default,Cluster Option]
+indexterm:[Cluster,Option,is-managed-default]
++Deprecated:+ See <<s-resource-defaults>> instead
+
+| maintenance-mode | FALSE |
+indexterm:[maintenance-mode,Cluster Option]
+indexterm:[Cluster,Option,maintenance-mode]
+Should the cluster monitor resources and start/stop them as required
+
+| stonith-timeout | 60s |
+indexterm:[stonith-timeout,Cluster Option]
+indexterm:[Cluster,Option,stonith-timeout]
+How long to wait for the STONITH action to complete
+
+| default-action-timeout | 20s |
+indexterm:[default-action-timeout,Cluster Option]
+indexterm:[Cluster,Option,default-action-timeout]
++Deprecated:+ See <<s-operation-defaults>> instead
+
+| dc-deadtime | 20s |
+indexterm:[dc-deadtime,Cluster Option]
+indexterm:[Cluster,Option,dc-deadtime]
+How long to wait for a response from other nodes during startup.
+
+The "correct" value will depend on the speed/load of your network and the type of switches used.
+
+| cluster-recheck-interval | 15min |
+indexterm:[cluster-recheck-interval,Cluster Option]
+indexterm:[Cluster,Option,cluster-recheck-interval]
+Polling interval for time based changes to options, resource parameters and constraints.
+
+The Cluster is primarily event driven, however the configuration can have elements that change based on time. To ensure these changes take effect, we can optionally poll the cluster's status for changes.
+
+Allowed values: Zero disables polling. Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)
+
+| election-timeout | 2min |
+indexterm:[election-timeout,Cluster Option]
+indexterm:[Cluster,Option,election-timeout]
++Advanced Use Only+
+
+If need to adjust this value, it probably indicates the presence of a bug.
+
+| shutdown-escalation | 20min |
+indexterm:[shutdown-escalation,Cluster Option]
+indexterm:[Cluster,Option,shutdown-escalation]
++Advanced Use Only+
+
+If need to adjust this value, it probably indicates the presence of a bug.
+
+| crmd-integration-timeout | 3min |
+indexterm:[crmd-integration-timeout,Cluster Option]
+indexterm:[Cluster,Option,crmd-integration-timeout]
++Advanced Use Only+
+
+If need to adjust this value, it probably indicates the presence of a bug.
+
+| crmd-finalization-timeout | 30min |
+indexterm:[crmd-finalization-timeout,Cluster Option]
+indexterm:[Cluster,Option,crmd-finalization-timeout]
++Advanced Use Only+
+
+If need to adjust this value, it probably indicates the presence of a bug.
+
+| crmd-transition-delay |  |
+indexterm:[crmd-transition-delay,Cluster Option]
+indexterm:[Cluster,Option,crmd-transition-delay]
++Advanced Use Only+ Enabling this option will slow down cluster recovery under all conditions.
+
+Delay cluster recovery for the configured interval to allow for additional/related events to occur. Useful if your configuration is sensitive to the order in which ping updates arrive.
+
 |=========================================================
 
 You can always obtain an up-to-date list of cluster options, including
-their default values, by running the `pengine
-metadata` command.
+their default values, by running the `man pengine` and `man crmd` commands.
 
 == Querying and Setting Cluster Options ==
 
