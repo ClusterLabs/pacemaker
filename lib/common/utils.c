@@ -1104,6 +1104,10 @@ generate_series_filename(const char *directory, const char *series, int sequence
     CRM_CHECK(directory != NULL, return NULL);
     CRM_CHECK(series != NULL, return NULL);
 
+#if !HAVE_BZLIB_H
+    bzip = FALSE;
+#endif
+    
     len += strlen(directory);
     len += strlen(series);
     filename = malloc(len);
