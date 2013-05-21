@@ -975,7 +975,7 @@ lrmd_tls_set_key(gnutls_datum_t * key, const char *location)
 
     key->data = gnutls_malloc(read_len);
     while (!feof(stream)) {
-        char next;
+        int next;
 
         if (cur_len == buf_len) {
             buf_len = cur_len + read_len;
