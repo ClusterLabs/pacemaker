@@ -781,7 +781,7 @@ internal_stonith_action_execute(stonith_action_t * action)
         goto fail;
     }
 
-    close(p_write_fd);
+    close(p_write_fd); p_write_fd = -1;
 
     /* async */
     if (action->async) {
