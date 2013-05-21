@@ -129,7 +129,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
                st_event->target, st_event->result == pcmk_ok ? "" : " not",
-               st_event->operation,
+               st_event->action,
                st_event->executioner ? st_event->executioner : "<anyone>",
                st_event->origin, pcmk_strerror(st_event->result), st_event->id,
                st_event->client_origin ? st_event->client_origin : "<unknown>");
@@ -408,11 +408,13 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     fsa_pe_ref = NULL;
 
     if (transition_graph->complete) {
-        if (transition_timer->period_ms > 0) {
-            crm_timer_stop(transition_timer);
-            crm_timer_start(transition_timer);
-        } else if (too_many_st_failures() == FALSE) {
-            register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+        if (too_many_st_failures() == FALSE) {
+            if (transition_timer->period_ms > 0) {
+                crm_timer_stop(transition_timer);
+                crm_timer_start(transition_timer);
+            } else {
+                register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+            }
         } else {
             register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
         }
