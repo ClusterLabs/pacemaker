@@ -235,8 +235,13 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     }
 
     crm_trace("Inbound: %.200s", data);
-    if (op_request == NULL || cib_client == NULL) {
+    if (op_request == NULL) {
+        crm_trace("Invalid message from %p", c);
         crm_ipcs_send_ack(cib_client, id, "nack", __FUNCTION__, __LINE__);
+        return 0;
+
+    } else if(cib_client == NULL) {
+        crm_trace("Invalid client %p", c);
         return 0;
     }
 

@@ -626,8 +626,13 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
               enum crm_ipc_server_flags flags)
 {
     struct iovec *iov = NULL;
-    ssize_t rc = crm_ipc_prepare(request, message, &iov);
+    ssize_t rc = 0;
 
+    if(c == NULL) {
+        return -EDESTADDRREQ;
+    }
+
+    rc = crm_ipc_prepare(request, message, &iov);
     if (rc > 0) {
         rc = crm_ipcs_sendv(c, iov, flags | crm_ipc_server_free);
 
