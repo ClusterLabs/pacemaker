@@ -687,7 +687,7 @@ write_cib_contents(gpointer p)
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
     tmp_cib_fd = mkstemp(tmp_cib);
-    if (write_xml_fd(cib_local, tmp_cib, tmp_cib_fd, FALSE) <= 0) {
+    if (tmp_cib_fd < 0 || write_xml_fd(cib_local, tmp_cib, tmp_cib_fd, FALSE) <= 0) {
         crm_err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
