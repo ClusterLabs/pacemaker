@@ -270,7 +270,9 @@ do_election_count_vote(long long action,
     CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 
     if(crm_peer_cache == NULL) {
-        CRM_LOG_ASSERT(is_set(fsa_input_register, R_SHUTDOWN));
+        if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
+            crm_err("Internal error, no peer cache");
+        }
         return;
     }
 
