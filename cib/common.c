@@ -219,11 +219,12 @@ cib_get_operation_id(const char *op, int *operation)
 
         operation_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
         for (lpc = 1; lpc < max_msg_types; lpc++) {
-            /* coverity[returned_null] Ignore */
             int *value = malloc(sizeof(int));
 
-            *value = lpc;
-            g_hash_table_insert(operation_hash, (gpointer) cib_server_ops[lpc].operation, value);
+            if(value) {
+                *value = lpc;
+                g_hash_table_insert(operation_hash, (gpointer) cib_server_ops[lpc].operation, value);
+            }
         }
     }
 
