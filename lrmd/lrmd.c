@@ -1265,7 +1265,6 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     const char *op = crm_element_value(request, F_LRMD_OPERATION);
     int do_reply = 0;
     int do_notify = 0;
-    int exit = 0;
 
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
@@ -1314,9 +1313,5 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 
     if (do_notify) {
         send_generic_notify(rc, request);
-    }
-
-    if (exit) {
-        lrmd_shutdown(0);
     }
 }
