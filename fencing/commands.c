@@ -197,6 +197,9 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
         return -EINVAL;
     }
 
+    op->state = st_done;
+    op->completed = time(NULL);
+    op->delegate = strdup("a human");
     cmd->device = strdup("manual_ack");
     cmd->remote_op_id = strdup(op->id);
 

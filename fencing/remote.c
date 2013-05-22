@@ -534,6 +534,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     g_hash_table_replace(remote_op_list, op->id, op);
     CRM_LOG_ASSERT(g_hash_table_lookup(remote_op_list, op->id) != NULL);
+    crm_trace("Created %s", op->id);
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
@@ -1298,8 +1299,10 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
             }
         }
     }
-    *output = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
 
+    crm_trace("Looking for operations on %s in %p", target, remote_op_list);
+
+    *output = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
     if (remote_op_list) {
         GHashTableIter iter;
         remote_fencing_op_t *op = NULL;
@@ -1313,6 +1316,7 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
             }
 
             rc = 0;
+            crm_trace("Attaching op %s", op->id);
             entry = create_xml_node(*output, STONITH_OP_EXEC);
             crm_xml_add(entry, F_STONITH_TARGET, op->target);
             crm_xml_add(entry, F_STONITH_ACTION, op->action);
