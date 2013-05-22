@@ -1255,6 +1255,16 @@ class ClusterManager(UserDict):
             self.ShouldBeStatus[peer] = "down"
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
 
+            if peer_state[peer] == "in-progress":
+                # Wait for any in-progress operations to complete
+                shot = stonith.look(60)
+                while len(stonith.regexes) and shot:
+                    line = repr(shot)
+                    self.debug("Found: "+ line)
+                    del stonith.regexes[stonith.whichmatch]
+                    shot = stonith.look(60)
+
+            # Now make sure the node is alive too
             self.ns.WaitForNodeToComeUp(peer, self["DeadTime"])
 
             # Poll until it comes up
