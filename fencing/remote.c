@@ -488,6 +488,24 @@ static uint32_t fencing_active_peers(void)
     return count;
 }
 
+int
+stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
+{
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+
+    op->state = st_done;
+    op->completed = time(NULL);
+    op->delegate = strdup("a human");
+
+    crm_notice("Injecting manual confirmation that %s is safely off/down",
+               crm_element_value(dev, F_STONITH_TARGET));
+
+    remote_op_done(op, msg, pcmk_ok, FALSE);
+
+    /* Replies are sent via done_cb->stonith_send_async_reply()->do_local_reply() */
+    return -EINPROGRESS;
+}
+
 /*!
  * \internal
  * \brief Create a new remote stonith op

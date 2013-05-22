@@ -187,31 +187,6 @@ create_async_command(xmlNode * msg)
     return cmd;
 }
 
-static int
-stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
-{
-    async_command_t *cmd = create_async_command(msg);
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
-
-    if (cmd == NULL) {
-        return -EINVAL;
-    }
-
-    op->state = st_done;
-    op->completed = time(NULL);
-    op->delegate = strdup("a human");
-    cmd->device = strdup("manual_ack");
-    cmd->remote_op_id = strdup(op->id);
-
-    crm_notice("Injecting manual confirmation that %s is safely off/down",
-               crm_element_value(dev, F_STONITH_TARGET));
-
-    cmd->done_cb(0, 0, NULL, cmd);
-
-    /* Replies are sent via done_cb->stonith_send_async_reply()->do_local_reply() */
-    return -EINPROGRESS;
-}
-
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
