@@ -116,7 +116,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         c->name = g_strdup_printf("%s.%u", value, c->pid);
     }
 
+    crm_trace("Flags %u for command %u from %s", flags, id, crm_client_name(c));
     if (flags & crm_ipc_client_response) {
+        crm_trace("Need response");
         CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
         c->request_id = id;     /* Reply only to the last one */
     }

@@ -204,7 +204,9 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
                crm_element_value(dev, F_STONITH_TARGET));
 
     cmd->done_cb(0, 0, NULL, cmd);
-    return pcmk_ok;
+
+    /* Replies are sent via done_cb->stonith_send_async_reply()->do_local_reply() */
+    return -EINPROGRESS;
 }
 
 static gboolean
@@ -1967,6 +1969,13 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
      * If in progress, a reply will happen async after the request
      * processing is finished */
     if (rc != -EINPROGRESS) {
+        crm_trace("Reply handling: %p %u %u %d %d %s", client, client?client->request_id:0,
+                  id, is_set(call_options, st_opt_sync_call), call_options,
+                  crm_element_value(request, F_STONITH_CALLOPTS));
+
+        if (is_set(call_options, st_opt_sync_call)) {
+            CRM_ASSERT(client == NULL || client->request_id == id);
+        }
         reply = stonith_construct_reply(request, output, data, rc);
         stonith_send_reply(reply, call_options, remote_peer, client_id);
     }
