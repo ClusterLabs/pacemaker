@@ -405,6 +405,9 @@ if __name__ == '__main__':
        elif args[i] == "--once":
            Environment["scenario"] = "all-once"
 
+       elif args[i] == "--boot":
+           Environment["scenario"] = "boot"
+
        elif args[i] == "--valgrind-tests":
            Environment["valgrind-tests"] = 1
 
@@ -583,13 +586,15 @@ if __name__ == '__main__':
     elif Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
-            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+    elif Environment["scenario"] == "boot":
+        scenario = Sequence(cm, [ BootCluster(Environment)], Audits)
     else:
         scenario = RandomTests(
-            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
 
     Environment.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
     Environment.log("Stack:                  %s" % Environment["Stack"])

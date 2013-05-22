@@ -291,9 +291,9 @@ class Sequence(Scenario):
                 self.run_test(test, testcount)
                 testcount += 1
 
-class InitClusterManager(ScenarioComponent):
+class BootCluster(ScenarioComponent):
     (
-'''InitClusterManager is the most basic of ScenarioComponents.
+'''BootCluster is the most basic of ScenarioComponents.
 This ScenarioComponent simply starts the cluster manager on all the nodes.
 It is fairly robust as it waits for all nodes to come up before starting
 as they might have been rebooted or crashed for some reason beforehand.
@@ -302,7 +302,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         pass
 
     def IsApplicable(self):
-        '''InitClusterManager is so generic it is always Applicable'''
+        '''BootCluster is so generic it is always Applicable'''
         return 1
 
     def SetUp(self, CM):

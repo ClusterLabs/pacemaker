@@ -18,6 +18,7 @@ clean=0
 build=0
 kill=0
 run=0
+boot=0
 
 custom_log=""
 patterns="-e CTS:"
@@ -46,6 +47,7 @@ while true; do
 	--build|build) build=1; shift;;
 	--kill|kill) kill=1; shift; break;;
 	--run|run) run=1; shift; break;;
+	--boot|boot) boot=1; clean=1; shift; break;;
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
 	local-init)
@@ -173,7 +175,14 @@ if [ $install = 1 ]; then
     cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
 fi
 
-if [ $run = 1 ]; then
+if [ $boot = 1 ]; then
+    $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack --boot
+    rc=$?
+    if [ $rc = 0 ]; then
+	echo "The cluster is ready..."
+    fi
+    exit $rc
+elif [ $run = 1 ]; then
     $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
     exit $?
 
