@@ -86,6 +86,7 @@ typedef struct stonith_history_s {
     int state;
 
     struct stonith_history_s *next;
+    char *client;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;

@@ -464,20 +464,21 @@ main(int argc, char **argv)
                     }
 
                     if (hp->state == st_failed) {
-                        printf("%s failed to %s node %s on behalf of %s at %s\n",
-                               hp->delegate ? hp->delegate : "We", action_s, hp->target, hp->origin,
-                               ctime(&complete));
+                        printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
+                               hp->delegate ? hp->delegate : "We", action_s, hp->target,
+                               hp->client, hp->origin, ctime(&complete));
 
                     } else if (hp->state == st_done && hp->delegate) {
-                        printf("%s was able to %s node %s on behalf of %s at %s\n",
-                               hp->delegate, action_s, hp->target, hp->origin, ctime(&complete));
+                        printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
+                               hp->delegate, action_s, hp->target,
+                               hp->client, hp->origin, ctime(&complete));
 
                     } else if (hp->state == st_done) {
-                        printf("We were able to %s node %s on behalf of %s at %s\n",
-                               action_s, hp->target, hp->origin, ctime(&complete));
+                        printf("We were able to %s node %s on behalf of %s from %s at %s\n",
+                               action_s, hp->target, hp->client, hp->origin, ctime(&complete));
                     } else {
-                        printf("%s wishes to %s node %s - %d %d\n",
-                               hp->origin, action_s, hp->target, hp->state, hp->completed);
+                        printf("%s at %s wishes to %s node %s - %d %d\n",
+                               hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
                     }
 
                     free(action_s);
@@ -498,9 +499,9 @@ main(int argc, char **argv)
                             action_s = strdup(latest->action);
                         }
 
-                        printf("%s was able to %s node %s on behalf of %s at %s\n",
+                        printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
                                latest->delegate ? latest->delegate : "We", action_s, latest->target,
-                               latest->origin, ctime(&complete));
+                               latest->client, latest->origin, ctime(&complete));
 
                         free(action_s);
                     }
