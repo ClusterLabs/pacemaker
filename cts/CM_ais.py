@@ -436,8 +436,8 @@ class crm_cman(crm_cs_v0):
 
         self.update({
             "Name"           : "crm-cman",
-            "StartCmd"       : "service cman start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service cman stop;",
+            "StartCmd"       : "service pacemaker start",
+            "StopCmd"        : "service pacemaker stop",
 
             "EpocheCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
