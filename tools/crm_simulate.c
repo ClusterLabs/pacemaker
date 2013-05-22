@@ -386,7 +386,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     if (action_rsc == NULL) {
         crm_log_xml_err(action->xml, "Bad");
-        free(node);
+        free(node); free(uuid);
         return FALSE;
     }
 
@@ -465,7 +465,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(rc == pcmk_ok);
 
   done:
-    free(node);
+    free(node); free(uuid);
     free_xml(cib_node);
     action->confirmed = TRUE;
     update_graph(graph, action);
