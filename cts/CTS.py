@@ -31,6 +31,7 @@ from socket import gethostbyname_ex
 from UserDict import UserDict
 from subprocess import Popen,PIPE
 from cts.CTSvars import *
+from threading import Thread
 
 trace_rsh=None
 trace_lw=None
@@ -462,6 +463,43 @@ class FileLog(Logger):
     def name(self):
         return "FileLog"
 
+class AsyncWaitProc(Thread):
+    def __init__(self, proc, node, command, Env):
+        self.Env = Env
+        self.proc = proc
+        self.node = node
+        self.command = command
+        Thread.__init__(self)
+
+    def log(self, args):
+        if not self.Env:
+            print (args)
+        else:
+            self.Env.log(args)
+
+    def debug(self, args):
+        if not self.Env:
+            print (args)
+        else:
+            self.Env.debug(args)
+    def run(self):
+        self.debug("cmd: async: target=%s, pid=%d: %s" % (self.node, self.proc.pid, self.command))
+
+        self.proc.wait()
+        self.debug("cmd: pid %d returned %d" % (self.proc.pid, self.proc.returncode))
+
+        if self.proc.stderr:
+            lines = self.proc.stderr.readlines()
+            self.proc.stderr.close()
+            for line in lines:
+                self.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
+
+        if self.proc.stdout:
+            lines = self.proc.stdout.readlines()
+            self.proc.stdout.close()
+            for line in lines:
+                self.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
+
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
        machine - somehow.  The somehow is up to us.  This particular
@@ -471,6 +509,7 @@ class RemoteExec:
 
     def __init__(self, Env=None, silent=False):
         self.Env = Env
+        self.async = []
         self.silent = silent
 
         if trace_rsh:
@@ -538,17 +577,13 @@ class RemoteExec:
 
         rc = 0
         result = None
-        if not synchronous:
-            proc = Popen(self._cmd([node, command]),
-                       stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
-
-            if not silent: self.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
-            if proc.pid > 0:
-                return 0
-            return -1
-
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
+
+        if not synchronous and proc.pid > 0 and not self.silent:
+            aproc = AsyncWaitProc(proc, node, command, self.Env)
+            aproc.start()
+            return 0
 
         #if not blocking:
         #    fcntl.fcntl(proc.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
