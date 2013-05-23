@@ -393,7 +393,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 
     while (1) {
 
-	/* Get user input */
+        /* Get user input */
         c = getchar();
 
         switch (c) {
@@ -414,6 +414,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 break;
             case 't':
                 print_timing = ! print_timing;
+                if (print_timing)
+                    print_operations = TRUE;
                 break;
             case 'A':
                 print_nodes_attr = ! print_nodes_attr;
