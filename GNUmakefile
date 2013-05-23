@@ -48,7 +48,7 @@ TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= --without=doc
 #WITH    ?= --without=doc --with=gcov
 
-LAST_RC	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
+LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
@@ -182,8 +182,19 @@ srpm:	srpm-$(DISTRO)
 mock:   mock-$(MOCK_CFG)
 	echo "Done"
 
-yumdep: $(PACKAGE)-$(DISTRO).spec
-	sudo yum-builddep $(PACKAGE)-$(DISTRO).spec
+rpm-dep: $(PACKAGE)-$(DISTRO).spec
+	if [ x != x`which yumm-buildep 2>/dev/null` ]; then			\
+	    echo "Installing with yum-builddep";		\
+	    sudo yum-builddep $(PACKAGE)-$(DISTRO).spec;	\
+	elif [ x != x`which yum 2>/dev/null` ]; then				\
+	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
+	    sudo yum install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');	\
+	elif [ x != x`which zypper` ]; then			\
+	    echo -e "Installing: $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')\n\n";	\
+	    sudo zypper install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ');\
+	else							\
+	    echo "I don't know how to install $(shell grep BuildRequires pacemaker.spec.in | sed -e s/BuildRequires:// -e s:\>.*0:: | tr '\n' ' ')";\
+	fi
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
