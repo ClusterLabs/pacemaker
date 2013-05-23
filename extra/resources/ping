@@ -305,6 +305,7 @@ ping_update() {
 : ${OCF_RESKEY_attempts:="3"}
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_failure_score:="0"}
 
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
