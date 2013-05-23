@@ -166,6 +166,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         params = NULL;
 
         if (asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT_DIR, provider, agent) == -1) {
+            crm_err("Internal error: cannot create agent path");
             goto return_error;
         }
         op->opaque->args[0] = strdup(op->opaque->exec);
@@ -177,6 +178,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
              * of tacking on the LSB_ROOT_DIR path to the front */
             op->opaque->exec = strdup(op->agent);
         } else if (asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT_DIR, op->agent) == -1) {
+            crm_err("Internal error: cannot create agent path");
             goto return_error;
         }
         op->opaque->args[0] = strdup(op->opaque->exec);
@@ -207,6 +209,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
             op->opaque->exec = strdup(op->agent);
 
         } else if (asprintf(&op->opaque->exec, "%s/%s", NAGIOS_PLUGIN_DIR, op->agent) == -1) {
+            crm_err("Internal error: cannot create agent path");
             goto return_error;
         }
 

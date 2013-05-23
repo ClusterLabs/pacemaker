@@ -1607,7 +1607,13 @@ main(int argc, char **argv)
 
         op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
 
-        if (services_action_sync(op)) {
+        if(op == NULL) {
+            /* Re-run but with stderr enabled so we can display a sane error message */
+            crm_enable_stderr(TRUE);
+            resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+            return crm_exit(EINVAL);
+
+        } else if (services_action_sync(op)) {
             int more, lpc, last;
             char *local_copy = NULL;
 
