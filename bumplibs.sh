@@ -11,7 +11,7 @@ headers[pengine]="include/crm/pengine/common.h  include/crm/pengine/complex.h  i
 headers[stonithd]="include/crm/stonith-ng.h"
 headers[lrmd]="include/crm/lrmd.h"
 
-LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1`
+LAST_RELEASE=`test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1`
 for lib in crmcommon crmcluster transitioner cib pe_rules pe_status stonithd pengine lrmd; do
     git diff -w $LAST_RELEASE..HEAD ${headers[$lib]}
     echo ""

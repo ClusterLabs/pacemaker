@@ -27,7 +27,7 @@ lib_LTLIBRARIES	= libtransitioner.la
 noinst_HEADERS		= 
 libtransitioner_la_SOURCES	= unpack.c graph.c utils.c
 
-libtransitioner_la_LDFLAGS	= -version-info 2:0:0
+libtransitioner_la_LDFLAGS	= -version-info 2:1:0
 libtransitioner_la_CFLAGS	= -I$(top_builddir)
 
 clean-generic:

@@ -32,7 +32,7 @@ if ENABLE_ACL
 libcib_la_SOURCES       += cib_acl.c
 endif
 
-libcib_la_LDFLAGS	= -version-info 3:0:0 $(top_builddir)/lib/common/libcrmcommon.la $(CRYPTOLIB) \
+libcib_la_LDFLAGS	= -version-info 3:1:0 $(top_builddir)/lib/common/libcrmcommon.la $(CRYPTOLIB) \
 			$(top_builddir)/lib/pengine/libpe_rules.la
 
 libcib_la_CFLAGS	= -I$(top_srcdir)
