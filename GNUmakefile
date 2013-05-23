@@ -48,9 +48,12 @@ TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= --without=doc
 #WITH    ?= --without=doc --with=gcov
 
-LAST_TAG	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
-LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1)
-NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
+LAST_RC	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
+LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
+NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
+
+beekhof:
+	echo $(LAST_RELEASE) $(NEXT_RELEASE)
 
 BUILD_COUNTER	?= build.counter
 LAST_COUNT      = $(shell test ! -e $(BUILD_COUNTER) && echo 0; test -e $(BUILD_COUNTER) && cat $(BUILD_COUNTER))
@@ -190,7 +193,7 @@ release:
 	make TAG=$(LAST_RELEASE) rpm
 
 rc:
-	make TAG=$(LAST_TAG) rpm
+	make TAG=$(LAST_RC) rpm
 
 dirty:
 	make TAG=dirty mock
@@ -265,7 +268,7 @@ summary:
 	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
 
 rc-changes:
-	@make LAST_RELEASE=$(LAST_TAG) changes
+	@make LAST_RELEASE=$(LAST_RC) changes
 
 changes: summary
 	@printf "\n- Features added in $(NEXT_RELEASE)\n"
