@@ -48,6 +48,7 @@ TAG     ?= $(shell git log --pretty="format:%h" -n 1)
 WITH    ?= --without=doc
 #WITH    ?= --without=doc --with=gcov
 
+LAST_TAG	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | head -n 1)
 LAST_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1)
 NEXT_RELEASE	?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1 | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
@@ -58,9 +59,9 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 init:
 	./autogen.sh
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
-	if [ -e `which rpm` ]; then					\
+	if [ -e $(shell which rpm) ]; then				\
 		echo "Suggested invocation:"; 				\
-		rpm --eval %{configure} | grep -v program-prefix`;	\
+		rpm --eval %{configure} | grep -v program-prefix;	\
 	fi
 
 export:
@@ -85,7 +86,16 @@ $(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
 
 $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	rm -f $@
-	cp $(PACKAGE).spec.in $@
+	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
+	    cp $(PACKAGE).spec.in $@;						\
+	    echo "Rebuilt $@ (local modifications)";				\
+	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
+	    cp $(PACKAGE).spec.in $@;						\
+	    echo "Rebuilt $@";							\
+	else 									\
+	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
+	    echo "Rebuilt $@ from $(TAG)";					\
+	fi
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
 	sed -i.sed s:libexecdir}/lcrso:libdir}/lcrso:g $@
@@ -107,27 +117,35 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i.sed s:.*pacemaker.service.*::g $@
 	sed -i.sed s:global\ cs_major.*:global\ cs_major\ 1:g $@
 	sed -i.sed s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
-	@echo Rebuilt $@
+	@echo "Applied SUSE-specific modifications"
 
 # Works for all fedora based distros
 $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 	rm -f $@
-	cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec
-	@echo Rebuilt $@
+	if [ x != x"`git ls-files -m | grep pacemaker.spec.in`" ]; then		\
+	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
+	    echo "Rebuilt $@ (local modifications)";				\
+	elif [ x = x"`git show $(TAG):pacemaker.spec.in 2>/dev/null`" ]; then	\
+	    cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec;				\
+	    echo "Rebuilt $@";							\
+	else 									\
+	    git show $(TAG):$(PACKAGE).spec.in >> $(PACKAGE)-$*.spec;		\
+	    echo "Rebuilt $@ from $(TAG)";					\
+	fi
 
 srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
-	if [ -e $(BUILD_COUNTER) ]; then								\
-		echo $(COUNT) > $(BUILD_COUNTER);							\
+	if [ -e $(BUILD_COUNTER) ]; then					\
+		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
 	sed -i.sed 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
 	sed -i.sed 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
-	case $(TAG) in 															\
-		Pacemaker*) sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed s:Pacemaker-::)/' $(PACKAGE).spec;;		\
-		*)          sed -i.sed 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed s:Pacemaker-::)/' $(PACKAGE).spec;; 	\
+	case $(TAG) in 								\
+		Pacemaker*) sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;		\
+		*)          sed -i.sed 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;; 	\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
@@ -170,6 +188,9 @@ rpm:	srpm
 
 release:
 	make TAG=$(LAST_RELEASE) rpm
+
+rc:
+	make TAG=$(LAST_TAG) rpm
 
 dirty:
 	make TAG=dirty mock
@@ -241,10 +262,12 @@ summary:
 	@printf "\n- Statistics:\n"
 	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n"
 	@printf "  Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat | tail -n 1
+	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
 
-changes:
-	@make summary
+rc-changes:
+	@make LAST_RELEASE=$(LAST_TAG) changes
+
+changes: summary
 	@printf "\n- Features added in $(NEXT_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
