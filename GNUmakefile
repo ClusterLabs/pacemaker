@@ -183,7 +183,7 @@ mock:   mock-$(MOCK_CFG)
 	echo "Done"
 
 rpm-dep: $(PACKAGE)-$(DISTRO).spec
-	if [ x != x`which yumm-buildep 2>/dev/null` ]; then			\
+	if [ x != x`which yum-builddep 2>/dev/null` ]; then			\
 	    echo "Installing with yum-builddep";		\
 	    sudo yum-builddep $(PACKAGE)-$(DISTRO).spec;	\
 	elif [ x != x`which yum 2>/dev/null` ]; then				\
