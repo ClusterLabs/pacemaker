@@ -1,0 +1,65 @@
+<cib epoch="141" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Apr 23 22:38:47 2013" update-origin="yingying.site" update-client="cibadmin" update-user="root" crm_feature_set="3.0.7" have-quorum="0" dc-uuid="yingying.site">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.9-138556c"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="classic openais (with plugin)"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1366727914"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="yingying.site" uname="yingying.site"/>
+    </nodes>
+    <resources>
+      <group id="group1">
+        <meta_attributes id="group1-meta_attributes">
+          <nvpair id="group1-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+        <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="rsc1-monitor-1" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="rsc2-monitor-10" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="rsc3-monitor-10" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="yingying.site" uname="yingying.site" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="yingying.site">
+        <instance_attributes id="status-yingying.site">
+          <nvpair id="status-yingying.site-last-failure-rsc2" name="last-failure-rsc2" value="1366727884"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="yingying.site">
+        <lrm_resources>
+          <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:2:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:0;8:2:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1366701080" last-rc-change="0" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_monitor_10000" operation_key="rsc1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="9:2:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:0;9:2:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="63" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rsc3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc3_last_0" operation_key="rsc3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:76:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:0;9:76:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="201" rc-code="0" op-status="0" interval="0" last-run="1366727927" last-rc-change="0" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc3_monitor_10000" operation_key="rsc3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="11:75:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:0;11:75:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="197" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc2_last_failure_0" operation_key="rsc2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="8:76:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:1;8:76:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="206" rc-code="1" op-status="0" interval="0" last-run="1366727927" last-rc-change="1366727927" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc2_monitor_10000" operation_key="rsc2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:75:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" transition-magic="0:0;9:75:0:9d0dbf9e-92cd-42cb-82ad-0c9c7ca6adff" call-id="191" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
