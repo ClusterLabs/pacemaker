@@ -408,15 +408,11 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     fsa_pe_ref = NULL;
 
     if (transition_graph->complete) {
-        if (too_many_st_failures() == FALSE) {
-            if (transition_timer->period_ms > 0) {
-                crm_timer_stop(transition_timer);
-                crm_timer_start(transition_timer);
-            } else {
-                register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
-            }
+        if (transition_timer->period_ms > 0) {
+            crm_timer_stop(transition_timer);
+            crm_timer_start(transition_timer);
         } else {
-            register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
+            register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }
         return;
     }
