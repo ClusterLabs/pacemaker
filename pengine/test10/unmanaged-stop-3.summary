@@ -1,0 +1,22 @@
+
+Current cluster status:
+Online: [ yingying.site ]
+
+ Resource Group: group1
+     rsc1	(ocf::pacemaker:Dummy):	Started yingying.site 
+     rsc2	(ocf::pacemaker:Dummy):	Started yingying.site (unmanaged) FAILED 
+
+Transition Summary:
+ * Stop    rsc1	(yingying.site)
+
+Executing cluster transition:
+ * Pseudo action:   group1_stop_0
+ * Pseudo action:   group1_start_0
+
+Revised cluster status:
+Online: [ yingying.site ]
+
+ Resource Group: group1
+     rsc1	(ocf::pacemaker:Dummy):	Started yingying.site 
+     rsc2	(ocf::pacemaker:Dummy):	Started yingying.site (unmanaged) FAILED 
+
