@@ -33,6 +33,22 @@
 }
 
 {
+   Cman - Points to uninitialized bytes
+   Memcheck:Param
+   socketcall.sendmsg(msg)
+   fun:__sendmsg_nocancel
+   obj:/usr/lib64/libcman.so.3.0
+   obj:/usr/lib64/libcman.so.3.0
+}
+
+{
+   Cman - Jump or move depends on uninitialized values
+   Memcheck:Cond
+   obj:/usr/lib64/libcman.so.3.0
+   obj:/usr/lib64/libcman.so.3.0
+}
+
+{
    glib types
    Memcheck:Leak
    fun:malloc
