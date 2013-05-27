@@ -175,11 +175,8 @@ mainloop_set_trigger(crm_trigger_t * source)
 gboolean
 mainloop_destroy_trigger(crm_trigger_t * source)
 {
-    source->trigger = FALSE;
-    if (source->id > 0) {
-        g_source_remove(source->id);
-        source->id = 0;
-    }
+    GSource *gs = (GSource *)source;
+    g_source_destroy(gs);
     return TRUE;
 }
 
@@ -323,6 +320,7 @@ mainloop_destroy_signal(int sig)
         return TRUE;
     }
 
+    crm_trace("Destroying signal %d", sig);
     tmp = crm_signals[sig];
     crm_signals[sig] = NULL;
     mainloop_destroy_trigger((crm_trigger_t *) tmp);

@@ -89,4 +89,4 @@
 # PCMK_valgrind_enabled=cib,crmd
 # PCMK_callgrind_enabled=yes
 # PCMK_callgrind_enabled=cib,crmd
-# VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p"
+# VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"

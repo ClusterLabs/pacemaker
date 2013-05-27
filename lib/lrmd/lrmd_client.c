@@ -1986,6 +1986,12 @@ lrmd_api_delete(lrmd_t * lrmd)
         free(native->remote_nodename);
         free(native->remote);
     }
+
+    if (stonith_api) {
+        stonith_api->cmds->free(stonith_api);
+        stonith_api = NULL;
+    }
+
     free(lrmd->private);
     free(lrmd);
 }

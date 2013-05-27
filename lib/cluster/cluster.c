@@ -328,6 +328,10 @@ empty_uuid_cache(void)
         g_hash_table_destroy(crm_uuid_cache);
         crm_uuid_cache = NULL;
     }
+    if (crm_uname_cache != NULL) {
+        g_hash_table_destroy(crm_uname_cache);
+        crm_uname_cache = NULL;
+    }
 }
 
 void

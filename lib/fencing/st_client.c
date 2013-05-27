@@ -1534,6 +1534,7 @@ stonith_api_signoff(stonith_t * stonith)
         crm_ipc_destroy(ipc);
     }
 
+    free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     return pcmk_ok;
 }
@@ -2224,10 +2225,12 @@ stonith_api_free(stonith_t * stonith)
         stonith_private_t *private = stonith->private;
 
         g_hash_table_destroy(private->stonith_op_callback_table);
-        free(private->token);
         free(stonith->private);
         free(stonith->cmds);
         free(stonith);
+
+    } else {
+        crm_err("Not free'ing active connection");
     }
 
     return rc;

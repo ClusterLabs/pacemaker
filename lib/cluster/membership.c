@@ -188,11 +188,13 @@ void
 crm_peer_destroy(void)
 {
     if (crm_peer_cache != NULL) {
+        crm_trace("Destroying peer cache with %d members", g_hash_table_size(crm_peer_cache));
         g_hash_table_destroy(crm_peer_cache);
         crm_peer_cache = NULL;
     }
 
     if (crm_peer_id_cache != NULL) {
+        crm_trace("Destroying peer ID cache with %d members", g_hash_table_size(crm_peer_id_cache));
         g_hash_table_destroy(crm_peer_id_cache);
         crm_peer_id_cache = NULL;
     }

@@ -141,17 +141,21 @@ internal_lrm_state_destroy(gpointer data)
         return;
     }
 
+    crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
     if (lrm_state->resource_history) {
+        crm_trace("Destroying history op cache with %d members", g_hash_table_size(lrm_state->resource_history));
         g_hash_table_destroy(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
+        crm_trace("Destroying deletion op cache with %d members", g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_destroy(lrm_state->deletion_ops);
     }
     if (lrm_state->pending_ops) {
+        crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_destroy(lrm_state->pending_ops);
     }
 
@@ -215,7 +219,12 @@ void
 lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
+        crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table);
+    }
+    if(proxy_table) {
+        crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
+        g_hash_table_destroy(proxy_table);
     }
 }
 

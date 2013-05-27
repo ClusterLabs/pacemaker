@@ -37,15 +37,26 @@
    Memcheck:Param
    socketcall.sendmsg(msg)
    fun:__sendmsg_nocancel
-   obj:/usr/lib64/libcman.so.3.0
-   obj:/usr/lib64/libcman.so.3.0
+   obj:*/libcman.so.3.0
+   obj:*/libcman.so.3.0
 }
 
 {
    Cman - Jump or move depends on uninitialized values
    Memcheck:Cond
-   obj:/usr/lib64/libcman.so.3.0
-   obj:/usr/lib64/libcman.so.3.0
+   obj:*/libcman.so.3.0
+   obj:*/libcman.so.3.0
+}
+
+{
+   quarks - hashtable
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-*
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+   fun:g_quark_from_static_string
 }
 
 {

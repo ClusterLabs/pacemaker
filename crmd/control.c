@@ -210,16 +210,21 @@ crmd_exit(int rc)
     GListPtr gIter = NULL;
 
     crm_trace("Preparing to exit");
+
+    if(ipcs) {
+        crm_trace("Closing IPC server");
+        mainloop_del_ipc_server(ipcs);
+    }
+
     if (attrd_ipc) {
+        crm_trace("Closing attrd connection");
         crm_ipc_close(attrd_ipc);
         crm_ipc_destroy(attrd_ipc);
-    }
-    if (crmd_mainloop) {
-        g_main_loop_quit(crmd_mainloop);
-        g_main_loop_unref(crmd_mainloop);
+        attrd_ipc = NULL;
     }
 #if SUPPORT_HEARTBEAT
     if (fsa_cluster_conn) {
+        crm_trace("Disconnecting heartbeat");
         fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
         fsa_cluster_conn = NULL;
     }
@@ -237,29 +242,23 @@ crmd_exit(int rc)
     g_list_free(fsa_message_queue);
     fsa_message_queue = NULL;
 
-    crm_client_cleanup();
-    empty_uuid_cache();
-    crm_peer_destroy();
     clear_bit(fsa_input_register, R_MEMBERSHIP);
 
-    if (te_subsystem->client && te_subsystem->client->ipcs) {
-        crm_debug("Full destroy: TE");
-        qb_ipcs_disconnect(te_subsystem->client->ipcs);
-    }
-    free(te_subsystem);
-
     if (pe_subsystem->client && pe_subsystem->client->ipcs) {
-        crm_debug("Full destroy: PE");
+        crm_trace("Disconnecting Policy Engine");
         qb_ipcs_disconnect(pe_subsystem->client->ipcs);
     }
     free(pe_subsystem);
 
     free(cib_subsystem);
+    free(te_subsystem);
 
     if (reload_hash) {
+        crm_trace("Destroying reload cache with %d members", g_hash_table_size(reload_hash));
         g_hash_table_destroy(reload_hash);
     }
     if (voted) {
+        crm_trace("Destroying voted cache with %d members", g_hash_table_size(voted));
         g_hash_table_destroy(voted);
     }
 
@@ -269,6 +268,19 @@ crmd_exit(int rc)
     verify_stopped(fsa_state, LOG_WARNING);
     clear_bit(fsa_input_register, R_LRM_CONNECTED);
     lrm_state_destroy_all();
+
+    mainloop_destroy_trigger(fsa_source);
+    mainloop_destroy_trigger(config_read);
+    mainloop_destroy_trigger(stonith_reconnect);
+
+    if(stonith_api) {
+        crm_trace("Disconnecting fencing API");
+        stonith_api->cmds->free(stonith_api);
+    }
+
+    crm_client_cleanup();
+    empty_uuid_cache();
+    crm_peer_destroy();
 
     free(transition_timer);
     free(integration_timer);
@@ -283,10 +295,35 @@ crmd_exit(int rc)
     free(fsa_our_uname);
     free(fsa_our_uuid);
     free(fsa_our_dc);
+    free(te_uuid);
+
+    free(fsa_pe_ref);
 
     free(max_generation_from);
     free_xml(max_generation_xml);
 
+    mainloop_destroy_signal(SIGUSR1);
+    mainloop_destroy_signal(SIGTERM);
+    mainloop_destroy_signal(SIGTRAP);
+    mainloop_destroy_signal(SIGCHLD);
+
+    if (crmd_mainloop) {
+        int lpc = 0;
+        GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
+        crm_trace("Draining mainloop %d %d", g_main_loop_is_running(crmd_mainloop), g_main_context_pending(ctx));
+        while(g_main_context_pending(ctx) && lpc < 10) {
+            lpc++;
+            crm_trace("Iteration %d", lpc);
+            g_main_context_dispatch(ctx);
+        }
+
+        crm_trace("Closing mainloop %d %d", g_main_loop_is_running(crmd_mainloop), g_main_context_pending(ctx));
+        g_main_loop_quit(crmd_mainloop);
+        g_main_loop_unref(crmd_mainloop);
+        crmd_mainloop = NULL;
+    }
+
+    crm_trace("Done");
     return crm_exit(rc);
 }
 
@@ -606,7 +643,8 @@ do_stop(long long action,
         stop_subsystem(pe_subsystem, FALSE);
     }
 
-    mainloop_del_ipc_server(ipcs);
+    crm_trace("Closing IPC server");
+    mainloop_del_ipc_server(ipcs); ipcs = NULL;
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
