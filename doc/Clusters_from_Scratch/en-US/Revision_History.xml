@@ -8,43 +8,43 @@
 	<simpara>
 		<revhistory>
 			<revision>
-			  <revnumber>1</revnumber>
+			  <revnumber>1-0</revnumber>
 			  <date>Mon May 17 2010</date>
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>2</revnumber>
+			  <revnumber>2-0</revnumber>
 			  <date>Wed Sep 22 2010</date>
 			  <author><firstname>Raoul</firstname><surname>Scarazzini</surname><email>rasca@miamammausalinux.org</email></author>
 			  <revdescription><simplelist><member>Italian translation</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>3</revnumber>
+			  <revnumber>3-0</revnumber>
 			  <date>Wed Feb 9 2011</date>
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Updated for Fedora 13</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>4</revnumber>
+			  <revnumber>4-0</revnumber>
 			  <date>Wed Oct 5 2011</date>
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Update the GFS2 section to use CMAN</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>5</revnumber>
+			  <revnumber>5-0</revnumber>
 			  <date>Fri Feb 10 2012</date>
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Generate docbook content from asciidoc sources</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>6</revnumber>
+			  <revnumber>6-0</revnumber>
 			  <date>Tues July 3 2012</date>
 			  <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
 			  <revdescription><simplelist><member>Updated for Fedora 17</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>7</revnumber>
+			  <revnumber>7-0</revnumber>
 			  <date>Fri Sept 14 2012</date>
 			  <author><firstname>David</firstname><surname>Vossel</surname><email>dvossel@redhat.com</email></author>
 			  <revdescription><simplelist><member>Updated for pcs</member></simplelist></revdescription>
