@@ -1,12 +1,8 @@
 digraph "g" {
 "all_stopped" [ style=dashed color="red" fontcolor="orange"]
-"group1_running_0" [ style=dashed color="red" fontcolor="orange"]
-"group1_start_0" -> "group1_running_0" [ style = dashed]
-"group1_start_0" [ style=bold color="green" fontcolor="orange"]
 "group1_stop_0" -> "group1_stopped_0" [ style = dashed]
 "group1_stop_0" -> "rsc1_stop_0 yingying.site" [ style = dashed]
 "group1_stop_0" [ style=bold color="green" fontcolor="orange"]
-"group1_stopped_0" -> "group1_start_0" [ style = dashed]
 "group1_stopped_0" [ style=dashed color="red" fontcolor="orange"]
 "probe_complete yingying.site" [ style=bold color="green" fontcolor="black"]
 "rsc1_stop_0 yingying.site" -> "all_stopped" [ style = dashed]

@@ -27,7 +27,7 @@ Transition Summary:
  * Start   rsc_c001n02	(c001n03 - blocked)
  * Start   rsc_c001n03	(c001n03 - blocked)
  * Start   rsc_c001n01	(c001n03 - blocked)
- * Stop    child_DoFencing:1	(c001n02)
+ * Stop    child_DoFencing:1	(c001n02 - blocked)
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n03
