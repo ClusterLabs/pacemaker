@@ -2007,11 +2007,28 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         GListPtr gIter = NULL;
 
         CRM_CHECK(current != NULL,);
+
+        key = stop_key(rsc);
         for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
+            action_t *stop_op = NULL;
+            gboolean allowed = FALSE;
 
-            log_change("Stop    %s\t(%s)", rsc->id, node->details->uname);
+            possible_matches = find_actions(rsc->actions, key, node);
+            if (possible_matches) {
+                stop_op = possible_matches->data;
+                g_list_free(possible_matches);
+            }
+
+            if (stop_op && (stop_op->flags & pe_action_runnable)) {
+                allowed = TRUE;
+            }
+
+            log_change("Stop    %s\t(%s%s)", rsc->id, node->details->uname,
+                       allowed ? "" : " - blocked");
         }
+
+        free(key);
     }
 
     if (moving) {
