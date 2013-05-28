@@ -356,12 +356,13 @@ crmd_exit(int rc)
     }
 
     crm_trace("Done %d", rc);
-
-    if(rc != pcmk_ok) {
-        crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
-        crm_write_blackbox(SIGTRAP, NULL);
+    if(rc == pcmk_ok) {
+        /* Graceful */
+        return rc;
     }
 
+    crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
+    crm_write_blackbox(SIGTRAP, NULL);
     return crm_exit(rc);
 }
 

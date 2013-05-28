@@ -163,6 +163,6 @@ crmd_init(void)
         exit_code = 1;
     }
 
-    crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-    return crmd_exit(exit_code);
+    crm_info("%u stopped: %s (%d)", getpid(), pcmk_strerror(exit_code), exit_code);
+    return crm_exit(exit_code);
 }
