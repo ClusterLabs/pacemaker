@@ -414,6 +414,7 @@ terminate_cs_connection(void)
         if (pcmk_cpg_handle) {
             crm_info("Disconnecting CPG");
             if (cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group) == CS_OK) {
+                crm_info("Destroying CPG");
                 cpg_finalize(pcmk_cpg_handle);
             }
             pcmk_cpg_handle = 0;
@@ -428,6 +429,7 @@ terminate_cs_connection(void)
         if (pcmk_cman_handle) {
             crm_info("Disconnecting cman");
             if (cman_stop_notification(pcmk_cman_handle) >= 0) {
+                crm_info("Destroying cman");
                 cman_finish(pcmk_cman_handle);
             }
 

@@ -193,6 +193,7 @@ extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern GHashTable *reload_hash;
+extern char *te_client_id;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
 
@@ -300,6 +301,7 @@ crmd_exit(int rc)
     free(fsa_our_dc);
 
     free(te_uuid);
+    free(te_client_id);
     free(fsa_pe_ref);
     free(failed_stop_offset);
     free(failed_start_offset);

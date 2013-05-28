@@ -102,12 +102,13 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
 #  include <libfenced.h>
 #endif
 
+char *te_client_id = NULL;
+
 static void
 tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 {
-    static char *client_id = NULL;
-    if(client_id == NULL) {
-        client_id = g_strdup_printf("%s.%d", crm_system_name, getpid());
+    if(te_client_id == NULL) {
+        te_client_id = g_strdup_printf("%s.%d", crm_system_name, getpid());
     }
 
     if (st_event == NULL) {
@@ -163,7 +164,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             /* The DC always sends updates */
             send_stonith_update(NULL, st_event->target, uuid);
 
-            if (st_event->client_origin && safe_str_neq(st_event->client_origin, client_id)) {
+            if (st_event->client_origin && safe_str_neq(st_event->client_origin, te_client_id)) {
 
                 /* Abort the current transition graph if it wasn't us
                  * that invoked stonith to fence someone
