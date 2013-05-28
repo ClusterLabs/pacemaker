@@ -140,7 +140,7 @@ crmd_quorum_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(1);
+        crmd_exit(ENOLINK);
 
     } else {
         crm_info("connection closed");
@@ -152,7 +152,7 @@ crmd_ais_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(1);
+        crmd_exit(ENOLINK);
 
     } else {
         crm_info("connection closed");
@@ -165,7 +165,7 @@ crmd_cman_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(1);
+        crmd_exit(ENOLINK);
 
     } else {
         crm_info("connection closed");
