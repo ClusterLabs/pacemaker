@@ -221,19 +221,6 @@ text2msg_type(const char *text)
     return type;
 }
 
-static char *ais_cluster_name = NULL;
-
-gboolean
-crm_get_cluster_name(char **cname)
-{
-    CRM_CHECK(cname != NULL, return FALSE);
-    if (ais_cluster_name) {
-        *cname = strdup(ais_cluster_name);
-        return TRUE;
-    }
-    return FALSE;
-}
-
 GListPtr cs_message_queue = NULL;
 int cs_message_timer = 0;
 

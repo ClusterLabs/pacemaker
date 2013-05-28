@@ -132,7 +132,6 @@ gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);
 int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
-gboolean crm_get_cluster_name(char **cname);
 
 #  if SUPPORT_HEARTBEAT
 gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);

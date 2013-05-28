@@ -140,7 +140,6 @@ int ais_fd_async = -1;          /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
 
 hdb_handle_t ais_ipc_handle = 0;
-static char *ais_cluster_name = NULL;
 
 gboolean
 get_ais_nodeid(uint32_t * id, char **uname)
@@ -192,20 +191,8 @@ get_ais_nodeid(uint32_t * id, char **uname)
 
     *id = answer.id;
     *uname = strdup(answer.uname);
-    ais_cluster_name = strdup(answer.cname);
 
     return TRUE;
-}
-
-gboolean
-crm_get_cluster_name(char **cname)
-{
-    CRM_CHECK(cname != NULL, return FALSE);
-    if (ais_cluster_name) {
-        *cname = strdup(ais_cluster_name);
-        return TRUE;
-    }
-    return FALSE;
 }
 
 gboolean
@@ -743,13 +730,6 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
         crm_err("Couldn't connect to cman");
         goto cman_bail;
     }
-
-    rc = cman_get_cluster(pcmk_cman_handle, &cluster);
-    if (rc < 0) {
-        crm_err("Couldn't query cman cluster details: %d %d", rc, errno);
-        goto cman_bail;
-    }
-    ais_cluster_name = strdup(cluster.ci_name);
 
     rc = cman_start_notification(pcmk_cman_handle, cman_event_callback);
     if (rc < 0) {
