@@ -325,10 +325,12 @@ void
 empty_uuid_cache(void)
 {
     if (crm_uuid_cache != NULL) {
+        crm_trace("Destroying uuid cache with %d members", g_hash_table_size(crm_uuid_cache));
         g_hash_table_destroy(crm_uuid_cache);
         crm_uuid_cache = NULL;
     }
     if (crm_uname_cache != NULL) {
+        crm_trace("Destroying uname cache with %d members", g_hash_table_size(crm_uname_cache));
         g_hash_table_destroy(crm_uname_cache);
         crm_uname_cache = NULL;
     }
