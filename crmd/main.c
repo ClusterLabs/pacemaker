@@ -62,6 +62,7 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
 
+    crmd_mainloop = g_main_new(FALSE);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating resource and node failures as well as co-ordinating the cluster's response");
@@ -138,7 +139,6 @@ crmd_init(void)
 
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
-        crmd_mainloop = g_main_new(FALSE);
         crm_trace("Starting %s's mainloop", crm_system_name);
 
 #ifdef REALTIME_SUPPORT
