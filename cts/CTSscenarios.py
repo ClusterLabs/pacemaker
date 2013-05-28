@@ -325,6 +325,15 @@ as they might have been rebooted or crashed for some reason beforehand.
         CM.log("Stopping Cluster Manager on all nodes")
         return CM.stopall(verbose=True)
 
+class LeaveBooted(BootCluster):
+    def TearDown(self, CM):
+        '''Set up the given ScenarioComponent'''
+
+        # Stop the cluster manager everywhere
+
+        CM.log("Leaving Cluster running on all nodes")
+        return 1
+
 class PingFest(ScenarioComponent):
     (
 '''PingFest does a flood ping to each node in the cluster from the test machine.
