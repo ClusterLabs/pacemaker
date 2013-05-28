@@ -226,7 +226,13 @@ mainloop_set_trigger(crm_trigger_t * source)
 gboolean
 mainloop_destroy_trigger(crm_trigger_t * source)
 {
-    GSource *gs = (GSource *)source;
+    GSource *gs = NULL;
+
+    if(source == NULL) {
+        return TRUE;
+    }
+
+    gs = (GSource *)source;
     crm_trace("Destroying %p with ref-count=%u", source, g_source_refcount(gs));
 
     g_source_unref(gs); /* The caller no longer carries a reference to source */
