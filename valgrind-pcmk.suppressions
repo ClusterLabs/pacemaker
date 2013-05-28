@@ -7,29 +7,11 @@
 }
 
 {
-   Ignore crm_system_name
-   Memcheck:Leak
-   fun:malloc
-   fun:crm_strdup_fn
-   fun:crm_log_init_worker
-   fun:crm_log_init
-   fun:main
-}
-
-{
-   libqb fixed upstream 1
+   Ignore option parsing
    Memcheck:Leak
    fun:realloc
-   fun:_grow_bin_array
-   fun:_qb_array_grow
-}
-
-{
-   libqb fixed upstream 2
-   Memcheck:Leak
-   fun:calloc
-   fun:qb_log_dcs_get
-   fun:_qb_log_callsite_get
+   fun:crm_get_option_long
+   fun:main
 }
 
 {
