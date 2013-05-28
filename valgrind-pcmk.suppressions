@@ -88,12 +88,63 @@
 }
 
 {
-   g_mainloop - create
+   g_mainloop - new
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_slist_*d
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   g_mainloop - new 2
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
    fun:g_main_loop_new
-   fun:crmd_init
+   fun:main
+}
+
+{
+   g_mainloop - new 3
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   g_mainloop - new 4
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   g_mainloop - new 5
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-*
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
 }
 
 {
