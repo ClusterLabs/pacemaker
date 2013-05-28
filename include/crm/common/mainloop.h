@@ -30,6 +30,8 @@ typedef struct trigger_s crm_trigger_t;
 typedef struct mainloop_io_s mainloop_io_t;
 typedef struct mainloop_child_s mainloop_child_t;
 
+void mainloop_cleanup(void);
+
 crm_trigger_t *mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
                                     gpointer userdata);
 

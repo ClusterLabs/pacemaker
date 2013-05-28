@@ -386,6 +386,14 @@ mainloop_destroy_signal(int sig)
 
 static qb_array_t *gio_map = NULL;
 
+void
+mainloop_cleanup(void) 
+{
+    if(gio_map) {
+        qb_array_free(gio_map);
+    }
+}
+
 /*
  * libqb...
  */

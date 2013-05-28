@@ -82,10 +82,14 @@ int node_score_infinity = INFINITY;
 int
 crm_exit(int rc)
 {
-    crm_trace("exit %d", rc);
+    mainloop_cleanup();
+
 #if HAVE_LIBXML2
+    crm_trace("cleaning up libxml");
     crm_xml_cleanup();
 #endif
+
+    crm_trace("exit %d", rc);
     qb_log_fini();
     exit(rc);
     return rc;                  /* Can never happen, but allows return crm_exit(rc)
