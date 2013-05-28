@@ -481,7 +481,7 @@ main(int argc, char **argv)
     if (exit_code != pcmk_ok) {
         crm_err("Init failed, could not perform requested operations");
         fprintf(stderr, "Init failed, could not perform requested operations\n");
-        return -exit_code;
+        return crm_exit(-exit_code);
     }
 
     exit_code = do_work(input, command_options, &output);

@@ -639,6 +639,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     }
 
     if (entity) {
+        free(crm_system_name);
         crm_system_name = strdup(entity);
 
     } else if (argc > 0 && argv != NULL) {
@@ -648,6 +649,8 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         if (strstr(modified, "lt-") == crm_system_name) {
             modified += 3;
         }
+
+        free(crm_system_name);
         crm_system_name = strdup(modified);
         free(mutable);
 
