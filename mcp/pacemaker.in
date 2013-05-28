@@ -169,7 +169,7 @@ stop()
 		echo -n "."
 	    done
 	else
-	    echo -n "$desc is already stopped, cleaning up any stale processes and files"
+	    echo -n "$desc is already stopped"
 	fi
 
 	rm -f $LOCK_FILE
