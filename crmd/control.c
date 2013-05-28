@@ -286,6 +286,15 @@ crmd_exit(int rc)
     empty_uuid_cache();
     crm_peer_destroy();
 
+    crm_timer_stop(transition_timer);
+    crm_timer_stop(integration_timer);
+    crm_timer_stop(finalization_timer);
+    crm_timer_stop(election_trigger);
+    crm_timer_stop(election_timeout);
+    crm_timer_stop(shutdown_escalation_timer);
+    crm_timer_stop(wait_timer);
+    crm_timer_stop(recheck_timer);
+
     free(transition_timer);
     free(integration_timer);
     free(finalization_timer);
