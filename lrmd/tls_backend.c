@@ -250,24 +250,7 @@ lrmd_remote_connection_destroy(gpointer user_data)
 static int
 lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t * key)
 {
-    int rc = 0;
-    const char *specific_location = getenv("PCMK_authkey_location");
-
-    if (lrmd_tls_set_key(key, specific_location) == 0) {
-        crm_debug("Using custom authkey location %s", specific_location);
-        return 0;
-    }
-
-    if (lrmd_tls_set_key(key, DEFAULT_REMOTE_KEY_LOCATION)) {
-        rc = lrmd_tls_set_key(key, ALT_REMOTE_KEY_LOCATION);
-    }
-    if (rc) {
-        crm_err("No lrmd remote key found");
-        return -1;
-    }
-    crm_debug("Authkey found at default location.");
-
-    return rc;
+    return lrmd_tls_set_key(key);
 }
 
 int

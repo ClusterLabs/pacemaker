@@ -66,7 +66,7 @@ void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*call
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define LRMD_CLIENT_HANDSHAKE_TIMEOUT 5000    /* 5 seconds */
 gnutls_psk_client_credentials_t psk_cred_s;
-int lrmd_tls_set_key(gnutls_datum_t * key, const char *location);
+int lrmd_tls_set_key(gnutls_datum_t * key);
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 int lrmd_tls_send_msg(crm_remote_t * session, xmlNode * msg, uint32_t id, const char *msg_type);
@@ -934,8 +934,8 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-int
-lrmd_tls_set_key(gnutls_datum_t * key, const char *location)
+static int
+set_key(gnutls_datum_t * key, const char *location)
 {
     FILE *stream;
     int read_len = 256;
@@ -1009,27 +1009,24 @@ lrmd_tls_set_key(gnutls_datum_t * key, const char *location)
     return 0;
 }
 
-static int
-lrmd_tls_key_cb(gnutls_session_t session, char **username, gnutls_datum_t * key)
+int
+lrmd_tls_set_key(gnutls_datum_t * key)
 {
     int rc = 0;
     const char *specific_location = getenv("PCMK_authkey_location");
 
-    if (lrmd_tls_set_key(key, specific_location) == 0) {
+    if (set_key(key, specific_location) == 0) {
         crm_debug("Using custom authkey location %s", specific_location);
         return 0;
     }
 
-    if (lrmd_tls_set_key(key, DEFAULT_REMOTE_KEY_LOCATION)) {
-        rc = lrmd_tls_set_key(key, ALT_REMOTE_KEY_LOCATION);
+    if (set_key(key, DEFAULT_REMOTE_KEY_LOCATION)) {
+        rc = set_key(key, ALT_REMOTE_KEY_LOCATION);
     }
     if (rc) {
         crm_err("No lrmd remote key found");
         return -1;
     }
-
-    *username = gnutls_malloc(strlen(DEFAULT_REMOTE_USERNAME) + 1);
-    strcpy(*username, DEFAULT_REMOTE_USERNAME);
 
     return rc;
 }
@@ -1072,6 +1069,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         .destroy = lrmd_tls_connection_destroy,
     };
     int rc = sock;
+    gnutls_datum_t psk_key = { NULL, 0 };
 
     if (rc < 0) {
         lrmd_tls_connection_destroy(lrmd);
@@ -1083,8 +1081,16 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
     /* TODO continue with tls stuff now that tcp connect passed. make this async as well soon
      * to avoid all blocking code in the client. */
     native->sock = sock;
+
+    if (lrmd_tls_set_key(&psk_key) != 0) {
+        lrmd_tls_connection_destroy(lrmd);
+        return;
+    }
+
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
-    gnutls_psk_set_client_credentials_function(native->psk_cred_c, lrmd_tls_key_cb);
+    gnutls_psk_set_client_credentials(native->psk_cred_c, DEFAULT_REMOTE_USERNAME, &psk_key, GNUTLS_PSK_KEY_RAW);
+    gnutls_free(psk_key.data);
+
     native->remote->tls_session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
 
     if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
@@ -1137,6 +1143,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 
     lrmd_private_t *native = lrmd->private;
     int sock;
+    gnutls_datum_t psk_key = { NULL, 0 };
 
     lrmd_gnutls_global_init();
 
@@ -1148,8 +1155,16 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     }
 
     native->sock = sock;
+
+    if (lrmd_tls_set_key(&psk_key) != 0) {
+        lrmd_tls_connection_destroy(lrmd);
+        return -1;
+    }
+
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
-    gnutls_psk_set_client_credentials_function(native->psk_cred_c, lrmd_tls_key_cb);
+    gnutls_psk_set_client_credentials(native->psk_cred_c, DEFAULT_REMOTE_USERNAME, &psk_key, GNUTLS_PSK_KEY_RAW);
+    gnutls_free(psk_key.data);
+
     native->remote->tls_session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
 
     if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
