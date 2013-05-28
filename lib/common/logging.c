@@ -639,18 +639,20 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     }
 
     if (entity) {
-        crm_system_name = entity;
+        crm_system_name = strdup(entity);
 
     } else if (argc > 0 && argv != NULL) {
         char *mutable = strdup(argv[0]);
+        char *modified = basename(mutable);
 
-        crm_system_name = basename(mutable);
-        if (strstr(crm_system_name, "lt-") == crm_system_name) {
-            crm_system_name += 3;
+        if (strstr(modified, "lt-") == crm_system_name) {
+            modified += 3;
         }
+        crm_system_name = strdup(modified);
+        free(mutable);
 
     } else if (crm_system_name == NULL) {
-        crm_system_name = "Unknown";
+        crm_system_name = strdup("Unknown");
     }
 
     setenv("PCMK_service", crm_system_name, 1);

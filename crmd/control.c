@@ -298,9 +298,11 @@ crmd_exit(int rc)
     free(fsa_our_uname);
     free(fsa_our_uuid);
     free(fsa_our_dc);
-    free(te_uuid);
 
+    free(te_uuid);
     free(fsa_pe_ref);
+    free(failed_stop_offset);
+    free(failed_start_offset);
 
     free(max_generation_from);
     free_xml(max_generation_xml);

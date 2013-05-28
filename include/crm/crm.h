@@ -56,7 +56,7 @@
 
 #  define CRM_META			"CRM_meta"
 
-extern const char *crm_system_name;
+extern char *crm_system_name;
 
 /* *INDENT-OFF* */
 

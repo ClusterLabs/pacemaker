@@ -72,12 +72,17 @@ CRM_TRACE_INIT_DATA(common);
 
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
-const char *crm_system_name = "unknown";
+char *crm_system_name = NULL;
 
 int node_score_red = 0;
 int node_score_green = 0;
 int node_score_yellow = 0;
 int node_score_infinity = INFINITY;
+
+static struct crm_option *crm_long_options = NULL;
+static const char *crm_app_description = NULL;
+static char *crm_short_options = NULL;
+static const char *crm_app_usage = NULL;
 
 int
 crm_exit(int rc)
@@ -91,6 +96,10 @@ crm_exit(int rc)
 
     crm_trace("exit %d", rc);
     qb_log_fini();
+
+    free(crm_short_options);
+    free(crm_system_name);
+
     exit(rc);
     return rc;                  /* Can never happen, but allows return crm_exit(rc)
                                  * where "return rc" was used previously
@@ -1560,11 +1569,6 @@ crm_meta_value(GHashTable * hash, const char *field)
     return value;
 }
 
-static struct crm_option *crm_long_options = NULL;
-static const char *crm_app_description = NULL;
-static const char *crm_short_options = NULL;
-static const char *crm_app_usage = NULL;
-
 static struct option *
 crm_create_long_opts(struct crm_option *long_options)
 {
@@ -1618,7 +1622,7 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
                 const char *app_desc)
 {
     if (short_options) {
-        crm_short_options = short_options;
+        crm_short_options = strdup(short_options);
 
     } else if (long_options) {
         int lpc = 0;

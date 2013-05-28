@@ -229,7 +229,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_system_name = "cibadmin";
+    crm_system_name = strdup("cibadmin");
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."
                     "\n\nAllows the configuration, or sections of it, to be queried, modified, replaced and deleted."
