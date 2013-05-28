@@ -248,7 +248,7 @@ crm_client_init(void)
 void
 crm_client_cleanup(void)
 {
-    if (client_connections == NULL) {
+    if (client_connections != NULL) {
         int active = g_hash_table_size(client_connections);
 
         if (active) {

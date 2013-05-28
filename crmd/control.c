@@ -269,9 +269,12 @@ crmd_exit(int rc)
     clear_bit(fsa_input_register, R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
+    /* This basically will not work, since mainloop has a reference to it */
     mainloop_destroy_trigger(fsa_source);
+
     mainloop_destroy_trigger(config_read);
     mainloop_destroy_trigger(stonith_reconnect);
+    mainloop_destroy_trigger(transition_trigger);
 
     if(stonith_api) {
         crm_trace("Disconnecting fencing API");
@@ -319,6 +322,8 @@ crmd_exit(int rc)
 
         crm_trace("Closing mainloop %d %d", g_main_loop_is_running(crmd_mainloop), g_main_context_pending(ctx));
         g_main_loop_quit(crmd_mainloop);
+
+        /* Won't strictly do anything since we're inside it now */
         g_main_loop_unref(crmd_mainloop);
         crmd_mainloop = NULL;
     }
@@ -375,6 +380,7 @@ do_startup(long long action,
 
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
     config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
+    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
 
     crm_debug("Creating CIB and LRM objects");
     fsa_cib_conn = cib_new();

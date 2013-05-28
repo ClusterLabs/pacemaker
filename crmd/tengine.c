@@ -106,10 +106,6 @@ do_te_control(long long action,
     te_uuid = crm_generate_uuid();
     crm_info("Registering TE UUID: %s", te_uuid);
 
-    if (transition_trigger == NULL) {
-        transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
-    }
-
     if (pcmk_ok !=
         fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
         crm_err("Could not set CIB notification callback");

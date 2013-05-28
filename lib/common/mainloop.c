@@ -112,11 +112,59 @@ crm_trigger_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
     return rc;
 }
 
+static void
+crm_trigger_finalize(GSource * source)
+{
+    crm_trace("Trigger %p destroyed", source);
+}
+
+#if 0
+struct _GSourceCopy
+{
+  gpointer callback_data;
+  GSourceCallbackFuncs *callback_funcs;
+
+  const GSourceFuncs *source_funcs;
+  guint ref_count;
+
+  GMainContext *context;
+
+  gint priority;
+  guint flags;
+  guint source_id;
+
+  GSList *poll_fds;
+  
+  GSource *prev;
+  GSource *next;
+
+  char    *name;
+
+  void *priv;
+};
+
+static int
+g_source_refcount(GSource * source)
+{
+    /* Duplicating the contents of private header files is a necessary evil */
+    if (source) {
+        struct _GSourceCopy *evil = (struct _GSourceCopy*)source;
+        return evil->ref_count;
+    }
+    return 0;
+}
+#else
+static int g_source_refcount(GSource * source)
+{
+    return 0;
+}
+#endif
+
 static GSourceFuncs crm_trigger_funcs = {
     crm_trigger_prepare,
     crm_trigger_check,
     crm_trigger_dispatch,
-    NULL
+    crm_trigger_finalize,
 };
 
 static crm_trigger_t *
@@ -138,7 +186,10 @@ mainloop_setup_trigger(GSource * source, int priority, int (*dispatch) (gpointer
     g_source_set_priority(source, priority);
     g_source_set_can_recurse(source, FALSE);
 
+    crm_trace("Setup %p with ref-count=%u", source, g_source_refcount(source));
     trigger->id = g_source_attach(source, NULL);
+    crm_trace("Attached %p with ref-count=%u", source, g_source_refcount(source));
+
     return trigger;
 }
 
@@ -176,7 +227,13 @@ gboolean
 mainloop_destroy_trigger(crm_trigger_t * source)
 {
     GSource *gs = (GSource *)source;
-    g_source_destroy(gs);
+    crm_trace("Destroying %p with ref-count=%u", source, g_source_refcount(gs));
+
+    g_source_unref(gs); /* The caller no longer carries a reference to source */
+    if(g_source_refcount(gs) > 1) {
+        crm_info("Trigger %p is still referenced %u times", source, g_source_refcount(gs));
+    }
+    g_source_destroy(gs); /* Remove from mainloop and free() now that ref-count is 0 */
     return TRUE;
 }
 
@@ -217,7 +274,7 @@ static GSourceFuncs crm_signal_funcs = {
     crm_trigger_prepare,
     crm_trigger_check,
     crm_signal_dispatch,
-    NULL
+    crm_trigger_finalize,
 };
 
 gboolean
