@@ -396,7 +396,10 @@ cib_new_variant(void)
 void
 cib_delete(cib_t * cib)
 {
-    GList *list = cib->notify_list;
+    GList *list = NULL;
+    if(cib) {
+        list = cib->notify_list;
+    }
 
     while (list != NULL) {
         cib_notify_client_t *client = g_list_nth_data(list, 0);
@@ -405,10 +408,14 @@ cib_delete(cib_t * cib)
         free(client);
     }
 
-    g_hash_table_destroy(cib_op_callback_table);
-    cib_op_callback_table = NULL;
-    cib->cmds->free(cib);
-    cib = NULL;
+    if(cib_op_callback_table) {
+        g_hash_table_destroy(cib_op_callback_table);
+        cib_op_callback_table = NULL;
+    }
+
+    if(cib) {
+        cib->cmds->free(cib);
+    }
 }
 
 int

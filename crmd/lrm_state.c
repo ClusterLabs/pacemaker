@@ -220,11 +220,11 @@ lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
         crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
-        g_hash_table_destroy(lrm_state_table);
+        g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
     }
     if(proxy_table) {
         crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
-        g_hash_table_destroy(proxy_table);
+        g_hash_table_destroy(proxy_table); proxy_table = NULL;
     }
 }
 

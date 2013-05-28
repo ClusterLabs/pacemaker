@@ -1686,7 +1686,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
     }
 
     set_bit(fsa_input_register, R_SENT_RSC_STOP);
-    g_list_free(lrm_state_list);
+    g_list_free(lrm_state_list); lrm_state_list = NULL;
     return res;
 }
 

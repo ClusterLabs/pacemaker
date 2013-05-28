@@ -254,7 +254,7 @@ crm_client_cleanup(void)
         if (active) {
             crm_err("Exiting with %d active connections", active);
         }
-        g_hash_table_destroy(client_connections);
+        g_hash_table_destroy(client_connections); client_connections = NULL;
     }
 }
 

@@ -210,7 +210,17 @@ crmd_exit(int rc)
 {
     GListPtr gIter = NULL;
 
-    crm_trace("Preparing to exit");
+    crm_trace("Preparing to exit: %d", rc);
+
+    if (is_set(fsa_input_register, R_IN_RECOVERY)) {
+        crm_err("Could not recover from internal error: %");
+        rc = pcmk_err_generic;
+    }
+
+    if (is_set(fsa_input_register, R_STAYDOWN)) {
+        crm_warn("Inhibiting respawn: %d -> %d", rc, 100);
+        rc = 100;
+    }
 
     if(ipcs) {
         crm_trace("Closing IPC server");
@@ -223,6 +233,7 @@ crmd_exit(int rc)
         crm_ipc_destroy(attrd_ipc);
         attrd_ipc = NULL;
     }
+
 #if SUPPORT_HEARTBEAT
     if (fsa_cluster_conn) {
         crm_trace("Disconnecting heartbeat");
@@ -240,27 +251,26 @@ crmd_exit(int rc)
                  fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         delete_fsa_input(fsa_data);
     }
-    g_list_free(fsa_message_queue);
-    fsa_message_queue = NULL;
 
     clear_bit(fsa_input_register, R_MEMBERSHIP);
+    g_list_free(fsa_message_queue); fsa_message_queue = NULL;
 
-    if (pe_subsystem->client && pe_subsystem->client->ipcs) {
+    if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
         crm_trace("Disconnecting Policy Engine");
         qb_ipcs_disconnect(pe_subsystem->client->ipcs);
     }
-    free(pe_subsystem);
 
-    free(cib_subsystem);
-    free(te_subsystem);
+    free(pe_subsystem); pe_subsystem = NULL;
+    free(cib_subsystem); cib_subsystem = NULL;
+    free(te_subsystem); te_subsystem = NULL;
 
     if (reload_hash) {
         crm_trace("Destroying reload cache with %d members", g_hash_table_size(reload_hash));
-        g_hash_table_destroy(reload_hash);
+        g_hash_table_destroy(reload_hash); reload_hash = NULL;
     }
     if (voted) {
         crm_trace("Destroying voted cache with %d members", g_hash_table_size(voted));
-        g_hash_table_destroy(voted);
+        g_hash_table_destroy(voted); voted = NULL;
     }
 
     cib_delete(fsa_cib_conn);
@@ -271,15 +281,15 @@ crmd_exit(int rc)
     lrm_state_destroy_all();
 
     /* This basically will not work, since mainloop has a reference to it */
-    mainloop_destroy_trigger(fsa_source);
+    mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
 
-    mainloop_destroy_trigger(config_read);
-    mainloop_destroy_trigger(stonith_reconnect);
-    mainloop_destroy_trigger(transition_trigger);
+    mainloop_destroy_trigger(config_read); config_read = NULL;
+    mainloop_destroy_trigger(stonith_reconnect); stonith_reconnect = NULL;
+    mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
     if(stonith_api) {
         crm_trace("Disconnecting fencing API");
-        stonith_api->cmds->free(stonith_api);
+        stonith_api->cmds->free(stonith_api); stonith_api = NULL;
     }
 
     crm_client_cleanup();
@@ -295,28 +305,28 @@ crmd_exit(int rc)
     crm_timer_stop(wait_timer);
     crm_timer_stop(recheck_timer);
 
-    free(transition_timer);
-    free(integration_timer);
-    free(finalization_timer);
-    free(election_trigger);
-    free(election_timeout);
-    free(shutdown_escalation_timer);
-    free(wait_timer);
-    free(recheck_timer);
+    free(transition_timer); transition_timer = NULL;
+    free(integration_timer); integration_timer = NULL;
+    free(finalization_timer); finalization_timer = NULL;
+    free(election_trigger); election_trigger = NULL;
+    free(election_timeout); election_timeout = NULL;
+    free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
+    free(wait_timer); wait_timer = NULL;
+    free(recheck_timer); recheck_timer = NULL;
 
-    free(fsa_our_dc_version);
-    free(fsa_our_uname);
-    free(fsa_our_uuid);
-    free(fsa_our_dc);
+    free(fsa_our_dc_version); fsa_our_dc_version = NULL;
+    free(fsa_our_uname); fsa_our_uname = NULL;
+    free(fsa_our_uuid); fsa_our_uuid = NULL;
+    free(fsa_our_dc); fsa_our_dc = NULL;
 
-    free(te_uuid);
-    free(te_client_id);
-    free(fsa_pe_ref);
-    free(failed_stop_offset);
-    free(failed_start_offset);
+    free(te_uuid); te_uuid = NULL;
+    free(te_client_id); te_client_id = NULL;
+    free(fsa_pe_ref); fsa_pe_ref = NULL;
+    free(failed_stop_offset); failed_stop_offset = NULL;
+    free(failed_start_offset); failed_start_offset = NULL;
 
-    free(max_generation_from);
-    free_xml(max_generation_xml);
+    free(max_generation_from); max_generation_from = NULL;
+    free_xml(max_generation_xml); max_generation_xml = NULL;
 
     mainloop_destroy_signal(SIGUSR1);
     mainloop_destroy_signal(SIGTERM);
@@ -339,9 +349,19 @@ crmd_exit(int rc)
         /* Won't strictly do anything since we're inside it now */
         g_main_loop_unref(crmd_mainloop);
         crmd_mainloop = NULL;
+
+    } else if(rc == pcmk_ok) {
+        crm_debug("No mainloop detected");
+        rc = EPROTO;
     }
 
-    crm_trace("Done");
+    crm_trace("Done %d", rc);
+
+    if(rc != pcmk_ok) {
+        crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
+        crm_write_blackbox(SIGTRAP, NULL);
+    }
+
     return crm_exit(rc);
 }
 
@@ -351,12 +371,12 @@ do_exit(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int exit_code = 0;
+    int exit_code = pcmk_ok;
     int log_level = LOG_INFO;
     const char *exit_type = "gracefully";
 
     if (action & A_EXIT_1) {
-        exit_code = 1;
+        /* exit_code = pcmk_err_generic; */
         log_level = LOG_ERR;
         exit_type = "forcefully";
     }
@@ -364,15 +384,6 @@ do_exit(long long action,
     verify_stopped(cur_state, LOG_ERR);
     do_crm_log(log_level, "Performing %s - %s exiting the CRMd",
                fsa_action2string(action), exit_type);
-
-    if (is_set(fsa_input_register, R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error");
-        exit_code = 2;
-    }
-    if (is_set(fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn by Heartbeat");
-        exit_code = 100;
-    }
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
     delete_fsa_input(msg_data);
@@ -921,6 +932,6 @@ crm_shutdown(int nsig)
 
     } else {
         crm_info("exit from shutdown");
-        crmd_exit(EX_OK);
+        crmd_exit(pcmk_ok);
     }
 }
