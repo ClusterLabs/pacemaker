@@ -178,6 +178,5 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     /* Should not happen */
     crm_perror(LOG_ERR, "FATAL: Cannot exec %s", the_subsystem->command);
 
-    crmd_exit(100);             /* Suppress respawning */
-    return TRUE;                /* never reached */
+    return crm_exit(100);             /* Suppress respawning */
 }
