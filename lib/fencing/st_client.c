@@ -2217,20 +2217,28 @@ stonith_api_free(stonith_t * stonith)
 {
     int rc = pcmk_ok;
 
+    crm_trace("Destroying %p", stonith);
+
     if (stonith->state != stonith_disconnected) {
+        crm_trace("Disconnecting %p first", stonith);
         rc = stonith->cmds->disconnect(stonith);
     }
 
     if (stonith->state == stonith_disconnected) {
         stonith_private_t *private = stonith->private;
 
+        crm_trace("Removing %d callbacks", g_hash_table_size(private->stonith_op_callback_table));
         g_hash_table_destroy(private->stonith_op_callback_table);
+
+        crm_trace("Destroying %d notification clients", g_list_length(private->notify_list));
+        g_list_free_full(private->notify_list, free);
+
         free(stonith->private);
         free(stonith->cmds);
         free(stonith);
 
     } else {
-        crm_err("Not free'ing active connection");
+        crm_err("Not free'ing active connection: %s (%d)", pcmk_strerror(rc), rc);
     }
 
     return rc;
@@ -2239,18 +2247,10 @@ stonith_api_free(stonith_t * stonith)
 void
 stonith_api_delete(stonith_t * stonith)
 {
-    stonith_private_t *private = stonith->private;
-    GList *list = private->notify_list;
-
-    while (list != NULL) {
-        stonith_notify_client_t *client = g_list_nth_data(list, 0);
-
-        list = g_list_remove(list, client);
-        free(client);
+    crm_trace("Destroying %p", stonith);
+    if(stonith) {
+        stonith->cmds->free(stonith);
     }
-
-    stonith->cmds->free(stonith);
-    stonith = NULL;
 }
 
 stonith_t *
