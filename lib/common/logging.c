@@ -646,7 +646,7 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         char *mutable = strdup(argv[0]);
         char *modified = basename(mutable);
 
-        if (strstr(modified, "lt-") == crm_system_name) {
+        if (strstr(modified, "lt-") == modified) {
             modified += 3;
         }
 
