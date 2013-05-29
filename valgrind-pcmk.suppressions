@@ -15,6 +15,17 @@
 }
 
 {
+   dlopen internals
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen
+   fun:_log_so_walk_callback
+   fun:dl_iterate_phdr
+   fun:qb_log_init
+}
+
+{
    Cman - Points to uninitialized bytes
    Memcheck:Param
    socketcall.sendmsg(msg)
@@ -70,109 +81,49 @@
 }
 
 {
-   g_mainloop - new
-   Memcheck:Leak
-   fun:malloc
-   fun:g_malloc
-   fun:g_slice_alloc
-   fun:g_slist_*d
-   fun:g_main_context_new
-   fun:g_main_context_default
-   fun:g_main_loop_new
-   fun:main
-}
-
-{
-   g_mainloop - new 2
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   fun:g_main_loop_new
-   fun:main
-}
-
-{
-   g_mainloop - new 3
-   Memcheck:Leak
-   fun:malloc
-   fun:g_malloc
-   fun:g_slice_alloc
-   fun:g_ptr_array_sized_new
-   fun:g_main_context_new
-   fun:g_main_context_default
-   fun:g_main_loop_new
-   fun:main
-}
-
-{
-   g_mainloop - new 4
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   fun:g_main_context_new
-   fun:g_main_context_default
-   fun:g_main_loop_new
-   fun:main
-}
-
-{
-   g_mainloop - new 5
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   obj:*/libglib-*
-   fun:g_slice_alloc
-   fun:g_ptr_array_sized_new
-   fun:g_main_context_new
-   fun:g_main_context_default
-   fun:g_main_loop_new
-   fun:main
-}
-
-{
-   g_mainloop - run 1
+   glib mainloop internals
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
    fun:g_slice_alloc
    fun:g_slice_alloc0
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_context_dispatch
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_loop_run
 }
 
 {
-   g_mainloop - run 2
+   glib mainloop internals
    Memcheck:Leak
    fun:malloc
    fun:realloc
    fun:g_realloc
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_array_set_size
    fun:g_static_private_set
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_context_dispatch
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_loop_run
 }
 
 {
-   g_mainloop - run 3
+   glib mainloop internals
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
    fun:g_slice_alloc
    fun:g_array_sized_new
    fun:g_static_private_set
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_context_dispatch
-   obj:*/libglib-*
+   obj:*/libglib-2.*
    fun:g_main_loop_run
 }
 
 {
-   g_mainloop - run 4
+   glib mainloop internals
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
@@ -181,25 +132,16 @@
 }
 
 {
-   g_mainloop - run 5
+   glib mainloop internals
    Memcheck:Leak
-   fun:malloc
-   fun:g_malloc
-   obj:*/libglib-*
-   fun:g_main_loop_run
-}
-
-{
-   g_mainloop - run 5
-   Memcheck:Leak
-   fun:malloc
-   fun:realloc
-   fun:g_realloc
-   obj:*/libglib-*
-   fun:g_ptr_array_add
-   fun:g_main_context_check
-   obj:*/libglib-*
-   fun:g_main_loop_run
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-2.*
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
 }
 
 {
