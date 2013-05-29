@@ -29,6 +29,7 @@ libtransitioner_la_SOURCES	= unpack.c graph.c utils.c
 
 libtransitioner_la_LDFLAGS	= -version-info 2:1:0
 libtransitioner_la_CFLAGS	= -I$(top_builddir)
+libtransitioner_la_LIBADD       = $(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:
 	rm -f *~
