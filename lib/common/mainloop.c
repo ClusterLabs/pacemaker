@@ -233,13 +233,20 @@ mainloop_destroy_trigger(crm_trigger_t * source)
     }
 
     gs = (GSource *)source;
-    crm_trace("Destroying %p with ref-count=%u", source, g_source_refcount(gs));
 
-    g_source_unref(gs); /* The caller no longer carries a reference to source */
-    if(g_source_refcount(gs) > 1) {
-        crm_info("Trigger %p is still referenced %u times", source, g_source_refcount(gs));
+    if(g_source_refcount(gs) > 2) {
+        crm_info("Trigger %p is still referenced %u times", gs, g_source_refcount(gs));
     }
-    g_source_destroy(gs); /* Remove from mainloop and free() now that ref-count is 0 */
+
+    g_source_destroy(gs); /* Remove from mainloop, ref_count-- */
+    g_source_unref(gs); /* The caller no longer carries a reference to source
+                         *
+                         * At this point the source should be free'd,
+                         * unless we're currently processing said
+                         * source, in which case mainloop holds an
+                         * additional reference and it will be free'd
+                         * once our processing completes
+                         */
     return TRUE;
 }
 
