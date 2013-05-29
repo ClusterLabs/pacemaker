@@ -263,7 +263,7 @@ class Tests:
 			"upstart_cancel_line"   : "-c cancel -r \"upstart_test_rsc\" -a \"monitor\" -i \"2000\" -t \"3000\" ",
 			"upstart_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
 
-			"service_reg_line"      : "-c register_rsc -r service_test_rsc -t 3000 -C service -T lrmd_dummy_daemon",
+			"service_reg_line"      : "-c register_rsc -r service_test_rsc -t 3000 -C service -T LSBDummy",
 			"service_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
 			"service_unreg_line"    : "-c unregister_rsc -r \"service_test_rsc\" -t 3000",
 			"service_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
@@ -276,7 +276,7 @@ class Tests:
 			"service_cancel_line"   : "-c cancel -r \"service_test_rsc\" -a \"monitor\" -i \"2000\" -t \"3000\" ",
 			"service_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:service_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
 
-			"lsb_reg_line"      : "-c register_rsc -r lsb_test_rsc -t 3000 -C lsb -T lrmd_dummy_daemon",
+			"lsb_reg_line"      : "-c register_rsc -r lsb_test_rsc -t 3000 -C lsb -T LSBDummy",
 			"lsb_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:lsb_test_rsc action:none rc:ok op_status:complete\" ",
 			"lsb_unreg_line"    : "-c unregister_rsc -r \"lsb_test_rsc\" -t 3000",
 			"lsb_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:lsb_test_rsc action:none rc:ok op_status:complete\"",
@@ -387,7 +387,7 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
-		os.system("cp /usr/share/pacemaker/tests/cts/LSBDummy /etc/init.d/lrmd_dummy_daemon")
+		os.system("cp /usr/share/pacemaker/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
 		os.system("systemctl daemon-reload")
@@ -397,7 +397,7 @@ if __name__ == "__main__":
 		    os.system("rm -f /etc/pacemaker/authkey")
 
 		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
-		os.system("rm -f /etc/init.d/lrmd_dummy_daemon")
+		os.system("rm -f /etc/init.d/LSBDummy")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
 		os.system("rm -f /usr/sbin/fence_dummy_sleep")
@@ -751,8 +751,8 @@ if __name__ == "__main__":
 
 		### get metadata ###
 		test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
-		test.add_cmd_check_stdout("-c metadata -C \"lsb\" -T \"lrmd_dummy_daemon\""
-			,"resource-agent name='lrmd_dummy_daemon'")
+		test.add_cmd_check_stdout("-c metadata -C \"lsb\" -T \"LSBDummy\""
+			,"resource-agent name='LSBDummy'")
 
 		### get stonith metadata ###
 		test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
@@ -782,9 +782,9 @@ if __name__ == "__main__":
 		test.add_cmd_check_stdout("-c list_agents -C ocf", "Stateful")
 		test.add_cmd_check_stdout("-c list_agents -C lsb", "", "Stateful")                        ### should not exist
 		test.add_cmd_check_stdout("-c list_agents -C service", "", "Stateful")                    ### should not exist
-		test.add_cmd_check_stdout("-c list_agents ", "lrmd_dummy_daemon")                         ### init.d ###
-		test.add_cmd_check_stdout("-c list_agents -C lsb", "lrmd_dummy_daemon")
-		test.add_cmd_check_stdout("-c list_agents -C service", "lrmd_dummy_daemon")
+		test.add_cmd_check_stdout("-c list_agents ", "LSBDummy")                                  ### init.d ###
+		test.add_cmd_check_stdout("-c list_agents -C lsb", "LSBDummy")
+		test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
 		test.add_cmd_check_stdout("-c list_agents -C ocf", "", "lrmd_dummy_daemon")               ### should not exist
 
 		test.add_cmd_check_stdout("-c list_agents -C ocf", "", "lrmd_dummy_daemon")               ### should not exist
@@ -794,15 +794,15 @@ if __name__ == "__main__":
 
 		if "systemd" in self.rsc_classes:
 			test.add_cmd_check_stdout("-c list_agents ", "lrmd_dummy_daemon")                 ### systemd ###
-			test.add_cmd_check_stdout("-c list_agents -C service", "lrmd_dummy_daemon")
-			test.add_cmd_check_stdout("-c list_agents -C systemd", "", "Stateful")		  ### should not exist
+			test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
+			test.add_cmd_check_stdout("-c list_agents -C systemd", "", "Stateful")            ### should not exist
 			test.add_cmd_check_stdout("-c list_agents -C systemd", "lrmd_dummy_daemon")
 			test.add_cmd_check_stdout("-c list_agents -C systemd", "", "fence_dummy_monitor") ### should not exist
 
 		if "upstart" in self.rsc_classes:
 			test.add_cmd_check_stdout("-c list_agents ", "lrmd_dummy_daemon")                 ### upstart ###
-			test.add_cmd_check_stdout("-c list_agents -C service", "lrmd_dummy_daemon")
-			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "Stateful")		  ### should not exist
+			test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
+			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "Stateful")            ### should not exist
 			test.add_cmd_check_stdout("-c list_agents -C upstart", "lrmd_dummy_daemon")
 			test.add_cmd_check_stdout("-c list_agents -C upstart", "", "fence_dummy_monitor") ### should not exist
 
