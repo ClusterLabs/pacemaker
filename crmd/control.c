@@ -387,7 +387,6 @@ do_exit(long long action,
                fsa_action2string(action), exit_type);
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-    delete_fsa_input(msg_data);
     crmd_exit(exit_code);
 }
 
