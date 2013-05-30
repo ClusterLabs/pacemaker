@@ -85,6 +85,7 @@ start()
 	# they also assume that init scripts will create
 	# required subdirectories for proper operations
 	mkdir -p @localstatedir@/run
+	mkdir -p @CRM_RSCTMP_DIR@
 
 	if status $prog > /dev/null 2>&1; then
 		success
