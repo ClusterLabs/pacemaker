@@ -19,7 +19,7 @@
    Memcheck:Leak
    fun:calloc
    fun:_dlerror_run
-   fun:dlopen
+   fun:dlopen*
    fun:_log_so_walk_callback
    fun:dl_iterate_phdr
    fun:qb_log_init
@@ -81,7 +81,75 @@
 }
 
 {
-   glib mainloop internals
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:*
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-2.*
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_thread_self
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libglib-2.*
+   fun:g_ptr_array_add
+   fun:g_main_context_check
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
@@ -94,7 +162,7 @@
 }
 
 {
-   glib mainloop internals
+   glib mainloop internals - run
    Memcheck:Leak
    fun:malloc
    fun:realloc
@@ -109,7 +177,7 @@
 }
 
 {
-   glib mainloop internals
+   glib mainloop internals - run
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
@@ -120,28 +188,6 @@
    fun:g_main_context_dispatch
    obj:*/libglib-2.*
    fun:g_main_loop_run
-}
-
-{
-   glib mainloop internals
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   fun:g_thread_self
-   fun:g_main_loop_run
-}
-
-{
-   glib mainloop internals
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   obj:*/libglib-2.*
-   fun:g_slice_alloc
-   fun:g_ptr_array_sized_new
-   fun:g_main_context_new
-   fun:g_main_context_default
-   fun:g_main_loop_new
 }
 
 {
