@@ -295,8 +295,16 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = get_object_root(section, *result_cib);
-    if (replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
-        crm_trace("No matching object to delete");
+    if(safe_str_eq(crm_element_name(input), section)) {
+        xmlNode *child = NULL;
+        for(child = __xml_first_child(input); child; child = __xml_next(child)) {
+            if (replace_xml_child(NULL, obj_root, child, TRUE) == FALSE) {
+                crm_trace("No matching object to delete: %s=%s", child->name, ID(child));
+            }
+        }
+
+    } else if (replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
+            crm_trace("No matching object to delete: %s=%s", input->name, ID(input));
     }
 
     return pcmk_ok;
