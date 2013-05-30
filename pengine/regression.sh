@@ -18,7 +18,7 @@
  #
 
 core=`dirname $0`
-. $core/regression.core.sh
+. $core/regression.core.sh || exit 1
 
 create_mode="true"
 info Generating test outputs for these tests...
