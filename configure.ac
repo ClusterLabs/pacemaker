@@ -668,7 +668,9 @@ if
     $PKGCONFIG --exists systemd
 then
     systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
+    tmpfilesdconfdir="/usr/lib/tmpfiles.d"
     AC_SUBST(systemdunitdir)
+    AC_SUBST(tmpfilesdconfdir)
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, test -n "$systemdunitdir" -a "x$systemdunitdir" != xno)
 
@@ -1828,6 +1830,7 @@ lib/Makefile							\
 mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
+	mcp/pacemaker-tmpfiles.conf					\
 	mcp/pacemaker.upstart					\
 	mcp/pacemaker.combined.upstart				\
 fencing/Makefile                                                \

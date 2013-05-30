@@ -31,6 +31,7 @@ endif
 
 if HAVE_SYSTEMD
 systemdunit_DATA = pacemaker.service
+tmpfilesdconf_DATA = pacemaker-tmpfiles.conf
 endif
 
 ## SOURCES

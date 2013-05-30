@@ -428,6 +428,7 @@ fi
 
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
+%{_prefix}/lib/tmpfiles.d/pacemaker-tmpfiles.conf
 %endif
 
 %{_datadir}/pacemaker
