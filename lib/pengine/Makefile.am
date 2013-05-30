@@ -28,10 +28,11 @@ noinst_HEADERS	= unpack.h variant.h
 
 libpe_rules_la_LDFLAGS	= -version-info 2:2:0
 libpe_rules_la_SOURCES	= rules.c common.c
+libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 libpe_status_la_LDFLAGS	= -version-info 6:0:2
 libpe_status_la_SOURCES	=  status.c unpack.c utils.c complex.c native.c group.c clone.c rules.c common.c
-libpe_status_la_LIBADD	=  @CURSESLIBS@
+libpe_status_la_LIBADD	=  @CURSESLIBS@ $(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:
 	rm -f *.log *.debug *~

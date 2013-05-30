@@ -6,19 +6,19 @@
   <simpara>
     <revhistory>
       <revision>
-        <revnumber>1</revnumber>
+        <revnumber>1-0</revnumber>
         <date>19 Oct 2009</date>
         <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
         <revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
       </revision>
       <revision>
-        <revnumber>2</revnumber>
+        <revnumber>2-0</revnumber>
         <date>26 Oct 2009</date>
         <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
         <revdescription><simplelist><member>Cleanup and reformatting of docbook xml complete</member></simplelist></revdescription>
       </revision>
       <revision>
-        <revnumber>3</revnumber>
+        <revnumber>3-0</revnumber>
         <date>Tue Nov 12 2009</date>
         <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
         <revdescription>
@@ -29,7 +29,7 @@
         </revdescription>
       </revision>
       <revision>
-        <revnumber>4</revnumber>
+        <revnumber>4-0</revnumber>
         <date>Mon Oct 8 2012</date>
         <author><firstname>Andrew</firstname><surname>Beekhof</surname><email>andrew@beekhof.net</email></author>
         <revdescription>

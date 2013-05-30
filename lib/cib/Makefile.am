@@ -32,9 +32,8 @@ if ENABLE_ACL
 libcib_la_SOURCES       += cib_acl.c
 endif
 
-libcib_la_LDFLAGS	= -version-info 3:1:0 $(top_builddir)/lib/common/libcrmcommon.la $(CRYPTOLIB) \
-			$(top_builddir)/lib/pengine/libpe_rules.la
-
+libcib_la_LDFLAGS	= -version-info 3:1:0 -L$(top_builddir)/lib/pengine/.libs
+libcib_la_LIBADD        = $(CRYPTOLIB) $(top_builddir)/lib/pengine/libpe_rules.la $(top_builddir)/lib/common/libcrmcommon.la
 libcib_la_CFLAGS	= -I$(top_srcdir)
 
 clean-generic:
