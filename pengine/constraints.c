@@ -366,10 +366,10 @@ unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
-    const char *id_lh = crm_element_value(xml_obj, "rsc");
+    const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-    const char *node = crm_element_value(xml_obj, "node");
+    const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     const char *domain = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
     const char *role = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
