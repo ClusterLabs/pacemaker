@@ -29,6 +29,8 @@
 "rsc2_stop_0 node2" -> "rsc2_delete_0 node2" [ style = bold]
 "rsc2_stop_0 node2" -> "rsc2_start_0 node2" [ style = bold]
 "rsc2_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
+"rsc3_delete_0 node3" -> "rsc3_start_0 node3" [ style = bold]
+"rsc3_delete_0 node3" [ style=bold color="green" fontcolor="black"]
 "rsc3_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc3_monitor_0 node2" -> "probe_complete node2" [ style = bold]

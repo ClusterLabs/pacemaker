@@ -9,8 +9,9 @@ Transition Summary:
  * Start   remote-node	(18builder)
 
 Executing cluster transition:
- * Resource action: remote-node     start on 18builder
+ * Resource action: remote-node     delete on 18builder
  * Cluster action:  clear_failcount for remote-node on 18builder
+ * Resource action: remote-node     start on 18builder
  * Resource action: remote-node     monitor=30000 on 18builder
 
 Revised cluster status:
