@@ -132,7 +132,7 @@ cib_process_quit(const char *op, int options, const char *section, xmlNode * req
     crm_trace("Processing \"%s\" event", op);
 
     crm_warn("The CRMd has asked us to exit... complying");
-    crm_exit(0);
+    crm_exit(pcmk_ok);
     return result;
 }
 

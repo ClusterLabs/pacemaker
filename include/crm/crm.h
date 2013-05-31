@@ -66,6 +66,8 @@ extern char *crm_system_name;
 #  define MAX_IPC_FAIL	5
 #  define MAX_IPC_DELAY   120
 
+#  define DAEMON_RESPAWN_STOP 100
+
 #  define MSG_LOG			1
 #  define DOT_FSA_ACTIONS		1
 #  define DOT_ALL_FSA_INPUTS	1

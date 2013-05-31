@@ -392,7 +392,7 @@ get_local_node_name(void)
 
     if (name == NULL) {
         crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
     return name;
 }
@@ -632,7 +632,7 @@ get_cluster_type(void)
     } else if (cluster_type == pcmk_cluster_invalid) {
         crm_notice("This installation does not support the '%s' cluster infrastructure: terminating.",
                    cluster);
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
 
     } else {
         crm_info("%s an active '%s' cluster", detected?"Detected":"Assuming", name_for_cluster_type(cluster_type));

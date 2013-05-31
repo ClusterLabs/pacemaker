@@ -222,7 +222,7 @@ lrmd_shutdown(int nsig)
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
-    crm_exit(0);
+    crm_exit(pcmk_ok);
 }
 
 /* *INDENT-OFF* */
@@ -286,7 +286,7 @@ main(int argc, char **argv)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 
 #ifdef ENABLE_PCMK_REMOTE
@@ -296,7 +296,7 @@ main(int argc, char **argv)
 
         if (lrmd_init_remote_tls_server(remote_port) < 0) {
             crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
         ipc_proxy_init();
     }

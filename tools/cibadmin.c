@@ -535,7 +535,7 @@ main(int argc, char **argv)
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
   bail:
-    return crm_exit(ABS(exit_code));
+    return crm_exit(exit_code);
 }
 
 int

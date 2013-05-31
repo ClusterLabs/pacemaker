@@ -478,13 +478,13 @@ cib_init(void)
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");
-        crm_exit(1);
+        crm_exit(ENODATA);
     }
 
     if (stand_alone == FALSE) {
         if (crm_cluster_connect(&crm_cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
         cib_our_uname = crm_cluster.uname;
         if (is_openais_cluster()) {
@@ -539,7 +539,7 @@ cib_init(void)
     g_main_run(mainloop);
     cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
 
-    return crm_exit(0);
+    return crm_exit(pcmk_ok);
 }
 
 gboolean

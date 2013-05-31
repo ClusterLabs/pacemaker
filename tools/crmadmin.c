@@ -391,7 +391,7 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
     if (mainloop) {
         g_main_quit(mainloop);
     } else {
-        crm_exit(1);
+        crm_exit(ENOTCONN);
     }
 }
 
@@ -503,7 +503,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
             if (BE_SILENT && dc != NULL) {
                 fprintf(stderr, "%s\n", dc);
             }
-            crm_exit(0);
+            crm_exit(pcmk_ok);
         }
     }
 
@@ -512,7 +512,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     if (received_responses >= expected_responses) {
         crm_trace("Received expected number (%d) of messages from Heartbeat."
                   "  Exiting normally.", expected_responses);
-        crm_exit(0);
+        crm_exit(pcmk_ok);
     }
 
     message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);

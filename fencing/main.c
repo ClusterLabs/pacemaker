@@ -808,7 +808,7 @@ stonith_shutdown(int nsig)
         g_main_quit(mainloop);
     } else {
         stonith_cleanup();
-        crm_exit(EX_OK);
+        crm_exit(pcmk_ok);
     }
 }
 
@@ -1091,7 +1091,7 @@ main(int argc, char **argv)
 
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
         stonith_our_uname = cluster.uname;
         stonith_our_uuid = cluster.uuid;

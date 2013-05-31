@@ -113,7 +113,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     if (crmd_replies_needed == 0) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        return crm_exit(0);
+        return crm_exit(pcmk_ok);
     }
 
     free_xml(msg);

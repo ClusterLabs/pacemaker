@@ -174,7 +174,7 @@ cpg_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
     cpg_handle = 0;
-    crm_exit(1);
+    crm_exit(ENOTCONN);
 }
 
 static void
@@ -527,7 +527,7 @@ read_config(void)
                 } else {
                     crm_err("We can only start Pacemaker from init if using version 1"
                             " of the Pacemaker plugin for Corosync.  Terminating.");
-                    crm_exit(100);
+                    crm_exit(DAEMON_RESPAWN_STOP);
                 }
                 break;
             }

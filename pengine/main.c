@@ -172,7 +172,7 @@ main(int argc, char **argv)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 
     /* Create the mainloop and run it... */
@@ -182,12 +182,12 @@ main(int argc, char **argv)
     g_main_run(mainloop);
 
     crm_info("Exiting %s", crm_system_name);
-    return crm_exit(0);
+    return crm_exit(pcmk_ok);
 }
 
 void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    crm_exit(EX_OK);
+    crm_exit(pcmk_ok);
 }

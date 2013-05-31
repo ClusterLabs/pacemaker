@@ -220,7 +220,7 @@ read_local_hb_uuid(void)
     fseek(input, 0L, start);
     if (start != ftell(input)) {
         fprintf(stderr, "fseek not behaving: %ld vs. %ld\n", start, ftell(input));
-        crm_exit(2);
+        crm_exit(pcmk_err_generic);
     }
 
     buffer = malloc(50);
@@ -229,7 +229,7 @@ read_local_hb_uuid(void)
 
     if (read_len != UUID_LEN) {
         fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n", UUID_LEN, read_len);
-        crm_exit(3);
+        crm_exit(pcmk_err_generic);
 
     } else if (buffer != NULL) {
         cl_uuid_unparse(&uuid, buffer);
@@ -238,7 +238,7 @@ read_local_hb_uuid(void)
 
     } else {
         fprintf(stderr, "No buffer to unparse\n");
-        crm_exit(4);
+        crm_exit(ENODATA);
     }
 
     free(buffer);
@@ -294,7 +294,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
         fprintf(stdout, "\n");
     }
     fflush(stdout);
-    crm_exit(0);
+    crm_exit(pcmk_ok);
 }
 
 static gboolean
@@ -353,15 +353,15 @@ try_heartbeat(int command, enum cluster_type_e stack)
 
     if (command == 'i') {
         if (read_local_hb_uuid()) {
-            crm_exit(0);
+            crm_exit(pcmk_ok);
         }
 
     } else if (command == 'R') {
         if (crmd_remove_node_cache(target_uname)) {
             crm_err("Failed to connect to crmd to remove node id %s", target_uname);
-            crm_exit(-pcmk_err_generic);
+            crm_exit(pcmk_err_generic);
         }
-        crm_exit(0);
+        crm_exit(pcmk_ok);
 
     } else if (ccm_age_connect(&ccm_fd)) {
         int rc = 0;
@@ -463,11 +463,11 @@ try_cman(int command, enum cluster_type_e stack)
             crm_help('?', EX_USAGE);
     }
     cman_finish(cman_handle);
-    crm_exit(0);
+    crm_exit(pcmk_ok);
 
   cman_bail:
     cman_finish(cman_handle);
-    return crm_exit(EX_USAGE);
+    return crm_exit(EINVAL);
 }
 #endif
 
@@ -477,7 +477,7 @@ ais_membership_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
     ais_fd_sync = -1;
-    crm_exit(1);
+    crm_exit(ENOTCONN);
 }
 
 static gint
@@ -548,7 +548,7 @@ ais_membership_dispatch(int kind, const char *from, const char *data)
         fprintf(stdout, "\n");
     }
 
-    crm_exit(0);
+    crm_exit(pcmk_ok);
 
     return TRUE;
 }
@@ -586,7 +586,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
             fprintf(stdout, "\n");
         }
 
-        crm_exit(0);
+        crm_exit(pcmk_ok);
     }
 
     return 0;
@@ -595,7 +595,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 static void
 node_mcp_destroy(gpointer user_data)
 {
-    crm_exit(1);
+    crm_exit(ENOTCONN);
 }
 
 static gboolean
@@ -626,7 +626,7 @@ try_corosync(int command, enum cluster_type_e stack)
         case 'e':
             /* Age makes no sense (yet) in an AIS cluster */
             fprintf(stdout, "1\n");
-            crm_exit(0);
+            crm_exit(pcmk_ok);
 
         case 'q':
             /* Go direct to the Quorum API */
@@ -648,7 +648,7 @@ try_corosync(int command, enum cluster_type_e stack)
                 fprintf(stdout, "0\n");
             }
             quorum_finalize(q_handle);
-            crm_exit(0);
+            crm_exit(pcmk_ok);
 
         case 'i':
             /* Go direct to the CPG API */
@@ -666,7 +666,7 @@ try_corosync(int command, enum cluster_type_e stack)
 
             fprintf(stdout, "%u\n", nodeid);
             cpg_finalize(c_handle);
-            crm_exit(0);
+            crm_exit(pcmk_ok);
 
         case 'l':
         case 'p':
@@ -705,12 +705,12 @@ try_openais(int command, enum cluster_type_e stack)
             case 'R':
                 send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
                 cib_remove_node(0, target_uname);
-                crm_exit(0);
+                crm_exit(pcmk_ok);
 
             case 'e':
                 /* Age makes no sense (yet) in an AIS cluster */
                 fprintf(stdout, "1\n");
-                crm_exit(0);
+                crm_exit(pcmk_ok);
 
             case 'q':
                 send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
@@ -724,7 +724,7 @@ try_openais(int command, enum cluster_type_e stack)
 
             case 'i':
                 printf("%u\n", cluster.nodeid);
-                crm_exit(0);
+                crm_exit(pcmk_ok);
 
             default:
                 fprintf(stderr, "Unknown option '%c'\n", command);
@@ -819,11 +819,11 @@ main(int argc, char **argv)
 
     if (command == 'n') {
         fprintf(stdout, "%s\n", get_local_node_name());
-        crm_exit(0);
+        crm_exit(pcmk_ok);
 
     } else if (command == 'N') {
         fprintf(stdout, "%s\n", get_node_name(nodeid));
-        crm_exit(0);
+        crm_exit(pcmk_ok);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {
@@ -831,7 +831,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        crm_exit(EX_USAGE);
+        crm_exit(EINVAL);
     }
 
     try_stack = get_cluster_type();

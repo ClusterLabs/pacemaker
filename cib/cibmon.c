@@ -251,5 +251,5 @@ cibmon_diff(const char *event, xmlNode * msg)
 void
 cibmon_shutdown(int nsig)
 {
-    crm_exit(EX_OK);
+    crm_exit(pcmk_ok);
 }

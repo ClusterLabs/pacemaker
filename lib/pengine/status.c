@@ -34,7 +34,7 @@
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\
 	crm_mem_stats(NULL);						\
 	crm_err("Exiting: stage %d", stage);				\
-	crm_exit(1);
+	crm_exit(pcmk_err_generic);
 
 /*
  * Unpack everything

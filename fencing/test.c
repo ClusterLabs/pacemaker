@@ -56,7 +56,7 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
         mainloop_set_trigger(trig);  \
     } else { \
         crm_err("FAILURE = %s async_callback %d", __PRETTY_FUNCTION__, callback_rc); \
-        crm_exit(-1); \
+        crm_exit(pcmk_err_generic); \
     } \
     callback_rc = 0; \
 
@@ -114,7 +114,7 @@ static void
 st_callback(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
-        crm_exit(1);
+        crm_exit(ENOTCONN);
     }
 
     crm_notice("Operation %s requested by %s %s for peer %s.  %s reported: %s (ref=%s)",
@@ -162,11 +162,11 @@ passive_test(void)
     } \
     if (rc != expected_rc) { \
         crm_err("FAILURE - expected rc %d != %d(%s) for cmd - %s\n", expected_rc, rc, pcmk_strerror(rc), str); \
-        crm_exit(-1); \
+        crm_exit(pcmk_err_generic); \
     } else if (expected_notifications) { \
         crm_err("FAILURE - expected %d notifications, got only %d for cmd - %s\n", \
             num_notifications, num_notifications - expected_notifications, str); \
-        crm_exit(-1); \
+        crm_exit(pcmk_err_generic); \
     } else { \
         if (verbose) {                   \
             crm_info("SUCCESS - %s: %d", str, rc);    \
@@ -533,7 +533,7 @@ iterate_mainloop_tests(gboolean event_ready)
     if (mainloop_iter == (sizeof(callbacks) / sizeof(mainloop_test_iteration_cb))) {
         /* all tests ran, everything passed */
         crm_info("ALL MAINLOOP TESTS PASSED!");
-        crm_exit(0);
+        crm_exit(pcmk_ok);
     }
 
     callbacks[mainloop_iter] (event_ready);
@@ -560,7 +560,7 @@ test_shutdown(int nsig)
     }
 
     if (rc) {
-        crm_exit(-1);
+        crm_exit(pcmk_err_generic);
     }
 }
 

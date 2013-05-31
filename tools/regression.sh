@@ -200,11 +200,11 @@ function test_tools() {
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
-    test_assert 234
+    test_assert 22
 
     desc="Don't support migration to non-existant locations"
     cmd="crm_resource -r dummy -M -N i.dont.exist"
-    test_assert 250
+    test_assert 6
 
     desc="Create a fencing resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"Fence\" class=\"stonith\" type=\"fence_true\"/>'"
@@ -216,7 +216,7 @@ function test_tools() {
 
     desc="Try to move a resource to its existing location"
     cmd="crm_resource -r dummy --move --host node1"
-    test_assert 234
+    test_assert 22
 
     desc="Move a resource from its existing location"
     cmd="crm_resource -r dummy --move"
@@ -260,7 +260,7 @@ function test_tools() {
 
     desc="Ban a resource on unknown node"
     cmd="crm_resource -r dummy -B -N host1"
-    test_assert 250
+    test_assert 6
 
     desc="Create two more nodes and bring them online"
     cmd="crm_simulate --live-check --in-place --node-up=node2 --node-up=node3"

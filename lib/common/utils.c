@@ -100,11 +100,16 @@ crm_exit(int rc)
     free(crm_short_options);
     free(crm_system_name);
 
-    exit(rc);
-    return rc;                  /* Can never happen, but allows return crm_exit(rc)
-                                 * where "return rc" was used previously
-                                 * - which keeps compilers happy.
-                                 */
+    exit(ABS(rc)); /* Always exit with a positive value so that it can be passed to crm_error
+                    *
+                    * Otherwise the system wraps it around and people
+                    * have to jump through hoops figuring out what the
+                    * error was
+                    */
+    return rc;     /* Can never happen, but allows return crm_exit(rc)
+                    * where "return rc" was used previously - which
+                    * keeps compilers happy.
+                    */
 }
 
 gboolean
@@ -1417,10 +1422,10 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        crm_exit(EX_USAGE);
+        crm_exit(EINVAL);
 
     } else if (pid > 0) {
-        crm_exit(EX_OK);
+        crm_exit(pcmk_ok);
     }
 
     rc = crm_lock_pidfile(pidfile);
@@ -1792,7 +1797,7 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 }
 
@@ -1819,7 +1824,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     if (*ipcs == NULL) {
         crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 }
 
@@ -1831,7 +1836,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     if (*ipcs == NULL) {
         crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 }
 
@@ -2243,7 +2248,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if (!(*handle)) {
         crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
         if (fatal) {
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
         return NULL;
     }
@@ -2252,7 +2257,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if ((error = dlerror()) != NULL) {
         crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
         if (fatal) {
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
     }
 

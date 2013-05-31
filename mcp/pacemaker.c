@@ -337,7 +337,7 @@ start_child(pcmk_child_t * child)
             (void)execvp(child->command, opts_default);
         }
         crm_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
     return TRUE;                /* never reached */
 }
@@ -414,7 +414,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (fatal_error) {
         crm_notice("Attempting to inhibit respawning after fatal error");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 
     return TRUE;
@@ -856,7 +856,7 @@ main(int argc, char **argv)
             case 'F':
                 printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", VERSION, BUILD_VERSION,
                        CRM_FEATURE_SET, CRM_FEATURES);
-                crm_exit(0);
+                crm_exit(pcmk_ok);
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
                 ++argerr;
@@ -892,13 +892,13 @@ main(int argc, char **argv)
         }
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_exit(0);
+        crm_exit(pcmk_ok);
 
     } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
-        crm_exit(100);
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
 
     crm_ipc_close(old_instance);
@@ -906,7 +906,7 @@ main(int argc, char **argv)
 
     if (read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
-        crm_exit(1);
+        crm_exit(ENODATA);
     }
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s", VERSION, BUILD_VERSION, CRM_FEATURES);
@@ -942,7 +942,7 @@ main(int argc, char **argv)
 
     if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
-        crm_exit(1);
+        crm_exit(ENOKEY);
     }
 
     mkdir(CRM_STATE_DIR, 0750);
@@ -976,17 +976,17 @@ main(int argc, char **argv)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
-        crm_exit(1);
+        crm_exit(EIO);
     }
 
     if (cluster_connect_cfg(&local_nodeid) == FALSE) {
         crm_err("Couldn't connect to Corosync's CFG service");
-        crm_exit(1);
+        crm_exit(ENOPROTOOPT);
     }
 
     if (cluster_connect_cpg() == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
-        crm_exit(1);
+        crm_exit(ENOPROTOOPT);
     }
 
     local_name = get_local_node_name();
@@ -1015,5 +1015,5 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    crm_exit(0);
+    crm_exit(pcmk_ok);
 }

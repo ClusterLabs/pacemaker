@@ -1072,7 +1072,7 @@ Error performing operation: Invalid argument
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Require a destination when migrating a resource that is stopped - Unknown error (234) =#=#=#=
+=#=#=#= End test: Require a destination when migrating a resource that is stopped - Invalid argument (22) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existant locations =#=#=#=
 Error performing operation: node 'i.dont.exist' is unknown
@@ -1114,7 +1114,7 @@ Error performing operation: No such device or address
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Don't support migration to non-existant locations - Unknown error (250) =#=#=#=
+=#=#=#= End test: Don't support migration to non-existant locations - No such device or address (6) =#=#=#=
 * Passed: crm_resource   - Don't support migration to non-existant locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 <cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
@@ -1283,7 +1283,7 @@ Error performing operation: Invalid argument
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Try to move a resource to its existing location - Unknown error (234) =#=#=#=
+=#=#=#= End test: Try to move a resource to its existing location - Invalid argument (22) =#=#=#=
 * Passed: crm_resource   - Try to move a resource to its existing location
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
@@ -1881,7 +1881,7 @@ Error performing operation: No such device or address
     </tickets>
   </status>
 </cib>
-=#=#=#= End test: Ban a resource on unknown node - Unknown error (250) =#=#=#=
+=#=#=#= End test: Ban a resource on unknown node - No such device or address (6) =#=#=#=
 * Passed: crm_resource   - Ban a resource on unknown node
 =#=#=#= Begin test: Create two more nodes and bring them online =#=#=#=
 

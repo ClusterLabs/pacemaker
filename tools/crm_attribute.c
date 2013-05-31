@@ -322,5 +322,5 @@ main(int argc, char **argv)
 
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
-    return crm_exit(ABS(rc));
+    return crm_exit(rc);
 }

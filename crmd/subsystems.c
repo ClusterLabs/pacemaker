@@ -178,5 +178,5 @@ start_subsystem(struct crm_subsystem_s * the_subsystem)
     /* Should not happen */
     crm_perror(LOG_ERR, "FATAL: Cannot exec %s", the_subsystem->command);
 
-    return crm_exit(100);             /* Suppress respawning */
+    return crm_exit(DAEMON_RESPAWN_STOP);             /* Suppress respawning */
 }

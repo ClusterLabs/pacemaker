@@ -300,7 +300,7 @@ convert_xml_child(HA_Message * msg, xmlNode * xml)
             );
         crm_debug("rc=%d, used=%d", rc, used);
         if (rc != BZ_OK) {
-            crm_exit(100);
+            crm_exit(DAEMON_RESPAWN_STOP);
         }
         crm_debug("Original %s, decompressed %s", buffer, uncompressed);
         free(uncompressed);

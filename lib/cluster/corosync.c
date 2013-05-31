@@ -1072,7 +1072,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
             if (node && node->id != nodeid) {
                 crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id,
                          nodeid, name);
-                crm_exit(100);
+                crm_exit(DAEMON_RESPAWN_STOP);
             }
         }
 
