@@ -758,8 +758,8 @@ Could not establish attrd connection: Connection refused (111)
   </status>
 </cib>
 * Passed: crm_resource   - Set a resource's fail-count
-Resource 'dummy' not moved: inactive
-You can prevent 'dummy' from running on a specific location with --ban --host <name>
+Resource 'dummy' not moved: active in 0 locations.
+You can prevent 'dummy' from running on a specific location with: --ban --host <name>
 Error performing operation: Invalid argument
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>

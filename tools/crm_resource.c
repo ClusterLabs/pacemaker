@@ -1941,26 +1941,42 @@ main(int argc, char **argv)
         if(rsc == NULL) {
             CMD_ERR("Resource '%s' not moved: unknown\n", rsc_id);
 
-        } else if(g_list_length(rsc->running_on) == 0) {
-            CMD_ERR("Resource '%s' not moved: inactive\n", rsc_id);
-            CMD_ERR("You can prevent '%s' from running on a specific location with --ban --host <name>\n", rsc_id);
-
         } else if(g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
             rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
 
         } else if(scope_master && rsc->variant == pe_master) {
+            int count = 0;
+            GListPtr iter = NULL;
+            node_t *current = NULL;
+
+            for(iter = rsc->children; iter; iter = iter->next) {
+                resource_t *child = (resource_t *)iter->data;
+                if(child->role == RSC_ROLE_MASTER) {
+                    count++;
+                    current = child->running_on->data;
+                }
+            }
+
+            if(count == 1 && current) {
+                rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
+
+            } else {
+                CMD_ERR("Resource '%s' not moved: currently promoted in %d locations.\n", rsc_id, count);
+                CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
+                        " --ban --master --host <name>\n", rsc_id);
+            }
 
         } else {
             CMD_ERR("Resource '%s' not moved: active in %d locations.\n", rsc_id, g_list_length(rsc->running_on));
             CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
 
-            if(rsc->variant == pe_master) {
+            if(rsc->variant == pe_master && g_list_length(rsc->running_on) > 0) {
                 CMD_ERR("You can prevent '%s' from being promoted at its current location with: --ban --master\n", rsc_id);
-                CMD_ERR("You can prevent '%s' from being promoted at a specific location with: --ban --host <name> --master\n", rsc_id);
+                CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
+                        " --ban --master --host <name>\n", rsc_id);
             }
         }
-
 
     } else if (rsc_cmd == 'G') {
         if (rsc_id == NULL) {
