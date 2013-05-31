@@ -138,7 +138,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     if (xml_has_children(xml_search)) {
         xmlNode *child = NULL;
 
-        rc = -EINVAL;
+        rc = -ENOTUNIQ;
         attr_msg(LOG_WARNING, "Multiple attributes match name=%s", attr_name);
 
         for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
@@ -180,7 +180,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
     CRM_CHECK(attr_name != NULL || attr_id != NULL, return -EINVAL);
 
     rc = find_nvpair_attr_delegate(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name,
-                                   attr_id, attr_name, FALSE, &local_attr_id, user_name);
+                                   attr_id, attr_name, to_console, &local_attr_id, user_name);
     if (rc == pcmk_ok) {
         attr_id = local_attr_id;
         goto do_modify;
@@ -196,6 +196,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         const char *node_type = NULL;
         xmlNode *cib_top = NULL;
 
+        crm_trace("%s does not exist, create it", attr_name);
         rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top,
                              cib_sync_call | cib_scope_local | cib_xpath | cib_no_children,
                              user_name);
