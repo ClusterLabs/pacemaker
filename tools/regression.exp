@@ -97,7 +97,7 @@ Duration ends at: 2009-02-28 00:00:00Z
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -107,7 +107,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   <status/>
 </cib>
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -117,7 +117,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Require --force for CIB erasure
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -127,7 +127,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Allow CIB erasure with --force
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -137,7 +137,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query CIB
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -152,7 +152,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 </cib>
 * Passed: crm_attribute  - Set cluster option
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -166,7 +166,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query new cluster option
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -180,7 +180,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query cluster options
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -200,7 +200,7 @@ Call failed: Name not unique on network
     </cluster_property_set>
   </failed_update>
 </failed>
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -212,7 +212,7 @@ Call failed: Name not unique on network
   <status/>
 </cib>
 * Passed: cibadmin       - Create operaton should fail with: -76, The object already exists
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -227,7 +227,7 @@ Call failed: Name not unique on network
 </cib>
 * Passed: cibadmin       - Modify cluster options section
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -241,7 +241,7 @@ Call failed: Name not unique on network
   <status/>
 </cib>
 * Passed: cibadmin       - Query updated cluster option
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -259,7 +259,7 @@ Call failed: Name not unique on network
 </cib>
 * Passed: crm_attribute  - Set duplicate cluster option
 Please choose from one of the matches above and suppy the 'id' with --attr-id
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -276,7 +276,7 @@ Please choose from one of the matches above and suppy the 'id' with --attr-id
   <status/>
 </cib>
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail with -216, Could not set cluster option
-<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -295,7 +295,7 @@ Please choose from one of the matches above and suppy the 'id' with --attr-id
 * Passed: crm_attribute  - Set cluster option with -s
 Deleted crm_config option: id=(null) name=cluster-delay
 
-<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -310,7 +310,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   <status/>
 </cib>
 * Passed: crm_attribute  - Delete cluster option with -i
-<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -327,7 +327,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   <status/>
 </cib>
 * Passed: cibadmin       - Create node entry
-<cib epoch="9" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="9" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -346,7 +346,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   </status>
 </cib>
 * Passed: cibadmin       - Create node status entry
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -370,7 +370,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
 </cib>
 * Passed: crm_attribute  - Create node attribute
       <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -393,7 +393,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   </status>
 </cib>
 * Passed: cibadmin       - Query new node attribute
-Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -417,7 +417,7 @@ Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker
 </cib>
 * Passed: cibadmin       - Digest calculation
 Call failed: Update was older than existing configuration
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -442,7 +442,7 @@ Call failed: Update was older than existing configuration
 * Passed: cibadmin       - Replace operation should fail with: 205, Update was older than existing configuration
 Error performing operation: No such device or address
 scope=status  name=standby value=off
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -465,7 +465,7 @@ scope=status  name=standby value=off
   </status>
 </cib>
 * Passed: crm_standby    - Default standby value
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -490,7 +490,7 @@ scope=status  name=standby value=off
 </cib>
 * Passed: crm_standby    - Set standby status
 scope=nodes  name=standby value=true
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -521,7 +521,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
-<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -544,7 +544,7 @@ Could not establish attrd connection: Connection refused (111)
   </status>
 </cib>
 * Passed: crm_standby    - Delete standby value
-<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -569,7 +569,7 @@ Could not establish attrd connection: Connection refused (111)
   </status>
 </cib>
 * Passed: cibadmin       - Create a resource
-<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -599,7 +599,7 @@ Could not establish attrd connection: Connection refused (111)
 </cib>
 * Passed: crm_resource   - Create a resource meta attribute
 false
-<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -629,7 +629,7 @@ false
 </cib>
 * Passed: crm_resource   - Query a resource meta attribute
 Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -656,7 +656,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
   </status>
 </cib>
 * Passed: crm_resource   - Remove a resource meta attribute
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -686,8 +686,8 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
   </status>
 </cib>
 * Passed: crm_resource   - Create a resource attribute
- dummy	(ocf::pacemaker:Dummy):	Stopped
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+ dummy	(ocf::pacemaker:Dummy):	Stopped 
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -722,7 +722,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -758,9 +758,9 @@ Could not establish attrd connection: Connection refused (111)
   </status>
 </cib>
 * Passed: crm_resource   - Set a resource's fail-count
-Resource dummy not moved: not-active and no preferred location specified.
+Resource dummy not moved: inactive and no value for --host
 Error performing operation: Invalid argument
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -798,7 +798,7 @@ Error performing operation: Invalid argument
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 Error performing operation: i.dont.exist is not a known node
 Error performing operation: No such device or address
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -834,7 +834,7 @@ Error performing operation: No such device or address
   </status>
 </cib>
 * Passed: crm_resource   - Don't support migration to non-existant locations
-<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -858,11 +858,7 @@ Error performing operation: No such device or address
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy">
-        <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
-          <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="clusterNode-UNAME" type="string"/>
-        </rule>
-      </rsc_location>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" node="clusterNode-UNAME" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -876,7 +872,7 @@ Error performing operation: No such device or address
   </status>
 </cib>
 * Passed: crm_resource   - Migrate a resource
-<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -913,7 +909,7 @@ Error performing operation: No such device or address
 </cib>
 * Passed: crm_resource   - Un-migrate a resource
 false
-<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -949,7 +945,7 @@ false
   </status>
 </cib>
 * Passed: crm_ticket     - Default ticket granted state
-<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -989,7 +985,7 @@ false
 </cib>
 * Passed: crm_ticket     - Set ticket granted state
 false
-<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1029,7 +1025,7 @@ false
 </cib>
 * Passed: crm_ticket     - Query ticket granted state
 Deleted ticketA state attribute:  name=granted
-<cib epoch="18" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1068,7 +1064,7 @@ Deleted ticketA state attribute:  name=granted
   </status>
 </cib>
 * Passed: crm_ticket     - Delete ticket granted state
-<cib epoch="18" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1108,7 +1104,7 @@ Deleted ticketA state attribute:  name=granted
 </cib>
 * Passed: crm_ticket     - Make a ticket standby
 true
-<cib epoch="18" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1147,7 +1143,7 @@ true
   </status>
 </cib>
 * Passed: crm_ticket     - Query ticket standby state
-<cib epoch="18" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1187,7 +1183,7 @@ true
 </cib>
 * Passed: crm_ticket     - Activate a ticket
 Deleted ticketA state attribute:  name=standby
-<cib epoch="18" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2" >
+<cib epoch="18" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -1226,3 +1222,432 @@ Deleted ticketA state attribute:  name=standby
   </status>
 </cib>
 * Passed: crm_ticket     - Delete ticket standby state
+Unknown node: node1
+Error performing operation: No such device or address
+<cib epoch="18" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+  </status>
+</cib>
+* Passed: crm_resource   - Ban a resource on unknown node
+
+Current cluster status:
+Node clusterNode-UNAME (clusterNode-UUID): UNCLEAN (offline)
+
+ dummy	(ocf::pacemaker:Dummy):	Stopped 
+
+Performing requested modifications
+ + Bringing node node1 online
+ + Bringing node node2 online
+ + Bringing node node3 online
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: dummy           monitor on node3
+ * Resource action: dummy           monitor on node2
+ * Resource action: dummy           monitor on node1
+ * Pseudo action:   probe_complete
+
+Revised cluster status:
+Node clusterNode-UNAME (clusterNode-UUID): UNCLEAN (offline)
+Online: [ node1 node2 node3 ]
+
+ dummy	(ocf::pacemaker:Dummy):	Stopped 
+
+<cib epoch="21" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_simulate   - Create three nodes and bring them online
+WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
+	This will prevent dummy from running on node1 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
+	This will be the case even if node1 is the last node in the cluster
+	This message can be disabled with --quiet
+<cib epoch="22" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Ban dummy from node1
+WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score of -INFINITY for resource dummy on node2.
+	This will prevent dummy from running on node2 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
+	This will be the case even if node2 is the last node in the cluster
+	This message can be disabled with --quiet
+<cib epoch="23" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" node="node2" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Ban dummy from node2
+<cib epoch="25" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" node="node2" score="-INFINITY"/>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Move dummy to node1
+<cib epoch="26" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Clear implicit constraints for dummy on node2

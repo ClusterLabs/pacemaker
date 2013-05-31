@@ -171,7 +171,7 @@ function test_tools() {
     $VALGRIND_CMD crm_resource -r dummy -M -N clusterNode-UNAME
     assert $? 0 crm_resource "Migrate a resource"
 
-    $VALGRIND_CMD crm_resource -r dummy -U
+    $VALGRIND_CMD crm_resource -r dummy -U 1>&2
     assert $? 0 crm_resource "Un-migrate a resource"
 
     $VALGRIND_CMD crm_ticket -t ticketA -G granted -d false
@@ -197,6 +197,24 @@ function test_tools() {
 
     $VALGRIND_CMD crm_ticket -t ticketA -D standby
     assert $? 0 crm_ticket "Delete ticket standby state"
+
+    $VALGRIND_CMD crm_resource -r dummy -B -N node1 2>&1
+    assert $? 250 crm_resource "Ban a resource on unknown node"
+
+    $VALGRIND_CMD crm_simulate --live-check --in-place --node-up=node1 --node-up=node2 --node-up=node3
+    assert $? 0 crm_simulate "Create three nodes and bring them online"
+
+    $VALGRIND_CMD crm_resource -r dummy -B -N node1 2>&1
+    assert $? 0 crm_resource "Ban dummy from node1"
+
+    $VALGRIND_CMD crm_resource -r dummy -B -N node2 2>&1
+    assert $? 0 crm_resource "Ban dummy from node2"
+
+    $VALGRIND_CMD crm_resource -r dummy -M -N node1 2>&1
+    assert $? 0 crm_resource "Move dummy to node1"
+
+    $VALGRIND_CMD crm_resource -r dummy -U -N node2
+    assert $? 0 crm_resource "Clear implicit constraints for dummy on node2"
  }
 
 function test_date() {
@@ -231,6 +249,8 @@ test_date > $test_home/regression.out
 echo "Testing tools"
 test_tools >> $test_home/regression.out
 sed -i.sed 's/cib-last-written.*>/>/' $test_home/regression.out
+sed -i.sed 's/ last-run=\"[0-9]*\"//' $test_home/regression.out
+sed -i.sed 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.out
 
 if [ $do_save = 1 ]; then
     cp $test_home/regression.out $test_home/regression.exp
