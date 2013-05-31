@@ -42,6 +42,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
+bool scope_master = FALSE;
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
 const char *attr_set_type = XML_TAG_ATTR_SETS;
@@ -1376,7 +1377,10 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 0:
-                if (safe_str_eq("force-stop", longname)
+                if (safe_str_eq("force-stop", longname)) {
+                    scope_master = TRUE;
+
+                } else if (safe_str_eq("force-stop", longname)
                     || safe_str_eq("force-start", longname)
                     || safe_str_eq("force-check", longname)) {
                     rsc_cmd = flag;
@@ -1810,7 +1814,7 @@ main(int argc, char **argv)
         rc = list_resource_operations(rsc_id, host_uname, FALSE, &data_set);
 
     } else if (rc == -ENXIO) {
-        CMD_ERR("Resource %s not found: %s\n", crm_str(rsc_id), pcmk_strerror(rc));
+        CMD_ERR("Resource '%s' not found: %s\n", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
         if (rsc_id == NULL) {
@@ -1858,91 +1862,105 @@ main(int argc, char **argv)
             rc = clear_resource(rsc_id, NULL, data_set.nodes, cib_conn);
         }
 
-    } else if (rsc_cmd == 'B') {
-        node_t *dest = NULL;
-
-        if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource\n");
-            rc = -ENXIO;
-            goto bail;
-        }
-
-        if (host_uname) {
-            dest = pe_find_node(data_set.nodes, host_uname);
-            if (dest == NULL) {
-                CMD_ERR("Unknown node: %s\n", host_uname);
-                rc = -ENXIO;
-                goto bail;
-            }
-            rc = ban_resource(rsc_id, dest->details->uname, NULL, cib_conn);
-
-        } else {
-            rc = ban_resource(rsc_id, NULL, data_set.nodes, cib_conn);
-        }
-
-
-    } else if (rsc_cmd == 'M') {
+    } else if (rsc_cmd == 'M' && host_uname) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
         rc = -EINVAL;
 
         if (rsc == NULL) {
-            CMD_ERR("Resource %s not moved: not found\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: not found\n", rsc_id);
             rc = -ENXIO;
             goto bail;
 
         } else if(rsc->variant == pe_clone) {
-            CMD_ERR("Resource %s not moved: moving a clone makes no sense\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: moving a clone makes no sense\n", rsc_id);
             goto bail;
 
         } else if (rsc->variant < pe_clone && g_list_length(rsc->running_on) > 1) {
-            CMD_ERR("Resource %s not moved: active on multiple nodes\n", rsc_id);
+            CMD_ERR("Resource '%s' not moved: active on multiple nodes\n", rsc_id);
             goto bail;
         }
 
-        if(host_uname) {
-            node_t *dest = pe_find_node(data_set.nodes, host_uname);
+        if(dest == NULL) {
+            CMD_ERR("Error performing operation: node '%s' is unknown\n", host_uname);
+            rc = -ENXIO;
+            goto bail;
+        }
 
-            if(dest == NULL) {
-                CMD_ERR("Error performing operation: %s is not a known node\n", host_uname);
-                rc = -ENXIO;
+        if(g_list_length(rsc->running_on) == 1) {
+            node_t *current = rsc->running_on->data;
+
+            if (safe_str_eq(current->details->uname, dest->details->uname)) {
+                CMD_ERR("Error performing operation: %s is already active on %s\n", rsc_id, dest->details->uname);
                 goto bail;
             }
-
-            if(g_list_length(rsc->running_on) == 1) {
-                node_t *current = rsc->running_on->data;
-
-                if (safe_str_eq(current->details->uname, dest->details->uname)) {
-                    CMD_ERR("Error performing operation: %s is already active on %s\n", rsc_id, dest->details->uname);
-                    goto bail;
-                }
             /* } else if (rsc->variant == pe_master) { Find the master and ban it */
-            }
+        }
 
-            /* Clear any previous constraints for 'dest' */
-            clear_resource(rsc_id, dest->details->uname, data_set.nodes, cib_conn);
+        /* Clear any previous constraints for 'dest' */
+        clear_resource(rsc_id, dest->details->uname, data_set.nodes, cib_conn);
 
-            /* Record an explicit preference for 'dest' */
-            rc = prefer_resource(rsc_id, dest->details->uname, cib_conn);
+        /* Record an explicit preference for 'dest' */
+        rc = prefer_resource(rsc_id, dest->details->uname, cib_conn);
 
-            if(do_force && g_list_length(rsc->running_on) == 1) {
-                node_t *current = rsc->running_on->data;
+        if(do_force && g_list_length(rsc->running_on) == 1) {
+            node_t *current = rsc->running_on->data;
 
-                /* Ban the original location */
-                ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
-            }
+            /* Ban the original location */
+            ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
+        }
 
-            /* BEGIN: Backwards compatability */
-        } else if(g_list_length(rsc->running_on) == 0) {
-            CMD_ERR("Resource %s not moved: inactive and no value for --host\n", rsc_id);
+    } else if (rsc_cmd == 'B' && host_uname) {
+        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        node_t *dest = pe_find_node(data_set.nodes, host_uname);
+
+        rc = -ENXIO;
+        if (rsc_id == NULL) {
+            CMD_ERR("No value specified for --resource\n");
             goto bail;
+        } else if(rsc == NULL) {
+            CMD_ERR("Resource '%s' not moved: unknown\n", rsc_id);
+
+        } else if (dest == NULL) {
+            CMD_ERR("Error performing operation: node '%s' is unknown\n", host_uname);
+            goto bail;
+        }
+        rc = ban_resource(rsc_id, dest->details->uname, NULL, cib_conn);
+
+    } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
+        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        rc = -ENXIO;
+        if (rsc_id == NULL) {
+            CMD_ERR("No value specified for --resource\n");
+            goto bail;
+        }
+
+        rc = -EINVAL;
+        if(rsc == NULL) {
+            CMD_ERR("Resource '%s' not moved: unknown\n", rsc_id);
+
+        } else if(g_list_length(rsc->running_on) == 0) {
+            CMD_ERR("Resource '%s' not moved: inactive\n", rsc_id);
+            CMD_ERR("You can prevent '%s' from running on a specific location with --ban --host <name>\n", rsc_id);
 
         } else if(g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
-
             rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
-            /* END: Backwards compatability */
+
+        } else if(scope_master && rsc->variant == pe_master) {
+
+        } else {
+            CMD_ERR("Resource '%s' not moved: active in %d locations.\n", rsc_id, g_list_length(rsc->running_on));
+            CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
+
+            if(rsc->variant == pe_master) {
+                CMD_ERR("You can prevent '%s' from being promoted at its current location with: --ban --master\n", rsc_id);
+                CMD_ERR("You can prevent '%s' from being promoted at a specific location with: --ban --host <name> --master\n", rsc_id);
+            }
         }
+
 
     } else if (rsc_cmd == 'G') {
         if (rsc_id == NULL) {

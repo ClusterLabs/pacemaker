@@ -758,7 +758,8 @@ Could not establish attrd connection: Connection refused (111)
   </status>
 </cib>
 * Passed: crm_resource   - Set a resource's fail-count
-Resource dummy not moved: inactive and no value for --host
+Resource 'dummy' not moved: inactive
+You can prevent 'dummy' from running on a specific location with --ban --host <name>
 Error performing operation: Invalid argument
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
@@ -796,7 +797,7 @@ Error performing operation: Invalid argument
   </status>
 </cib>
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
-Error performing operation: i.dont.exist is not a known node
+Error performing operation: node 'i.dont.exist' is unknown
 Error performing operation: No such device or address
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
@@ -1222,7 +1223,7 @@ Deleted ticketA state attribute:  name=standby
   </status>
 </cib>
 * Passed: crm_ticket     - Delete ticket standby state
-Unknown node: node1
+Error performing operation: node 'node1' is unknown
 Error performing operation: No such device or address
 <cib epoch="18" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
