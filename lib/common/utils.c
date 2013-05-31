@@ -1935,6 +1935,8 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
     free_xml(update);
     if (rc > 0) {
         crm_debug("Sent update: %s=%s for %s", name, value, host ? host : "localhost");
+        rc = pcmk_ok;
+
     } else {
         crm_debug("Could not send update %s=%s for %s: %s (%d)", name, value,
                   host ? host : "localhost", pcmk_strerror(rc), rc);

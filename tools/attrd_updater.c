@@ -144,7 +144,7 @@ main(int argc, char **argv)
         int rc = attrd_update_delegate(NULL, command, NULL, attr_name, attr_value, attr_section,
                                        attr_set, attr_dampen, NULL);
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
+            fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
         }
         crm_exit(rc);
     }
