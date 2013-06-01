@@ -778,10 +778,10 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
         if (node && node->details->remote_rsc) {
             /* TODO talk directly to cib for remote nodes until we can re-write
              * attrd to handle remote-nodes */
-            delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
+            rc = delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,
                                   NULL, attr_name, NULL, FALSE, NULL);
         } else {
-            attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
+            rc = attrd_update_delegate(NULL, 'D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL,
                               NULL, NULL);
         }
         free(attr_name);

@@ -252,7 +252,7 @@ main(int argc, char **argv)
     if ((command == 'v' || command == 'D')
         && is_remote_node == FALSE /* always send remote node attr directly to cib */
         && safe_str_eq(type, XML_CIB_TAG_STATUS)
-        && attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
+        && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
                                  NULL, NULL)) {
         crm_info("Update %s=%s sent via attrd", attr_name, command == 'D' ? "<none>" : attr_value);
 

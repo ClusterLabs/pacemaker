@@ -1062,7 +1062,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 
         rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL,
                                    NULL, user_name);
-        if (rc > 0) {
+        if (rc == pcmk_ok) {
             break;
 
         } else if (rc != -EAGAIN && rc != -EALREADY) {
@@ -1074,7 +1074,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
 
     } while (max--);
 
-    if (rc < 0) {
+    if (rc != pcmk_ok) {
         if (name) {
             crm_err("Could not send attrd %s update%s: %s (%d)",
                     name, is_set(fsa_input_register, R_SHUTDOWN) ? " at shutdown" : "",
