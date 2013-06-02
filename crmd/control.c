@@ -213,8 +213,10 @@ crmd_exit(int rc)
     crm_trace("Preparing to exit: %d", rc);
 
     if (is_set(fsa_input_register, R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error: %");
-        rc = pcmk_err_generic;
+        crm_err("Could not recover from internal error: %s (%d)", pcmk_strerror(rc), rc);
+        if(rc == pcmk_ok) {
+            rc = pcmk_err_generic;
+        }
     }
 
     if (is_set(fsa_input_register, R_STAYDOWN)) {
