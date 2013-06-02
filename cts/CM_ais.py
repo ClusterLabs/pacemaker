@@ -167,7 +167,7 @@ class crm_ais(crm_lha):
                     "Child process attrd exited .* rc=1",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.*Could not recover from internal error",
                     ], badnews_ignore = cib_ignore, common_ignore = self.common_ignore)
 
         fullcomplist["lrmd"] = Process(self, "lrmd", pats = [
@@ -179,7 +179,7 @@ class crm_ais(crm_lha):
                     "crmd.*I_ERROR.*lrm_connection_destroy",
                     "Child process crmd exited .* rc=2",
                     "crmd.*Input I_TERMINATE from do_recover",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.* Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
 
         fullcomplist["crmd"] = Process(self, "crmd", pats = [
@@ -202,7 +202,7 @@ class crm_ais(crm_lha):
                     "crit: pe_ipc_destroy: Connection to the Policy Engine failed",
                     "crmd.*I_ERROR.*save_cib_contents",
                     "crmd.*Input I_TERMINATE from do_recover",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.* Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
 
         stonith_ignore = [
@@ -269,7 +269,7 @@ class crm_whitetank(crm_ais):
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "cib.*error: cib_ais_destroy: AIS connection terminated",
                     #"crmd.*error: crm_ais_destroy: AIS connection terminated",
-                    "crmd.*do_exit: Could not recover from internal error",
+                    "crmd.* Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
                     "attrd.*attrd_ais_destroy: Lost connection to OpenAIS service!",
                     "stonithd.*error: AIS connection terminated",
