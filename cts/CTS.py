@@ -1252,8 +1252,11 @@ class ClusterManager(UserDict):
 
         for peer in peer_list:
 
-            self.ShouldBeStatus[peer] = "down"
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
+            if self.Env["at-boot"]:
+                self.ShouldBeStatus[peer] = "up"
+            else:
+                self.ShouldBeStatus[peer] = "down"
 
             if peer_state[peer] == "in-progress":
                 # Wait for any in-progress operations to complete
@@ -1276,10 +1279,7 @@ class ClusterManager(UserDict):
                     self.log("ERROR: Peer %s failed to restart after being fenced" % peer)
                     return None
 
-                self.ShouldBeStatus[peer] = "up"
-
         return peer_list
-
 
     def StartaCM(self, node, verbose=False):
 
