@@ -220,7 +220,9 @@ mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data), gpointe
 void
 mainloop_set_trigger(crm_trigger_t * source)
 {
-    source->trigger = TRUE;
+    if(source) {
+        source->trigger = TRUE;
+    }
 }
 
 gboolean

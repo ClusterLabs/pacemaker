@@ -90,7 +90,9 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
     }
 
     /* cbchan will be garbage at this point, arrange for it to be reset */
-    stonith_api->state = stonith_disconnected;
+    if(stonith_api) {
+        stonith_api->state = stonith_disconnected;
+    }
 
     if (AM_I_DC) {
         fail_incompletable_stonith(transition_graph);
@@ -319,8 +321,8 @@ te_graph_trigger(gpointer user_data)
 void
 trigger_graph_processing(const char *fn, int line)
 {
-    mainloop_set_trigger(transition_trigger);
     crm_trace("%s:%d - Triggered graph processing", fn, line);
+    mainloop_set_trigger(transition_trigger);
 }
 
 void
