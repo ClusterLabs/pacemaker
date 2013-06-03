@@ -362,6 +362,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /*
              * Medium priority actions
+             * - Membership
              */
         } else if (fsa_actions & A_DC_TAKEOVER) {
             do_fsa_action(fsa_data, A_DC_TAKEOVER, do_dc_takeover);
@@ -373,10 +374,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_ELECTION_CHECK, do_election_check);
         } else if (fsa_actions & A_ELECTION_START) {
             do_fsa_action(fsa_data, A_ELECTION_START, do_election_vote);
-        } else if (fsa_actions & A_TE_HALT) {
-            do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);
-        } else if (fsa_actions & A_TE_CANCEL) {
-            do_fsa_action(fsa_data, A_TE_CANCEL, do_te_invoke);
         } else if (fsa_actions & A_DC_JOIN_OFFER_ALL) {
             do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL, do_dc_join_offer_all);
         } else if (fsa_actions & A_DC_JOIN_OFFER_ONE) {
@@ -385,24 +382,28 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_REQ, do_dc_join_filter_offer);
         } else if (fsa_actions & A_DC_JOIN_PROCESS_ACK) {
             do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_ACK, do_dc_join_ack);
+        } else if (fsa_actions & A_DC_JOIN_FINALIZE) {
+            do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE, do_dc_join_finalize);
+        } else if (fsa_actions & A_CL_JOIN_ANNOUNCE) {
+            do_fsa_action(fsa_data, A_CL_JOIN_ANNOUNCE, do_cl_join_announce);
 
             /*
              * Low(er) priority actions
              * Make sure the CIB is always updated before invoking the
              * PE, and the PE before the TE
              */
-        } else if (fsa_actions & A_DC_JOIN_FINALIZE) {
-            do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE, do_dc_join_finalize);
+        } else if (fsa_actions & A_TE_HALT) {
+            do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);
+        } else if (fsa_actions & A_TE_CANCEL) {
+            do_fsa_action(fsa_data, A_TE_CANCEL, do_te_invoke);
         } else if (fsa_actions & A_LRM_INVOKE) {
             do_fsa_action(fsa_data, A_LRM_INVOKE, do_lrm_invoke);
         } else if (fsa_actions & A_PE_INVOKE) {
             do_fsa_action(fsa_data, A_PE_INVOKE, do_pe_invoke);
         } else if (fsa_actions & A_TE_INVOKE) {
             do_fsa_action(fsa_data, A_TE_INVOKE, do_te_invoke);
-        } else if (fsa_actions & A_CL_JOIN_ANNOUNCE) {
-            do_fsa_action(fsa_data, A_CL_JOIN_ANNOUNCE, do_cl_join_announce);
 
-            /* sub-system stop */
+            /* Shutdown actions */
         } else if (fsa_actions & A_DC_RELEASED) {
             do_fsa_action(fsa_data, A_DC_RELEASED, do_dc_release);
         } else if (fsa_actions & A_PE_STOP) {
