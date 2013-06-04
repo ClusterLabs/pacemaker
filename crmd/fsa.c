@@ -490,6 +490,8 @@ do_state_transition(long long actions,
         level = LOG_NOTICE;
     } else if (cur_state == S_ELECTION) {
         level = LOG_NOTICE;
+    } else if (cur_state == S_STARTING) {
+        level = LOG_NOTICE;
     } else if (next_state == S_RECOVERY) {
         level = LOG_WARNING;
     }
