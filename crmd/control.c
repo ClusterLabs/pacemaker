@@ -227,6 +227,7 @@ crmd_exit(int rc)
     if(ipcs) {
         crm_trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
+        ipcs = NULL;
     }
 
     if (attrd_ipc) {
