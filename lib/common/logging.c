@@ -312,7 +312,7 @@ static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const char *msg)
 {
     if(cs && cs->priority < LOG_ERR) {
-        crm_write_blackbox(SIGABRT, cs); /* Bypass the over-dumping logic */
+        crm_write_blackbox(SIGTRAP, cs); /* Bypass the over-dumping logic */
     } else {
         crm_write_blackbox(0, cs);
     }
@@ -334,7 +334,13 @@ crm_enable_blackbox(int nsig)
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
 
         crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+
+        /* Save to disk on abnormal termination */
         crm_signal(SIGSEGV, crm_trigger_blackbox);
+        crm_signal(SIGABRT, crm_trigger_blackbox);
+        crm_signal(SIGILL,  crm_trigger_blackbox);
+        crm_signal(SIGBUS,  crm_trigger_blackbox);
+
         crm_update_callsites();
 
         /* Original meanings from signal(7)
@@ -370,7 +376,6 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
 
     switch (nsig) {
         case 0:
-        case SIGABRT:
         case SIGTRAP:
             /* The graceful case - such as assertion failure or user request */
 
