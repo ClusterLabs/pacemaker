@@ -478,7 +478,7 @@ Some possible uses of topologies include:
 
 |=========================================================
 
-.Example use of Fencing Topologies
+=== Example use of Fencing Topologies ===
 [source,XML]
 ----
  <cib crm_feature_set="3.0.6" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
@@ -499,14 +499,135 @@ Some possible uses of topologies include:
 </cib>
 ----
 
-.Example of dual layer fencing with dual PDUs
-The following example illustrate a typical use for +fencing_topology+ in a
-cluster with the following properties:
-* 3 nodes (2 active, 1 in standby for quorum purposes)
-* fencing through +fence_virsh+
-* alternate fencing through +fence_apc_snmp+ targetting 2 fencing devices (one per PDU)
-* PDU fencing is only implemented for the active nodes and has location constraints
-* fencing topology set to try virsh first then default to a "sure-kill" dual PDU fencing
+=== Example use of advanced Fencing Topologies: dual layer and dual devices ===
+
+The following example illustrate an advanced use of +fencing_topology+ in a cluster with the following properties:
+
+* 3 nodes (2 active prod-mysql nodes, 1 prod_mysql-rep in standby for quorum purposes)
+* the active nodes have an IPMI-controlled power board reached at 10.10.10.1 and 10.10.10.2
+* the active nodes also have two independant PSUs connected to two independant PDUs reached at 10.20.1.1, 10.20.1.2, 10.20.2.1, 10.20.2.2
+* the first fencing method uses +fence_ipmi+
+* the second fencing method uses +fence_apc_snmp+ targetting 2 fencing devices (one per PDU)
+* fencing is only implemented for the active nodes and has location constraints
+* fencing topology is set to try IPMI fencing first then default to a "sure-kill" dual PDU fencing
+
+In a normal failure scenario, STONITH would select +fence_ipmi+ to try and kill the faulty node.
+If that first method fails, STONITH would then move on to selecting +fence_apc_snmp+ twice:
+
+* once for the first PDU
+* again for the second PDU
+
+The fence action is considered successful only if both PDUs report the required status. If any of them fails, STONITH loops back to the first fencing method, +fence_ipmi+, and so on until the node is fenced or fencing action is cancelled.
+
+.First fencing method: single IPMI device
+
+Each cluster node has it own dedicated IPMI channel that can be called for fencing using the following primitives:
+[source,XML]
+----
+      <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+        <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+        <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
+        </instance_attributes>
+      </primitive>
+----
+
+.Second fencing method: dual PDU devices
+
+Each cluster node also has two distinct power channels controlled by two distinct PDUs. That means a total of 4 fencing devices configured as follows:
+[source,XML]
+----
+      <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+        </instance_attributes>
+      </primitive>
+
+----
+
+.Location Constraints 
+
+To prevent STONITH from running a fencing agent on the very same node it is supposed to fence, constraints are placed on all the fencing primitives:
+[source,XML]
+----
+    <constraints>
+      <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
+    </constraints>
+----
+
+.Fencing topology
+
+Now that all the fencing resources are defined, it's time to create the right topology. 
+We want to first fence using IPMI and if that does not work, fence both PDUs to effectively kill the node.
+[source,XML]
+----
+    <fencing-topology>
+      <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
+      <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
+      <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
+      <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
+    </fencing-topology>
+----
+
+.Final configuration
+
+Put together, the configuration looks like this:
 [source,XML]
 ----
 <cib admin_epoch="0" crm_feature_set="3.0.7" epoch="292" have-quorum="1" num_updates="29" validate-with="pacemaker-1.2">
@@ -520,81 +641,91 @@ cluster with the following properties:
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="corocrm-test1" uname="corocrm-test1">
-      <node id="corocrm-test2" uname="corocrm-test2"/>
-      <node id="corocrm-test3" uname="corocrm-test3"/>
-        <instance_attributes id="nodes-corocrm-test3">
-          <nvpair id="nodes-corocrm-test3-standby" name="standby" value="on"/>
+      <node id="prod-mysql1" uname="prod-mysql1">
+      <node id="prod-mysql2" uname="prod-mysql2"/>
+      <node id="prod-mysql-rep1" uname="prod-mysql-rep1"/>
+        <instance_attributes id="prod-mysql-rep1">
+          <nvpair id="prod-mysql-rep1-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
     </nodes>
     <resources>
-      <primitive class="stonith" id="fence_corocrm-test1_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_corocrm-test1_apc1-instance_attributes">
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_corocrm-test1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="corocrm-test1"/>
+      <primitive class="stonith" id="fence_prod-mysql1_ipmi" type="fence_ipmilan">
+        <instance_attributes id="fence_prod-mysql1_ipmi-instance_attributes">
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
+          <nvpair id="fence_prod-mysql1_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
         </instance_attributes>
       </primitive>
-      <primitive class="stonith" id="fence_corocrm-test1_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_corocrm-test1_apc2-instance_attributes">
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-port" name="port" value="10"/>
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_corocrm-test1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="corocrm-test1"/>
+      <primitive class="stonith" id="fence_prod-mysql2_ipmi" type="fence_ipmilan">
+        <instance_attributes id="fence_prod-mysql2_ipmi-instance_attributes">
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-ipaddr" name="ipaddr" value="10.10.10.2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-passwd" name="passwd" value="finishme"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-verbose" name="verbose" value="true"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+          <nvpair id="fence_prod-mysql2_ipmi-instance_attributes-lanplus" name="lanplus" value="true"/>
         </instance_attributes>
       </primitive>
-      <primitive class="stonith" id="fence_corocrm-test2_apc1" type="fence_apc_snmp">
-        <instance_attributes id="fence_corocrm-test2_apc1-instance_attributes">
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_corocrm-test2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="corocrm-test2"/>
+      <primitive class="stonith" id="fence_prod-mysql1_apc1" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql1_apc1-instance_attributes">
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-port" name="port" value="10"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
         </instance_attributes>
       </primitive>
-      <primitive class="stonith" id="fence_corocrm-test2_apc2" type="fence_apc_snmp">
-        <instance_attributes id="fence_corocrm-test2_apc2-instance_attributes">
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-action" name="action" value="off"/>
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-port" name="port" value="11"/>
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-login" name="login" value="fencing"/>
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
-          <nvpair id="fence_corocrm-test2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="corocrm-test2"/>
+      <primitive class="stonith" id="fence_prod-mysql1_apc2" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql1_apc2-instance_attributes">
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.1"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-port" name="port" value="10"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql1_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql1"/>
         </instance_attributes>
       </primitive>
-      <clone id="fencing">
-        <meta_attributes id="fencing-meta_attributes">
-          <nvpair id="fencing-meta_attributes-target-role" name="target-role" value="Started"/>
-        </meta_attributes>
-        <primitive class="stonith" id="fence_corocrm-test_virsh" type="fence_virsh">
-          <instance_attributes id="fence_corocrm-test_virsh-instance_attributes">
-            <nvpair id="fence_corocrm-test_virsh-instance_attributes-ipaddr" name="ipaddr" value="10.10.1.1"/>
-            <nvpair id="fence_corocrm-test_virsh-instance_attributes-action" name="action" value="off"/>
-            <nvpair id="fence_corocrm-test_virsh-instance_attributes-login" name="login" value="root"/>
-            <nvpair id="fence_corocrm-test_virsh-instance_attributes-passwd" name="passwd" value="rootpassword"/>
-            <nvpair id="fence_corocrm-test_virsh-instance_attributes-port" name="port" value="dynamic"/>
-          </instance_attributes>
-        </primitive>
-      </clone>
-    </resources>
+      <primitive class="stonith" id="fence_prod-mysql2_apc1" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql2_apc1-instance_attributes">
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-port" name="port" value="11"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="stonith" id="fence_prod-mysql2_apc2" type="fence_apc_snmp">
+        <instance_attributes id="fence_prod-mysql2_apc2-instance_attributes">
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-ipaddr" name="ipaddr" value="10.20.1.2"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-action" name="action" value="off"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-port" name="port" value="11"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-login" name="login" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-passwd" name="passwd" value="fencing"/>
+          <nvpair id="fence_prod-mysql2_apc2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="prod-mysql2"/>
+        </instance_attributes>
+      </primitive>
+   </resources>
     <constraints>
-      <rsc_location id="l_fence_corocrm-test1_apc2" node="corocrm-test1" rsc="fence_corocrm-test1_apc2" score="-INFINITY"/>
-      <rsc_location id="l_fence_corocrm-test1_apc1" node="corocrm-test1" rsc="fence_corocrm-test1_apc1" score="-INFINITY"/>
-      <rsc_location id="l_fence_corocrm-test2_apc1" node="corocrm-test2" rsc="fence_corocrm-test2_apc1" score="-INFINITY"/>
-      <rsc_location id="l_fence_corocrm-test2_apc2" node="corocrm-test2" rsc="fence_corocrm-test2_apc2" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql1_ipmi" node="prod-mysql1" rsc="fence_prod-mysql1_ipmi" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_ipmi" node="prod-mysql2" rsc="fence_prod-mysql2_ipmi" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql1_apc2" node="prod-mysql1" rsc="fence_prod-mysql1_apc2" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql1_apc1" node="prod-mysql1" rsc="fence_prod-mysql1_apc1" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_apc1" node="prod-mysql2" rsc="fence_prod-mysql2_apc1" score="-INFINITY"/>
+      <rsc_location id="l_fence_prod-mysql2_apc2" node="prod-mysql2" rsc="fence_prod-mysql2_apc2" score="-INFINITY"/>
     </constraints>
     <fencing-topology>
-      <fencing-level devices="fence_corocrm-test_virsh" id="fencing-0" index="1" target="corocrm-test2"/>
-      <fencing-level devices="fence_corocrm-test2_apc1,fence_corocrm-test2_apc2" id="fencing-1" index="2" target="corocrm-test2"/>
-      <fencing-level devices="fence_corocrm-test_virsh" id="fencing-2" index="1" target="corocrm-test1"/>
-      <fencing-level devices="fence_corocrm-test1_apc1,fence_corocrm-test1_apc2" id="fencing-3" index="2" target="corocrm-test1"/>
+      <fencing-level devices="fence_prod-mysql1_ipmi" id="fencing-2" index="1" target="prod-mysql1"/>
+      <fencing-level devices="fence_prod-mysql1_apc1,fence_prod-mysql1_apc2" id="fencing-3" index="2" target="prod-mysql1"/>
+      <fencing-level devices="fence_prod-mysql2_ipmi" id="fencing-0" index="1" target="prod-mysql2"/>
+      <fencing-level devices="fence_prod-mysql2_apc1,fence_prod-mysql2_apc2" id="fencing-1" index="2" target="prod-mysql2"/>
     </fencing-topology>
    ...
   </configuration>
