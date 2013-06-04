@@ -206,11 +206,41 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 }
 
 int
+crmd_fast_exit(int rc) 
+{
+    if (is_set(fsa_input_register, R_STAYDOWN)) {
+        crm_warn("Inhibiting respawn: %d -> %d", rc, 100);
+        rc = 100;
+    }
+
+    if (rc == pcmk_ok && is_set(fsa_input_register, R_IN_RECOVERY)) {
+        crm_err("Could not recover from internal error: %s (%d)", pcmk_strerror(rc), rc);
+        rc = pcmk_err_generic;
+    }
+    return crm_exit(rc);
+}
+
+int
 crmd_exit(int rc)
 {
     GListPtr gIter = NULL;
+    static bool in_progress = FALSE;
 
+    if(in_progress && rc == 0) {
+        crm_debug("Exit is already in progress");
+        return rc;
+
+    } else if(in_progress) {
+        crm_notice("Error during shutdown process, terminating now: %s (%d)", pcmk_strerror(rc), rc);
+        crm_write_blackbox(SIGTRAP, NULL);
+        crmd_fast_exit(rc);
+    }
+
+    in_progress = TRUE;
     crm_trace("Preparing to exit: %d", rc);
+
+    /* Suppress secondary errors resulting from us disconnecting everything */
+    set_bit(fsa_input_register, R_HA_DISCONNECTED);
 
     if (is_set(fsa_input_register, R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error: %s (%d)", pcmk_strerror(rc), rc);
@@ -264,13 +294,14 @@ crmd_exit(int rc)
     }
 
     free(pe_subsystem); pe_subsystem = NULL;
-    free(cib_subsystem); cib_subsystem = NULL;
     free(te_subsystem); te_subsystem = NULL;
+    free(cib_subsystem); cib_subsystem = NULL;
 
     if (reload_hash) {
         crm_trace("Destroying reload cache with %d members", g_hash_table_size(reload_hash));
         g_hash_table_destroy(reload_hash); reload_hash = NULL;
     }
+
     if (voted) {
         crm_trace("Destroying voted cache with %d members", g_hash_table_size(voted));
         g_hash_table_destroy(voted); voted = NULL;
@@ -292,6 +323,7 @@ crmd_exit(int rc)
 
     if(stonith_api) {
         crm_trace("Disconnecting fencing API");
+        clear_bit(fsa_input_register, R_ST_REQUIRED);
         stonith_api->cmds->free(stonith_api); stonith_api = NULL;
     }
 
@@ -336,7 +368,7 @@ crmd_exit(int rc)
     mainloop_destroy_signal(SIGTRAP);
     mainloop_destroy_signal(SIGCHLD);
 
-    if (crmd_mainloop) {
+    if (rc == pcmk_ok && crmd_mainloop) {
         int lpc = 0;
         GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
         GMainLoop *mloop = crmd_mainloop;
@@ -370,7 +402,7 @@ crmd_exit(int rc)
 
     crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
     crm_write_blackbox(SIGTRAP, NULL);
-    return crm_exit(rc);
+    return crmd_fast_exit(rc);
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/

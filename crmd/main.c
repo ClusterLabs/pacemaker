@@ -164,5 +164,5 @@ crmd_init(void)
     }
 
     crm_info("%u stopped: %s (%d)", getpid(), pcmk_strerror(exit_code), exit_code);
-    return crm_exit(exit_code);
+    return crmd_fast_exit(exit_code);
 }
