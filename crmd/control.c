@@ -338,19 +338,23 @@ crmd_exit(int rc)
     if (crmd_mainloop) {
         int lpc = 0;
         GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
-        crm_trace("Draining mainloop %d %d", g_main_loop_is_running(crmd_mainloop), g_main_context_pending(ctx));
+        GMainLoop *mloop = crmd_mainloop;
+
+        /* Don't re-enter this block */
+        crmd_mainloop = NULL;
+
+        crm_trace("Draining mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
         while(g_main_context_pending(ctx) && lpc < 10) {
             lpc++;
             crm_trace("Iteration %d", lpc);
             g_main_context_dispatch(ctx);
         }
 
-        crm_trace("Closing mainloop %d %d", g_main_loop_is_running(crmd_mainloop), g_main_context_pending(ctx));
-        g_main_loop_quit(crmd_mainloop);
+        crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+        g_main_loop_quit(mloop);
 
-        /* Won't strictly do anything since we're inside it now */
-        g_main_loop_unref(crmd_mainloop);
-        crmd_mainloop = NULL;
+        /* Won't do anything yet, since we're inside it now */
+        g_main_loop_unref(mloop);
 
     } else if(rc == pcmk_ok) {
         crm_debug("No mainloop detected");
