@@ -121,7 +121,7 @@ class crm_lha(ClusterManager):
             "Pat:ChildExit"    : "(ERROR|error): Client .* exited with return code",
             
             "Pat:Fencing_start"    : "Initiating remote operation .* for %s",
-            "Pat:Fencing_ok"  : "stonith.* log_operation: Operation .* for host '%s' with device .* returned: 0",
+            "Pat:Fencing_ok"  : "stonith.* remote_op_done: Operation .* of %s by .*: OK",
 
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
