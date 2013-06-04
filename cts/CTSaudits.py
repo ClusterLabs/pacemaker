@@ -224,6 +224,10 @@ class FileAudit(ClusterAudit):
                     self.CM.log("Warning: Stale IPC file on %s: %s" % (node, line))
 
                 if clean:
+                    (rc, lsout)=self.CM.rsh(node, "ps axf | grep -e pacemaker -e corosync", None)
+                    for line in lsout:
+                        self.CM.debug("ps[%s]: %s" % (node, line))
+
                     self.CM.rsh(node, "rm -f /dev/shm/qb-*")
 
             else:
