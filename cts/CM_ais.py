@@ -144,7 +144,7 @@ class crm_ais(crm_lha):
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "error: attrd_connection_destroy: Lost connection to attrd",
                     "info: te_fence_node: Executing .* fencing operation",
-
+                    "crm_write_blackbox:",
 #                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
 #                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
             ]
