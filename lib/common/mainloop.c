@@ -731,29 +731,37 @@ static void
 mainloop_gio_destroy(gpointer c)
 {
     mainloop_io_t *client = c;
+    char *c_name = strdup(client->name);
 
     /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
      * client->channel will still have ref_count > 0... should be == 1
      */
-    crm_trace("Destroying client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
+    crm_trace("Destroying client %s[%p] %d", c_name, c, mainloop_gio_refcount(client));
 
     if (client->ipc) {
         crm_ipc_close(client->ipc);
     }
 
     if (client->destroy_fn) {
-        client->destroy_fn(client->userdata);
+        void (*destroy_fn) (gpointer userdata) = client->destroy_fn;
+
+        client->destroy_fn = NULL;
+        destroy_fn(client->userdata);
     }
 
     if (client->ipc) {
-        crm_ipc_destroy(client->ipc);
+        crm_ipc_t *ipc = client->ipc;
+
+        client->ipc = NULL;
+        crm_ipc_destroy(ipc);
     }
 
-    crm_trace("Destroyed client %s[%p] %d", client->name, c, mainloop_gio_refcount(client));
-    free(client->name);
+    crm_trace("Destroyed client %s[%p] %d", c_name, c, mainloop_gio_refcount(client));
 
-    memset(client, 0, sizeof(mainloop_io_t));   /* A bit of pointless paranoia */
+    free(client->name); client->name = NULL;
     free(client);
+
+    free(c_name);
 }
 
 mainloop_io_t *
