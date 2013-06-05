@@ -172,7 +172,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
     } else {
         do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s exited (pid=%d, rc=%d)", name, pid, exitcode);
+                   "Child process %s (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
     }
 
     if (exitcode == 100) {
