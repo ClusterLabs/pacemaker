@@ -53,6 +53,7 @@
 #  define pcmk_err_cib_save             210
 
 const char *pcmk_strerror(int rc);
+const char *pcmk_errorname(int rc);
 const char *bz2_strerror(int rc);
 
 #endif
