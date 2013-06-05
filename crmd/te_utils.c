@@ -159,7 +159,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
      if (st_event->result == pcmk_ok) {
          crm_node_t *peer = crm_get_peer(0, st_event->target);
-         const char *uuid = get_uuid(peer);
+         const char *uuid = crm_peer_uuid(peer);
          gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
@@ -353,7 +353,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
             const char *kind = TYPE(search);
             if(safe_str_eq(XML_CIB_TAG_STATE, kind)
                || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
-                uname = get_uname(ID(search));
+                uname = crm_peer_uname(ID(search));
             }
             search = search->parent;
         }

@@ -69,10 +69,6 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
-    if (get_node_uuid(0, target) == NULL) {
-        set_node_uuid(target, uuid);
-    }
-
     /* Make sure the membership and join caches are accurate */
     peer = crm_get_peer(0, target);
     if (peer->uuid == NULL) {
@@ -82,7 +78,7 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
     crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
-    erase_node_from_join(target);
+    crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
 
     node_state =
         do_update_node_cib(peer,

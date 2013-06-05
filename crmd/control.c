@@ -339,7 +339,6 @@ crmd_exit(int rc)
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
     crm_client_cleanup();
-    empty_uuid_cache();
     crm_peer_destroy();
 
     crm_timer_stop(transition_timer);

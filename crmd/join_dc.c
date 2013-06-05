@@ -39,7 +39,7 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 static int current_join_id = 0;
 unsigned long long saved_ccm_membership_id = 0;
 
-static void
+void
 crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
 {
     enum crm_join_phase last = 0;
@@ -76,14 +76,13 @@ initialize_join(gboolean before)
 {
     GHashTableIter iter;
     crm_node_t *peer = NULL;
-    char *key = NULL;
 
     /* clear out/reset a bunch of stuff */
     crm_debug("join-%d: Initializing join data (flag=%s)",
               current_join_id, before ? "true" : "false");
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) &peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
     }
 
@@ -98,16 +97,6 @@ initialize_join(gboolean before)
         }
         clear_bit(fsa_input_register, R_HAVE_CIB);
         clear_bit(fsa_input_register, R_CIB_ASKED);
-    }
-}
-
-void
-erase_node_from_join(const char *uname)
-{
-
-    if (uname != NULL) {
-        crm_node_t *peer = crm_get_peer(0, uname);
-        crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
     }
 }
 
@@ -139,7 +128,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    erase_node_from_join(join_to);
+    crm_update_peer_join(__FUNCTION__, (crm_node_t*)member, crm_join_none);
 
     if (crm_is_peer_active(member)) {
         crm_node_t *peer = crm_get_peer(0, join_to);
@@ -238,7 +227,7 @@ do_dc_join_offer_one(long long action,
     crm_info("join-%d: Processing %s request from %s in state %s",
              current_join_id, op, join_to, fsa_state2string(cur_state));
 
-    erase_node_from_join(join_to);
+    crm_update_peer_join(__FUNCTION__, member, crm_join_none);
     join_make_offer(NULL, member, NULL);
 
     /* always offer to the DC (ourselves)
@@ -656,12 +645,11 @@ do_dc_join_final(long long action,
 int crmd_join_phase_count(enum crm_join_phase phase)
 {
     int count = 0;
-    const char *key;
     crm_node_t *peer;
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) &peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         if(peer->join == phase) {
             count++;
         }
@@ -671,12 +659,11 @@ int crmd_join_phase_count(enum crm_join_phase phase)
 
 void crmd_join_phase_log(int level)
 {
-    const char *key;
     crm_node_t *peer;
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) &peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         const char *state = "unknown";
         switch(peer->join) {
             case crm_join_nack:

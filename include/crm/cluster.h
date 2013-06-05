@@ -73,8 +73,7 @@ typedef struct crm_peer_node_s {
 
 void crm_peer_init(void);
 void crm_peer_destroy(void);
-char *get_corosync_uuid(uint32_t id, const char *uname);
-const char *get_node_uuid(uint32_t id, const char *uname);
+char *get_corosync_uuid(crm_node_t *peer);
 int get_corosync_id(int id, const char *uuid);
 
 typedef struct crm_cluster_s {
@@ -145,11 +144,9 @@ gboolean send_ais_text(int class, const char *data, gboolean local,
 gboolean get_ais_nodeid(uint32_t * id, char **uname);
 #  endif
 
-void empty_uuid_cache(void);
-const char *get_uuid(crm_node_t *node);
-const char *get_uname(const char *uuid);
+const char *crm_peer_uuid(crm_node_t *node);
+const char *crm_peer_uname(const char *uuid);
 void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
-void unget_uuid(crm_node_t *node);
 
 enum crm_status_type {
     crm_status_uname,

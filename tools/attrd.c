@@ -614,7 +614,6 @@ main(int argc, char **argv)
 
     g_hash_table_destroy(attr_hash);
     free(attrd_uuid);
-    empty_uuid_cache();
 
     return crm_exit(pcmk_ok);
 }

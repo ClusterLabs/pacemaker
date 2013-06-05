@@ -507,7 +507,7 @@ do_dc_takeover(long long action,
     for (gIter = stonith_cleanup_list; gIter != NULL; gIter = gIter->next) {
         char *target = gIter->data;
         crm_node_t *target_node = crm_get_peer(0, target);
-        const char *uuid = get_uuid(target_node);
+        const char *uuid = crm_peer_uuid(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
         send_stonith_update(NULL, target, uuid);

@@ -43,39 +43,31 @@ extern GHashTable *voted;
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 static void
-check_dead_member(const char *uname, GHashTable * members)
-{
-    CRM_CHECK(uname != NULL, return);
-    if (members != NULL && g_hash_table_lookup(members, uname) != NULL) {
-        crm_err("%s didnt really leave the membership!", uname);
-        return;
-    }
-
-    erase_node_from_join(uname);
-    if (voted != NULL) {
-        g_hash_table_remove(voted, uname);
-    }
-
-    if (safe_str_eq(fsa_our_uname, uname)) {
-        crm_err("We're not part of the cluster anymore");
-        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-
-    } else if (AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
-        crm_warn("Our DC node (%s) left the cluster", uname);
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-
-    } else if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
-        check_join_state(fsa_state, __FUNCTION__);
-    }
-}
-
-static void
 reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
 
     if (crm_is_peer_active(node) == FALSE) {
-        check_dead_member(node->uname, NULL);
+        crm_update_peer_join(__FUNCTION__, node, crm_join_none);
+
+        if(node->uname) {
+            if (voted != NULL) {
+                g_hash_table_remove(voted, node->uname);
+            }
+
+            if (safe_str_eq(fsa_our_uname, node->uname)) {
+                crm_err("We're not part of the cluster anymore");
+                register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+
+            } else if (AM_I_DC == FALSE && safe_str_eq(node->uname, fsa_our_dc)) {
+                crm_warn("Our DC node (%s) left the cluster", node->uname);
+                register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+            }
+        }
+
+        if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
+            check_join_state(fsa_state, __FUNCTION__);
+        }
         fail_incompletable_actions(transition_graph, node->uuid);
     }
 }
@@ -232,20 +224,18 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
-        /* if(uname_is_uuid()) { */
-        /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, node_list); */
-        /* } else { */
-
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *new_node = NULL;
 
             crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
-            new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
-            crm_xml_add(new_node, XML_ATTR_ID, node->uuid);
-            crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
+            if(node->uuid && node->uname) {
+                /* We need both to be valid */
+                new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
+                crm_xml_add(new_node, XML_ATTR_ID, node->uuid);
+                crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
+            }
         }
-        /* } */
     }
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
@@ -268,14 +258,6 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             do_update_node_cib(node, flags, node_list, source);
-        }
-
-        g_hash_table_iter_init(&iter, crm_peer_id_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if(node->uname == NULL) {
-                /* Would not have been present in the main peer cache */
-                do_update_node_cib(node, flags, node_list, source);
-            }
         }
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);

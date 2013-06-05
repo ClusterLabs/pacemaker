@@ -429,7 +429,8 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
     if (safe_str_eq(status, ONLINESTATUS)) {
         /* remove the cached value in case it changed */
         crm_trace("Uncaching UUID for %s", node);
-        unget_uuid(peer);
+        free(peer->uuid);
+        peer->uuid = NULL;
     }
 
     crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd, status);

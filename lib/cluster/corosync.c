@@ -574,11 +574,13 @@ pcmk_cpg_deliver(cpg_handle_t handle,
         crm_err("Nodeid mismatch from %d.%d: claimed nodeid=%u", nodeid, pid, ais_msg->sender.id);
         return;
 
-    } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, pcmk_uname)) {
-        /* Not for us */
-        return;
     } else if (ais_msg->host.id != 0 && (pcmk_nodeid != ais_msg->host.id)) {
         /* Not for us */
+        crm_trace("Not for us: %u != %u", ais_msg->host.id, pcmk_nodeid);
+        return;
+    } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, pcmk_uname)) {
+        /* Not for us */
+        crm_trace("Not for us: %s != %s", ais_msg->host.uname, pcmk_uname);
         return;
     }
 
@@ -751,11 +753,6 @@ pcmk_quorum_notification(quorum_handle_t handle,
         node->last_seen = 0;
     }
 
-    g_hash_table_iter_init(&iter, crm_peer_id_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        node->last_seen = 0;
-    }
-
     for (i = 0; i < view_list_entries; i++) {
         uint32_t id = view_list[i];
         char *name = NULL;
@@ -775,14 +772,6 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
     crm_trace("Reaping unseen nodes...");
     g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (node->last_seen != ring_id) {
-            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
-        }
-    }
-
-    /* Pick up any nodes node yet in the main peer cache */
-    g_hash_table_iter_init(&iter, crm_peer_id_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         if (node->last_seen != ring_id) {
             crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
@@ -887,6 +876,8 @@ init_cs_connection(crm_cluster_t * cluster)
 gboolean
 init_cs_connection_once(crm_cluster_t * cluster)
 {
+    const char *uuid = NULL;
+    crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
 
     crm_peer_init();
@@ -906,12 +897,14 @@ init_cs_connection_once(crm_cluster_t * cluster)
     CRM_ASSERT(pcmk_uname != NULL);
     pcmk_uname_len = strlen(pcmk_uname);
 
-    if (pcmk_nodeid != 0) {
-        /* Ensure the local node always exists */
-        crm_get_peer(pcmk_nodeid, pcmk_uname);
+    /* Ensure the local node always exists */
+    peer = crm_get_peer(pcmk_nodeid, pcmk_uname);
+    uuid = get_corosync_uuid(peer);
+
+    if(uuid) {
+        cluster->uuid = strdup(uuid);
     }
 
-    cluster->uuid = get_corosync_uuid(pcmk_nodeid, pcmk_uname);
     cluster->uname = strdup(pcmk_uname);
     cluster->nodeid = pcmk_nodeid;
 
@@ -1069,7 +1062,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
 
         name = corosync_node_name(cmap_handle, nodeid);
         if (name != NULL) {
-            crm_node_t *node = g_hash_table_lookup(crm_peer_cache, name);
+            crm_node_t *node = crm_get_peer(0, name);
 
             if (node && node->id != nodeid) {
                 crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id,

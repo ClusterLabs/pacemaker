@@ -86,7 +86,7 @@ void fsa_dump_actions(long long action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 
 gboolean update_dc(xmlNode * msg);
-void erase_node_from_join(const char *node);
+void crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase);
 xmlNode *do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);

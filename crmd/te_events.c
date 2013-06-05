@@ -161,7 +161,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
 
     if (on_uname == NULL) {
         /* uname not in event, check cache */
-        on_uname = get_uname(event_node_uuid);
+        on_uname = crm_peer_uname(event_node_uuid);
         CRM_CHECK(on_uname != NULL, return TRUE);
     }
 

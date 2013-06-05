@@ -370,7 +370,7 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
 
     peer = crm_get_peer(0, oc->m_array[offset].node_uname);
-    uuid = get_uuid(peer);
+    uuid = crm_peer_uuid(peer);
 
     crm_update_peer(__FUNCTION__, oc->m_array[offset].node_id,
                            oc->m_array[offset].node_born_on, seq, -1, 0,
@@ -524,7 +524,7 @@ register_heartbeat_conn(crm_cluster_t * cluster)
     CRM_CHECK(const_uname != NULL, return FALSE);
 
     peer = crm_get_peer(0, const_uname);
-    const_uuid = get_uuid(peer);
+    const_uuid = crm_peer_uuid(peer);
 
     CRM_CHECK(const_uuid != NULL, return FALSE);
 
@@ -603,7 +603,7 @@ heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xm
         }
 
         peer = crm_get_peer(0, ha_node);
-        ha_node_uuid = get_uuid(peer);
+        ha_node_uuid = crm_peer_uuid(peer);
 
         if (ha_node_uuid == NULL) {
             crm_warn("Node %s: no uuid found", ha_node);

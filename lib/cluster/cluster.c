@@ -40,11 +40,8 @@ CRM_TRACE_INIT_DATA(cluster);
 void *hb_library = NULL;
 #endif
 
-static GHashTable *crm_uuid_cache = NULL;
-static GHashTable *crm_uname_cache = NULL;
-
 static char *
-get_heartbeat_uuid(uint32_t unused, const char *uname)
+get_heartbeat_uuid(const char *uname)
 {
     char *uuid_calc = NULL;
 
@@ -54,6 +51,8 @@ get_heartbeat_uuid(uint32_t unused, const char *uname)
 
     if (heartbeat_cluster == NULL) {
         crm_warn("No connection to heartbeat, using uuid=uname");
+        return NULL;
+    } else if(uname == NULL) {
         return NULL;
     }
 
@@ -104,87 +103,62 @@ get_corosync_id(int id, const char *uuid)
 }
 
 char *
-get_corosync_uuid(uint32_t id, const char *uname)
+get_corosync_uuid(crm_node_t *node)
 {
-    if (!uname_is_uuid() && is_corosync_cluster()) {
-        if (id <= 0) {
-            /* Try the membership cache... */
-            crm_node_t *node = g_hash_table_lookup(crm_peer_cache, uname);
+    if(node == NULL) {
+        return NULL;
 
-            if (node != NULL) {
-                id = node->id;
-            }
-        }
-
-        if (id > 0) {
+    } else if (!uname_is_uuid() && is_corosync_cluster()) {
+        if (node->id > 0) {
             int len = 32;
             char *buffer = NULL;
 
             buffer = calloc(1, (len + 1));
             if (buffer != NULL) {
-                snprintf(buffer, len, "%u", id);
+                snprintf(buffer, len, "%u", node->id);
             }
 
             return buffer;
 
         } else {
-            crm_warn("Node %s is not yet known by corosync", uname);
+            crm_info("Node %s is not yet known by corosync", node->uname);
         }
 
-    } else if (uname != NULL) {
-        return strdup(uname);
+    } else if (node->uname != NULL) {
+        return strdup(node->uname);
     }
 
     return NULL;
 }
 
-void
-set_node_uuid(const char *uname, const char *uuid)
-{
-    CRM_CHECK(uuid != NULL, return);
-    CRM_CHECK(uname != NULL, return);
-
-    if (crm_uuid_cache == NULL) {
-        crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                               g_hash_destroy_str, g_hash_destroy_str);
-    }
-
-    g_hash_table_insert(crm_uuid_cache, strdup(uname), strdup(uuid));
-}
-
 const char *
-get_node_uuid(uint32_t id, const char *uname)
+crm_peer_uuid(crm_node_t *peer)
 {
     char *uuid = NULL;
     enum cluster_type_e type = get_cluster_type();
 
-    if (crm_uuid_cache == NULL) {
-        crm_uuid_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                               g_hash_destroy_str, g_hash_destroy_str);
-    }
-
     /* avoid blocking heartbeat calls where possible */
-    if (uname) {
-        uuid = g_hash_table_lookup(crm_uuid_cache, uname);
-    }
-    if (uuid != NULL) {
-        return uuid;
+    if(peer == NULL) {
+        return NULL;
+
+    } else if (peer->uuid) {
+        return peer->uuid;
     }
 
     switch (type) {
         case pcmk_cluster_corosync:
-            uuid = get_corosync_uuid(id, uname);
+            uuid = get_corosync_uuid(peer);
             break;
 
         case pcmk_cluster_cman:
         case pcmk_cluster_classic_ais:
-            if (uname) {
-                uuid = strdup(uname);
+            if (peer->uname) {
+                uuid = strdup(peer->uname);
             }
             break;
 
         case pcmk_cluster_heartbeat:
-            uuid = get_heartbeat_uuid(id, uname);
+            uuid = get_heartbeat_uuid(peer->uname);
             break;
 
         case pcmk_cluster_unknown:
@@ -193,18 +167,8 @@ get_node_uuid(uint32_t id, const char *uname)
             break;
     }
 
-    if (uuid == NULL) {
-        return NULL;
-    }
-
-    if (uname) {
-        g_hash_table_insert(crm_uuid_cache, strdup(uname), uuid);
-        return g_hash_table_lookup(crm_uuid_cache, uname);
-    }
-
-    /* Memory leak! */
-    CRM_LOG_ASSERT(uuid != NULL);
-    return uuid;
+    peer->uuid = uuid;
+    return peer->uuid;
 }
 
 gboolean
@@ -321,41 +285,6 @@ send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode 
     return FALSE;
 }
 
-void
-empty_uuid_cache(void)
-{
-    if (crm_uuid_cache != NULL) {
-        crm_trace("Destroying uuid cache with %d members", g_hash_table_size(crm_uuid_cache));
-        g_hash_table_destroy(crm_uuid_cache);
-        crm_uuid_cache = NULL;
-    }
-    if (crm_uname_cache != NULL) {
-        crm_trace("Destroying uname cache with %d members", g_hash_table_size(crm_uname_cache));
-        g_hash_table_destroy(crm_uname_cache);
-        crm_uname_cache = NULL;
-    }
-}
-
-void
-unget_uuid(crm_node_t *node)
-{
-    if (crm_uuid_cache == NULL) {
-        return;
-    } else if(node->uname == NULL) {
-        return;
-    }
-    g_hash_table_remove(crm_uuid_cache, node->uname);
-}
-
-const char *
-get_uuid(crm_node_t *node)
-{
-    if(node == NULL) {
-        return NULL;
-    }
-    return get_node_uuid(node->id, node->uname);
-}
-
 char *
 get_local_node_name(void)
 {
@@ -443,36 +372,43 @@ get_node_name(uint32_t nodeid)
 
 /* Only used by update_failcount() in te_utils.c */
 const char *
-get_uname(const char *uuid)
+crm_peer_uname(const char *uuid)
 {
-    char *uname = NULL;
-
-    if (crm_uname_cache == NULL) {
-        crm_uname_cache = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                g_hash_destroy_str, g_hash_destroy_str);
-    }
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
 
     CRM_CHECK(uuid != NULL, return NULL);
 
     /* avoid blocking calls where possible */
-    uname = g_hash_table_lookup(crm_uname_cache, uuid);
-    if (uname != NULL) {
-        crm_trace("%s = %s (cached)", uuid, uname);
-        return uname;
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if(node->uuid && strcasecmp(node->uuid, uuid) == 0) {
+            if(node->uname) {
+                return node->uname;
+            }
+            break;
+        }
     }
+
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
-        if (!uname_is_uuid() && is_corosync_cluster()) {
+        if (uname_is_uuid() == FALSE && is_corosync_cluster()) {
             uint32_t id = crm_int_helper(uuid, NULL);
-            crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 
-            if (node && node->uname) {
-                uname = strdup(node->uname);
-            }
+            node = crm_get_peer(id, NULL);
 
         } else {
-            uname = strdup(uuid);
+            node = crm_get_peer(0, uuid);
         }
+
+        if (node) {
+            crm_info("Setting uuid for node %s[%u] to '%s'", node->uname, node->id, uuid);
+            node->uuid = strdup(uuid);
+            if(node->uname) {
+                return node->uname;
+            }
+        }
+        return NULL;
     }
 #endif
 
@@ -481,32 +417,39 @@ get_uname(const char *uuid)
         if (heartbeat_cluster != NULL) {
             cl_uuid_t uuid_raw;
             char *uuid_copy = strdup(uuid);
+            char *uname = malloc(MAX_NAME);
 
             cl_uuid_parse(uuid_copy, &uuid_raw);
-            uname = malloc(MAX_NAME);
 
             if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, uname,
                                                              MAX_NAME) == HA_FAIL) {
                 crm_err("Could not calculate uname for %s", uuid);
-                free(uuid_copy);
-                free(uname);
-                uname = NULL;
+            } else {
+                node = crm_get_peer(0, uname);
+            }
+
+            free(uuid_copy);
+            free(uname);
+        }
+
+        if (node) {
+            crm_info("Setting uuid for node %s to '%s'", node->uname, uuid);
+            node->uuid = strdup(uuid);
+            if(node->uname) {
+                return node->uname;
             }
         }
+        return NULL;
     }
 #endif
 
-    if (uname) {
-        crm_trace("Storing %s = %s", uuid, uname);
-        g_hash_table_insert(crm_uname_cache, strdup(uuid), uname);
-    }
-    return uname;
+    return NULL;
 }
 
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
-    const char *uuid_calc = get_uuid(node);
+    const char *uuid_calc = crm_peer_uuid(node);
 
     crm_xml_add(xml, attr, uuid_calc);
     return;

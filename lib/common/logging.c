@@ -354,8 +354,8 @@ crm_enable_blackbox(int nsig)
 
         blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
         qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
-        crm_info("Trigger: %d is %d %d", blackbox_trigger,
-                 qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
+        crm_trace("Trigger: %d is %d %d", blackbox_trigger,
+                  qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
 
         crm_update_callsites();
     }

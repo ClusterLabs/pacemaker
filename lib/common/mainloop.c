@@ -671,7 +671,7 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
             } while (keep && rc > 0 && --max > 0);
 
         } else {
-            crm_trace("New message from %s[%p]", client->name, client);
+            crm_trace("New message from %s[%p] %u", client->name, client, condition);
             if (client->dispatch_fn_io) {
                 if (client->dispatch_fn_io(client->userdata) < 0) {
                     crm_trace("Connection to %s no longer required", client->name);

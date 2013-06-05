@@ -32,7 +32,6 @@
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
 
-GHashTable *crm_peer_id_cache = NULL;
 GHashTable *crm_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
@@ -80,41 +79,24 @@ guint
 reap_crm_member(uint32_t id, const char *name)
 {
     int matches = 0;
-    crm_node_t *node = NULL;
+    crm_node_t search;
 
-    if (crm_peer_cache == NULL || crm_peer_id_cache == NULL) {
+    if (crm_peer_cache == NULL) {
         crm_trace("Nothing to do, cache not initialized");
         return 0;
     }
 
-    if (name) {
-        node = g_hash_table_lookup(crm_peer_cache, name);
-    }
-
-    if (node == NULL && id > 0) {
-        node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
-    }
-
-    if (node == NULL) {
-        crm_info("Peer %u/%s cannot be purged: does not exist", id, name);
-        return 0;
-    }
-
-    if (crm_is_peer_active(node)) {
-        crm_warn("Peer %u/%s cannot be purged: still active", id, name);
+    search.id = id;
+    search.uname = strdup(name);
+    matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
+    if(matches) {
+        crm_notice("Purged %d peers with id=%u and/or uname=%s from the membership cache", matches, id, name);
 
     } else {
-        if (g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(id))) {
-            crm_notice("Purged dead peer %u/%s from the uuid cache", id, name);
-
-        } else if (id) {
-            crm_warn("Peer %u/%s was not found in the ID cache", id, name);
-        }
-
-        matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, node);
-        crm_notice("Purged %d dead peers with id=%u from the membership cache", matches, id);
+        crm_info("No peers with id=%u and/or uname=%s exist", id, name);
     }
 
+    free(search.uname);
     return matches;
 }
 
@@ -155,15 +137,6 @@ destroy_crm_node(gpointer data)
     free(node);
 }
 
-static gboolean
-crm_strcase_equal (gconstpointer v1, gconstpointer v2)
-{
-    const gchar *string1 = v1;
-    const gchar *string2 = v2;
-
-    return strcasecmp (string1, string2) == 0;
-}
-
 void
 crm_peer_init(void)
 {
@@ -176,11 +149,7 @@ crm_peer_init(void)
 
     crm_peer_destroy();
     if (crm_peer_cache == NULL) {
-        crm_peer_cache = g_hash_table_new_full(crm_str_hash, crm_strcase_equal, NULL, destroy_crm_node);
-    }
-
-    if (crm_peer_id_cache == NULL) {
-        crm_peer_id_cache = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
+        crm_peer_cache = g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_crm_node);
     }
 }
 
@@ -191,12 +160,6 @@ crm_peer_destroy(void)
         crm_trace("Destroying peer cache with %d members", g_hash_table_size(crm_peer_cache));
         g_hash_table_destroy(crm_peer_cache);
         crm_peer_cache = NULL;
-    }
-
-    if (crm_peer_id_cache != NULL) {
-        crm_trace("Destroying peer ID cache with %d members", g_hash_table_size(crm_peer_id_cache));
-        g_hash_table_destroy(crm_peer_id_cache);
-        crm_peer_id_cache = NULL;
     }
 }
 
@@ -212,81 +175,114 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
+    GHashTableIter iter;
     crm_node_t *node = NULL;
+    crm_node_t *by_id = NULL;
+    crm_node_t *by_name = NULL;
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
     crm_peer_init();
 
-    if (node == NULL && uname != NULL) {
-        node = g_hash_table_lookup(crm_peer_cache, uname);
+    if (uname != NULL) {
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if(node->uname && strcasecmp(node->uname, uname) == 0) {
+                crm_trace("Name match: %s", node->uname);
+                by_name = node;
+                break;
+            }
+        }
     }
 
-    if (node == NULL && id > 0) {
-        node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
-
-        if (node && node->uname && uname) {
-            crm_crit("Node %s and %s share the same cluster node id '%u'!", node->uname, uname, id);
-
-            /* NOTE: Calling crm_new_peer() means the entry in
-             * crm_peer_id_cache will point to the new entity
-             *
-             * TO-DO: Replace the old uname instead?
-             */
-            node = NULL;
+    if (id > 0) {
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if(node->id == id) {
+                crm_trace("ID match: %u", node->id);
+                by_id = node;
+                break;
+            }
         }
+    }
+
+    node = by_id; /* Good default */
+    if(by_id == by_name) {
+        /* Nothing to do if they match (both NULL counts) */
+        crm_trace("Consistent: %p for %u/%s", by_id, id, uname);
+
+    } else if(by_name) {
+        crm_trace("Only one: %p for %u/%s", by_name, id, uname);
+
+        if(id && by_name->id) {
+            crm_crit("Node %u and %u share the same name '%s'",
+                     id, by_name->id, uname);
+            node = NULL; /* Create a new one */
+
+        } else {
+            node = by_name;
+        }
+
+    } else if(by_id) {
+        crm_trace("Only one: %p for %u/%s", by_id, id, uname);
+
+        if(uname && by_id->uname) {
+            crm_crit("Node '%s' and '%s' share the same cluster nodeid %u: assuming '%s' is correct",
+                     uname, by_id->uname, id, uname);
+        }
+
+    } else if(uname && by_id->uname) {
+        crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u", by_id->uname, by_name->uname, id);
+
+    } else if(id && by_name->id) {
+        crm_warn("Node %u and %u share the same name: '%s'", by_id->id, by_name->id, uname);
+
+    } else {
+        /* Simple merge */
+
+        /* Only corosync based clusters use nodeid's
+         * The functions that call crm_update_peer_state() only know nodeid so 'by_id' is authorative when merging
+         * Same for crm_update_peer_proc()
+         */
+
+        crm_info("Merging %p into %p", by_name, by_id);
+        g_hash_table_remove(crm_peer_cache, by_name);
     }
 
     if (node == NULL) {
-        crm_debug("Creating entry for node %s/%u", uname, id);
+        char *uniqueid = crm_generate_uuid();
 
         node = calloc(1, sizeof(crm_node_t));
         CRM_ASSERT(node);
+
+        crm_info("Created entry %s/%p for node %s/%u (%d total)",
+                 uniqueid, node, uname, id, 1 + g_hash_table_size(crm_peer_cache));
+        g_hash_table_replace(crm_peer_cache, uniqueid, node);
     }
 
-    if (id > 0 && node->id != id) {
-        unsigned int previous_id = node->id;
-        crm_node_t *old = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+    if(id > 0 && uname && (node->id == 0 || node->uname == NULL)) {
+        crm_info("Node %u is now known as %s", id, uname);
+    }
 
+    if(id > 0 && node->id == 0) {
         node->id = id;
-        crm_info("Node %s now has id: %u", crm_str(uname), id);
-        if (old && old->state) {
-            /* Only corosync based clusters use nodeid's
-             * The functions that call crm_update_peer_state() only know nodeid so 'old' is authorative when merging
-             * Same for crm_update_peer_proc()
-             */
-            crm_update_peer_state(__FUNCTION__, node, old->state, 0);
-            crm_update_peer_proc(__FUNCTION__, node, old->processes, NULL);
-        }
-
-        if (previous_id > 0) {
-            crm_node_t *node_entry = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(previous_id));
-            if (node_entry != NULL && node_entry == node) {
-                g_hash_table_steal(crm_peer_id_cache, GUINT_TO_POINTER(previous_id));
-            }
-        }
-        g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
     }
 
-    if (uname && node->uname == NULL) {
+    if(uname && node->uname == NULL) {
         node->uname = strdup(uname);
-        if (node->id) {
-            crm_info("Node %u is now known as %s", node->id, uname);
-        }
-        g_hash_table_replace(crm_peer_cache, node->uname, node);
         if (crm_status_callback) {
             crm_status_callback(crm_status_uname, node, NULL);
         }
     }
 
-    if (node && node->uname && node->uuid == NULL) {
-        const char *uuid = get_node_uuid(id, node->uname);
+    if(node->uuid == NULL) {
+        const char *uuid = crm_peer_uuid(node);
 
         if (uuid) {
-            node->uuid = strdup(uuid);
-            crm_info("Node %u has uuid %s", id, node->uuid);
+            crm_info("Node %u has uuid %s", id, uuid);
+
         } else {
-            crm_warn("Cannot obtain a UUID for node %d/%s", id, node->uname);
+            crm_info("Cannot obtain a UUID for node %d/%s", id, node->uname);
         }
     }
 
@@ -312,7 +308,7 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
     if (node->uuid == NULL) {
         if (is_openais_cluster()) {
             /* Yes, overrule whatever was passed in */
-            node->uuid = get_corosync_uuid(id, uname);
+            crm_peer_uuid(node);
 
         } else if (uuid != NULL) {
             node->uuid = strdup(uuid);
