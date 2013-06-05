@@ -113,6 +113,8 @@ gboolean did_rsc_op_fail(lrmd_event_data_t * event, int target_rc);
 char *crm_md5sum(const char *buffer);
 
 char *crm_generate_uuid(void);
+
+void crm_build_path(const char *path_c, mode_t mode);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
 int crm_exit(int rc);
