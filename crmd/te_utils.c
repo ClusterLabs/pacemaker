@@ -158,8 +158,9 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 #endif
 
      if (st_event->result == pcmk_ok) {
-         const char *uuid = get_uuid(st_event->target);
-        gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
+         crm_node_t *peer = crm_get_peer(0, st_event->target);
+         const char *uuid = get_uuid(peer);
+         gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
         if(AM_I_DC) {

@@ -141,7 +141,7 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
     const char *value = NULL;
     xmlNode *node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
-    set_uuid(node_state, XML_ATTR_UUID, node->uname);
+    set_uuid(node_state, XML_ATTR_UUID, node);
 
     if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
         crm_info("Node update for %s cancelled: no id", node->uname);
@@ -312,7 +312,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
 
         update = create_xml_node(NULL, XML_TAG_CIB);
         crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
-        set_uuid(update, XML_ATTR_DC_UUID, fsa_our_uname);
+        crm_xml_add(update, XML_ATTR_DC_UUID, fsa_our_uuid);
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
         crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);

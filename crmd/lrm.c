@@ -1889,8 +1889,9 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
     if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
-        set_uuid(iter, XML_ATTR_UUID, lrm_state->node_name);
+        crm_xml_add(iter, XML_ATTR_UUID, uuid);
         uuid = fsa_our_uuid;
+
     } else {
         /* remote nodes uuid and uname are equal */
         crm_xml_add(iter, XML_ATTR_UUID, lrm_state->node_name);

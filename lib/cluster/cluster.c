@@ -337,18 +337,23 @@ empty_uuid_cache(void)
 }
 
 void
-unget_uuid(const char *uname)
+unget_uuid(crm_node_t *node)
 {
     if (crm_uuid_cache == NULL) {
         return;
+    } else if(node->uname == NULL) {
+        return;
     }
-    g_hash_table_remove(crm_uuid_cache, uname);
+    g_hash_table_remove(crm_uuid_cache, node->uname);
 }
 
 const char *
-get_uuid(const char *uname)
+get_uuid(crm_node_t *node)
 {
-    return get_node_uuid(0, uname);
+    if(node == NULL) {
+        return NULL;
+    }
+    return get_node_uuid(node->id, node->uname);
 }
 
 char *
@@ -499,11 +504,11 @@ get_uname(const char *uuid)
 }
 
 void
-set_uuid(xmlNode * node, const char *attr, const char *uname)
+set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
-    const char *uuid_calc = get_uuid(uname);
+    const char *uuid_calc = get_uuid(node);
 
-    crm_xml_add(node, attr, uuid_calc);
+    crm_xml_add(xml, attr, uuid_calc);
     return;
 }
 

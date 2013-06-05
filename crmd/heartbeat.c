@@ -424,13 +424,14 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
     crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
                node, client, status, AM_I_DC ? "true" : "false");
 
+    peer = crm_get_peer(0, node);
+
     if (safe_str_eq(status, ONLINESTATUS)) {
         /* remove the cached value in case it changed */
         crm_trace("Uncaching UUID for %s", node);
-        unget_uuid(node);
+        unget_uuid(peer);
     }
 
-    peer = crm_get_peer(0, node);
     crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd, status);
 
     if (AM_I_DC) {

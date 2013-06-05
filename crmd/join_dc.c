@@ -548,7 +548,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_trace("Creating node entry for %s", join_to);
 
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    set_uuid(tmp1, XML_ATTR_UUID, join_to);
+    set_uuid(tmp1, XML_ATTR_UUID, join_node);
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
 
     fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,

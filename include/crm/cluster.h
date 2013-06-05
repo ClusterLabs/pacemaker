@@ -146,10 +146,10 @@ gboolean get_ais_nodeid(uint32_t * id, char **uname);
 #  endif
 
 void empty_uuid_cache(void);
-const char *get_uuid(const char *uname);
+const char *get_uuid(crm_node_t *node);
 const char *get_uname(const char *uuid);
-void set_uuid(xmlNode * node, const char *attr, const char *uname);
-void unget_uuid(const char *uname);
+void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
+void unget_uuid(crm_node_t *node);
 
 enum crm_status_type {
     crm_status_uname,
