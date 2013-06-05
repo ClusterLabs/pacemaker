@@ -224,6 +224,8 @@ int
 crmd_exit(int rc)
 {
     GListPtr gIter = NULL;
+    GMainLoop *mloop = crmd_mainloop;
+
     static bool in_progress = FALSE;
 
     if(in_progress && rc == 0) {
@@ -242,17 +244,7 @@ crmd_exit(int rc)
     /* Suppress secondary errors resulting from us disconnecting everything */
     set_bit(fsa_input_register, R_HA_DISCONNECTED);
 
-    if (is_set(fsa_input_register, R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error: %s (%d)", pcmk_strerror(rc), rc);
-        if(rc == pcmk_ok) {
-            rc = pcmk_err_generic;
-        }
-    }
-
-    if (is_set(fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn: %d -> %d", rc, 100);
-        rc = 100;
-    }
+/* Close all IPC servers and clients to ensure any and all shared memory files are cleaned up */
 
     if(ipcs) {
         crm_trace("Closing IPC server");
@@ -266,6 +258,36 @@ crmd_exit(int rc)
         crm_ipc_destroy(attrd_ipc);
         attrd_ipc = NULL;
     }
+
+    if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
+        crm_trace("Disconnecting Policy Engine");
+        qb_ipcs_disconnect(pe_subsystem->client->ipcs);
+    }
+
+    if(stonith_api) {
+        crm_trace("Disconnecting fencing API");
+        clear_bit(fsa_input_register, R_ST_REQUIRED);
+        stonith_api->cmds->free(stonith_api); stonith_api = NULL;
+    }
+
+    if (rc == pcmk_ok && crmd_mainloop == NULL) {
+        crm_debug("No mainloop detected");
+        rc = EPROTO;
+    }
+
+    /* On an error, just get out.
+     *
+     * Otherwise, make the effort to have mainloop exit gracefully so
+     * that it (mostly) cleans up after itself and valgrind has less
+     * to report on - allowing real errors stand out
+     */
+    if(rc != pcmk_ok) {
+        crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
+        crm_write_blackbox(SIGTRAP, NULL);
+        return crmd_fast_exit(rc);
+    }
+
+/* Clean up as much memory as possible for valgrind */
 
 #if SUPPORT_HEARTBEAT
     if (fsa_cluster_conn) {
@@ -287,11 +309,6 @@ crmd_exit(int rc)
 
     clear_bit(fsa_input_register, R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
-
-    if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
-        crm_trace("Disconnecting Policy Engine");
-        qb_ipcs_disconnect(pe_subsystem->client->ipcs);
-    }
 
     free(pe_subsystem); pe_subsystem = NULL;
     free(te_subsystem); te_subsystem = NULL;
@@ -320,12 +337,6 @@ crmd_exit(int rc)
     mainloop_destroy_trigger(config_read); config_read = NULL;
     mainloop_destroy_trigger(stonith_reconnect); stonith_reconnect = NULL;
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
-
-    if(stonith_api) {
-        crm_trace("Disconnecting fencing API");
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
-        stonith_api->cmds->free(stonith_api); stonith_api = NULL;
-    }
 
     crm_client_cleanup();
     empty_uuid_cache();
@@ -368,15 +379,15 @@ crmd_exit(int rc)
     mainloop_destroy_signal(SIGTRAP);
     mainloop_destroy_signal(SIGCHLD);
 
-    if (rc == pcmk_ok && crmd_mainloop) {
+    if (mloop) {
         int lpc = 0;
         GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
-        GMainLoop *mloop = crmd_mainloop;
 
         /* Don't re-enter this block */
         crmd_mainloop = NULL;
 
         crm_trace("Draining mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+
         while(g_main_context_pending(ctx) && lpc < 10) {
             lpc++;
             crm_trace("Iteration %d", lpc);
@@ -389,20 +400,11 @@ crmd_exit(int rc)
         /* Won't do anything yet, since we're inside it now */
         g_main_loop_unref(mloop);
 
-    } else if(rc == pcmk_ok) {
-        crm_debug("No mainloop detected");
-        rc = EPROTO;
+        crm_trace("Done %d", rc);
     }
 
-    crm_trace("Done %d", rc);
-    if(rc == pcmk_ok) {
-        /* Graceful */
-        return rc;
-    }
-
-    crm_notice("Forcing immediate exit: %s (%d)", pcmk_strerror(rc), rc);
-    crm_write_blackbox(SIGTRAP, NULL);
-    return crmd_fast_exit(rc);
+    /* Graceful */
+    return rc;
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
