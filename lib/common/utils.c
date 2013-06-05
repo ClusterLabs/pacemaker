@@ -1845,7 +1845,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
                       const char *value, const char *section, const char *set, const char *dampen,
                       const char *user_name)
 {
-    int rc = 0;
+    int rc = -ENOTCONN;
     int max = 5;
     enum crm_ipc_flags flags = crm_ipc_client_none;
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
