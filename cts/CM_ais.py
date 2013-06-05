@@ -163,7 +163,7 @@ class crm_ais(crm_lha):
                     "error: crm_ipc_read: Connection to cib_.* failed",
                     "error: mainloop_gio_callback: Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
-                    "Child process crmd .* exited rc=1",
+                    "Child process crmd .* exited: Generic Pacemaker error (201)",
                     "Child process attrd .* exited rc=2",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
@@ -177,7 +177,7 @@ class crm_ais(crm_lha):
                     "error: crm_ipc_read: Connection to lrmd failed",
                     "error: mainloop_gio_callback: Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
-                    "Child process crmd .* exited rc=1",
+                    "Child process crmd .* exited: Generic Pacemaker error (201)",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.* Could not recover from internal error",
                     ], badnews_ignore = self.common_ignore)
@@ -196,7 +196,7 @@ class crm_ais(crm_lha):
         fullcomplist["pengine"] = Process(self, "pengine", dc_pats = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
-                    "Child process crmd exited .* rc=2",
+                    "Child process crmd .* exited: Generic Pacemaker error (201)",
                     "crm_ipc_read: Connection to pengine failed",
                     "error: mainloop_gio_callback: Connection to pengine.* closed",
                     "crit: pe_ipc_destroy: Connection to the Policy Engine failed",
