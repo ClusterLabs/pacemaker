@@ -720,32 +720,13 @@ pcmk_quorum_dispatch(gpointer user_data)
 }
 
 static void
-corosync_mark_unseen_peer_dead(gpointer key, gpointer value, gpointer user_data)
-{
-    int *seq = user_data;
-    crm_node_t *node = value;
-
-    if (node->last_seen != *seq && node->state
-        && crm_str_eq(CRM_NODE_LOST, node->state, TRUE) == FALSE) {
-        crm_notice("Node %d/%s was not seen in the previous transition", node->id, node->uname);
-        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
-    }
-}
-
-static void
-corosync_mark_node_unseen(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-
-    node->last_seen = 0;
-}
-
-static void
 pcmk_quorum_notification(quorum_handle_t handle,
                          uint32_t quorate,
                          uint64_t ring_id, uint32_t view_list_entries, uint32_t * view_list)
 {
     int i;
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
     static gboolean init_phase = TRUE;
 
     if (quorate != crm_have_quorum) {
@@ -764,14 +745,17 @@ pcmk_quorum_notification(quorum_handle_t handle,
     }
 
     init_phase = FALSE;
-    g_hash_table_foreach(crm_peer_cache, corosync_mark_node_unseen, NULL);
+
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        node->last_seen = 0;
+    }
 
     for (i = 0; i < view_list_entries; i++) {
         uint32_t id = view_list[i];
         char *name = NULL;
-        crm_node_t *node = NULL;
 
-        crm_debug("Member[%d] %d ", i, id);
+        crm_debug("Member[%d] %u ", i, id);
 
         node = crm_get_peer(id, NULL);
         if (node->uname == NULL) {
@@ -785,7 +769,12 @@ pcmk_quorum_notification(quorum_handle_t handle,
     }
 
     crm_trace("Reaping unseen nodes...");
-    g_hash_table_foreach(crm_peer_cache, corosync_mark_unseen_peer_dead, &ring_id);
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if (node->last_seen != ring_id) {
+            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+        }
+    }
 
     if (quorum_app_callback) {
         quorum_app_callback(ring_id, quorate);

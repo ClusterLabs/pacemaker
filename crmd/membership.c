@@ -40,12 +40,6 @@ int last_peer_update = 0;
 
 extern GHashTable *voted;
 
-struct update_data_s {
-    const char *caller;
-    xmlNode *parent;
-    int flags;
-};
-
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 static void
@@ -194,27 +188,6 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
     return node_state;
 }
 
-static void
-ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    struct update_data_s *data = (struct update_data_s *)user_data;
-
-    do_update_node_cib(node, data->flags, data->parent, data->caller);
-}
-
-static void
-create_cib_node_definition(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    xmlNode *cib_nodes = user_data;
-    xmlNode *cib_new_node = NULL;
-
-    crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
-    cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
-    crm_xml_add(cib_new_node, XML_ATTR_ID, node->uuid);
-    crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
-}
 
 static void
 node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
@@ -256,10 +229,22 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 #endif
 
     if (from_hashtable) {
+        GHashTableIter iter;
+        crm_node_t *node = NULL;
+
         /* if(uname_is_uuid()) { */
         /*     g_hash_table_foreach(crm_peer_id_cache, create_cib_node_definition, node_list); */
         /* } else { */
-        g_hash_table_foreach(crm_peer_cache, create_cib_node_definition, node_list);
+
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            xmlNode *new_node = NULL;
+
+            crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
+            new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
+            crm_xml_add(new_node, XML_ATTR_ID, node->uuid);
+            crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
+        }
         /* } */
     }
 
@@ -275,15 +260,15 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
          * There is no need to update the local CIB with our values if
          * we've not seen valid membership data
          */
-        struct update_data_s update_data;
+        GHashTableIter iter;
+        crm_node_t *node = NULL;
 
         node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
-        update_data.caller = source;
-        update_data.parent = node_list;
-        update_data.flags = flags;
-
-        g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            do_update_node_cib(node, flags, node_list, source);
+        }
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
         fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
