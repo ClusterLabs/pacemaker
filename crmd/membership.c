@@ -270,6 +270,14 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             do_update_node_cib(node, flags, node_list, source);
         }
 
+        g_hash_table_iter_init(&iter, crm_peer_id_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if(node->uname == NULL) {
+                /* Would not have been present in the main peer cache */
+                do_update_node_cib(node, flags, node_list, source);
+            }
+        }
+
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
         fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
         last_peer_update = call_id;
