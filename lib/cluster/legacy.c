@@ -265,11 +265,11 @@ crm_cs_flush(void)
 
     queue_len -= sent;
     if (sent > 1 || cs_message_queue) {
-        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s",
-                 sent, queue_len, last_sent, ais_error2text(rc));
+        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
+                 sent, queue_len, last_sent, ais_error2text(rc), rc);
     } else {
-        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s",
-                  sent, queue_len, last_sent, ais_error2text(rc));
+        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
+                  sent, queue_len, last_sent, ais_error2text(rc), rc);
     }
 
     if (cs_message_queue) {
