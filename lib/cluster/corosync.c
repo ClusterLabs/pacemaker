@@ -751,6 +751,11 @@ pcmk_quorum_notification(quorum_handle_t handle,
         node->last_seen = 0;
     }
 
+    g_hash_table_iter_init(&iter, crm_peer_id_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        node->last_seen = 0;
+    }
+
     for (i = 0; i < view_list_entries; i++) {
         uint32_t id = view_list[i];
         char *name = NULL;
@@ -770,6 +775,14 @@ pcmk_quorum_notification(quorum_handle_t handle,
 
     crm_trace("Reaping unseen nodes...");
     g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if (node->last_seen != ring_id) {
+            crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+        }
+    }
+
+    /* Pick up any nodes node yet in the main peer cache */
+    g_hash_table_iter_init(&iter, crm_peer_id_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         if (node->last_seen != ring_id) {
             crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
