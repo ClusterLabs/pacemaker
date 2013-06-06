@@ -53,7 +53,7 @@ def set_power_status(conn, options):
 
 def main():
     global all_opt
-    device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug", "action", "port",
+    device_opt = [  "help", "version", "agent", "verbose", "debug", "action", "port",
             "no_password", "power_wait", "power_timeout", "random_sleep_range"]
 
     all_opt["random_sleep_range"] = {
