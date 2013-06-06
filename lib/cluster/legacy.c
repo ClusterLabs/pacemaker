@@ -205,7 +205,7 @@ get_ais_details(uint32_t * id, char **uname)
 
 static uint32_t get_local_nodeid(cpg_handle_t handle)
 {
-    int rc = -1;
+    int rc = CS_OK;
     int retries = 0;
     static uint32_t local_nodeid = 0;
     cpg_handle_t local_handle = handle;

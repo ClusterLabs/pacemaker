@@ -164,7 +164,7 @@ class crm_ais(crm_lha):
                     "error: mainloop_gio_callback: Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
                     "Child process crmd .* exited: Generic Pacemaker error (201)",
-                    "Child process attrd .* exited rc=2",
+                    "Child process attrd .* exited: Transport endpoint is not connected (107)",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd.*Could not recover from internal error",
