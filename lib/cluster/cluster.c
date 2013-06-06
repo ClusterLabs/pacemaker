@@ -285,49 +285,15 @@ send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode 
     return FALSE;
 }
 
-char *
+const char *
 get_local_node_name(void)
 {
-    char *name = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    static char *name = NULL;
 
-    switch (stack) {
-
-#if SUPPORT_CMAN
-        case pcmk_cluster_cman:
-            name = cman_node_name(0 /* AKA. CMAN_NODEID_US */ );
-            break;
-#endif
-
-#if SUPPORT_COROSYNC
-#  if !SUPPORT_PLUGIN
-        case pcmk_cluster_corosync:
-            name = corosync_node_name(0, 0);
-            break;
-#  endif
-#endif
-        case pcmk_cluster_heartbeat:
-        case pcmk_cluster_classic_ais:
-            break;
-        default:
-            crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+    if(name) {
+        return name;
     }
-
-    if (name == NULL) {
-        struct utsname res;
-        int rc = uname(&res);
-
-        if (rc == 0) {
-            crm_notice("Defaulting to uname -n for the local %s node name",
-                       name_for_cluster_type(stack));
-            name = strdup(res.nodename);
-        }
-    }
-
-    if (name == NULL) {
-        crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
-        crm_exit(DAEMON_RESPAWN_STOP);
-    }
+    name = get_node_name(0);
     return name;
 }
 
@@ -335,15 +301,18 @@ char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
+    bool do_uname = FALSE;
     enum cluster_type_e stack = get_cluster_type();
 
     switch (stack) {
         case pcmk_cluster_heartbeat:
+            do_uname = TRUE;
             break;
 
 #if SUPPORT_PLUGIN
         case pcmk_cluster_classic_ais:
             name = classic_node_name(nodeid);
+            do_uname = TRUE;
             break;
 #else
 #  if SUPPORT_COROSYNC
@@ -356,11 +325,28 @@ get_node_name(uint32_t nodeid)
 #if SUPPORT_CMAN
         case pcmk_cluster_cman:
             name = cman_node_name(nodeid);
+            do_uname = TRUE;
             break;
 #endif
 
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+    }
+
+    if(name == NULL && nodeid == 0 && do_uname) {
+        struct utsname res;
+        int rc = uname(&res);
+
+        if (rc == 0) {
+            crm_notice("Defaulting to uname -n for the local %s node name",
+                       name_for_cluster_type(stack));
+            name = strdup(res.nodename);
+        }
+
+        if (name == NULL) {
+            crm_err("Could not obtain the local %s node name", name_for_cluster_type(stack));
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
     }
 
     if (name == NULL) {

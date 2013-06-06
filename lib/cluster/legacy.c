@@ -48,9 +48,6 @@ struct cpg_name pcmk_cpg_group = {
 cman_handle_t pcmk_cman_handle = NULL;
 #endif
 
-static char *pcmk_uname = NULL;
-static int pcmk_uname_len = 0;
-static uint32_t pcmk_nodeid = 0;
 int ais_membership_timer = 0;
 gboolean ais_membership_force = FALSE;
 int ais_dispatch(gpointer user_data);
@@ -141,14 +138,23 @@ void *ais_ipc_ctx = NULL;
 
 hdb_handle_t ais_ipc_handle = 0;
 
-gboolean
-get_ais_nodeid(uint32_t * id, char **uname)
+static gboolean
+get_ais_details(uint32_t * id, char **uname)
 {
     struct iovec iov;
     int retries = 0;
     int rc = CS_OK;
     cs_ipc_header_response_t header;
     struct crm_ais_nodeid_resp_s answer;
+
+    static uint32_t local_id = 0;
+    static char *local_uname = NULL;
+
+    if(local_id) {
+        if(id) *id = local_id;
+        if(uname) *uname = strdup(local_uname);
+        return TRUE;
+    }
 
     header.error = CS_OK;
     header.id = crm_class_nodeid;
@@ -189,10 +195,56 @@ get_ais_nodeid(uint32_t * id, char **uname)
 
     crm_info("Server details: id=%u uname=%s cname=%s", answer.id, answer.uname, answer.cname);
 
-    *id = answer.id;
-    *uname = strdup(answer.uname);
+    local_id = answer.id;
+    local_uname = strdup(answer.uname);
 
+    if(id) *id = local_id;
+    if(uname) *uname = strdup(local_uname);
     return TRUE;
+}
+
+static uint32_t get_local_nodeid(cpg_handle_t handle)
+{
+    int rc = -1;
+    int retries = 0;
+    static uint32_t local_nodeid = 0;
+    cpg_handle_t local_handle = handle;
+    cpg_callbacks_t cb = { };
+
+    if(local_nodeid != 0) {
+        return local_nodeid;
+    }
+
+#if 0
+    /* Should not be necessary */
+    if(get_cluster_type() == pcmk_cluster_classic_ais) {
+        get_ais_details(&local_nodeid, NULL);
+        goto done;
+    }
+#endif
+
+    if(local_handle == 0) {
+        crm_trace("Creating connection");
+        cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
+    }
+
+    if (rc == CS_OK) {
+        retries = 0;
+        crm_trace("Performing lookup");
+        cs_repeat(retries, 5, rc = cpg_local_get(local_handle, &local_nodeid));
+    }
+
+    if (rc != CS_OK) {
+        crm_err("Could not get local node id from the CPG API: %s (%d)", ais_error2text(rc), rc);
+    }
+
+    if(handle != local_handle) {
+        crm_trace("Closing connection %u", local_handle);
+        cpg_finalize(local_handle);
+    }
+
+    crm_debug("Local nodeid is %u", local_nodeid);
+    return local_nodeid;
 }
 
 GListPtr cs_message_queue = NULL;
@@ -340,6 +392,8 @@ send_ais_text(int class, const char *data,
 {
     static int msg_id = 0;
     static int local_pid = 0;
+    static int local_name_len = 0;
+    static const char *local_name = NULL;
 
     char *target = NULL;
     struct iovec *iov;
@@ -352,6 +406,13 @@ send_ais_text(int class, const char *data,
               return FALSE);
 
     CRM_CHECK(dest != crm_msg_ais, return FALSE);
+
+    if(local_name == NULL) {
+        local_name = get_local_node_name();
+    }
+    if(local_name_len == 0 && local_name) {
+        local_name_len = strlen(local_name);
+    }
 
     if (data == NULL) {
         data = "";
@@ -391,9 +452,9 @@ send_ais_text(int class, const char *data,
     ais_msg->sender.id = 0;
     ais_msg->sender.type = sender;
     ais_msg->sender.pid = local_pid;
-    ais_msg->sender.size = pcmk_uname_len;
+    ais_msg->sender.size = local_name_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
-    memcpy(ais_msg->sender.uname, pcmk_uname, ais_msg->sender.size);
+    memcpy(ais_msg->sender.uname, local_name, ais_msg->sender.size);
 
     ais_msg->size = 1 + strlen(data);
     ais_msg->header.size = sizeof(AIS_Message) + ais_msg->size;
@@ -863,15 +924,18 @@ pcmk_cpg_deliver(cpg_handle_t handle,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     AIS_Message *ais_msg = (AIS_Message *) msg;
+    uint32_t local_nodeid = get_local_nodeid(handle);
+    const char *local_name = get_local_node_name();
 
     if (ais_msg->sender.id > 0 && ais_msg->sender.id != nodeid) {
         crm_err("Nodeid mismatch from %d.%d: claimed nodeid=%u", nodeid, pid, ais_msg->sender.id);
         return;
 
-    } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, pcmk_uname)) {
+    } else if (ais_msg->host.id != 0 && (local_nodeid != ais_msg->host.id)) {
         /* Not for us */
         return;
-    } else if (ais_msg->host.id != 0 && (pcmk_nodeid != ais_msg->host.id)) {
+
+    } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, local_name)) {
         /* Not for us */
         return;
     }
@@ -907,6 +971,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
     int i;
     gboolean found = FALSE;
     static int counter = 0;
+    uint32_t local_nodeid = get_local_nodeid(handle);
 
     for (i = 0; i < left_list_entries; i++) {
         crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
@@ -924,7 +989,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
         crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-        if (pcmk_nodeid == member_list[i].nodeid) {
+        if (local_nodeid == member_list[i].nodeid) {
             found = TRUE;
         }
     }
@@ -995,7 +1060,7 @@ init_cpg_connection(crm_cluster_t * cluster)
         return FALSE;
     }
 
-    peer = crm_get_peer(cluster->nodeid, pcmk_uname);
+    peer = crm_get_peer(cluster->nodeid, NULL);
     crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
 
 #  else
@@ -1020,7 +1085,7 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     int rc;
     int pid = 0;
     char *pid_s = NULL;
-    struct utsname name;
+    const char *name = NULL;
 
     struct mainloop_fd_callbacks ais_fd_callbacks = {
         .dispatch = ais_dispatch,
@@ -1064,22 +1129,18 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
     free(pid_s);
 
-    if (uname(&name) < 0) {
-        crm_perror(LOG_ERR, "Could not determin the current host");
-        crm_exit(DAEMON_RESPAWN_STOP);
-    }
+    cluster->nodeid = get_local_nodeid(0);
 
-    get_ais_nodeid(&pcmk_nodeid, &pcmk_uname);
-    if (safe_str_neq(name.nodename, pcmk_uname)) {
-        crm_crit("Node name mismatch!  Corosync supplied %s, our lookup returned %s",
-                 pcmk_uname, name.nodename);
+    name = get_local_node_name();
+    get_ais_details(NULL, &(cluster->uname));
+    if (safe_str_neq(name, cluster->uname)) {
+        crm_crit("Node name mismatch!  Corosync supplied %s but our lookup returned %s",
+                 cluster->uname, name);
         crm_notice
             ("Node name mismatches usually occur when assigned automatically by DHCP servers");
-        crm_notice("If this node was part of the cluster with a different name,"
-                   " you will need to remove the old entry with crm_node --remove");
+        crm_exit(ENOTUNIQ);
     }
-    
-    cluster->nodeid = pcmk_nodeid;
+
 
     return TRUE;
 }
@@ -1200,6 +1261,7 @@ extern int set_cluster_type(enum cluster_type_e type);
 gboolean
 init_cs_connection_once(crm_cluster_t * cluster)
 {
+    const char *uuid = NULL;
     crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
 
@@ -1216,7 +1278,7 @@ init_cs_connection_once(crm_cluster_t * cluster)
             if (init_cpg_connection(cluster) == FALSE) {
                 return FALSE;
             }
-            pcmk_uname = cman_node_name(0 /* CMAN_NODEID_US */ );
+            cluster->uname = cman_node_name(0 /* CMAN_NODEID_US */ );
             break;
         case pcmk_cluster_heartbeat:
             crm_info("Could not find an active corosync based cluster");
@@ -1230,19 +1292,25 @@ init_cs_connection_once(crm_cluster_t * cluster)
 
     crm_info("Connection to '%s': established", name_for_cluster_type(stack));
 
-    CRM_ASSERT(pcmk_uname != NULL);
-    pcmk_uname_len = strlen(pcmk_uname);
+    cluster->nodeid = get_local_nodeid(0);
+    if(cluster->nodeid == 0) {
+        crm_err("Could not establish local nodeid");
+        return FALSE;
+    }
 
-    pcmk_nodeid = cluster->nodeid;
+    cluster->uname = get_node_name(0);
+    if(cluster->uname == NULL) {
+        crm_err("Could not establish local node name");
+        return FALSE;
+    }
 
     /* Ensure the local node always exists */
-    peer = crm_get_peer(pcmk_nodeid, pcmk_uname);
+    peer = crm_get_peer(cluster->nodeid, cluster->uname);
     uuid = get_corosync_uuid(peer);
 
     if(uuid) {
         cluster->uuid = strdup(uuid);
     }
-    cluster->uname = strdup(pcmk_uname);
 
     return TRUE;
 }

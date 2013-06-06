@@ -39,7 +39,7 @@ GHashTable *peers = NULL;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 
-char *local_name = NULL;
+const char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t *shutdown_trigger = NULL;
 const char *pid_file = "/var/run/pacemaker.pid";

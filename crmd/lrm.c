@@ -256,6 +256,9 @@ do_lrm_control(long long action,
 
     lrm_state_t *lrm_state = NULL;
 
+    if(fsa_our_uname == NULL) {
+        return; /* Nothing to do */
+    }
     lrm_state = lrm_state_find_or_create(fsa_our_uname);
     if (lrm_state == NULL) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
