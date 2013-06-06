@@ -118,6 +118,10 @@ do_ha_control(long long action,
         }
         fsa_our_uname = cluster->uname;
         fsa_our_uuid = cluster->uuid;
+        if(cluster->uuid == NULL) {
+            crm_err("Could not obtain local uuid");
+            registered = FALSE;
+        }
 
         if (registered == FALSE) {
             set_bit(fsa_input_register, R_HA_DISCONNECTED);

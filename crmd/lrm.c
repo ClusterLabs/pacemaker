@@ -1892,15 +1892,21 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
     if (safe_str_eq(lrm_state->node_name, fsa_our_uname)) {
-        crm_xml_add(iter, XML_ATTR_UUID, uuid);
         uuid = fsa_our_uuid;
 
     } else {
         /* remote nodes uuid and uname are equal */
-        crm_xml_add(iter, XML_ATTR_UUID, lrm_state->node_name);
         uuid = lrm_state->node_name;
         crm_xml_add(iter, XML_NODE_IS_REMOTE, "true");
     }
+
+    CRM_LOG_ASSERT(uuid != NULL);
+    if(uuid == NULL) {
+        rc = -EINVAL;
+        goto done;
+    }
+
+    crm_xml_add(iter, XML_ATTR_UUID,  uuid);
     crm_xml_add(iter, XML_ATTR_UNAME, lrm_state->node_name);
     crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
 
@@ -1926,6 +1932,8 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
         goto cleanup;
     }
 
+    crm_log_xml_trace(update, __FUNCTION__);
+
     /* make it an asyncronous call and be done with it
      *
      * Best case:
@@ -1948,7 +1956,7 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     if (rc > 0) {
         last_resource_update = rc;
     }
-
+  done:
     /* the return code is a call number, not an error code */
     crm_trace("Sent resource state update message: %d for %s=%d on %s", rc,
               op->op_type, op->interval, op->rsc_id);
