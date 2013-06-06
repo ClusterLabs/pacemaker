@@ -1288,9 +1288,9 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
-    {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node"},
-    {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node"},
-    {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node\n"},
+    {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
+    {"force-start",0, 0,  0,  "\t(Advanced) Bypass the cluster and start a resource on the local node. Additional detail with -V"},
+    {"force-check",0, 0,  0,  "\t(Advanced) Bypass the cluster and check the state of a resource on the local node. Additional detail with -V\n"},
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"node",		1, 0, 'N', "\tHost uname"},
@@ -1354,10 +1354,10 @@ main(int argc, char **argv)
     const char *longname = NULL;
     pe_working_set_t data_set;
     xmlNode *cib_xml_copy = NULL;
-
     cib_t *cib_conn = NULL;
-    int rc = pcmk_ok;
+    bool do_trace = FALSE;
 
+    int rc = pcmk_ok;
     int option_index = 0;
     int argerr = 0;
     int flag;
@@ -1490,6 +1490,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'V':
+                do_trace = TRUE;
                 crm_bump_log_level(argc, argv);
                 break;
             case '$':
@@ -1704,6 +1705,10 @@ main(int argc, char **argv)
         params = generate_resource_params(rsc, &data_set);
 
         op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
+
+        if(do_trace) {
+            setenv("OCF_TRACE_RA", "1", 1);
+        }
 
         if(op == NULL) {
             /* Re-run but with stderr enabled so we can display a sane error message */
