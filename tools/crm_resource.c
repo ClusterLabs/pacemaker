@@ -1377,7 +1377,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 0:
-                if (safe_str_eq("force-stop", longname)) {
+                if (safe_str_eq("master", longname)) {
                     scope_master = TRUE;
 
                 } else if (safe_str_eq("force-stop", longname)
