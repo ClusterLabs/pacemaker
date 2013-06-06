@@ -1702,8 +1702,13 @@ main(int argc, char **argv)
         rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
         rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-        params = generate_resource_params(rsc, &data_set);
 
+        if(safe_str_eq(rclass, "stonith")){
+            CMD_ERR("Sorry, --%s doesn't support %s resources yet\n", rsc_long_cmd, rclass);
+            crm_exit(EOPNOTSUPP);
+        }
+
+        params = generate_resource_params(rsc, &data_set);
         op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params);
 
         if(do_trace) {
