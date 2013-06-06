@@ -128,7 +128,7 @@ class Test:
 		self.__new_cmd(self.test_tool_location, args, 0, "", kill=killProc)
 
 	def add_expected_fail_cmd(self, args):
-		self.__new_cmd(self.test_tool_location, args, 255, "")
+		self.__new_cmd(self.test_tool_location, args, 1, "")
 
 	def get_exitcode(self):
 		return self.result_exitcode
