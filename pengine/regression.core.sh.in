@@ -68,6 +68,7 @@ while true ; do
 	    shift;;
 	--run) single_test="$2"; shift; shift; break;;
 	-b|--binary) test_binary=$2; PCMK_schema_directory=""; shift; shift;;
+	-i|--io-dir) io_dir=$2; shift; shift;;
 	-?|--help) echo "$0 [--binary name] [--force-local]"; shift; exit 0;;
 	--) shift ; break ;;
 	"") break;;

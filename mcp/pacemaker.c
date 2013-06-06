@@ -429,29 +429,6 @@ pcmk_shutdown(int nsig)
     mainloop_set_trigger(shutdown_trigger);
 }
 
-static void
-build_path(const char *path_c, mode_t mode)
-{
-    int offset = 1, len = 0;
-    char *path = strdup(path_c);
-
-    CRM_CHECK(path != NULL, return);
-    for (len = strlen(path); offset < len; offset++) {
-        if (path[offset] == '/') {
-            path[offset] = 0;
-            if (mkdir(path, mode) < 0 && errno != EEXIST) {
-                crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-                break;
-            }
-            path[offset] = '/';
-        }
-    }
-    if (mkdir(path, mode) < 0 && errno != EEXIST) {
-        crm_perror(LOG_ERR, "Could not create directory '%s'", path);
-    }
-    free(path);
-}
-
 static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -949,26 +926,26 @@ main(int argc, char **argv)
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used by stonithd */
-    build_path(HA_STATE_DIR "/heartbeat", 0755);
+    crm_build_path(HA_STATE_DIR "/heartbeat", 0755);
     mcp_chown(HA_STATE_DIR "/heartbeat", pcmk_uid, pcmk_gid);
 
     /* Used by RAs - Leave owned by root */
-    build_path(CRM_RSCTMP_DIR, 0755);
+    crm_build_path(CRM_RSCTMP_DIR, 0755);
 
     /* Used to store core files in */
-    build_path(CRM_CORE_DIR, 0775);
+    crm_build_path(CRM_CORE_DIR, 0775);
     mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store blackbox dumps in */
-    build_path(CRM_BLACKBOX_DIR, 0755);
+    crm_build_path(CRM_BLACKBOX_DIR, 0755);
     mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store policy engine inputs in */
-    build_path(PE_STATE_DIR, 0755);
+    crm_build_path(PE_STATE_DIR, 0755);
     mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
 
     /* Used to store the cluster configuration */
-    build_path(CRM_CONFIG_DIR, 0755);
+    crm_build_path(CRM_CONFIG_DIR, 0755);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);

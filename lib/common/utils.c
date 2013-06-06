@@ -365,6 +365,29 @@ crm_itoa(int an_int)
     return buffer;
 }
 
+void
+crm_build_path(const char *path_c, mode_t mode)
+{
+    int offset = 1, len = 0;
+    char *path = strdup(path_c);
+
+    CRM_CHECK(path != NULL, return);
+    for (len = strlen(path); offset < len; offset++) {
+        if (path[offset] == '/') {
+            path[offset] = 0;
+            if (mkdir(path, mode) < 0 && errno != EEXIST) {
+                crm_perror(LOG_ERR, "Could not create directory '%s'", path);
+                break;
+            }
+            path[offset] = '/';
+        }
+    }
+    if (mkdir(path, mode) < 0 && errno != EEXIST) {
+        crm_perror(LOG_ERR, "Could not create directory '%s'", path);
+    }
+    free(path);
+}
+
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {

@@ -282,6 +282,9 @@ main(int argc, char **argv)
         }
     }
 
+    /* Used by RAs - Leave owned by root */
+    crm_build_path(CRM_RSCTMP_DIR, 0755);
+
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
