@@ -799,8 +799,10 @@ pcmk_quorum_notification(quorum_handle_t handle,
     crm_trace("Reaping unseen nodes...");
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (node->last_seen != ring_id) {
+        if (node->last_seen != ring_id && node->state) {
             crm_update_peer_state(__FUNCTION__, node, CRM_NODE_LOST, 0);
+        } else if (node->last_seen != ring_id) {
+            crm_info("State of node %s[%u] is still unknown", node->uname, node->id);
         }
     }
 
