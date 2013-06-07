@@ -221,6 +221,12 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(st_event->target));
 
         }
+
+        /* Everyone records them as safely down */
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
+        crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
+        crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
      }
 }
 
