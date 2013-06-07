@@ -569,11 +569,13 @@ print_cluster_status(pe_working_set_t * data_set)
         } else if (node->details->online) {
             node_mode = "online";
             online_nodes = add_list_element(online_nodes, node_name);
+            free(node_name);
             continue;
 
         } else {
             node_mode = "OFFLINE";
             offline_nodes = add_list_element(offline_nodes, node_name);
+            free(node_name);
             continue;
         }
 
@@ -939,6 +941,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
+        free_xml(cib_node);
     }
 
     for (gIter = node_down; gIter != NULL; gIter = gIter->next) {
@@ -951,6 +954,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
+        free_xml(cib_node);
     }
 
     for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {
@@ -964,6 +968,7 @@ modify_configuration(pe_working_set_t * data_set,
         rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                       cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
+        free_xml(cib_node);
     }
 
     for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
