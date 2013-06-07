@@ -55,6 +55,9 @@
 # Use a different versioning scheme
 %bcond_with pre_release
 
+# Support Upstart job
+%bcond_with upstart_job
+
 %if %{with profiling}
 # This disables -debuginfo package creation and also the stripping binaries/libraries
 # Useful if you want sane profiling data
@@ -345,6 +348,12 @@ mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 mkdir -p ${RPM_BUILD_ROOT}%{_var}/lib/pacemaker/cores
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 
+%if %{with upstart_job}
+mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
+install -m 644 mcp/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
+install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
+%endif
+
 # Scripts that should be executable
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
 
@@ -486,6 +495,11 @@ fi
 %{_libexecdir}/lcrso/pacemaker.lcrso
 %endif
 %endif
+%endif
+
+%if %{with upstart_job}
+%config(noreplace) %{_sysconfdir}/init/pacemaker.conf
+%config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
 %endif
 
 %files cli
