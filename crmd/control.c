@@ -218,7 +218,7 @@ crmd_fast_exit(int rc)
     }
 
     if (rc == pcmk_ok && is_set(fsa_input_register, R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error: %s (%d)", pcmk_strerror(rc), rc);
+        crm_err("Could not recover from internal error");
         rc = pcmk_err_generic;
     }
     return crm_exit(rc);
@@ -424,6 +424,7 @@ do_exit(long long action,
         /* exit_code = pcmk_err_generic; */
         log_level = LOG_ERR;
         exit_type = "forcefully";
+        exit_code = pcmk_err_generic;
     }
 
     verify_stopped(cur_state, LOG_ERR);

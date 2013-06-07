@@ -654,7 +654,13 @@ pcmk_cpg_membership(cpg_handle_t handle,
         crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
 
         crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
+
+        /* Anyone that is sending us CPG messages must also be a _CPG_ member.
+         * But its _not_ safe to assume its in the quorum membership.
+         * We may have just found out its dead and are processing the last couple of messages it sent
+         */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+
         if (local_nodeid == member_list[i].nodeid) {
             found = TRUE;
         }
