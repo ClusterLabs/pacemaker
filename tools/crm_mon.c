@@ -364,6 +364,93 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
+#if CURSES_ENABLED
+static const char *
+get_option_desc(char c)
+{
+    int lpc;
+
+    for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
+
+        if (long_options[lpc].name[0] == '-')
+            continue;
+
+        if (long_options[lpc].val == c) {
+            const char * tab = NULL;
+            tab = strrchr(long_options[lpc].desc, '\t');
+            return tab ? ++tab : long_options[lpc].desc;
+        }
+    }
+
+    return NULL;
+}
+
+static gboolean
+detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
+{
+    char c;
+    gboolean config_mode = FALSE;
+
+    while (1) {
+
+        /* Get user input */
+        c = getchar();
+
+        switch (c) {
+            case 'c':
+                print_tickets = ! print_tickets;
+                break;
+            case 'f':
+                print_failcount = ! print_failcount;
+                break;
+            case 'n':
+                group_by_node = ! group_by_node;
+                break;
+            case 'o':
+                print_operations = ! print_operations;
+                break;
+            case 'r':
+                inactive_resources = ! inactive_resources;
+                break;
+            case 't':
+                print_timing = ! print_timing;
+                if (print_timing)
+                    print_operations = TRUE;
+                break;
+            case 'A':
+                print_nodes_attr = ! print_nodes_attr;
+                break;
+            case '?':
+                config_mode = TRUE;
+                break;
+            default:
+                goto refresh;
+        }
+
+        if (!config_mode)
+            goto refresh;
+
+        blank_screen();
+
+        print_as("Display option change mode\n");
+        print_as("\n");
+        print_as("%c c: \t%s\n", print_tickets ? '*': ' ', get_option_desc('c'));
+        print_as("%c f: \t%s\n", print_failcount ? '*': ' ', get_option_desc('f'));
+        print_as("%c n: \t%s\n", group_by_node ? '*': ' ', get_option_desc('n'));
+        print_as("%c o: \t%s\n", print_operations ? '*': ' ', get_option_desc('o'));
+        print_as("%c r: \t%s\n", inactive_resources ? '*': ' ', get_option_desc('r'));
+        print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
+        print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
+        print_as("\n");
+        print_as("Toggle fields via field letter, type any other key to return");
+    }
+
+refresh:
+    mon_refresh_display(NULL);
+    return TRUE;
+}
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -584,6 +671,7 @@ main(int argc, char **argv)
         if (ncurses_winch_handler == SIG_DFL ||
             ncurses_winch_handler == SIG_IGN || ncurses_winch_handler == SIG_ERR)
             ncurses_winch_handler = NULL;
+        g_io_add_watch(g_io_channel_unix_new(STDIN_FILENO), G_IO_IN, detect_user_input, NULL);
     }
 #endif
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
