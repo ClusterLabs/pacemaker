@@ -39,6 +39,9 @@ gboolean crm_have_quorum = FALSE;
 gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
+    if(node == NULL) {
+        return FALSE;
+    }
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
         return crm_is_corosync_peer_active(node);

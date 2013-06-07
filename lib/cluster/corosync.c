@@ -660,6 +660,24 @@ pcmk_cpg_membership(cpg_handle_t handle,
          * We may have just found out its dead and are processing the last couple of messages it sent
          */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        if(peer && crm_is_peer_active(peer) == FALSE) {
+            time_t now = time(NULL);
+
+            /* Co-opt the otherwise unused votes field */
+            if(peer->votes == 0) {
+                peer->votes = now;
+
+            } else if(now > (60 + peer->votes)) {
+                /* On the otherhand, if we're still getting messages, at a certain point
+                 * we need to acknowledge our internal cache is probably wrong
+                 *
+                 * Set the threshold to 1 minute
+                 */
+                crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
+                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
+                peer->votes = 0;
+            }
+        }
 
         if (local_nodeid == member_list[i].nodeid) {
             found = TRUE;
@@ -667,7 +685,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
     }
 
     if (!found) {
-        crm_err("We're not part of CPG group %s anymore!", groupName->value);
+        crm_err("We're not part of CPG group '%s' anymore!", groupName->value);
         cpg_evicted = TRUE;
     }
 
