@@ -660,7 +660,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
          * We may have just found out its dead and are processing the last couple of messages it sent
          */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-        if(peer && crm_is_peer_active(peer) == FALSE) {
+        if(peer && peer->state && crm_is_peer_active(peer) == FALSE) {
             time_t now = time(NULL);
 
             /* Co-opt the otherwise unused votes field */
