@@ -241,6 +241,9 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     } else if (safe_str_neq(rclass, "ocf")
                && safe_str_neq(rclass, "stonith")
                && safe_str_neq(rclass, "heartbeat")
+               && safe_str_neq(rclass, "service")
+               && safe_str_neq(rclass, "upstart")
+               && safe_str_neq(rclass, "systemd")
                && safe_str_neq(rclass, "lsb")) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
