@@ -2349,11 +2349,14 @@ stage8(pe_working_set_t * data_set)
              * But for now its the best way to detect (in CTS) when
              * CIB resource updates are being lost
              */
-            crm_crit("Cannot %s node '%s' because of %s:%s%s",
-                     action->node->details->unclean ? "fence" : "shut down",
-                     action->node->details->uname, action->rsc->id,
-                     is_not_set(action->rsc->flags, pe_rsc_managed) ? " unmanaged" : " blocked",
-                     is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "");
+            if (is_set(data_set->flags, pe_flag_have_quorum)
+                || data_set->no_quorum_policy == no_quorum_ignore) {
+                crm_crit("Cannot %s node '%s' because of %s:%s%s",
+                         action->node->details->unclean ? "fence" : "shut down",
+                         action->node->details->uname, action->rsc->id,
+                         is_not_set(action->rsc->flags, pe_rsc_managed) ? " unmanaged" : " blocked",
+                         is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "");
+            }
         }
 
         graph_element_from_action(action, data_set);
