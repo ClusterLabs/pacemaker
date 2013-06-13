@@ -1272,19 +1272,12 @@ stage6(pe_working_set_t * data_set)
     gboolean integrity_lost = FALSE;
     action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
-    gboolean need_stonith = FALSE;
+    gboolean need_stonith = TRUE;
     GListPtr gIter = data_set->nodes;
 
     crm_trace("Processing fencing and shutdown cases");
 
-    if (is_set(data_set->flags, pe_flag_stonith_enabled)
-        && (is_set(data_set->flags, pe_flag_have_quorum)
-            || data_set->no_quorum_policy == no_quorum_ignore
-            || data_set->no_quorum_policy == no_quorum_suicide)) {
-        need_stonith = TRUE;
-    }
-
-    if (need_stonith && any_managed_resouces(data_set) == FALSE) {
+    if (any_managed_resouces(data_set) == FALSE) {
         crm_notice("Delaying fencing operations until there are resources to manage");
         need_stonith = FALSE;
     }
@@ -1297,7 +1290,7 @@ stage6(pe_working_set_t * data_set)
         }
 
         stonith_op = NULL;
-        if (node->details->unclean && need_stonith) {
+        if (need_stonith && node->details->unclean && pe_can_fence(data_set, node)) {
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
             stonith_op = pe_fence_op(node, NULL, data_set);

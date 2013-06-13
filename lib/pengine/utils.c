@@ -44,11 +44,22 @@ bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
     } else if (is_not_set(data_set->flags, pe_flag_have_stonith_resource)) {
         return FALSE; /* No devices */
 
-    } else if (is_not_set(data_set->flags, pe_flag_have_quorum)
-               && data_set->no_quorum_policy != no_quorum_ignore) {
-        return FALSE; /* No permission */
+    } else if (is_set(data_set->flags, pe_flag_have_quorum)) {
+        return TRUE;
+
+    } else if (data_set->no_quorum_policy == no_quorum_ignore) {
+        return TRUE;
+
+    } else if(node == NULL) {
+        return FALSE;
+
+    } else if(node->details->online) {
+        crm_notice("We can fence %s without quorum because they're in our membership", node->details->uname);
+        return TRUE;
     }
-    return TRUE;
+
+    crm_trace("Cannot fence %s", node->details->uname);
+    return FALSE;
 }
 
 node_t *
