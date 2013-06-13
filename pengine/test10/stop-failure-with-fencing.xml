@@ -1,0 +1,103 @@
+<cib epoch="16" num_updates="2669" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.7" cib-last-written="Wed Jun 12 15:15:06 2013" update-origin="pcmk-1" update-client="crmd" have-quorum="0" dc-uuid="101">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-2.1635.07e4208.git.el7-07e4208"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="101" uname="pcmk-1"/>
+      <node id="102" uname="pcmk-2"/>
+      <node id="103" uname="pcmk-3"/>
+      <node id="104" uname="pcmk-4"/>
+    </nodes>
+    <resources>
+      <clone id="dlm-clone">
+        <primitive class="systemd" id="dlm" type="dlm">
+          <instance_attributes id="dlm-instance_attributes"/>
+          <operations>
+            <op id="dlm-monitor-on-fail-fence" interval="60s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="dlm-clone-meta"/>
+      </clone>
+      <clone id="clvm-clone">
+        <primitive class="lsb" id="clvm" type="clvmd">
+          <instance_attributes id="clvm-instance_attributes"/>
+          <operations>
+            <op id="clvm-monitor-on-fail-fence" interval="60s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clvm-clone-meta">
+          <nvpair id="clvm-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ClusterIP-instance_attributes">
+          <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.200"/>
+          <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+        </instance_attributes>
+        <operations>
+          <op id="ClusterIP-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <instance_attributes id="Fencing-instance_attributes"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-clvm-clone-dlm-clone-INFINITY" rsc="clvm-clone" score="INFINITY" with-rsc="dlm-clone"/>
+      <rsc_colocation id="colocation-ClusterIP-clvm-clone-INFINITY" rsc="ClusterIP" score="INFINITY" with-rsc="clvm-clone"/>
+      <rsc_order first="dlm-clone" id="order-dlm-clone-clvm-clone-mandatory" then="clvm-clone"/>
+      <rsc_order first="clvm-clone" first-action="start" id="order-clvm-clone-ClusterIP-mandatory" then="ClusterIP" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="101" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="101">
+        <instance_attributes id="status-101">
+          <nvpair id="status-101-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="101">
+        <lrm_resources>
+          <lrm_resource id="dlm" type="dlm" class="systemd">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="4:0:7:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:7;4:0:7:c7361723-6772-4b78-b5c0-97b68496af47" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1371014128" last-rc-change="1371014128" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP_last_0" operation_key="ClusterIP_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="6:0:7:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:7;6:0:7:c7361723-6772-4b78-b5c0-97b68496af47" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1371014128" last-rc-change="1371014128" exec-time="57" queue-time="0" op-digest="22e31cb0cce67390eef00f0c516dd19f"/>
+          </lrm_resource>
+          <lrm_resource id="clvm" type="clvmd" class="lsb">
+            <lrm_rsc_op id="clvm_last_0" operation_key="clvm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="5:0:7:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:7;5:0:7:c7361723-6772-4b78-b5c0-97b68496af47" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1371014128" last-rc-change="1371014128" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="102" uname="pcmk-2" crmd="online" join="member" crm-debug-origin="do_update_resource" in_ccm="true" expected="member">
+      <lrm id="102">
+        <lrm_resources>
+          <lrm_resource id="dlm" type="dlm" class="systemd">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="5:2053:7:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:7;5:2053:7:c7361723-6772-4b78-b5c0-97b68496af47" call-id="5993" rc-code="7" op-status="0" interval="0" last-run="1371014532" last-rc-change="1371014532" exec-time="48" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvm" type="clvmd" class="lsb">
+            <lrm_rsc_op id="clvm_last_failure_0" operation_key="clvm_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:2616:0:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:5;10:2616:0:c7361723-6772-4b78-b5c0-97b68496af47" call-id="7655" rc-code="5" op-status="0" interval="0" last-run="1371014555" last-rc-change="1371014555" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ClusterIP" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ClusterIP_last_0" operation_key="ClusterIP_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:2053:7:c7361723-6772-4b78-b5c0-97b68496af47" transition-magic="0:7;7:2053:7:c7361723-6772-4b78-b5c0-97b68496af47" call-id="5997" rc-code="7" op-status="0" interval="0" last-run="1371014532" last-rc-change="1371014532" exec-time="42" queue-time="0" op-digest="22e31cb0cce67390eef00f0c516dd19f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="102">
+        <instance_attributes id="status-102">
+          <nvpair id="status-102-last-failure-clvm" name="last-failure-clvm" value="1371014555"/>
+          <nvpair id="status-102-fail-count-clvm" name="fail-count-clvm" value="INFINITY"/>
+          <nvpair id="status-102-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-102-shutdown" name="shutdown" value="1371014551"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="103" uname="pcmk-3" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+    <node_state id="104" uname="pcmk-4" crmd="offline" join="down" crm-debug-origin="do_state_transition"/>
+  </status>
+</cib>

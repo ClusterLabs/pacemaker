@@ -1,0 +1,29 @@
+
+Current cluster status:
+Node pcmk-3 (103): UNCLEAN (offline)
+Node pcmk-4 (104): UNCLEAN (offline)
+Online: [ pcmk-1 pcmk-2 ]
+
+ Clone Set: dlm-clone [dlm]
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ Clone Set: clvm-clone [clvm]
+     clvm	(lsb:clvmd):	Started pcmk-3 (unmanaged) FAILED 
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Node pcmk-3 (103): UNCLEAN (offline)
+Node pcmk-4 (104): UNCLEAN (offline)
+Online: [ pcmk-1 pcmk-2 ]
+
+ Clone Set: dlm-clone [dlm]
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ Clone Set: clvm-clone [clvm]
+     clvm	(lsb:clvmd):	Started pcmk-3 (unmanaged) FAILED 
+     Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
+

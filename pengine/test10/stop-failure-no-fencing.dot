@@ -1,0 +1,6 @@
+digraph "g" {
+"clvm-clone_stop_0" -> "clvm-clone_stopped_0" [ style = dashed]
+"clvm-clone_stop_0" [ style=dashed color="red" fontcolor="orange"]
+"clvm-clone_stopped_0" [ style=dashed color="red" fontcolor="orange"]
+"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
+}
