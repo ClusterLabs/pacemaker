@@ -295,7 +295,12 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
         crm_debug("%s - exited with rc=%d", prefix, exitcode);
     }
 
+    g_free(prefix);
+    prefix = g_strdup_printf("%s:%d:stderr", op->id, op->pid);
     crm_log_output(LOG_NOTICE, prefix, op->stderr_data);
+
+    g_free(prefix);
+    prefix = g_strdup_printf("%s:%d:stdout", op->id, op->pid);
     crm_log_output(LOG_DEBUG, prefix, op->stdout_data);
 
     g_free(prefix);
