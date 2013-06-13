@@ -7,6 +7,19 @@
 }
 
 {
+   Ignore bash
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:make_if_command
+   fun:yyparse
+   fun:parse_command
+   fun:read_command
+   fun:reader_loop
+   fun:main
+}
+
+{
    Ignore option parsing
    Memcheck:Leak
    fun:realloc
