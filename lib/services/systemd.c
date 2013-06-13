@@ -201,7 +201,7 @@ systemd_unit_property(const char *obj, const gchar * iface, const char *name)
     GVariant *_ret = NULL;
     char *output = NULL;
 
-    crm_info("Calling GetAll on %s", obj);
+    crm_trace("Calling GetAll on %s", obj);
     proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
 
     if (!proxy) {
@@ -218,7 +218,7 @@ systemd_unit_property(const char *obj, const gchar * iface, const char *name)
         g_object_unref(proxy);
         return NULL;
     }
-    crm_info("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string(_ret),
+    crm_debug("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string(_ret),
              g_variant_n_children(_ret));
 
     asv = g_variant_get_child_value(_ret, 0);
@@ -226,7 +226,7 @@ systemd_unit_property(const char *obj, const gchar * iface, const char *name)
 
     value = g_variant_lookup_value(asv, name, NULL);
     if (value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
-        crm_debug("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
+        crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
         output = g_variant_dup_string(value, NULL);
 
     } else {
@@ -443,7 +443,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
         char *state = systemd_unit_property(unit, BUS_NAME ".Unit", "ActiveState");
 
-        if (!g_strcmp0(state, "active")) {
+        if (g_strcmp0(state, "active") == 0) {
             op->rc = PCMK_EXECRA_OK;
         } else {
             op->rc = PCMK_EXECRA_NOT_RUNNING;
@@ -452,11 +452,11 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         free(state);
         goto cleanup;
 
-    } else if (!g_strcmp0(action, "start")) {
+    } else if (g_strcmp0(action, "start") == 0) {
         action = "StartUnit";
-    } else if (!g_strcmp0(action, "stop")) {
+    } else if (g_strcmp0(action, "stop") == 0) {
         action = "StopUnit";
-    } else if (!g_strcmp0(action, "restart")) {
+    } else if (g_strcmp0(action, "restart") == 0) {
         action = "RestartUnit";
     } else {
         op->rc = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
