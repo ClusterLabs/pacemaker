@@ -1,7 +1,13 @@
 [Unit]
 Description=Pacemaker High Availability Cluster Manager
+
+After=basic.target
 After=network.target
+After=corosync.service
+
+Requires=basic.target
 Requires=network.target
+Requires=corosync.service
 
 [Install]
 WantedBy=multi-user.target
