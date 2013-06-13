@@ -974,11 +974,23 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         remote_op_timeout(op);
 
     } else if(op->replies >= op->replies_expected || op->replies >= fencing_active_peers()) {
-        crm_info("None of the %d peers are capable of terminating %s for %s (%d)",
-                 op->replies, op->target, op->client_name, op->state);
+        int rc = -EHOSTUNREACH;
+
+        /* if the operation never left the query state,
+         * but we have all the expected replies, then no devices
+         * are available to execute the fencing operation. */
+        if (op->state == st_query) {
+           crm_info("None of the %d peers have devices capable of terminating %s for %s (%d)",
+                   op->replies, op->target, op->client_name, op->state);
+
+            rc = -ENODEV;
+        } else {
+           crm_info("None of the %d peers are capable of terminating %s for %s (%d)",
+                   op->replies, op->target, op->client_name, op->state);
+        }
 
         op->state = st_failed;
-        remote_op_done(op, NULL, -EHOSTUNREACH, FALSE);
+        remote_op_done(op, NULL, rc, FALSE);
 
     } else if (device) {
         crm_info("Waiting for additional peers capable of terminating %s with %s for %s.%.8s",
