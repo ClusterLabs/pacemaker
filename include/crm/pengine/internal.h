@@ -51,6 +51,8 @@ typedef struct notify_data_s {
 
 } notify_data_t;
 
+bool pe_can_fence(pe_working_set_t *data_set, node_t *node);
+
 int merge_weights(int w1, int w2);
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 void append_hashtable(gpointer key, gpointer value, gpointer user_data);

@@ -36,6 +36,21 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
+bool pe_can_fence(pe_working_set_t * data_set, node_t *node)
+{
+    if(is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+        return FALSE; /* Turned off */
+
+    } else if (is_not_set(data_set->flags, pe_flag_have_stonith_resource)) {
+        return FALSE; /* No devices */
+
+    } else if (is_not_set(data_set->flags, pe_flag_have_quorum)
+               && data_set->no_quorum_policy != no_quorum_ignore) {
+        return FALSE; /* No permission */
+    }
+    return TRUE;
+}
+
 node_t *
 node_copy(node_t * this_node)
 {

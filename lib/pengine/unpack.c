@@ -61,10 +61,10 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
             set_bit(rsc->flags, pe_rsc_failed);
         }
     } else if (node->details->unclean == FALSE) {
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
         } else {
-            crm_warn("Node %s is unclean %s", node->details->uname, reason);
+            crm_err("Node %s is unclean %s", node->details->uname, reason);
         }
         node->details->unclean = TRUE;
     }
@@ -1658,7 +1658,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             /* treat it as if it is still running
              * but also mark the node as unclean
              */
-            pe_fence_node(data_set, node, "to recover from resource failure(s)");
+            pe_fence_node(data_set, node, "because of resource failure(s)");
             break;
 
         case action_fail_standby:
@@ -2244,6 +2244,14 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         case PCMK_EXECRA_NOT_INSTALLED:
         case PCMK_EXECRA_INVALID_PARAM:
             effective_node = node;
+            if(pe_can_fence(data_set, node) == FALSE
+               && safe_str_eq(task, CRMD_ACTION_STOP)) {
+                /* If a stop fails and we can't fence, there's nothing else we can do */
+                pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
+                            rsc->id, task, lrmd_event_rc2str(actual_rc_i), actual_rc_i);
+                clear_bit(rsc->flags, pe_rsc_managed);
+                set_bit(rsc->flags, pe_rsc_block);
+            }
             /* fall through */
         case PCMK_EXECRA_NOT_CONFIGURED:
             failed = rsc;
