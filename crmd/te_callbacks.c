@@ -350,7 +350,7 @@ too_many_st_failures(void)
 }
 
 void
-reset_st_fail_count(const char *target)
+st_fail_count_reset(const char *target)
 {
     struct st_fail_rec *rec = NULL;
 
@@ -363,6 +363,26 @@ reset_st_fail_count(const char *target)
     }
 }
 
+static void
+st_fail_count_increment(const char *target)
+{
+    struct st_fail_rec *rec = NULL;
+
+    if (stonith_failures == NULL) {
+        stonith_failures =
+            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free);
+    }
+
+    rec = g_hash_table_lookup(stonith_failures, target);
+    if (rec) {
+        rec->count++;
+    } else {
+        rec = malloc(sizeof(struct st_fail_rec));
+        rec->count = 1;
+        g_hash_table_insert(stonith_failures, strdup(target), rec);
+    }
+}
+
 void
 tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
@@ -371,7 +391,6 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     int stonith_id = -1;
     int transition_id = -1;
     crm_action_t *action = NULL;
-    struct st_fail_rec *rec = NULL;
     int call_id = data->call_id;
     int rc = data->rc;
     char *userdata = data->userdata;
@@ -408,10 +427,6 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     }
 
     stop_te_timer(action->timer);
-    if (stonith_failures == NULL) {
-        stonith_failures =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free);
-    }
 
     if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -424,10 +439,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
                 send_stonith_update(action, target, uuid);
             }
         }
-        rec = g_hash_table_lookup(stonith_failures, target);
-        if (rec) {
-            rec->count = 0;
-        }
+        st_fail_count_reset(target);
 
     } else {
         const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
@@ -440,14 +452,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
 
-        rec = g_hash_table_lookup(stonith_failures, target);
-        if (rec) {
-            rec->count++;
-        } else {
-            rec = malloc(sizeof(struct st_fail_rec));
-            rec->count = 1;
-            g_hash_table_insert(stonith_failures, strdup(target), rec);
-        }
+        st_fail_count_increment(target);
     }
 
     update_graph(transition_graph, action);

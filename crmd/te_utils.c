@@ -127,7 +127,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
     if (st_event->result == pcmk_ok &&
         safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
-        reset_st_fail_count(st_event->target);
+        st_fail_count_reset(st_event->target);
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s for %s: %s (ref=%s) by client %s",
