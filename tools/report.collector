@@ -352,7 +352,7 @@ pkg_ver() {
     # for Linux .deb based systems
     case $pkg_mgr in
 	deb)
-	    dpkg-query -f '${Package} ${Version} ${Architecture}\n' -W
+	    dpkg-query -f '${Package} ${Version} ${Architecture}\n' -W | sort
 	    for pkg in $*; do
 		if dpkg-query -W $pkg 2>/dev/null ; then
 		    debug "Verifying installation of: $pkg"
@@ -362,7 +362,7 @@ pkg_ver() {
 	    done
 	    ;;
 	rpm)
-	    rpm -qa --qf '%{name} %{version}-%{release} - %{distribution} %{arch}\n'
+	    rpm -qa --qf '%{name} %{version}-%{release} - %{distribution} %{arch}\n' | sort
 	    for pkg in $*; do
 		if rpm -q $pkg >/dev/null 2>&1 ; then
 		    debug "Verifying installation of: $pkg"
