@@ -674,10 +674,11 @@ if __name__ == "__main__":
 
 		### verify resource temporary folder is created and used by heartbeat agents.  ###
 		test = self.new_test("rsc_tmp_dir", "Verify creation and use of rsc temporary state directory")
-		test.add_sys_cmd("ls", "@CRM_RSCTMP_DIR@")
+		test.add_sys_cmd("ls", "-al @CRM_RSCTMP_DIR@")
 		test.add_cmd("-c register_rsc -r test_rsc -P heartbeat -C ocf -T Dummy "
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" -t 3000")
 		test.add_cmd("-c exec -r test_rsc -a start -t 4000")
+		test.add_sys_cmd("ls", "-al @CRM_RSCTMP_DIR@")
 		test.add_sys_cmd("ls", "@CRM_RSCTMP_DIR@/Dummy-test_rsc.state")
 		test.add_cmd("-c exec -r test_rsc -a stop -t 4000")
 		test.add_cmd("-c unregister_rsc -r test_rsc -t 3000 "
