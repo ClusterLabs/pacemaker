@@ -298,6 +298,7 @@ crm_add_logfile(const char *filename)
 
     crm_notice("Additional logging available in %s", filename);
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
+    /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
 
     /* Enable callsites */
     crm_update_callsites();
