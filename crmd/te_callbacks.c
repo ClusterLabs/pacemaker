@@ -326,6 +326,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
 GHashTable *stonith_failures = NULL;
 struct st_fail_rec {
     int count;
+    int last_rc;
 };
 
 gboolean
@@ -344,6 +345,9 @@ too_many_st_failures(void)
         if (value->count > 10) {
             crm_notice("Too many failures to fence %s (%d), giving up", key, value->count);
             return TRUE;
+        } else if (value->last_rc == -ENODEV) {
+            crm_notice("No devices found in cluster to fence %s, giving up", key);
+            return TRUE;
         }
     }
     return FALSE;
@@ -360,11 +364,12 @@ st_fail_count_reset(const char *target)
 
     if (rec) {
         rec->count = 0;
+        rec->last_rc = 0;
     }
 }
 
 static void
-st_fail_count_increment(const char *target)
+st_fail_count_increment(const char *target, int rc)
 {
     struct st_fail_rec *rec = NULL;
 
@@ -381,6 +386,8 @@ st_fail_count_increment(const char *target)
         rec->count = 1;
         g_hash_table_insert(stonith_failures, strdup(target), rec);
     }
+    rec->last_rc = rc;
+
 }
 
 void
@@ -452,7 +459,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
             abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
         }
 
-        st_fail_count_increment(target);
+        st_fail_count_increment(target, rc);
     }
 
     update_graph(transition_graph, action);
