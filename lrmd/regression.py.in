@@ -87,7 +87,7 @@ class Test:
 			self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
 
 		if self.verbose:
-			additional_args = additional_args + " -VVV "
+			additional_args = additional_args + " -VV "
 
 		self.lrmd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/lrmd-regression.log" % (self.daemon_location, additional_args)))
 
