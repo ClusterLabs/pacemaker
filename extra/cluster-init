@@ -143,9 +143,9 @@ while true; do
     esac
 done
 
-if [ x = "x$host_input" -a x = "x$CTS_GROUP" ]; then
+if [ x = "x$host_input" -a x = "x$cluster_name" ]; then
     if [ -d $HOME/.dsh/group ]; then
-        read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 CTS_GROUP
+        read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 cluster_name
     else
         read -p "Please specify a whitespace delimetered list of nodes you'd like to configure as a cluster? [] " -t 60 host_list
 
@@ -155,9 +155,9 @@ if [ x = "x$host_input" -a x = "x$CTS_GROUP" ]; then
     fi
 fi
 
-if [ ! -z $CTS_GROUP ]; then
-    host_input="-g $CTS_GROUP"
-    dsh_group=`echo $CTS_GROUP | sed s/[a-zA-Z]*//`
+if [ ! -z $cluster_name ]; then
+    host_input="-g $cluster_name"
+    dsh_group=`echo $cluster_name | sed s/[a-zA-Z]*//`
 fi
 
 if [ -z "$host_input" ]; then
