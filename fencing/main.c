@@ -579,7 +579,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             cib_device_update(gIter->data, data_set);
             if(rsc->variant == pe_clone || rsc->variant == pe_master) {
-                crm_trace("Only adding one copy of the clone %s", rsc->id);
+                crm_trace("Only processing one copy of the clone %s", rsc->id);
                 break;
             }
         }
