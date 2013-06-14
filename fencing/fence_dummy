@@ -1,0 +1,345 @@
+#!/usr/bin/python
+
+# The Following Agent Has Been Tested On:
+#
+# Virsh 0.3.3 on RHEL 5.2 with xen-3.0.3-51
+#
+
+import sys, time, random
+
+#BEGIN_VERSION_GENERATION
+RELEASE_VERSION="3.1.6"
+BUILD_DATE="(built Mon Oct 24 12:14:08 UTC 2011)"
+REDHAT_COPYRIGHT="Copyright (C) Red Hat, Inc. 2004-2010 All rights reserved."
+#END_VERSION_GENERATION
+
+all_opt = {
+	"help"    : {
+		"getopt" : "h",
+		"longopt" : "help",
+		"help" : "-h, --help                     Display this help and exit",
+		"required" : "0",
+		"shortdesc" : "Display help and exit",
+		"order" : 54 },
+	"version" : { 
+		"getopt" : "V",
+		"longopt" : "version",
+		"help" : "-V, --version                  Output version information and exit",
+		"required" : "0",
+		"shortdesc" : "Display version information and exit",
+		"order" : 53 },
+	"quiet"   : {
+		"getopt" : "q",
+		"help" : "",
+		"order" : 50 },
+	"verbose" : {
+		"getopt" : "v",
+		"longopt" : "verbose",
+		"help" : "-v, --verbose                  Verbose mode",
+		"required" : "0",
+		"shortdesc" : "Verbose mode",
+		"order" : 51 },
+	"debug" : {
+		"getopt" : "D:",
+		"longopt" : "debug-file", 
+		"help" : "-D, --debug-file=<debugfile>   Debugging to output file",
+		"required" : "0",
+		"shortdesc" : "Write debug information to given file",
+		"order" : 52 },
+	"delay" : {
+		"getopt" : "f:",
+		"longopt" : "delay",
+		"help" : "--delay <seconds>              Wait X seconds before fencing is started",
+		"required" : "0",
+		"shortdesc" : "Wait X seconds before fencing is started",
+		"default" : "0",
+		"order" : 200 },
+	"action" : {
+		"getopt" : "o:",
+		"longopt" : "action",
+		"help" : "-o, --action=<action>          Action: status, reboot (default), off or on",
+		"required" : "1",
+		"shortdesc" : "Fencing Action",
+		"default" : "reboot",
+		"order" : 1 },
+	"port" : {
+		"getopt" : "n:",
+		"longopt" : "plug",
+		"help" : "-n, --plug=<id>                Physical plug number on device or\n" + 
+                "                                        name of virtual machine",
+		"required" : "1",
+		"shortdesc" : "Physical plug number or name of virtual machine",
+		"order" : 1 },
+	"switch" : {
+		"getopt" : "s:",
+		"longopt" : "switch",
+		"help" : "-s, --switch=<id>              Physical switch number on device",
+		"required" : "0",
+		"shortdesc" : "Physical switch number on device",
+		"order" : 1 },
+	"uuid" : {
+		"getopt" : "U:",
+		"longopt" : "uuid",
+		"help" : "-U, --uuid                     UUID of the VM to fence.",
+		"required" : "0",
+		"shortdesc" : "The UUID of the virtual machine to fence.",
+		"order" : 1}
+}
+
+common_opt = [ "retry_on", "delay" ]
+
+def show_docs(options, docs = None):
+	device_opt = options["device_opt"]
+
+	if docs == None:
+		docs = { }
+		docs["shortdesc"] = "Fence agent"
+		docs["longdesc"] = ""
+	
+	## Process special options (and exit)
+	#####
+	if options.has_key("-h"): 
+		usage(device_opt)
+		sys.exit(0)
+
+	if options.has_key("-o") and options["-o"].lower() == "metadata":
+		metadata(device_opt, options, docs)
+		sys.exit(0)
+
+	if options.has_key("-V"):
+		print __main__.RELEASE_VERSION, __main__.BUILD_DATE
+		print __main__.REDHAT_COPYRIGHT
+		sys.exit(0)
+
+def usage(avail_opt):
+	global all_opt
+
+	print "Usage:"
+	print "\t" + os.path.basename(sys.argv[0]) + " [options]"
+	print "Options:"
+
+	sorted_list = [ (key, all_opt[key]) for key in avail_opt ]
+	sorted_list.sort(lambda x, y: cmp(x[1]["order"], y[1]["order"]))
+
+	for key, value in sorted_list:
+		if len(value["help"]) != 0:
+			print "   " + value["help"]
+
+def metadata(avail_opt, options, docs):
+	global all_opt
+
+	sorted_list = [ (key, all_opt[key]) for key in avail_opt ]
+	sorted_list.sort(lambda x, y: cmp(x[1]["order"], y[1]["order"]))
+
+	print "<?xml version=\"1.0\" ?>"
+	print "<resource-agent name=\"" + os.path.basename(sys.argv[0]) + "\" shortdesc=\"" + docs["shortdesc"] + "\" >"
+	print "<longdesc>" + docs["longdesc"] + "</longdesc>"
+	if docs.has_key("vendorurl"):
+		print "<vendor-url>" + docs["vendorurl"] + "</vendor-url>"
+	print "<parameters>"
+	for option, value in sorted_list:
+		if all_opt[option].has_key("shortdesc"):
+			print "\t<parameter name=\"" + option + "\" unique=\"0\" required=\"" + all_opt[option]["required"] + "\">"
+
+			default = ""
+			if all_opt[option].has_key("default"):
+				default = "default=\""+str(all_opt[option]["default"])+"\""
+			elif options.has_key("-" + all_opt[option]["getopt"][:-1]):
+				if options["-" + all_opt[option]["getopt"][:-1]]:
+					try:
+						default = "default=\"" + options["-" + all_opt[option]["getopt"][:-1]] + "\""
+					except TypeError:
+						## @todo/@note: Currently there is no clean way how to handle lists
+						## we can create a string from it but we can't set it on command line
+						default = "default=\"" + str(options["-" + all_opt[option]["getopt"][:-1]]) +"\""
+			elif options.has_key("-" + all_opt[option]["getopt"]):
+				default = "default=\"true\" "
+
+			mixed = all_opt[option]["help"]
+			## split it between option and help text
+			res = re.compile("^(.*--\S+)\s+", re.IGNORECASE | re.S).search(mixed)
+			if (None != res):
+				mixed = res.group(1)
+			mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
+			print "\t\t<getopt mixed=\"" + mixed + "\" />"
+
+			if all_opt[option]["getopt"].count(":") > 0:
+				print "\t\t<content type=\"string\" "+default+" />"
+			else:
+				print "\t\t<content type=\"boolean\" "+default+" />"
+				
+			print "\t\t<shortdesc lang=\"en\">" + all_opt[option]["shortdesc"] + "</shortdesc>"
+			print "\t</parameter>"
+	print "</parameters>"
+	print "<actions>"
+	if avail_opt.count("io_fencing") == 0:
+		print "\t<action name=\"on\" />"
+		print "\t<action name=\"off\" />"
+		print "\t<action name=\"reboot\" />"
+	else:
+		print "\t<action name=\"enable\" />"
+		print "\t<action name=\"disable\" />"	
+
+	print "\t<action name=\"status\" />"
+	print "\t<action name=\"list\" />"
+	print "\t<action name=\"monitor\" />"
+	print "\t<action name=\"metadata\" />"	
+	print "</actions>"
+	print "</resource-agent>"
+
+def process_input(avail_opt):
+	global all_opt
+	global common_opt
+
+	##
+	## Add options which are available for every fence agent
+	#####
+	avail_opt.extend(common_opt)
+
+	##
+	## Set standard environment
+	#####
+	os.putenv("LANG", "C")
+	os.putenv("LC_ALL", "C")
+
+	##
+	## Prepare list of options for getopt
+	#####
+	getopt_string = ""
+	longopt_list = [ ]
+	for k in avail_opt:
+		if all_opt.has_key(k):
+			getopt_string += all_opt[k]["getopt"]
+		else:
+			fail_usage("Parse error: unknown option '"+k+"'")
+
+		if all_opt.has_key(k) and all_opt[k].has_key("longopt"):
+			if all_opt[k]["getopt"].endswith(":"):
+				longopt_list.append(all_opt[k]["longopt"] + "=")
+			else:
+				longopt_list.append(all_opt[k]["longopt"])
+
+	## Compatibility layer
+	if avail_opt.count("module_name") == 1:
+		getopt_string += "n:"
+		longopt_list.append("plug=")
+	
+	##
+	## Read options from command line or standard input
+	#####
+	if len(sys.argv) > 1:
+		try:
+			opt, args = getopt.gnu_getopt(sys.argv[1:], getopt_string, longopt_list)
+		except getopt.GetoptError, error:
+			fail_usage("Parse error: " + error.msg)
+
+		## Transform longopt to short one which are used in fencing agents
+		#####
+		old_opt = opt
+		opt = { }
+		for o in dict(old_opt).keys():
+			if o.startswith("--"):
+				for x in all_opt.keys():
+					if all_opt[x].has_key("longopt") and "--" + all_opt[x]["longopt"] == o:
+						opt["-" + all_opt[x]["getopt"].rstrip(":")] = dict(old_opt)[o]
+			else:
+				opt[o] = dict(old_opt)[o]
+
+		## Compatibility Layer
+		#####
+		z = dict(opt)
+		if z.has_key("-T") == 1:
+			z["-o"] = "status"
+		if z.has_key("-n") == 1:
+			z["-m"] = z["-n"]
+
+		opt = z
+		##
+		#####
+	else:
+		opt = { }
+		name = ""
+		for line in sys.stdin.readlines():
+			line = line.strip()
+			if ((line.startswith("#")) or (len(line) == 0)):
+				continue
+
+			(name, value) = (line + "=").split("=", 1)
+			value = value[:-1]
+
+			## Compatibility Layer
+			######
+			if name == "option":
+				name = "action"
+
+			##
+			######
+			if avail_opt.count(name) == 0:
+				sys.stderr.write("Parse error: Ignoring unknown option '"+line+"'\n")
+				continue
+
+			if all_opt[name]["getopt"].endswith(":"):
+				opt["-"+all_opt[name]["getopt"].rstrip(":")] = value
+			elif ((value == "1") or (value.lower() == "yes") or (value.lower() == "on") or (value.lower() == "true")):
+				opt["-"+all_opt[name]["getopt"]] = "1"
+	return opt
+
+def atexit_handler():
+	try:
+		sys.stdout.close()
+		os.close(1)
+	except IOError:
+		sys.stderr.write("%s failed to close standard output\n"%(sys.argv[0]))
+		sys.exit(EC_GENERIC_ERROR)
+
+def main():
+    global all_opt
+    device_opt = [  "help", "version", "verbose", "debug", "action", "port",
+            "power_timeout", "random_sleep_range"]
+
+    all_opt["random_sleep_range"] = {
+        "getopt" : "R:",
+        "longopt" : "random_sleep_range",
+        "help" : "--random_sleep-range=<seconds>Issue a sleep between 1 and <seconds>. Used for testing.",
+        "order" : 1 }
+
+    all_opt["mode"] = {
+        "getopt" : "M:",
+        "longopt" : "mode",
+        "help" : "--mode=(pass|fail|random). Used for testing.",
+        "order" : 1 }
+
+    ## Defaults for fence agent
+    docs = { }
+    docs["shortdesc"] = "Dummy fence agent"
+    docs["longdesc"] = "fence_dummy is a fake Fencing agent which reports success based on it's mode (pass|fail|random) without doing anything."
+
+    atexit.register(atexit_handler)
+    options = process_input(device_opt)
+    show_docs(options, docs)
+
+    # random sleep for testing
+    if options.has_key("-f"):
+        val = int(options["-f"])
+        sys.stderr.write("delay sleep for %d seconds" % val)
+        time.sleep(val)
+
+    if options.has_key("-R"):
+        val = int(options["-R"])
+        ran = random.randint(1, val)
+        sys.stderr.write("random sleep for %d seconds" % ran)
+        time.sleep(ran)
+
+    if options.has_key("-o") and (options["-o"] == "monitor"):
+        sys.exit(0)
+    
+    if options.has_key("-M"):
+        if options["-M"] == "pass":
+            sys.exit(0)
+        elif options["-M"] == "fail":
+            sys.exit(1)
+
+    sys.exit(random.randint(0, 1))
+
+if __name__ == "__main__":
+    main()

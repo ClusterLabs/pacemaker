@@ -41,7 +41,6 @@ cts_DATA	=	README cts.supp
 cts_SCRIPTS	=	cluster_test		\
 			CTSlab.py		\
 			LSBDummy		\
-			$(top_srcdir)/fencing/fence_true \
-			$(top_srcdir)/fencing/fence_false
+			$(top_srcdir)/fencing/fence_dummy
 
 SUBDIRS	= benchmark

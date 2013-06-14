@@ -381,24 +381,24 @@ class CIB11(CibBase):
 
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
-                    ftype="fence_true"
-                    self.CM.install_helper(ftype, destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
+                    self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stt = Resource(self.Factory, "FencingPass", ftype, "stonith")
                     stt["pcmk_host_list"] = string.join(stt_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stt["power_timeout"] = "20"
+                    stt["delay"] = "20"
                     stt["random_sleep_range"] = "10"
+                    stf["mode"] = "pass"
                     stt.commit()
 
                 # Create a Dummy agent that always fails for levels-or
                 if len(stf_nodes):
-                    ftype="fence_false"
-                    self.CM.install_helper(ftype, destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
+                    self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stf = Resource(self.Factory, "FencingFail", ftype, "stonith")
                     stf["pcmk_host_list"] = string.join(stf_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stf["power_timeout"] = "20"
+                    stf["delay"] = "20"
                     stf["random_sleep_range"] = "30"
+                    stf["mode"] = "fail"
                     stf.commit()
 
                 # Now commit the levels themselves
