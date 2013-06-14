@@ -36,13 +36,14 @@ cluster-helper --list bullet $target
 
 if [ $kill != 0 ]; then
     echo "Cleaning processes"
-    cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd pacemaker-remoted ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
-
-    cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
 
     # Bah. Force systemd to actually look at the process and realize its dead"
-    cluster-helper $target -- "service corosync stop" &> /dev/null
-    cluster-helper $target -- "service pacemaker stop" &> /dev/null
+    cluster-helper $target -- "service corosync stop" &> /dev/null &
+    cluster-helper $target -- "service pacemaker stop" &> /dev/null &
+
+    cluster-helper $target -- "killall -q -9 corosync aisexec heartbeat pacemakerd pacemaker-remoted ccm stonithd ha_logd lrmd crmd pengine attrd pingd mgmtd cib fenced dlm_controld gfs_controld" &> /dev/null
+    cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
+
     if [ $kill == 2 ]; then
 	exit 0
     fi
