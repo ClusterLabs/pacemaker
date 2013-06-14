@@ -699,7 +699,7 @@ fi
   + High: cib: Prevent use-after-free for remote plaintext connections
   + High: crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat
 
-* Wed Oct 13 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-3
+* Tue Oct 13 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-3
 - Update the tarball from upstream to version 38cd629e5c3c
   + High: Core: Bug lf#2169 - Allow dtd/schema validation to be disabled
   + High: PE: Bug lf#2106 - Not all anonymous clone children are restarted after configuration change
