@@ -64,7 +64,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
         } else {
-            crm_err("Node %s is unclean %s", node->details->uname, reason);
+            crm_warn("Node %s is unclean %s", node->details->uname, reason);
         }
         node->details->unclean = TRUE;
     }
