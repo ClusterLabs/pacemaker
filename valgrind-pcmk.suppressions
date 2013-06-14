@@ -7,11 +7,11 @@
 }
 
 {
-   Ignore bash
+   Bash leak
    Memcheck:Leak
    fun:malloc
    fun:xmalloc
-   fun:make_if_command
+   fun:*
    fun:yyparse
    fun:parse_command
    fun:read_command
