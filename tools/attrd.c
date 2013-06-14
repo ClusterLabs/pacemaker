@@ -405,7 +405,7 @@ update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
 {
     attr_hash_entry_t *entry = value;
 
-    if (entry->value != NULL) {
+    if (entry->value != NULL || entry->stored_value != NULL) {
         attrd_timer_callback(value);
     }
 }
