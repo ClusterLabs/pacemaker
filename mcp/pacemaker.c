@@ -925,13 +925,6 @@ main(int argc, char **argv)
     mkdir(CRM_STATE_DIR, 0750);
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
-    /* Used by stonithd */
-    crm_build_path(HA_STATE_DIR "/heartbeat", 0755);
-    mcp_chown(HA_STATE_DIR "/heartbeat", pcmk_uid, pcmk_gid);
-
-    /* Used by RAs - Leave owned by root */
-    crm_build_path(CRM_RSCTMP_DIR, 0755);
-
     /* Used to store core files in */
     crm_build_path(CRM_CORE_DIR, 0775);
     mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
@@ -947,6 +940,8 @@ main(int argc, char **argv)
     /* Used to store the cluster configuration */
     crm_build_path(CRM_CONFIG_DIR, 0755);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
+
+    /* Resource agent paths are constructed by the lrmd */
 
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
 

@@ -122,6 +122,9 @@ BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
 BuildRequires: glib2-devel libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
 
+# Required for agent_config.h which specifies the correct scratch directory
+BuildRequires: resource-agents
+
 # We need reasonably recent versions of libqb
 BuildRequires: libqb-devel > 0.11.0
 Requires:      libqb > 0.11.0

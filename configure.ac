@@ -112,7 +112,7 @@ cc_supports_flag() {
 }
 
 try_extract_header_define() {
-	  AC_MSG_CHECKING(if $2 in $1 exists. If not defaulting to $3)
+	  AC_MSG_CHECKING(if $2 in $1 exists)
 	  Cfile=$srcdir/extract_define.$2.${$}
 	  printf "#include <stdio.h>\n" > ${Cfile}.c
 	  printf "#include <%s>\n" $1 >> ${Cfile}.c
@@ -120,14 +120,19 @@ try_extract_header_define() {
 	  printf "#ifdef %s\n" $2 >> ${Cfile}.c
 	  printf "printf(\"%%s\", %s);\n" $2 >> ${Cfile}.c
 	  printf "#endif \n return 0; }\n" >> ${Cfile}.c
-	  $CC $CFLAGS ${Cfile}.c -o ${Cfile}
-	  value=`${Cfile}`
+	  $CC $CFLAGS ${Cfile}.c -o ${Cfile} 2>/dev/null
+	  value=
+	  if test -x ${Cfile}; then
+	      value=`${Cfile} 2>/dev/null`
+	  fi
 	  if  test x"${value}" == x""; then
 	      value=$3
+	      AC_MSG_RESULT(default: $value)
+	  else
+	      AC_MSG_RESULT($value)
 	  fi
-	  AC_MSG_RESULT($value)
 	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
+	  rm -rf ${Cfile}.cc ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
 	}
 
 extract_header_define() {
@@ -1036,6 +1041,7 @@ AC_CHECK_HEADERS(heartbeat/hb_config.h)
 AC_CHECK_HEADERS(heartbeat/glue_config.h)
 AC_CHECK_HEADERS(stonith/stonith.h)
 AC_CHECK_HEADERS(agent_config.h)
+
 GLUE_HEADER=none
 HAVE_GLUE=0
 if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
@@ -1107,7 +1113,7 @@ AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daem
 AC_SUBST(CRM_DAEMON_DIR)
 
 HB_DAEMON_DIR=`try_extract_header_define $GLUE_HEADER HA_LIBHBDIR $libdir/heartbeat`
-AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
+AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location Heartbeat expects Pacemaker daemons to be in)
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
@@ -1115,7 +1121,7 @@ HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedi
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/heartbeat/rsctmp`
+CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/resource-agents`
 AC_MSG_CHECKING(Scratch dir for resource agents)
 AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
