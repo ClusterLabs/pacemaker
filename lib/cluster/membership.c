@@ -174,6 +174,18 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
     crm_status_callback = dispatch;
 }
 
+static void crm_dump_peer_hash(int level, const char *caller)
+{
+    GHashTableIter iter;
+    const char *id = NULL;
+    crm_node_t *node = NULL;
+
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &id, (gpointer *) &node)) {
+        do_crm_log(level, "%s: Node %u/%s = %p - %s", caller, node->id, node->uname, node, id);
+    }
+}
+
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
@@ -191,7 +203,7 @@ crm_get_peer(unsigned int id, const char *uname)
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(node->uname && strcasecmp(node->uname, uname) == 0) {
-                crm_trace("Name match: %s", node->uname);
+                crm_trace("Name match: %s = %p", node->uname, node);
                 by_name = node;
                 break;
             }
@@ -202,7 +214,7 @@ crm_get_peer(unsigned int id, const char *uname)
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(node->id == id) {
-                crm_trace("ID match: %u", node->id);
+                crm_trace("ID match: %u = %p", node->id, node);
                 by_id = node;
                 break;
             }
@@ -214,10 +226,11 @@ crm_get_peer(unsigned int id, const char *uname)
         /* Nothing to do if they match (both NULL counts) */
         crm_trace("Consistent: %p for %u/%s", by_id, id, uname);
 
-    } else if(by_name) {
+    } else if(by_id == NULL && by_name) {
         crm_trace("Only one: %p for %u/%s", by_name, id, uname);
 
         if(id && by_name->id) {
+            crm_dump_peer_hash(LOG_WARNING, __FUNCTION__);
             crm_crit("Node %u and %u share the same name '%s'",
                      id, by_name->id, uname);
             node = NULL; /* Create a new one */
@@ -226,10 +239,11 @@ crm_get_peer(unsigned int id, const char *uname)
             node = by_name;
         }
 
-    } else if(by_id) {
+    } else if(by_name == NULL && by_id) {
         crm_trace("Only one: %p for %u/%s", by_id, id, uname);
 
         if(uname && by_id->uname) {
+            crm_dump_peer_hash(LOG_WARNING, __FUNCTION__);
             crm_crit("Node '%s' and '%s' share the same cluster nodeid %u: assuming '%s' is correct",
                      uname, by_id->uname, id, uname);
         }
@@ -244,9 +258,13 @@ crm_get_peer(unsigned int id, const char *uname)
         /* Simple merge */
 
         /* Only corosync based clusters use nodeid's
-         * The functions that call crm_update_peer_state() only know nodeid so 'by_id' is authorative when merging
+         *
+         * The functions that call crm_update_peer_state() only know nodeid
+         * so 'by_id' is authorative when merging
+         *
          * Same for crm_update_peer_proc()
          */
+        crm_dump_peer_hash(LOG_DEBUG, __FUNCTION__);
 
         crm_info("Merging %p into %p", by_name, by_id);
         g_hash_table_remove(crm_peer_cache, by_name);
