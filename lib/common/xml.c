@@ -1614,6 +1614,9 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
             crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
         }
         free(new_digest);
+
+    } else if (result) {
+        purge_diff_markers(*new);       /* Purge now so the diff is ok */
     }
 
     return result;
