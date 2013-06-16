@@ -21,7 +21,7 @@ info "Test home is:\t$test_home"
 
 while true ; do
     case "$1" in
-        all) tests="pengine lrmd fencing cli"; shift;;
+        all) tests="pengine cli lrmd fencing"; shift;;
         pengine|lrmd|pacemaker_remote|fencing|cli) tests="$tests $1"; shift;;
         -V|--verbose) verbose="-V"; shift;;
         -v|--valgrind) valgrind="-v"; shift;;
@@ -32,7 +32,7 @@ while true ; do
 done
 
 if [ -z "$tests" ]; then
-    tests="pengine lrmd cli"
+    tests="pengine cli lrmd"
 fi
 
 failed=""
