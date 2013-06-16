@@ -309,7 +309,14 @@ findmsg() {
 
 	for d in $syslogdirs; do
 	    if [ -d $d ]; then
-		logfiles="$logfiles `grep -l -e "$pattern" $d/*`"
+		files=`find $d -type f -maxdepth 1`
+		for f in $files; do
+		    local cat=`find_decompressor $f`
+		    $cat $f | grep -l -e "$pattern"
+		    if [ $? = 0 ]; then
+		        logfiles="$logfiles $f"
+		    fi
+		done
 	    fi
 	done 2>/dev/null
 
