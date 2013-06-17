@@ -407,6 +407,8 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
     }
 }
 
+#define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
+
 gboolean
 systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 {
@@ -453,9 +455,38 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         goto cleanup;
 
     } else if (g_strcmp0(action, "start") == 0) {
+        FILE *file_strm = NULL;
+        char *override_dir = g_strdup_printf("%s/%s", SYSTEMD_OVERRIDE_ROOT, unit);
+        char *override_file = g_strdup_printf("%s/50-pacemaker.conf", override_dir);
+
         action = "StartUnit";
+        crm_build_path(override_dir, 0755);
+
+        file_strm = fopen(override_file, "w");
+        if (file_strm != NULL) {
+            int rc = fprintf(file_strm, "[Service]\nRestart=no");
+            if (rc < 0) {
+                crm_perror(LOG_ERR, "Cannot write to systemd override file %s: %s (%d)", override_file, pcmk_strerror(errno), errno);
+            }
+
+        } else {
+            crm_err("Cannot open systemd override file %s for writing: %s (%d)", override_file, pcmk_strerror(errno), errno);
+        }
+
+        if (file_strm != NULL) {
+            fflush(file_strm);
+            fclose(file_strm);
+        }
+        free(override_file);
+        free(override_dir);
+
     } else if (g_strcmp0(action, "stop") == 0) {
+        char *override_file = g_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
+
         action = "StopUnit";
+        unlink(override_file);
+        free(override_file);
+
     } else if (g_strcmp0(action, "restart") == 0) {
         action = "RestartUnit";
     } else {
