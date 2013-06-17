@@ -401,8 +401,8 @@ fi
 
 %pre -n %{name}-libs
 
-getent group %{gname} >/dev/null || groupadd -r %{gname}
-getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -s /sbin/nologin -c "cluster user" %{uname}
+getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
+getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
 
 %post -n %{name}-libs -p /sbin/ldconfig
