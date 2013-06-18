@@ -1391,7 +1391,6 @@ initiate_exit(void)
 
 extern int remote_fd;
 extern int remote_tls_fd;
-extern void terminate_cs_connection(void);
 
 void
 terminate_cib(const char *caller, gboolean fast)

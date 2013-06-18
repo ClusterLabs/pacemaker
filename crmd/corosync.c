@@ -41,8 +41,10 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_COROSYNC
 
-static gboolean
-crmd_ais_dispatch(int kind, const char *from, const char *data)
+static void
+crmd_cs_dispatch(cpg_handle_t handle,
+                         const struct cpg_name *groupName,
+                         uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     int seq = 0;
     xmlNode *xml = NULL;
@@ -50,10 +52,18 @@ crmd_ais_dispatch(int kind, const char *from, const char *data)
     crm_node_t *peer = NULL;
     enum crm_proc_flag flag = crm_proc_cpg;
 
+    uint32_t kind = 0;
+    const char *from = NULL;
+    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+
+    if(data == NULL) {
+        return;
+    }
     xml = string2xml(data);
     if (xml == NULL) {
         crm_err("Could not parse message content (%d): %.100s", kind, data);
-        return TRUE;
+        free(data);
+        return;
     }
 
     switch (kind) {
@@ -123,8 +133,8 @@ crmd_ais_dispatch(int kind, const char *from, const char *data)
             crm_err("Invalid message class (%d): %.100s", kind, data);
     }
 
+    free(data);
     free_xml(xml);
-    return TRUE;
 }
 
 static gboolean
@@ -148,7 +158,7 @@ crmd_quorum_destroy(gpointer user_data)
 }
 
 static void
-crmd_ais_destroy(gpointer user_data)
+crmd_cs_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
@@ -182,8 +192,9 @@ crm_connect_corosync(crm_cluster_t * cluster)
 
     if (is_openais_cluster()) {
         crm_set_status_callback(&peer_update_callback);
-        cluster->cs_dispatch = crmd_ais_dispatch;
-        cluster->destroy = crmd_ais_destroy;
+        cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
+        cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+        cluster->destroy = crmd_cs_destroy;
 
         rc = crm_cluster_connect(cluster);
     }

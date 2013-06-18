@@ -29,6 +29,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
+#include <crm/cluster/internal.h>
 #include <crm/cluster.h>
 
 #include <dirent.h>
@@ -43,22 +44,6 @@ const char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t *shutdown_trigger = NULL;
 const char *pid_file = "/var/run/pacemaker.pid";
-
-/* *INDENT-OFF* */
-enum crm_proc_flag {
-    crm_proc_none       = 0x00000001,
-    crm_proc_plugin        = 0x00000002,
-    crm_proc_lrmd       = 0x00000010,
-    crm_proc_cib        = 0x00000100,
-    crm_proc_crmd       = 0x00000200,
-    crm_proc_attrd      = 0x00001000,
-    crm_proc_stonithd   = 0x00002000,
-    crm_proc_pe         = 0x00010000,
-    crm_proc_te         = 0x00020000,
-    crm_proc_mgmtd      = 0x00040000,
-    crm_proc_stonith_ng = 0x00100000,
-};
-/* *INDENT-ON* */
 
 typedef struct pcmk_child_s {
     int pid;
@@ -539,8 +524,10 @@ update_process_clients(void)
 void
 update_process_peers(void)
 {
+    /* Do nothing for corosync-2 based clusters */
+
     char buffer[1024];
-    struct iovec iov;
+    struct iovec *iov;
     int rc = 0;
 
     memset(buffer, 0, SIZEOF(buffer));
@@ -552,11 +539,11 @@ update_process_peers(void)
         rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node proclist=\"%u\"/>", get_process_list());
     }
 
-    iov.iov_base = buffer;
-    iov.iov_len = rc + 1;
-
     crm_trace("Sending %s", buffer);
-    send_cpg_message(&iov);
+    iov = calloc(1, sizeof(struct iovec));
+    iov->iov_base = strdup(buffer);
+    iov->iov_len = rc + 1;
+    send_cpg_iov(iov);
 }
 
 gboolean
@@ -618,6 +605,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
     }
     return changed;
 }
+
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -779,6 +767,42 @@ init_children_processes(void)
     }
 }
 
+static void
+mcp_cpg_destroy(gpointer user_data)
+{
+    crm_err("Connection destroyed");
+    crm_exit(ENOTCONN);
+}
+
+static void
+mcp_cpg_deliver(cpg_handle_t handle,
+                 const struct cpg_name *groupName,
+                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+{
+    if (nodeid != local_nodeid) {
+        uint32_t procs = 0;
+        xmlNode *xml = string2xml(msg);
+        const char *uname = crm_element_value(xml, "uname");
+
+        crm_element_value_int(xml, "proclist", (int *)&procs);
+        /* crm_debug("Got proclist %.32x from %s", procs, uname); */
+        if (update_node_processes(nodeid, uname, procs)) {
+            update_process_clients();
+        }
+    }
+}
+
+static void
+mcp_cpg_membership(cpg_handle_t handle,
+                    const struct cpg_name *groupName,
+                    const struct cpg_address *member_list, size_t member_list_entries,
+                    const struct cpg_address *left_list, size_t left_list_entries,
+                    const struct cpg_address *joined_list, size_t joined_list_entries)
+{
+    /* Don't care about CPG membership, but we do want to broadcast our own presence */
+    update_process_peers();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -795,6 +819,7 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
     const char *facility = daemon_option("logfacility");
+    static crm_cluster_t cluster;
 
     setenv("LC_ALL", "C", 1);
     setenv("HA_LOGD", "no", 1);
@@ -951,12 +976,17 @@ main(int argc, char **argv)
         crm_exit(EIO);
     }
 
+    /* Allows us to block shutdown */
     if (cluster_connect_cfg(&local_nodeid) == FALSE) {
         crm_err("Couldn't connect to Corosync's CFG service");
         crm_exit(ENOPROTOOPT);
     }
 
-    if (cluster_connect_cpg() == FALSE) {
+    cluster.destroy = mcp_cpg_destroy;
+    cluster.cpg.cpg_deliver_fn = mcp_cpg_deliver;
+    cluster.cpg.cpg_confchg_fn = mcp_cpg_membership;
+
+    if(cluster_connect_cpg(&cluster) == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
         crm_exit(ENOPROTOOPT);
     }
@@ -982,7 +1012,7 @@ main(int argc, char **argv)
 
     g_main_destroy(mainloop);
 
-    cluster_disconnect_cpg();
+    cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
 
     crm_info("Exiting %s", crm_system_name);

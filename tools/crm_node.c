@@ -500,16 +500,23 @@ crm_add_member(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-static gboolean
-ais_membership_dispatch(int kind, const char *from, const char *data)
+static void
+ais_membership_dispatch(cpg_handle_t handle,
+                          const struct cpg_name *groupName,
+                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
+    uint32_t kind = 0;
+    const char *from = NULL;
+    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+
     switch (kind) {
         case crm_class_members:
         case crm_class_notify:
         case crm_class_quorum:
             break;
         default:
-            return TRUE;
+            free(data);
+            return;
 
             break;
     }
@@ -548,9 +555,10 @@ ais_membership_dispatch(int kind, const char *from, const char *data)
         fprintf(stdout, "\n");
     }
 
+    free(data);
     crm_exit(pcmk_ok);
 
-    return TRUE;
+    return;
 }
 #endif
 
@@ -695,7 +703,8 @@ try_openais(int command, enum cluster_type_e stack)
     static crm_cluster_t cluster;
 
     cluster.destroy = ais_membership_destroy;
-    cluster.cs_dispatch = ais_membership_dispatch;
+    cluster.cpg.cpg_deliver_fn = ais_membership_dispatch;
+    cluster.cpg.cpg_confchg_fn = NULL;
 
     if (init_cs_connection_once(&cluster)) {
 
@@ -703,7 +712,7 @@ try_openais(int command, enum cluster_type_e stack)
 
         switch (command) {
             case 'R':
-                send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
+                send_cluster_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
                 cib_remove_node(0, target_uname);
                 crm_exit(pcmk_ok);
 
@@ -713,13 +722,13 @@ try_openais(int command, enum cluster_type_e stack)
                 crm_exit(pcmk_ok);
 
             case 'q':
-                send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
+                send_cluster_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
                 break;
 
             case 'l':
             case 'p':
                 crm_info("Requesting the list of configured nodes");
-                send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+                send_cluster_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
                 break;
 
             case 'i':

@@ -915,7 +915,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (is_classic_ais_cluster()) {
         value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
         crm_debug("Sending expected-votes=%s to corosync", value);
-        send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
+        send_cluster_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
     }
 #endif
 

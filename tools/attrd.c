@@ -325,11 +325,19 @@ attrd_ha_callback(HA_Message * msg, void *private_data)
 #endif
 
 #if SUPPORT_COROSYNC
-static gboolean
-attrd_ais_dispatch(int kind, const char *from, const char *data)
+static void
+attrd_cs_dispatch(cpg_handle_t handle,
+                 const struct cpg_name *groupName,
+                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
+    uint32_t kind = 0;
     xmlNode *xml = NULL;
+    const char *from = NULL;
+    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
 
+    if(data == NULL) {
+        return;
+    }
     if (kind == crm_class_cluster) {
         xml = string2xml(data);
         if (xml == NULL) {
@@ -360,11 +368,11 @@ attrd_ais_dispatch(int kind, const char *from, const char *data)
         free_xml(xml);
     }
 
-    return TRUE;
+    free(data);
 }
 
 static void
-attrd_ais_destroy(gpointer unused)
+attrd_cs_destroy(gpointer unused)
 {
     if (need_shutdown) {
         /* we signed out, so this is expected */
@@ -537,8 +545,9 @@ main(int argc, char **argv)
 
 #if SUPPORT_COROSYNC
         if (is_openais_cluster()) {
-            cluster.destroy = attrd_ais_destroy;
-            cluster.cs_dispatch = attrd_ais_dispatch;
+            cluster.destroy = attrd_cs_destroy;
+            cluster.cpg.cpg_deliver_fn = attrd_cs_dispatch;
+            cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
         }
 #endif
 

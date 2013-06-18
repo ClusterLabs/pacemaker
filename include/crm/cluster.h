@@ -26,6 +26,10 @@
 #    include <ocf/oc_event.h>
 #  endif
 
+#  if SUPPORT_COROSYNC
+#    include <corosync/cpg.h>
+#  endif
+
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
 extern GHashTable *crm_peer_id_cache;
@@ -81,13 +85,18 @@ typedef struct crm_cluster_s {
     char *uname;
     uint32_t nodeid;
 
+    void (*destroy) (gpointer);
+
 #  if SUPPORT_HEARTBEAT
     ll_cluster_t *hb_conn;
     void (*hb_dispatch) (HA_Message * msg, void *private);
 #  endif
 
-     gboolean(*cs_dispatch) (int kind, const char *from, const char *data);
-    void (*destroy) (gpointer);
+#  if SUPPORT_COROSYNC
+    struct cpg_name group;
+    cpg_callbacks_t cpg;
+    cpg_handle_t cpg_handle;
+#  endif
 
 } crm_cluster_t;
 
@@ -138,8 +147,18 @@ gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
 
 #  if SUPPORT_COROSYNC
 extern int ais_fd_sync;
+uint32_t get_local_nodeid(cpg_handle_t handle);
+
+gboolean cluster_connect_cpg(crm_cluster_t *cluster);
+void cluster_disconnect_cpg(crm_cluster_t * cluster);
+
+void pcmk_cpg_membership(cpg_handle_t handle,
+                         const struct cpg_name *groupName,
+                         const struct cpg_address *member_list, size_t member_list_entries,
+                         const struct cpg_address *left_list, size_t left_list_entries,
+                         const struct cpg_address *joined_list, size_t joined_list_entries);
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
-gboolean send_ais_text(int class, const char *data, gboolean local,
+gboolean send_cluster_text(int class, const char *data, gboolean local,
                        crm_node_t * node, enum crm_ais_msg_types dest);
 #  endif
 
@@ -179,5 +198,8 @@ gboolean is_heartbeat_cluster(void);
 
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
+
+char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
+                        uint32_t *kind, const char **from);
 
 #endif

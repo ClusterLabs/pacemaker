@@ -518,7 +518,7 @@ do_dc_takeover(long long action,
 
 #if SUPPORT_COROSYNC
     if (is_classic_ais_cluster()) {
-        send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
+        send_cluster_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
     }
 #endif
 

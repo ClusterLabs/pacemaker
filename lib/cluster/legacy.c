@@ -31,12 +31,6 @@
 #  include <corosync/corodefs.h>
 #  include <corosync/cpg.h>
 #  include <corosync/cfg.h>
-cpg_handle_t pcmk_cpg_handle = 0;
-
-struct cpg_name pcmk_cpg_group = {
-    .length = 0,
-    .value[0] = 0,
-};
 #endif
 
 #if HAVE_CMAP
@@ -50,88 +44,8 @@ cman_handle_t pcmk_cman_handle = NULL;
 
 int ais_membership_timer = 0;
 gboolean ais_membership_force = FALSE;
-int ais_dispatch(gpointer user_data);
+int plugin_dispatch(gpointer user_data);
 
-#define cs_repeat(counter, max, code) do {		\
-	code;						\
-	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
-	    counter++;					\
-	    crm_debug("Retrying operation after %ds", counter);	\
-	    sleep(counter);				\
-	} else {                                        \
-            break;                                      \
-        }                                               \
-    } while(counter < max)
-
-enum crm_ais_msg_types
-text2msg_type(const char *text)
-{
-    int type = crm_msg_none;
-
-    CRM_CHECK(text != NULL, return type);
-    if (safe_str_eq(text, "ais")) {
-        type = crm_msg_ais;
-    } else if (safe_str_eq(text, "crm_plugin")) {
-        type = crm_msg_ais;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CIB)) {
-        type = crm_msg_cib;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CRMD)) {
-        type = crm_msg_crmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_DC)) {
-        type = crm_msg_crmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
-        type = crm_msg_te;
-    } else if (safe_str_eq(text, CRM_SYSTEM_PENGINE)) {
-        type = crm_msg_pe;
-    } else if (safe_str_eq(text, CRM_SYSTEM_LRMD)) {
-        type = crm_msg_lrmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
-        type = crm_msg_stonithd;
-    } else if (safe_str_eq(text, "stonith-ng")) {
-        type = crm_msg_stonith_ng;
-    } else if (safe_str_eq(text, "attrd")) {
-        type = crm_msg_attrd;
-
-    } else {
-        /* This will normally be a transient client rather than
-         * a cluster daemon.  Set the type to the pid of the client
-         */
-        int scan_rc = sscanf(text, "%d", &type);
-
-        if (scan_rc != 1 || type <= crm_msg_stonith_ng) {
-            /* Ensure its sane */
-            type = crm_msg_none;
-        }
-    }
-    return type;
-}
-
-char *
-get_ais_data(const AIS_Message * msg)
-{
-    int rc = BZ_OK;
-    char *uncompressed = NULL;
-    unsigned int new_size = msg->size + 1;
-
-    if (msg->is_compressed == FALSE) {
-        crm_trace("Returning uncompressed message data");
-        uncompressed = strdup(msg->data);
-
-    } else {
-        crm_trace("Decompressing message data");
-        uncompressed = calloc(1, new_size);
-
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, (char *)msg->data,
-                                        msg->compressed_size, 1, 0);
-
-        CRM_ASSERT(rc == BZ_OK);
-        CRM_ASSERT(new_size == msg->size);
-    }
-
-    return uncompressed;
-}
-
-#if SUPPORT_COROSYNC
 int ais_fd_sync = -1;
 int ais_fd_async = -1;          /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
@@ -159,9 +73,6 @@ get_ais_details(uint32_t * id, char **uname)
     header.error = CS_OK;
     header.id = crm_class_nodeid;
     header.size = sizeof(cs_ipc_header_response_t);
-
-    CRM_CHECK(id != NULL, return FALSE);
-    CRM_CHECK(uname != NULL, return FALSE);
 
     iov.iov_base = &header;
     iov.iov_len = header.size;
@@ -203,140 +114,7 @@ get_ais_details(uint32_t * id, char **uname)
     return TRUE;
 }
 
-static uint32_t get_local_nodeid(cpg_handle_t handle)
-{
-    int rc = CS_OK;
-    int retries = 0;
-    static uint32_t local_nodeid = 0;
-    cpg_handle_t local_handle = handle;
-    cpg_callbacks_t cb = { };
-
-    if(local_nodeid != 0) {
-        return local_nodeid;
-    }
-
-#if 0
-    /* Should not be necessary */
-    if(get_cluster_type() == pcmk_cluster_classic_ais) {
-        get_ais_details(&local_nodeid, NULL);
-        goto done;
-    }
-#endif
-
-    if(local_handle == 0) {
-        crm_trace("Creating connection");
-        cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
-    }
-
-    if (rc == CS_OK) {
-        retries = 0;
-        crm_trace("Performing lookup");
-        cs_repeat(retries, 5, rc = cpg_local_get(local_handle, &local_nodeid));
-    }
-
-    if (rc != CS_OK) {
-        crm_err("Could not get local node id from the CPG API: %s (%d)", ais_error2text(rc), rc);
-    }
-
-    if(handle != local_handle) {
-        crm_trace("Closing connection %u", local_handle);
-        cpg_finalize(local_handle);
-    }
-
-    crm_debug("Local nodeid is %u", local_nodeid);
-    return local_nodeid;
-}
-
-GListPtr cs_message_queue = NULL;
-int cs_message_timer = 0;
-
-static ssize_t crm_cs_flush(void);
-
-static gboolean
-crm_cs_flush_cb(gpointer data)
-{
-    cs_message_timer = 0;
-    crm_cs_flush();
-    return FALSE;
-}
-
-#define CS_SEND_MAX 200
-static ssize_t
-crm_cs_flush(void)
-{
-    int sent = 0;
-    ssize_t rc = 0;
-    int queue_len = 0;
-    static unsigned int last_sent = 0;
-
-    if (pcmk_cpg_handle == 0) {
-        crm_trace("Connection is dead");
-        return pcmk_ok;
-    }
-
-    queue_len = g_list_length(cs_message_queue);
-    if ((queue_len % 1000) == 0 && queue_len > 1) {
-        crm_err("CPG queue has grown to %d", queue_len);
-
-    } else if (queue_len == CS_SEND_MAX) {
-        crm_warn("CPG queue has grown to %d", queue_len);
-    }
-
-    if (cs_message_timer) {
-        /* There is already a timer, wait until it goes off */
-        crm_trace("Timer active %d", cs_message_timer);
-        return pcmk_ok;
-    }
-
-    while (cs_message_queue && sent < CS_SEND_MAX) {
-        AIS_Message *header = NULL;
-        struct iovec *iov = cs_message_queue->data;
-
-        errno = 0;
-        rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, iov, 1);
-
-        if (rc != CS_OK) {
-            break;
-        }
-
-        sent++;
-        header = iov->iov_base;
-        last_sent = header->id;
-        if (header->compressed_size) {
-            crm_trace("CPG message %d (%d compressed bytes) sent",
-                      header->id, header->compressed_size);
-        } else {
-            crm_trace("CPG message %d (%d bytes) sent: %.200s",
-                      header->id, header->size, header->data);
-        }
-
-        cs_message_queue = g_list_remove(cs_message_queue, iov);
-        free(iov[0].iov_base);
-        free(iov);
-    }
-
-    queue_len -= sent;
-    if (sent > 1 || cs_message_queue) {
-        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
-                 sent, queue_len, last_sent, ais_error2text(rc), rc);
-    } else {
-        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%d)",
-                  sent, queue_len, last_sent, ais_error2text(rc), rc);
-    }
-
-    if (cs_message_queue) {
-        uint32_t delay_ms = 100;
-        if(rc != CS_OK) {
-            /* Proportionally more if sending failed but cap at 1s */
-            delay_ms = QB_MIN(1000, CS_SEND_MAX + (10 * queue_len));
-        }
-        cs_message_timer = g_timeout_add(delay_ms, crm_cs_flush_cb, NULL);
-    }
-
-    return rc;
-}
-
-static bool
+bool
 send_plugin_text(int class, struct iovec *iov)
 {
     int rc = CS_OK;
@@ -386,154 +164,8 @@ send_plugin_text(int class, struct iovec *iov)
     return (rc == CS_OK);
 }
 
-gboolean
-send_ais_text(int class, const char *data,
-              gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
-{
-    static int msg_id = 0;
-    static int local_pid = 0;
-    static int local_name_len = 0;
-    static const char *local_name = NULL;
-
-    char *target = NULL;
-    struct iovec *iov;
-    AIS_Message *ais_msg = NULL;
-    enum cluster_type_e cluster_type = get_cluster_type();
-    enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
-
-    /* There are only 6 handlers registered to crm_lib_service in plugin.c */
-    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
-              return FALSE);
-
-    CRM_CHECK(dest != crm_msg_ais, return FALSE);
-
-    if(local_name == NULL) {
-        local_name = get_local_node_name();
-    }
-    if(local_name_len == 0 && local_name) {
-        local_name_len = strlen(local_name);
-    }
-
-    if (data == NULL) {
-        data = "";
-    }
-
-    if (local_pid == 0) {
-        local_pid = getpid();
-    }
-
-    if (sender == crm_msg_none) {
-        sender = local_pid;
-    }
-
-    ais_msg = calloc(1, sizeof(AIS_Message));
-
-    ais_msg->id = msg_id++;
-    ais_msg->header.id = class;
-    ais_msg->header.error = CS_OK;
-
-    ais_msg->host.type = dest;
-    ais_msg->host.local = local;
-
-    if (node) {
-        if (node->uname) {
-            target = strdup(node->uname);
-            ais_msg->host.size = strlen(node->uname);
-            memset(ais_msg->host.uname, 0, MAX_NAME);
-            memcpy(ais_msg->host.uname, node->uname, ais_msg->host.size);
-        } else {
-            target = g_strdup_printf("%u", node->id);
-        }
-        ais_msg->host.id = node->id;
-    } else {
-        target = strdup("all");
-    }
-
-    ais_msg->sender.id = 0;
-    ais_msg->sender.type = sender;
-    ais_msg->sender.pid = local_pid;
-    ais_msg->sender.size = local_name_len;
-    memset(ais_msg->sender.uname, 0, MAX_NAME);
-    memcpy(ais_msg->sender.uname, local_name, ais_msg->sender.size);
-
-    ais_msg->size = 1 + strlen(data);
-    ais_msg->header.size = sizeof(AIS_Message) + ais_msg->size;
-
-    if (ais_msg->size < CRM_BZ2_THRESHOLD) {
-        ais_msg = realloc(ais_msg, ais_msg->header.size);
-        memcpy(ais_msg->data, data, ais_msg->size);
-
-    } else {
-        char *compressed = NULL;
-        unsigned int new_size = 0;
-        char *uncompressed = strdup(data);
-
-        if (crm_compress_string(uncompressed, ais_msg->size, 0, &compressed, &new_size)) {
-
-            ais_msg->header.size = sizeof(AIS_Message) + new_size + 1;
-            ais_msg = realloc(ais_msg, ais_msg->header.size);
-            memcpy(ais_msg->data, compressed, new_size);
-            ais_msg->data[new_size] = 0;
-
-            ais_msg->is_compressed = TRUE;
-            ais_msg->compressed_size = new_size;
-
-        } else {
-            ais_msg = realloc(ais_msg, ais_msg->header.size);
-            memcpy(ais_msg->data, data, ais_msg->size);
-        }
-
-        free(uncompressed);
-        free(compressed);
-    }
-
-    iov = calloc(1, sizeof(struct iovec));
-    iov->iov_base = ais_msg;
-    iov->iov_len = ais_msg->header.size;
-
-    if (ais_msg->compressed_size) {
-        crm_trace("Queueing %s message %u to %s (%d compressed bytes)",
-                  cluster_type == pcmk_cluster_classic_ais?"plugin":"CPG",
-                  ais_msg->id, target, ais_msg->compressed_size);
-    } else {
-        crm_trace("Queueing %s message %u to %s (%d bytes)",
-                  cluster_type == pcmk_cluster_classic_ais?"plugin":"CPG",
-                  ais_msg->id, target, ais_msg->size);
-    }
-
-    /* The plugin is the only time we dont use CPG messaging */
-    if(cluster_type == pcmk_cluster_classic_ais) {
-        return send_plugin_text(class, iov);
-    }
-
-    cs_message_queue = g_list_append(cs_message_queue, iov);
-    crm_cs_flush();
-
-    free(target);
-    return TRUE;
-}
-
-gboolean
-send_ais_message(xmlNode * msg, gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
-{
-    gboolean rc = TRUE;
-    char *data = NULL;
-
-    if (is_classic_ais_cluster()) {
-        if (ais_fd_async < 0) {
-            crm_err("Not connected to AIS: %d", ais_fd_async);
-            return FALSE;
-        }
-    }
-
-    data = dump_xml_unformatted(msg);
-    rc = send_ais_text(crm_class_cluster, data, local, node, dest);
-    free(data);
-    return rc;
-}
-
 void
-terminate_cs_connection(void)
+terminate_cs_connection(crm_cluster_t *cluster)
 {
     crm_notice("Disconnecting from Corosync");
 
@@ -545,20 +177,8 @@ terminate_cs_connection(void)
         } else {
             crm_info("No plugin connection");
         }
-
-    } else {
-        if (pcmk_cpg_handle) {
-            crm_info("Disconnecting CPG");
-            if (cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group) == CS_OK) {
-                crm_info("Destroying CPG");
-                cpg_finalize(pcmk_cpg_handle);
-            }
-            pcmk_cpg_handle = 0;
-
-        } else {
-            crm_info("No CPG connection");
-        }
     }
+    cluster_disconnect_cpg(cluster);
 
 #  if SUPPORT_CMAN
     if (is_cman_cluster()) {
@@ -578,155 +198,66 @@ terminate_cs_connection(void)
     ais_fd_sync = -1;
 }
 
-static crm_node_t *
-crm_update_ais_node(xmlNode * member, long long seq)
+void
+plugin_handle_membership(AIS_Message *msg)
 {
-    const char *id_s = crm_element_value(member, "id");
-    const char *addr = crm_element_value(member, "addr");
-    const char *uname = crm_element_value(member, "uname");
-    const char *state = crm_element_value(member, "state");
-    const char *born_s = crm_element_value(member, "born");
-    const char *seen_s = crm_element_value(member, "seen");
-    const char *votes_s = crm_element_value(member, "votes");
-    const char *procs_s = crm_element_value(member, "processes");
+    if (msg->header.id == crm_class_members || msg->header.id == crm_class_quorum) {
+        xmlNode *member = NULL;
+        const char *value = NULL;
+        gboolean quorate = FALSE;
+        xmlNode *xml = string2xml(msg->data);
 
-    int votes = crm_int_helper(votes_s, NULL);
-    unsigned int id = crm_int_helper(id_s, NULL);
-    unsigned int procs = crm_int_helper(procs_s, NULL);
-
-    /* TODO: These values will contain garbage if version < 0.7.1 */
-    uint64_t born = crm_int_helper(born_s, NULL);
-    uint64_t seen = crm_int_helper(seen_s, NULL);
-
-    return crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
-}
-
-static gboolean
-ais_dispatch_message(AIS_Message * msg,
-                     gboolean(*dispatch) (int kind, const char *from, const char *data))
-{
-    char *data = NULL;
-    char *uncompressed = NULL;
-
-    xmlNode *xml = NULL;
-
-    CRM_ASSERT(msg != NULL);
-
-    crm_trace("Got new%s message (size=%d, %d, %d)",
-              msg->is_compressed ? " compressed" : "",
-              ais_data_len(msg), msg->size, msg->compressed_size);
-
-    data = msg->data;
-    if (msg->is_compressed && msg->size > 0) {
-        int rc = BZ_OK;
-        unsigned int new_size = msg->size + 1;
-
-        if (check_message_sanity(msg, NULL) == FALSE) {
-            goto badmsg;
+        if (xml == NULL) {
+            crm_err("Invalid membership update: %s", msg->data);
+            return;
         }
 
-        crm_trace("Decompressing message data");
-        uncompressed = calloc(1, new_size);
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, data, msg->compressed_size, 1, 0);
-
-        if (rc != BZ_OK) {
-            crm_err("Decompression failed: %d", rc);
-            goto badmsg;
+        value = crm_element_value(xml, "quorate");
+        CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:"); return);
+        if (crm_is_true(value)) {
+            quorate = TRUE;
         }
 
-        CRM_ASSERT(rc == BZ_OK);
-        CRM_ASSERT(new_size == msg->size);
+        value = crm_element_value(xml, "id");
+        CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id"); return);
+        crm_peer_seq = crm_int_helper(value, NULL);
 
-        data = uncompressed;
+        if (quorate != crm_have_quorum) {
+            crm_notice("Membership %s: quorum %s", value, quorate ? "acquired" : "lost");
+            crm_have_quorum = quorate;
 
-    } else if (check_message_sanity(msg, data) == FALSE) {
-        goto badmsg;
+        } else {
+            crm_info("Membership %s: quorum %s", value, quorate ? "retained" : "still lost");
+        }
 
-    } else if (safe_str_eq("identify", data)) {
-        int pid = getpid();
-        char *pid_s = crm_itoa(pid);
+        for (member = __xml_first_child(xml); member != NULL; member = __xml_next(member)) {
+            const char *id_s = crm_element_value(member, "id");
+            const char *addr = crm_element_value(member, "addr");
+            const char *uname = crm_element_value(member, "uname");
+            const char *state = crm_element_value(member, "state");
+            const char *born_s = crm_element_value(member, "born");
+            const char *seen_s = crm_element_value(member, "seen");
+            const char *votes_s = crm_element_value(member, "votes");
+            const char *procs_s = crm_element_value(member, "processes");
 
-        send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
-        free(pid_s);
-        goto done;
-    }
+            int votes = crm_int_helper(votes_s, NULL);
+            unsigned int id = crm_int_helper(id_s, NULL);
+            unsigned int procs = crm_int_helper(procs_s, NULL);
 
-    if (msg->header.id != crm_class_members) {
-        crm_get_peer(msg->sender.id, msg->sender.uname);
-    }
+            /* TODO: These values will contain garbage if version < 0.7.1 */
+            uint64_t born = crm_int_helper(born_s, NULL);
+            uint64_t seen = crm_int_helper(seen_s, NULL);
 
-    if (msg->header.id == crm_class_rmpeer) {
-        uint32_t id = crm_int_helper(data, NULL);
-
-        crm_info("Removing peer %s/%u", data, id);
-        reap_crm_member(id, NULL);
-        goto done;
-
-    } else if (is_classic_ais_cluster()) {
-        if (msg->header.id == crm_class_members || msg->header.id == crm_class_quorum) {
-            xmlNode *node = NULL;
-            const char *value = NULL;
-            gboolean quorate = FALSE;
-
-            xml = string2xml(data);
-            if (xml == NULL) {
-                crm_err("Invalid membership update: %s", data);
-                goto badmsg;
-            }
-
-            value = crm_element_value(xml, "quorate");
-            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:");
-                      goto badmsg);
-            if (crm_is_true(value)) {
-                quorate = TRUE;
-            }
-
-            value = crm_element_value(xml, "id");
-            CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id");
-                      goto badmsg);
-            crm_peer_seq = crm_int_helper(value, NULL);
-
-            if (quorate != crm_have_quorum) {
-                crm_notice("Membership %s: quorum %s", value, quorate ? "acquired" : "lost");
-                crm_have_quorum = quorate;
-
-            } else {
-                crm_info("Membership %s: quorum %s", value, quorate ? "retained" : "still lost");
-            }
-
-            for (node = __xml_first_child(xml); node != NULL; node = __xml_next(node)) {
-                crm_update_ais_node(node, crm_peer_seq);
-            }
+            crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
         }
     }
-
-    crm_trace("Payload: %s", data);
-    if (dispatch != NULL) {
-        dispatch(msg->header.id, msg->sender.uname, data);
-    }
-
-  done:
-    free(uncompressed);
-    free_xml(xml);
-    return TRUE;
-
-  badmsg:
-    crm_err("Invalid message (id=%d, dest=%s:%s, from=%s:%s.%d):"
-            " min=%d, total=%d, size=%d, bz2_size=%d",
-            msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
-            ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-            msg->sender.pid, (int)sizeof(AIS_Message),
-            msg->header.size, msg->size, msg->compressed_size);
-    goto done;
 }
 
 int
-ais_dispatch(gpointer user_data)
+plugin_dispatch(gpointer user_data)
 {
     int rc = CS_OK;
-    gboolean good = TRUE;
-
-    gboolean(*dispatch) (int kind, const char *from, const char *data) = user_data;
+    crm_cluster_t *cluster = (crm_cluster_t *) user_data;
 
     do {
         char *buffer = NULL;
@@ -743,20 +274,20 @@ ais_dispatch(gpointer user_data)
             /* NULL is a legal "no message afterall" value */
             return 0;
         }
-        good = ais_dispatch_message((AIS_Message *) buffer, dispatch);
+        /*
+        cpg_deliver_fn_t(cpg_handle_t handle, const struct cpg_name *group_name,
+                         uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len);
+        */
+        cluster->cpg.cpg_deliver_fn(0, NULL, 0, 0, buffer, 0);
         coroipcc_dispatch_put(ais_ipc_handle);
 
-    } while (good && ais_ipc_handle);
+    } while (ais_ipc_handle);
 
-    if (good) {
-        return 0;
-    }
-
-    return -1;
+    return 0;
 }
 
 static void
-ais_destroy(gpointer user_data)
+plugin_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
     ais_fd_sync = -1;
@@ -896,179 +427,6 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 }
 
 #  ifdef SUPPORT_COROSYNC
-gboolean(*pcmk_cpg_dispatch_fn) (int kind, const char *from, const char *data) = NULL;
-static bool cpg_evicted = FALSE;
-
-static int
-pcmk_cpg_dispatch(gpointer user_data)
-{
-    int rc = 0;
-
-    pcmk_cpg_dispatch_fn = user_data;
-    rc = cpg_dispatch(pcmk_cpg_handle, CS_DISPATCH_ALL);
-    if (rc != CS_OK) {
-        crm_err("Connection to the CPG API failed: %d", rc);
-        pcmk_cpg_handle = 0;
-        return -1;
-
-    } else if(cpg_evicted) {
-        crm_err("Evicted from CPG membership");
-        return -1;
-    }
-    return 0;
-}
-
-static void
-pcmk_cpg_deliver(cpg_handle_t handle,
-                 const struct cpg_name *groupName,
-                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    AIS_Message *ais_msg = (AIS_Message *) msg;
-    uint32_t local_nodeid = get_local_nodeid(handle);
-    const char *local_name = get_local_node_name();
-
-    if (ais_msg->sender.id > 0 && ais_msg->sender.id != nodeid) {
-        crm_err("Nodeid mismatch from %d.%d: claimed nodeid=%u", nodeid, pid, ais_msg->sender.id);
-        return;
-
-    } else if (ais_msg->host.id != 0 && (local_nodeid != ais_msg->host.id)) {
-        /* Not for us */
-        return;
-
-    } else if (ais_msg->host.size != 0 && safe_str_neq(ais_msg->host.uname, local_name)) {
-        /* Not for us */
-        return;
-    }
-
-    ais_msg->sender.id = nodeid;
-    if (ais_msg->sender.size == 0) {
-        crm_node_t *peer = crm_get_peer(nodeid, NULL);
-
-        if (peer == NULL) {
-            crm_err("Peer with nodeid=%u is unknown", nodeid);
-
-        } else if (peer->uname == NULL) {
-            crm_err("No uname for peer with nodeid=%u", nodeid);
-
-        } else {
-            crm_notice("Fixing uname for peer with nodeid=%u", nodeid);
-            ais_msg->sender.size = strlen(peer->uname);
-            memset(ais_msg->sender.uname, 0, MAX_NAME);
-            memcpy(ais_msg->sender.uname, peer->uname, ais_msg->sender.size);
-        }
-    }
-
-    ais_dispatch_message(ais_msg, pcmk_cpg_dispatch_fn);
-}
-
-static void
-pcmk_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *groupName,
-                    const struct cpg_address *member_list, size_t member_list_entries,
-                    const struct cpg_address *left_list, size_t left_list_entries,
-                    const struct cpg_address *joined_list, size_t joined_list_entries)
-{
-    int i;
-    gboolean found = FALSE;
-    static int counter = 0;
-    uint32_t local_nodeid = get_local_nodeid(handle);
-
-    for (i = 0; i < left_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(left_list[i].nodeid, NULL);
-
-        crm_info("Left[%d.%d] %s.%u ", counter, i, groupName->value, left_list[i].nodeid);
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, OFFLINESTATUS);
-    }
-
-    for (i = 0; i < joined_list_entries; i++) {
-        crm_info("Joined[%d.%d] %s.%u ", counter, i, groupName->value, joined_list[i].nodeid);
-    }
-
-    for (i = 0; i < member_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
-
-        crm_info("Member[%d.%d] %s.%u ", counter, i, groupName->value, member_list[i].nodeid);
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-        if (local_nodeid == member_list[i].nodeid) {
-            found = TRUE;
-        }
-    }
-
-    if (!found) {
-        crm_err("We're not part of CPG group %s anymore!", groupName->value);
-        cpg_evicted = TRUE;
-    }
-
-    counter++;
-}
-
-cpg_callbacks_t cpg_callbacks = {
-    .cpg_deliver_fn = pcmk_cpg_deliver,
-    .cpg_confchg_fn = pcmk_cpg_membership,
-};
-#  endif
-
-static gboolean
-init_cpg_connection(crm_cluster_t * cluster)
-{
-#  ifdef SUPPORT_COROSYNC
-    int rc = -1;
-    int fd = 0;
-    int retries = 0;
-    crm_node_t *peer = NULL;
-
-    struct mainloop_fd_callbacks cpg_fd_callbacks = {
-        .dispatch = pcmk_cpg_dispatch,
-        .destroy = cluster->destroy,
-    };
-
-    cpg_evicted = FALSE;
-    strcpy(pcmk_cpg_group.value, crm_system_name);
-    pcmk_cpg_group.length = strlen(crm_system_name) + 1;
-
-    cs_repeat(retries, 30, rc = cpg_initialize(&pcmk_cpg_handle, &cpg_callbacks));
-    if (rc != CS_OK) {
-        crm_err("Could not connect to the Cluster Process Group API: %d\n", rc);
-        goto bail;
-    }
-
-    retries = 0;
-    cs_repeat(retries, 30, rc = cpg_local_get(pcmk_cpg_handle, (unsigned int *)&cluster->nodeid));
-    if (rc != CS_OK) {
-        crm_err("Could not get local node id from the CPG API");
-        goto bail;
-    }
-
-    retries = 0;
-    cs_repeat(retries, 30, rc = cpg_join(pcmk_cpg_handle, &pcmk_cpg_group));
-    if (rc != CS_OK) {
-        crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
-        goto bail;
-    }
-
-    rc = cpg_fd_get(pcmk_cpg_handle, &fd);
-    if (rc != CS_OK) {
-        crm_err("Could not obtain the CPG API connection: %d\n", rc);
-        goto bail;
-    }
-
-    mainloop_add_fd("corosync-cpg", G_PRIORITY_MEDIUM, fd, cluster->cs_dispatch, &cpg_fd_callbacks);
-
-  bail:
-    if (rc != CS_OK) {
-        cpg_finalize(pcmk_cpg_handle);
-        return FALSE;
-    }
-
-    peer = crm_get_peer(cluster->nodeid, NULL);
-    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
-
-#  else
-    crm_err("The Corosync CPG API is not supported in this build");
-    crm_exit(DAEMON_RESPAWN_STOP);
-#  endif
-    return TRUE;
-}
 
 gboolean
 init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
@@ -1086,9 +444,11 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     int pid = 0;
     char *pid_s = NULL;
     const char *name = NULL;
+    crm_node_t *peer = NULL;
+    enum crm_proc_flag proc = 0;
 
     struct mainloop_fd_callbacks ais_fd_callbacks = {
-        .dispatch = ais_dispatch,
+        .dispatch = plugin_dispatch,
         .destroy = cluster->destroy,
     };
 
@@ -1099,7 +459,7 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     if (ais_ipc_handle) {
         coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
     } else {
-        crm_info("Connection to our AIS plugin (%d) failed: %s (%d)",
+        crm_info("Connection to our Corosync plugin (%d) failed: %s (%d)",
                  PCMK_SERVICE_ID, strerror(errno), errno);
         return FALSE;
     }
@@ -1108,7 +468,7 @@ init_cs_connection_classic(crm_cluster_t * cluster)
         rc = CS_ERR_LIBRARY;
     }
     if (rc != CS_OK) {
-        crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", PCMK_SERVICE_ID,
+        crm_info("Connection to our Corosync plugin (%d) failed: %s (%d)", PCMK_SERVICE_ID,
                  ais_error2text(rc), rc);
     }
 
@@ -1117,16 +477,15 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     }
 
     if (ais_fd_callbacks.destroy == NULL) {
-        ais_fd_callbacks.destroy = ais_destroy;
+        ais_fd_callbacks.destroy = plugin_destroy;
     }
 
-    mainloop_add_fd("corosync-plugin", G_PRIORITY_MEDIUM, ais_fd_async, cluster->cs_dispatch,
-                    &ais_fd_callbacks);
+    mainloop_add_fd("corosync-plugin", G_PRIORITY_MEDIUM, ais_fd_async, cluster, &ais_fd_callbacks);
     crm_info("AIS connection established");
 
     pid = getpid();
     pid_s = crm_itoa(pid);
-    send_ais_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
+    send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
     free(pid_s);
 
     cluster->nodeid = get_local_nodeid(0);
@@ -1141,6 +500,9 @@ init_cs_connection_classic(crm_cluster_t * cluster)
         crm_exit(ENOTUNIQ);
     }
 
+    proc = text2proc(crm_system_name);
+    peer = crm_get_peer(cluster->nodeid, cluster->uname);
+    crm_update_peer_proc(__FUNCTION__, peer, proc|crm_proc_plugin, ONLINESTATUS);
 
     return TRUE;
 }
@@ -1275,7 +637,7 @@ init_cs_connection_once(crm_cluster_t * cluster)
             }
             break;
         case pcmk_cluster_cman:
-            if (init_cpg_connection(cluster) == FALSE) {
+            if (cluster_connect_cpg(cluster) == FALSE) {
                 return FALSE;
             }
             cluster->uname = cman_node_name(0 /* CMAN_NODEID_US */ );

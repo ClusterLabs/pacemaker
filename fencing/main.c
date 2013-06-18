@@ -190,15 +190,25 @@ stonith_peer_hb_destroy(gpointer user_data)
 #endif
 
 #if SUPPORT_COROSYNC
-static gboolean
-stonith_peer_ais_callback(int kind, const char *from, const char *data)
+static void
+stonith_peer_ais_callback(cpg_handle_t handle,
+                          const struct cpg_name *groupName,
+                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
+    uint32_t kind = 0;
     xmlNode *xml = NULL;
+    const char *from = NULL;
+    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
 
+    if(data == NULL) {
+        return;
+    }
     if (kind == crm_class_cluster) {
         xml = string2xml(data);
         if (xml == NULL) {
-            goto bail;
+            crm_err("Invalid XML: '%.120s'", data);
+            free(data);
+            return;
         }
         crm_xml_add(xml, F_ORIG, from);
         /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
@@ -206,18 +216,14 @@ stonith_peer_ais_callback(int kind, const char *from, const char *data)
     }
 
     free_xml(xml);
-    return TRUE;
-
-  bail:
-    crm_err("Invalid XML: '%.120s'", data);
-    return TRUE;
-
+    free(data);
+    return;
 }
 
 static void
-stonith_peer_ais_destroy(gpointer user_data)
+stonith_peer_cs_destroy(gpointer user_data)
 {
-    crm_err("AIS connection terminated");
+    crm_err("Corosync connection terminated");
     stonith_shutdown(0);
 }
 #endif
@@ -1084,8 +1090,9 @@ main(int argc, char **argv)
 
         if (is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-            cluster.destroy = stonith_peer_ais_destroy;
-            cluster.cs_dispatch = stonith_peer_ais_callback;
+            cluster.destroy = stonith_peer_cs_destroy;
+            cluster.cpg.cpg_deliver_fn = stonith_peer_ais_callback;
+            cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
 #endif
         }
 

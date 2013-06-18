@@ -349,20 +349,24 @@ gboolean heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xml
 
 #  if SUPPORT_COROSYNC
 
+gboolean send_cpg_iov(struct iovec * iov);
+
 #    if SUPPORT_PLUGIN
 char *classic_node_name(uint32_t nodeid);
+void plugin_handle_membership(AIS_Message *msg);
+bool send_plugin_text(int class, struct iovec *iov);
 #    else
 char *corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid);
 #    endif
 
 gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent);
 
-gboolean send_ais_message(xmlNode * msg, gboolean local,
-                          crm_node_t * node, enum crm_ais_msg_types dest);
+gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
+                                 crm_node_t * node, enum crm_ais_msg_types dest);
 
 enum cluster_type_e find_corosync_variant(void);
 
-void terminate_cs_connection(void);
+void terminate_cs_connection(crm_cluster_t * cluster);
 gboolean init_cs_connection(crm_cluster_t * cluster);
 gboolean init_cs_connection_once(crm_cluster_t * cluster);
 #  endif

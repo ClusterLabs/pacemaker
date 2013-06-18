@@ -240,7 +240,7 @@ crm_cluster_disconnect(crm_cluster_t * cluster)
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
         crm_peer_destroy();
-        terminate_cs_connection();
+        terminate_cs_connection(cluster);
         crm_info("Disconnected from %s", type_str);
         return;
     }
@@ -274,7 +274,7 @@ send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode 
 
 #if SUPPORT_COROSYNC
     if (is_openais_cluster()) {
-        return send_ais_message(data, FALSE, node, service);
+        return send_cluster_message_cs(data, FALSE, node, service);
     }
 #endif
 #if SUPPORT_HEARTBEAT
