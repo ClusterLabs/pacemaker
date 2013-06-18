@@ -5,7 +5,7 @@
 # Virsh 0.3.3 on RHEL 5.2 with xen-3.0.3-51
 #
 
-import sys, time, random
+import sys, time, random, os, atexit, getopt, re
 
 #BEGIN_VERSION_GENERATION
 RELEASE_VERSION="3.1.6"
@@ -42,14 +42,28 @@ all_opt = {
 	"debug" : {
 		"getopt" : "D:",
 		"longopt" : "debug-file", 
-		"help" : "-D, --debug-file=<debugfile>   Debugging to output file",
+		"help" : "-D, --debug-file=[debugfile]   Debugging to output file",
 		"required" : "0",
 		"shortdesc" : "Write debug information to given file",
 		"order" : 52 },
+	"random_sleep_range": {
+		"getopt" : "R:",
+		"required" : "0",
+		"longopt" : "random_sleep_range",
+		"help" : "--random_sleep-range=[seconds] Issue a sleep between 1 and [seconds]. Used for testing.",
+		"shortdesc" : "Issue a sleep between 1 and [seconds]",
+		"order" : 1 },
+	"mode": {
+		"getopt" : "M:",
+		"longopt" : "mode",
+		"required" : "0",
+		"help" : "--mode=(pass|fail|random). Used for testing.",
+		"shortdesc" : "Should operations always pass, always fail or fail at random",
+		"order" : 1 },
 	"delay" : {
 		"getopt" : "f:",
 		"longopt" : "delay",
-		"help" : "--delay <seconds>              Wait X seconds before fencing is started",
+		"help" : "--delay [seconds]              Wait X seconds before fencing is started",
 		"required" : "0",
 		"shortdesc" : "Wait X seconds before fencing is started",
 		"default" : "0",
@@ -57,7 +71,7 @@ all_opt = {
 	"action" : {
 		"getopt" : "o:",
 		"longopt" : "action",
-		"help" : "-o, --action=<action>          Action: status, reboot (default), off or on",
+		"help" : "-o, --action=[action]          Action: status, reboot (default), off or on",
 		"required" : "1",
 		"shortdesc" : "Fencing Action",
 		"default" : "reboot",
@@ -65,7 +79,7 @@ all_opt = {
 	"port" : {
 		"getopt" : "n:",
 		"longopt" : "plug",
-		"help" : "-n, --plug=<id>                Physical plug number on device or\n" + 
+		"help" : "-n, --plug=[id]                Physical plug number on device or\n" + 
                 "                                        name of virtual machine",
 		"required" : "1",
 		"shortdesc" : "Physical plug number or name of virtual machine",
@@ -73,7 +87,7 @@ all_opt = {
 	"switch" : {
 		"getopt" : "s:",
 		"longopt" : "switch",
-		"help" : "-s, --switch=<id>              Physical switch number on device",
+		"help" : "-s, --switch=[id]              Physical switch number on device",
 		"required" : "0",
 		"shortdesc" : "Physical switch number on device",
 		"order" : 1 },
@@ -85,8 +99,6 @@ all_opt = {
 		"shortdesc" : "The UUID of the virtual machine to fence.",
 		"order" : 1}
 }
-
-common_opt = [ "retry_on", "delay" ]
 
 def show_docs(options, docs = None):
 	device_opt = options["device_opt"]
@@ -189,12 +201,6 @@ def metadata(avail_opt, options, docs):
 
 def process_input(avail_opt):
 	global all_opt
-	global common_opt
-
-	##
-	## Add options which are available for every fence agent
-	#####
-	avail_opt.extend(common_opt)
 
 	##
 	## Set standard environment
@@ -290,24 +296,11 @@ def atexit_handler():
 		os.close(1)
 	except IOError:
 		sys.stderr.write("%s failed to close standard output\n"%(sys.argv[0]))
-		sys.exit(EC_GENERIC_ERROR)
+		sys.exit(1)
 
 def main():
     global all_opt
-    device_opt = [  "help", "version", "verbose", "debug", "action", "port",
-            "power_timeout", "random_sleep_range"]
-
-    all_opt["random_sleep_range"] = {
-        "getopt" : "R:",
-        "longopt" : "random_sleep_range",
-        "help" : "--random_sleep-range=<seconds>Issue a sleep between 1 and <seconds>. Used for testing.",
-        "order" : 1 }
-
-    all_opt["mode"] = {
-        "getopt" : "M:",
-        "longopt" : "mode",
-        "help" : "--mode=(pass|fail|random). Used for testing.",
-        "order" : 1 }
+    device_opt = [ "help", "version", "verbose", "debug", "action", "port", "mode", "random_sleep_range"]
 
     ## Defaults for fence agent
     docs = { }
@@ -316,6 +309,7 @@ def main():
 
     atexit.register(atexit_handler)
     options = process_input(device_opt)
+    options["device_opt"] = device_opt
     show_docs(options, docs)
 
     # random sleep for testing
