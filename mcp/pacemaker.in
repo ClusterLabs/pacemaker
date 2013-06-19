@@ -111,6 +111,7 @@ cman_pre_start()
     pid=$(pidof corosync 2>/dev/null)
     if [ $? -ne 0 ]; then
 	service cman start
+	sleep 2
     fi
 }
 
