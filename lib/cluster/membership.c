@@ -125,7 +125,7 @@ crm_active_peers(void)
     return count;
 }
 
-void
+static void
 destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;

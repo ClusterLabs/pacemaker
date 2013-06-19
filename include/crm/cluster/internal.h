@@ -381,6 +381,8 @@ enum crm_quorum_source {
     crm_quorum_pacemaker,
 };
 
+int get_corosync_id(int id, const char *uuid);
+char *get_corosync_uuid(crm_node_t *peer);
 enum crm_quorum_source get_quorum_source(void);
 
 void crm_update_peer_proc(const char *source, crm_node_t * peer, uint32_t flag, const char *status);

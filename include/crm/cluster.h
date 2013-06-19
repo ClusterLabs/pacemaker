@@ -32,7 +32,6 @@
 
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
-extern GHashTable *crm_peer_id_cache;
 extern unsigned long long crm_peer_seq;
 
 #  ifndef CRM_SERVICE
@@ -77,8 +76,6 @@ typedef struct crm_peer_node_s {
 
 void crm_peer_init(void);
 void crm_peer_destroy(void);
-char *get_corosync_uuid(crm_node_t *peer);
-int get_corosync_id(int id, const char *uuid);
 
 typedef struct crm_cluster_s {
     char *uuid;
@@ -130,8 +127,6 @@ enum crm_ais_msg_types {
 
 gboolean send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
-
-void destroy_crm_node(gpointer /* crm_node_t* */ data);
 
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
