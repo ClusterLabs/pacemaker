@@ -237,7 +237,7 @@ if __name__ == '__main__':
                Environment["DoFencing"]=1
            elif args[i+1] == "0" or args[i+1] == "no":
                Environment["DoFencing"]=0
-           elif args[i+1] == "rhcs":
+           elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
@@ -466,7 +466,7 @@ if __name__ == '__main__':
         Environment["use_logd"] = 0
 
     elif Environment["Stack"] == "corosync" or Environment["Stack"] == "cs" or Environment["Stack"] == "mcp":
-        Environment["Stack"]    = "corosync"
+        Environment["Stack"]    = "corosync 2.x"
         Environment['CMclass']  = crm_mcp
         Environment["use_logd"] = 0
 

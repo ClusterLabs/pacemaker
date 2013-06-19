@@ -267,12 +267,12 @@ class crm_whitetank(crm_ais):
         aisexec_ignore = [
                     "error: ais_dispatch: Receiving message .* failed",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "cib.*error: cib_ais_destroy: AIS connection terminated",
+                    "cib.*error: cib_cs_destroy: AIS connection terminated",
                     #"crmd.*error: crm_ais_destroy: AIS connection terminated",
                     "crmd.* Could not recover from internal error",
                     "crmd.*I_TERMINATE.*do_recover",
-                    "attrd.*attrd_ais_destroy: Lost connection to OpenAIS service!",
-                    "stonithd.*error: AIS connection terminated",
+                    "attrd.*attrd_cs_destroy: Lost connection to Corosync service!",
+                    "stonithd.*error: Corosync connection terminated",
             ]
 
         aisexec_ignore.extend(self.common_ignore)
@@ -329,9 +329,9 @@ class crm_cs_v0(crm_ais):
             r"crmd_cib_connection_destroys:",
             r"crmd.*error: do_recover: Action A_RECOVER .* not supported",
             r"error: do_log: FSA: Input I_TERMINATE.*do_recover",
-            r"error: cib_ais_destroy: Corosync connection lost!  Exiting.",
+            r"error: cib_cs_destroy: Corosync connection lost!  Exiting.",
             r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated...",
-            r"error: send_ais_text: Sending message .* via cpg: FAILED",
+            r"error: send_cluster_text: Sending message .* via cpg: FAILED",
 
             r"error: crmd_quorum_destroy: connection terminated",
             r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect.",
@@ -353,11 +353,11 @@ class crm_cs_v0(crm_ais):
 
         self.complist.append(Process(self, "corosync", pats = [
                     r"pacemakerd.*error: cfg_connection_destroy: Connection destroyed",
-                    r"pacemakerd.*error: cpg_connection_destroy: Connection destroyed",
-                    r"attrd_ais_destroy: Lost connection to Corosync service!",
-                    r"stonith_peer_ais_destroy: AIS connection terminated",
-                    r"cib_ais_destroy: Corosync connection lost!  Exiting.",
-                    r"crmd_ais_destroy: connection terminated",
+                    r"pacemakerd.*error: mcp_cpg_destroy: Connection destroyed",
+                    r"attrd_cs_destroy: Lost connection to Corosync service!",
+                    r"stonith_peer_cs_destroy: Corosync connection terminated",
+                    r"cib_cs_destroy: Corosync connection lost!  Exiting.",
+                    r"crmd_cs_destroy: connection terminated",
                     r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect",
                     r"pengine.*Scheduling Node .* for STONITH",
                     r"log_operation: Operation .* for host .* with device .* returned: 0",
