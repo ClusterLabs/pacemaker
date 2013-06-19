@@ -999,7 +999,7 @@ case $SUPPORT_GCOV in
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
 	AC_MSG_NOTICE(Old CFLAGS: $CFLAGS)
-	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g'`
+	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g' -e 's/-D_FORTIFY_SOURCE=.\ //g'`
 	CFLAGS="$CFLAGS -O0"
 	AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 
