@@ -32,6 +32,11 @@ if [ -f config.log ]; then
     eval $last
 else
     echo Now run ./configure
+    echo "Now run configure with any arguments (eg. --prefix) specific to your system"
+    if [ -e `which rpm` ]; then
+	echo "Suggested invocation:"
+	rpm --eval %{configure} | grep -v program-prefix
+    fi
 fi
 
 trap '' 0

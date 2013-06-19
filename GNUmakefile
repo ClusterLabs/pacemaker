@@ -61,11 +61,6 @@ COUNT           = $(shell expr 1 + $(LAST_COUNT))
 
 init:
 	./autogen.sh
-	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
-	if [ -e $(shell which rpm) ]; then				\
-		echo "Suggested invocation:"; 				\
-		rpm --eval %{configure} | grep -v program-prefix;	\
-	fi
 
 export:
 	rm -f $(PACKAGE)-dirty.tar.* $(PACKAGE)-tip.tar.* $(PACKAGE)-HEAD.tar.*
