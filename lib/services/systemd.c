@@ -477,6 +477,8 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
             fflush(file_strm);
             fclose(file_strm);
         }
+        systemd_daemon_reload(systemd_proxy, &error);
+        g_error_free(error); error = NULL;
         free(override_file);
         free(override_dir);
 
@@ -486,6 +488,8 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         action = "StopUnit";
         unlink(override_file);
         free(override_file);
+        systemd_daemon_reload(systemd_proxy, &error);
+        g_error_free(error); error = NULL;
 
     } else if (g_strcmp0(action, "restart") == 0) {
         action = "RestartUnit";
