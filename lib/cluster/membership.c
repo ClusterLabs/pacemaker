@@ -143,14 +143,6 @@ destroy_crm_node(gpointer data)
 void
 crm_peer_init(void)
 {
-    static gboolean initialized = FALSE;
-
-    if (initialized) {
-        return;
-    }
-    initialized = TRUE;
-
-    crm_peer_destroy();
     if (crm_peer_cache == NULL) {
         crm_peer_cache = g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_crm_node);
     }
