@@ -278,7 +278,7 @@ read_config(void)
 
 #if HAVE_CONFDB
     char *value = NULL;
-    confdb_handle_t config;
+    confdb_handle_t config = 0;
     confdb_handle_t top_handle = 0;
     hdb_handle_t local_handle;
     static confdb_callbacks_t callbacks = { };
@@ -287,7 +287,8 @@ read_config(void)
         rc = confdb_initialize(&config, &callbacks);
         if (rc != CS_OK) {
             retries++;
-            printf("Connection setup failed: %d.  Retrying in %ds\n", rc, retries);
+            printf("confdb connection setup failed: %s.  Retrying in %ds\n", ais_error2text(rc), retries);
+            crm_info("confdb connection setup failed: %s.  Retrying in %ds", ais_error2text(rc), retries);
             sleep(retries);
 
         } else {
@@ -304,8 +305,8 @@ read_config(void)
         rc = cmap_initialize(&local_handle);
         if (rc != CS_OK) {
             retries++;
-            printf("API connection setup failed: %s.  Retrying in %ds\n", cs_strerror(rc), retries);
-            crm_info("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
+            printf("cmap connection setup failed: %s.  Retrying in %ds\n", cs_strerror(rc), retries);
+            crm_info("cmap connection setup failed: %s.  Retrying in %ds", cs_strerror(rc), retries);
             sleep(retries);
 
         } else {
