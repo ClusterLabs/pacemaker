@@ -113,8 +113,8 @@ crmd_cs_dispatch(cpg_handle_t handle,
                 /* If we can still talk to our peer process on that node,
                  * then its also part of the corosync membership
                  */
-                crm_err("Recieving messages from a node we think is dead: %s[%d]", peer->uname,
-                        peer->id);
+                crm_warn("Recieving messages from a node we think is dead: %s[%d]", peer->uname,
+                         peer->id);
                 crm_update_peer_proc(__FUNCTION__, peer, flag, ONLINESTATUS);
             }
             crmd_ha_msg_filter(xml);

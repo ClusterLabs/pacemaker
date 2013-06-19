@@ -87,6 +87,7 @@ class crm_ais(crm_lha):
                 r"Unknown node -> we will not deliver message",
                 r"crm_write_blackbox",
                 r"pacemakerd.*Could not connect to Cluster Configuration Database API",
+                r"Recieving messages from a node we think is dead",
 
                 #r"crm_ipc_send:.*Request .* failed",
                 #r"crm_ipc_send:.*Sending to .* is disabled until pending reply is recieved",
