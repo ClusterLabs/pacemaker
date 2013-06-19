@@ -95,6 +95,10 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 static void
 crm_trigger_blackbox(int nsig)
 {
+    if(nsig == SIGTRAP) {
+        /* Turn it on if it wasn't already */
+        crm_enable_blackbox(nsig);
+    }
     crm_write_blackbox(nsig, NULL);
 }
 
@@ -343,15 +347,6 @@ crm_enable_blackbox(int nsig)
         crm_signal(SIGBUS,  crm_trigger_blackbox);
 
         crm_update_callsites();
-
-        /* Original meanings from signal(7)
-         *
-         * Signal       Value     Action   Comment
-         * SIGTRAP        5        Core    Trace/breakpoint trap
-         *
-         * Our usage is as similar as possible
-         */
-        mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
 
         blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
         qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
@@ -762,7 +757,17 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
             }
 #endif
         }
+
+        /* Original meanings from signal(7)
+         *
+         * Signal       Value     Action   Comment
+         * SIGTRAP        5        Core    Trace/breakpoint trap
+         * SIGUSR1     30,10,16    Term    User-defined signal 1
+         *
+         * Our usage is as similar as possible
+         */
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
+        mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
     }
 
     crm_xml_init(); /* Sets buffer allocation strategy */
