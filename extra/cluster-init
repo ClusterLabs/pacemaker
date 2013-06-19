@@ -294,10 +294,10 @@ esac
 
 case $DATE in
     [Yy][Ee][Ss]|[Yy])
-	now=`date`
 	for host in $host_list; do
 	    echo "Setting time on ${host}"
 	    scp /etc/localtime root@${host}:/etc
+	    now=`date`
 	    ssh -l root ${host} -- date -s "'$now'"
 	    echo ""
 	done
