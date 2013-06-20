@@ -164,10 +164,12 @@ mock-install-%:
 	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents
 
 mock-sh: mock-sh-$(MOCK_CFG)
+	echo "Done"
 
 mock-sh-%:
 	echo "Connecting"
 	mock --root=$* $(MOCK_OPTIONS) --shell
+	echo "Done"
 
 # eg. WITH="--with cman" make rpm
 mock-%:
