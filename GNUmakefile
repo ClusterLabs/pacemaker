@@ -94,27 +94,27 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
-	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
-	sed -i.sed s:corosynclib:libcorosync:g $@
-	sed -i.sed s:libexecdir}/lcrso:libdir}/lcrso:g $@
-	sed -i.sed 's:%{name}-libs:lib%{name}3:g' $@
-	sed -i.sed s:heartbeat-libs:heartbeat:g $@
-	sed -i.sed s:cluster-glue-libs:libglue:g $@
-	sed -i.sed s:libselinux-devel:automake:g $@
-	sed -i.sed s:lm_sensors-devel:automake:g $@
-	sed -i.sed s:bzip2-devel:libbz2-devel:g $@
-	sed -i.sed s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
-	sed -i.sed s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
-	sed -i.sed s:bcond_without\ publican:bcond_with\ publican:g $@
-	sed -i.sed s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
-	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
-	sed -i.sed s:libtool-ltdl-devel::g $@
-	sed -i.sed s:publican::g $@
-	sed -i.sed s:byacc::g $@
-	sed -i.sed s:without\ cman:with\ cman:g $@
-	sed -i.sed s:.*pacemaker.service.*::g $@
-	sed -i.sed s:global\ cs_major.*:global\ cs_major\ 1:g $@
-	sed -i.sed s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
+	sed -i "s@.*SYSTEMD_MACROS.*@$(shell cat systemd.macros)@g" $@
+	sed -i s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
+	sed -i s:corosynclib:libcorosync:g $@
+	sed -i s:libexecdir}/lcrso:libdir}/lcrso:g $@
+	sed -i 's:%{name}-libs:lib%{name}3:g' $@
+	sed -i s:heartbeat-libs:heartbeat:g $@
+	sed -i s:cluster-glue-libs:libglue:g $@
+	sed -i s:libselinux-devel:automake:g $@
+	sed -i s:lm_sensors-devel:automake:g $@
+	sed -i s:bzip2-devel:libbz2-devel:g $@
+	sed -i s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
+	sed -i s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
+	sed -i s:bcond_without\ publican:bcond_with\ publican:g $@
+	sed -i s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
+	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
+	sed -i s:libtool-ltdl-devel::g $@
+	sed -i s:publican::g $@
+	sed -i s:byacc::g $@
+	sed -i s:without\ cman:with\ cman:g $@
+	sed -i s:global\ cs_major.*:global\ cs_major\ 1:g $@
+	sed -i s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
 	@echo "Applied SUSE-specific modifications"
 
 # Works for all fedora based distros
@@ -137,13 +137,13 @@ srpm-%:	export $(PACKAGE)-%.spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -i.sed 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
-	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
-	sed -i.sed 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
+	sed -i 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
+	sed -i 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec
+	sed -i 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
+	sed -i 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
 	case $(TAG) in 								\
-		Pacemaker*) sed -i.sed 's/Version:.*/Version:\ $(shell echo $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;		\
-		*)          sed -i.sed 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;; 	\
+		Pacemaker*) sed -i 's/Version:.*/Version:\ $(shell echo $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;		\
+		*)          sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;; 	\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
@@ -296,7 +296,7 @@ indent:
 	git co HEAD crmd/fsa_proto.h lib/gnu
 
 rel-tags: tags
-	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
+	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
 ccc_analyzer=/usr/lib64/clang-analyzer/scan-build/ccc-analyzer
 

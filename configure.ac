@@ -957,6 +957,12 @@ dnl ========================================================================
 dnl    Profiling and GProf
 dnl ========================================================================
 
+case $SUPPORT_GCOV in
+     1|yes|true)
+	SUPPORT_PROFILING=1
+	;;
+esac
+
 case $SUPPORT_PROFILING in
      1|yes|true)
 	SUPPORT_PROFILING=1
@@ -966,41 +972,22 @@ case $SUPPORT_PROFILING in
 	#CFLAGS="$CFLAGS -pg"
 
 	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fno-omit-frame-pointer"
+	CFLAGS="$CFLAGS -fno-omit-frame-pointer -fprofile-arcs -ftest-coverage -fno-inline"
 	#CFLAGS="$CFLAGS -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 	dnl CFLAGS="$CFLAGS -fno-default-inline -fno-inline"
 
-	dnl Update features
-	PCMK_FEATURES="$PCMK_FEATURES gprof"
-	;;
-     *) SUPPORT_PROFILING=0;;
-esac
-AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for gprof profiling)
-
-case $SUPPORT_GCOV in
-     1|yes|true)
-	SUPPORT_GCOV=1
-
-        dnl Enable gprof
-	#LIBS="$LIBS -pg"
-	#CFLAGS="$CFLAGS -pg"
-
-	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -fno-inline"
-
-	dnl Turn off optimization so code coverage tool
-	dnl can get accurate line numbers
+	dnl Turn off optimization so code coverage tool can get accurate line numbers
 	AC_MSG_NOTICE(Old CFLAGS: $CFLAGS)
 	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g' -e 's/-D_FORTIFY_SOURCE=.\ //g'`
 	CFLAGS="$CFLAGS -O0"
 	AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 
 	dnl Update features
-	PCMK_FEATURES="$PCMK_FEATURES gcov"
+	PCMK_FEATURES="$PCMK_FEATURES profile"
 	;;
      *) SUPPORT_PROFILING=0;;
 esac
-AC_DEFINE_UNQUOTED(SUPPORT_GCOV, $SUPPORT_GCOV, Support for gcov coverage testing)
+AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for profiling)
 
 dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat / LibQB
