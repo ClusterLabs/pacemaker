@@ -8,13 +8,13 @@
 	<simpara>
 		<revhistory>
 			<revision>
-			  <revnumber>1</revnumber>
+			  <revnumber>1-0</revnumber>
 			  <date>Tue Mar 19 2013</date>
 			  <author><firstname>David</firstname><surname>Vossel</surname><email>dvossel@redhat.com</email></author>
 			  <revdescription><simplelist><member>Import from Pages.app</member></simplelist></revdescription>
 			</revision>
 			<revision>
-			  <revnumber>2</revnumber>
+			  <revnumber>2-0</revnumber>
 			  <date>Tue May 13 2013</date>
 			  <author><firstname>David</firstname><surname>Vossel</surname><email>dvossel@redhat.com</email></author>
 			  <revdescription><simplelist><member>Added Future Features Section</member></simplelist></revdescription>
