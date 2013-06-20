@@ -136,6 +136,9 @@ BuildRequires:  libgnutls-devel
 BuildRequires:  gnutls-devel
 %endif
 
+%if 0%{?suse_version} >= 1200
+BuildRequires: systemd-devel
+%endif
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl

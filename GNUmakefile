@@ -160,6 +160,8 @@ mock-install-%:
 	echo "Installing packages"
 	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents
 
+mock-sh: mock-sh-$(MOCK_CFG)
+
 mock-sh-%:
 	echo "Connecting"
 	mock --root=$* $(MOCK_OPTIONS) --shell

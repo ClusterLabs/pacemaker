@@ -27,7 +27,7 @@ initdir		 = $(INITDIR)
 init_SCRIPTS	 = pacemaker_remote
 sbin_PROGRAMS	 = pacemaker_remoted
 
-if HAVE_SYSTEMD
+if BUILD_SYSTEMD
 systemdunit_DATA = pacemaker_remote.service
 endif
 

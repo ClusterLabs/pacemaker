@@ -669,14 +669,6 @@ else
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
 
-if
-    $PKGCONFIG --exists systemd
-then
-    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
-    AC_SUBST(systemdunitdir)
-fi
-AM_CONDITIONAL(HAVE_SYSTEMD, test -n "$systemdunitdir" -a "x$systemdunitdir" != xno)
-
 #
 #	Where is dlopen?
 #
@@ -1192,13 +1184,24 @@ fi
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 
-if test $HAVE_gio = 1 -a "x${enable_systemd}" != xno; then
-   HAVE_systemd=1
-   PCMK_FEATURES="$PCMK_FEATURES systemd"
+if
+    $PKGCONFIG --exists systemd
+then
+    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
+    AC_SUBST(systemdunitdir)
+else
+    enable_systemd=no
 fi
+
+if test $HAVE_gio = 1 -a "x${enable_systemd}" != xno; then
+   if test -n "$systemdunitdir" -a "x$systemdunitdir" != xno; then
+      HAVE_systemd=1
+      PCMK_FEATURES="$PCMK_FEATURES systemd"
+   fi
+fi
+
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
-
 
 case $SUPPORT_NAGIOS in
      1|yes|true|try)
