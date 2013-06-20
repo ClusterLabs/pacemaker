@@ -272,6 +272,11 @@ docdir=%{pcmk_docdir} %{configure}                 \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
 
+%if 0%{?suse_version} >= 1200
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+%endif
+
 make %{_smp_mflags} V=1 docdir=%{pcmk_docdir} all
 
 %install
