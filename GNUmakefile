@@ -104,15 +104,11 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i s:libselinux-devel:automake:g $@
 	sed -i s:lm_sensors-devel:automake:g $@
 	sed -i s:bzip2-devel:libbz2-devel:g $@
-	sed -i s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
-	sed -i s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
 	sed -i s:bcond_without\ publican:bcond_with\ publican:g $@
-	sed -i s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
 	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	sed -i s:libtool-ltdl-devel::g $@
 	sed -i s:publican::g $@
 	sed -i s:byacc::g $@
-	sed -i s:without\ cman:with\ cman:g $@
 	sed -i s:global\ cs_major.*:global\ cs_major\ 1:g $@
 	sed -i s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
 	@echo "Applied SUSE-specific modifications"
