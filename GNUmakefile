@@ -94,7 +94,6 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
-	sed -i "s@.*SYSTEMD_MACROS.*@$(shell cat systemd.macros)@g" $@
 	sed -i s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i s:corosynclib:libcorosync:g $@
 	sed -i s:libexecdir}/lcrso:libdir}/lcrso:g $@
@@ -111,7 +110,15 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i s:byacc::g $@
 	sed -i s:global\ cs_major.*:global\ cs_major\ 1:g $@
 	sed -i s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
+	sed -i 's@%systemd_post pacemaker.service@if [ ZZZ -eq 1 ]; then systemctl preset pacemaker.service || : ; fi@' $@
+	sed -i 's@%systemd_postun_with_restart pacemaker.service@systemctl daemon-reload || : ; if [ ZZZ -ge 1 ]; then systemctl try-restart pacemaker.service || : ; fi@' $@
+	sed -i 's@%systemd_preun pacemaker.service@if [ ZZZ -eq 0 ]; then systemctl --no-reload disable pacemaker.service || : ; systemctl stop pacemaker.service || : ; fi@' $@
+	sed -i 's@%systemd_post pacemaker_remote.service@if [ ZZZ -eq 1 ]; then systemctl preset pacemaker_remote.service || : ; fi@' $@
+	sed -i 's@%systemd_postun_with_restart pacemaker_remote.service@systemctl daemon-reload || : ; if [ ZZZ -ge 1 ]; then systemctl try-restart pacemaker_remote.service || : ; fi@' $@
+	sed -i 's@%systemd_preun pacemaker_remote.service@if [ ZZZ -eq 0 ]; then systemctl --no-reload disable pacemaker_remote.service || : ; systemctl stop pacemaker_remote.service || : ; fi@' $@
+	sed -i "s@ZZZ@\o0441@g" $@
 	@echo "Applied SUSE-specific modifications"
+
 
 # Works for all fedora based distros
 $(PACKAGE)-%.spec: $(PACKAGE).spec.in

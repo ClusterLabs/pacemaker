@@ -16,8 +16,6 @@
 %global cs_minor %(pkg-config corosync --modversion  | awk -F . '{print $2}')
 %global rawhide  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
 
-# INSERT_SYSTEMD_MACROS_FOR_SUSE - See ./systemd.macros
-
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
 # to disable or enable specific features
