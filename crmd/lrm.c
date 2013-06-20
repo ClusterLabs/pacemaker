@@ -1929,6 +1929,7 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
 
     } else {
         crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);
+        send_direct_ack(NULL, NULL, rsc, op, op->rsc_id);
         goto cleanup;
     }
 
