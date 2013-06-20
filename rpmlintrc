@@ -1,5 +1,6 @@
 addFilter("E: non-standard-dir-perm .* 0750")
 addFilter("E: hardcoded-library-path in /usr/lib/ocf")
+addFilter("E: changelog-time-in-future")
 addFilter("W: spelling-error")
 addFilter("W: non-standard-uid .* hacluster")
 addFilter("W: non-standard-gid .* haclient")
