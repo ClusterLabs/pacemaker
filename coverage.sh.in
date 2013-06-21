@@ -1,5 +1,6 @@
 #!/bin/bash
 
+start=$PWD
 test_home=`dirname $0`
 sanitydir=@datadir@/@PACKAGE@/tests
 
@@ -27,7 +28,15 @@ else
     export GCOV_PREFIX_STRIP=4
     export GCOV_PREFIX=$GCOV_BASE
 
-    cd `rpm -ql pacemaker-debuginfo | grep include | head -n 1`/..
+    top=`find / -name crm_internal.h 2>/dev/null | grep debug | head -n 1`
+    if [ "x$top" = x ]; then
+	echo "Could not locate the pacemaker headers"
+	exit 1
+    fi
+
+    cd `dirname $top`
+    cd ..
+
     echo "Creating the directory structure in $GCOV_BASE from $PWD"
     # The .gcno files will already be there for sources,
     # but we still need to create the include/ subtree
@@ -39,7 +48,7 @@ else
     find . -type f -name "*.debug" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
 fi
 
-cd -
+cd $start
 lcov -d $GCOV_BASE -z
 
 # Run all active regression tests
@@ -50,3 +59,4 @@ lcov -d $GCOV_BASE -c -o pacemaker.info
 rm -rf html
 mkdir html
 genhtml -o html pacemaker.info
+ 

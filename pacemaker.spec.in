@@ -24,6 +24,9 @@
 # Build with/without support for profiling tools
 %bcond_with profiling
 
+# Include Build with/without support for performing coverage analysis
+%bcond_with coverage
+
 # We generate docs using Publican, Asciidoc and Inkscape, but they're not available everywhere
 %bcond_without doc
 
@@ -92,19 +95,19 @@ BuildRequires: bison byacc flex help2man gnutls-devel
 BuildRequires: systemd-devel
 %endif
 
-%if "%{?_vendor}" == "redhat"
-
 # If you want to build for unofficial installs of corosync-2 on RHEL < 7
 # or fedora < 17, remove all references to clusterlib-devel below
 
+%if 0%{?fedora} > 0
 %if 0%{?fedora} < 17
 BuildRequires: clusterlib-devel
 %endif
+%endif
 
+%if 0%{?rhel} > 0
 %if 0%{?rhel} < 7
 BuildRequires: clusterlib-devel
 %endif
-
 %endif
 
 Requires:      corosync
@@ -137,7 +140,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : stonithd doc profiling pre_release upstart_job
+  --with(out) : stonithd doc coverage profiling pre_release upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -254,6 +257,7 @@ find . -exec touch \{\} \;
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}                 \
         %{?with_profiling:   --with-profiling}     \
+        %{?with_coverage:    --with-coverage}      \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
@@ -301,7 +305,7 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
-%if %{with profiling}
+%if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
 find . -name '*.gcno' -type f | while read F ; do
@@ -520,7 +524,7 @@ exit 0
 %{_datadir}/pacemaker/tests
 %{_includedir}/pacemaker
 %{_libdir}/*.so
-%if %{with profiling}
+%if %{with coverage}
 %{_var}/lib/pacemaker
 %endif
 %{_libdir}/pkgconfig/*.pc
