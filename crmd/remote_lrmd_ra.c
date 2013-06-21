@@ -241,6 +241,31 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
+static void
+remote_init_cib_status(lrm_state_t *lrm_state)
+{
+    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    xmlNode *state = NULL;
+    int call_id = 0;
+    int call_opt = cib_quorum_override;
+
+    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
+        call_opt |= cib_scope_local;
+    }
+    state = create_xml_node(update, XML_CIB_TAG_STATE);
+
+    crm_xml_add(state, XML_NODE_IS_REMOTE, "true");
+    crm_xml_add(state, XML_ATTR_UUID,  lrm_state->node_name);
+    crm_xml_add(state, XML_ATTR_UNAME, lrm_state->node_name);
+    crm_xml_add(state, XML_ATTR_ORIGIN, __FUNCTION__);
+
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id != pcmk_ok) {
+        crm_debug("Failed to init status section for remote-node %s", lrm_state->node_name);
+    }
+    free_xml(update);
+}
+
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -293,6 +318,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
 
         } else {
+            /* make sure we have a clean status section to start with */
+            remote_init_cib_status(lrm_state);
+
             cmd->rc = PCMK_EXECRA_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
         }
