@@ -1010,7 +1010,7 @@ LIBQB_LOG=1
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 if
-   !pkg-config --atleast-version 0.13 libqb
+   ! pkg-config --atleast-version 0.13 libqb
 then
    AC_MSG_FAILURE(Version of libqb is too old: v0.13 or greater requried)
 fi
