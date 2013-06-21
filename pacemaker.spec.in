@@ -6,15 +6,13 @@
 %global upstream_version HEAD
 %global upstream_prefix ClusterLabs-pacemaker
 
-%global py_site %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
-
 # Turn off the auto compilation of python files not in the site-packages directory
 # Needed so that the -devel package is multilib compliant
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
-%global cs_major %(pkg-config corosync --modversion  | awk -F . '{print $1}')
-%global cs_minor %(pkg-config corosync --modversion  | awk -F . '{print $2}')
 %global rawhide  %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
+%global cs_version %(pkg-config corosync --modversion  | awk -F . '{print $1}')
+%global py_site %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
 
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
@@ -60,11 +58,11 @@ Group:         System Environment/Daemons
 Source0:       %{upstream_prefix}-%{upstream_version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
-Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-Requires:      python >= 2.4
+Requires:      resource-agents
+Requires:      python
 
 %if %{defined systemd_requires}
 %systemd_requires
@@ -72,12 +70,6 @@ Requires:      python >= 2.4
 
 %if 0%{?rhel} > 0
 ExclusiveArch: i686 x86_64
-%endif
-
-%if 0%{?suse_version}
-# Suse splits this off into a separate package
-Requires:      python-curses python-xml
-BuildRequires: python-curses python-xml
 %endif
 
 # Required for core functionality
@@ -94,29 +86,25 @@ Requires:      libqb > 0.11.0
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man
+BuildRequires: bison byacc flex help2man gnutls-devel
 
 %if %{defined _unitdir}
 BuildRequires: systemd-devel
 %endif
 
-%if 0%{?suse_version} >= 1100
-# Renamed since opensuse-11.0
-BuildRequires:  libgnutls-devel
-%else
-BuildRequires:  gnutls-devel
-%endif
+%if "%{?_vendor}" == "redhat"
 
-%if 0%{?fedora} > 0
+# If you want to build for unofficial installs of corosync-2 on RHEL < 7
+# or fedora < 17, remove all references to clusterlib-devel below
+
 %if 0%{?fedora} < 17
 BuildRequires: clusterlib-devel
 %endif
-%endif
 
-%if 0%{?rhel} > 0
 %if 0%{?rhel} < 7
 BuildRequires: clusterlib-devel
 %endif
+
 %endif
 
 Requires:      corosync
@@ -152,11 +140,11 @@ Available rpmbuild rebuild options:
   --with(out) : stonithd doc profiling pre_release upstart_job
 
 %package cli
-License:      GPLv2+ and LGPLv2+
-Summary:      Command line tools for controlling Pacemaker clusters
-Group:        System Environment/Daemons
-Requires:     %{name}-libs = %{version}-%{release}
-Requires:     perl-TimeDate
+License:       GPLv2+ and LGPLv2+
+Summary:       Command line tools for controlling Pacemaker clusters
+Group:         System Environment/Daemons
+Requires:      %{name}-libs = %{version}-%{release}
+Requires:      perl-TimeDate
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -167,9 +155,9 @@ to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
 %package -n %{name}-libs
-License:      GPLv2+ and LGPLv2+
-Summary:      Core Pacemaker libraries
-Group:        System Environment/Daemons
+License:       GPLv2+ and LGPLv2+
+Summary:       Core Pacemaker libraries
+Group:         System Environment/Daemons
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -179,10 +167,10 @@ The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
 %package -n %{name}-cluster-libs
-License:      GPLv2+ and LGPLv2+
-Summary:      Cluster Libraries used by Pacemaker
-Group:        System Environment/Daemons
-Requires:     %{name}-libs = %{version}-%{release}
+License:       GPLv2+ and LGPLv2+
+Summary:       Cluster Libraries used by Pacemaker
+Group:         System Environment/Daemons
+Requires:      %{name}-libs = %{version}-%{release}
 
 %description -n %{name}-cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -191,18 +179,18 @@ manager for Corosync, CMAN and/or Linux-HA.
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
-%package -n %{name}-remote
-License:      GPLv2+ and LGPLv2+
-Summary:      Pacemaker remote daemon for non-cluster nodes
-Group:        System Environment/Daemons
-Requires:     %{name}-libs = %{version}-%{release}
-Requires:     %{name}-cli = %{version}-%{release}
-Requires:     resource-agents
+%package remote
+License:       GPLv2+ and LGPLv2+
+Summary:       Pacemaker remote daemon for non-cluster nodes
+Group:         System Environment/Daemons
+Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-cli = %{version}-%{release}
+Requires:      resource-agents
 %if %{defined systemd_requires}
 %systemd_requires
 %endif
 
-%description -n %{name}-remote
+%description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Corosync, CMAN and/or Linux-HA.
 
@@ -211,15 +199,15 @@ which is capable of extending pacemaker functionality to remote
 nodes not running the full corosync/cluster stack.
 
 %package -n %{name}-libs-devel
-License:      GPLv2+ and LGPLv2+
-Summary:      Pacemaker development package
-Group:        Development/Libraries
-Requires:     %{name}-cts = %{version}-%{release}
-Requires:     %{name}-libs = %{version}-%{release}
-Requires:     %{name}-cluster-libs = %{version}-%{release}
-Requires:     libtool-ltdl-devel libqb-devel libuuid-devel
-Requires:     libxml2-devel libxslt-devel bzip2-devel glib2-devel
-Requires:     corosynclib-devel
+License:       GPLv2+ and LGPLv2+
+Summary:       Pacemaker development package
+Group:         Development/Libraries
+Requires:      %{name}-cts = %{version}-%{release}
+Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      libtool-ltdl-devel libqb-devel libuuid-devel
+Requires:      libxml2-devel libxslt-devel bzip2-devel glib2-devel
+Requires:      corosynclib-devel
 
 %description -n %{name}-libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -228,22 +216,22 @@ manager for Corosync, CMAN and/or Linux-HA.
 The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
-%package      cts
-License:      GPLv2+ and LGPLv2+
-Summary:      Test framework for cluster-related technologies like Pacemaker
-Group:        System Environment/Daemons
-Requires:     python
-Requires:     %{name}-libs = %{version}-%{release}
+%package       cts
+License:       GPLv2+ and LGPLv2+
+Summary:       Test framework for cluster-related technologies like Pacemaker
+Group:         System Environment/Daemons
+Requires:      python
+Requires:      %{name}-libs = %{version}-%{release}
 
-%description  cts
+%description   cts
 Test framework for cluster-related technologies like Pacemaker
 
-%package      doc
-License:      GPLv2+ and LGPLv2+
-Summary:      Documentation for Pacemaker
-Group:        Documentation
+%package       doc
+License:       GPLv2+ and LGPLv2+
+Summary:       Documentation for Pacemaker
+Group:         Documentation
 
-%description  doc
+%description   doc
 Documentation for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -439,10 +427,8 @@ exit 0
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
 
-%if 0%{?cs_major} < 2
-%if 0%{?cs_minor} < 8
+%if 0%{?cs_version} < 2
 %{_libexecdir}/lcrso/pacemaker.lcrso
-%endif
 %endif
 
 %if %{with upstart_job}
@@ -501,7 +487,7 @@ exit 0
 %doc COPYING.LIB
 %doc AUTHORS
 
-%files -n %{name}-remote
+%files remote
 %defattr(-,root,root)
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker

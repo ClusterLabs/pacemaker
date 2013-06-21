@@ -110,6 +110,10 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i s:byacc::g $@
 	sed -i s:global\ cs_major.*:global\ cs_major\ 1:g $@
 	sed -i s:global\ cs_minor.*:global\ cs_minor\ 4:g $@
+	sed -i s:gnutls-devel:libgnutls-devel:g $@
+	sed -i s:189:90:g $@
+	sed -i 's@python-devel@python-devel python-curses python-xml@' $@
+	sed -i 's@Requires:      python@Requires:      python python-curses python-xml@' $@
 	sed -i 's@%systemd_post pacemaker.service@if [ ZZZ -eq 1 ]; then systemctl preset pacemaker.service || : ; fi@' $@
 	sed -i 's@%systemd_postun_with_restart pacemaker.service@systemctl daemon-reload || : ; if [ ZZZ -ge 1 ]; then systemctl try-restart pacemaker.service || : ; fi@' $@
 	sed -i 's@%systemd_preun pacemaker.service@if [ ZZZ -eq 0 ]; then systemctl --no-reload disable pacemaker.service || : ; systemctl stop pacemaker.service || : ; fi@' $@
