@@ -388,7 +388,7 @@ get_option_desc(char c)
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
 {
-    char c;
+    int c;
     gboolean config_mode = FALSE;
 
     while (1) {
