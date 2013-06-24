@@ -837,7 +837,7 @@ parse_cli_lifetime(const char *input)
 static int
 ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn)
 {
-    char *later_s = parse_cli_lifetime(move_lifetime);
+    char *later_s = NULL;
     int rc = pcmk_ok;
     char *id = NULL;
     xmlNode *fragment = NULL;
