@@ -1354,6 +1354,7 @@ print_status(pe_working_set_t * data_set)
     if (print_nodes_attr) {
         print_as("\nNode Attributes:\n");
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+            GListPtr gIter2 = NULL;
             node_t *node = (node_t *) gIter->data;
 
             if (node == NULL || node->details->online == FALSE) {
@@ -1362,6 +1363,21 @@ print_status(pe_working_set_t * data_set)
             print_as("* Node %s:\n", node->details->uname);
             g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
             g_list_foreach(attr_list, print_node_attribute, node);
+
+            for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+                resource_t *rsc = (resource_t *) gIter2->data;
+                const char *provider = g_hash_table_lookup(rsc->meta, "provider");
+                const char *type = g_hash_table_lookup(rsc->meta, "type");
+                if (safe_str_eq(provider, "linbit") && safe_str_eq(type, "drbd")) {
+                    const char *master_attr_name = crm_concat("master", rsc->clone_name, '-');
+                    const char *attr = g_hash_table_lookup(node->details->attrs, master_attr_name);
+
+                    if (!attr) {
+                        print_as("    + %-32s\t: missing! degraded?\n", master_attr_name);
+                    }
+                    free((char*)master_attr_name);
+                }
+            }
             g_list_free(attr_list);
             attr_list = NULL;
         }
