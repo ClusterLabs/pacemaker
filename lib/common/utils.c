@@ -1658,10 +1658,14 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
         char *local_short_options = NULL;
 
         for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
-            if (long_options[lpc].val) {
-                local_short_options = realloc(local_short_options, opt_string_len + 3);
+            if (long_options[lpc].val && long_options[lpc].val < UCHAR_MAX) {
+                local_short_options = realloc(local_short_options, opt_string_len + 4);
                 local_short_options[opt_string_len++] = long_options[lpc].val;
-                if (long_options[lpc].has_arg == required_argument) {
+                /* getopt(3) says: Two colons mean an option takes an optional arg; */
+                if (long_options[lpc].has_arg == optional_argument) {
+                    local_short_options[opt_string_len++] = ':';
+                }
+                if (long_options[lpc].has_arg >= required_argument) {
                     local_short_options[opt_string_len++] = ':';
                 }
                 local_short_options[opt_string_len] = 0;
@@ -1776,9 +1780,9 @@ crm_help(char cmd, int exit_code)
                 } else {
                     fputs("    ", stream);
                 }
-                fprintf(stream, " --%s%c%s\t%s\n", crm_long_options[i].name,
-                        crm_long_options[i].has_arg ? '=' : ' ',
-                        crm_long_options[i].has_arg ? "value" : "",
+                fprintf(stream, " --%s%s\t%s\n", crm_long_options[i].name,
+                        crm_long_options[i].has_arg == optional_argument ? "[=value]" :
+                        crm_long_options[i].has_arg == required_argument ? "=value" : "",
                         crm_long_options[i].desc ? crm_long_options[i].desc : "");
             }
         }
@@ -1786,16 +1790,19 @@ crm_help(char cmd, int exit_code)
     } else if (crm_short_options) {
         fprintf(stream, "Usage: %s - %s\n", crm_system_name, crm_app_description);
         for (i = 0; crm_short_options[i] != 0; i++) {
-            int has_arg = FALSE;
+            int has_arg = no_argument /* 0 */;
 
             if (crm_short_options[i + 1] == ':') {
-                has_arg = TRUE;
+                if (crm_short_options[i + 2] == ':')
+                    has_arg = optional_argument /* 2 */;
+                else
+                    has_arg = required_argument /* 1 */;
             }
 
-            fprintf(stream, " -%c %s\n", crm_short_options[i], has_arg ? "{value}" : "");
-            if (has_arg) {
-                i++;
-            }
+            fprintf(stream, " -%c %s\n", crm_short_options[i],
+                    has_arg == optional_argument ? "[value]" :
+                    has_arg == required_argument ? "{value}" : "");
+            i += has_arg;
         }
     }
 
