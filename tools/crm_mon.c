@@ -972,15 +972,15 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
             int expected_score = 0;
 
             if (g_hash_table_lookup(rsc->meta, "name") != NULL) {
-                name = g_hash_table_lookup(rsc->meta, "name");
+                name = g_hash_table_lookup(rsc->parameters, "name");
             }
 
             /* To identify the resource with the attribute name. */
             if (safe_str_eq(name, attrname)) {
                 int value = crm_parse_int(attrvalue, "0");
 
-                multiplier = g_hash_table_lookup(rsc->meta, "multiplier");
-                host_list = g_strsplit(g_hash_table_lookup(rsc->meta, "host_list"), " ", 0);
+                multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
+                host_list = g_strsplit(g_hash_table_lookup(rsc->parameters, "host_list"), " ", 0);
                 host_list_num = g_strv_length(host_list);
                 g_strfreev(host_list);
                 /* pingd multiplier is the same as the default value. */
