@@ -524,8 +524,8 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
 
             g_hash_table_iter_init(&iter, crm_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                if(node->uname && strcasecmp(node->uname, name) == 0) {
-                    if (node && node->id && node->id != nodeid) {
+                if(node && node->uname && strcasecmp(node->uname, name) == 0) {
+                    if (node->id && node->id != nodeid) {
                         crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id,
                                  nodeid, name);
                         crm_exit(DAEMON_RESPAWN_STOP);
