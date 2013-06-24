@@ -1305,10 +1305,11 @@ print_status(pe_working_set_t * data_set)
             if (node == NULL || node->details->online == FALSE) {
                 continue;
             }
-            attr_list = NULL;
             print_as("* Node %s:\n", node->details->uname);
             g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
             g_list_foreach(attr_list, print_node_attribute, node);
+            g_list_free(attr_list);
+            attr_list = NULL;
         }
     }
 
