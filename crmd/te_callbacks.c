@@ -383,6 +383,10 @@ st_fail_count_increment(const char *target, int rc)
         rec->count++;
     } else {
         rec = malloc(sizeof(struct st_fail_rec));
+        if(rec == NULL) {
+            return;
+        }
+
         rec->count = 1;
         g_hash_table_insert(stonith_failures, strdup(target), rec);
     }
