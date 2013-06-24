@@ -1047,7 +1047,7 @@ print_node_attribute(gpointer name, gpointer node_data)
     node_t *node = (node_t *) node_data;
 
     value = g_hash_table_lookup(node->details->attrs, name);
-    print_as("    + %-32s\t: %-10s", (char *)name, value);
+    print_as("    + %-32s\t: %10s", (char *)name, value);
     print_attr_msg(node, node->details->running_rsc, name, value);
     print_as("\n");
 }
@@ -1373,7 +1373,7 @@ print_status(pe_working_set_t * data_set)
                     const char *attr = g_hash_table_lookup(node->details->attrs, master_attr_name);
 
                     if (!attr) {
-                        print_as("    + %-32s\t: missing! degraded?\n", master_attr_name);
+                        print_as("    + %-32s\t: %10s\t: missing! degraded?\n", master_attr_name, "-");
                     }
                     free((char*)master_attr_name);
                 }
