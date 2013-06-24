@@ -97,6 +97,10 @@ gboolean print_last_change = TRUE;
 gboolean print_tickets = FALSE;
 gboolean watch_fencing = FALSE;
 
+/* FIXME allow, detect, and correctly interpret glob pattern or regex? */
+const char *print_neg_location_prefix;
+const char *print_neg_location_prefix_toggle;
+
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
 	    "#is_dc", NULL}
@@ -327,6 +331,7 @@ static struct crm_option long_options[] = {
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
     {"watch-fencing",  0, 0, 'W', "\t\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
+    {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
@@ -420,6 +425,20 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
             case 'A':
                 print_nodes_attr = ! print_nodes_attr;
                 break;
+            case 'L':
+                if (print_neg_location_prefix) {
+                    /* toggle off */
+                    print_neg_location_prefix_toggle = print_neg_location_prefix;
+                    print_neg_location_prefix = NULL;
+                } else if (print_neg_location_prefix_toggle) {
+                    /* toggle on */
+                    print_neg_location_prefix = print_neg_location_prefix_toggle;
+                    print_neg_location_prefix_toggle = NULL;
+                } else {
+                    /* toggled on for the first time at runtime */
+                    print_neg_location_prefix = "";
+                }
+                break;
             case '?':
                 config_mode = TRUE;
                 break;
@@ -441,6 +460,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("%c r: \t%s\n", inactive_resources ? '*': ' ', get_option_desc('r'));
         print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
         print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
+        print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
     }
@@ -515,6 +535,9 @@ main(int argc, char **argv)
                 break;
             case 'A':
                 print_nodes_attr = TRUE;
+                break;
+            case 'L':
+                print_neg_location_prefix = optarg ?: "";
                 break;
             case 'c':
                 print_tickets = TRUE;
@@ -1084,16 +1107,32 @@ print_ticket(gpointer name, gpointer value, gpointer data)
 static void
 print_cluster_tickets(pe_working_set_t * data_set)
 {
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
-    /* For recording the tickets that are referenced in rsc_ticket constraints
-     * but have never been granted yet. */
-    unpack_constraints(cib_constraints, data_set);
 
     print_as("\nTickets:\n");
     g_hash_table_foreach(data_set->tickets, print_ticket, NULL);
 
     return;
+}
+
+static void print_neg_locations(pe_working_set_t *data_set)
+{
+    GListPtr gIter, gIter2;
+
+    print_as("\nFencing constraints:\n");
+    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
+        rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
+        if (!g_str_has_prefix(location->id, print_neg_location_prefix))
+            continue;
+        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
+            node_t *node = (node_t *) gIter2->data;
+            if (node->weight >= 0) /* != -INFINITY ??? */
+                continue;
+            print_as(" %s\tprevents %s from running %son %s\n",
+                    location->id, location->rsc_lh->id,
+                    location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                    node->details->uname);
+        }
+    }
 }
 
 static int
@@ -1350,8 +1389,19 @@ print_status(pe_working_set_t * data_set)
         }
     }
 
+    if (print_tickets || print_neg_location_prefix) {
+        /* For recording the tickets that are referenced in rsc_ticket constraints
+         * but have never been granted yet.
+         * To be able to print negative location constraint summary,
+         * we also need them to be unpacked. */
+        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+        unpack_constraints(cib_constraints, data_set);
+    }
     if (print_tickets) {
         print_cluster_tickets(data_set);
+    }
+    if (print_neg_location_prefix) {
+        print_neg_locations(data_set);
     }
 #if CURSES_ENABLED
     if (as_console) {
