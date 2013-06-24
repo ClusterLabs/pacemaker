@@ -958,10 +958,25 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
+        const char *provider = g_hash_table_lookup(rsc->meta, "provider");
         const char *type = g_hash_table_lookup(rsc->meta, "type");
 
         if (rsc->children != NULL) {
             print_attr_msg(node, rsc->children, attrname, attrvalue);
+        }
+
+        if (g_str_has_prefix(attrname, "master-")
+        && safe_str_eq(provider, "linbit") && safe_str_eq(type, "drbd")
+        && safe_str_eq(attrname + sizeof("master-")-1, rsc->clone_name)) {
+            const char *score_attr = g_hash_table_lookup(rsc->parameters, "adjust_master_score");
+            /* 10000: default score of ocf:linbit:drbd for "optimal" state;
+             * adjust_master_score allows for adjustments of the hardcoded defaults
+             * (with a sufficiently recent version of the ocf:linbit:drbd RA). */
+            int good = crm_parse_int(score_attr, "10000");
+            int value = crm_parse_int(attrvalue, "0");
+            if (value < good) {
+                print_as("\t: degraded? (expected %u)", good);
+            }
         }
 
         if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
