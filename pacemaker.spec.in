@@ -36,6 +36,9 @@
 # Ship an Upstart job file
 %bcond_with upstart_job
 
+# Turn off cman support on platforms that normally ship with it
+%bcond_without cman
+
 %if %{with profiling}
 # This disables -debuginfo package creation and also the stripping binaries/libraries
 # Useful if you want sane profiling data
@@ -95,8 +98,7 @@ BuildRequires: bison byacc flex help2man gnutls-devel
 BuildRequires: systemd-devel
 %endif
 
-# If you want to build for unofficial installs of corosync-2 on RHEL < 7
-# or fedora < 17, remove all references to clusterlib-devel below
+%if %{with cman}
 
 %if 0%{?fedora} > 0
 %if 0%{?fedora} < 17
@@ -108,6 +110,8 @@ BuildRequires: clusterlib-devel
 %if 0%{?rhel} < 7
 BuildRequires: clusterlib-devel
 %endif
+%endif
+
 %endif
 
 Requires:      corosync
@@ -140,7 +144,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : stonithd doc coverage profiling pre_release upstart_job
+  --with(out) : cman stonithd doc coverage profiling pre_release upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -258,6 +262,8 @@ find . -exec touch \{\} \;
 docdir=%{pcmk_docdir} %{configure}                 \
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
+        %{!?with_cman:       --without-cman}       \
+	--without-heartbeat			   \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
