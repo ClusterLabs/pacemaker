@@ -1,5 +1,7 @@
  digraph "g" {
 "remote-node_clear_failcount 18builder" [ style=bold color="green" fontcolor="black"]
+"remote-node_delete_0 18builder" -> "remote-node_start_0 18builder" [ style = bold]
+"remote-node_delete_0 18builder" [ style=bold color="green" fontcolor="black"]
 "remote-node_monitor_30000 18builder" [ style=bold color="green" fontcolor="black"]
 "remote-node_start_0 18builder" -> "remote-node_monitor_30000 18builder" [ style = bold]
 "remote-node_start_0 18builder" [ style=bold color="green" fontcolor="black"]

@@ -1,27 +1,40 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="remote-node_monitor_30000" on_node="18builder" on_node_uuid="4">
+      <rsc_op id="7" operation="monitor" operation_key="remote-node_monitor_30000" on_node="18builder" on_node_uuid="4">
         <primitive id="remote-node" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" port="1984" server="18node1"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="remote-node_start_0" on_node="18builder" on_node_uuid="4"/>
+        <rsc_op id="6" operation="start" operation_key="remote-node_start_0" on_node="18builder" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="5" operation="start" operation_key="remote-node_start_0" on_node="18builder" on_node_uuid="4">
+      <rsc_op id="6" operation="start" operation_key="remote-node_start_0" on_node="18builder" on_node_uuid="4">
+        <primitive id="remote-node" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" port="1984" server="18node1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="delete" operation_key="remote-node_delete_0" on_node="18builder" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="3" operation="delete" operation_key="remote-node_delete_0" on_node="18builder" on_node_uuid="4">
         <primitive id="remote-node" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" port="1984" server="18node1"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="2">
+  <synapse id="3">
     <action_set>
       <crm_event id="1" operation="clear_failcount" operation_key="remote-node_clear_failcount" on_node="18builder" on_node_uuid="4">
         <primitive id="remote-node" class="ocf" provider="pacemaker" type="Dummy"/>
