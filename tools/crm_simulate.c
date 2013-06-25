@@ -569,6 +569,13 @@ print_cluster_status(pe_working_set_t * data_set)
                 node_mode = "OFFLINE (standby)";
             }
 
+        } else if (node->details->maintenance) {
+            if (node->details->online) {
+                node_mode = "maintenance";
+            } else {
+                node_mode = "OFFLINE (maintenance)";
+            }
+
         } else if (node->details->online) {
             node_mode = "online";
             online_nodes = add_list_element(online_nodes, node_name);

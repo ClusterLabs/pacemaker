@@ -509,6 +509,10 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
         } else if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             pe_rsc_trace(action->rsc, "Skipping %s: maintainence mode", action->uuid);
             continue;
+        } else if (node->details->maintenance) {
+            pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
+                         action->uuid, node->details->uname);
+            continue;
         } else if (safe_str_neq(action->task, RSC_STOP)) {
             continue;
         } else if (is_not_set(action->rsc->flags, pe_rsc_managed)

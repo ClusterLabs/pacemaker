@@ -501,6 +501,8 @@ do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
 
 echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
+do_test node-maintenance-1 "cl#5128 - Node maintenance"
+do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
 
 echo ""
 do_test stopped-monitor-00	"Stopped Monitor - initial start"

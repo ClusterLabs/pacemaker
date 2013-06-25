@@ -1,0 +1,8 @@
+digraph "g" {
+"Cancel rsc2_monitor_10000 node2" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"probe_complete node1" [ style=bold color="green" fontcolor="black"]
+"probe_complete node2" [ style=bold color="green" fontcolor="black"]
+"rsc1_stop_0 node1" -> "all_stopped" [ style = bold]
+"rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black"]
+}

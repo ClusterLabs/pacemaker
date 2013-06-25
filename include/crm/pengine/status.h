@@ -144,6 +144,8 @@ struct node_shared_s {
 
     /*! cache of calculated rsc digests for this node. */
     GHashTable *digest_cache;
+
+    gboolean maintenance;
 };
 
 struct node_s {
