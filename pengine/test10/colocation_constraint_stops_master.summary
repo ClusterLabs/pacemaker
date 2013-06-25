@@ -24,6 +24,7 @@ Executing cluster transition:
  * Pseudo action:   MASTER_RSC_A_confirmed-pre_notify_stop_0
  * Pseudo action:   MASTER_RSC_A_stop_0
  * Resource action: NATIVE_RSC_A:0  stop on fc16-builder
+ * Resource action: NATIVE_RSC_A:0  delete on fc16-builder2
  * Pseudo action:   MASTER_RSC_A_stopped_0
  * Pseudo action:   MASTER_RSC_A_post_notify_stopped_0
  * Pseudo action:   MASTER_RSC_A_confirmed-post_notify_stopped_0

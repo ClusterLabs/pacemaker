@@ -98,11 +98,12 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 
 static gboolean
 check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
-                     pe_working_set_t * data_set)
+                     gboolean active_here, pe_working_set_t * data_set)
 {
     int attr_lpc = 0;
     gboolean force_restart = FALSE;
     gboolean delete_resource = FALSE;
+    gboolean changed = FALSE;
 
     const char *value = NULL;
     const char *old_value = NULL;
@@ -121,15 +122,21 @@ check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
             continue;
         }
 
-        force_restart = TRUE;
-        crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
-                   rsc->id, node->details->uname, attr_list[attr_lpc],
-                   crm_str(old_value), crm_str(value));
+        changed = TRUE;
+        if (active_here) {
+            force_restart = TRUE;
+            crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
+                       rsc->id, node->details->uname, attr_list[attr_lpc],
+                       crm_str(old_value), crm_str(value));
+        }
     }
     if (force_restart) {
         /* make sure the restart happens */
         stop_action(rsc, node, FALSE);
         set_bit(rsc->flags, pe_rsc_start_pending);
+        delete_resource = TRUE;
+
+    } else if (changed) {
         delete_resource = TRUE;
     }
     return delete_resource;
@@ -331,6 +338,9 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+        if (check_rsc_parameters(rsc, node, rsc_entry, FALSE, data_set)) {
+            DeleteRsc(rsc, node, FALSE, data_set);
+        }
         pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
                      rsc->id, node->details->uname);
         return;
@@ -338,7 +348,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
     pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
 
-    if (check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
+    if (check_rsc_parameters(rsc, node, rsc_entry, TRUE, data_set)) {
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 
@@ -501,6 +511,9 @@ check_actions(pe_working_set_t * data_set)
                             for (gIter = result; gIter != NULL; gIter = gIter->next) {
                                 resource_t *rsc = (resource_t *) gIter->data;
 
+                                if (rsc->variant != pe_native) {
+                                    continue;
+                                }
                                 check_actions_for(rsc_entry, rsc, node, data_set);
                             }
                             g_list_free(result);
