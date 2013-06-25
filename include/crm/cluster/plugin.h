@@ -16,4 +16,4 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-extern gboolean ais_dispatch(gpointer user_data);
+extern int plugin_dispatch(gpointer user_data);
