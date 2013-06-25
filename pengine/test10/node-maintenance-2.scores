@@ -1,0 +1,7 @@
+Allocation scores:
+native_color: rsc1 allocation score on node1: -1
+native_color: rsc1 allocation score on node2: 0
+native_color: rsc2 allocation score on node1: 0
+native_color: rsc2 allocation score on node2: 0
+native_color: rsc_stonith allocation score on node1: 0
+native_color: rsc_stonith allocation score on node2: 0

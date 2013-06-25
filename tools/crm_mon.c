@@ -776,6 +776,7 @@ print_simple_status(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
+    int nodes_maintenance = 0;
 
     dc = data_set->dc_node;
 
@@ -788,6 +789,8 @@ print_simple_status(pe_working_set_t * data_set)
 
         if (node->details->standby && node->details->online) {
             nodes_standby++;
+        } else if (node->details->maintenance && node->details->online) {
+            nodes_maintenance++;
         } else if (node->details->online) {
             nodes_online++;
         } else {
@@ -799,6 +802,9 @@ print_simple_status(pe_working_set_t * data_set)
         print_as("Ok: %d nodes online", nodes_online);
         if (nodes_standby > 0) {
             print_as(", %d standby nodes", nodes_standby);
+        }
+        if (nodes_maintenance > 0) {
+            print_as(", %d maintenance nodes", nodes_maintenance);
         }
         print_as(", %d resources configured", count_resources(data_set, NULL));
     }
@@ -1261,6 +1267,13 @@ print_status(pe_working_set_t * data_set)
                 node_mode = "OFFLINE (standby)";
             }
 
+        } else if (node->details->maintenance) {
+            if (node->details->online) {
+                node_mode = "maintenance";
+            } else {
+                node_mode = "OFFLINE (maintenance)";
+            }
+
         } else if (node->details->online) {
             node_mode = "online";
             if (group_by_node == FALSE) {
@@ -1508,6 +1521,7 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "online=\"%s\" ", node->details->online ? "true" : "false");
         fprintf(stream, "standby=\"%s\" ", node->details->standby ? "true" : "false");
         fprintf(stream, "standby_onfail=\"%s\" ", node->details->standby_onfail ? "true" : "false");
+        fprintf(stream, "maintenance=\"%s\" ", node->details->maintenance ? "true" : "false");
         fprintf(stream, "pending=\"%s\" ", node->details->pending ? "true" : "false");
         fprintf(stream, "unclean=\"%s\" ", node->details->unclean ? "true" : "false");
         fprintf(stream, "shutdown=\"%s\" ", node->details->shutdown ? "true" : "false");
@@ -1660,6 +1674,12 @@ print_html_status(pe_working_set_t * data_set, const char *filename, gboolean we
         } else if (node->details->standby) {
             fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
                     "<font color=\"red\">OFFLINE (standby)</font>\n");
+        } else if (node->details->maintenance && node->details->online) {
+            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
+                    "<font color=\"blue\">maintenance</font>\n");
+        } else if (node->details->maintenance) {
+            fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
+                    "<font color=\"red\">OFFLINE (maintenance)</font>\n");
         } else if (node->details->online) {
             fprintf(stream, "Node: %s (%s): %s", node->details->uname, node->details->id,
                     "<font color=\"green\">online</font>\n");
