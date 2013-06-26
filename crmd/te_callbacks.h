@@ -24,9 +24,6 @@ extern void cib_fencing_updated(xmlNode * msg, int call_id, int rc,
 extern void cib_action_updated(xmlNode * msg, int call_id, int rc,
                                xmlNode * output, void *user_data);
 
-extern void cib_failcount_updated(xmlNode * msg, int call_id, int rc,
-                                  xmlNode * output, void *user_data);
-
 extern gboolean global_timer_callback(gpointer data);
 extern gboolean action_timer_callback(gpointer data);
 

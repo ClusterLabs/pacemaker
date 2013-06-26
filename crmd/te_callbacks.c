@@ -498,14 +498,6 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     }
 }
 
-void
-cib_failcount_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    if (rc < pcmk_ok) {
-        crm_err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
-    }
-}
-
 gboolean
 action_timer_callback(gpointer data)
 {
