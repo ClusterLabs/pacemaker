@@ -178,6 +178,14 @@ static void crm_dump_peer_hash(int level, const char *caller)
     }
 }
 
+static gboolean crm_hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
+{
+    if(value == user_data) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
@@ -259,7 +267,7 @@ crm_get_peer(unsigned int id, const char *uname)
         crm_dump_peer_hash(LOG_DEBUG, __FUNCTION__);
 
         crm_info("Merging %p into %p", by_name, by_id);
-        g_hash_table_remove(crm_peer_cache, by_name);
+        g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
     }
 
     if (node == NULL) {
