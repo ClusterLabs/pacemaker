@@ -251,6 +251,7 @@ plugin_handle_membership(AIS_Message *msg)
             crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
         }
     }
+    free_xml(xml);
 }
 
 int
