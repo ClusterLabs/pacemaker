@@ -225,20 +225,6 @@ pcmk_cpg_dispatch(gpointer user_data)
     return 0;
 }
 
-/*
-static void
-pcmk_cpg_deliver_message(cpg_handle_t handle,
-                         const struct cpg_name *groupName,
-                         uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    uint32_t kind = 0;
-    const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
-
-    free(data);
-}
-*/
-
 char *
 pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *content,
                         uint32_t *kind, const char **from)
