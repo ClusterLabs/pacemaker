@@ -404,10 +404,6 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
 
     CRM_CHECK(action != NULL, return NULL);
 
-    if (device_args) {
-        g_hash_table_foreach(device_args, append_arg, &arg_list);
-    }
-
     buffer[511] = 0;
     snprintf(buffer, 511, "pcmk_%s_action", action);
     if (device_args) {
@@ -479,6 +475,10 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
                       alias);
             append_const_arg(param, alias, &arg_list);
         }
+    }
+
+    if (device_args) {
+        g_hash_table_foreach(device_args, append_arg, &arg_list);
     }
 
     return arg_list;
