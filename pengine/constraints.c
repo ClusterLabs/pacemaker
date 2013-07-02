@@ -727,30 +727,53 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 }
 
 static int
-validate_order_resources(resource_t * lh_rsc, resource_t * rh_rsc)
+validate_order_resources(resource_t * first_rsc, const char *first_action, resource_t * then_rsc, const char *then_action)
 {
-    enum contains_stonith_res lh_flag = contains_stonith(lh_rsc);
-    enum contains_stonith_res rh_flag = contains_stonith(rh_rsc);
+    enum contains_stonith_res first_flag = contains_stonith(first_rsc);
+    enum contains_stonith_res then_flag = contains_stonith(then_rsc);
 
-    if (lh_flag == contains_stonith_mixed) {
+    enum action_tasks first = text2task(first_action);
+    enum action_tasks then = text2task(then_action);
+
+    resource_t * first_parent = uber_parent(first_rsc);
+    resource_t * then_parent = uber_parent(then_rsc);
+
+    if (first_flag == contains_stonith_mixed) {
         crm_config_err
-            ("Order constraint, LH (%s) then RH (%s), can not be applied.  LH contains stonith resources mixed with other resource classes.",
-             lh_rsc->id, rh_rsc->id);
+            ("Order constraint, %s then %s, can not be applied:"
+             " %s contains stonith resources mixed with other resource classes.",
+             first_rsc->id, then_rsc->id, first_rsc->id);
         return -1;
-    } else if (rh_flag == contains_stonith_mixed) {
+
+    } else if (then_flag == contains_stonith_mixed) {
         crm_config_err
-            ("Order constraint, LH (%s) then RH (%s), can not be applied.  RH contains stonith resources mixed with other resource classes.",
-             lh_rsc->id, rh_rsc->id);
+            ("Order constraint, %s then %s, can not be applied:"
+             " %s contains stonith resources mixed with other resource classes.",
+             first_rsc->id, then_rsc->id, then_rsc->id);
         return -1;
-    } else if (lh_flag == contains_stonith_true && (lh_flag != rh_flag)) {
+
+    } else if (first_flag == contains_stonith_true && (first_flag != then_flag)) {
         crm_config_err
-            ("Order constraint, LH (%s) then RH (%s), can not be applied. LH is of class stonith and RH is not.",
-             lh_rsc->id, rh_rsc->id);
+            ("Order constraint, %s then %s, can not be applied: %s is of class stonith and %s is not.",
+             first_rsc->id, then_rsc->id, first_rsc->id, then_rsc->id);
         return -1;
-    } else if (rh_flag == contains_stonith_true && (rh_flag != lh_flag)) {
+
+    } else if (then_flag == contains_stonith_true && (then_flag != first_flag)) {
         crm_config_err
-            ("Order constraint, LH (%s) then RH (%s), can not be applied. RH is of class stonith and LH is not.",
-             lh_rsc->id, rh_rsc->id);
+            ("Order constraint, %s then %s, can not be applied: %s is of class stonith and %s is not.",
+             first_rsc->id, then_rsc->id, then_rsc->id, first_rsc->id);
+        return -1;
+
+    } else if(first_parent->variant < pe_master && first > action_promote) {
+        crm_config_warn
+            ("Order constraint, %s then %s, can not be applied: Operation %s is not valid for %s",
+             first_rsc->id, then_rsc->id, first_action, first_rsc->id);
+        return -1;
+
+    } else if(then_parent->variant < pe_master && then > action_promote) {
+        crm_config_warn
+            ("Order constraint, %s then %s, can not be applied: Operation %s is not valid for %s",
+             first_rsc->id, then_rsc->id, then_action, then_rsc->id);
         return -1;
     }
 
@@ -771,7 +794,7 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     CRM_CHECK(rh_rsc != NULL, return -1);
     CRM_CHECK(rh_task != NULL, return -1);
 
-    if (validate_order_resources(lh_rsc, rh_rsc)) {
+    if (validate_order_resources(lh_rsc, lh_task, rh_rsc, rh_task)) {
         return -1;
     }
 
