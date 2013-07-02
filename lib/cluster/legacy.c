@@ -53,7 +53,7 @@ void *ais_ipc_ctx = NULL;
 hdb_handle_t ais_ipc_handle = 0;
 
 static gboolean
-get_ais_details(uint32_t * id, char **uname)
+plugin_get_details(uint32_t * id, char **uname)
 {
     struct iovec iov;
     int retries = 0;
@@ -254,9 +254,8 @@ plugin_handle_membership(AIS_Message *msg)
     }
 }
 
-
 static void
-legacy_default_deliver_message(cpg_handle_t handle,
+plugin_default_deliver_message(cpg_handle_t handle,
                                const struct cpg_name *groupName,
                                uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
@@ -296,7 +295,7 @@ plugin_dispatch(gpointer user_data)
             cluster->cpg.cpg_deliver_fn(0, NULL, 0, 0, buffer, 0);
 
         } else {
-            legacy_default_deliver_message(0, NULL, 0, 0, buffer, 0);
+            plugin_default_deliver_message(0, NULL, 0, 0, buffer, 0);
         }
 
         coroipcc_dispatch_put(ais_ipc_handle);
@@ -511,7 +510,7 @@ init_cs_connection_classic(crm_cluster_t * cluster)
     cluster->nodeid = get_local_nodeid(0);
 
     name = get_local_node_name();
-    get_ais_details(NULL, &(cluster->uname));
+    plugin_get_details(NULL, &(cluster->uname));
     if (safe_str_neq(name, cluster->uname)) {
         crm_crit("Node name mismatch!  Corosync supplied %s but our lookup returned %s",
                  cluster->uname, name);
