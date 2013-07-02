@@ -2930,6 +2930,11 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
     GListPtr gIter = NULL;
     const char *value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
 
+    if(is_set(rsc->flags, pe_rsc_migrating)) {
+        /* Already taken care of or in progress */
+        return;
+    }
+
     if (crm_is_true(value) == FALSE) {
         return;
     }
@@ -2984,6 +2989,7 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
      *  *-> migrate_to -> migrate_from -> stop -> start
      */
 
+    set_bit(rsc->flags, pe_rsc_migrating);
     update_action_flags(start, pe_action_pseudo);       /* easier than trying to delete it from the graph
                                                          * but perhaps we should have it run anyway
                                                          */
@@ -3099,7 +3105,19 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
         } else if (is_set(other->flags, pe_action_optional) || other->rsc == rsc
                    || other->rsc == rsc->parent) {
             continue;
+
+        } else {
+            /* First check if they need to migrate too */
+            crm_debug("Checking %s first", other->rsc->id);
+            rsc_migrate_reload(other->rsc, data_set);
         }
+
+        if(other->rsc && is_set(other->rsc->flags, pe_rsc_migrating)) {
+            crm_debug("Breaking %s before %s (migrating)", other_w->action->uuid, stop->uuid);
+            other_w->type = pe_order_none;
+            continue;
+        }
+
         crm_debug("Ordering %s before %s (stop)", other_w->action->uuid, then->uuid);
         order_actions(other, then, other_w->type);
     }
@@ -3172,6 +3190,11 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
     action_t *stop = NULL;
     action_t *start = NULL;
     gboolean partial = FALSE;
+
+    if(is_set(rsc->flags, pe_rsc_munging)) {
+        return;
+    }
+    set_bit(rsc->flags, pe_rsc_munging);
 
     if (rsc->children) {
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {

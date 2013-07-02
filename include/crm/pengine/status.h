@@ -167,6 +167,7 @@ struct node_s {
 #  define pe_rsc_provisional	0x00000100ULL
 #  define pe_rsc_allocating	0x00000200ULL
 #  define pe_rsc_merging	0x00000400ULL
+#  define pe_rsc_munging	0x00000800ULL
 
 #  define pe_rsc_try_reload     0x00001000ULL
 #  define pe_rsc_reload         0x00002000ULL
@@ -178,6 +179,7 @@ struct node_s {
 
 #  define pe_rsc_starting	0x00100000ULL
 #  define pe_rsc_stopping	0x00200000ULL
+#  define pe_rsc_migrating	0x00400000ULL
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
 
