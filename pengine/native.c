@@ -3083,22 +3083,12 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
             }
         }
     }
-#if 0
-    /* Implied now that start/stop are not morphed into migrate ops */
 
-    /* Anything that needed stop to complete, now also needs start to have completed */
-    for (gIter = stop->actions_after; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
+    /* Anything that needed stop to complete, now also needs start to have completed
+     * However, this is implied now that start/stop are not morphed into migrate ops
+     */
 
-        other = other_w->action;
-        if (is_set(other->flags, pe_action_optional) || other->rsc != NULL) {
-            continue;
-        }
-        crm_debug("Ordering %s before %s (stop)", from->uuid, other->uuid);
-        order_actions(from, other, other_w->type);
-    }
-#endif
-    /* migrate 'then' action also needs anything that the stop needed to have completed too */
+    /* The migrate_to action (aka 'then') also needs to depend on anything that the stop needed to have completed */
     for (gIter = stop->actions_before; gIter != NULL; gIter = gIter->next) {
         action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
 
@@ -3114,7 +3104,7 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
         order_actions(other, then, other_w->type);
     }
 
-    /* migrate 'then' action also needs anything that the start needed to have completed too */
+    /* The migrate_to action (aka 'then') also needs to depend on anything that the start needed to have completed */
     for (gIter = start->actions_before; gIter != NULL; gIter = gIter->next) {
         action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
 
