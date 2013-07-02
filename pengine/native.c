@@ -2814,6 +2814,7 @@ at_stack_bottom(resource_t * rsc)
     int mode = stack_stable;
     GListPtr action_list = NULL;
     GListPtr gIter = NULL;
+    GHashTable *coloc_list = NULL;
 
     key = start_key(rsc);
     action_list = find_actions(rsc->actions, key, NULL);
@@ -2825,6 +2826,7 @@ at_stack_bottom(resource_t * rsc)
     start = action_list->data;
     g_list_free(action_list);
 
+    coloc_list = g_hash_table_new(crm_str_hash, g_str_equal);
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
         resource_t *target = constraint->rsc_rh;
@@ -2834,13 +2836,14 @@ at_stack_bottom(resource_t * rsc)
         if (constraint->score > 0) {
             mode |= check_stack_element(rsc, target, "coloc");
             if (mode & stack_middle) {
-                return FALSE;
+                goto bail;
 
             } else if ((mode & stack_stopping) && (mode & stack_starting)) {
                 crm_notice("Cannot migrate %s due to colocation activity (last was %s)",
                            rsc->id, target->id);
-                return FALSE;
+                goto bail;
             }
+            g_hash_table_insert(coloc_list, target->id, target);
         }
     }
 
@@ -2856,19 +2859,31 @@ at_stack_bottom(resource_t * rsc)
 
         pe_rsc_trace(rsc, "%s: Checking %s ordering", rsc->id, other->uuid);
 
-        if (is_set(other->flags, pe_action_optional) == FALSE) {
+        if(other->rsc == NULL) {
+            /* No colocation involved */
+            crm_trace("%s: No colocation for %s", rsc->id, other->uuid);
+            continue;
+
+        } else if (is_set(other->flags, pe_action_optional) == FALSE) {
             mode |= check_stack_element(rsc, other->rsc, "order");
-            if (mode & stack_middle) {
-                return FALSE;
+            if ((mode & stack_middle) && g_hash_table_lookup(coloc_list, other->rsc->id)) {
+                crm_trace("%s: Stack middle: %s", rsc->id, other->rsc->id);
+                goto bail;
 
             } else if ((mode & stack_stopping) && (mode & stack_starting)) {
                 crm_notice("Cannot migrate %s due to ordering activity (last was %s)",
                            rsc->id, other->rsc->id);
-                return FALSE;
+                goto bail;
             }
         }
     }
+
+    g_hash_table_destroy(coloc_list);
     return TRUE;
+
+  bail:
+    g_hash_table_destroy(coloc_list);
+    return FALSE;
 }
 
 static action_t *
@@ -3207,13 +3222,10 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    if (stop == NULL) {
-        return;
-
-    } else if (is_set(stop->flags, pe_action_optional) && is_set(rsc->flags, pe_rsc_try_reload)) {
+    if (stop != NULL && is_set(stop->flags, pe_action_optional) && is_set(rsc->flags, pe_rsc_try_reload)) {
         ReloadRsc(rsc, stop, start, data_set);
 
-    } else if (is_not_set(stop->flags, pe_action_optional)) {
+    } else if (stop == NULL || is_not_set(stop->flags, pe_action_optional)) {
         MigrateRsc(rsc, stop, start, data_set, partial);
     }
 }
