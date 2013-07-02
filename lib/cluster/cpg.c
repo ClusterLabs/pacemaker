@@ -617,6 +617,7 @@ send_cluster_text(int class, const char *data,
         crm_trace("Queueing CPG message %u to %s (%d bytes, %d bytes payload): %.200s",
                   msg->id, target, iov->iov_len, msg->size, data);
     }
+    free(target);
 
 #if SUPPORT_PLUGIN
     /* The plugin is the only time we dont use CPG messaging */
@@ -627,7 +628,6 @@ send_cluster_text(int class, const char *data,
 
     send_cpg_iov(iov);
 
-    free(target);
     return TRUE;
 }
 
