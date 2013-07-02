@@ -270,6 +270,7 @@ do_test bug-1820 "Migration in a group"
 do_test bug-1820-1 "Non-migration in a group"
 do_test migrate-5 "Primitive migration with a clone"
 do_test migrate-fencing "Migration after Fencing"
+do_test migrate-both-vms "Migrate two VMs that have no colocation"
 
 #echo ""
 #do_test complex1 "Complex	"

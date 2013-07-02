@@ -1,0 +1,486 @@
+<cib epoch="282" num_updates="11" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.7" update-origin="cvmh01" update-client="crm_resource" cib-last-written="Thu May 16 14:57:53 2013" have-quorum="1" dc-uuid="cvmh04">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10rc2-1.el6.ccni-7789030"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1368729129"/>
+        <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="cvmh01" uname="cvmh01">
+        <instance_attributes id="nodes-cvmh01">
+          <nvpair id="nodes-cvmh01-standby" name="standby" value="off"/>
+        </instance_attributes>
+        <utilization id="nodes-cvmh01-utilization">
+          <nvpair id="nodes-cvmh01-utilization-cpu" name="cpu" value="32"/>
+          <nvpair id="nodes-cvmh01-utilization-hv_memory" name="hv_memory" value="114688"/>
+        </utilization>
+      </node>
+      <node id="cvmh02" uname="cvmh02">
+        <instance_attributes id="nodes-cvmh02">
+          <nvpair id="nodes-cvmh02-standby" name="standby" value="off"/>
+        </instance_attributes>
+        <utilization id="nodes-cvmh02-utilization">
+          <nvpair id="nodes-cvmh02-utilization-cpu" name="cpu" value="32"/>
+          <nvpair id="nodes-cvmh02-utilization-hv_memory" name="hv_memory" value="114688"/>
+        </utilization>
+      </node>
+      <node id="cvmh03" uname="cvmh03">
+        <instance_attributes id="nodes-cvmh03">
+          <nvpair id="nodes-cvmh03-standby" name="standby" value="on"/>
+        </instance_attributes>
+        <utilization id="nodes-cvmh03-utilization">
+          <nvpair id="nodes-cvmh03-utilization-cpu" name="cpu" value="32"/>
+          <nvpair id="nodes-cvmh03-utilization-hv_memory" name="hv_memory" value="114688"/>
+        </utilization>
+      </node>
+      <node id="cvmh04" uname="cvmh04">
+        <instance_attributes id="nodes-cvmh04">
+          <nvpair id="nodes-cvmh04-standby" name="standby" value="on"/>
+        </instance_attributes>
+        <utilization id="nodes-cvmh04-utilization">
+          <nvpair id="nodes-cvmh04-utilization-cpu" name="cpu" value="32"/>
+          <nvpair id="nodes-cvmh04-utilization-hv_memory" name="hv_memory" value="114688"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fence-cvmh01" type="fence_ipmilan">
+        <instance_attributes id="fence-cvmh01-instance_attributes">
+          <nvpair id="fence-cvmh01-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="cvmh01"/>
+          <nvpair id="fence-cvmh01-instance_attributes-ipaddr" name="ipaddr" value="172.31.49.129"/>
+          <nvpair id="fence-cvmh01-instance_attributes-login" name="login" value="ADMIN"/>
+          <nvpair id="fence-cvmh01-instance_attributes-passwd" name="passwd" value="Jackson5-live"/>
+          <nvpair id="fence-cvmh01-instance_attributes-timeout" name="timeout" value="90"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-cvmh01-monitor-2h" interval="2h" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="fence-cvmh02" type="fence_ipmilan">
+        <instance_attributes id="fence-cvmh02-instance_attributes">
+          <nvpair id="fence-cvmh02-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="cvmh02"/>
+          <nvpair id="fence-cvmh02-instance_attributes-ipaddr" name="ipaddr" value="172.31.49.130"/>
+          <nvpair id="fence-cvmh02-instance_attributes-login" name="login" value="ADMIN"/>
+          <nvpair id="fence-cvmh02-instance_attributes-passwd" name="passwd" value="Jackson5-live"/>
+          <nvpair id="fence-cvmh02-instance_attributes-timeout" name="timeout" value="90"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-cvmh02-monitor-2h" interval="2h" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="fence-cvmh03" type="fence_ipmilan">
+        <instance_attributes id="fence-cvmh03-instance_attributes">
+          <nvpair id="fence-cvmh03-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="cvmh03"/>
+          <nvpair id="fence-cvmh03-instance_attributes-ipaddr" name="ipaddr" value="172.31.49.131"/>
+          <nvpair id="fence-cvmh03-instance_attributes-login" name="login" value="ADMIN"/>
+          <nvpair id="fence-cvmh03-instance_attributes-passwd" name="passwd" value="Jackson5-live"/>
+          <nvpair id="fence-cvmh03-instance_attributes-timeout" name="timeout" value="90"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-cvmh03-monitor-2h" interval="2h" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="fence-cvmh04" type="fence_ipmilan">
+        <instance_attributes id="fence-cvmh04-instance_attributes">
+          <nvpair id="fence-cvmh04-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="cvmh04"/>
+          <nvpair id="fence-cvmh04-instance_attributes-ipaddr" name="ipaddr" value="172.31.49.132"/>
+          <nvpair id="fence-cvmh04-instance_attributes-login" name="login" value="ADMIN"/>
+          <nvpair id="fence-cvmh04-instance_attributes-passwd" name="passwd" value="Jackson5-live"/>
+          <nvpair id="fence-cvmh04-instance_attributes-timeout" name="timeout" value="90"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-cvmh04-monitor-2h" interval="2h" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="c-fs-libvirt-VM-xcm">
+        <meta_attributes id="c-fs-libvirt-meta_attributes">
+          <nvpair id="c-fs-libvirt-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c-fs-libvirt-meta_attributes-ordered" name="ordered" value="true"/>
+          <nvpair id="c-fs-libvirt-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="fs-libvirt-VM-xcm" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs-libvirt-instance_attributes">
+            <nvpair id="fs-libvirt-instance_attributes-directory" name="directory" value="/srv/libvirt/VM-xcm"/>
+            <nvpair id="fs-libvirt-instance_attributes-fstype" name="fstype" value="nfs"/>
+            <nvpair id="fs-libvirt-instance_attributes-device" name="device" value="cvmstorage-ib:/libvirt/VM-xcm"/>
+            <nvpair id="fs-libvirt-instance_attributes-options" name="options" value="rw,relatime"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs-libvirt-start-0" interval="0" name="start" timeout="60s"/>
+            <op id="fs-libvirt-monitor-30s" interval="30s" name="monitor" timeout="110s"/>
+            <op id="fs-libvirt-stop-0" interval="0" name="stop" timeout="110s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="c-p-libvirtd">
+        <meta_attributes id="c-p-libvirtd-meta_attributes">
+          <nvpair id="c-p-libvirtd-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c-p-libvirtd-meta_attributes-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+        <primitive class="lsb" id="p-libvirtd" type="libvirtd">
+          <operations>
+            <op id="p-libvirtd-monitor-30s" interval="30s" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="c-fs-bind-libvirt-VM-cvmh">
+        <meta_attributes id="c-fs-bind-libvirt-VM-cvmh-meta_attributes">
+          <nvpair id="c-fs-bind-libvirt-VM-cvmh-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c-fs-bind-libvirt-VM-cvmh-meta_attributes-ordered" name="ordered" value="true"/>
+          <nvpair id="c-fs-bind-libvirt-VM-cvmh-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="fs-bind-libvirt-VM-cvmh" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs-bind-libvirt-VM-cvmh-instance_attributes">
+            <nvpair id="fs-bind-libvirt-VM-cvmh-instance_attributes-directory" name="directory" value="/srv/libvirt/VM-cvmh"/>
+            <nvpair id="fs-bind-libvirt-VM-cvmh-instance_attributes-fstype" name="fstype" value="none"/>
+            <nvpair id="fs-bind-libvirt-VM-cvmh-instance_attributes-options" name="options" value="bind"/>
+            <nvpair id="fs-bind-libvirt-VM-cvmh-instance_attributes-device" name="device" value="/gpfs/lb/utility/VM-cvmh"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs-bind-libvirt-VM-cvmh-monitor-60s" interval="60s" name="monitor" timeout="40s"/>
+            <op id="fs-bind-libvirt-VM-cvmh-start-0" interval="0" name="start" timeout="180s"/>
+            <op id="fs-bind-libvirt-VM-cvmh-stop-0" interval="0" name="stop" timeout="120s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="c-watch-ib0">
+        <meta_attributes id="c-watch-ib0-meta_attributes">
+          <nvpair id="c-watch-ib0-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c-watch-ib0-meta_attributes-ordered" name="ordered" value="true"/>
+          <nvpair id="c-watch-ib0-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="p-watch-ib0" provider="heartbeat" type="ethmonitor">
+          <instance_attributes id="p-watch-ib0-instance_attributes">
+            <nvpair id="p-watch-ib0-instance_attributes-interface" name="interface" value="ib0"/>
+          </instance_attributes>
+          <operations>
+            <op id="p-watch-ib0-monitor-10s" interval="10s" name="monitor" timeout="100s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="c-fs-gpfs">
+        <meta_attributes id="c-fs-gpfs-meta_attributes">
+          <nvpair id="c-fs-gpfs-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="c-fs-gpfs-meta_attributes-ordered" name="ordered" value="true"/>
+          <nvpair id="c-fs-gpfs-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="p-fs-gpfs" provider="ccni" type="gpfs">
+          <instance_attributes id="p-fs-gpfs-instance_attributes">
+            <nvpair id="p-fs-gpfs-instance_attributes-fspath" name="fspath" value="/gpfs/lb/utility"/>
+          </instance_attributes>
+          <operations>
+            <op id="p-fs-gpfs-monitor-30s" interval="30s" name="monitor" timeout="20s"/>
+            <op id="p-fs-gpfs-start-0" interval="0" name="start" timeout="180s"/>
+            <op id="p-fs-gpfs-stop-0" interval="0" name="stop" timeout="120s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <primitive class="ocf" id="vm-compute-test" provider="ccni" type="xcatVirtualDomain">
+        <instance_attributes id="vm-compute-test-instance_attributes">
+          <nvpair id="vm-compute-test-instance_attributes-nodename" name="nodename" value="compute-test"/>
+          <nvpair id="vm-compute-test-instance_attributes-migration_network_suffix" name="migration_network_suffix" value="-ib"/>
+          <nvpair id="vm-compute-test-instance_attributes-migration_transport" name="migration_transport" value="ssh"/>
+        </instance_attributes>
+        <operations>
+          <op id="vm-compute-test-start-0" interval="0" name="start" timeout="90s"/>
+          <op id="vm-compute-test-stop-0" interval="0" name="stop" timeout="90s"/>
+          <op id="vm-compute-test-monitor-45s" interval="45s" name="monitor" timeout="30s"/>
+        </operations>
+        <meta_attributes id="vm-compute-test-meta_attributes">
+          <nvpair id="vm-compute-test-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="vm-compute-test-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+        <utilization id="vm-compute-test-utilization">
+          <nvpair id="vm-compute-test-utilization-cpu" name="cpu" value="2"/>
+          <nvpair id="vm-compute-test-utilization-hv_memory" name="hv_memory" value="4096"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="vm-swbuildsl6" provider="ccni" type="xcatVirtualDomain">
+        <instance_attributes id="vm-swbuildsl6-instance_attributes">
+          <nvpair id="vm-swbuildsl6-instance_attributes-nodename" name="nodename" value="swbuildsl6"/>
+          <nvpair id="vm-swbuildsl6-instance_attributes-migration_network_suffix" name="migration_network_suffix" value="-ib"/>
+          <nvpair id="vm-swbuildsl6-instance_attributes-migration_transport" name="migration_transport" value="ssh"/>
+        </instance_attributes>
+        <operations>
+          <op id="vm-swbuildsl6-start-0" interval="0" name="start" timeout="90s"/>
+          <op id="vm-swbuildsl6-stop-0" interval="0" name="stop" timeout="90s"/>
+          <op id="vm-swbuildsl6-monitor-45s" interval="45s" name="monitor" timeout="30s"/>
+        </operations>
+        <meta_attributes id="vm-swbuildsl6-meta_attributes">
+          <nvpair id="vm-swbuildsl6-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="vm-swbuildsl6-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+        <utilization id="vm-swbuildsl6-utilization">
+          <nvpair id="vm-swbuildsl6-utilization-cpu" name="cpu" value="2"/>
+          <nvpair id="vm-swbuildsl6-utilization-hv_memory" name="hv_memory" value="1024"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="loc-fence-cvmh01" node="cvmh01" rsc="fence-cvmh01" score="-INFINITY"/>
+      <rsc_location id="loc-fence-cvmh02" node="cvmh02" rsc="fence-cvmh02" score="-INFINITY"/>
+      <rsc_location id="loc-fence-cvmh03" node="cvmh03" rsc="fence-cvmh03" score="-INFINITY"/>
+      <rsc_location id="loc-fence-cvmh04" node="cvmh04" rsc="fence-cvmh04" score="-INFINITY"/>
+      <rsc_location id="loc-fs-gpfs-needs-ib0" rsc="c-fs-gpfs">
+        <rule boolean-op="or" id="loc-fs-gpfs-needs-ib0-rule" score="-INFINITY">
+          <expression attribute="ethmonitor-ib0" id="loc-fs-gpfs-needs-ib0-expression" operation="not_defined"/>
+          <expression attribute="ethmonitor-ib0" id="loc-fs-gpfs-needs-ib0-expression-0" operation="eq" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="c-fs-libvirt-VM-cvmh-with-gpfs" rsc="c-fs-bind-libvirt-VM-cvmh" score="INFINITY" with-rsc="c-fs-gpfs"/>
+      <rsc_order first="c-fs-gpfs" id="o-fs-libvirt-VM-cvmh-after-gpfs" score="INFINITY" then="c-fs-bind-libvirt-VM-cvmh"/>
+      <rsc_order id="o-libvirtd-after-storage" score="INFINITY">
+        <resource_set id="o-libvirtd-after-storage-0" sequential="false">
+          <resource_ref id="c-fs-libvirt-VM-xcm"/>
+          <resource_ref id="c-fs-bind-libvirt-VM-cvmh"/>
+        </resource_set>
+        <resource_set id="o-libvirtd-after-storage-1">
+          <resource_ref id="c-p-libvirtd"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_colocation id="c-libvirtd-with-storage" score="INFINITY">
+        <resource_set id="c-libvirtd-with-storage-0">
+          <resource_ref id="c-p-libvirtd"/>
+        </resource_set>
+        <resource_set id="c-libvirtd-with-storage-1" sequential="false">
+          <resource_ref id="c-fs-libvirt-VM-xcm"/>
+          <resource_ref id="c-fs-bind-libvirt-VM-cvmh"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_order first="c-p-libvirtd" id="o-vm-compute-test" score="INFINITY" then="vm-compute-test"/>
+      <rsc_colocation id="colo-vm-compute-test" rsc="vm-compute-test" score="INFINITY" with-rsc="c-p-libvirtd"/>
+      <rsc_order first="c-p-libvirtd" id="o-vm-swbuildsl6" score="INFINITY" then="vm-swbuildsl6"/>
+      <rsc_colocation id="colo-vm-swbuildsl6" rsc="vm-swbuildsl6" score="INFINITY" with-rsc="c-p-libvirtd"/>
+      <rsc_order first="vm-compute-test" id="o-vm-swbuildsl6-after-compute-test" score="INFINITY" then="vm-swbuildsl6"/>
+      <rsc_location id="cli-prefer-vm-swbuildsl6" rsc="vm-swbuildsl6">
+        <rule id="cli-prefer-rule-vm-swbuildsl6" score="INFINITY" boolean-op="and">
+          <expression id="cli-prefer-expr-vm-swbuildsl6" attribute="#uname" operation="eq" value="cvmh04" type="string"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="cvmh04" uname="cvmh04" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="cvmh04">
+        <instance_attributes id="status-cvmh04">
+          <nvpair id="status-cvmh04-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cvmh04-ethmonitor-ib0" name="ethmonitor-ib0" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="cvmh04">
+        <lrm_resources>
+          <lrm_resource id="p-fs-gpfs" type="gpfs" class="ocf" provider="ccni">
+            <lrm_rsc_op id="p-fs-gpfs_last_0" operation_key="p-fs-gpfs_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="56:5:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;56:5:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="102" rc-code="0" op-status="0" interval="0" last-run="1368723038" last-rc-change="0" exec-time="11130" queue-time="0" op-digest="828941af49371df1bdaf3281c8de7f26"/>
+            <lrm_rsc_op id="p-fs-gpfs_monitor_30000" operation_key="p-fs-gpfs_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="40:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;40:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="108" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="25" queue-time="0" op-digest="83933614961e691318bbfacb9713eb07"/>
+          </lrm_resource>
+          <lrm_resource id="p-watch-ib0" type="ethmonitor" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p-watch-ib0_last_failure_0" operation_key="p-watch-ib0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="25:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;25:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="113" rc-code="0" op-status="0" interval="0" last-run="1368723049" last-rc-change="0" exec-time="257" queue-time="0" op-digest="39e86b0225e78e1718225b1efcfd1d0d"/>
+            <lrm_rsc_op id="p-watch-ib0_monitor_10000" operation_key="p-watch-ib0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="51:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;51:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="117" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="260" queue-time="0" op-digest="c12f8e40e06de248b3c5192a119d0196"/>
+          </lrm_resource>
+          <lrm_resource id="fs-bind-libvirt-VM-cvmh" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_last_0" operation_key="fs-bind-libvirt-VM-cvmh_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="43:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;43:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="119" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="87" queue-time="0" op-digest="b05627a92b86f8fc3f4f613ff675ac66"/>
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_monitor_60000" operation_key="fs-bind-libvirt-VM-cvmh_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="44:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;44:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="122" rc-code="0" op-status="0" interval="60000" last-rc-change="0" exec-time="57" queue-time="0" op-digest="92166effb762961b3119fce320c94067"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh01_last_0" operation_key="fence-cvmh01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="110:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;110:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="237" rc-code="0" op-status="0" interval="0" last-run="1368729155" last-rc-change="0" exec-time="0" queue-time="1" op-digest="ad4c47dc9922141a09236b764207427d"/>
+            <lrm_rsc_op id="fence-cvmh01_monitor_7200000" operation_key="fence-cvmh01_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="110:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;110:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="226" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="158" queue-time="0" op-digest="1bd345323fea4739bb21c985e08220d7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh02_last_0" operation_key="fence-cvmh02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="107:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;107:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="251" rc-code="0" op-status="0" interval="0" last-run="1368729770" last-rc-change="0" exec-time="1" queue-time="0" op-digest="df0eceda2a9a52f8fed2c893aaeecf1e"/>
+            <lrm_rsc_op id="fence-cvmh02_monitor_7200000" operation_key="fence-cvmh02_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="109:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;109:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="244" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="126" queue-time="0" op-digest="fad12abe3bb211749252344d51678ae6"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh03" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh03_last_0" operation_key="fence-cvmh03_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="104:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;104:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="248" rc-code="0" op-status="0" interval="0" last-run="1368729770" last-rc-change="0" exec-time="1" queue-time="0" op-digest="da21d2ecd8134b896efeb7a09f94cb9b"/>
+            <lrm_rsc_op id="fence-cvmh03_monitor_7200000" operation_key="fence-cvmh03_monitor_7200000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="105:23:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;105:23:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="174" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="263" queue-time="0" op-digest="e115962a67889b475aff37575338a0a7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh04" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh04_last_0" operation_key="fence-cvmh04_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="44:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;44:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="71" rc-code="7" op-status="0" interval="0" last-run="1368723004" last-rc-change="0" exec-time="0" queue-time="0" op-digest="5eb06d429768e2c562aa4bd0d62ffcce"/>
+          </lrm_resource>
+          <lrm_resource id="p-libvirtd" type="libvirtd" class="lsb">
+            <lrm_rsc_op id="p-libvirtd_last_0" operation_key="p-libvirtd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="91:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;91:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="126" rc-code="0" op-status="0" interval="0" last-run="1368723051" last-rc-change="0" exec-time="219" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p-libvirtd_monitor_30000" operation_key="p-libvirtd_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="92:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;92:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="129" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="12" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="vm-compute-test" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-compute-test_last_0" operation_key="vm-compute-test_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="36:0:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;36:0:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="46" rc-code="7" op-status="0" interval="0" last-run="1368722834" last-rc-change="1368722834" exec-time="259" queue-time="0" op-digest="f7e7cda9d89df534dce4017bbbfc2bdd"/>
+          </lrm_resource>
+          <lrm_resource id="fs-libvirt-VM-xcm" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_last_failure_0" operation_key="fs-libvirt-VM-xcm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="36:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;36:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="144" rc-code="0" op-status="0" interval="0" last-run="1368723147" last-rc-change="0" exec-time="53" queue-time="0" op-digest="83b49ced37fad9a23c58a6e5f33a1681"/>
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_monitor_30000" operation_key="fs-libvirt-VM-xcm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="35:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;35:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="147" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="46" queue-time="0" op-digest="08268dab47091c9aa1b637af45216f65"/>
+          </lrm_resource>
+          <lrm_resource id="vm-swbuildsl6" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-swbuildsl6_last_0" operation_key="vm-swbuildsl6_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="114:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;114:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="257" rc-code="0" op-status="0" interval="0" last-run="1368729772" last-rc-change="0" exec-time="266" queue-time="0" op-digest="5cee8ac009e837925604fe5503628b55" migrate_source="cvmh01" migrate_target="cvmh04"/>
+            <lrm_rsc_op id="vm-swbuildsl6_monitor_45000" operation_key="vm-swbuildsl6_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="39:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;39:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="260" rc-code="0" op-status="0" interval="45000" last-rc-change="0" exec-time="243" queue-time="0" op-digest="eaa1ed7c843cacd0d8c87441a011a0ac"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="cvmh02" uname="cvmh02" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member">
+      <transient_attributes id="cvmh02">
+        <instance_attributes id="status-cvmh02">
+          <nvpair id="status-cvmh02-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cvmh02-ethmonitor-ib0" name="ethmonitor-ib0" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="cvmh02">
+        <lrm_resources>
+          <lrm_resource id="p-fs-gpfs" type="gpfs" class="ocf" provider="ccni">
+            <lrm_rsc_op id="p-fs-gpfs_last_0" operation_key="p-fs-gpfs_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="53:4:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;53:4:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1368723027" last-rc-change="0" exec-time="11226" queue-time="0" op-digest="828941af49371df1bdaf3281c8de7f26"/>
+            <lrm_rsc_op id="p-fs-gpfs_monitor_30000" operation_key="p-fs-gpfs_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="51:5:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;51:5:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="87" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="31" queue-time="0" op-digest="83933614961e691318bbfacb9713eb07"/>
+          </lrm_resource>
+          <lrm_resource id="p-watch-ib0" type="ethmonitor" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p-watch-ib0_last_failure_0" operation_key="p-watch-ib0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="21:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;21:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="96" rc-code="0" op-status="0" interval="0" last-run="1368723049" last-rc-change="0" exec-time="262" queue-time="0" op-digest="39e86b0225e78e1718225b1efcfd1d0d"/>
+            <lrm_rsc_op id="p-watch-ib0_monitor_10000" operation_key="p-watch-ib0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="54:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;54:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="104" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="260" queue-time="0" op-digest="c12f8e40e06de248b3c5192a119d0196"/>
+          </lrm_resource>
+          <lrm_resource id="fs-bind-libvirt-VM-cvmh" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_last_0" operation_key="fs-bind-libvirt-VM-cvmh_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="73:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;73:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="98" rc-code="0" op-status="0" interval="0" last-run="1368723049" last-rc-change="0" exec-time="89" queue-time="0" op-digest="b05627a92b86f8fc3f4f613ff675ac66"/>
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_monitor_60000" operation_key="fs-bind-libvirt-VM-cvmh_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="38:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;38:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="102" rc-code="0" op-status="0" interval="60000" last-rc-change="0" exec-time="57" queue-time="0" op-digest="92166effb762961b3119fce320c94067"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh01_last_0" operation_key="fence-cvmh01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="111:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;111:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="222" rc-code="0" op-status="0" interval="0" last-run="1368729155" last-rc-change="0" exec-time="160" queue-time="0" op-digest="ad4c47dc9922141a09236b764207427d"/>
+            <lrm_rsc_op id="fence-cvmh01_monitor_7200000" operation_key="fence-cvmh01_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="112:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;112:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="233" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="68" queue-time="0" op-digest="1bd345323fea4739bb21c985e08220d7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh02_last_0" operation_key="fence-cvmh02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="26:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;26:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1368723004" last-rc-change="0" exec-time="0" queue-time="0" op-digest="df0eceda2a9a52f8fed2c893aaeecf1e"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh03" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh03_last_0" operation_key="fence-cvmh03_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="104:9:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;104:9:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="121" rc-code="0" op-status="0" interval="0" last-run="1368723090" last-rc-change="0" exec-time="1" queue-time="0" op-digest="da21d2ecd8134b896efeb7a09f94cb9b"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh04" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh04_last_0" operation_key="fence-cvmh04_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="103:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;103:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="224" rc-code="0" op-status="0" interval="0" last-run="1368729155" last-rc-change="0" exec-time="76" queue-time="0" op-digest="5eb06d429768e2c562aa4bd0d62ffcce"/>
+            <lrm_rsc_op id="fence-cvmh04_monitor_7200000" operation_key="fence-cvmh04_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="104:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;104:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="231" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="65" queue-time="0" op-digest="531c7cae3c2cc7fb5f43069ff7382bd2"/>
+          </lrm_resource>
+          <lrm_resource id="p-libvirtd" type="libvirtd" class="lsb">
+            <lrm_rsc_op id="p-libvirtd_last_0" operation_key="p-libvirtd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="87:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;87:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="108" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="237" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p-libvirtd_monitor_30000" operation_key="p-libvirtd_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="88:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;88:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="111" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="11" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="vm-compute-test" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-compute-test_last_0" operation_key="vm-compute-test_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="37:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;37:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="239" rc-code="0" op-status="0" interval="0" last-run="1368729162" last-rc-change="0" exec-time="109" queue-time="0" migrate_source="cvmh02" migrate_target="cvmh03" op-digest="f7e7cda9d89df534dce4017bbbfc2bdd"/>
+            <lrm_rsc_op id="vm-compute-test_monitor_45000" operation_key="vm-compute-test_monitor_45000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="103:17:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;103:17:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="170" rc-code="0" op-status="0" interval="45000" last-rc-change="0" exec-time="235" queue-time="0" op-digest="db6fc9cf095af052d7e998c438c77c69"/>
+          </lrm_resource>
+          <lrm_resource id="fs-libvirt-VM-xcm" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_last_failure_0" operation_key="fs-libvirt-VM-xcm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="32:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;32:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="133" rc-code="0" op-status="0" interval="0" last-run="1368723147" last-rc-change="0" exec-time="53" queue-time="0" op-digest="83b49ced37fad9a23c58a6e5f33a1681"/>
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_monitor_30000" operation_key="fs-libvirt-VM-xcm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="38:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;38:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="136" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="56" queue-time="0" op-digest="08268dab47091c9aa1b637af45216f65"/>
+          </lrm_resource>
+          <lrm_resource id="vm-swbuildsl6" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-swbuildsl6_last_0" operation_key="vm-swbuildsl6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="36:44:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;36:44:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="219" rc-code="7" op-status="0" interval="0" last-run="1368727987" last-rc-change="1368727987" exec-time="156" queue-time="0" op-digest="5cee8ac009e837925604fe5503628b55"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="cvmh03" uname="cvmh03" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member">
+      <transient_attributes id="cvmh03">
+        <instance_attributes id="status-cvmh03">
+          <nvpair id="status-cvmh03-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cvmh03-ethmonitor-ib0" name="ethmonitor-ib0" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="cvmh03">
+        <lrm_resources>
+          <lrm_resource id="p-fs-gpfs" type="gpfs" class="ocf" provider="ccni">
+            <lrm_rsc_op id="p-fs-gpfs_last_0" operation_key="p-fs-gpfs_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="60:2:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;60:2:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="82" rc-code="0" op-status="0" interval="0" last-run="1368723007" last-rc-change="0" exec-time="6034" queue-time="0" op-digest="828941af49371df1bdaf3281c8de7f26"/>
+            <lrm_rsc_op id="p-fs-gpfs_monitor_30000" operation_key="p-fs-gpfs_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="47:3:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;47:3:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="87" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="31" queue-time="0" op-digest="83933614961e691318bbfacb9713eb07"/>
+          </lrm_resource>
+          <lrm_resource id="p-watch-ib0" type="ethmonitor" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p-watch-ib0_last_failure_0" operation_key="p-watch-ib0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="23:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;23:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="96" rc-code="0" op-status="0" interval="0" last-run="1368723049" last-rc-change="0" exec-time="257" queue-time="0" op-digest="39e86b0225e78e1718225b1efcfd1d0d"/>
+            <lrm_rsc_op id="p-watch-ib0_monitor_10000" operation_key="p-watch-ib0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="57:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;57:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="99" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="262" queue-time="1" op-digest="c12f8e40e06de248b3c5192a119d0196"/>
+          </lrm_resource>
+          <lrm_resource id="fs-bind-libvirt-VM-cvmh" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_last_0" operation_key="fs-bind-libvirt-VM-cvmh_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="41:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;41:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="101" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="89" queue-time="0" op-digest="b05627a92b86f8fc3f4f613ff675ac66"/>
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_monitor_60000" operation_key="fs-bind-libvirt-VM-cvmh_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="42:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;42:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="104" rc-code="0" op-status="0" interval="60000" last-rc-change="0" exec-time="56" queue-time="0" op-digest="92166effb762961b3119fce320c94067"/>
+          </lrm_resource>
+          <lrm_resource id="vm-compute-test" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-compute-test_last_0" operation_key="vm-compute-test_migrate_from_0" operation="migrate_from" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="115:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;115:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="239" rc-code="0" op-status="0" interval="0" last-run="1368729161" last-rc-change="0" exec-time="245" queue-time="1" op-digest="f7e7cda9d89df534dce4017bbbfc2bdd" migrate_source="cvmh02" migrate_target="cvmh03"/>
+            <lrm_rsc_op id="vm-compute-test_monitor_45000" operation_key="vm-compute-test_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="39:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;39:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="242" rc-code="0" op-status="0" interval="45000" last-rc-change="0" exec-time="267" queue-time="0" op-digest="db6fc9cf095af052d7e998c438c77c69"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh02_last_0" operation_key="fence-cvmh02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="107:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;107:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="233" rc-code="0" op-status="0" interval="0" last-run="1368729155" last-rc-change="0" exec-time="1" queue-time="0" op-digest="df0eceda2a9a52f8fed2c893aaeecf1e"/>
+            <lrm_rsc_op id="fence-cvmh02_monitor_7200000" operation_key="fence-cvmh02_monitor_7200000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="110:21:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;110:21:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="159" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="75" queue-time="0" op-digest="fad12abe3bb211749252344d51678ae6"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh01_last_0" operation_key="fence-cvmh01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="108:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;108:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="212" rc-code="0" op-status="0" interval="0" last-run="1368727897" last-rc-change="0" exec-time="1" queue-time="0" op-digest="ad4c47dc9922141a09236b764207427d"/>
+            <lrm_rsc_op id="fence-cvmh01_monitor_7200000" operation_key="fence-cvmh01_monitor_7200000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="113:21:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;113:21:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="161" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="68" queue-time="0" op-digest="1bd345323fea4739bb21c985e08220d7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh04" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh04_last_0" operation_key="fence-cvmh04_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="102:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;102:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="230" rc-code="0" op-status="0" interval="0" last-run="1368729155" last-rc-change="0" exec-time="0" queue-time="0" op-digest="5eb06d429768e2c562aa4bd0d62ffcce"/>
+            <lrm_rsc_op id="fence-cvmh04_monitor_7200000" operation_key="fence-cvmh04_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="103:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;103:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="219" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="195" queue-time="0" op-digest="531c7cae3c2cc7fb5f43069ff7382bd2"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh03" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh03_last_0" operation_key="fence-cvmh03_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="35:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;35:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1368723004" last-rc-change="0" exec-time="0" queue-time="0" op-digest="da21d2ecd8134b896efeb7a09f94cb9b"/>
+          </lrm_resource>
+          <lrm_resource id="p-libvirtd" type="libvirtd" class="lsb">
+            <lrm_rsc_op id="p-libvirtd_last_0" operation_key="p-libvirtd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="89:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;89:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="108" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="217" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p-libvirtd_monitor_30000" operation_key="p-libvirtd_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="90:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;90:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="111" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="11" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="fs-libvirt-VM-xcm" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_last_failure_0" operation_key="fs-libvirt-VM-xcm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="34:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;34:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="126" rc-code="0" op-status="0" interval="0" last-run="1368723147" last-rc-change="0" exec-time="45" queue-time="0" op-digest="83b49ced37fad9a23c58a6e5f33a1681"/>
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_monitor_30000" operation_key="fs-libvirt-VM-xcm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="41:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;41:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="129" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="58" queue-time="0" op-digest="08268dab47091c9aa1b637af45216f65"/>
+          </lrm_resource>
+          <lrm_resource id="vm-swbuildsl6" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-swbuildsl6_last_0" operation_key="vm-swbuildsl6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="38:44:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;38:44:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="226" rc-code="7" op-status="0" interval="0" last-run="1368727987" last-rc-change="1368727987" exec-time="155" queue-time="0" op-digest="5cee8ac009e837925604fe5503628b55"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="cvmh01" uname="cvmh01" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member">
+      <transient_attributes id="cvmh01">
+        <instance_attributes id="status-cvmh01">
+          <nvpair id="status-cvmh01-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cvmh01-ethmonitor-ib0" name="ethmonitor-ib0" value="1"/>
+          <nvpair id="status-cvmh01-last-failure-vm-swbuildsl6" name="last-failure-vm-swbuildsl6" value="1368727987"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="cvmh01">
+        <lrm_resources>
+          <lrm_resource id="p-fs-gpfs" type="gpfs" class="ocf" provider="ccni">
+            <lrm_rsc_op id="p-fs-gpfs_last_0" operation_key="p-fs-gpfs_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="48:3:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;48:3:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1368723014" last-rc-change="0" exec-time="13191" queue-time="0" op-digest="828941af49371df1bdaf3281c8de7f26"/>
+            <lrm_rsc_op id="p-fs-gpfs_monitor_30000" operation_key="p-fs-gpfs_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="52:4:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;52:4:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="96" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="26" queue-time="0" op-digest="83933614961e691318bbfacb9713eb07"/>
+          </lrm_resource>
+          <lrm_resource id="p-watch-ib0" type="ethmonitor" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p-watch-ib0_last_failure_0" operation_key="p-watch-ib0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="19:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;19:6:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="109" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="264" queue-time="0" op-digest="39e86b0225e78e1718225b1efcfd1d0d"/>
+            <lrm_rsc_op id="p-watch-ib0_monitor_10000" operation_key="p-watch-ib0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="60:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;60:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="118" rc-code="0" op-status="0" interval="10000" last-rc-change="0" exec-time="156" queue-time="0" op-digest="c12f8e40e06de248b3c5192a119d0196"/>
+          </lrm_resource>
+          <lrm_resource id="fs-bind-libvirt-VM-cvmh" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_last_0" operation_key="fs-bind-libvirt-VM-cvmh_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="71:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;71:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="111" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="89" queue-time="0" op-digest="b05627a92b86f8fc3f4f613ff675ac66"/>
+            <lrm_rsc_op id="fs-bind-libvirt-VM-cvmh_monitor_60000" operation_key="fs-bind-libvirt-VM-cvmh_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="72:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;72:6:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="114" rc-code="0" op-status="0" interval="60000" last-rc-change="0" exec-time="53" queue-time="0" op-digest="92166effb762961b3119fce320c94067"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh01" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh01_last_0" operation_key="fence-cvmh01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="15:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:7;15:1:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1368723004" last-rc-change="0" exec-time="0" queue-time="0" op-digest="ad4c47dc9922141a09236b764207427d"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh02" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh02_last_0" operation_key="fence-cvmh02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="108:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;108:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="328" rc-code="0" op-status="0" interval="0" last-run="1368729770" last-rc-change="0" exec-time="79" queue-time="0" op-digest="df0eceda2a9a52f8fed2c893aaeecf1e"/>
+            <lrm_rsc_op id="fence-cvmh02_monitor_7200000" operation_key="fence-cvmh02_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="109:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;109:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="332" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="73" queue-time="0" op-digest="fad12abe3bb211749252344d51678ae6"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh03" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh03_last_0" operation_key="fence-cvmh03_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="105:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;105:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="326" rc-code="0" op-status="0" interval="0" last-run="1368729770" last-rc-change="0" exec-time="101" queue-time="0" op-digest="da21d2ecd8134b896efeb7a09f94cb9b"/>
+            <lrm_rsc_op id="fence-cvmh03_monitor_7200000" operation_key="fence-cvmh03_monitor_7200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="106:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;106:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="334" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="122" queue-time="0" op-digest="e115962a67889b475aff37575338a0a7"/>
+          </lrm_resource>
+          <lrm_resource id="fence-cvmh04" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="fence-cvmh04_last_0" operation_key="fence-cvmh04_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="101:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;101:42:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="282" rc-code="0" op-status="0" interval="0" last-run="1368727897" last-rc-change="0" exec-time="1" queue-time="0" op-digest="5eb06d429768e2c562aa4bd0d62ffcce"/>
+            <lrm_rsc_op id="fence-cvmh04_monitor_7200000" operation_key="fence-cvmh04_monitor_7200000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="105:19:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;105:19:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="203" rc-code="0" op-status="0" interval="7200000" last-rc-change="0" exec-time="103" queue-time="0" op-digest="531c7cae3c2cc7fb5f43069ff7382bd2"/>
+          </lrm_resource>
+          <lrm_resource id="p-libvirtd" type="libvirtd" class="lsb">
+            <lrm_rsc_op id="p-libvirtd_last_0" operation_key="p-libvirtd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="85:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;85:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="121" rc-code="0" op-status="0" interval="0" last-run="1368723050" last-rc-change="0" exec-time="226" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="p-libvirtd_monitor_30000" operation_key="p-libvirtd_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="86:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;86:7:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="124" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="vm-compute-test" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-compute-test_last_0" operation_key="vm-compute-test_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="101:17:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;101:17:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="182" rc-code="0" op-status="0" interval="0" last-run="1368723634" last-rc-change="0" exec-time="107" queue-time="0" op-digest="f7e7cda9d89df534dce4017bbbfc2bdd"/>
+          </lrm_resource>
+          <lrm_resource id="fs-libvirt-VM-xcm" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_last_failure_0" operation_key="fs-libvirt-VM-xcm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="30:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;30:12:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="170" rc-code="0" op-status="0" interval="0" last-run="1368723147" last-rc-change="0" exec-time="49" queue-time="0" op-digest="83b49ced37fad9a23c58a6e5f33a1681"/>
+            <lrm_rsc_op id="fs-libvirt-VM-xcm_monitor_30000" operation_key="fs-libvirt-VM-xcm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="44:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;44:13:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="173" rc-code="0" op-status="0" interval="30000" last-rc-change="0" exec-time="52" queue-time="0" op-digest="08268dab47091c9aa1b637af45216f65"/>
+          </lrm_resource>
+          <lrm_resource id="vm-swbuildsl6" type="xcatVirtualDomain" class="ocf" provider="ccni">
+            <lrm_rsc_op id="vm-swbuildsl6_last_failure_0" operation_key="vm-swbuildsl6_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="33:46:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;33:46:7:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="305" rc-code="0" op-status="0" interval="0" last-run="1368729129" last-rc-change="0" exec-time="249" queue-time="0" op-digest="5cee8ac009e837925604fe5503628b55"/>
+            <lrm_rsc_op id="vm-swbuildsl6_monitor_45000" operation_key="vm-swbuildsl6_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="26:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;26:48:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="319" rc-code="0" op-status="0" interval="45000" last-rc-change="0" exec-time="185" queue-time="0" op-digest="eaa1ed7c843cacd0d8c87441a011a0ac"/>
+            <lrm_rsc_op id="vm-swbuildsl6_last_0" operation_key="vm-swbuildsl6_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="37:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" transition-magic="0:0;37:50:0:17a9de01-60db-4c3c-8cde-3ad398a7de34" call-id="339" rc-code="0" op-status="0" interval="0" last-run="1368729773" last-rc-change="0" exec-time="109" queue-time="0" op-digest="5cee8ac009e837925604fe5503628b55" migrate_source="cvmh01" migrate_target="cvmh04"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

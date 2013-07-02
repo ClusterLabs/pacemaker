@@ -1,0 +1,101 @@
+
+Current cluster status:
+Node cvmh03: standby
+Node cvmh04: standby
+Online: [ cvmh01 cvmh02 ]
+
+ fence-cvmh01	(stonith:fence_ipmilan):	Started cvmh02 
+ fence-cvmh02	(stonith:fence_ipmilan):	Started cvmh01 
+ fence-cvmh03	(stonith:fence_ipmilan):	Started cvmh01 
+ fence-cvmh04	(stonith:fence_ipmilan):	Started cvmh02 
+ Clone Set: c-fs-libvirt-VM-xcm [fs-libvirt-VM-xcm]
+     Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
+ Clone Set: c-p-libvirtd [p-libvirtd]
+     Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
+ Clone Set: c-fs-bind-libvirt-VM-cvmh [fs-bind-libvirt-VM-cvmh]
+     Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
+ Clone Set: c-watch-ib0 [p-watch-ib0]
+     Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
+ Clone Set: c-fs-gpfs [p-fs-gpfs]
+     Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
+ vm-compute-test	(ocf::ccni:xcatVirtualDomain):	Started cvmh03 
+ vm-swbuildsl6	(ocf::ccni:xcatVirtualDomain):	Started cvmh04 
+
+Transition Summary:
+ * Stop    fs-libvirt-VM-xcm:0	(cvmh04)
+ * Stop    fs-libvirt-VM-xcm:2	(cvmh03)
+ * Stop    p-watch-ib0:0	(cvmh04)
+ * Stop    p-watch-ib0:2	(cvmh03)
+ * Stop    p-fs-gpfs:0	(cvmh04)
+ * Stop    p-fs-gpfs:2	(cvmh03)
+ * Stop    p-libvirtd:0	(cvmh04)
+ * Stop    p-libvirtd:2	(cvmh03)
+ * Stop    fs-bind-libvirt-VM-cvmh:0	(cvmh04)
+ * Stop    fs-bind-libvirt-VM-cvmh:2	(cvmh03)
+ * Migrate vm-compute-test	(Started cvmh03 -> cvmh01)
+ * Migrate vm-swbuildsl6	(Started cvmh04 -> cvmh02)
+
+Executing cluster transition:
+ * Pseudo action:   c-watch-ib0_stop_0
+ * Resource action: vm-compute-test migrate_to on cvmh03
+ * Pseudo action:   load_stopped_cvmh01
+ * Pseudo action:   load_stopped_cvmh02
+ * Resource action: p-watch-ib0     stop on cvmh03
+ * Resource action: vm-compute-test migrate_from on cvmh01
+ * Resource action: vm-compute-test stop on cvmh03
+ * Pseudo action:   load_stopped_cvmh03
+ * Resource action: p-watch-ib0     stop on cvmh04
+ * Pseudo action:   c-watch-ib0_stopped_0
+ * Pseudo action:   vm-compute-test_start_0
+ * Resource action: vm-swbuildsl6   migrate_to on cvmh04
+ * Resource action: vm-compute-test monitor=45000 on cvmh01
+ * Resource action: vm-swbuildsl6   migrate_from on cvmh02
+ * Resource action: vm-swbuildsl6   stop on cvmh04
+ * Pseudo action:   load_stopped_cvmh04
+ * Pseudo action:   c-p-libvirtd_stop_0
+ * Pseudo action:   vm-swbuildsl6_start_0
+ * Resource action: p-libvirtd      stop on cvmh03
+ * Resource action: vm-swbuildsl6   monitor=45000 on cvmh02
+ * Resource action: p-libvirtd      stop on cvmh04
+ * Pseudo action:   c-p-libvirtd_stopped_0
+ * Pseudo action:   c-fs-bind-libvirt-VM-cvmh_stop_0
+ * Pseudo action:   c-fs-libvirt-VM-xcm_stop_0
+ * Resource action: fs-bind-libvirt-VM-cvmh stop on cvmh03
+ * Resource action: fs-libvirt-VM-xcm stop on cvmh03
+ * Resource action: fs-bind-libvirt-VM-cvmh stop on cvmh04
+ * Pseudo action:   c-fs-bind-libvirt-VM-cvmh_stopped_0
+ * Resource action: fs-libvirt-VM-xcm stop on cvmh04
+ * Pseudo action:   c-fs-libvirt-VM-xcm_stopped_0
+ * Pseudo action:   c-fs-gpfs_stop_0
+ * Resource action: p-fs-gpfs       stop on cvmh03
+ * Resource action: p-fs-gpfs       stop on cvmh04
+ * Pseudo action:   c-fs-gpfs_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Node cvmh03: standby
+Node cvmh04: standby
+Online: [ cvmh01 cvmh02 ]
+
+ fence-cvmh01	(stonith:fence_ipmilan):	Started cvmh02 
+ fence-cvmh02	(stonith:fence_ipmilan):	Started cvmh01 
+ fence-cvmh03	(stonith:fence_ipmilan):	Started cvmh01 
+ fence-cvmh04	(stonith:fence_ipmilan):	Started cvmh02 
+ Clone Set: c-fs-libvirt-VM-xcm [fs-libvirt-VM-xcm]
+     Started: [ cvmh01 cvmh02 ]
+     Stopped: [ cvmh03 cvmh04 ]
+ Clone Set: c-p-libvirtd [p-libvirtd]
+     Started: [ cvmh01 cvmh02 ]
+     Stopped: [ cvmh03 cvmh04 ]
+ Clone Set: c-fs-bind-libvirt-VM-cvmh [fs-bind-libvirt-VM-cvmh]
+     Started: [ cvmh01 cvmh02 ]
+     Stopped: [ cvmh03 cvmh04 ]
+ Clone Set: c-watch-ib0 [p-watch-ib0]
+     Started: [ cvmh01 cvmh02 ]
+     Stopped: [ cvmh03 cvmh04 ]
+ Clone Set: c-fs-gpfs [p-fs-gpfs]
+     Started: [ cvmh01 cvmh02 ]
+     Stopped: [ cvmh03 cvmh04 ]
+ vm-compute-test	(ocf::ccni:xcatVirtualDomain):	Started cvmh01 
+ vm-swbuildsl6	(ocf::ccni:xcatVirtualDomain):	Started cvmh02 
+
