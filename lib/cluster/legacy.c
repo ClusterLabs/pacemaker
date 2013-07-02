@@ -250,7 +250,21 @@ plugin_handle_membership(AIS_Message *msg)
 
             crm_update_peer(__FUNCTION__, id, born, seen, votes, procs, uname, uname, addr, state);
         }
+        free_xml(xml);
     }
+}
+
+
+static void
+legacy_default_deliver_message(cpg_handle_t handle,
+                               const struct cpg_name *groupName,
+                               uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+{
+    uint32_t kind = 0;
+    const char *from = NULL;
+    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+
+    free(data);
 }
 
 int
@@ -278,7 +292,13 @@ plugin_dispatch(gpointer user_data)
         cpg_deliver_fn_t(cpg_handle_t handle, const struct cpg_name *group_name,
                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len);
         */
-        cluster->cpg.cpg_deliver_fn(0, NULL, 0, 0, buffer, 0);
+        if (cluster && cluster->cpg.cpg_deliver_fn) {
+            cluster->cpg.cpg_deliver_fn(0, NULL, 0, 0, buffer, 0);
+
+        } else {
+            legacy_default_deliver_message(0, NULL, 0, 0, buffer, 0);
+        }
+
         coroipcc_dispatch_put(ais_ipc_handle);
 
     } while (ais_ipc_handle);
