@@ -3110,7 +3110,7 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
                    || other->rsc == rsc->parent) {
             continue;
         }
-        crm_debug("Ordering %s before %s (stop)", other_w->action->uuid, stop->uuid);
+        crm_debug("Ordering %s before %s (stop)", other_w->action->uuid, then->uuid);
         order_actions(other, then, other_w->type);
     }
 
@@ -3125,7 +3125,7 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
                    || other->rsc == rsc->parent) {
             continue;
         }
-        crm_debug("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
+        crm_debug("Ordering %s before %s (start)", other_w->action->uuid, then->uuid);
         order_actions(other, then, other_w->type);
     }
 }
