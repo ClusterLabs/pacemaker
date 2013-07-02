@@ -270,6 +270,22 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     rsc_then = pe_find_resource(data_set->resources, id_then);
     rsc_first = pe_find_resource(data_set->resources, id_first);
 
+    if(rsc_then && safe_str_neq(rsc_then->id, id_then)) {
+        /* We found an instance of a clone instead */
+        rsc_then = uber_parent(rsc_then);
+        if(rsc_then) {
+            crm_debug("Found %s for %s", rsc_then->id, id_then);
+        }
+    }
+
+    if(rsc_first && safe_str_neq(rsc_first->id, id_first)) {
+        /* We found an instance of a clone instead */
+        rsc_first = uber_parent(rsc_first);
+        if(rsc_first) {
+            crm_debug("Found %s for %s", rsc_first->id, id_first);
+        }
+    }
+
     if (rsc_then == NULL) {
         crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
         return FALSE;
