@@ -401,6 +401,7 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
     char buffer[512];
     char *arg_list = NULL;
     const char *value = NULL;
+    const char *_action = action;
 
     CRM_CHECK(action != NULL, return NULL);
 
@@ -479,6 +480,18 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
 
     if (device_args) {
         g_hash_table_foreach(device_args, append_arg, &arg_list);
+    }
+
+    if(g_hash_table_lookup(device_args, STONITH_ATTR_ACTION_OP)) {
+        if(safe_str_eq(_action,"list")
+           || safe_str_eq(_action,"status")
+           || safe_str_eq(_action,"monitor")
+           || safe_str_eq(_action,"metadata")) {
+            /* Force use of the calculated command for support ops
+             * We don't want list or monitor ops initiating fencing, regardless of what the admin configured
+             */
+            append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
+        }
     }
 
     return arg_list;
