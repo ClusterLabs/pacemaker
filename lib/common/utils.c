@@ -1257,7 +1257,7 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
         }
 
     } else {
-        crm_err("Cannout open series file %s for writing", series_file);
+        crm_err("Cannot open series file %s for writing", series_file);
     }
 
     if (file_strm != NULL) {
