@@ -482,7 +482,7 @@ make_args(const char *action, const char *victim, uint32_t victim_nodeid, GHashT
         g_hash_table_foreach(device_args, append_arg, &arg_list);
     }
 
-    if(g_hash_table_lookup(device_args, STONITH_ATTR_ACTION_OP)) {
+    if(device_args && g_hash_table_lookup(device_args, STONITH_ATTR_ACTION_OP)) {
         if(safe_str_eq(_action,"list")
            || safe_str_eq(_action,"status")
            || safe_str_eq(_action,"monitor")
