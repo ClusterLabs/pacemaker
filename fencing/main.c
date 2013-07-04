@@ -630,7 +630,11 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         return;
 
     } else if(node->weight < 0) {
-        crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score2char(node->weight));
+        char *score = score2char(node->weight);
+
+        crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
+        free(score);
+
         return;
 
     } else {
