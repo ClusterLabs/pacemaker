@@ -642,7 +642,6 @@ extern int set_cluster_type(enum cluster_type_e type);
 gboolean
 init_cs_connection_once(crm_cluster_t * cluster)
 {
-    const char *uuid = NULL;
     crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
 
@@ -687,11 +686,7 @@ init_cs_connection_once(crm_cluster_t * cluster)
 
     /* Ensure the local node always exists */
     peer = crm_get_peer(cluster->nodeid, cluster->uname);
-    uuid = get_corosync_uuid(peer);
-
-    if(uuid) {
-        cluster->uuid = strdup(uuid);
-    }
+    cluster->uuid = get_corosync_uuid(peer);
 
     return TRUE;
 }
