@@ -298,6 +298,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
+        char *score = NULL;
 
         chosen = child->fns->location(child, NULL, FALSE);
         if (chosen == NULL || child->sort_index < 0) {
@@ -308,8 +309,10 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
         /* adds in master preferences and rsc_location.role=Master */
-        pe_rsc_trace(rsc, "Adding %s to %s from %s", score2char(child->sort_index),
+        score = score2char(child->sort_index);
+        pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
+        free(score);
         node->weight = merge_weights(child->sort_index, node->weight);
     }
 
