@@ -161,7 +161,12 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
 
     if (on_uname == NULL) {
         /* uname not in event, check cache */
-        on_uname = crm_peer_uname(event_node_uuid);
+        if (get_is_remote_from_event(event) == FALSE) {
+            /* crm_peer_uname can initialize a remote-node into the peer cache,
+             * which is very bad. Only look for uname if this event doesn't involve
+             * a remote-node. */
+            on_uname = crm_peer_uname(event_node_uuid);
+        }
         CRM_CHECK(on_uname != NULL, return TRUE);
     }
 
