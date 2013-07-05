@@ -394,6 +394,7 @@ exit 0
 
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
+%{_unitdir}/pacemaker.combined.service
 %else
 %{_initrddir}/pacemaker
 %endif
