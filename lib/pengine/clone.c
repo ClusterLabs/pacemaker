@@ -392,6 +392,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     GListPtr gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
+    int active_instances = 0;
 
     if (pre_text == NULL) {
         pre_text = " ";
@@ -488,6 +489,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         node_t *host = gIter->data;
 
         list_text = add_list_element(list_text, host->details->uname);
+	active_instances++;
     }
 
     short_print(list_text, child_text, "Masters", options, print_data);
@@ -501,6 +503,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         node_t *host = gIter->data;
 
         list_text = add_list_element(list_text, host->details->uname);
+	active_instances++;
     }
 
     short_print(list_text, child_text, rsc->variant == pe_master ? "Slaves" : "Started", options,
@@ -510,7 +513,8 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     list_text = NULL;
 
     /* Stopped */
-    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+    if(is_not_set(rsc->flags, pe_rsc_unique) 
+	&& (clone_data->clone_max > active_instances)) {
 
         GListPtr nIter;
         GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
