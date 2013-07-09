@@ -41,7 +41,6 @@ Online: [ c001n11 c001n12 ]
 
  fencing	(stonith:external/ssh):	Started c001n11
  Clone Set: dlm-clone [dlm]
-     Stopped: [ c001n11 c001n12 ]
  Clone Set: o2cb-clone [o2cb]
      Stopped: [ c001n11 c001n12 ]
  Clone Set: clone-drbd0 [drbd0]

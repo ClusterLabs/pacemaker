@@ -11,10 +11,8 @@ Online: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
-     Stopped: [ hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
      Slaves: [ hex-2 hex-3 ]
-     Stopped: [ hex-1 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Started hex-3 
      vg-md0	(ocf::heartbeat:LVM):	Started hex-3 
@@ -58,11 +56,9 @@ Online: [ hex-1 hex-2 hex-3 ]
  Master/Slave Set: ms-r0 [drbd-r0]
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
-     Stopped: [ hex-3 ]
  Master/Slave Set: ms-r1 [drbd-r1]
      Masters: [ hex-3 ]
      Slaves: [ hex-2 ]
-     Stopped: [ hex-1 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Started hex-3 
      vg-md0	(ocf::heartbeat:LVM):	Started hex-3 

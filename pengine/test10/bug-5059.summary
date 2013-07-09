@@ -14,7 +14,6 @@ OFFLINE: [ gluster04.h ]
      Stopped: [ gluster03.h gluster04.h ]
  Clone Set: c_dummy [p_dummy1]
      Started: [ gluster01.h gluster02.h ]
-     Stopped: [ gluster03.h gluster04.h ]
 
 Transition Summary:
  * Promote p_stateful1:0	(Slave -> Master gluster01.h)
@@ -72,8 +71,6 @@ OFFLINE: [ gluster04.h ]
  Master/Slave Set: ms_stateful [g_stateful]
      Masters: [ gluster01.h ]
      Slaves: [ gluster02.h ]
-     Stopped: [ gluster03.h gluster04.h ]
  Clone Set: c_dummy [p_dummy1]
      Started: [ gluster01.h gluster02.h ]
-     Stopped: [ gluster03.h gluster04.h ]
 

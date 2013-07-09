@@ -23,6 +23,5 @@ Online: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk pcw2688.see.ed.ac.uk pcw2709
 
  Clone Set: cups_clone [cups_lsb]
      Started: [ pcw2058.see.ed.ac.uk pcw2059.see.ed.ac.uk ]
-     Stopped: [ pcw2688.see.ed.ac.uk pcw2709.see.ed.ac.uk ]
  smb_lsb	(lsb:smb):	Started pcw2688.see.ed.ac.uk
 

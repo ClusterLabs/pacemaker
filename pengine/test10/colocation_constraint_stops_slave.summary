@@ -5,7 +5,6 @@ OFFLINE: [ fc16-builder2 ]
 
  Master/Slave Set: MASTER_RSC_A [NATIVE_RSC_A]
      Slaves: [ fc16-builder ]
-     Stopped: [ fc16-builder2 ]
  NATIVE_RSC_B	(ocf::pacemaker:Dummy):	Started fc16-builder
 
 Transition Summary:

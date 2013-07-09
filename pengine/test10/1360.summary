@@ -6,7 +6,6 @@ Online: [ ssgtest1a ssgtest1b ]
      VIP	(ocf::testing:VIP-RIP.sh):	Started ssgtest1a
  Clone Set: dolly [dollies]
      Started: [ ssgtest1a ]
-     Stopped: [ ssgtest1b ]
 
 Transition Summary:
  * Move    dollies:0	(Started ssgtest1a -> ssgtest1b)
@@ -27,5 +26,4 @@ Online: [ ssgtest1a ssgtest1b ]
      VIP	(ocf::testing:VIP-RIP.sh):	Started ssgtest1a
  Clone Set: dolly [dollies]
      Started: [ ssgtest1b ]
-     Stopped: [ ssgtest1a ]
 

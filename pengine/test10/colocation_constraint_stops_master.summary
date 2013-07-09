@@ -4,7 +4,6 @@ Online: [ fc16-builder fc16-builder2 ]
 
  Master/Slave Set: MASTER_RSC_A [NATIVE_RSC_A]
      Masters: [ fc16-builder ]
-     Stopped: [ fc16-builder2 ]
 
 Transition Summary:
  * Demote  NATIVE_RSC_A:0	(Master -> Stopped fc16-builder)

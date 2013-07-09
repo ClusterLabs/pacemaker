@@ -104,7 +104,6 @@ Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
      boothd	(ocf::pacemaker:booth-site):	Started lustre02-left
  Master/Slave Set: ms-drbd-mgs [drbd-mgs]
      Slaves: [ lustre01-left lustre02-left ]
-     Stopped: [ lustre03-left lustre04-left ]
  Master/Slave Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000]
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
  Master/Slave Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left]
