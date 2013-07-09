@@ -391,12 +391,16 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
 
                 if (crm_is_true(crm_element_value(search, XML_NODE_IS_REMOTE))) {
-                    /* remote node uname and uuids are the same. */
+                    /* Remote node uname and uuids are the same.
+                     * We also don't want them to be present in the
+                     * peer cache, so we shouldn't look them up with
+                     * crm_peer_uname()
+                     */
                     uname = ID(search);
                 } else {
                     uname = crm_peer_uname(ID(search));
                 }
-				break;
+                break;
             }
             search = search->parent;
         }
