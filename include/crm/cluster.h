@@ -60,6 +60,7 @@ typedef struct crm_peer_node_s {
     uint32_t id;                /* Only used by corosync derivatives */
     uint64_t born;              /* Only used by heartbeat and the legacy plugin */
     uint64_t last_seen;
+    uint64_t flags;             /* Unused, but might be a good place to specify 'remote' */
 
     int32_t votes;              /* Only used by the legacy plugin */
     uint32_t processes;
