@@ -151,23 +151,17 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
         return FALSE;
     }
 
+    CRM_LOG_ASSERT(on_uname != NULL);
+    if (on_uname == NULL) {
+        return TRUE;
+    }
+
     if (failed_stop_offset == NULL) {
         failed_stop_offset = strdup(INFINITY_S);
     }
 
     if (failed_start_offset == NULL) {
         failed_start_offset = strdup(INFINITY_S);
-    }
-
-    if (on_uname == NULL) {
-        /* uname not in event, check cache */
-        if (get_is_remote_from_event(event) == FALSE) {
-            /* crm_peer_uname can initialize a remote-node into the peer cache,
-             * which is very bad. Only look for uname if this event doesn't involve
-             * a remote-node. */
-            on_uname = crm_peer_uname(event_node_uuid);
-        }
-        CRM_CHECK(on_uname != NULL, return TRUE);
     }
 
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval), crm_err("Couldn't parse: %s", ID(event));
