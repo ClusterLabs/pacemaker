@@ -53,13 +53,6 @@
 
 CRM_TRACE_INIT_DATA(lrmd);
 
-/* This structure is just used to retrieve a list of
- * fencing device clients stored locally on this machine
- * and retrieve the metadata for those devices... This api
- * never actually connects to the stonith component for any
- * reason. */
-static stonith_t *stonith_api = NULL;
-
 static int lrmd_api_disconnect(lrmd_t * lrmd);
 static int lrmd_api_is_connected(lrmd_t * lrmd);
 
@@ -1494,16 +1487,15 @@ static int
 stonith_get_metadata(const char *provider, const char *type, char **output)
 {
     int rc = pcmk_ok;
+    stonith_t *stonith_api = stonith_api_new();
 
-    if (!stonith_api) {
-        stonith_api = stonith_api_new();
-        CRM_ASSERT(stonith_api != NULL);
-    }
+    CRM_ASSERT(stonith_api != NULL);
 
     stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
     if (*output == NULL) {
         rc = -EIO;
     }
+    stonith_api->cmds->free(stonith_api);
     return rc;
 }
 
@@ -1818,13 +1810,11 @@ static int
 list_stonith_agents(lrmd_list_t ** resources)
 {
     int rc = 0;
+    stonith_t *stonith_api = stonith_api_new();
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    if (!stonith_api) {
-        stonith_api = stonith_api_new();
-        CRM_ASSERT(stonith_api != NULL);
-    }
+    CRM_ASSERT(stonith_api != NULL);
 
     stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
 
@@ -1836,6 +1826,8 @@ list_stonith_agents(lrmd_list_t ** resources)
     }
 
     stonith_key_value_freeall(stonith_resources, 1, 0);
+
+    stonith_api->cmds->free(stonith_api);
     return rc;
 }
 
@@ -2011,16 +2003,6 @@ lrmd_api_delete(lrmd_t * lrmd)
 #endif
         free(native->remote_nodename);
         free(native->remote);
-    }
-
-    /* Go ahead and cleanup the global stonith_api structure
-     * when ever an api instance is deleted... the stonith_api
-     * will get created again if it is needed later on.  Since no
-     * actual connection to stonith is initiated, creation/deletion is
-     * very cheap. */
-    if (stonith_api) {
-        stonith_api->cmds->free(stonith_api);
-        stonith_api = NULL;
     }
 
     free(lrmd->private);
