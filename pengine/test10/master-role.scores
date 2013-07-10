@@ -5,9 +5,9 @@ clone_color: res_Stateful_1:0 allocation score on sles11-a: 0
 clone_color: res_Stateful_1:0 allocation score on sles11-b: 11
 clone_color: res_Stateful_1:1 allocation score on sles11-a: 11
 clone_color: res_Stateful_1:1 allocation score on sles11-b: 0
-native_color: res_Stateful_1:0 allocation score on sles11-a: 0
+native_color: res_Stateful_1:0 allocation score on sles11-a: -INFINITY
 native_color: res_Stateful_1:0 allocation score on sles11-b: 11
 native_color: res_Stateful_1:1 allocation score on sles11-a: 11
-native_color: res_Stateful_1:1 allocation score on sles11-b: -INFINITY
+native_color: res_Stateful_1:1 allocation score on sles11-b: 0
 res_Stateful_1:0 promotion score on sles11-b: 10
 res_Stateful_1:1 promotion score on sles11-a: 10

@@ -18,7 +18,7 @@ native_color: IPaddr0 allocation score on frigg: -INFINITY
 native_color: IPaddr0 allocation score on odin: 76
 native_color: MailTo allocation score on frigg: -INFINITY
 native_color: MailTo allocation score on odin: 0
-native_color: drbd0:0 allocation score on frigg: 0
+native_color: drbd0:0 allocation score on frigg: -INFINITY
 native_color: drbd0:0 allocation score on odin: 76
 native_color: drbd0:1 allocation score on frigg: 76
-native_color: drbd0:1 allocation score on odin: -INFINITY
+native_color: drbd0:1 allocation score on odin: 0

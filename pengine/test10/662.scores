@@ -29,10 +29,10 @@ native_color: child_DoFencing:0 allocation score on c001n04: -INFINITY
 native_color: child_DoFencing:0 allocation score on c001n09: -INFINITY
 native_color: child_DoFencing:1 allocation score on c001n02: -INFINITY
 native_color: child_DoFencing:1 allocation score on c001n03: 1
-native_color: child_DoFencing:1 allocation score on c001n04: 0
+native_color: child_DoFencing:1 allocation score on c001n04: -INFINITY
 native_color: child_DoFencing:1 allocation score on c001n09: 0
 native_color: child_DoFencing:2 allocation score on c001n02: -INFINITY
-native_color: child_DoFencing:2 allocation score on c001n03: -INFINITY
+native_color: child_DoFencing:2 allocation score on c001n03: 0
 native_color: child_DoFencing:2 allocation score on c001n04: 1
 native_color: child_DoFencing:2 allocation score on c001n09: 0
 native_color: child_DoFencing:3 allocation score on c001n02: -INFINITY

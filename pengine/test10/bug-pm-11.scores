@@ -15,22 +15,22 @@ clone_color: stateful-2:1 allocation score on node-a: 0
 clone_color: stateful-2:1 allocation score on node-b: 0
 group:0 promotion score on node-b: 49
 group:1 promotion score on node-a: 99
-group_color: group:0 allocation score on node-a: 0
+group_color: group:0 allocation score on node-a: -INFINITY
 group_color: group:0 allocation score on node-b: 0
 group_color: group:1 allocation score on node-a: 0
-group_color: group:1 allocation score on node-b: -INFINITY
-group_color: stateful-1:0 allocation score on node-a: 0
+group_color: group:1 allocation score on node-b: 0
+group_color: stateful-1:0 allocation score on node-a: -INFINITY
 group_color: stateful-1:0 allocation score on node-b: 1
 group_color: stateful-1:1 allocation score on node-a: 1
-group_color: stateful-1:1 allocation score on node-b: -INFINITY
-group_color: stateful-2:0 allocation score on node-a: 0
+group_color: stateful-1:1 allocation score on node-b: 0
+group_color: stateful-2:0 allocation score on node-a: -INFINITY
 group_color: stateful-2:0 allocation score on node-b: 0
 group_color: stateful-2:1 allocation score on node-a: 0
-group_color: stateful-2:1 allocation score on node-b: -INFINITY
-native_color: stateful-1:0 allocation score on node-a: 0
+group_color: stateful-2:1 allocation score on node-b: 0
+native_color: stateful-1:0 allocation score on node-a: -INFINITY
 native_color: stateful-1:0 allocation score on node-b: 1
 native_color: stateful-1:1 allocation score on node-a: 1
-native_color: stateful-1:1 allocation score on node-b: -INFINITY
+native_color: stateful-1:1 allocation score on node-b: 0
 native_color: stateful-2:0 allocation score on node-a: -INFINITY
 native_color: stateful-2:0 allocation score on node-b: 0
 native_color: stateful-2:1 allocation score on node-a: 0

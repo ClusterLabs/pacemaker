@@ -18,8 +18,8 @@ group_color: webserver allocation score on dktest2: 0
 native_color: apache-vip allocation score on dktest1: INFINITY
 native_color: apache-vip allocation score on dktest2: -INFINITY
 native_color: drbd1:0 allocation score on dktest1: INFINITY
-native_color: drbd1:0 allocation score on dktest2: -INFINITY
-native_color: drbd1:1 allocation score on dktest1: 0
+native_color: drbd1:0 allocation score on dktest2: 0
+native_color: drbd1:1 allocation score on dktest1: -INFINITY
 native_color: drbd1:1 allocation score on dktest2: INFINITY
 native_color: mount allocation score on dktest1: INFINITY
 native_color: mount allocation score on dktest2: -INFINITY

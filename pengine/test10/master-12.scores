@@ -14,15 +14,15 @@ clone_color: sf:1 allocation score on sel4: 1
 drbd0:0 promotion score on sel4: 75
 drbd0:1 promotion score on sel3: 175
 drbd0:2 promotion score on none: 0
-native_color: drbd0:0 allocation score on sel3: 0
+native_color: drbd0:0 allocation score on sel3: -INFINITY
 native_color: drbd0:0 allocation score on sel4: 76
 native_color: drbd0:1 allocation score on sel3: 76
-native_color: drbd0:1 allocation score on sel4: -INFINITY
+native_color: drbd0:1 allocation score on sel4: 0
 native_color: fs0 allocation score on sel3: 76
 native_color: fs0 allocation score on sel4: -INFINITY
 native_color: sf:0 allocation score on sel3: 1
-native_color: sf:0 allocation score on sel4: -INFINITY
-native_color: sf:1 allocation score on sel3: 0
+native_color: sf:0 allocation score on sel4: 0
+native_color: sf:1 allocation score on sel3: -INFINITY
 native_color: sf:1 allocation score on sel4: 1
 sf:0 promotion score on sel3: 99
 sf:1 promotion score on sel4: -1

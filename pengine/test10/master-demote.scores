@@ -31,8 +31,8 @@ named_drbd_node:2 promotion score on none: 0
 native_color: cyrus_address allocation score on cxa1: 210
 native_color: cyrus_address allocation score on cxb1: 200
 native_color: cyrus_drbd_node:0 allocation score on cxa1: 76
-native_color: cyrus_drbd_node:0 allocation score on cxb1: -INFINITY
-native_color: cyrus_drbd_node:1 allocation score on cxa1: 0
+native_color: cyrus_drbd_node:0 allocation score on cxb1: 0
+native_color: cyrus_drbd_node:1 allocation score on cxa1: -INFINITY
 native_color: cyrus_drbd_node:1 allocation score on cxb1: 76
 native_color: cyrus_filesys allocation score on cxa1: -INFINITY
 native_color: cyrus_filesys allocation score on cxb1: -INFINITY
@@ -43,8 +43,8 @@ native_color: cyrus_syslogd allocation score on cxb1: -INFINITY
 native_color: cyrus_volgroup allocation score on cxa1: -INFINITY
 native_color: cyrus_volgroup allocation score on cxb1: -INFINITY
 native_color: fence_node:0 allocation score on cxa1: 1
-native_color: fence_node:0 allocation score on cxb1: -INFINITY
-native_color: fence_node:1 allocation score on cxa1: 0
+native_color: fence_node:0 allocation score on cxb1: 0
+native_color: fence_node:1 allocation score on cxa1: -INFINITY
 native_color: fence_node:1 allocation score on cxb1: 1
 native_color: named_address allocation score on cxa1: 200
 native_color: named_address allocation score on cxb1: 210
@@ -61,6 +61,6 @@ native_color: named_syslogd allocation score on cxb1: -INFINITY
 native_color: named_volgroup allocation score on cxa1: -INFINITY
 native_color: named_volgroup allocation score on cxb1: -INFINITY
 native_color: pingd_node:0 allocation score on cxa1: 1
-native_color: pingd_node:0 allocation score on cxb1: -INFINITY
-native_color: pingd_node:1 allocation score on cxa1: 0
+native_color: pingd_node:0 allocation score on cxb1: 0
+native_color: pingd_node:1 allocation score on cxa1: -INFINITY
 native_color: pingd_node:1 allocation score on cxb1: 1

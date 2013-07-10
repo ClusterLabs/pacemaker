@@ -135,7 +135,7 @@ native_color: fs-libvirt-VM-xcm:0 allocation score on cvmh01: -INFINITY
 native_color: fs-libvirt-VM-xcm:0 allocation score on cvmh02: -INFINITY
 native_color: fs-libvirt-VM-xcm:0 allocation score on cvmh03: -INFINITY
 native_color: fs-libvirt-VM-xcm:0 allocation score on cvmh04: -INFINITY
-native_color: fs-libvirt-VM-xcm:1 allocation score on cvmh01: 0
+native_color: fs-libvirt-VM-xcm:1 allocation score on cvmh01: -INFINITY
 native_color: fs-libvirt-VM-xcm:1 allocation score on cvmh02: 1
 native_color: fs-libvirt-VM-xcm:1 allocation score on cvmh03: -INFINITY
 native_color: fs-libvirt-VM-xcm:1 allocation score on cvmh04: -INFINITY
@@ -144,14 +144,14 @@ native_color: fs-libvirt-VM-xcm:2 allocation score on cvmh02: -INFINITY
 native_color: fs-libvirt-VM-xcm:2 allocation score on cvmh03: -INFINITY
 native_color: fs-libvirt-VM-xcm:2 allocation score on cvmh04: -INFINITY
 native_color: fs-libvirt-VM-xcm:3 allocation score on cvmh01: 1
-native_color: fs-libvirt-VM-xcm:3 allocation score on cvmh02: -INFINITY
+native_color: fs-libvirt-VM-xcm:3 allocation score on cvmh02: 0
 native_color: fs-libvirt-VM-xcm:3 allocation score on cvmh03: -INFINITY
 native_color: fs-libvirt-VM-xcm:3 allocation score on cvmh04: -INFINITY
 native_color: p-fs-gpfs:0 allocation score on cvmh01: -INFINITY
 native_color: p-fs-gpfs:0 allocation score on cvmh02: -INFINITY
 native_color: p-fs-gpfs:0 allocation score on cvmh03: -INFINITY
 native_color: p-fs-gpfs:0 allocation score on cvmh04: -INFINITY
-native_color: p-fs-gpfs:1 allocation score on cvmh01: 0
+native_color: p-fs-gpfs:1 allocation score on cvmh01: -INFINITY
 native_color: p-fs-gpfs:1 allocation score on cvmh02: 1
 native_color: p-fs-gpfs:1 allocation score on cvmh03: -INFINITY
 native_color: p-fs-gpfs:1 allocation score on cvmh04: -INFINITY
@@ -160,7 +160,7 @@ native_color: p-fs-gpfs:2 allocation score on cvmh02: -INFINITY
 native_color: p-fs-gpfs:2 allocation score on cvmh03: -INFINITY
 native_color: p-fs-gpfs:2 allocation score on cvmh04: -INFINITY
 native_color: p-fs-gpfs:3 allocation score on cvmh01: 1
-native_color: p-fs-gpfs:3 allocation score on cvmh02: -INFINITY
+native_color: p-fs-gpfs:3 allocation score on cvmh02: 0
 native_color: p-fs-gpfs:3 allocation score on cvmh03: -INFINITY
 native_color: p-fs-gpfs:3 allocation score on cvmh04: -INFINITY
 native_color: p-libvirtd:0 allocation score on cvmh01: -INFINITY
@@ -183,7 +183,7 @@ native_color: p-watch-ib0:0 allocation score on cvmh01: -INFINITY
 native_color: p-watch-ib0:0 allocation score on cvmh02: -INFINITY
 native_color: p-watch-ib0:0 allocation score on cvmh03: -INFINITY
 native_color: p-watch-ib0:0 allocation score on cvmh04: -INFINITY
-native_color: p-watch-ib0:1 allocation score on cvmh01: 0
+native_color: p-watch-ib0:1 allocation score on cvmh01: -INFINITY
 native_color: p-watch-ib0:1 allocation score on cvmh02: 1
 native_color: p-watch-ib0:1 allocation score on cvmh03: -INFINITY
 native_color: p-watch-ib0:1 allocation score on cvmh04: -INFINITY
@@ -192,7 +192,7 @@ native_color: p-watch-ib0:2 allocation score on cvmh02: -INFINITY
 native_color: p-watch-ib0:2 allocation score on cvmh03: -INFINITY
 native_color: p-watch-ib0:2 allocation score on cvmh04: -INFINITY
 native_color: p-watch-ib0:3 allocation score on cvmh01: 1
-native_color: p-watch-ib0:3 allocation score on cvmh02: -INFINITY
+native_color: p-watch-ib0:3 allocation score on cvmh02: 0
 native_color: p-watch-ib0:3 allocation score on cvmh03: -INFINITY
 native_color: p-watch-ib0:3 allocation score on cvmh04: -INFINITY
 native_color: vm-compute-test allocation score on cvmh01: 0

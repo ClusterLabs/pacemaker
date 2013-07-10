@@ -233,7 +233,7 @@ native_color: prmPingd:1 allocation score on act1: -INFINITY
 native_color: prmPingd:1 allocation score on act2: -INFINITY
 native_color: prmPingd:1 allocation score on act3: -INFINITY
 native_color: prmPingd:1 allocation score on sby1: INFINITY
-native_color: prmPingd:1 allocation score on sby2: -INFINITY
+native_color: prmPingd:1 allocation score on sby2: 0
 native_color: prmPingd:2 allocation score on act1: -INFINITY
 native_color: prmPingd:2 allocation score on act2: INFINITY
 native_color: prmPingd:2 allocation score on act3: 0
@@ -247,5 +247,5 @@ native_color: prmPingd:3 allocation score on sby2: 0
 native_color: prmPingd:4 allocation score on act1: -INFINITY
 native_color: prmPingd:4 allocation score on act2: -INFINITY
 native_color: prmPingd:4 allocation score on act3: -INFINITY
-native_color: prmPingd:4 allocation score on sby1: 0
+native_color: prmPingd:4 allocation score on sby1: -INFINITY
 native_color: prmPingd:4 allocation score on sby2: INFINITY

@@ -16,6 +16,6 @@ native_color: failover-ip allocation score on node-2: -INFINITY
 native_color: master-app-rsc allocation score on node-0: 0
 native_color: master-app-rsc allocation score on node-2: -INFINITY
 native_color: node-app-rsc:0 allocation score on node-0: 1
-native_color: node-app-rsc:0 allocation score on node-2: -INFINITY
-native_color: node-app-rsc:1 allocation score on node-0: 0
+native_color: node-app-rsc:0 allocation score on node-2: 0
+native_color: node-app-rsc:1 allocation score on node-0: -INFINITY
 native_color: node-app-rsc:1 allocation score on node-2: 1

@@ -20,8 +20,8 @@ native_color: dummy02 allocation score on bl460g1n14: 0
 native_color: dummy03 allocation score on bl460g1n13: -INFINITY
 native_color: dummy03 allocation score on bl460g1n14: 0
 native_color: prmDRBD:0 allocation score on bl460g1n13: INFINITY
-native_color: prmDRBD:0 allocation score on bl460g1n14: -INFINITY
-native_color: prmDRBD:1 allocation score on bl460g1n13: 0
+native_color: prmDRBD:0 allocation score on bl460g1n14: 0
+native_color: prmDRBD:1 allocation score on bl460g1n13: -INFINITY
 native_color: prmDRBD:1 allocation score on bl460g1n14: INFINITY
 prmDRBD:0 promotion score on bl460g1n13: 1
 prmDRBD:1 promotion score on bl460g1n14: 10100

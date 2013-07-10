@@ -30,11 +30,11 @@ native_color: main_rsc2 allocation score on srv01: -INFINITY
 native_color: main_rsc2 allocation score on srv02: INFINITY
 native_color: main_rsc2 allocation score on srv03: 100
 native_color: prmDummy1:0 allocation score on srv01: -INFINITY
-native_color: prmDummy1:0 allocation score on srv02: 0
+native_color: prmDummy1:0 allocation score on srv02: -INFINITY
 native_color: prmDummy1:0 allocation score on srv03: INFINITY
 native_color: prmDummy1:1 allocation score on srv01: -INFINITY
 native_color: prmDummy1:1 allocation score on srv02: INFINITY
-native_color: prmDummy1:1 allocation score on srv03: -INFINITY
+native_color: prmDummy1:1 allocation score on srv03: 0
 native_color: prmDummy1:2 allocation score on srv01: -INFINITY
 native_color: prmDummy1:2 allocation score on srv02: -INFINITY
 native_color: prmDummy1:2 allocation score on srv03: -INFINITY
@@ -43,10 +43,10 @@ native_color: prmPingd:0 allocation score on srv01: -INFINITY
 native_color: prmPingd:0 allocation score on srv02: -INFINITY
 native_color: prmPingd:0 allocation score on srv02: 0
 native_color: prmPingd:0 allocation score on srv03: -INFINITY
-native_color: prmPingd:0 allocation score on srv03: -INFINITY
+native_color: prmPingd:0 allocation score on srv03: 0
 native_color: prmPingd:1 allocation score on srv01: -INFINITY
-native_color: prmPingd:1 allocation score on srv02: 0
+native_color: prmPingd:1 allocation score on srv02: -INFINITY
 native_color: prmPingd:1 allocation score on srv03: INFINITY
 native_color: prmPingd:2 allocation score on srv01: -INFINITY
 native_color: prmPingd:2 allocation score on srv02: INFINITY
-native_color: prmPingd:2 allocation score on srv03: -INFINITY
+native_color: prmPingd:2 allocation score on srv03: 0

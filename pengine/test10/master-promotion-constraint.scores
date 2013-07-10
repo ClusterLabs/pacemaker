@@ -17,10 +17,10 @@ native_color: d1 allocation score on hex-13: -INFINITY
 native_color: d1 allocation score on hex-14: -INFINITY
 native_color: fencing-sbd allocation score on hex-13: 0
 native_color: fencing-sbd allocation score on hex-14: 0
-native_color: s0:0 allocation score on hex-13: -INFINITY
+native_color: s0:0 allocation score on hex-13: 0
 native_color: s0:0 allocation score on hex-14: 11
 native_color: s0:1 allocation score on hex-13: 6
-native_color: s0:1 allocation score on hex-14: 0
+native_color: s0:1 allocation score on hex-14: -INFINITY
 s0:0 promotion score on hex-14: -INFINITY
 s0:1 promotion score on hex-13: -INFINITY
 s0:2 promotion score on none: 0
