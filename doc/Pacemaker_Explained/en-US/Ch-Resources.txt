@@ -585,7 +585,7 @@ healthy.  To instruct the cluster to do this, you need to add a
 * 'standby' - Move _all_ resources away from the node on which the resource failed
 
 The default for the +stop+ operation is +fence+ when STONITH is
-enabled and +block+ otherwise. All other operations default to +stop+.
+enabled and +block+ otherwise. All other operations default to +restart+.
  indexterm:[on-fail,Action Property]
  indexterm:[Action,Property,on-fail]
 
