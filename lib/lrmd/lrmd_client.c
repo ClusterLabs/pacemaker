@@ -53,6 +53,11 @@
 
 CRM_TRACE_INIT_DATA(lrmd);
 
+/* This structure is just used to retrieve a list of
+ * fencing device clients stored locally on this machine
+ * and retrieve the metadata for those devices... This api
+ * never actually connects to the stonith component for any
+ * reason. */
 static stonith_t *stonith_api = NULL;
 
 static int lrmd_api_disconnect(lrmd_t * lrmd);
@@ -1490,6 +1495,11 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
 {
     int rc = pcmk_ok;
 
+    if (!stonith_api) {
+        stonith_api = stonith_api_new();
+        CRM_ASSERT(stonith_api != NULL);
+    }
+
     stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
     if (*output == NULL) {
         rc = -EIO;
@@ -1811,6 +1821,11 @@ list_stonith_agents(lrmd_list_t ** resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
+    if (!stonith_api) {
+        stonith_api = stonith_api_new();
+        CRM_ASSERT(stonith_api != NULL);
+    }
+
     stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
@@ -1948,10 +1963,6 @@ lrmd_api_new(void)
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
     new_lrmd->cmds->list_standards = lrmd_api_list_standards;
 
-    if (!stonith_api) {
-        stonith_api = stonith_api_new();
-    }
-
     return new_lrmd;
 }
 
@@ -2002,6 +2013,11 @@ lrmd_api_delete(lrmd_t * lrmd)
         free(native->remote);
     }
 
+    /* Go ahead and cleanup the global stonith_api structure
+     * when ever an api instance is deleted... the stonith_api
+     * will get created again if it is needed later on.  Since no
+     * actual connection to stonith is initiated, creation/deletion is
+     * very cheap. */
     if (stonith_api) {
         stonith_api->cmds->free(stonith_api);
         stonith_api = NULL;
