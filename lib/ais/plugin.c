@@ -161,27 +161,27 @@ get_process_list(void)
 }
 
 static struct corosync_lib_handler pcmk_lib_service[] = {
-    {                           /* 0 */
+    {                           /* 0 - crm_class_cluster */
      .lib_handler_fn = pcmk_ipc,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
-    {                           /* 1 */
+    {                           /* 1 - crm_class_members */
      .lib_handler_fn = pcmk_nodes,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
-    {                           /* 2 */
+    {                           /* 2 - crm_class_notify */
      .lib_handler_fn = pcmk_notify,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
-    {                           /* 3 */
+    {                           /* 3 - crm_class_nodeid */
      .lib_handler_fn = pcmk_nodeid,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
-    {                           /* 4 */
+    {                           /* 4 - crm_class_rmpeer */
      .lib_handler_fn = pcmk_remove_member,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
-    {                           /* 5 */
+    {                           /* 5 - crm_class_quorum */
      .lib_handler_fn = pcmk_quorum,
      .flow_control = COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
      },
