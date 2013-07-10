@@ -1490,7 +1490,9 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
 {
     int rc = pcmk_ok;
 
-    stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
+    if(stonith_api) {
+        stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
+    }
     if (*output == NULL) {
         rc = -EIO;
     }
@@ -1811,7 +1813,9 @@ list_stonith_agents(lrmd_list_t ** resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
+    if(stonith_api) {
+        stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
+    }
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
         rc++;
