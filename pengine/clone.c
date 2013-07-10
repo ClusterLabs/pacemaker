@@ -473,10 +473,15 @@ append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all)
 node_t *
 clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
-    int allocated = 0;
     GHashTableIter iter;
+    GListPtr nIter = NULL;
     GListPtr gIter = NULL;
+    GListPtr nodes = NULL;
     node_t *node = NULL;
+
+    int allocated = 0;
+    int loop_max = 0;
+    int clone_max = 0;
     int available_nodes = 0;
     clone_variant_data_t *clone_data = NULL;
 
@@ -526,19 +531,29 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
+    clone_max = clone_data->clone_max;
+    if(available_nodes) {
+        loop_max = clone_data->clone_max / available_nodes;
+    }
+    if (loop_max < 1) {
+        loop_max = 1;
+    }
+
     rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
 
     /* Pre-allocate as many instances as we can to their current location
+     * First pre-sort the list of nodes by their placement score
      */
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-    while (available_nodes
-           && available_nodes <= clone_data->clone_max
-           && g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        int lpc;
-        int loop_max = clone_data->clone_max / available_nodes;
+    nodes = g_hash_table_get_values(rsc->allowed_nodes);
+    nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
 
-        if (loop_max < 1) {
-            loop_max = 1;
+    for(nIter = nodes; nIter; nIter = nIter->next) {
+        int lpc;
+
+        node = nIter->data;
+
+        if(clone_max <= 0) {
+            break;
         }
 
         if (can_run_resources(node) == FALSE || node->weight < 0) {
@@ -546,7 +561,8 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             continue;
         }
 
-        pe_rsc_trace(rsc, "Pre-allocatiing %s", node->details->uname);
+        clone_max--;
+        pe_rsc_trace(rsc, "Pre-allocating %s (%d remaining)", node->details->uname, clone_max);
         for (lpc = 0;
              allocated < clone_data->clone_max
              && node->count < clone_data->clone_node_max
@@ -572,9 +588,9 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     pe_rsc_trace(rsc, "Done pre-allocating");
+    g_list_free(nodes);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
         if (g_list_length(child->running_on) > 0) {
