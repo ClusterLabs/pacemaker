@@ -290,6 +290,16 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if(uname && node->uname == NULL) {
+        int lpc, len = strlen(uname);
+
+        for (lpc = 0; lpc < len; lpc++) {
+            if (uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
+                crm_warn("Node names with capitals are discouraged, consider changing '%s' to something else",
+                         uname);
+                break;
+            }
+        }
+
         node->uname = strdup(uname);
         if (crm_status_callback) {
             crm_status_callback(crm_status_uname, node, NULL);
