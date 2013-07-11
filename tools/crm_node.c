@@ -114,7 +114,9 @@ cib_remove_node(uint32_t id, const char *name)
     return rc;
 }
 
-static int tools_remove_node_cache(const char *node, const char *target)
+int tools_remove_node_cache(const char *node, const char *target);
+
+int tools_remove_node_cache(const char *node, const char *target)
 {
     int n = 0;
     int rc = -1;
