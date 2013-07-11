@@ -34,6 +34,11 @@ SendSIGKILL=no
 #
 # ExecStopPost=killall -TERM crmd attrd fenced cib pengine lrmd
 
+# If you want Corosync to stop whenever Pacemaker is stopped,
+# uncomment the next line too:
+#
+# ExecStopPost=killall -TERM corosync
+
 # Uncomment this for older versions of systemd that didn't support
 # TimeoutStopSec
 # TimeoutSec=30min
