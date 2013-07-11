@@ -616,6 +616,7 @@ struct mainloop_io_s {
     char *name;
     void *userdata;
 
+    int fd;
     guint source;
     crm_ipc_t *ipc;
     GIOChannel *channel;
@@ -646,6 +647,8 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     gboolean keep = TRUE;
     mainloop_io_t *client = data;
+
+    CRM_ASSERT(client->fd == g_io_channel_unix_get_fd(client->channel));
 
     if (condition & G_IO_IN) {
         if (client->ipc) {
@@ -820,6 +823,7 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
             client->dispatch_fn_io = callbacks->dispatch;
         }
 
+        client->fd = fd;
         client->channel = g_io_channel_unix_new(fd);
         client->source =
             g_io_add_watch_full(client->channel, priority,
