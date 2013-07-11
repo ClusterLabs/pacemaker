@@ -36,7 +36,6 @@
 #include <ctype.h>
 gboolean fatal_error = FALSE;
 GMainLoop *mainloop = NULL;
-GHashTable *peers = NULL;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 
@@ -103,7 +102,11 @@ static uint32_t
 get_process_list(void)
 {
     int lpc = 0;
-    uint32_t procs = crm_proc_plugin;
+    uint32_t procs = 0;
+
+    if(is_classic_ais_cluster()) {
+        procs |= crm_proc_plugin;
+    }
 
     for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
         if (pcmk_children[lpc].pid != 0) {
@@ -481,7 +484,7 @@ pcmk_ipc_destroy(qb_ipcs_connection_t * c)
     crm_trace("Connection %p", c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = {
+struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
     .connection_accept = pcmk_ipc_accept,
     .connection_created = pcmk_ipc_created,
     .msg_process = pcmk_ipc_dispatch,
@@ -489,34 +492,30 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_destroyed = pcmk_ipc_destroy
 };
 
-static void
-ghash_send_proc_details(gpointer key, gpointer value, gpointer data)
-{
-    crm_ipcs_send(value, 0, data, TRUE);
-}
-
-static void
-peer_loop_fn(gpointer key, gpointer value, gpointer user_data)
-{
-    pcmk_peer_t *node = value;
-    xmlNode *update = user_data;
-
-    xmlNode *xml = create_xml_node(update, "node");
-
-    crm_xml_add_int(xml, "id", node->id);
-    crm_xml_add(xml, "uname", node->uname);
-    crm_xml_add_int(xml, "processes", node->processes);
-}
-
 void
 update_process_clients(void)
 {
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+    crm_client_t *client = NULL;
     xmlNode *update = create_xml_node(NULL, "nodes");
 
     crm_trace("Sending process list to %d children", crm_hash_table_size(client_connections));
 
-    g_hash_table_foreach(peers, peer_loop_fn, update);
-    g_hash_table_foreach(client_connections, ghash_send_proc_details, update);
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+        xmlNode *xml = create_xml_node(update, "node");
+
+        crm_xml_add_int(xml, "id", node->id);
+        crm_xml_add(xml, "uname", node->uname);
+        crm_xml_add(xml, "state", node->state);
+        crm_xml_add_int(xml, "processes", node->processes);
+    }
+
+    g_hash_table_iter_init(&iter, client_connections);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
+        crm_ipcs_send(client, 0, update, TRUE);
+    }
 
     free_xml(update);
 }
@@ -550,42 +549,7 @@ gboolean
 update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 {
     gboolean changed = FALSE;
-    pcmk_peer_t *node = g_hash_table_lookup(peers, GUINT_TO_POINTER(id));
-
-    if (node == NULL) {
-        changed = TRUE;
-
-        node = calloc(1, sizeof(pcmk_peer_t));
-        node->id = id;
-
-        g_hash_table_insert(peers, GUINT_TO_POINTER(id), node);
-        node = g_hash_table_lookup(peers, GUINT_TO_POINTER(id));
-        CRM_ASSERT(node != NULL);
-    }
-
-    if (uname != NULL) {
-        if (node->uname == NULL || safe_str_eq(node->uname, uname) == FALSE) {
-            int lpc, len = strlen(uname);
-
-            crm_notice("%p Node %u now known as %s%s%s", node, id, uname,
-                       node->uname ? node->uname : ", was: ", node->uname ? node->uname : "");
-            free(node->uname);
-            node->uname = strdup(uname);
-            changed = TRUE;
-
-            for (lpc = 0; lpc < len; lpc++) {
-                if (uname[lpc] >= 'A' && uname[lpc] <= 'Z') {
-                    crm_warn
-                        ("Node names with capitals are discouraged, consider changing '%s' to something else",
-                         uname);
-                    break;
-                }
-            }
-        }
-
-    } else {
-        crm_trace("Empty uname for node %u", id);
-    }
+    crm_node_t *node = crm_get_peer(id, uname);
 
     if (procs != 0) {
         if (procs != node->processes) {
@@ -803,6 +767,19 @@ mcp_cpg_membership(cpg_handle_t handle,
     update_process_peers();
 }
 
+static gboolean
+mcp_quorum_callback(unsigned long long seq, gboolean quorate)
+{
+    /* Nothing to do */
+    return TRUE;
+}
+
+static void
+mcp_quorum_destroy(gpointer user_data)
+{
+    crm_info("connection closed");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -830,7 +807,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
 
-    /* Restore the original facility so that read_config() does the right thing */
+    /* Restore the original facility so that mcp_read_config() does the right thing */
     set_daemon_option("logfacility", facility);
 
     while (1) {
@@ -906,7 +883,7 @@ main(int argc, char **argv)
     crm_ipc_close(old_instance);
     crm_ipc_destroy(old_instance);
 
-    if (read_config() == FALSE) {
+    if (mcp_read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
         crm_exit(ENODATA);
     }
@@ -968,9 +945,7 @@ main(int argc, char **argv)
 
     /* Resource agent paths are constructed by the lrmd */
 
-    peers = g_hash_table_new(g_direct_hash, g_direct_equal);
-
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &ipc_callbacks);
+    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
         crm_exit(EIO);
@@ -989,6 +964,11 @@ main(int argc, char **argv)
     if(cluster_connect_cpg(&cluster) == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
         crm_exit(ENOPROTOOPT);
+    }
+
+    if (is_corosync_cluster()) {
+        /* Keep the membership list up-to-date for crm_node to query */
+        rc = cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy);
     }
 
     local_name = get_local_node_name();

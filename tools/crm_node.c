@@ -585,7 +585,11 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
                 fprintf(stdout, "%u %s\n", id, uname);
 
             } else if (command == 'p') {
-                fprintf(stdout, "%s ", uname);
+                const char *state = crm_element_value(node, "state");
+
+                if(safe_str_eq(state, CRM_NODE_MEMBER)) {
+                    fprintf(stdout, "%s ", uname);
+                }
             }
         }
         free_xml(msg);
@@ -684,6 +688,7 @@ try_corosync(int command, enum cluster_type_e stack)
                 mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL,
                                         &node_callbacks);
             if (ipc != NULL) {
+                /* Sending anything will get us a list of nodes */
                 xmlNode *poke = create_xml_node(NULL, "poke");
 
                 crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);

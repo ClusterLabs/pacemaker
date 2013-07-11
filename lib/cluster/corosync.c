@@ -240,7 +240,7 @@ quorum_callbacks_t quorum_callbacks = {
 };
 
 gboolean
-init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
+cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
                        void (*destroy) (gpointer))
 {
     int rc = -1;

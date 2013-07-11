@@ -262,7 +262,7 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 #endif
 
 gboolean
-read_config(void)
+mcp_read_config(void)
 {
     int rc = CS_OK;
     int retries = 0;

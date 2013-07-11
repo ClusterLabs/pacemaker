@@ -432,7 +432,7 @@ void crm_update_peer_state(const char *source, crm_node_t * node, const char *st
 gboolean init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean),
                               void (*destroy) (gpointer));
 
-gboolean init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
+gboolean cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
                                 void (*destroy) (gpointer));
 
 void set_node_uuid(const char *uname, const char *uuid);

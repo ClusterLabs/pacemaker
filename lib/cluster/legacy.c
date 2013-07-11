@@ -448,7 +448,7 @@ init_cman_connection(gboolean(*dispatch) (unsigned long long, gboolean), void (*
 #  ifdef SUPPORT_COROSYNC
 
 gboolean
-init_quorum_connection(gboolean(*dispatch) (unsigned long long, gboolean),
+cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
                        void (*destroy) (gpointer))
 {
     crm_err("The Corosync quorum API is not supported in this build");

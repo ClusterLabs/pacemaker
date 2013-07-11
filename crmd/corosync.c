@@ -200,7 +200,7 @@ crm_connect_corosync(crm_cluster_t * cluster)
     }
 
     if (rc && is_corosync_cluster()) {
-        init_quorum_connection(crmd_cman_dispatch, crmd_quorum_destroy);
+        cluster_connect_quorum(crmd_cman_dispatch, crmd_quorum_destroy);
     }
 #  if SUPPORT_CMAN
     if (rc && is_cman_cluster()) {
