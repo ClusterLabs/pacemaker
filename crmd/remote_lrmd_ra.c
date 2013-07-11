@@ -33,8 +33,6 @@
 /* The max start timeout before cmd retry */
 #define MAX_START_TIMEOUT_MS 10000
 
-int remote_ra_callid = 0;
-
 typedef struct remote_ra_cmd_s {
     /*! the local node the cmd is issued from */
     char *owner;
@@ -102,6 +100,19 @@ free_cmd(gpointer user_data)
     free(cmd);
 }
 
+static int
+generate_callid(void)
+{
+    static int remote_ra_callid = 0;
+
+    remote_ra_callid++;
+    if (remote_ra_callid <= 0) {
+        remote_ra_callid = 1;
+    }
+
+    return remote_ra_callid;
+}
+
 static gboolean
 recurring_helper(gpointer data)
 {
@@ -114,6 +125,9 @@ recurring_helper(gpointer data)
         remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
 
         ra_data->recurring_cmds = g_list_remove(ra_data->recurring_cmds, cmd);
+
+        cmd->call_id = generate_callid();
+
         ra_data->cmds = g_list_append(ra_data->cmds, cmd);
         mainloop_set_trigger(ra_data->work);
     }
@@ -648,11 +662,7 @@ remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     cmd->params = params;
     cmd->start_time = time(NULL);
 
-    remote_ra_callid++;
-    if (remote_ra_callid <= 0) {
-        remote_ra_callid = 1;
-    }
-    cmd->call_id = remote_ra_callid;
+    cmd->call_id = generate_callid();
 
     if (cmd->start_delay) {
         cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
