@@ -591,7 +591,7 @@ if __name__ == '__main__':
         scenario = Sequence(
             cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "boot":
-        scenario = Sequence(cm, [ LeaveBooted(Environment)], Audits, [])
+        scenario = Boot(cm, [ LeaveBooted(Environment)], Audits, [])
     else:
         scenario = RandomTests(
             cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)

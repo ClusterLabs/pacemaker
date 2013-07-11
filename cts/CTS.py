@@ -1460,7 +1460,7 @@ class ClusterManager(UserDict):
         else:        self.ShouldBeStatus[node]="down"
         return ret
 
-    def startall(self, nodelist=None, verbose=False):
+    def startall(self, nodelist=None, verbose=False, quick=False):
 
         '''Start the cluster manager on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
@@ -1469,12 +1469,39 @@ class ClusterManager(UserDict):
         map = {}
         if not nodelist:
             nodelist=self.Env["nodes"]
+        if not quick:
+            for node in nodelist:
+                if self.ShouldBeStatus[node] == "down":
+                    self.ns.WaitForAllNodesToComeUp(nodelist, 300)
+                    if not self.StartaCM(node, verbose=verbose):
+                        ret = 0
+            return ret
+
+        # Approximation of SimulStartList for --boot 
+        watchpats = [ ]
+        watchpats.append(self["Pat:DC_IDLE"])
         for node in nodelist:
-            if self.ShouldBeStatus[node] == "down":
-                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
-                if not self.StartaCM(node, verbose=verbose):
-                    ret = 0
-        return ret
+            watchpats.append(self["Pat:Local_started"] % node)
+            watchpats.append(self["Pat:InfraUp"] % node)
+            watchpats.append(self["Pat:PacemakerUp"] % node)
+
+        #   Start all the nodes - at about the same time...
+        watch = LogWatcher(self.Env, self["LogFileName"], watchpats, "fast-start", self["DeadTime"]+10)
+        watch.setwatch()
+
+        for node in nodelist:
+            self.StartaCMnoBlock(node, verbose=verbose)
+
+        watch.lookforall()
+        if watch.unmatched:
+            for regex in watch.unmatched:
+                self.log ("Warn: Startup pattern not found: %s" %(regex))
+
+        if not self.cluster_stable():
+            self.log("Cluster did not stabilize")
+            return 0
+
+        return 1
 
     def stopall(self, nodelist=None, verbose=False):
 

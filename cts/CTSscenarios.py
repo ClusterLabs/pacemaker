@@ -291,6 +291,11 @@ class Sequence(Scenario):
                 self.run_test(test, testcount)
                 testcount += 1
 
+class Boot(Scenario):
+    '''Start the Cluster'''
+    def run_loop(self, Iterations):
+        testcount=0
+
 class BootCluster(ScenarioComponent):
     (
 '''BootCluster is the most basic of ScenarioComponents.
@@ -315,7 +320,7 @@ as they might have been rebooted or crashed for some reason beforehand.
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")
-        return CM.startall(verbose=True)
+        return CM.startall(verbose=True, quick=True)
 
     def TearDown(self, CM):
         '''Set up the given ScenarioComponent'''

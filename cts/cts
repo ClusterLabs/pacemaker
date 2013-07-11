@@ -47,7 +47,7 @@ while true; do
 	--build|build) build=1; shift;;
 	--kill|kill) kill=1; shift; break;;
 	--run|run) run=1; shift; break;;
-	--boot|boot) boot=1; clean=1; shift; break;;
+	--boot|boot|start) boot=1; clean=1; shift; break;;
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
 	local-init)
