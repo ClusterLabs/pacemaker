@@ -107,7 +107,7 @@ extern gboolean crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr
 
 extern gboolean send_request(xmlNode * msg, char **msg_reference);
 
-extern enum crmd_fsa_input handle_message(xmlNode * stored_msg);
+extern enum crmd_fsa_input handle_message(xmlNode * stored_msg, enum crmd_fsa_cause cause);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 

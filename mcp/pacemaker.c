@@ -77,6 +77,8 @@ static pcmk_child_t pcmk_children[] = {
 
 static gboolean start_child(pcmk_child_t * child);
 static gboolean check_active_before_startup_processes(gpointer user_data);
+void update_process_clients(crm_client_t *client);
+void update_process_peers(void);
 
 void
 enable_crmd_as_root(gboolean enable)
@@ -458,9 +460,23 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
                    crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
         pcmk_shutdown(15);
 
+    } else if (crm_str_eq(task, CRM_OP_RM_NODE_CACHE, TRUE)) {
+        /* Send to everyone */
+        struct iovec *iov;
+        int id = 0;
+        const char *name = NULL;
+
+        crm_element_value_int(msg, XML_ATTR_ID, &id);
+        name = crm_element_value(msg, XML_ATTR_UNAME);
+        crm_notice("Instructing peers to remove references to node %s/%u", name, id);
+
+        iov = calloc(1, sizeof(struct iovec));
+        iov->iov_base = dump_xml_unformatted(msg);
+        iov->iov_len = 1 + strlen(iov->iov_base);
+        send_cpg_iov(iov);
+
     } else {
-        /* Just send to everyone */
-        update_process_clients();
+        update_process_clients(c);
     }
 
     free_xml(msg);
@@ -493,11 +509,10 @@ struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
 };
 
 void
-update_process_clients(void)
+update_process_clients(crm_client_t *client)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
-    crm_client_t *client = NULL;
     xmlNode *update = create_xml_node(NULL, "nodes");
 
     crm_trace("Sending process list to %d children", crm_hash_table_size(client_connections));
@@ -512,9 +527,14 @@ update_process_clients(void)
         crm_xml_add_int(xml, "processes", node->processes);
     }
 
-    g_hash_table_iter_init(&iter, client_connections);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
+    if(client) {
         crm_ipcs_send(client, 0, update, TRUE);
+
+    } else {
+        g_hash_table_iter_init(&iter, client_connections);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
+            crm_ipcs_send(client, 0, update, TRUE);
+        }
     }
 
     free_xml(update);
@@ -564,7 +584,7 @@ update_node_processes(uint32_t id, const char *uname, uint32_t procs)
     }
 
     if (changed && id == local_nodeid) {
-        update_process_clients();
+        update_process_clients(NULL);
         update_process_peers();
     }
     return changed;
@@ -743,16 +763,27 @@ mcp_cpg_deliver(cpg_handle_t handle,
                  const struct cpg_name *groupName,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    if (nodeid != local_nodeid) {
+    xmlNode *xml = string2xml(msg);
+    const char *task = crm_element_value(xml, F_CRM_TASK);
+
+    crm_trace("Recieved %s %.200s", task, msg);
+    if (task == NULL && nodeid != local_nodeid) {
         uint32_t procs = 0;
-        xmlNode *xml = string2xml(msg);
         const char *uname = crm_element_value(xml, "uname");
 
         crm_element_value_int(xml, "proclist", (int *)&procs);
         /* crm_debug("Got proclist %.32x from %s", procs, uname); */
         if (update_node_processes(nodeid, uname, procs)) {
-            update_process_clients();
+            update_process_clients(NULL);
         }
+
+    } else if (crm_str_eq(task, CRM_OP_RM_NODE_CACHE, TRUE)) {
+        int id = 0;
+        const char *name = NULL;
+
+        crm_element_value_int(xml, XML_ATTR_ID, &id);
+        name = crm_element_value(xml, XML_ATTR_UNAME);
+        reap_crm_member(id, name);
     }
 }
 

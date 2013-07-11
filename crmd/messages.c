@@ -39,7 +39,7 @@ GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 void handle_response(xmlNode * stored_msg);
-enum crmd_fsa_input handle_request(xmlNode * stored_msg);
+enum crmd_fsa_input handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause);
 enum crmd_fsa_input handle_shutdown_request(xmlNode * stored_msg);
 
 #ifdef MSG_LOG
@@ -333,7 +333,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
     }
 
     /* handle locally */
-    result = handle_message(input);
+    result = handle_message(input, cause);
 
     /* done or process later? */
     switch (result) {
@@ -588,7 +588,7 @@ crmd_authorize_message(xmlNode * client_msg, crm_client_t * curr_client, const c
 }
 
 enum crmd_fsa_input
-handle_message(xmlNode * msg)
+handle_message(xmlNode * msg, enum crmd_fsa_cause cause)
 {
     const char *type = NULL;
 
@@ -596,7 +596,7 @@ handle_message(xmlNode * msg)
 
     type = crm_element_value(msg, F_CRM_MSG_TYPE);
     if (crm_str_eq(type, XML_ATTR_REQUEST, TRUE)) {
-        return handle_request(msg);
+        return handle_request(msg, cause);
 
     } else if (crm_str_eq(type, XML_ATTR_RESPONSE, TRUE)) {
         handle_response(msg);
@@ -646,7 +646,7 @@ handle_failcount_op(xmlNode * stored_msg)
 }
 
 enum crmd_fsa_input
-handle_request(xmlNode * stored_msg)
+handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 {
     xmlNode *msg = NULL;
     const char *op = crm_element_value(stored_msg, F_CRM_TASK);
@@ -792,14 +792,22 @@ handle_request(xmlNode * stored_msg)
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
         int id = 0;
         const char *name = NULL;
-        xmlNode *options = get_xpath_object("//" XML_TAG_OPTIONS, stored_msg, LOG_ERR);
 
-        if (options) {
-            crm_element_value_int(options, XML_ATTR_ID, &id);
-            name = crm_element_value(options, XML_ATTR_UNAME);
+        crm_element_value_int(stored_msg, XML_ATTR_ID, &id);
+        name = crm_element_value(stored_msg, XML_ATTR_UNAME);
+
+        if(cause == C_IPC_MESSAGE) {
+            msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+            if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+                crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
+            } else {
+                crm_notice("Instructing peers to remove references to node %s/%u", name, id);
+            }
+            free_xml(msg);
+
+        } else {
+            reap_crm_member(id, name);
         }
-
-        reap_crm_member(id, name);
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");

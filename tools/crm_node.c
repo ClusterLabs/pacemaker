@@ -44,8 +44,6 @@ char *target_uname = NULL;
 const char *standby_value = NULL;
 const char *standby_scope = NULL;
 
-int crmd_remove_node_cache(const char *id);
-
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -116,71 +114,71 @@ cib_remove_node(uint32_t id, const char *name)
     return rc;
 }
 
-int
-crmd_remove_node_cache(const char *id)
+static int tools_remove_node_cache(const char *node, const char *target)
 {
     int n = 0;
     int rc = -1;
     char *name = NULL;
     char *admin_uuid = NULL;
-    crm_ipc_t *conn = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    crm_ipc_t *conn = crm_ipc_new(target, 0);
     xmlNode *cmd = NULL;
     xmlNode *hello = NULL;
-    xmlNode *msg_data = NULL;
     char *endptr = NULL;
 
     if (!conn) {
-        goto rm_node_cleanup;
+        return -ENOTCONN;
     }
 
     if (!crm_ipc_connect(conn)) {
-        goto rm_node_cleanup;
+        crm_ipc_destroy(conn);
+        return -ENOTCONN;
     }
 
-    admin_uuid = calloc(1, 11);
-    snprintf(admin_uuid, 10, "%d", getpid());
-    admin_uuid[10] = '\0';
+    if(safe_str_eq(target, CRM_SYSTEM_CRMD)) {
+        admin_uuid = calloc(1, 11);
+        snprintf(admin_uuid, 10, "%d", getpid());
+        admin_uuid[10] = '\0';
 
-    hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
-    rc = crm_ipc_send(conn, hello, 0, 0, NULL);
-    if (rc < 0) {
-        goto rm_node_cleanup;
+        hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
+        rc = crm_ipc_send(conn, hello, 0, 0, NULL);
+
+        free_xml(hello);
+        free(admin_uuid);
+        if (rc < 0) {
+            return rc;
+        }
     }
 
     errno = 0;
-    n = strtol(id, &endptr, 10);
-    if (errno != 0 || endptr == id || *endptr != '\0') {
+    n = strtol(node, &endptr, 10);
+    if (errno != 0 || endptr == node || *endptr != '\0') {
         /* Argument was not a nodeid */
         n = 0;
-        name = strdup(id);
+        name = strdup(node);
     } else {
         name = get_node_name(n);
     }
 
-    crm_trace("Removing %s aka. %s from the membership cache", name, id);
-
-    msg_data = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if (n) {
-        crm_xml_add_int(msg_data, XML_ATTR_ID, n);
-    }
-    crm_xml_add(msg_data, XML_ATTR_UNAME, name);
+    crm_trace("Removing %s aka. %s from the membership cache", name, node);
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                         msg_data, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
+                         NULL, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
+
+    if (n) {
+        crm_xml_add_int(cmd, XML_ATTR_ID, n);
+    }
+    crm_xml_add(cmd, XML_ATTR_UNAME, name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc > 0) {
         rc = cib_remove_node(n, name);
     }
 
-  rm_node_cleanup:
     if (conn) {
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
     }
     free_xml(cmd);
-    free_xml(hello);
-    free(admin_uuid);
     return rc > 0 ? 0 : rc;
 }
 
@@ -357,8 +355,8 @@ try_heartbeat(int command, enum cluster_type_e stack)
         }
 
     } else if (command == 'R') {
-        if (crmd_remove_node_cache(target_uname)) {
-            crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+        if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
+            crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
             crm_exit(pcmk_err_generic);
         }
         crm_exit(pcmk_ok);
@@ -415,8 +413,8 @@ try_cman(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            if (crmd_remove_node_cache(target_uname)) {
-                crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
+                crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
             }
             break;
 
@@ -630,8 +628,13 @@ try_corosync(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            if (crmd_remove_node_cache(target_uname)) {
-                crm_err("Failed to connect to crmd to remove node id %s", target_uname);
+            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
+                crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
+                crm_exit(pcmk_err_generic);
+            }
+            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_MCP)) {
+                crm_err("Failed to connect to "CRM_SYSTEM_MCP" to remove node '%s'", target_uname);
+                crm_exit(pcmk_err_generic);
             }
             break;
 
