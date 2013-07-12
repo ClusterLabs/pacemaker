@@ -773,18 +773,34 @@ device_has_duplicate(stonith_device_t * device)
     GHashTableIter gIter;
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
-    if (!dup || safe_str_neq(dup->agent, device->agent)) {
+    if (!dup) {
+        crm_trace("No match for %s", device->id);
+        return NULL;
+
+    } else if (safe_str_neq(dup->agent, device->agent)) {
+        crm_trace("Different agent: %s != %s", dup->agent, device->agent);
         return NULL;
     }
+
+    /* Use calculate_operation_digest() here? */
     g_hash_table_iter_init(&gIter, device->params);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
-        char *other_value = g_hash_table_lookup(dup->params, key);
 
-        if (!other_value || safe_str_neq(other_value, value)) {
-            return NULL;
+        if(strstr(key, "CRM_meta") == key) {
+            continue;
+        } else if(strcmp(key, "crm_feature_set") == 0) {
+            continue;
+        } else {
+            char *other_value = g_hash_table_lookup(dup->params, key);
+
+            if (!other_value || safe_str_neq(other_value, value)) {
+                crm_trace("Different value for %s: %s != %s", key, other_value, value);
+                return NULL;
+            }
         }
     }
 
+    crm_trace("Match");
     return dup;
 }
 
@@ -794,18 +810,22 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
 
-    if ((dup = device_has_duplicate(device))) {
+    dup = device_has_duplicate(device);
+    if (dup) {
         crm_notice("Device '%s' already existed in device list (%d active devices)", device->id,
                    g_hash_table_size(device_list));
         free_device(device);
         device = dup;
+
     } else {
         stonith_device_t *old = g_hash_table_lookup(device_list, device->id);
 
         if (from_cib && old && old->api_registered) {
             /* If the cib is writing over an entry that is shared with a stonith client,
              * copy any pending ops that currently exist on the old entry to the new one.
-             * Otherwise the pending ops will be reported as failures */
+             * Otherwise the pending ops will be reported as failures
+             */
+            crm_trace("Overwriting an existing entry for %s from the cib", device->id);
             device->pending_ops = old->pending_ops;
             device->api_registered = TRUE;
             old->pending_ops = NULL;
@@ -1095,10 +1115,10 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     }
 
     if (safe_str_eq(host, alias)) {
-        crm_info("%s can%s fence %s: %s", dev->id, can ? "" : " not", host, check_type);
+        crm_notice("%s can%s fence %s: %s", dev->id, can ? "" : " not", host, check_type);
     } else {
-        crm_info("%s can%s fence %s (aka. '%s'): %s", dev->id, can ? "" : " not", host, alias,
-                 check_type);
+        crm_notice("%s can%s fence %s (aka. '%s'): %s", dev->id, can ? "" : " not", host, alias,
+                   check_type);
     }
 
   search_report_results:
