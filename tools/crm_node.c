@@ -638,6 +638,7 @@ try_corosync(int command, enum cluster_type_e stack)
                 crm_err("Failed to connect to "CRM_SYSTEM_MCP" to remove node '%s'", target_uname);
                 crm_exit(pcmk_err_generic);
             }
+            crm_exit(pcmk_ok);
             break;
 
         case 'e':
