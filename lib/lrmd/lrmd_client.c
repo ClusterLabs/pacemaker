@@ -53,8 +53,6 @@
 
 CRM_TRACE_INIT_DATA(lrmd);
 
-static stonith_t *stonith_api = NULL;
-
 static int lrmd_api_disconnect(lrmd_t * lrmd);
 static int lrmd_api_is_connected(lrmd_t * lrmd);
 
@@ -1489,9 +1487,11 @@ static int
 stonith_get_metadata(const char *provider, const char *type, char **output)
 {
     int rc = pcmk_ok;
+    stonith_t *stonith_api = stonith_api_new();
 
     if(stonith_api) {
         stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, provider, output, 0);
+        stonith_api->cmds->free(stonith_api);
     }
     if (*output == NULL) {
         rc = -EIO;
@@ -1810,11 +1810,13 @@ static int
 list_stonith_agents(lrmd_list_t ** resources)
 {
     int rc = 0;
+    stonith_t *stonith_api = stonith_api_new();
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
     if(stonith_api) {
         stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &stonith_resources, 0);
+        stonith_api->cmds->free(stonith_api);
     }
 
     for (dIter = stonith_resources; dIter; dIter = dIter->next) {
@@ -1952,10 +1954,6 @@ lrmd_api_new(void)
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
     new_lrmd->cmds->list_standards = lrmd_api_list_standards;
 
-    if (!stonith_api) {
-        stonith_api = stonith_api_new();
-    }
-
     return new_lrmd;
 }
 
@@ -2004,11 +2002,6 @@ lrmd_api_delete(lrmd_t * lrmd)
 #endif
         free(native->remote_nodename);
         free(native->remote);
-    }
-
-    if (stonith_api) {
-        stonith_api->cmds->free(stonith_api);
-        stonith_api = NULL;
     }
 
     free(lrmd->private);

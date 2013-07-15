@@ -311,6 +311,9 @@ free_device(gpointer data)
     g_list_free(device->pending_ops);
 
     g_list_free_full(device->targets, free);
+
+    mainloop_destroy_trigger(device->work);
+
     free_xml(device->agent_metadata);
     free(device->namespace);
     free(device->on_target_actions);
