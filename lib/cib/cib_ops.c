@@ -647,7 +647,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff && diff_del_epoch < this_epoch) {
         apply_diff = FALSE;
-        log_level = LOG_NOTICE;
+        log_level = LOG_INFO;
         reason = "current \"" XML_ATTR_GENERATION "\" is greater than required";
 
     } else if (apply_diff && diff_del_updates > this_updates) {
@@ -658,7 +658,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     } else if (apply_diff && diff_del_updates < this_updates) {
         apply_diff = FALSE;
-        log_level = LOG_NOTICE;
+        log_level = LOG_INFO;
         reason = "current \"" XML_ATTR_NUMUPDATES "\" is greater than required";
     }
 
