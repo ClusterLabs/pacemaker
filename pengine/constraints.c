@@ -40,7 +40,7 @@ enum pe_order_kind {
 };
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {				\
-	__rsc = pe_find_resource(data_set->resources, __name);		\
+	__rsc = pe_find_constraint_resource(data_set->resources, __name);		\
 	if(__rsc == NULL) {						\
 	    crm_config_err("%s: No resource found for %s", __set, __name); \
 	    return FALSE;						\
@@ -214,6 +214,30 @@ contains_stonith(resource_t * rsc)
     return res;
 }
 
+static resource_t *
+pe_find_constraint_resource(GListPtr rsc_list, const char *id)
+{
+    GListPtr rIter = NULL;
+
+    for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
+        resource_t *parent = rIter->data;
+
+        resource_t *match =
+            parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
+
+        if (match != NULL) {
+            if(safe_str_neq(match->id, id)) {
+                /* We found an instance of a clone instead */
+                match = uber_parent(match);
+                crm_debug("Found %s for %s", match->id, id);
+            }
+            return match;
+        }
+    }
+    crm_trace("No match for %s", id);
+    return NULL;
+}
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -267,24 +291,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    rsc_then = pe_find_resource(data_set->resources, id_then);
-    rsc_first = pe_find_resource(data_set->resources, id_first);
-
-    if(rsc_then && safe_str_neq(rsc_then->id, id_then)) {
-        /* We found an instance of a clone instead */
-        rsc_then = uber_parent(rsc_then);
-        if(rsc_then) {
-            crm_debug("Found %s for %s", rsc_then->id, id_then);
-        }
-    }
-
-    if(rsc_first && safe_str_neq(rsc_first->id, id_first)) {
-        /* We found an instance of a clone instead */
-        rsc_first = uber_parent(rsc_first);
-        if(rsc_first) {
-            crm_debug("Found %s for %s", rsc_first->id, id_first);
-        }
-    }
+    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
+    rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
 
     if (rsc_then == NULL) {
         crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
@@ -384,7 +392,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     rsc_to_node_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
+    resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     const char *domain = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
@@ -1386,7 +1394,7 @@ template_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char *attr,
         return TRUE;
     }
 
-    rsc = pe_find_resource(data_set->resources, id);
+    rsc = pe_find_constraint_resource(data_set->resources, id);
     if (rsc == NULL) {
         xmlNode *template_rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, id);
 
@@ -1471,8 +1479,8 @@ unpack_order_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set
         return TRUE;
     }
 
-    rsc_first = pe_find_resource(data_set->resources, id_first);
-    rsc_then = pe_find_resource(data_set->resources, id_then);
+    rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
+    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
     if (rsc_first && rsc_then) {
         /* Neither side references any template. */
         return TRUE;
@@ -1855,8 +1863,8 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-    resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-    resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
+    resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
+    resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
 
     if (rsc_lh == NULL) {
         crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
@@ -1958,8 +1966,8 @@ unpack_colocation_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_workin
         return TRUE;
     }
 
-    rsc_lh = pe_find_resource(data_set->resources, id_lh);
-    rsc_rh = pe_find_resource(data_set->resources, id_rh);
+    rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
+    rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
     if (rsc_lh && rsc_rh) {
         /* Neither side references any template. */
         return TRUE;
@@ -2261,7 +2269,7 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         crm_config_err("Invalid constraint '%s': No resource specified", id);
         return FALSE;
     } else {
-        rsc_lh = pe_find_resource(data_set->resources, id_lh);
+        rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     }
 
     if (rsc_lh == NULL) {
@@ -2330,7 +2338,7 @@ unpack_rsc_ticket_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_workin
         return TRUE;
     }
 
-    rsc_lh = pe_find_resource(data_set->resources, id_lh);
+    rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     if (rsc_lh) {
         /* No template is referenced. */
         return TRUE;
