@@ -1465,17 +1465,18 @@ class ClusterManager(UserDict):
         '''Start the cluster manager on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
         '''
-        ret = 1
         map = {}
         if not nodelist:
             nodelist=self.Env["nodes"]
+
+        for node in nodelist:
+            if self.ShouldBeStatus[node] == "down":
+                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
+
         if not quick:
-            for node in nodelist:
-                if self.ShouldBeStatus[node] == "down":
-                    self.ns.WaitForAllNodesToComeUp(nodelist, 300)
-                    if not self.StartaCM(node, verbose=verbose):
-                        ret = 0
-            return ret
+            if not self.StartaCM(node, verbose=verbose):
+                return 0
+            return 1
 
         # Approximation of SimulStartList for --boot 
         watchpats = [ ]
@@ -1489,6 +1490,8 @@ class ClusterManager(UserDict):
         watch = LogWatcher(self.Env, self["LogFileName"], watchpats, "fast-start", self["DeadTime"]+10)
         watch.setwatch()
 
+        if not self.StartaCM(nodelist[0], verbose=verbose):
+            return 0
         for node in nodelist:
             self.StartaCMnoBlock(node, verbose=verbose)
 
