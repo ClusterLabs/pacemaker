@@ -1,8 +1,11 @@
 # Semi-random collection of tasks we'd like to get done
 
-## Targeted for 2.0
- 
-## Targeted for 2.0.x
+- pcs resource start --recursive :  set target role for anything we depend on
+
+## Targeted for this year
+
+- Only bump epoch if we have quorum when we are elected the DC 
+- Bump epoch if we gain quorum and are the DC
 
 - Make sure crm_attribute/crmd writes direct to cib if attrd is not around
 - See if anywhere should be using clock_gettime() instead of time(NULL)
@@ -27,7 +30,7 @@ trace   Jan 06 10:42:41 print_synapse(190):0: [Action   17]: Completed rsc op Fe
 - Convert cts/CIB.py into a supported Python API for the CIB
 - Re-implement no-quorum filter for cib updates?
 
-## Targeted for 2.1
+## Targeted for next year and beyond
 
 - Support A colocated with (B || C || D)
 - Implement a truely atomic version of attrd
