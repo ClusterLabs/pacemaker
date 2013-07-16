@@ -1151,6 +1151,7 @@ print_status(pe_working_set_t * data_set)
     char *since_epoch = NULL;
     char *online_nodes = NULL;
     char *offline_nodes = NULL;
+    const char *stack_s = NULL;
     xmlNode *dc_version = NULL;
     xmlNode *quorum_node = NULL;
     xmlNode *stack = NULL;
@@ -1200,7 +1201,8 @@ print_status(pe_working_set_t * data_set)
     stack =
         get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
     if (stack) {
-        print_as("Stack: %s\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+        stack_s = crm_element_value(stack, XML_NVPAIR_ATTR_VALUE);
+        print_as("Stack: %s\n", stack_s);
     }
 
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
@@ -1227,9 +1229,13 @@ print_status(pe_working_set_t * data_set)
         quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
 
-    print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
-             quorum_votes);
-    print_as("%d Resources configured.\n", count_resources(data_set, NULL));
+    if(stack_s && strstr(stack_s, "classic openais") != NULL) {
+        print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
+                 quorum_votes);
+    } else {
+        print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+    }
+    print_as("%d Resources configured\n", count_resources(data_set, NULL));
     print_as("\n\n");
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
