@@ -514,6 +514,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             assign_to = rsc->running_on->data;
             reason = "master";
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
+            assign_to = rsc->running_on->data;
             reason = "failed";
         } else {
             assign_to = rsc->running_on->data;

@@ -41,7 +41,7 @@ clone_color: dlm:3 allocation score on pcmk-3: 0
 clone_color: dlm:3 allocation score on pcmk-4: 0
 native_color: ClusterIP allocation score on pcmk-1: 0
 native_color: ClusterIP allocation score on pcmk-2: -INFINITY
-native_color: ClusterIP allocation score on pcmk-3: -INFINITY
+native_color: ClusterIP allocation score on pcmk-3: 0
 native_color: ClusterIP allocation score on pcmk-4: -INFINITY
 native_color: Fencing allocation score on pcmk-1: 0
 native_color: Fencing allocation score on pcmk-2: 0

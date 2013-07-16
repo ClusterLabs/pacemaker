@@ -7,6 +7,8 @@ Online: [ node1 node2 ]
 Transition Summary:
 
 Executing cluster transition:
+ * Resource action: rsc1            monitor=10000 on node1
+ * Resource action: rsc1            cancel=20000 on node1
 
 Revised cluster status:
 Online: [ node1 node2 ]
