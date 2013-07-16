@@ -111,8 +111,9 @@ again on pcmk-2.
 
 [source,C]
 -----
-[root@pcmk-2 ~]# cat <<-END >/var/www/html/index.html <html>
- <body>My Test Site - pcmk-2</body>
+[root@pcmk-2 ~]# cat <<-END >/var/www/html/index.html
+ <html>
+  <body>My Test Site - pcmk-2</body>
  </html>
  END
 -----

@@ -9,7 +9,7 @@
   </indexterm>
   <para>
     If you find a typographical error in this manual, or if you have thought of a way to make this manual better, we would love to hear from you! 
-    Please submit a report in Bugzilla<footnote><para><ulink url="http://developerbugs.linux-foundation.org/enter_bug.cgi?product=Pacemaker"/></para></footnote> against the product <application>&PRODUCT;.</application>
+    Please submit a report in Bugzilla<footnote><para><ulink url="http://bugs.clusterlabs.org"/></para></footnote> against the product <application>&PRODUCT;.</application>
   </para>
   <para>
     When submitting a bug report, be sure to mention the manual's identifier: <citetitle>&BOOKID;</citetitle>

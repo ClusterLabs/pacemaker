@@ -335,7 +335,7 @@ create another variation on our home page.
 </html>
 END
 # umount /dev/drbd1
-# drbdadm verify wwwdata#
+# drbdadm verify wwwdata
 -----
 
 == Reconfigure the Cluster for GFS2 ==

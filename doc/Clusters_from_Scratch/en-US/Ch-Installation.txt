@@ -221,7 +221,7 @@ outside world.
 
 === Short Node Names ===
 
-During installation, we filled in the machine's fully qualifier domain
+During installation, we filled in the machine's fully qualified domain
 name (FQDN) which can be rather long when it appears in cluster logs and
 status output. See for yourself how the machine identifies itself:
 (((Nodes, short name)))
@@ -414,11 +414,11 @@ pcmk-2
 === Install the Cluster Software ===
 
 Since version 12, Fedora comes with recent versions of everything you
-need, so simply fire up the shell and run:
+need, so simply fire up a shell on all your nodes and run:
 
 [source,C]
 ----
-# yum install -y pacemaker corosync
+[ALL] # yum install -y pacemaker corosync
 ----
 .....
 fedora/metalink                                  |  38 kB     00:00
@@ -850,7 +850,7 @@ across all nodes from a single location.
 
 [source,C]
 ----
-# yum install -y pcs
+[ALL] # yum install -y pcs
 ----
 
 Make sure to install the pcs packages on both nodes.
@@ -918,7 +918,7 @@ endif::[]
 === Notes on Multicast Address Assignment ===
 
 There are several subtle points that often deserve consideration when
-choosing/assigning multicast addresses.
+choosing/assigning multicast addresses for corosync.
 footnote:[This information is borrowed from, the now defunct, http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html]
 
 . Avoid '224.0.0.x'
@@ -1078,7 +1078,7 @@ This plugin also had the capability to start Pacemaker automatically when Corosy
 
 Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
 
-Instead, Pacemaker must be started as a separate job/initscript.
+Instead, Pacemaker must be started as a separate service.
 Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.

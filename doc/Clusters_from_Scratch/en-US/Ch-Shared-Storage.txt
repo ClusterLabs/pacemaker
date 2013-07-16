@@ -83,7 +83,7 @@ later holding the GFS2 metadata.
 
 [source,C]
 ----
-# vgdisplay | grep -e Name - e Free
+# vgdisplay | grep -e Name -e Free
   VG Name               vg_pcmk1
   Free  PE / Size       31 / 992.00 MiB
 # lvs
