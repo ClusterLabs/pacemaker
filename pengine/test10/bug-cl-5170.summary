@@ -1,0 +1,34 @@
+
+Current cluster status:
+Node TCS-1: OFFLINE (standby)
+Online: [ TCS-2 ]
+
+ Resource Group: svc
+     ip_trf	(ocf::heartbeat:IPaddr2):	Started TCS-2 
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Started TCS-2 
+ Clone Set: cl_tomcat_nms [d_tomcat_nms]
+     d_tomcat_nms	(ocf::ntc:tomcat):	Started TCS-2 (unmanaged) FAILED 
+     Stopped: [ TCS-1 ]
+
+Transition Summary:
+ * Stop    ip_trf	(Started TCS-2)
+ * Stop    ip_mgmt	(Started TCS-2)
+
+Executing cluster transition:
+ * Pseudo action:   svc_stop_0
+ * Resource action: ip_mgmt         stop on TCS-2
+ * Resource action: ip_trf          stop on TCS-2
+ * Pseudo action:   all_stopped
+ * Pseudo action:   svc_stopped_0
+
+Revised cluster status:
+Node TCS-1: OFFLINE (standby)
+Online: [ TCS-2 ]
+
+ Resource Group: svc
+     ip_trf	(ocf::heartbeat:IPaddr2):	Stopped 
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Stopped 
+ Clone Set: cl_tomcat_nms [d_tomcat_nms]
+     d_tomcat_nms	(ocf::ntc:tomcat):	Started TCS-2 (unmanaged) FAILED 
+     Stopped: [ TCS-1 ]
+

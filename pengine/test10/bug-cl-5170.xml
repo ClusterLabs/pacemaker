@@ -1,0 +1,128 @@
+<cib epoch="21" num_updates="911" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Mon Jul 15 09:53:36 2013" update-origin="TCS-2" update-client="cibadmin" crm_feature_set="3.0.7" have-quorum="0" dc-uuid="TCS-2" no-quorum-panic="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-1.el6-3463b39"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="3min"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="TCS-1" uname="TCS-1">
+        <instance_attributes id="nodes-TCS-1">
+          <nvpair id="nodes-TCS-1-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="TCS-2" uname="TCS-2"/>
+    </nodes>
+    <resources>
+      <group id="svc">
+        <primitive class="ocf" id="ip_trf" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_trf-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_trf-instance_attributes">
+            <nvpair id="ip_trf-instance_attributes-nic" name="nic" value="bond0.3019"/>
+            <nvpair id="ip_trf-instance_attributes-iflabel" name="iflabel" value="ha"/>
+            <nvpair id="ip_trf-instance_attributes-ip" name="ip" value="172.18.19.51"/>
+            <nvpair id="ip_trf-instance_attributes-broadcast" name="broadcast" value="172.18.19.51"/>
+          </instance_attributes>
+          <meta_attributes id="ip_trf-meta_attributes">
+            <nvpair id="ip_trf-meta_attributes-failure-timeout" name="failure-timeout" value="10"/>
+            <nvpair id="ip_trf-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="ip_mgmt" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_mgmt-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_mgmt-instance_attributes">
+            <nvpair id="ip_mgmt-instance_attributes-nic" name="nic" value="bond0"/>
+            <nvpair id="ip_mgmt-instance_attributes-iflabel" name="iflabel" value="ha"/>
+            <nvpair id="ip_mgmt-instance_attributes-ip" name="ip" value="172.20.1.51"/>
+            <nvpair id="ip_mgmt-instance_attributes-broadcast" name="broadcast" value="172.20.1.51"/>
+          </instance_attributes>
+          <meta_attributes id="ip_mgmt-meta_attributes">
+            <nvpair id="ip_mgmt-meta_attributes-failure-timeout" name="failure-timeout" value="10"/>
+            <nvpair id="ip_mgmt-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+      <clone id="cl_tomcat_nms">
+        <primitive class="ocf" id="d_tomcat_nms" provider="ntc" type="tomcat">
+          <operations>
+            <op id="d_tomcat_nms-start-0" interval="0" name="start" timeout="510s"/>
+            <op id="d_tomcat_nms-stop-0" interval="0" name="stop" timeout="510s"/>
+            <op id="d_tomcat_nms-monitor-15s" interval="15s" name="monitor" on-fail="block" timeout="510s"/>
+          </operations>
+          <instance_attributes id="d_tomcat_nms-instance_attributes">
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_timeout" name="monitor_timeout" value="120"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-instance_name" name="instance_name" value="NMS"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_use_ssl" name="monitor_use_ssl" value="no"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_urls" name="monitor_urls" value="/tcs/health"/>
+          </instance_attributes>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_colocation id="colo_tomcat_nms" rsc="svc" score="INFINITY" with-rsc="cl_tomcat_nms"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="TCS-1" uname="TCS-1" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="down">
+      <lrm id="TCS-1">
+        <lrm_resources>
+          <lrm_resource id="ip_mgmt" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_mgmt_last_0" operation_key="ip_mgmt_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="8:31:7:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:7;8:31:7:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1373881291" last-rc-change="1373881291" exec-time="86" queue-time="0" op-digest="b273465a4fc69d15474aadf4f8fbfa0f"/>
+          </lrm_resource>
+          <lrm_resource id="ip_trf" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_trf_last_0" operation_key="ip_trf_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:31:7:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:7;7:31:7:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1373881291" last-rc-change="1373881291" exec-time="92" queue-time="0" op-digest="ba0c9b67acbb491c1ecb271fe8902331"/>
+          </lrm_resource>
+          <lrm_resource id="d_tomcat_nms" type="tomcat" class="ocf" provider="ntc">
+            <lrm_rsc_op id="d_tomcat_nms_last_0" operation_key="d_tomcat_nms_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:35:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;17:35:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1373881408" last-rc-change="1373881408" exec-time="35757" queue-time="0" op-digest="5d6e6347e3618ccb7842ba5d67b49a34" op-force-restart=" state  instance_name  monitor_urls  monitor_use_ssl  monitor_timeout  cleanup " op-restart-digest="5d6e6347e3618ccb7842ba5d67b49a34"/>
+            <lrm_rsc_op id="d_tomcat_nms_monitor_15000" operation_key="d_tomcat_nms_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="19:34:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;19:34:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="28" rc-code="0" op-status="0" interval="15000" last-rc-change="1373881403" exec-time="1285" queue-time="0" op-digest="a0994b68b09932f216ada94a12373a74"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="TCS-1">
+        <instance_attributes id="status-TCS-1">
+          <nvpair id="status-TCS-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-TCS-1-standby" name="standby" value="true"/>
+          <nvpair id="status-TCS-1-shutdown" name="shutdown" value="1373881669"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="TCS-2" uname="TCS-2" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member">
+      <transient_attributes id="TCS-2">
+        <instance_attributes id="status-TCS-2">
+          <nvpair id="status-TCS-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-TCS-2-fail-count-d_tomcat_nms" name="fail-count-d_tomcat_nms" value="309"/>
+          <nvpair id="status-TCS-2-last-failure-d_tomcat_nms" name="last-failure-d_tomcat_nms" value="1373882611"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="TCS-2">
+        <lrm_resources>
+          <lrm_resource id="ip_trf" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_trf_last_0" operation_key="ip_trf_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:340:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;7:340:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3559" rc-code="0" op-status="0" interval="0" last-run="1373882611" last-rc-change="1373882611" exec-time="58" queue-time="0" op-digest="ba0c9b67acbb491c1ecb271fe8902331"/>
+            <lrm_rsc_op id="ip_trf_monitor_10000" operation_key="ip_trf_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="1:340:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;1:340:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3562" rc-code="0" op-status="0" interval="10000" last-rc-change="1373882611" exec-time="65" queue-time="0" op-digest="ca5454db980b6098a286b508b016ab05"/>
+          </lrm_resource>
+          <lrm_resource id="d_tomcat_nms" type="tomcat" class="ocf" provider="ntc">
+            <lrm_rsc_op id="d_tomcat_nms_last_0" operation_key="d_tomcat_nms_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="16:341:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;16:341:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3576" rc-code="0" op-status="0" interval="0" last-run="1373882611" last-rc-change="1373882611" exec-time="156" queue-time="0" op-digest="5d6e6347e3618ccb7842ba5d67b49a34" op-force-restart=" state  instance_name  monitor_urls  monitor_use_ssl  monitor_timeout  cleanup " op-restart-digest="5d6e6347e3618ccb7842ba5d67b49a34"/>
+            <lrm_rsc_op id="d_tomcat_nms_last_failure_0" operation_key="d_tomcat_nms_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="15:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:1;15:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3583" rc-code="1" op-status="0" interval="15000" last-rc-change="1373882612" exec-time="309" queue-time="0" op-digest="a0994b68b09932f216ada94a12373a74"/>
+            <lrm_rsc_op id="d_tomcat_nms_monitor_15000" operation_key="d_tomcat_nms_monitor_15000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="14:284:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;14:284:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="2933" rc-code="0" op-status="0" interval="15000" last-rc-change="1373882568" exec-time="746" queue-time="0" op-digest="a0994b68b09932f216ada94a12373a74"/>
+          </lrm_resource>
+          <lrm_resource id="ip_mgmt" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_mgmt_last_0" operation_key="ip_mgmt_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;7:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3580" rc-code="0" op-status="0" interval="0" last-run="1373882612" last-rc-change="1373882612" exec-time="67" queue-time="0" op-digest="b273465a4fc69d15474aadf4f8fbfa0f"/>
+            <lrm_rsc_op id="ip_mgmt_monitor_10000" operation_key="ip_mgmt_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="8:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" transition-magic="0:0;8:342:0:9c43135c-c278-4e43-ad1d-cea4f0b65428" call-id="3587" rc-code="0" op-status="0" interval="10000" last-rc-change="1373882612" exec-time="69" queue-time="0" op-digest="c5f2bae3abf1cbb25e2353f2149e5b9a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
