@@ -168,52 +168,6 @@ get_ordering_type(xmlNode * xml_obj)
     return kind_e;
 }
 
-enum contains_stonith_res {
-    contains_stonith_unknown = -1,
-    contains_stonith_false,
-    contains_stonith_true,
-    contains_stonith_mixed,
-};
-
-static enum contains_stonith_res
-contains_stonith(resource_t * rsc)
-{
-    enum contains_stonith_res res = contains_stonith_unknown;
-    GListPtr gIter = rsc->children;
-
-    if (gIter == FALSE) {
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-        if (safe_str_eq(class, "stonith")) {
-            return contains_stonith_true;
-        }
-        return contains_stonith_false;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
-        enum contains_stonith_res tmp = contains_stonith(child);
-
-        if (tmp != contains_stonith_unknown) {
-            switch (res) {
-                case contains_stonith_unknown:
-                    res = tmp;
-                    break;
-                case contains_stonith_false:
-                case contains_stonith_true:
-                    if (tmp != res) {
-                        return contains_stonith_mixed;
-                    }
-                    break;
-                case contains_stonith_mixed:
-                    return contains_stonith_mixed;
-            }
-        }
-    }
-
-    return res;
-}
-
 static resource_t *
 pe_find_constraint_resource(GListPtr rsc_list, const char *id)
 {
@@ -734,60 +688,6 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     return TRUE;
 }
 
-static int
-validate_order_resources(resource_t * first_rsc, const char *first_action, resource_t * then_rsc, const char *then_action)
-{
-    enum contains_stonith_res first_flag = contains_stonith(first_rsc);
-    enum contains_stonith_res then_flag = contains_stonith(then_rsc);
-
-    enum action_tasks first = text2task(first_action);
-    enum action_tasks then = text2task(then_action);
-
-    resource_t * first_parent = uber_parent(first_rsc);
-    resource_t * then_parent = uber_parent(then_rsc);
-
-    if (first_flag == contains_stonith_mixed) {
-        crm_config_err
-            ("Order constraint, %s then %s, can not be applied:"
-             " %s contains stonith resources mixed with other resource classes.",
-             first_rsc->id, then_rsc->id, first_rsc->id);
-        return -1;
-
-    } else if (then_flag == contains_stonith_mixed) {
-        crm_config_err
-            ("Order constraint, %s then %s, can not be applied:"
-             " %s contains stonith resources mixed with other resource classes.",
-             first_rsc->id, then_rsc->id, then_rsc->id);
-        return -1;
-
-    } else if (first_flag == contains_stonith_true && (first_flag != then_flag)) {
-        crm_config_err
-            ("Order constraint, %s then %s, can not be applied: %s is of class stonith and %s is not.",
-             first_rsc->id, then_rsc->id, first_rsc->id, then_rsc->id);
-        return -1;
-
-    } else if (then_flag == contains_stonith_true && (then_flag != first_flag)) {
-        crm_config_err
-            ("Order constraint, %s then %s, can not be applied: %s is of class stonith and %s is not.",
-             first_rsc->id, then_rsc->id, then_rsc->id, first_rsc->id);
-        return -1;
-
-    } else if(first_parent->variant < pe_master && first > action_promote) {
-        crm_config_warn
-            ("Order constraint, %s then %s, can not be applied: Operation %s is not valid for %s",
-             first_rsc->id, then_rsc->id, first_action, first_rsc->id);
-        return -1;
-
-    } else if(then_parent->variant < pe_master && then > action_promote) {
-        crm_config_warn
-            ("Order constraint, %s then %s, can not be applied: Operation %s is not valid for %s",
-             first_rsc->id, then_rsc->id, then_action, then_rsc->id);
-        return -1;
-    }
-
-    return 0;
-}
-
 /* LHS before RHS */
 int
 new_rsc_order(resource_t * lh_rsc, const char *lh_task,
@@ -802,9 +702,13 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     CRM_CHECK(rh_rsc != NULL, return -1);
     CRM_CHECK(rh_task != NULL, return -1);
 
+    /* We no longer need to test if these reference stonith resources
+     * now that stonithd has access to them even when they're not "running"
+     *
     if (validate_order_resources(lh_rsc, lh_task, rh_rsc, rh_task)) {
         return -1;
     }
+    */
 
     lh_key = generate_op_key(lh_rsc->id, lh_task, 0);
     rh_key = generate_op_key(rh_rsc->id, rh_task, 0);

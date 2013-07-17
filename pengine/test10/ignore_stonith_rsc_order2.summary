@@ -14,12 +14,14 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: S_A             monitor on fc16-builder
+ * Pseudo action:   MIXED_GROUP_start_0
  * Resource action: A               monitor on fc16-builder
  * Resource action: S_B             monitor on fc16-builder
  * Pseudo action:   probe_complete
- * Resource action: S_A             start on fc16-builder
  * Resource action: A               start on fc16-builder
  * Resource action: S_B             start on fc16-builder
+ * Pseudo action:   MIXED_GROUP_running_0
+ * Resource action: S_A             start on fc16-builder
 
 Revised cluster status:
 Online: [ fc16-builder ]

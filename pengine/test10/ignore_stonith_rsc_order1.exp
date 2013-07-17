@@ -10,6 +10,9 @@
       <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
+      <trigger>
+        <rsc_op id="7" operation="start" operation_key="A_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">

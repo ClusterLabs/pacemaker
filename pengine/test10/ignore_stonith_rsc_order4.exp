@@ -45,7 +45,11 @@
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="19" operation="running" operation_key="S_CLONE2_running_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
@@ -53,7 +57,17 @@
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="A:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="S_B:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="start" operation_key="MIXED_GROUP:0_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
@@ -61,7 +75,11 @@
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="18" operation="start" operation_key="S_CLONE2_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
@@ -73,6 +91,9 @@
     <inputs>
       <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="start" operation_key="MIXED_GROUP:0_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -96,6 +117,12 @@
       <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="A:0_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="start" operation_key="MIXED_GROUP:0_start_0"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
@@ -113,7 +140,14 @@
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="15" operation="running" operation_key="MIXED_GROUP:0_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="18" operation="start" operation_key="S_CLONE2_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
