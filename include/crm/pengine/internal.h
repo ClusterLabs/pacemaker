@@ -258,4 +258,6 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
+gboolean is_remote_node(xmlNode *xml);
+
 #endif

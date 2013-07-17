@@ -1,0 +1,105 @@
+<cib epoch="123" num_updates="11" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Jul 16 17:11:45 2013" update-origin="18builder" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="5">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.9-924fb4d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1374012653"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="5" uname="18builder">
+        <instance_attributes id="nodes-5">
+          <nvpair id="nodes-5-stuffs" name="stuffs" value="things"/>
+          <nvpair id="nodes-5-stuffs2" name="stuffs2" value="things2"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fence_false" type="fence_false">
+        <instance_attributes id="fence_false-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="container2" provider="pacemaker" type="Dummy">
+        <instance_attributes id="container2-instance_attributes"/>
+        <meta_attributes id="container2-meta_attributes">
+          <nvpair id="container2-meta_attributes-remote-node" name="remote-node" value="18node2"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="webserver" provider="pacemaker" type="Dummy">
+        <instance_attributes id="webserver-instance_attributes"/>
+        <operations>
+          <op id="webserver-monitor-interval-10s" interval="10s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="nfs_mount" provider="pacemaker" type="Dummy">
+        <instance_attributes id="nfs_mount-instance_attributes"/>
+        <operations>
+          <op id="nfs_mount-monitor-interval-10s" interval="10s" name="monitor"/>
+        </operations>
+      </primitive>
+      <group id="mygroup">
+        <primitive class="ocf" id="vg_tags" provider="heartbeat" type="LVM">
+          <instance_attributes id="vg_tags-instance_attributes">
+            <nvpair id="vg_tags-instance_attributes-volgrpname" name="volgrpname" value="vg_tags"/>
+            <nvpair id="vg_tags-instance_attributes-exclusive" name="exclusive" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="vg_tags-meta_attributes">
+            <nvpair id="vg_tags-meta_attributes-target-role" name="target-role" value="Stopped"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+      <primitive class="ocf" id="vg_tags_dup" provider="heartbeat" type="LVM">
+        <instance_attributes id="vg_tags_dup-instance_attributes">
+          <nvpair id="vg_tags_dup-instance_attributes-volgrpname" name="volgrpname" value="fakesss"/>
+          <nvpair id="vg_tags_dup-instance_attributes-exclusive" name="exclusive" value="true"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-webserver-nfs_mount-INFINITY" rsc="webserver" score="INFINITY" with-rsc="nfs_mount"/>
+      <rsc_order first="nfs_mount" first-action="start" id="order-nfs_mount-webserver-mandatory" then="webserver" then-action="start"/>
+      <rsc_location id="location-nfs_mount-18node2-INFINITY" node="18node2" rsc="nfs_mount" score="INFINITY"/>
+      <rsc_location id="location-nfs_mount-remote3--INFINITY" node="remote3" rsc="nfs_mount" score="-INFINITY"/>
+      <rsc_location id="location-nfs_mount-18builder--INFINITY" node="18builder" rsc="nfs_mount" score="-INFINITY"/>
+      <rsc_location id="location-container2-18builder-100" node="18builder" rsc="container2" score="100"/>
+      <rsc_location id="location-vg_tags-18builder-100" node="18builder" rsc="vg_tags" score="100"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="5" uname="18builder" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="fence_false" type="fence_false" class="stonith">
+            <lrm_rsc_op id="fence_false_last_0" operation_key="fence_false_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="4:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;4:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1374091811" last-rc-change="1374091811" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="container2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="container2_last_0" operation_key="container2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="11:0:0:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:0;11:0:0:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1374091812" last-rc-change="1374091812" exec-time="24" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="nfs_mount" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="nfs_mount_last_0" operation_key="nfs_mount_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;7:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1374091811" last-rc-change="1374091811" exec-time="91" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="webserver" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="webserver_last_0" operation_key="webserver_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="6:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;6:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1374091811" last-rc-change="1374091811" exec-time="93" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="18node2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="18node2_last_0" operation_key="18node2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;10:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="vg_tags_dup" type="LVM" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vg_tags_dup_last_0" operation_key="vg_tags_dup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;9:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1374091811" last-rc-change="1374091811" exec-time="103" queue-time="0" op-digest="afc827c21723e1d691a3f79e746a35ef"/>
+          </lrm_resource>
+          <lrm_resource id="vg_tags" type="LVM" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vg_tags_last_0" operation_key="vg_tags_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="8:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" transition-magic="0:7;8:0:7:64dceaa5-d9dd-4fc6-9c1f-3efe44fb695e" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1374091811" last-rc-change="1374091811" exec-time="106" queue-time="0" op-digest="0af1d4d5827a2ba377c799db1d375c39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
