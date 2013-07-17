@@ -268,7 +268,7 @@ create_node(const char *id, const char *uname, const char *type, const char *sco
     return new_node;
 }
 
-static gboolean
+gboolean
 is_remote_node(xmlNode *xml)
 {
     const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
