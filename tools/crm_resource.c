@@ -139,7 +139,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         return -ENXIO;
     }
 
-    if (the_rsc->variant > pe_clone) {
+    if (the_rsc->variant >= pe_clone) {
         GListPtr gIter = the_rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -1695,6 +1695,15 @@ main(int argc, char **argv)
             action = "stop";
         } else if (safe_str_eq(rsc_long_cmd, "force-start")) {
             action = "start";
+            if(rsc->variant >= pe_clone) {
+                rc = do_find_resource(rsc_id, NULL, &data_set);
+                if(rc > 0 && do_force == FALSE) {
+                    CMD_ERR("It is not safe to start %s here: the cluster claims it is already active", rsc_id);
+                    CMD_ERR("Try setting target-role=stopped first or specifying --force");
+                    crm_exit(EPERM);
+                }
+            }
+
         } else if (safe_str_eq(rsc_long_cmd, "force-check")) {
             action = "monitor";
         }
