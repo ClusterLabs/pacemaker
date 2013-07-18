@@ -169,7 +169,7 @@ crm_cs_flush(gpointer data)
         crm_trace("CPG message sent, size=%d", iov->iov_len);
 
         cs_message_queue = g_list_remove(cs_message_queue, iov);
-        free(iov[0].iov_base);
+        free(iov->iov_base);
         free(iov);
     }
 
@@ -592,7 +592,6 @@ send_cluster_text(int class, const char *data,
             msg->header.size = sizeof(AIS_Message) + new_size;
             msg = realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
-            msg->data[new_size] = 0;
 
             msg->is_compressed = TRUE;
             msg->compressed_size = new_size;
