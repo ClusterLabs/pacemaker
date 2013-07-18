@@ -1,23 +1,19 @@
 # Semi-random collection of tasks we'd like to get done
 
-- pcs resource start --recursive :  set target role for anything we depend on
-
 ## Targeted for this year
+
+- Implement:
+ - crm_node --standby
+ - crm_resource --enable --recursive :  set target role for anything we depend on
+ - crm_resource --force-start <-- check resource is stopped
 
 - Only bump epoch if we have quorum when we are elected the DC 
 - Bump epoch if we gain quorum and are the DC
 
 - Make sure crm_attribute/crmd writes direct to cib if attrd is not around
 - See if anywhere should be using clock_gettime() instead of time(NULL)
-
-- Figure out why libqb blackboxes contain garbage:
-trace   Jan 06 10:42:41 print_synapse(190):0: [Action   18]: Completed rsc op FencingPass_start_0               on ne (priority: 1918989871, waiting: /lib/pac
-trace   Jan 06 10:42:41 print_synapse(190):0: [Action   17]: Completed rsc op FencingPass_stop_0                on e (priority: 1635135232, waiting: r/lib/pa
-
 - Make sure fail counts etc are removed on resource deletion
 
-- Test and merge fsa-stall-with-data.patch
-- Test and merge join-offer-one.patch 
 - Test and merge ipc-dispatch.patch
 - Process election votes as soon as they happen
   notice: do_election_count_vote: Election 6 (current: 6, owner: 101): Processed no-vote from east-04 (Peer is not part of our cluster)
