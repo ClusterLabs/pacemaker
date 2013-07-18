@@ -589,7 +589,7 @@ send_cluster_text(int class, const char *data,
 
         if (crm_compress_string(uncompressed, msg->size, 0, &compressed, &new_size)) {
 
-            msg->header.size = sizeof(AIS_Message) + new_size + 1;
+            msg->header.size = sizeof(AIS_Message) + new_size;
             msg = realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
             msg->data[new_size] = 0;
