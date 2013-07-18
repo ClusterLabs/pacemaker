@@ -1658,7 +1658,7 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
         char *local_short_options = NULL;
 
         for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
-            if (long_options[lpc].val && long_options[lpc].val < UCHAR_MAX) {
+            if (long_options[lpc].val && long_options[lpc].val != '-' && long_options[lpc].val < UCHAR_MAX) {
                 local_short_options = realloc(local_short_options, opt_string_len + 4);
                 local_short_options[opt_string_len++] = long_options[lpc].val;
                 /* getopt(3) says: Two colons mean an option takes an optional arg; */
