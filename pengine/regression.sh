@@ -695,6 +695,7 @@ do_test whitebox-fail3 "Failed containers should not run nested on remote nodes.
 do_test whitebox-start "Start whitebox container with resources assigned to it"
 do_test whitebox-stop "Stop whitebox container with resources assigned to it"
 do_test whitebox-move "Move whitebox container with resources assigned to it"
+do_test whitebox-asymmetric "Verify connection rsc opts-in based on container resource"
 
 echo ""
 test_results

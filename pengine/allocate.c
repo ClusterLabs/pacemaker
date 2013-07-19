@@ -1040,12 +1040,16 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     if (resource1->running_on) {
         node = g_list_nth_data(resource1->running_on, 0);
         node = g_hash_table_lookup(r1_nodes, node->details->id);
-        r1_weight = node->weight;
+        if (node != NULL) {
+            r1_weight = node->weight;
+        }
     }
     if (resource2->running_on) {
         node = g_list_nth_data(resource2->running_on, 0);
         node = g_hash_table_lookup(r2_nodes, node->details->id);
-        r2_weight = node->weight;
+        if (node != NULL) {
+            r2_weight = node->weight;
+        }
     }
 
     if (r1_weight > r2_weight) {

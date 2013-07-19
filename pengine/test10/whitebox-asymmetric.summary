@@ -1,0 +1,34 @@
+
+Current cluster status:
+Online: [ 18builder ]
+OFFLINE: [ 18node2:container2 ]
+
+ fence_false	(stonith:fence_false):	Stopped 
+ container2	(ocf::pacemaker:Dummy):	Started 18builder 
+ webserver	(ocf::pacemaker:Dummy):	Stopped 
+ nfs_mount	(ocf::pacemaker:Dummy):	Stopped 
+ Resource Group: mygroup
+     vg_tags	(ocf::heartbeat:LVM):	Stopped 
+ vg_tags_dup	(ocf::heartbeat:LVM):	Stopped 
+
+Transition Summary:
+ * Start   nfs_mount	(18node2)
+ * Start   18node2	(18builder)
+
+Executing cluster transition:
+ * Resource action: 18node2         start on 18builder
+ * Resource action: nfs_mount       start on 18node2
+ * Resource action: 18node2         monitor=30000 on 18builder
+ * Resource action: nfs_mount       monitor=10000 on 18node2
+
+Revised cluster status:
+Online: [ 18builder 18node2:container2 ]
+
+ fence_false	(stonith:fence_false):	Stopped 
+ container2	(ocf::pacemaker:Dummy):	Started 18builder 
+ webserver	(ocf::pacemaker:Dummy):	Stopped 
+ nfs_mount	(ocf::pacemaker:Dummy):	Started 18node2 
+ Resource Group: mygroup
+     vg_tags	(ocf::heartbeat:LVM):	Stopped 
+ vg_tags_dup	(ocf::heartbeat:LVM):	Stopped 
+
