@@ -860,7 +860,8 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
         rc = cib_process_diff(NULL, cib_none, NULL, NULL, diff, input, output, NULL);
 
         if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply: %s", pcmk_strerror(rc));
+            crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);
+            free_xml(*output); *output = NULL;
             return rc;
         }
     }
