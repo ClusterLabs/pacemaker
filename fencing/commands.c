@@ -241,7 +241,7 @@ stonith_device_execute(stonith_device_t * device)
     exec_rc = stonith_action_execute_async(action, (void *)cmd, cmd->done_cb);
 
     if (exec_rc > 0) {
-        crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%dms",
+        crm_debug("Operation %s%s%s on %s now running with pid=%d, timeout=%ds",
                   cmd->action, cmd->victim ? " for node " : "", cmd->victim ? cmd->victim : "",
                   device->id, exec_rc, cmd->timeout);
         device->active_pid = exec_rc;
