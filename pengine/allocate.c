@@ -1247,7 +1247,7 @@ is_managed(const resource_t * rsc)
 }
 
 static gboolean
-any_managed_resouces(pe_working_set_t * data_set)
+any_managed_resources(pe_working_set_t * data_set)
 {
 
     GListPtr gIter = data_set->resources;
@@ -1296,7 +1296,7 @@ stage6(pe_working_set_t * data_set)
 
     crm_trace("Processing fencing and shutdown cases");
 
-    if (any_managed_resouces(data_set) == FALSE) {
+    if (any_managed_resources(data_set) == FALSE) {
         crm_notice("Delaying fencing operations until there are resources to manage");
         need_stonith = FALSE;
     }

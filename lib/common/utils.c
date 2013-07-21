@@ -2065,7 +2065,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     gboolean dc_needs_unique_ops = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
-    do_crm_log(level, "%s: Updating resouce %s after %s op %s (interval=%d)",
+    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
                origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
                op->interval);
 
