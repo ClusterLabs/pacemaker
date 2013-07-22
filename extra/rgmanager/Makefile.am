@@ -18,7 +18,9 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-# Foo
+if BUILD_CMAN
+
+# Migration tools
 bin_PROGRAMS = ccs_flatten disable_rgmanager
 bin_SCRIPTS = ccs2cib
 ccs_flatten_SOURCES = reslist.c resrules.c restree.c flatten.c xmlconf.c
@@ -34,3 +36,4 @@ ccs2cib: ccs2cib.in
 	echo >> $@
 	cat $^ >> $@
 	chmod +x $@
+endif
