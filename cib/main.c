@@ -41,6 +41,7 @@
 #include <cibio.h>
 #include <callbacks.h>
 #include <pwd.h>
+#include <grp.h>
 
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
@@ -168,6 +169,12 @@ main(int argc, char **argv)
                 rc = setgid(pwentry->pw_gid);
                 if (rc < 0) {
                     crm_perror(LOG_ERR, "Could not set group to %d", pwentry->pw_gid);
+                    return 100;
+                }
+
+                rc = initgroups(CRM_DAEMON_GROUP, pwentry->pw_gid);
+                if (rc < 0) {
+                    crm_perror(LOG_ERR, "Could not setup groups for user %d", pwentry->pw_uid);
                     return 100;
                 }
 
