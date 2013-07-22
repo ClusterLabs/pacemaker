@@ -1023,6 +1023,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name)
     g_list_free(lrm_state_list);
 }
 
+/* Returns: gboolean - cancellation is in progress */
 static gboolean
 cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, gboolean remove)
 {
@@ -1044,14 +1045,14 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
         if (pending->cancelled) {
             crm_debug("Operation %s already cancelled", key);
-            return TRUE;
+            return FALSE;
         }
 
         pending->cancelled = TRUE;
 
     } else {
         crm_info("No pending op found for %s", key);
-        return TRUE;
+        return FALSE;
     }
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
@@ -1060,6 +1061,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
     if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
+
     } else {
         crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
         /* The caller needs to make sure the entry is
@@ -1088,16 +1090,15 @@ struct cancel_data {
 static gboolean
 cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 {
+    gboolean remove = FALSE;
     struct cancel_data *data = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (safe_str_eq(op->op_key, data->key)) {
         data->done = TRUE;
-        if (cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove) == FALSE) {
-            return TRUE;
-        }
+        remove = !cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove);
     }
-    return FALSE;
+    return remove;
 }
 
 static gboolean
@@ -1204,7 +1205,6 @@ do_lrm_invoke(long long action,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    gboolean done = FALSE;
     gboolean create_rsc = TRUE;
     lrm_state_t *lrm_state = NULL;
     const char *crm_op = NULL;
@@ -1432,6 +1432,7 @@ do_lrm_invoke(long long action,
             const char *call_id = NULL;
             const char *op_task = NULL;
             const char *op_interval = NULL;
+            gboolean in_progress = FALSE;
 
             CRM_CHECK(params != NULL, crm_log_xml_warn(input->xml, "Bad command");
                       return);
@@ -1462,14 +1463,14 @@ do_lrm_invoke(long long action,
             call = crm_parse_int(call_id, "0");
             if (call == 0) {
                 /* the normal case when the PE cancels a recurring op */
-                done = cancel_op_key(lrm_state, rsc, op_key, TRUE);
+                in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
 
             } else {
                 /* the normal case when the PE cancels an orphan op */
-                done = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
+                in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
             }
 
-            if (done == FALSE) {
+            if (in_progress == FALSE) {
                 crm_debug("Nothing known about operation %d for %s", call, op_key);
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
 
@@ -1705,27 +1706,26 @@ struct stop_recurring_action_s {
 static gboolean
 stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 {
+    gboolean remove = FALSE;
     struct stop_recurring_action_s *event = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (op->interval != 0 && safe_str_eq(op->rsc_id, event->rsc->id)) {
-        if (cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE) == FALSE) {
-            return TRUE;
-        }
+        remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
 
-    return FALSE;
+    return remove;
 }
 
 static gboolean
 stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 {
+    gboolean remove = FALSE;
     lrm_state_t *lrm_state = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
-    gboolean remove = FALSE;
 
     if (op->interval != 0) {
-        remove = cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
+        remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
     }
 
     return remove;
@@ -2063,7 +2063,12 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
 
     if ((op->interval == 0) && g_hash_table_remove(lrm_state->pending_ops, op_id)) {
         removed = TRUE;
-        crm_trace("Op %s (call=%d, stop-id=%s): Confirmed", op_key, op->call_id, op_id);
+        crm_trace("Op %s (call=%d, stop-id=%s, remaining=%u): Confirmed",
+                  op_key, op->call_id, op_id, g_hash_table_size(lrm_state->pending_ops));
+
+    } else if(op->interval != 0 && op->op_status == PCMK_LRM_OP_CANCELLED) {
+        removed = TRUE;
+        g_hash_table_remove(lrm_state->pending_ops, op_id);
     }
 
     if (op->op_status == PCMK_LRM_OP_DONE) {
