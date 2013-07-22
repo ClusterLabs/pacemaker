@@ -166,14 +166,19 @@ internal_lrm_state_destroy(gpointer data)
 void
 lrm_state_reset_tables(lrm_state_t * lrm_state)
 {
-
     if (lrm_state->resource_history) {
+        crm_trace("Re-setting history op cache with %d members",
+                  g_hash_table_size(lrm_state->resource_history));
         g_hash_table_remove_all(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
+        crm_trace("Re-setting deletion op cache with %d members",
+                  g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
     if (lrm_state->pending_ops) {
+        crm_trace("Re-setting pending op cache with %d members",
+                  g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_remove_all(lrm_state->pending_ops);
     }
 }

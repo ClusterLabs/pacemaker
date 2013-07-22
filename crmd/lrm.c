@@ -373,7 +373,9 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     if (lrm_state->pending_ops) {
         if (lrm_state_is_connected(lrm_state) == TRUE) {
             /* Only log/complain about non-recurring actions */
+            crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
             g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_actions, lrm_state);
+            crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
         }
         g_hash_table_foreach(lrm_state->pending_ops, ghash_count_pending, &counter);
     }
@@ -1112,7 +1114,9 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
     data.remove = remove;
     data.lrm_state = lrm_state;
 
+    crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
     g_hash_table_foreach_remove(lrm_state->pending_ops, cancel_action_by_key, &data);
+    crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
     return data.done;
 }
 
@@ -1759,7 +1763,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
 
         data.rsc = rsc;
         data.lrm_state = lrm_state;
+        crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
+        crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
     }
 
     /* now do the op */
