@@ -313,43 +313,6 @@ do_lrm_control(long long action,
     }
 }
 
-static void
-ghash_print_pending(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *stop_id = key;
-    int *log_level = user_data;
-    struct recurring_op_s *pending = value;
-
-    do_crm_log(*log_level, "Pending action: %s (%s)", stop_id, pending->op_key);
-}
-
-static void
-ghash_print_pending_for_rsc(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *stop_id = key;
-    char *rsc = user_data;
-    struct recurring_op_s *pending = value;
-
-    if (safe_str_eq(rsc, pending->rsc_id)) {
-        crm_notice("%sction %s (%s) incomplete at shutdown",
-                   pending->interval == 0 ? "A" : "Recurring a", stop_id, pending->op_key);
-    }
-}
-
-static void
-ghash_count_pending(gpointer key, gpointer value, gpointer user_data)
-{
-    int *counter = user_data;
-    struct recurring_op_s *pending = value;
-
-    if (pending->interval > 0) {
-        /* Ignore recurring actions in the shutdown calculations */
-        return;
-    }
-
-    (*counter)++;
-}
-
 static gboolean
 lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state, int log_level)
 {
@@ -358,7 +321,9 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     const char *when = "lrm disconnect";
 
     GHashTableIter gIter;
+    const char *key = NULL;
     rsc_history_t *entry = NULL;
+    struct recurring_op_s *pending = NULL;
 
     crm_debug("Checking for active resources before exit");
 
@@ -370,21 +335,33 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         when = "shutdown... waiting";
     }
 
+    if (lrm_state->pending_ops && lrm_state_is_connected(lrm_state) == TRUE) {
+        guint removed = g_hash_table_foreach_remove(
+            lrm_state->pending_ops, stop_recurring_actions, lrm_state);
+
+        crm_notice("Stopped %u recurring operations at %s (%u ops remaining)",
+                   g_hash_table_size(lrm_state->pending_ops), removed, when);
+    }
+
     if (lrm_state->pending_ops) {
-        if (lrm_state_is_connected(lrm_state) == TRUE) {
-            /* Only log/complain about non-recurring actions */
-            crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
-            g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_actions, lrm_state);
-            crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
+        g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
+        while (g_hash_table_iter_next(&gIter, NULL, (void **)&pending)) {
+            /* Ignore recurring actions in the shutdown calculations */
+            if (pending->interval == 0) {
+                counter++;
+            }
         }
-        g_hash_table_foreach(lrm_state->pending_ops, ghash_count_pending, &counter);
     }
 
     if (counter > 0) {
         do_crm_log(log_level, "%d pending LRM operations at %s%s", counter, when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-            g_hash_table_foreach(lrm_state->pending_ops, ghash_print_pending, &log_level);
+            g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
+            while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
+                do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
+            }
+
         } else {
             rc = FALSE;
         }
@@ -402,7 +379,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
     counter = 0;
     g_hash_table_iter_init(&gIter, lrm_state->resource_history);
-    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+    while (g_hash_table_iter_next(&gIter, NULL, (gpointer*)&entry)) {
         if (is_rsc_active(lrm_state, entry->id) == FALSE) {
             continue;
         }
@@ -410,7 +387,16 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         counter++;
         crm_trace("Found %s active", entry->id);
         if (lrm_state->pending_ops) {
-            g_hash_table_foreach(lrm_state->pending_ops, ghash_print_pending_for_rsc, entry->id);
+            GHashTableIter hIter;
+
+            g_hash_table_iter_init(&hIter, lrm_state->pending_ops);
+            while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
+                if (safe_str_eq(entry->id, pending->rsc_id)) {
+                    crm_notice("%sction %s (%s) incomplete at %s",
+                               pending->interval == 0 ? "A" : "Recurring a",
+                               key, pending->op_key, when);
+                }
+            }
         }
     }
 
@@ -903,7 +889,6 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
         delete_rsc_status(lrm_state, rsc_id_copy, cib_quorum_override, user_name);
 
         g_hash_table_foreach_remove(lrm_state->pending_ops, lrm_remove_deleted_op, rsc_id_copy);
-
         free(rsc_id_copy);
     }
 
@@ -1104,6 +1089,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, gboolean remove)
 {
+    guint removed = 0;
     struct cancel_data data;
 
     CRM_CHECK(rsc != NULL, return FALSE);
@@ -1115,9 +1101,9 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
     data.remove = remove;
     data.lrm_state = lrm_state;
 
-    crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
-    g_hash_table_foreach_remove(lrm_state->pending_ops, cancel_action_by_key, &data);
-    crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
+    removed = g_hash_table_foreach_remove(lrm_state->pending_ops, cancel_action_by_key, &data);
+    crm_trace("Removed %u op cache entries, new size: %u",
+              removed, g_hash_table_size(lrm_state->pending_ops));
     return data.done;
 }
 
@@ -1711,6 +1697,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (op->interval != 0 && safe_str_eq(op->rsc_id, event->rsc->id)) {
+        crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
 
@@ -1725,6 +1712,7 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (op->interval != 0) {
+        crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
         remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
     }
 
@@ -1743,6 +1731,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     const char *transition = NULL;
 
     CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(operation != NULL, return);
 
     if (msg != NULL) {
         transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
@@ -1752,20 +1741,20 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     }
 
     op = construct_op(lrm_state, msg, rsc->id, operation);
+    CRM_CHECK(op != NULL, return);
 
-    /* stop the monitor before stopping the resource */
-    if (crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
-        || crm_str_eq(operation, CRMD_ACTION_DEMOTE, TRUE)
-        || crm_str_eq(operation, CRMD_ACTION_PROMOTE, TRUE)
-        || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
-
+    /* stop any previous monitor operations before changing the resource state */
+    if (op->interval == 0 && strcmp(operation, CRMD_ACTION_STATUS) != 0) {
+        guint removed = 0;
         struct stop_recurring_action_s data;
 
         data.rsc = rsc;
         data.lrm_state = lrm_state;
-        crm_trace("Op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
-        g_hash_table_foreach_remove(lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
-        crm_trace("New op cache size: %u", g_hash_table_size(lrm_state->pending_ops));
+        removed = g_hash_table_foreach_remove(
+            lrm_state->pending_ops, stop_recurring_action_by_rsc, &data);
+
+        crm_debug("Stopped %u recurring operations in preparation for %s_%s_%d",
+                  removed, rsc->id, operation, op->interval);
     }
 
     /* now do the op */
@@ -1774,8 +1763,8 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     if (fsa_state != S_NOT_DC && fsa_state != S_POLICY_ENGINE && fsa_state != S_TRANSITION_ENGINE) {
         if (safe_str_neq(operation, "fail")
             && safe_str_neq(operation, CRMD_ACTION_STOP)) {
-            crm_info("Discarding attempt to perform action %s on %s"
-                     " in state %s", operation, rsc->id, fsa_state2string(fsa_state));
+            crm_info("Discarding attempt to perform action %s on %s in state %s",
+                     operation, rsc->id, fsa_state2string(fsa_state));
             op->rc = 99;
             op->op_status = PCMK_LRM_OP_ERROR;
             send_direct_ack(NULL, NULL, rsc, op, rsc->id);
