@@ -761,8 +761,8 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && stonith_topology_next(op) == pcmk_ok);
 
     if (op->devices) {
-        crm_debug("Couldn't find anyone to fence %s with %s", op->target,
-                  (char *)op->devices->data);
+        crm_notice("Couldn't find anyone to fence %s with %s", op->target,
+                   (char *)op->devices->data);
     } else {
         crm_debug("Couldn't find anyone to fence %s", op->target);
     }
