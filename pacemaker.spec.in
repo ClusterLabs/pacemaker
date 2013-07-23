@@ -64,11 +64,11 @@ Group:         System Environment/Daemons
 Source0:       %{upstream_prefix}-%{upstream_version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
+Requires:      python
+Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-Requires:      resource-agents
-Requires:      python
 
 %if %{defined systemd_requires}
 %systemd_requires
@@ -312,6 +312,11 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
+# Only useful on rhel6
+rm -f %{buildroot}/%{_bindir}/ccs2cib
+rm -f %{buildroot}/%{_bindir}/ccs_flatten
+rm -f %{buildroot}/%{_bindir}/disable_rgmanager
+
 %if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
@@ -410,9 +415,6 @@ exit 0
 %{_sbindir}/attrd_updater
 %{_sbindir}/fence_legacy
 %{_sbindir}/fence_pcmk
-%{_bindir}/ccs2cib
-%{_bindir}/ccs_flatten
-%{_bindir}/disable_rgmanager
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/*
@@ -421,6 +423,7 @@ exit 0
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_pcmk.*
+%doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
 
@@ -469,6 +472,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_pcmk.*
+%exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker_remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
