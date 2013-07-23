@@ -5,7 +5,7 @@
 - Implement:
  - crm_node --standby
  - crm_resource --enable --recursive :  set target role for anything we depend on
- - crm_resource --force-start <-- check resource is stopped
+ - merge all the crmd global variables into a single struct 
 
 - Only bump epoch if we have quorum when we are elected the DC 
 - Bump epoch if we gain quorum and are the DC
