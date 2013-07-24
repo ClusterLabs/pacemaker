@@ -319,39 +319,22 @@ class crm_cs_v0(crm_ais):
         self.ais_components()
 
         corosync_ignore = [
-            r"error: crmd_quorum_destroy: connection terminated",
-            r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect",
-
+            r"error: pcmk_cpg_dispatch: Connection to the CPG API failed: Library error",
             r"pacemakerd.*error: pcmk_child_exit: Child process .* exited",
-            r"error: send_cpg_message: Sending message via cpg FAILED",
-            r"error: verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-            r"error: pcmk_cpg_dispatch: Connection to the CPG API failed:",
-            r"error: pcmk_cman_dispatch: Connection to cman failed: -1",
-            r"error: crm_ipc_read: Connection to cib_shm failed",
-            r"error: mainloop_gio_callback: Connection to .* closed",
-            r"crmd_cib_connection_destroys:",
-            r"crmd.*error: do_recover: Action A_RECOVER .* not supported",
-            r"error: do_log: FSA: Input I_TERMINATE.*do_recover",
-            r"error: cib_cs_destroy: Corosync connection lost!  Exiting.",
-            r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated...",
-            r"error: send_cluster_text: Sending message .* via cpg: FAILED",
-
-            r"error: crmd_quorum_destroy: connection terminated",
-            r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect.",
-
-            r"error: crm_ipc_read: Connection to stonith-ng failed",
-            r"crit: tengine_stonith_connection_destroy: Fencing daemon connection failed",
-            r"error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
-            r"error: stonith_connection_failed: STONITH connection failed",
-            r"error: te_connect_stonith: Sign-in failed: triggered a retry",
-            r"error: process_lrm_event: LRM operation Fencing.*",
-            r"error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy.* received in state",
-            r"error: do_log: FSA: Input I_ERROR from do_shutdown_req.* received in state",
-            r"do_state_transition: State transition .* S_RECOVERY .*origin=crmd_cib_connection_destroy",
-            r"do_state_transition: State transition .* S_RECOVERY .*origin=do_shutdown_req",
-
-            r"crmd.*error: cib_native_perform_op_delegate: Couldn't perform cib_slave operation",
-            r"crmd.*error: cib_native_perform_op_delegate: CIB disconnected",
+            r"cib.*error: cib_cs_destroy: Corosync connection lost",
+            r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated",
+            r"stonith-ng.*error: stonith_peer_cs_destroy: Corosync connection terminated",
+            r"error: pcmk_child_exit: Child process cib .* exited: Invalid argument",
+            r"error: pcmk_child_exit: Child process attrd .* exited: Transport endpoint is not connected",
+            r"error: pcmk_child_exit: Child process crmd .* exited: Link has been severed",
+            r"lrmd.*error: crm_ipc_read: Connection to stonith-ng failed",
+            r"lrmd.*error: mainloop_gio_callback: Connection to stonith-ng.* closed",
+            r"lrmd.*error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            r"crmd.*error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy",
+            r"crmd.*notice: do_state_transition: State transition S_NOT_DC -> S_RECOVERY",
+            r"crmd.*error: do_log: FSA: Input I_TERMINATE from do_recover",
+            r"crmd.*error: pcmk_cman_dispatch: Connection to cman failed",
+            r"crmd.*error: crmd_fast_exit: Could not recover from internal error",
             ]
 
         self.complist.append(Process(self, "corosync", pats = [
@@ -360,10 +343,8 @@ class crm_cs_v0(crm_ais):
                     r"attrd_cs_destroy: Lost connection to Corosync service!",
                     r"stonith_peer_cs_destroy: Corosync connection terminated",
                     r"cib_cs_destroy: Corosync connection lost!  Exiting.",
-                    r"crmd_cs_destroy: connection terminated",
-                    r"error: lrm_state_verify_stopped: .* resources were active at lrm disconnect",
+                    r"crmd_(cs|quorum)_destroy: connection terminated",
                     r"pengine.*Scheduling Node .* for STONITH",
-                    r"log_operation: Operation .* for host .* with device .* returned: 0",
                     r"tengine_stonith_notify: Peer .* was terminated .*: OK",
                     ], badnews_ignore = corosync_ignore, common_ignore = self.common_ignore))
 
