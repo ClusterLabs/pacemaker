@@ -414,7 +414,6 @@ mainloop_cleanup(void)
  */
 struct gio_to_qb_poll {
     int32_t is_used;
-    GIOChannel *channel;
     guint source;
     int32_t events;
     void *data;
@@ -422,28 +421,13 @@ struct gio_to_qb_poll {
     enum qb_loop_priority p;
 };
 
-static int
-gio_adapter_refcount(struct gio_to_qb_poll *adaptor)
-{
-    /* This is evil
-     * Looking at the giochannel header file, ref_count is the first member of channel
-     * So cheat...
-     */
-    if (adaptor && adaptor->channel) {
-        int *ref = (void *)adaptor->channel;
-
-        return *ref;
-    }
-    return 0;
-}
-
 static gboolean
 gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
     gint fd = g_io_channel_unix_get_fd(gio);
 
-    crm_trace("%p.%d %d (ref=%d)", data, fd, condition, gio_adapter_refcount(adaptor));
+    crm_trace("%p.%d %d", data, fd, condition);
 
     if (condition & G_IO_NVAL) {
         crm_trace("Marking failed adaptor %p unused", adaptor);
@@ -456,15 +440,9 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 static void
 gio_poll_destroy(gpointer data)
 {
-    /* adaptor->source is valid but about to be destroyed (ref_count == 0) in gmain.c
-     * adaptor->channel will still have ref_count > 0... should be == 1
-     */
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
-    crm_trace("Destroying adaptor %p channel %p (ref=%d)", adaptor, adaptor->channel,
-              gio_adapter_refcount(adaptor));
     adaptor->is_used = QB_FALSE;
-    adaptor->channel = NULL;
     adaptor->source = 0;
 }
 
@@ -498,7 +476,6 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
     /* Because unlike the poll() API, glib doesn't tell us about HUPs by default */
     evts |= (G_IO_HUP | G_IO_NVAL | G_IO_ERR);
 
-    adaptor->channel = channel;
     adaptor->fn = fn;
     adaptor->events = evts;
     adaptor->data = data;
@@ -508,19 +485,18 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
         g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, evts, gio_read_socket, adaptor,
                             gio_poll_destroy);
 
-    /* Now that mainloop now holds a reference to adaptor->channel,
+    /* Now that mainloop now holds a reference to channel,
      * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
      *
-     * This means that adaptor->channel will be free'd by:
+     * This means that channel will be free'd by:
      * g_main_context_dispatch()
      *  -> g_source_destroy_internal()
      *      -> g_source_callback_unref()
      * shortly after gio_poll_destroy() completes
      */
-    g_io_channel_unref(adaptor->channel);
+    g_io_channel_unref(channel);
 
-    crm_trace("Added to mainloop with gsource id=%d, ref=%d", adaptor->source,
-              gio_adapter_refcount(adaptor));
+    crm_trace("Added to mainloop with gsource id=%d", adaptor->source);
     if (adaptor->source > 0) {
         return 0;
     }
@@ -542,7 +518,7 @@ gio_poll_dispatch_del(int32_t fd)
 
     crm_trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
-        crm_trace("Marking adaptor %p unused (ref=%d)", adaptor, gio_adapter_refcount(adaptor));
+        crm_trace("Marking adaptor %p unused", adaptor);
         if (adaptor->source) {
             g_source_remove(adaptor->source);
             adaptor->source = 0;
@@ -631,28 +607,13 @@ struct mainloop_io_s {
 
 };
 
-static int
-mainloop_gio_refcount(mainloop_io_t * client)
-{
-    /* This is evil
-     * Looking at the giochannel header file, ref_count is the first member of channel
-     * So cheat...
-     */
-    if (client && client->channel) {
-        int *ref = (void *)client->channel;
-
-        return *ref;
-    }
-    return 0;
-}
-
 static gboolean
 mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     gboolean keep = TRUE;
     mainloop_io_t *client = data;
 
-    CRM_ASSERT(client->fd == g_io_channel_unix_get_fd(client->channel));
+    CRM_ASSERT(client->fd == g_io_channel_unix_get_fd(gio));
 
     if (condition & G_IO_IN) {
         if (client->ipc) {
@@ -693,8 +654,8 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
         keep = FALSE;
 
     } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
-        crm_trace("The connection %s[%p] has been closed (I/O condition=%d, refcount=%d)",
-                  client->name, client, condition, mainloop_gio_refcount(client));
+        crm_trace("The connection %s[%p] has been closed (I/O condition=%d)",
+                  client->name, client, condition);
         keep = FALSE;
 
     } else if ((condition & G_IO_IN) == 0) {
@@ -743,7 +704,7 @@ mainloop_gio_destroy(gpointer c)
     /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
      * client->channel will still have ref_count > 0... should be == 1
      */
-    crm_trace("Destroying client %s[%p] %d", c_name, c, mainloop_gio_refcount(client));
+    crm_trace("Destroying client %s[%p]", c_name, c);
 
     if (client->ipc) {
         crm_ipc_close(client->ipc);
@@ -763,7 +724,7 @@ mainloop_gio_destroy(gpointer c)
         crm_ipc_destroy(ipc);
     }
 
-    crm_trace("Destroyed client %s[%p] %d", c_name, c, mainloop_gio_refcount(client));
+    crm_trace("Destroyed client %s[%p]", c_name, c);
 
     free(client->name); client->name = NULL;
     free(client);
@@ -834,18 +795,17 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
                                 (G_IO_IN | G_IO_HUP | G_IO_NVAL | G_IO_ERR), mainloop_gio_callback,
                                 client, mainloop_gio_destroy);
 
-        /* Now that mainloop now holds a reference to adaptor->channel,
+        /* Now that mainloop now holds a reference to channel,
          * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
          *
-         * This means that adaptor->channel will be free'd by:
+         * This means that channel will be free'd by:
          * g_main_context_dispatch() or g_source_remove()
          *  -> g_source_destroy_internal()
          *      -> g_source_callback_unref()
          * shortly after mainloop_gio_destroy() completes
          */
         g_io_channel_unref(client->channel);
-        crm_trace("Added connection %d for %s[%p].%d %d", client->source, client->name, client, fd,
-                  mainloop_gio_refcount(client));
+        crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
     }
 
     return client;
@@ -855,7 +815,7 @@ void
 mainloop_del_fd(mainloop_io_t * client)
 {
     if (client != NULL) {
-        crm_trace("Removing client %s[%p] %d", client->name, client, mainloop_gio_refcount(client));
+        crm_trace("Removing client %s[%p]", client->name, client);
         if (client->source) {
             /* Results in mainloop_gio_destroy() being called just
              * before the source is removed from mainloop
