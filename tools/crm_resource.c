@@ -463,12 +463,16 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     return rc;
 }
 
+#include "../pengine/pengine.h"
+
+
 static int
 set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
-                  const char *attr_name, const char *attr_value,
+                  const char *attr_name, const char *attr_value, bool recursive,
                   cib_t * cib, pe_working_set_t * data_set)
 {
     int rc = pcmk_ok;
+    static bool need_init = TRUE;
 
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
@@ -560,6 +564,38 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
     free_xml(xml_top);
     free(local_attr_id);
     free(local_attr_set);
+
+    if(recursive && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+        GListPtr lpc = NULL;
+
+        if(need_init) {
+            xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+
+            need_init = FALSE;
+            unpack_constraints(cib_constraints, data_set);
+
+            for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
+                resource_t *r = (resource_t *) lpc->data;
+
+                clear_bit(r->flags, pe_rsc_allocating);
+            }
+        }
+
+        crm_debug("Looking for dependancies %p", rsc->rsc_cons_lhs);
+        set_bit(rsc->flags, pe_rsc_allocating);
+        for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+            rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+            resource_t *peer = cons->rsc_lh;
+
+            crm_debug("Checking %s %d", cons->id, cons->score);
+            if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
+                /* Don't get into colocation loops */
+                crm_debug("Setting %s=%s for dependant resource %s", attr_name, attr_value, peer->id);
+                set_resource_attr(peer->id, NULL, NULL, attr_name, attr_value, recursive, cib, data_set);
+            }
+        }
+    }
+
     return rc;
 }
 
@@ -1077,8 +1113,6 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
     return pcmk_ok;
 }
 
-#include "../pengine/pengine.h"
-
 static void
 show_location(resource_t * rsc, const char *prefix)
 {
@@ -1280,12 +1314,12 @@ static struct crm_option long_options[] = {
     },
     {"lifetime",   1, 0, 'u', "\tLifespan of constraints created by the --ban and --move commands"},
     {
-        "master",     0, 0,  0,
+        "master",  0, 0,  0,
         "\t\tLimit the scope of the --ban, --move and --clear  commands to the Master role.\n"
         "\t\t\t\tFor --ban and --move, the previous master can still remain active in the Slave role."
     },
 
-    {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
+    {"-spacer-",   1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB"},
     {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
     {"force-stop", 0, 0,  0,  "\t(Advanced) Bypass the cluster and stop a resource on the local node. Additional detail with -V"},
@@ -1294,6 +1328,7 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"node",		1, 0, 'N', "\tHost uname"},
+    {"recursive",       0, 0,  0,  "\tFollow colocation chains when using --set-parameter"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
     {"parameter-value", 1, 0, 'v', "Value to use with -p, -g or -d"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
@@ -1356,6 +1391,7 @@ main(int argc, char **argv)
     xmlNode *cib_xml_copy = NULL;
     cib_t *cib_conn = NULL;
     bool do_trace = FALSE;
+    bool recursive = FALSE;
 
     int rc = pcmk_ok;
     int option_index = 0;
@@ -1379,6 +1415,9 @@ main(int argc, char **argv)
             case 0:
                 if (safe_str_eq("master", longname)) {
                     scope_master = TRUE;
+
+                } else if(safe_str_eq(longname, "recursive")) {
+                    recursive = TRUE;
 
                 } else if (safe_str_eq("force-stop", longname)
                     || safe_str_eq("force-start", longname)
@@ -2053,9 +2092,10 @@ main(int argc, char **argv)
             rc = -EINVAL;
             goto bail;
         }
+
         /* coverity[var_deref_model] False positive */
         rc = set_resource_attr(rsc_id, prop_set, prop_id, prop_name,
-                               prop_value, cib_conn, &data_set);
+                               prop_value, recursive, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'd') {
         if (rsc_id == NULL) {
