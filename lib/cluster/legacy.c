@@ -367,16 +367,24 @@ cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
             }
 
             for (lpc = 0; lpc < node_count; lpc++) {
+                crm_node_t *peer = NULL;
+
                 if (cman_nodes[lpc].cn_nodeid == 0) {
                     /* Never allow node ID 0 to be considered a member #315711 */
                     /* Skip entirely, its a qdisk */
                     continue;
                 }
-                crm_update_peer(__FUNCTION__, cman_nodes[lpc].cn_nodeid,
-                                cman_nodes[lpc].cn_incarnation,
-                                cman_nodes[lpc].cn_member ? crm_peer_seq : 0, 0, 0,
-                                cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_name, NULL,
-                                cman_nodes[lpc].cn_member ? CRM_NODE_MEMBER : CRM_NODE_LOST);
+
+                peer = crm_get_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_name);
+                if(cman_nodes[lpc].cn_member) {
+                    crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, crm_peer_seq);
+
+                } else if(peer->state) {
+                    crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
+
+                } else {
+                    crm_info("State of node %s[%u] is still unknown", peer->uname, peer->id);
+                }
             }
 
             if (dispatch) {
