@@ -543,6 +543,10 @@ gio_poll_dispatch_del(int32_t fd)
     crm_trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
         crm_trace("Marking adaptor %p unused (ref=%d)", adaptor, gio_adapter_refcount(adaptor));
+        if (adaptor->source) {
+            g_source_remove(adaptor->source);
+            adaptor->source = 0;
+        }
         adaptor->is_used = QB_FALSE;
     }
     return 0;
