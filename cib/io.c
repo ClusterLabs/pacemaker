@@ -42,9 +42,13 @@
 #include <crm/cluster.h>
 
 #define CIB_SERIES "cib"
+#define CIB_SERIES_MAX 100
+#define CIB_SERIES_BZIP FALSE /* Must be false due to the way archived
+                               * copies are created - ie. with calls to
+                               * link()
+                               */
 
 extern const char *cib_root;
-static int cib_wrap = 100;
 
 #define CIB_WRITE_PARANOIA	0
 
@@ -281,16 +285,65 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
     return root;
 }
 
+static int cib_archive_filter(const struct dirent * a)
+{
+    /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
+    if(a->d_type != 8) {
+        return 0;
+
+    } else if(strstr(a->d_name, "cib-") != a->d_name) {
+        return 0;
+
+    } else if(strstr(a->d_name, ".sig") != NULL) {
+        return 0;
+    }
+    return 1;
+}
+
+static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
+{
+    /* Order by creation date - most recently created file first */
+    int rc = 0;
+    struct stat buf;
+
+    time_t a_age = 0;
+    time_t b_age = 0;
+
+    char *a_path = g_strdup_printf("%s/%s", cib_root, a[0]->d_name);
+    char *b_path = g_strdup_printf("%s/%s", cib_root, b[0]->d_name);
+
+    if(stat(a_path, &buf) == 0) {
+        a_age = buf.st_ctime;
+    }
+    if(stat(b_path, &buf) == 0) {
+        b_age = buf.st_ctime;
+    }
+
+    free(a_path);
+    free(b_path);
+
+    if(a_age > b_age) {
+        rc = 1;
+    } else if(a_age < b_age) {
+        rc = -1;
+    }
+
+    crm_trace("%s (%u) vs. %s (%u) : %d", a[0]->d_name, a_age, b[0]->d_name, b_age, rc);
+    return rc;
+}
+
 xmlNode *
 readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
-    int seq = 0;
-    char *backup_file = NULL;
-    char *filename = NULL, *sigfile = NULL;
+    struct dirent **namelist = NULL;
+
+    int lpc = 0;
+    char *sigfile = NULL;
+    char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
     const char *validation = NULL;
-    const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
+    const char *use_valgrind = getenv("PCMK_valgrind_enabled");
 
     xmlNode *root = NULL;
     xmlNode *status = NULL;
@@ -305,33 +358,33 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     cib_status = pcmk_ok;
     root = retrieveCib(filename, sigfile, TRUE);
+    free(filename);
+    free(sigfile);
 
     if (root == NULL) {
-        crm_warn("Primary configuration corrupt or unusable, trying backup...");
-        seq = get_last_sequence(cib_root, CIB_SERIES);
+        crm_warn("Primary configuration corrupt or unusable, trying backups");
+        lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
+        if (lpc < 0) {
+            crm_perror(LOG_NOTICE, "scandir(%s) failed", cib_root);
+        }
     }
 
-    while (root == NULL) {
-        struct stat buf;
+    while (root == NULL && lpc > 1) {
+        lpc--;
 
-        free(sigfile);
-
-        if (seq == 0) {
-            seq += cib_wrap;    /* unwrap */
-        }
-
-        backup_file = generate_series_filename(cib_root, CIB_SERIES, seq - 1, FALSE);
+        filename = g_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
         sigfile = crm_concat(filename, "sig", '.');
 
-        if (stat(backup_file, &buf) != 0) {
-            crm_debug("Backup file %s not found", backup_file);
-            break;
+        root = retrieveCib(filename, sigfile, FALSE);
+        if(root) {
+            crm_notice("Continuing with last valid configuration archive: %s", filename);
         }
-        crm_warn("Attempting to load: %s", backup_file);
-        root = retrieveCib(backup_file, sigfile, FALSE);
-        seq--;
+
+        free(namelist[lpc]);
+        free(filename);
+        free(sigfile);
     }
-    free(backup_file);
+    free(namelist);
 
     if (root == NULL) {
         root = createEmptyCib();
@@ -413,8 +466,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         }
     }
 
-    free(filename);
-    free(sigfile);
     return root;
 }
 
@@ -640,7 +691,7 @@ write_cib_contents(gpointer p)
             goto cleanup;
         }
 
-        backup_file = generate_series_filename(cib_root, CIB_SERIES, seq, FALSE);
+        backup_file = generate_series_filename(cib_root, CIB_SERIES, seq, CIB_SERIES_BZIP);
         backup_digest = crm_concat(backup_file, "sig", '.');
 
         unlink(backup_file);
@@ -659,7 +710,7 @@ write_cib_contents(gpointer p)
             crm_perror(LOG_ERR, "Cannot link %s to %s", digest_file, backup_digest);
             goto cleanup;
         }
-        write_last_sequence(cib_root, CIB_SERIES, seq + 1, cib_wrap);
+        write_last_sequence(cib_root, CIB_SERIES, seq + 1, CIB_SERIES_MAX);
         sync_directory(cib_root);
 
         crm_info("Archived previous version as %s", backup_file);
