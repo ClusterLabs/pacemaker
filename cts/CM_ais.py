@@ -330,11 +330,14 @@ class crm_cs_v0(crm_ais):
             r"lrmd.*error: crm_ipc_read: Connection to stonith-ng failed",
             r"lrmd.*error: mainloop_gio_callback: Connection to stonith-ng.* closed",
             r"lrmd.*error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
-            r"crmd.*error: do_log: FSA: Input I_ERROR from crmd_cib_connection_destroy",
-            r"crmd.*notice: do_state_transition: State transition S_NOT_DC -> S_RECOVERY",
-            r"crmd.*error: do_log: FSA: Input I_TERMINATE from do_recover",
+            r"crmd.*do_state_transition: State transition .* S_RECOVERY",
+            r"crmd.*error: do_log: FSA: Input I_ERROR",
+            r"crmd.*error: do_log: FSA: Input I_TERMINATE",
             r"crmd.*error: pcmk_cman_dispatch: Connection to cman failed",
             r"crmd.*error: crmd_fast_exit: Could not recover from internal error",
+            r"error: crm_ipc_read: Connection to cib_shm failed",
+            r"error: mainloop_gio_callback: Connection to cib_shm.* closed",
+
             ]
 
         self.complist.append(Process(self, "corosync", pats = [
