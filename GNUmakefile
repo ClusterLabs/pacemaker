@@ -277,21 +277,20 @@ www:	all global doxygen
 	make coverity
 
 summary:
-	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(NEXT_RELEASE)-1"
+	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
 	@printf "\n- Update source tarball to revision: `git id`"
-	@printf "\n- Statistics:\n"
-	@printf "  Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`\n"
-	@printf "  Diff:      "
+	@printf "\n- Changesets: `git log --pretty=format:'%h' $(LAST_RELEASE)..HEAD | wc -l`"
+	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
 
 rc-changes:
-	@make LAST_RELEASE=$(LAST_RC) changes
+	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
 
 changes: summary
-	@printf "\n- Features added in $(NEXT_RELEASE)\n"
+	@printf "\n- Features added since $(LAST_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug:@ Bug@' -e s@PE:@pengine:@ | sort -uf
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug@ Bug@' -e s@PE:@pengine:@ | sort -uf
 
 changelog:
 	@make changes > ChangeLog
