@@ -300,12 +300,12 @@ def atexit_handler():
 
 def main():
     global all_opt
-    device_opt = [ "help", "version", "verbose", "debug", "action", "port", "mode", "random_sleep_range"]
+    device_opt = all_opt.keys()
 
     ## Defaults for fence agent
     docs = { }
     docs["shortdesc"] = "Dummy fence agent"
-    docs["longdesc"] = "fence_dummy is a fake Fencing agent which reports success based on it's mode (pass|fail|random) without doing anything."
+    docs["longdesc"] = "fence_dummy is a fake fencing agent which reports success based on it's mode (pass|fail|random) without doing anything."
 
     atexit.register(atexit_handler)
     options = process_input(device_opt)
