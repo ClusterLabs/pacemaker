@@ -623,8 +623,7 @@ parse_date(const char *date_str)
     if (date_str[0] == 'T' || date_str[2] == ':') {
         /* Just a time supplied - Infer current date */
         dt = crm_time_new(NULL);
-
-        crm_time_parse(date_str, dt);
+        dt = crm_time_parse(date_str, dt);
         goto done;
 
     } else {
