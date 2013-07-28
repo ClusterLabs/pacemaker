@@ -53,7 +53,7 @@
 
 Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
-Version:       1.1.9
+Version:       1.1.10
 Release:       %{pcmk_release}%{?dist}
 License:       GPLv2+ and LGPLv2+
 Url:           http://www.clusterlabs.org
@@ -543,6 +543,12 @@ exit 0
 %doc AUTHORS
 
 %changelog
+* Fri Jul 26 2013 Andrew Beekhof <andrew@beekhof.net> 1.1.10-1
+- Update source tarball to revision: Pacemaker-1.1.10
+- Changesets: 602
+- Diff:       143 files changed, 8162 insertions(+), 5159 deletions(-)
+- See included ChangeLog file or https://raw.github.com/ClusterLabs/pacemaker/master/ChangeLog for full details
+
 * Thu Jun 20 2013 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.9-2
 - Simplify the spec file
 - Drop uncommon bcond variations: 
