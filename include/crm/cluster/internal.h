@@ -188,9 +188,10 @@ ais_msg_copy(const AIS_Message * source)
 {
     AIS_Message *target = malloc(sizeof(AIS_Message) + ais_data_len(source));
 
-    memcpy(target, source, sizeof(AIS_Message));
-    memcpy(target->data, source->data, ais_data_len(target));
-
+    if(target) {
+        memcpy(target, source, sizeof(AIS_Message));
+        memcpy(target->data, source->data, ais_data_len(target));
+    }
     return target;
 }
 

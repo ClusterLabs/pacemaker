@@ -124,6 +124,7 @@ send_plugin_text(int class, struct iovec *iov)
     AIS_Message *ais_msg = (AIS_Message*)iov[0].iov_base;
     cs_ipc_header_response_t *header = (cs_ipc_header_response_t *) buf;
 
+    CRM_ASSERT(buf != NULL);
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
     CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
               return FALSE);
