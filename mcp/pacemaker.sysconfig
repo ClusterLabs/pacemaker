@@ -63,6 +63,9 @@
 # Mostly only useful for developer testing
 # PCMK_schema_directory=/some/path
 
+# Enable this for rebooting this machine at the time of process (subsystem) failure
+# PCMK_fail_fast=no
+
 #==#==# Pacemaker Remote
 # Use a custom directory for finding the authkey.
 # PCMK_authkey_location=/etc/pacemaker/authkey
