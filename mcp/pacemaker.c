@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/reboot.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipcs.h>
@@ -145,7 +146,18 @@ pcmk_process_exit(pcmk_child_t * child)
         update_node_processes(local_nodeid, NULL, get_process_list());
 
     } else if (child->respawn) {
+        gboolean fail_fast = crm_is_true(getenv("PCMK_fail_fast"));
+
         crm_notice("Respawning failed child process: %s", child->name);
+
+#ifdef RB_HALT_SYSTEM
+        if (fail_fast) {
+            crm_err("Rebooting system", child->name);
+            sync();
+            reboot(RB_HALT_SYSTEM);
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
+#endif
         start_child(child);
     }
 }
