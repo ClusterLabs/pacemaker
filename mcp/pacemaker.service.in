@@ -32,12 +32,12 @@ SendSIGKILL=no
 # Although the node will likely end up being fenced as a result so its
 # not on by default
 #
-# ExecStopPost=killall -TERM crmd attrd fenced cib pengine lrmd
+# ExecStopPost=/usr/bin/killall -TERM crmd attrd fenced cib pengine lrmd
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:
 #
-# ExecStopPost=killall -TERM corosync
+# ExecStopPost=/bin/sh -c 'pidof crmd || killall -TERM corosync'
 
 # Uncomment this for older versions of systemd that didn't support
 # TimeoutStopSec
