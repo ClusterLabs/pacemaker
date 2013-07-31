@@ -1,0 +1,43 @@
+[Unit]
+Description=Starts Corosync cluster engine and Pacemaker cluster manager
+
+After=basic.target
+After=network.target
+After=corosync.service
+
+Requires=basic.target
+Requires=network.target
+Requires=corosync.service
+
+# Uncomment the line below, if you use corosync-notifyd
+# After=corosync-notifyd.service
+# Wants=corosync-notifyd.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+KillMode=process
+NotifyAccess=main
+SysVStartPriority=99
+EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
+
+ExecStart=@sbindir@/pacemakerd -f
+
+# If pacemakerd doesn't stop, its probably waiting on a cluster
+# resource.  Sending -KILL will just get the node fenced
+SendSIGKILL=no
+
+# When pacemakerd disappeared unexpectedly, a machine is rebooted
+# by the watchdog of corosync
+ExecStopPost=/bin/sh -c 'pidof crmd && killall -q -9 corosync; /usr/share/corosync/corosync stop || true'
+
+# Uncomment this for older versions of systemd that didn't support
+# TimeoutStopSec
+# TimeoutSec=30min
+
+# Pacemaker can only exit after all managed services have shut down
+# A HA database could conceivably take even longer than this 
+TimeoutStopSec=30min
+TimeoutStartSec=60s

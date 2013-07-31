@@ -30,7 +30,7 @@ man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 endif
 
 if BUILD_SYSTEMD
-systemdunit_DATA = pacemaker.service
+systemdunit_DATA = pacemaker.service pacemaker.combined.service
 endif
 
 ## SOURCES

@@ -58,6 +58,7 @@ include/config.h.in
 include/crm_config.h
 mcp/pacemaker
 mcp/pacemaker.service
+mcp/pacemaker.combined.service
 pengine/regression.core.sh
 publican.cfg
 shell/modules/help.py

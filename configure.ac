@@ -1827,6 +1827,7 @@ lib/Makefile							\
 mcp/Makefile							\
 	mcp/pacemaker						\
 	mcp/pacemaker.service					\
+	mcp/pacemaker.combined.service				\
 	mcp/pacemaker.upstart					\
 	mcp/pacemaker.combined.upstart				\
 fencing/Makefile                                                \
