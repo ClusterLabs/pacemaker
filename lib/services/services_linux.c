@@ -30,7 +30,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <string.h>
+
+#ifdef HAVE_SYS_SIGNALFD_H
 #include <sys/signalfd.h>
+#endif
 
 #include "crm/crm.h"
 #include "crm/common/mainloop.h"
@@ -426,6 +429,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
     if (synchronous) {
+#ifndef HAVE_SYS_SIGNALFD_H
+        CRM_ASSERT(FALSE);
+#else
         int status = 0;
         int timeout = op->timeout;
         int sfd = -1;
@@ -552,6 +558,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 crm_perror(LOG_ERR, "sigprocmask() to unblocked failed");
             }
         }
+#endif
 
     } else {
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
