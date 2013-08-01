@@ -195,7 +195,9 @@ gboolean is_heartbeat_cluster(void);
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
 
+#  if SUPPORT_COROSYNC
 char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
                         uint32_t *kind, const char **from);
+#  endif
 
 #endif

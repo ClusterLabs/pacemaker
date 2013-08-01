@@ -876,23 +876,16 @@ pcmk_errorname(int rc)
         case EAFNOSUPPORT: return "EAFNOSUPPORT";
         case EAGAIN: return "EAGAIN";
         case EALREADY: return "EALREADY";
-        case EBADE: return "EBADE";
         case EBADF: return "EBADF";
-        case EBADFD: return "EBADFD";
         case EBADMSG: return "EBADMSG";
-        case EBADR: return "EBADR";
-        case EBADRQC: return "EBADRQC";
-        case EBADSLT: return "EBADSLT";
         case EBUSY: return "EBUSY";
         case ECANCELED: return "ECANCELED";
         case ECHILD: return "ECHILD";
-        case ECHRNG: return "ECHRNG";
         case ECOMM: return "ECOMM";
         case ECONNABORTED: return "ECONNABORTED";
         case ECONNREFUSED: return "ECONNREFUSED";
         case ECONNRESET: return "ECONNRESET";
         /* case EDEADLK: return "EDEADLK"; */
-        case EDEADLOCK: return "EDEADLOCK";
         case EDESTADDRREQ: return "EDESTADDRREQ";
         case EDOM: return "EDOM";
         case EDQUOT: return "EDQUOT";
@@ -909,21 +902,8 @@ pcmk_errorname(int rc)
         case EIO: return "EIO";
         case EISCONN: return "EISCONN";
         case EISDIR: return "EISDIR";
-        case EISNAM: return "EISNAM";
-        case EKEYEXPIRED: return "EKEYEXPIRED";
-        case EKEYREJECTED: return "EKEYREJECTED";
-        case EKEYREVOKED: return "EKEYREVOKED";
-        case EL2HLT: return "EL2HLT";
-        case EL2NSYNC: return "EL2NSYNC";
-        case EL3HLT: return "EL3HLT";
-        case EL3RST: return "EL3RST";
         case ELIBACC: return "ELIBACC";
-        case ELIBBAD: return "ELIBBAD";
-        case ELIBMAX: return "ELIBMAX";
-        case ELIBSCN: return "ELIBSCN";
-        case ELIBEXEC: return "ELIBEXEC";
         case ELOOP: return "ELOOP";
-        case EMEDIUMTYPE: return "EMEDIUMTYPE";
         case EMFILE: return "EMFILE";
         case EMLINK: return "EMLINK";
         case EMSGSIZE: return "EMSGSIZE";
@@ -941,11 +921,8 @@ pcmk_errorname(int rc)
         case ENOKEY: return "ENOKEY";
         case ENOLCK: return "ENOLCK";
         case ENOLINK: return "ENOLINK";
-        case ENOMEDIUM: return "ENOMEDIUM";
         case ENOMEM: return "ENOMEM";
         case ENOMSG: return "ENOMSG";
-        case ENONET: return "ENONET";
-        case ENOPKG: return "ENOPKG";
         case ENOPROTOOPT: return "ENOPROTOOPT";
         case ENOSPC: return "ENOSPC";
         case ENOSR: return "ENOSR";
@@ -969,26 +946,54 @@ pcmk_errorname(int rc)
         case EPROTONOSUPPORT: return "EPROTONOSUPPORT";
         case EPROTOTYPE: return "EPROTOTYPE";
         case ERANGE: return "ERANGE";
-        case EREMCHG: return "EREMCHG";
         case EREMOTE: return "EREMOTE";
         case EREMOTEIO: return "EREMOTEIO";
-        case ERESTART: return "ERESTART";
+
         case EROFS: return "EROFS";
         case ESHUTDOWN: return "ESHUTDOWN";
         case ESPIPE: return "ESPIPE";
         case ESOCKTNOSUPPORT: return "ESOCKTNOSUPPORT";
         case ESRCH: return "ESRCH";
         case ESTALE: return "ESTALE";
-        case ESTRPIPE: return "ESTRPIPE";
         case ETIME: return "ETIME";
         case ETIMEDOUT: return "ETIMEDOUT";
         case ETXTBSY: return "ETXTBSY";
-        case EUCLEAN: return "EUCLEAN";
         case EUNATCH: return "EUNATCH";
         case EUSERS: return "EUSERS";
         /* case EWOULDBLOCK: return "EWOULDBLOCK"; */
         case EXDEV: return "EXDEV";
+            
+#ifdef EBADE
+            /* Not available on OSX */    
+        case EBADE: return "EBADE";
+        case EBADFD: return "EBADFD";
+        case EBADSLT: return "EBADSLT";
+        case EDEADLOCK: return "EDEADLOCK";
+        case EBADR: return "EBADR";
+        case EBADRQC: return "EBADRQC";
+        case ECHRNG: return "ECHRNG";
+        case EISNAM: return "EISNAM";
+        case EKEYEXPIRED: return "EKEYEXPIRED";
+        case EKEYREJECTED: return "EKEYREJECTED";
+        case EKEYREVOKED: return "EKEYREVOKED";
+        case EL2HLT: return "EL2HLT";
+        case EL2NSYNC: return "EL2NSYNC";
+        case EL3HLT: return "EL3HLT";
+        case EL3RST: return "EL3RST";
+        case ELIBBAD: return "ELIBBAD";
+        case ELIBMAX: return "ELIBMAX";
+        case ELIBSCN: return "ELIBSCN";
+        case ELIBEXEC: return "ELIBEXEC";
+        case ENOMEDIUM: return "ENOMEDIUM";
+        case EMEDIUMTYPE: return "EMEDIUMTYPE";
+        case ENONET: return "ENONET";
+        case ENOPKG: return "ENOPKG";
+        case EREMCHG: return "EREMCHG";
+        case ERESTART: return "ERESTART";
+        case ESTRPIPE: return "ESTRPIPE";
+        case EUCLEAN: return "EUCLEAN";
         case EXFULL: return "EXFULL";
+#endif
 
         case pcmk_err_generic: return "pcmk_err_generic";
         case pcmk_err_no_quorum: return "pcmk_err_no_quorum";

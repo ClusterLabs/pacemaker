@@ -704,7 +704,6 @@ gboolean
 check_message_sanity(const AIS_Message * msg, const char *data)
 {
     gboolean sane = TRUE;
-    gboolean repaired = FALSE;
     int dest = msg->host.type;
     int tmp_size = msg->header.size - sizeof(AIS_Message);
 
