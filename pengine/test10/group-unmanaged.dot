@@ -1,0 +1,4 @@
+digraph "g" {
+"probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
+"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
+}

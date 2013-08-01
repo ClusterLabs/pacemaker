@@ -64,6 +64,8 @@ do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 do_test bug-lf-2613 "Move group on failure"
 do_test bug-lf-2619 "Move group on clone failure"
 do_test group-fail "Ensure stop order is preserved for partially active groups"
+do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
+do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
 
 echo ""
 do_test rsc_dep1 "Must not     "

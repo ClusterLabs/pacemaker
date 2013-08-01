@@ -1,0 +1,12 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"group-1_stop_0" -> "group-1_stopped_0" [ style = bold]
+"group-1_stop_0" -> "r192.168.122.115_stop_0 pcmk-1" [ style = bold]
+"group-1_stop_0" [ style=bold color="green" fontcolor="orange"]
+"group-1_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
+"probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
+"r192.168.122.115_stop_0 pcmk-1" -> "all_stopped" [ style = bold]
+"r192.168.122.115_stop_0 pcmk-1" -> "group-1_stopped_0" [ style = bold]
+"r192.168.122.115_stop_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+}

@@ -1,0 +1,101 @@
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.1" admin_epoch="1" epoch="346" num_updates="16" cib-last-written="Fri Jul 26 09:27:10 2013" update-origin="pcmk-3" update-client="crm_attribute" have-quorum="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cts-stonith-enabled" name="stonith-enabled" value="0"/>
+        <nvpair id="cts-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cts-pe-input-series-max" name="pe-input-series-max" value="5000"/>
+        <nvpair id="cts-default-action-timeout" name="default-action-timeout" value="90s"/>
+        <nvpair id="cts-shutdown-escalation" name="shutdown-escalation" value="5min"/>
+        <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
+        <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
+        <nvpair id="cts-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-9.1822.6cd5991.git.el7-6cd5991"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="pcmk-1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="pcmk-2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <group id="group-1">
+        <primitive id="r192.168.122.113" class="ocf" type="IPaddr2" provider="heartbeat">
+          <instance_attributes id="r192.168.122.113-params">
+            <nvpair id="r192.168.122.113-ip" name="ip" value="192.168.122.113"/>
+            <nvpair id="r192.168.122.113-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.113-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive id="r192.168.122.114" class="ocf" type="IPaddr2" provider="heartbeat">
+          <meta_attributes id="r192.168.122.114-meta">
+            <nvpair id="r192.168.122.114-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+          <instance_attributes id="r192.168.122.114-params">
+            <nvpair id="r192.168.122.114-ip" name="ip" value="192.168.122.114"/>
+            <nvpair id="r192.168.122.114-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.114-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive id="r192.168.122.115" class="ocf" type="IPaddr2" provider="heartbeat">
+          <instance_attributes id="r192.168.122.115-params">
+            <nvpair id="r192.168.122.115-ip" name="ip" value="192.168.122.115"/>
+            <nvpair id="r192.168.122.115-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.115-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="r192.168.122.113" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.113_last_0" operation_key="r192.168.122.113_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="4488c6ab3485cc9775553205a13c7bef"/>
+            <lrm_rsc_op id="r192.168.122.113_monitor_5000" operation_key="r192.168.122.113_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="5000" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="7e2fd3da11ddbaf429c22af8094b8899"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.122.114" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.114_last_0" operation_key="r192.168.122.114_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="28dd79e38c45f4eb8f8fc39a84a3590b"/>
+            <lrm_rsc_op id="r192.168.122.114_monitor_5000" operation_key="r192.168.122.114_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="5000" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="c4003334269ec7d343e499fce7b19a52"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.122.115" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.115_last_0" operation_key="r192.168.122.115_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="89fd6feda180745e7fe46a52943b2d1e"/>
+            <lrm_rsc_op id="r192.168.122.115_monitor_5000" operation_key="r192.168.122.115_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="5000" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="c9e6a9528bf7fd068d1dfb5d0464b389"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="r192.168.122.113" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.113_last_0" operation_key="r192.168.122.113_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="4488c6ab3485cc9775553205a13c7bef"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.122.114" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.114_last_0" operation_key="r192.168.122.114_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="28dd79e38c45f4eb8f8fc39a84a3590b"/>
+          </lrm_resource>
+          <lrm_resource id="r192.168.122.115" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="r192.168.122.115_last_0" operation_key="r192.168.122.115_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1375337364" last-rc-change="1375337364" exec-time="0" queue-time="0" op-digest="89fd6feda180745e7fe46a52943b2d1e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
