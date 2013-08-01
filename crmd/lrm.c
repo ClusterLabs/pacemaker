@@ -1744,7 +1744,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     CRM_CHECK(op != NULL, return);
 
     /* stop any previous monitor operations before changing the resource state */
-    if (op->interval == 0 && strcmp(operation, CRMD_ACTION_STATUS) != 0) {
+    if (op->interval == 0
+        && strcmp(operation, CRMD_ACTION_STATUS) != 0
+        && strcmp(operation, CRMD_ACTION_NOTIFY) != 0) {
         guint removed = 0;
         struct stop_recurring_action_s data;
 
