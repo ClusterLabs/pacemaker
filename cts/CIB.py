@@ -462,7 +462,7 @@ class CIB11(CibBase):
         # Ping the test master
         p = Resource(self.Factory, "ping-1","ping",  "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host-list"] = self.CM.Env["cts-master"]
+        p["host_list"] = self.CM.Env["cts-master"]
         p["name"] = "connected"
         p["debug"] = "true"
 
