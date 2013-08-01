@@ -340,7 +340,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
             lrm_state->pending_ops, stop_recurring_actions, lrm_state);
 
         crm_notice("Stopped %u recurring operations at %s (%u ops remaining)",
-                   g_hash_table_size(lrm_state->pending_ops), removed, when);
+                   g_hash_table_size(lrm_state->pending_ops), when, removed);
     }
 
     if (lrm_state->pending_ops) {
