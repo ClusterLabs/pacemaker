@@ -745,6 +745,7 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     if (!pid) {
         /* child */
+        setpgid(0, 0);
 
         close(1);
         /* coverity[leaked_handle] False positive */
