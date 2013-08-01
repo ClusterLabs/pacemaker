@@ -1715,7 +1715,9 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         CRM_ASSERT(first->rsc && first->rsc->variant == pe_native);
         CRM_ASSERT(then->rsc && then->rsc->variant == pe_native);
 
-        if ((filter & pe_action_runnable) && (then->flags & pe_action_runnable) == 0) {
+        if ((filter & pe_action_runnable)
+            && (then->flags & pe_action_runnable) == 0
+            && (then->rsc->flags & pe_rsc_managed)) {
             reason = "shutdown";
         }
 
