@@ -190,12 +190,7 @@ $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"
     unless $opt_o =~ /^(on|off|reset|reboot|stat|status|monitor|list|hostlist|poweroff|poweron)$/;
 
-sub term_handler {
-    local $SIG{TERM} = 'IGNORE';
-    kill(TERM,-getpgrp($$));
-}
-
-setpgrp($$,0);
+setpgrp(0,0);
 
 if ( $pid=fork() == 0 )
 {
@@ -229,7 +224,6 @@ if ( $pid=fork() == 0 )
    }
 }
 
-$SIG{TERM} = \&term_handler;
 wait;
 $status=$?/256;
 
