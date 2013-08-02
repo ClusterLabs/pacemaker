@@ -722,10 +722,19 @@ crm_ipc_new(const char *name, size_t max_size)
 bool
 crm_ipc_connect(crm_ipc_t * client)
 {
+    int max_retry = 3;
     client->need_reply = FALSE;
+
+  retry:
+    errno = 0;
     client->ipc = qb_ipcc_connect(client->name, client->buf_size);
 
     if (client->ipc == NULL) {
+        if ((errno == EAGAIN) && (--max_retry >= 0)) {
+            crm_perror(LOG_INFO, "Retrying to establish %s connection", client->name);
+            sleep(1);
+            goto retry;
+        }
         crm_perror(LOG_INFO, "Could not establish %s connection", client->name);
         return FALSE;
     }
