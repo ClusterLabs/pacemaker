@@ -11,8 +11,8 @@ Online: [ TCS-2 ]
      Stopped: [ TCS-1 ]
 
 Transition Summary:
- * Stop    ip_trf	(Started TCS-2)
- * Stop    ip_mgmt	(Started TCS-2)
+ * Stop    ip_trf	(TCS-2)
+ * Stop    ip_mgmt	(TCS-2)
 
 Executing cluster transition:
  * Pseudo action:   svc_stop_0

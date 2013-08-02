@@ -316,6 +316,7 @@ do_test bug-lf-2574 "Avoid clone shuffle"
 do_test bug-lf-2581 "Avoid group restart due to unrelated clone (re)start"
 do_test bug-cl-5168 "Don't shuffle clones"
 do_test bug-cl-5170 "Prevent clone from starting with on-fail=block"
+do_test clone-fail-block-colocation "Move colocated group when failed clone has on-fail=block"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

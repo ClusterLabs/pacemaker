@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="14" operation="stopped" operation_key="svc_stopped_0">
+      <pseudo_event id="12" operation="stopped" operation_key="svc_stopped_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
@@ -10,16 +10,16 @@
         <rsc_op id="7" operation="stop" operation_key="ip_trf_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
+        <rsc_op id="8" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="stop" operation_key="svc_stop_0"/>
+        <pseudo_event id="11" operation="stop" operation_key="svc_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="13" operation="stop" operation_key="svc_stop_0">
+      <pseudo_event id="11" operation="stop" operation_key="svc_stop_0">
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
@@ -34,23 +34,23 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
+        <rsc_op id="8" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="stop" operation_key="svc_stop_0"/>
+        <pseudo_event id="11" operation="stop" operation_key="svc_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="9" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
+      <rsc_op id="8" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
         <primitive id="ip_mgmt" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_timeout="20000" broadcast="172.20.1.51" crm_feature_set="3.0.7" iflabel="ha" ip="172.20.1.51" nic="bond0"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="13" operation="stop" operation_key="svc_stop_0"/>
+        <pseudo_event id="11" operation="stop" operation_key="svc_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -65,7 +65,7 @@
         <rsc_op id="7" operation="stop" operation_key="ip_trf_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="9" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
+        <rsc_op id="8" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2"/>
       </trigger>
     </inputs>
   </synapse>

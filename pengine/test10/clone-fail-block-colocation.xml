@@ -1,0 +1,192 @@
+<cib epoch="29" num_updates="10" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Thu Aug  1 07:18:30 2013" update-origin="DEM-1" update-client="cibadmin" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="DEM-1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.11-1.el6-42f2063"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="3min"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1375341246"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="DEM-1" uname="DEM-1"/>
+      <node id="DEM-2" uname="DEM-2"/>
+    </nodes>
+    <resources>
+      <group id="svc">
+        <primitive class="ocf" id="ipv6_dem_tas_dns" provider="heartbeat" type="IPv6addr">
+          <operations>
+            <op id="ipv6_dem_tas_dns-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ipv6_dem_tas_dns-instance_attributes">
+            <nvpair id="ipv6_dem_tas_dns-instance_attributes-cidr_netmask" name="cidr_netmask" value="112"/>
+            <nvpair id="ipv6_dem_tas_dns-instance_attributes-nic" name="nic" value="bond0.3010"/>
+            <nvpair id="ipv6_dem_tas_dns-instance_attributes-ipv6addr" name="ipv6addr" value="fd15:a2c:8660:c828:172:16:10:241"/>
+          </instance_attributes>
+          <meta_attributes id="ipv6_dem_tas_dns-meta_attributes">
+            <nvpair id="ipv6_dem_tas_dns-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="lsb" id="d_bird_subnet_state" type="bird_subnet_state">
+          <operations>
+            <op id="d_bird_subnet_state-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <meta_attributes id="d_bird_subnet_state-meta_attributes">
+            <nvpair id="d_bird_subnet_state-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="ip_mgmt" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_mgmt-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_mgmt-instance_attributes">
+            <nvpair id="ip_mgmt-instance_attributes-broadcast" name="broadcast" value="172.20.1.241"/>
+            <nvpair id="ip_mgmt-instance_attributes-iflabel" name="iflabel" value="ha"/>
+            <nvpair id="ip_mgmt-instance_attributes-nic" name="nic" value="bond0"/>
+            <nvpair id="ip_mgmt-instance_attributes-ip" name="ip" value="172.20.1.241"/>
+          </instance_attributes>
+          <meta_attributes id="ip_mgmt-meta_attributes">
+            <nvpair id="ip_mgmt-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="ip_trf_tas" provider="heartbeat" type="IPaddr2">
+          <operations>
+            <op id="ip_trf_tas-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+          <instance_attributes id="ip_trf_tas-instance_attributes">
+            <nvpair id="ip_trf_tas-instance_attributes-broadcast" name="broadcast" value="172.16.10.241"/>
+            <nvpair id="ip_trf_tas-instance_attributes-iflabel" name="iflabel" value="ha"/>
+            <nvpair id="ip_trf_tas-instance_attributes-nic" name="nic" value="bond0.3010"/>
+            <nvpair id="ip_trf_tas-instance_attributes-ip" name="ip" value="172.16.10.241"/>
+          </instance_attributes>
+          <meta_attributes id="ip_trf_tas-meta_attributes">
+            <nvpair id="ip_trf_tas-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+      <clone id="cl_bird">
+        <primitive class="lsb" id="d_bird" type="bird">
+          <operations>
+            <op id="d_bird-monitor-10s" interval="10s" name="monitor" on-fail="block"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="cl_bird6">
+        <primitive class="lsb" id="d_bird6" type="bird6">
+          <operations>
+            <op id="d_bird6-monitor-10s" interval="10s" name="monitor" on-fail="block"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="cl_tomcat_nms">
+        <primitive class="ocf" id="d_tomcat_nms" provider="ntc" type="tomcat">
+          <operations>
+            <op id="d_tomcat_nms-monitor-15s" interval="15s" name="monitor" on-fail="block" timeout="510s"/>
+            <op id="d_tomcat_nms-stop-0" interval="0" name="stop" timeout="510s"/>
+            <op id="d_tomcat_nms-start-0" interval="0" name="start" timeout="510s"/>
+          </operations>
+          <instance_attributes id="d_tomcat_nms-instance_attributes">
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_urls" name="monitor_urls" value="/dem-device-manager/health"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_use_ssl" name="monitor_use_ssl" value="no"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-instance_name" name="instance_name" value="NMS"/>
+            <nvpair id="d_tomcat_nms-instance_attributes-monitor_timeout" name="monitor_timeout" value="120"/>
+          </instance_attributes>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="cl_bird" id="order_bird" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_bird6" id="order_bird6" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_colocation id="colo_tomcat_nms" rsc="svc" score="INFINITY" with-rsc="cl_tomcat_nms"/>
+      <rsc_colocation id="colo_bird6" rsc="svc" score="INFINITY" with-rsc="cl_bird6"/>
+      <rsc_colocation id="colo_bird" rsc="svc" score="INFINITY" with-rsc="cl_bird"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="DEM-1" uname="DEM-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="DEM-1">
+        <instance_attributes id="status-DEM-1">
+          <nvpair id="status-DEM-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-DEM-1-last-failure-d_bird" name="last-failure-d_bird" value="1375341129"/>
+          <nvpair id="status-DEM-1-fail-count-d_bird6" name="fail-count-d_bird6" value="1"/>
+          <nvpair id="status-DEM-1-last-failure-d_bird6" name="last-failure-d_bird6" value="1375341530"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="DEM-1">
+        <lrm_resources>
+          <lrm_resource id="ipv6_dem_tas_dns" type="IPv6addr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ipv6_dem_tas_dns_last_0" operation_key="ipv6_dem_tas_dns_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="11:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;11:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1375341015" last-rc-change="1375341015" exec-time="7006" queue-time="0" op-digest="53af56d463bd7ec89aee6e087825e22b"/>
+            <lrm_rsc_op id="ipv6_dem_tas_dns_monitor_10000" operation_key="ipv6_dem_tas_dns_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="12:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;12:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="62" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341022" exec-time="2" queue-time="1" op-digest="fd94b15c52be1857da5345d63a4bc0e5"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird6" type="bird6" class="lsb">
+            <lrm_rsc_op id="d_bird6_last_0" operation_key="d_bird6_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="29:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;29:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1375340999" last-rc-change="1375340999" exec-time="49" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="d_bird6_monitor_10000" operation_key="d_bird6_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="30:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;30:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="48" rc-code="0" op-status="0" interval="10000" last-rc-change="1375340999" exec-time="21" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="d_bird6_last_failure_0" operation_key="d_bird6_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="30:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:7;30:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="48" rc-code="7" op-status="0" interval="10000" last-rc-change="1375341530" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird_subnet_state" type="bird_subnet_state" class="lsb">
+            <lrm_rsc_op id="d_bird_subnet_state_last_0" operation_key="d_bird_subnet_state_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="13:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;13:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1375341022" last-rc-change="1375341022" exec-time="4036" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="d_bird_subnet_state_monitor_10000" operation_key="d_bird_subnet_state_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="14:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;14:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="68" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341026" exec-time="19" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="ip_trf_tas" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_trf_tas_last_0" operation_key="ip_trf_tas_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="17:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;17:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1375341026" last-rc-change="1375341026" exec-time="53" queue-time="0" op-digest="b3cfedd8c3c97d0ac635474e24692dad"/>
+            <lrm_rsc_op id="ip_trf_tas_monitor_10000" operation_key="ip_trf_tas_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="18:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;18:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="80" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341026" exec-time="21" queue-time="0" op-digest="20a32ab8c2aeec50b2bedda2f713ab57"/>
+          </lrm_resource>
+          <lrm_resource id="d_tomcat_nms" type="tomcat" class="ocf" provider="ntc">
+            <lrm_rsc_op id="d_tomcat_nms_last_0" operation_key="d_tomcat_nms_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="35:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;35:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1375340999" last-rc-change="1375340999" exec-time="15698" queue-time="0" op-digest="c030e52a1e91e58d4e2d6e57cb9cdea4" op-force-restart=" state  instance_name  monitor_urls  monitor_use_ssl  monitor_timeout  cleanup " op-restart-digest="c030e52a1e91e58d4e2d6e57cb9cdea4"/>
+            <lrm_rsc_op id="d_tomcat_nms_monitor_15000" operation_key="d_tomcat_nms_monitor_15000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="36:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;36:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="56" rc-code="0" op-status="0" interval="15000" last-rc-change="1375341015" exec-time="439" queue-time="0" op-digest="9641e02fa4460a2cbfb71f4da59905c7"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird" type="bird" class="lsb">
+            <lrm_rsc_op id="d_bird_last_failure_0" operation_key="d_bird_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="12:10:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;12:10:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="92" rc-code="0" op-status="0" interval="0" last-run="1375341247" last-rc-change="1375341247" exec-time="37" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="d_bird_monitor_10000" operation_key="d_bird_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="27:11:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;27:11:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="95" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341247" exec-time="30" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="ip_mgmt" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_mgmt_last_0" operation_key="ip_mgmt_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="15:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;15:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="70" rc-code="0" op-status="0" interval="0" last-run="1375341026" last-rc-change="1375341026" exec-time="43" queue-time="0" op-digest="c311e79fb95db5b1a4b80a95c8947ce1"/>
+            <lrm_rsc_op id="ip_mgmt_monitor_10000" operation_key="ip_mgmt_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="16:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;16:0:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="74" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341026" exec-time="41" queue-time="0" op-digest="a1f082697015807cf60bb28fe877e82f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="DEM-2" uname="DEM-2" crmd="online" join="member" crm-debug-origin="do_state_transition" in_ccm="true" expected="member">
+      <transient_attributes id="DEM-2">
+        <instance_attributes id="status-DEM-2">
+          <nvpair id="status-DEM-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-DEM-2-last-failure-d_bird" name="last-failure-d_bird" value="1375341085"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="DEM-2">
+        <lrm_resources>
+          <lrm_resource id="ipv6_dem_tas_dns" type="IPv6addr" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ipv6_dem_tas_dns_last_0" operation_key="ipv6_dem_tas_dns_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="12:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:7;12:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1375341054" last-rc-change="1375341054" exec-time="19" queue-time="0" op-digest="53af56d463bd7ec89aee6e087825e22b"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird6" type="bird6" class="lsb">
+            <lrm_rsc_op id="d_bird6_last_0" operation_key="d_bird6_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="41:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;41:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1375341055" last-rc-change="1375341055" exec-time="49" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="d_bird6_monitor_10000" operation_key="d_bird6_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="42:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;42:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="51" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341055" exec-time="26" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird_subnet_state" type="bird_subnet_state" class="lsb">
+            <lrm_rsc_op id="d_bird_subnet_state_last_0" operation_key="d_bird_subnet_state_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="13:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:7;13:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1375341054" last-rc-change="1375341054" exec-time="57" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_trf_tas" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_trf_tas_last_0" operation_key="ip_trf_tas_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="15:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:7;15:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1375341054" last-rc-change="1375341054" exec-time="109" queue-time="0" op-digest="b3cfedd8c3c97d0ac635474e24692dad"/>
+          </lrm_resource>
+          <lrm_resource id="d_tomcat_nms" type="tomcat" class="ocf" provider="ntc">
+            <lrm_rsc_op id="d_tomcat_nms_last_0" operation_key="d_tomcat_nms_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="49:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;49:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1375341055" last-rc-change="1375341055" exec-time="15714" queue-time="0" op-digest="c030e52a1e91e58d4e2d6e57cb9cdea4" op-force-restart=" state  instance_name  monitor_urls  monitor_use_ssl  monitor_timeout  cleanup " op-restart-digest="c030e52a1e91e58d4e2d6e57cb9cdea4"/>
+            <lrm_rsc_op id="d_tomcat_nms_monitor_15000" operation_key="d_tomcat_nms_monitor_15000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="50:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;50:1:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="56" rc-code="0" op-status="0" interval="15000" last-rc-change="1375341070" exec-time="287" queue-time="0" op-digest="9641e02fa4460a2cbfb71f4da59905c7"/>
+          </lrm_resource>
+          <lrm_resource id="d_bird" type="bird" class="lsb">
+            <lrm_rsc_op id="d_bird_last_failure_0" operation_key="d_bird_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="14:10:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;14:10:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1375341246" last-rc-change="1375341246" exec-time="8" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="d_bird_monitor_10000" operation_key="d_bird_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="30:11:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:0;30:11:0:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="71" rc-code="0" op-status="0" interval="10000" last-rc-change="1375341246" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="ip_mgmt" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_mgmt_last_0" operation_key="ip_mgmt_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="14:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" transition-magic="0:7;14:1:7:59c7d83a-c71b-4e79-bf04-be2b25b00846" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1375341054" last-rc-change="1375341054" exec-time="114" queue-time="0" op-digest="c311e79fb95db5b1a4b80a95c8947ce1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

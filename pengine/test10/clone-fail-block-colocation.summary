@@ -1,0 +1,58 @@
+
+Current cluster status:
+Online: [ DEM-1 DEM-2 ]
+
+ Resource Group: svc
+     ipv6_dem_tas_dns	(ocf::heartbeat:IPv6addr):	Started DEM-1 
+     d_bird_subnet_state	(lsb:bird_subnet_state):	Started DEM-1 
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Started DEM-1 
+     ip_trf_tas	(ocf::heartbeat:IPaddr2):	Started DEM-1 
+ Clone Set: cl_bird [d_bird]
+     Started: [ DEM-1 DEM-2 ]
+ Clone Set: cl_bird6 [d_bird6]
+     d_bird6	(lsb:bird6):	Started DEM-1 (unmanaged) FAILED 
+     Started: [ DEM-2 ]
+ Clone Set: cl_tomcat_nms [d_tomcat_nms]
+     Started: [ DEM-1 DEM-2 ]
+
+Transition Summary:
+ * Move    ipv6_dem_tas_dns	(Started DEM-1 -> DEM-2)
+ * Move    d_bird_subnet_state	(Started DEM-1 -> DEM-2)
+ * Move    ip_mgmt	(Started DEM-1 -> DEM-2)
+ * Move    ip_trf_tas	(Started DEM-1 -> DEM-2)
+
+Executing cluster transition:
+ * Pseudo action:   svc_stop_0
+ * Resource action: ip_trf_tas      stop on DEM-1
+ * Resource action: ip_mgmt         stop on DEM-1
+ * Resource action: d_bird_subnet_state stop on DEM-1
+ * Resource action: ipv6_dem_tas_dns stop on DEM-1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   svc_stopped_0
+ * Pseudo action:   svc_start_0
+ * Resource action: ipv6_dem_tas_dns start on DEM-2
+ * Resource action: d_bird_subnet_state start on DEM-2
+ * Resource action: ip_mgmt         start on DEM-2
+ * Resource action: ip_trf_tas      start on DEM-2
+ * Pseudo action:   svc_running_0
+ * Resource action: ipv6_dem_tas_dns monitor=10000 on DEM-2
+ * Resource action: d_bird_subnet_state monitor=10000 on DEM-2
+ * Resource action: ip_mgmt         monitor=10000 on DEM-2
+ * Resource action: ip_trf_tas      monitor=10000 on DEM-2
+
+Revised cluster status:
+Online: [ DEM-1 DEM-2 ]
+
+ Resource Group: svc
+     ipv6_dem_tas_dns	(ocf::heartbeat:IPv6addr):	Started DEM-2 
+     d_bird_subnet_state	(lsb:bird_subnet_state):	Started DEM-2 
+     ip_mgmt	(ocf::heartbeat:IPaddr2):	Started DEM-2 
+     ip_trf_tas	(ocf::heartbeat:IPaddr2):	Started DEM-2 
+ Clone Set: cl_bird [d_bird]
+     Started: [ DEM-1 DEM-2 ]
+ Clone Set: cl_bird6 [d_bird6]
+     d_bird6	(lsb:bird6):	Started DEM-1 (unmanaged) FAILED 
+     Started: [ DEM-2 ]
+ Clone Set: cl_tomcat_nms [d_tomcat_nms]
+     Started: [ DEM-1 DEM-2 ]
+

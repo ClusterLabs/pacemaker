@@ -16,6 +16,6 @@ native_color: d_tomcat_nms:0 allocation score on TCS-2: INFINITY
 native_color: d_tomcat_nms:1 allocation score on TCS-1: -INFINITY
 native_color: d_tomcat_nms:1 allocation score on TCS-2: -INFINITY
 native_color: ip_mgmt allocation score on TCS-1: -INFINITY
-native_color: ip_mgmt allocation score on TCS-2: 0
+native_color: ip_mgmt allocation score on TCS-2: -INFINITY
 native_color: ip_trf allocation score on TCS-1: -INFINITY
-native_color: ip_trf allocation score on TCS-2: 0
+native_color: ip_trf allocation score on TCS-2: -INFINITY
