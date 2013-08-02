@@ -925,7 +925,10 @@ find_compatible_child_by_node(resource_t * local_child, node_t * local_node, res
         resource_t *child_rsc = (resource_t *) gIter->data;
         enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
-        node = child_rsc->fns->location(child_rsc, NULL, current);
+        if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
+            /* We only want instances that haven't failed */
+            node = child_rsc->fns->location(child_rsc, NULL, current);
+        }
 
         if (filter != RSC_ROLE_UNKNOWN && next_role != filter) {
             crm_trace("Filtered %s", child_rsc->id);
@@ -1069,7 +1072,7 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
             resource_t *child_rsc = (resource_t *) gIter->data;
             node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
-            if (chosen != NULL) {
+            if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
                 rhs = g_list_prepend(rhs, chosen);
             }
         }

@@ -234,6 +234,7 @@ char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
 gint sort_node_uname(gconstpointer a, gconstpointer b);
+bool is_set_recursive(resource_t * rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
     /*! Digests are the same */

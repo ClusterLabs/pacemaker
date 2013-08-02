@@ -349,7 +349,7 @@ clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *prin
     free(child_text);
 }
 
-static bool is_set_recursive(resource_t * rsc, long long flag, bool any)
+bool is_set_recursive(resource_t * rsc, long long flag, bool any)
 {
     GListPtr gIter;
     bool all = !any;
