@@ -131,8 +131,14 @@ xmlNode *
 do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *source)
 {
     const char *value = NULL;
-    xmlNode *node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
+    xmlNode *node_state;
 
+    if (!node->state) {
+        crm_info("Node update for %s cancelled: no state, not seen yet", node->uname);
+       return NULL;
+    }
+
+    node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
     set_uuid(node_state, XML_ATTR_UUID, node);
 
     if (crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
