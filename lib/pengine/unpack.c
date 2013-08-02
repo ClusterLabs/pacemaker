@@ -1461,6 +1461,11 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             GListPtr locations = NULL;
             resource_t *child = rIter->data;
 
+            if (is_set(child->flags, pe_rsc_block)) {
+                pe_rsc_trace(child, "Skip: blocked in stopped state");
+                continue;
+            }
+
             child->fns->location(child, &locations, TRUE);
             if (locations == NULL) {
                 /* ->find_rsc() because we might be a cloned group */
