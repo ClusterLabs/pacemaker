@@ -382,8 +382,9 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
     const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if (safe_str_eq(operation, "probe_complete")) {
-        crm_info("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
+    if (safe_str_eq(operation, CRM_OP_PROBED)
+        || safe_str_eq(operation, CRM_OP_REPROBE)) {
+        crm_info("Skipping %s op for %s\n", operation, node);
         goto done;
     }
 
