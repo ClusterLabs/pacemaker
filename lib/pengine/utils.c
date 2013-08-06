@@ -1332,11 +1332,12 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         const char *b_magic = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
-        CRM_CHECK(decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy),
-                  sort_return(0, "bad magic a"));
-        CRM_CHECK(decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy),
-                  sort_return(0, "bad magic b"));
-
+        if(!decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy)) {
+            sort_return(0, "bad magic a");
+        }
+        if(!decode_transition_magic(b_magic, &b_uuid, &b_id, &dummy, &dummy, &dummy, &dummy)) {
+            sort_return(0, "bad magic b");
+        }
         /* try and determin the relative age of the operation...
          * some pending operations (ie. a start) may have been supuerceeded
          *   by a subsequent stop

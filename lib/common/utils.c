@@ -885,15 +885,13 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     key = calloc(1, strlen(magic) + 1);
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
     if (res != 3) {
-        crm_crit("Only found %d items in: %s", res, magic);
-        result = FALSE;
-        goto bail;
+        crm_warn("Only found %d items in: '%s'", res, magic);
+        free(key);
+        return FALSE;
     }
 
-    CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc), result = FALSE;
-              goto bail;);
+    CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc), result = FALSE);
 
-  bail:
     free(key);
     return result;
 }
