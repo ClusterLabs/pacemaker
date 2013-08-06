@@ -971,21 +971,20 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
         }
 
         if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
-            const char *name = "pingd";
-            const char *multiplier = NULL;
-            int host_list_num = 0;
-            int expected_score = 0;
+            const char *name = g_hash_table_lookup(rsc->parameters, "name");
 
-            if (g_hash_table_lookup(rsc->meta, "name") != NULL) {
-                name = g_hash_table_lookup(rsc->parameters, "name");
+            if (name == NULL) {
+                name = "pingd";
             }
 
             /* To identify the resource with the attribute name. */
             if (safe_str_eq(name, attrname)) {
+                int host_list_num = 0;
+                int expected_score = 0;
                 int value = crm_parse_int(attrvalue, "0");
                 const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
+                const char *multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
 
-                multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
                 if(hosts) {
                     char **host_list = g_strsplit(hosts, " ", 0);
                     host_list_num = g_strv_length(host_list);
