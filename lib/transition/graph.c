@@ -363,8 +363,13 @@ run_graph(crm_graph_t * graph)
         } else if (should_fire_synapse(synapse)) {
             crm_trace("Synapse %d fired", synapse->id);
             graph->fired++;
-            CRM_CHECK(fire_synapse(graph, synapse), stat_log_level = LOG_ERR;
-                      graph->abort_priority = INFINITY; graph->incomplete++; graph->fired--);
+            if(fire_synapse(graph, synapse) == FALSE) {
+                crm_err("Synapse %d failed to fire", synapse->id);
+                stat_log_level = LOG_ERR;
+                graph->abort_priority = INFINITY;
+                graph->incomplete++;
+                graph->fired--;
+            }
 
             if (synapse->confirmed == FALSE) {
                 graph->pending++;
