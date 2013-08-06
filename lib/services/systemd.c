@@ -478,7 +478,10 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
             fclose(file_strm);
         }
         systemd_daemon_reload(systemd_proxy, &error);
-        g_error_free(error); error = NULL;
+        if(error) {
+            g_error_free(error);
+            error = NULL;
+        }
         free(override_file);
         free(override_dir);
 
