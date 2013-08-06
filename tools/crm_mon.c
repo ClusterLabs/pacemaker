@@ -973,7 +973,6 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
         if (safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
             const char *name = "pingd";
             const char *multiplier = NULL;
-            char **host_list = NULL;
             int host_list_num = 0;
             int expected_score = 0;
 
@@ -984,11 +983,15 @@ print_attr_msg(node_t * node, GListPtr rsc_list, const char *attrname, const cha
             /* To identify the resource with the attribute name. */
             if (safe_str_eq(name, attrname)) {
                 int value = crm_parse_int(attrvalue, "0");
+                const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
 
                 multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
-                host_list = g_strsplit(g_hash_table_lookup(rsc->parameters, "host_list"), " ", 0);
-                host_list_num = g_strv_length(host_list);
-                g_strfreev(host_list);
+                if(hosts) {
+                    char **host_list = g_strsplit(hosts, " ", 0);
+                    host_list_num = g_strv_length(host_list);
+                    g_strfreev(host_list);
+                }
+
                 /* pingd multiplier is the same as the default value. */
                 expected_score = host_list_num * crm_parse_int(multiplier, "1");
 
