@@ -1085,6 +1085,8 @@ filter_reload_parameters(xmlNode * param_set, const char *restart_string)
     }
 }
 
+extern bool crm_is_daemon;
+
 /* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
@@ -1096,6 +1098,14 @@ crm_abort(const char *file, const char *function, int line,
 
     /* Implied by the parent's error logging below */
     /* crm_write_blackbox(0); */
+
+    if(crm_is_daemon == FALSE) {
+        /* This is a command line tool - do not fork */
+
+        /* crm_add_logfile(NULL);   * Record it to a file? */
+        crm_enable_stderr(TRUE); /* Make sure stderr is enabled so we can tell the caller */
+        do_fork = FALSE;         /* Just crash if needed */
+    }
 
     if (do_core == FALSE) {
         crm_err("%s: Triggered assert at %s:%d : %s", function, file, line, assert_condition);

@@ -46,6 +46,7 @@ unsigned int crm_log_priority = LOG_NOTICE;
 unsigned int crm_log_level = LOG_INFO;
 static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
+bool crm_is_daemon = 0;
 
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
@@ -626,6 +627,8 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     const char *facility = daemon_option("logfacility");
     const char *f_copy = facility;
 
+    crm_is_daemon = daemon;
+
     if (crm_trace_nonlog == 0) {
         crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
     }
@@ -711,11 +714,11 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
 
-    if (daemon) {
+    if (crm_is_daemon) {
         set_daemon_option("logfacility", facility);
     }
 
-    if (daemon && crm_tracing_enabled()
+    if (crm_is_daemon && crm_tracing_enabled()
         && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
         && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         /* Make sure tracing goes somewhere */
@@ -725,20 +728,20 @@ crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
     crm_update_callsites();
 
     /* Ok, now we can start logging... */
-    if (quiet == FALSE && daemon == FALSE) {
+    if (quiet == FALSE && crm_is_daemon == FALSE) {
         crm_log_args(argc, argv);
     }
 
-    if (daemon) {
+    if (crm_is_daemon) {
         const char *user = getenv("USER");
 
         if (user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
             crm_trace("Not switching to corefile directory for %s", user);
-            daemon = FALSE;
+            crm_is_daemon = FALSE;
         }
     }
 
-    if (daemon) {
+    if (crm_is_daemon) {
         int user = getuid();
         const char *base = CRM_CORE_DIR;
         struct passwd *pwent = getpwuid(user);
