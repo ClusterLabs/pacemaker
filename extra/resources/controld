@@ -42,11 +42,11 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-This Resource Agent can control the dlm_controld services needed by ocfs2.
+This Resource Agent can control the dlm_controld services needed by cluster-aware file systems.
 It assumes that dlm_controld is in your default PATH.
 In most cases, it should be run as an anonymous clone.
 </longdesc>
-<shortdesc lang="en">DLM Agent for OCFS2</shortdesc>
+<shortdesc lang="en">DLM Agent for cluster file systems</shortdesc>
 
 <parameters>
 
