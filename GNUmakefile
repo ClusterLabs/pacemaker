@@ -230,6 +230,7 @@ coverity:
 	tar czf $(COVFILE) --transform=s@.*$(TAG)@cov-int@ $(COVERITY_DIR)
 	@echo "Uploading to public Coverity instance..."
 	curl --form file=@$(COVFILE) --form project=$(PACKAGE) --form password=$(COVPASS) --form email=andrew@beekhof.net http://$(COVHOST)/cgi-bin/upload.py
+	rm -rf $(COVFILE) $(COVERITY_DIR)
 
 coverity-corp:
 	test -e configure || ./autogen.sh
