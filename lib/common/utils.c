@@ -1118,31 +1118,36 @@ crm_abort(const char *file, const char *function, int line,
         crm_err("%s: Triggered fatal assert at %s:%d : %s", function, file, line, assert_condition);
     }
 
-    switch (pid) {
-        case -1:
-            crm_crit("%s: Cannot create core for non-fatal assert at %s:%d : %s",
-                     function, file, line, assert_condition);
-            return;
+    if (pid == -1) {
+        crm_crit("%s: Cannot create core for non-fatal assert at %s:%d : %s",
+                 function, file, line, assert_condition);
+        return;
 
-        case 0:                /* Child */
-            abort();
-            break;
-
-        default:               /* Parent */
-            crm_err("%s: Forked child %d to record non-fatal assert at %s:%d : %s",
-                    function, pid, file, line, assert_condition);
-            crm_write_blackbox(SIGTRAP, NULL);
-
-            do {
-                rc = waitpid(pid, &status, 0);
-                if (rc < 0 && errno != EINTR) {
-                    crm_perror(LOG_ERR, "%s: Cannot wait on forked child %d", function, pid);
-                }
-
-            } while (rc < 0 && errno == EINTR);
-
-            return;
+    } else if(pid == 0) {
+        /* Child process */
+        abort();
+        return;
     }
+
+    /* Parent process */
+    crm_err("%s: Forked child %d to record non-fatal assert at %s:%d : %s",
+            function, pid, file, line, assert_condition);
+    crm_write_blackbox(SIGTRAP, NULL);
+
+    do {
+        rc = waitpid(pid, &status, 0);
+        if(rc == pid) {
+            return; /* Job done */
+        }
+
+    } while(errno == EINTR);
+
+    if (errno == ECHILD) {
+        /* crm_mon does this */
+        crm_trace("Cannot wait on forked child %d - SIGCHLD is probably set to SIG_IGN", pid);
+        return;
+    }
+    crm_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
 }
 
 char *
