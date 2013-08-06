@@ -56,12 +56,21 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 {
     int log_level = LOG_WARNING;
     GLogLevelFlags msg_level = (flags & G_LOG_LEVEL_MASK);
+    static struct qb_log_callsite *glib_cs = NULL;
+
+    if (glib_cs == NULL) {
+        glib_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "glib-handler", LOG_DEBUG, __LINE__, crm_trace_nonlog);
+    }
+
 
     switch (msg_level) {
         case G_LOG_LEVEL_CRITICAL:
-            /* log and record how we got here */
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, message, TRUE, TRUE);
-            return;
+            log_level = LOG_CRIT;
+
+            if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
+                /* log and record how we got here */
+                crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, message, TRUE, TRUE);
+            }
 
         case G_LOG_LEVEL_ERROR:
             log_level = LOG_ERR;
