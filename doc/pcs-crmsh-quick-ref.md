@@ -112,10 +112,10 @@ With roles:
 ## Moving resources
 
     crmsh # crm resource move WebSite pcmk-1
-    pcs   # pcs constraint location WebSite prefers pcmk-1=INFINITY
+    pcs   # pcs resource move WebSite pcmk-1
     
     crmsh # crm resource unmove WebSite
-    pcs   # pcs constraint rm location-WebSite-pcmk-1-INFINITY
+    pcs   # pcs resource unmove WebSite
     
 ## Creating a clone
 
