@@ -1,0 +1,442 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.6" have-quorum="1" admin_epoch="0" epoch="1456" num_updates="28" cib-last-written="Thu Aug  1 14:47:54 2013" dc-uuid="asttest1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1375361274"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="asttest1" type="normal" uname="asttest1"/>
+      <node id="asttest2" type="normal" uname="asttest2"/>
+    </nodes>
+    <resources>
+      <clone id="cl_route">
+        <meta_attributes id="cl_route-meta_attributes">
+          <nvpair id="cl_route-meta_attributes-priority" name="priority" value="0"/>
+          <nvpair id="cl_route-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="ip_voip_route_default" provider="heartbeat" type="Route">
+          <instance_attributes id="ip_voip_route_default-instance_attributes">
+            <nvpair id="ip_voip_route_default-instance_attributes-destination" name="destination" value="default"/>
+            <nvpair id="ip_voip_route_default-instance_attributes-gateway" name="gateway" value="10.2.4.1"/>
+          </instance_attributes>
+          <operations id="ip_voip_route_default-operations">
+            <op id="ip_voip_route_default-monitor-1s" interval="1" name="monitor" start-delay="0" timeout="20"/>
+          </operations>
+          <meta_attributes id="ip_voip_route_default-meta_attributes">
+            <nvpair id="ip_voip_route_default-meta_attributes-priority" name="priority" value="0"/>
+            <nvpair id="ip_voip_route_default-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
+          </meta_attributes>
+        </primitive>
+      </clone>
+      <primitive class="ocf" id="fs_drbd" provider="heartbeat" type="Filesystem">
+        <instance_attributes id="fs_drbd-instance_attributes">
+          <nvpair id="fs_drbd-instance_attributes-device" name="device" value="/dev/drbd/by-res/r0"/>
+          <nvpair id="fs_drbd-instance_attributes-directory" name="directory" value="/mnt/drbd"/>
+          <nvpair id="fs_drbd-instance_attributes-fstype" name="fstype" value="ext3"/>
+        </instance_attributes>
+        <operations>
+          <op id="fs_drbd-start-0" interval="0" name="start" start-delay="1" timeout="60s"/>
+          <op id="fs_drbd-stop-0" interval="0" name="stop" start-delay="1" timeout="60s"/>
+          <op id="fs_drbd-monitor-1s" interval="1s" name="monitor" start-delay="30" timeout="40s"/>
+        </operations>
+        <meta_attributes id="fs_drbd-meta_attributes">
+          <nvpair id="fs_drbd-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="fs_drbd-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <master id="ms_drbd">
+        <meta_attributes id="ms_drbd-meta_attributes">
+          <nvpair id="ms_drbd-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms_drbd-meta_attributes-target-role" name="target-role" value="master"/>
+          <nvpair id="ms_drbd-meta_attributes-priority" name="priority" value="0"/>
+          <nvpair id="ms_drbd-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd" provider="linbit" type="drbd">
+          <instance_attributes id="drbd-instance_attributes">
+            <nvpair id="drbd-instance_attributes-drbd_resource" name="drbd_resource" value="r0"/>
+          </instance_attributes>
+          <operations id="drbd-operations">
+            <op id="drbd-monitor-31s" interval="31" name="monitor" start-delay="0"/>
+          </operations>
+          <meta_attributes id="drbd-meta_attributes">
+            <nvpair id="drbd-meta_attributes-priority" name="priority" value="0"/>
+            <nvpair id="drbd-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
+          </meta_attributes>
+        </primitive>
+      </master>
+      <group id="ip_voip_addresses_p">
+        <meta_attributes id="ip_voip_addresses_p-meta_attributes">
+          <nvpair id="ip_voip_addresses_p-meta_attributes-ordered" name="ordered" value="false"/>
+          <nvpair id="ip_voip_addresses_p-meta_attributes-priority" name="priority" value="8"/>
+          <nvpair id="ip_voip_addresses_p-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="ip_voip_vlan850" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan850-instance_attributes">
+            <nvpair id="ip_voip_vlan850-instance_attributes-ip" name="ip" value="10.2.4.13"/>
+            <nvpair id="ip_voip_vlan850-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan850-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan850-instance_attributes-iflabel" name="iflabel" value="1"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan850-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan998" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan998-instance_attributes">
+            <nvpair id="ip_voip_vlan998-instance_attributes-ip" name="ip" value="10.224.4.13"/>
+            <nvpair id="ip_voip_vlan998-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan998-instance_attributes-nic" name="nic" value="vlan998"/>
+            <nvpair id="ip_voip_vlan998-instance_attributes-iflabel" name="iflabel" value="1"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan998-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan851" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan851-instance_attributes">
+            <nvpair id="ip_voip_vlan851-instance_attributes-ip" name="ip" value="10.2.4.44"/>
+            <nvpair id="ip_voip_vlan851-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan851-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan851-instance_attributes-iflabel" name="iflabel" value="2"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan851-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan852" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan852-instance_attributes">
+            <nvpair id="ip_voip_vlan852-instance_attributes-ip" name="ip" value="10.2.4.45"/>
+            <nvpair id="ip_voip_vlan852-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan852-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan852-instance_attributes-iflabel" name="iflabel" value="3"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan852-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan853" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan853-instance_attributes">
+            <nvpair id="ip_voip_vlan853-instance_attributes-ip" name="ip" value="10.2.4.46"/>
+            <nvpair id="ip_voip_vlan853-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan853-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan853-instance_attributes-iflabel" name="iflabel" value="4"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan853-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan854" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan854-instance_attributes">
+            <nvpair id="ip_voip_vlan854-instance_attributes-ip" name="ip" value="10.2.4.47"/>
+            <nvpair id="ip_voip_vlan854-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan854-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan854-instance_attributes-iflabel" name="iflabel" value="5"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan854-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan855" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan855-instance_attributes">
+            <nvpair id="ip_voip_vlan855-instance_attributes-ip" name="ip" value="10.2.4.54"/>
+            <nvpair id="ip_voip_vlan855-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan855-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan855-instance_attributes-iflabel" name="iflabel" value="6"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan855-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_vlan856" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ip_voip_vlan856-instance_attributes">
+            <nvpair id="ip_voip_vlan856-instance_attributes-ip" name="ip" value="10.2.4.55"/>
+            <nvpair id="ip_voip_vlan856-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+            <nvpair id="ip_voip_vlan856-instance_attributes-nic" name="nic" value="vlan850"/>
+            <nvpair id="ip_voip_vlan856-instance_attributes-iflabel" name="iflabel" value="7"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_vlan856-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="voip">
+        <meta_attributes id="voip-meta_attributes">
+          <nvpair id="voip-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          <nvpair id="voip-meta_attributes-priority" name="priority" value="10"/>
+          <nvpair id="voip-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <primitive class="lsb" id="mysqld" type="mysql">
+          <operations>
+            <op id="mysqld-monitor-1s" interval="1s" name="monitor" start-delay="10" timeout="15s"/>
+          </operations>
+        </primitive>
+        <primitive class="lsb" id="dahdi" type="dahdi">
+          <operations>
+            <op id="dahdi-start-0" interval="0" name="start" timeout="15s"/>
+            <op id="dahdi-stop-0" interval="0" name="stop" timeout="15s"/>
+            <op id="dahdi-monitor-1s" interval="1s" name="monitor" timeout="15s"/>
+          </operations>
+        </primitive>
+        <primitive class="lsb" id="fonulator" type="fonulator">
+          <operations>
+            <op id="fonulator-start-0" interval="0" name="start" timeout="20s"/>
+            <op id="fonulator-stop-0" interval="0" name="stop" timeout="20s"/>
+            <op id="fonulator-monitor-1s" interval="1s" name="monitor" start-delay="30" timeout="20s"/>
+          </operations>
+          <meta_attributes id="fonulator-meta_attributes">
+            <nvpair id="fonulator-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="lsb" id="asterisk" type="asterisk-11.0.1">
+          <operations>
+            <op id="asterisk-start-0" interval="0" name="start" timeout="15s"/>
+            <op id="asterisk-stop-0" interval="0" name="stop" timeout="15s"/>
+            <op id="asterisk-monitor-1s" interval="1s" name="monitor" start-delay="10" timeout="15s"/>
+          </operations>
+        </primitive>
+        <primitive class="lsb" id="iax2_mon" type="iax2_mon">
+          <operations>
+            <op id="iax2_mon-start-0" interval="0" name="start" timeout="20s"/>
+            <op id="iax2_mon-stop-0" interval="0" name="stop" timeout="20s"/>
+            <op id="iax2_mon-monitor-60s" interval="60s" name="monitor" start-delay="30" timeout="20s"/>
+          </operations>
+          <meta_attributes id="iax2_mon-meta_attributes">
+          </meta_attributes>
+        </primitive>
+        <primitive class="lsb" id="httpd" type="apache2">
+          <operations>
+            <op id="httpd-start-0" interval="0" name="start" timeout="20s"/>
+            <op id="httpd-stop-0" interval="0" name="stop" timeout="20s"/>
+            <op id="httpd-monitor-1s" interval="1s" name="monitor" start-delay="10" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="lsb" id="tftp" type="tftp-srce">
+          <operations>
+            <op id="tftp-start-0" interval="0" name="start" timeout="20s"/>
+            <op id="tftp-stop-0" interval="0" name="stop" timeout="20s"/>
+            <op id="tftp-monitor-60s" interval="60s" name="monitor" start-delay="10" timeout="10s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="ip_voip_routes">
+        <meta_attributes id="ip_voip_routes-meta_attributes">
+          <nvpair id="ip_voip_routes-meta_attributes-ordered" name="ordered" value="false"/>
+          <nvpair id="ip_voip_routes-meta_attributes-priority" name="priority" value="9"/>
+          <nvpair id="ip_voip_routes-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="ip_voip_route_test1" provider="heartbeat" type="Route">
+          <instance_attributes id="ip_voip_route_test1-instance_attributes">
+            <nvpair id="ip_voip_route_test1-instance_attributes-destination" name="destination" value="161.53.3.69/32"/>
+            <nvpair id="ip_voip_route_test1-instance_attributes-gateway" name="gateway" value="10.2.4.1"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_route_test1-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="ip_voip_route_test2" provider="heartbeat" type="Route">
+          <instance_attributes id="ip_voip_route_test2-instance_attributes">
+            <nvpair id="ip_voip_route_test2-instance_attributes-destination" name="destination" value="161.53.3.70/32"/>
+            <nvpair id="ip_voip_route_test2-instance_attributes-gateway" name="gateway" value="10.2.4.1"/>
+          </instance_attributes>
+          <operations>
+            <op id="ip_voip_route_test2-monitor-1s" interval="1s" name="monitor" timeout="20s"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_order first="ms_drbd" first-action="promote" id="fs_order" score="INFINITY" then="fs_drbd" then-action="start"/>
+      <rsc_colocation id="fs_colocation" rsc="fs_drbd" score="INFINITY" with-rsc="ms_drbd" with-rsc-role="Master"/>
+      <rsc_colocation id="ip_colocation" rsc="ip_voip_addresses_p" score="INFINITY" with-rsc="fs_drbd"/>
+      <rsc_order first="fs_drbd" first-action="start" id="ip_order" score="INFINITY" then="ip_voip_addresses_p" then-action="start"/>
+      <rsc_order first="ip_voip_routes" first-action="start" id="voip_order" score="INFINITY" then="voip" then-action="start"/>
+      <rsc_order first="ip_voip_addresses_p" first-action="start" id="ip_route_order" score="INFINITY" then="ip_voip_routes" then-action="start"/>
+      <rsc_colocation id="ip_route_colocation" rsc="ip_voip_routes" score="INFINITY" with-rsc="ip_voip_addresses_p"/>
+      <rsc_colocation id="voip_colocation" rsc="voip" score="INFINITY" with-rsc="ip_voip_addresses_p"/>
+      <rsc_location id="loc_voip_asttest1" node="asttest1" rsc="voip" score="2"/>
+      <rsc_location id="loc_voip_asttest2" node="asttest2" rsc="voip" score="1"/>
+    </constraints>
+    <rsc_defaults/>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="asttest1" uname="asttest1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="asttest1">
+        <instance_attributes id="status-asttest1">
+          <nvpair id="status-asttest1-master-drbd.0" name="master-drbd:0" value="5"/>
+          <nvpair id="status-asttest1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-asttest1-last-failure-ip_voip_route_default.0" name="last-failure-ip_voip_route_default:0" value="1375354971"/>
+          <nvpair id="status-asttest1-last-failure-fonulator" name="last-failure-fonulator" value="1375426327"/>
+          <nvpair id="status-asttest1-fail-count-fonulator" name="fail-count-fonulator" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="asttest1">
+        <lrm_resources>
+          <lrm_resource id="iax2_mon" type="iax2_mon" class="lsb">
+            <lrm_rsc_op id="iax2_mon_last_0" operation_key="iax2_mon_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="32:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;32:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="245" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1375426327" last-rc-change="1375426327" exec-time="10" queue-time="0"/>
+            <lrm_rsc_op id="iax2_mon_last_failure_0" operation_key="iax2_mon_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="8:0:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;8:0:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="iax2_mon_monitor_60000" operation_key="iax2_mon_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="32:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;32:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="238" rc-code="0" op-status="0" interval="60000" op-digest="879462d988187e72aebc90ead0d4a5a1" last-rc-change="1375361304" exec-time="30" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_test1" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_test1_last_0" operation_key="ip_voip_route_test1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="25:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;25:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="52" rc-code="0" op-status="0" interval="0" op-digest="0f49779c07733d37ae0bf36551e2102e" op-force-restart=" destination  device  gateway  source " op-restart-digest="0f49779c07733d37ae0bf36551e2102e"/>
+            <lrm_rsc_op id="ip_voip_route_test1_monitor_1000" operation_key="ip_voip_route_test1_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="26:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;26:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="54" rc-code="0" op-status="0" interval="1000" op-digest="ad257987e69a7767be3254505f98a1f0"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan850" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan850_last_0" operation_key="ip_voip_vlan850_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="33:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;33:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="35" rc-code="0" op-status="0" interval="0" op-digest="abc837946f03fab687589bb334807160"/>
+            <lrm_rsc_op id="ip_voip_vlan850_monitor_1000" operation_key="ip_voip_vlan850_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="34:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;34:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="46" rc-code="0" op-status="0" interval="1000" op-digest="ad2f3a398bf4d85df7f5d8195c355d34"/>
+          </lrm_resource>
+          <lrm_resource id="asterisk" type="asterisk-11.0.1" class="lsb">
+            <lrm_rsc_op id="asterisk_last_0" operation_key="asterisk_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="31:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;31:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="246" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1375426327" last-rc-change="1375426327" exec-time="20" queue-time="0"/>
+            <lrm_rsc_op id="asterisk_monitor_1000" operation_key="asterisk_monitor_1000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="30:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;30:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="236" rc-code="0" op-status="0" interval="1000" op-digest="0ad0b2a2266d4bea9b5308241154336d" last-rc-change="1375361284" exec-time="30" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="mysqld" type="mysql" class="lsb">
+            <lrm_rsc_op id="mysqld_last_0" operation_key="mysqld_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;7:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="56" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysqld_monitor_1000" operation_key="mysqld_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="8:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;8:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="57" rc-code="0" op-status="0" interval="1000" op-digest="0ad0b2a2266d4bea9b5308241154336d"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan851" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan851_last_0" operation_key="ip_voip_vlan851_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;37:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="37" rc-code="0" op-status="0" interval="0" op-digest="a4473ddc8a66e0805b763e8981debd5e"/>
+            <lrm_rsc_op id="ip_voip_vlan851_monitor_1000" operation_key="ip_voip_vlan851_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;38:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="45" rc-code="0" op-status="0" interval="1000" op-digest="3dc2757d43761a5558ce17760403a7df"/>
+          </lrm_resource>
+          <lrm_resource id="httpd" type="apache2" class="lsb">
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="33:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;33:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="244" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1375426326" last-rc-change="1375426326" exec-time="1220" queue-time="0"/>
+            <lrm_rsc_op id="httpd_monitor_1000" operation_key="httpd_monitor_1000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="34:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;34:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="240" rc-code="0" op-status="0" interval="1000" op-digest="02a5bcf940fc8d3239701acb11438d6a" last-rc-change="1375361284" exec-time="30" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_test2" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_test2_last_0" operation_key="ip_voip_route_test2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="27:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;27:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="53" rc-code="0" op-status="0" interval="0" op-digest="807e9c55e7a11b1e87da9de000b804cb" op-force-restart=" destination  device  gateway  source " op-restart-digest="807e9c55e7a11b1e87da9de000b804cb"/>
+            <lrm_rsc_op id="ip_voip_route_test2_monitor_1000" operation_key="ip_voip_route_test2_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="28:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;28:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="55" rc-code="0" op-status="0" interval="1000" op-digest="f6bfa36f9f75710c6e1a0ddc1d0aee3a"/>
+          </lrm_resource>
+          <lrm_resource id="dahdi" type="dahdi" class="lsb">
+            <lrm_rsc_op id="dahdi_last_0" operation_key="dahdi_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="9:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;9:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="58" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dahdi_monitor_1000" operation_key="dahdi_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="10:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;10:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="59" rc-code="0" op-status="0" interval="1000" op-digest="3ef575c5f050ae086f0f31bc8f085fdc"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan998" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan998_last_0" operation_key="ip_voip_vlan998_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="35:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;35:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="36" rc-code="0" op-status="0" interval="0" op-digest="5957b5a13ce258c5f92f917eb963650c"/>
+            <lrm_rsc_op id="ip_voip_vlan998_monitor_1000" operation_key="ip_voip_vlan998_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;36:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="44" rc-code="0" op-status="0" interval="1000" op-digest="2bb6acaf982679c52e6346097fb437bb"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan854" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan854_last_0" operation_key="ip_voip_vlan854_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="43:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;43:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="40" rc-code="0" op-status="0" interval="0" op-digest="82e9f2420d4d8e4348f56bfa78314105"/>
+            <lrm_rsc_op id="ip_voip_vlan854_monitor_1000" operation_key="ip_voip_vlan854_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="44:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;44:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="48" rc-code="0" op-status="0" interval="1000" op-digest="f35b2babd43e33b40b4422d235951144"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan855" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan855_last_0" operation_key="ip_voip_vlan855_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="45:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;45:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="41" rc-code="0" op-status="0" interval="0" op-digest="e76cf6988a26037ac267921f303dad22"/>
+            <lrm_rsc_op id="ip_voip_vlan855_monitor_1000" operation_key="ip_voip_vlan855_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="46:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;46:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="50" rc-code="0" op-status="0" interval="1000" op-digest="809ad355edb09ed8084803c692011a8c"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan852" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan852_last_0" operation_key="ip_voip_vlan852_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="39:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;39:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="38" rc-code="0" op-status="0" interval="0" op-digest="b17b883e1e5b01268c0b54dcadde40bc"/>
+            <lrm_rsc_op id="ip_voip_vlan852_monitor_1000" operation_key="ip_voip_vlan852_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="40:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;40:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="47" rc-code="0" op-status="0" interval="1000" op-digest="19904c85e663f2a874083766edf4d5c5"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan853" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan853_last_0" operation_key="ip_voip_vlan853_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="41:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;41:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="39" rc-code="0" op-status="0" interval="0" op-digest="ac1ff0c287ab5368ca51326e2868759d"/>
+            <lrm_rsc_op id="ip_voip_vlan853_monitor_1000" operation_key="ip_voip_vlan853_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="42:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;42:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="49" rc-code="0" op-status="0" interval="1000" op-digest="dc441110b4f0bd8a0b042b830d4bc280"/>
+          </lrm_resource>
+          <lrm_resource id="fs_drbd" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_drbd_last_0" operation_key="fs_drbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="58:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;58:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="33" rc-code="0" op-status="0" interval="0" op-digest="e7ee22607b9365327455b4fc05397306"/>
+            <lrm_rsc_op id="fs_drbd_monitor_1000" operation_key="fs_drbd_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="59:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;59:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="43" rc-code="0" op-status="0" interval="1000" op-digest="e4c937c91e4d332b9b34bedf8dc28efe"/>
+          </lrm_resource>
+          <lrm_resource id="drbd:0" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd:0_last_0" operation_key="drbd:0_promote_0" operation="promote" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="63:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;63:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="31" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan856" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan856_last_0" operation_key="ip_voip_vlan856_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="47:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;47:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="42" rc-code="0" op-status="0" interval="0" op-digest="18c2440007ec76bb845a02b02de7064e"/>
+            <lrm_rsc_op id="ip_voip_vlan856_monitor_1000" operation_key="ip_voip_vlan856_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="48:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;48:4:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="51" rc-code="0" op-status="0" interval="1000" op-digest="0146327e4be08b6ab9d77fe9572ef961"/>
+          </lrm_resource>
+          <lrm_resource id="tftp" type="tftp-srce" class="lsb">
+            <lrm_rsc_op id="tftp_last_0" operation_key="tftp_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="34:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;34:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="243" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1375426326" last-rc-change="1375426326" exec-time="20" queue-time="0"/>
+            <lrm_rsc_op id="tftp_monitor_60000" operation_key="tftp_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="36:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;36:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="242" rc-code="0" op-status="0" interval="60000" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" last-rc-change="1375361284" exec-time="30" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_default:1" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_default:1_last_failure_0" operation_key="ip_voip_route_default:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="24:8:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;24:8:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="76" rc-code="0" op-status="0" interval="0" op-digest="939f8cf9c699dc217ab72e651bdaba01" op-force-restart=" destination  device  gateway  source " op-restart-digest="939f8cf9c699dc217ab72e651bdaba01"/>
+            <lrm_rsc_op id="ip_voip_route_default:1_monitor_1000" operation_key="ip_voip_route_default:1_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="76:9:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;76:9:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="77" rc-code="0" op-status="0" interval="1000" op-digest="0e7476e050747a953c6a79d324201514"/>
+          </lrm_resource>
+          <lrm_resource id="fonulator" type="fonulator" class="lsb">
+            <lrm_rsc_op id="fonulator_last_0" operation_key="fonulator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="20:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;20:164:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="247" rc-code="0" op-status="0" interval="0" last-run="1375426327" last-rc-change="1375426327" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="fonulator_monitor_1000" operation_key="fonulator_monitor_1000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="28:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;28:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="234" rc-code="0" op-status="0" interval="1000" last-rc-change="1375361304" exec-time="50" queue-time="0" op-digest="879462d988187e72aebc90ead0d4a5a1"/>
+            <lrm_rsc_op id="fonulator_last_failure_0" operation_key="fonulator_monitor_1000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="28:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;28:89:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="234" rc-code="7" op-status="0" interval="1000" last-rc-change="1375426326" exec-time="40" queue-time="0" op-digest="879462d988187e72aebc90ead0d4a5a1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="asttest2" uname="asttest2" crmd="online" crm-debug-origin="do_update_resource" ha="active" in_ccm="true" join="member" expected="member" shutdown="0">
+      <transient_attributes id="asttest2">
+        <instance_attributes id="status-asttest2">
+          <nvpair id="status-asttest2-master-drbd.1" name="master-drbd:1" value="5"/>
+          <nvpair id="status-asttest2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="asttest2">
+        <lrm_resources>
+          <lrm_resource id="iax2_mon" type="iax2_mon" class="lsb">
+            <lrm_rsc_op id="iax2_mon_last_0" operation_key="iax2_mon_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="29:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;29:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="6" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_test1" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_test1_last_0" operation_key="ip_voip_route_test1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="32:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;32:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="9" rc-code="7" op-status="0" interval="0" op-digest="0f49779c07733d37ae0bf36551e2102e" op-force-restart=" destination  device  gateway  source " op-restart-digest="0f49779c07733d37ae0bf36551e2102e"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_test2" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_test2_last_0" operation_key="ip_voip_route_test2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="33:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;33:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="10" rc-code="7" op-status="0" interval="0" op-digest="807e9c55e7a11b1e87da9de000b804cb" op-force-restart=" destination  device  gateway  source " op-restart-digest="807e9c55e7a11b1e87da9de000b804cb"/>
+          </lrm_resource>
+          <lrm_resource id="asterisk" type="asterisk-11.0.1" class="lsb">
+            <lrm_rsc_op id="asterisk_last_0" operation_key="asterisk_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="28:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;28:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="5" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="mysqld" type="mysql" class="lsb">
+            <lrm_rsc_op id="mysqld_last_0" operation_key="mysqld_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="25:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;25:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan851" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan851_last_0" operation_key="ip_voip_vlan851_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;36:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="13" rc-code="7" op-status="0" interval="0" op-digest="a4473ddc8a66e0805b763e8981debd5e"/>
+          </lrm_resource>
+          <lrm_resource id="httpd" type="apache2" class="lsb">
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="30:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;30:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="7" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan850" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan850_last_0" operation_key="ip_voip_vlan850_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="34:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;34:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="11" rc-code="7" op-status="0" interval="0" op-digest="abc837946f03fab687589bb334807160"/>
+          </lrm_resource>
+          <lrm_resource id="dahdi" type="dahdi" class="lsb">
+            <lrm_rsc_op id="dahdi_last_0" operation_key="dahdi_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="26:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;26:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="3" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan998" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan998_last_0" operation_key="ip_voip_vlan998_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="35:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;35:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="12" rc-code="7" op-status="0" interval="0" op-digest="5957b5a13ce258c5f92f917eb963650c"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan854" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan854_last_0" operation_key="ip_voip_vlan854_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="39:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;39:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="16" rc-code="7" op-status="0" interval="0" op-digest="82e9f2420d4d8e4348f56bfa78314105"/>
+          </lrm_resource>
+          <lrm_resource id="fs_drbd" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_drbd_last_0" operation_key="fs_drbd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="43:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;43:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="20" rc-code="7" op-status="0" interval="0" op-digest="e7ee22607b9365327455b4fc05397306"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan852" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan852_last_0" operation_key="ip_voip_vlan852_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="37:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;37:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="14" rc-code="7" op-status="0" interval="0" op-digest="b17b883e1e5b01268c0b54dcadde40bc"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan853" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan853_last_0" operation_key="ip_voip_vlan853_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;38:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="15" rc-code="7" op-status="0" interval="0" op-digest="ac1ff0c287ab5368ca51326e2868759d"/>
+          </lrm_resource>
+          <lrm_resource id="tftp" type="tftp-srce" class="lsb">
+            <lrm_rsc_op id="tftp_last_0" operation_key="tftp_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="38:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;38:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="22" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="tftp_last_failure_0" operation_key="tftp_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="31:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;31:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="8" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan855" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan855_last_0" operation_key="ip_voip_vlan855_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="40:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;40:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="17" rc-code="7" op-status="0" interval="0" op-digest="e76cf6988a26037ac267921f303dad22"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_vlan856" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_vlan856_last_0" operation_key="ip_voip_vlan856_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="41:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;41:5:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="18" rc-code="7" op-status="0" interval="0" op-digest="18c2440007ec76bb845a02b02de7064e"/>
+          </lrm_resource>
+          <lrm_resource id="ip_voip_route_default:0" type="Route" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip_voip_route_default:0_last_failure_0" operation_key="ip_voip_route_default:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="26:8:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;26:8:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="28" rc-code="0" op-status="0" interval="0" op-digest="939f8cf9c699dc217ab72e651bdaba01" op-force-restart=" destination  device  gateway  source " op-restart-digest="939f8cf9c699dc217ab72e651bdaba01"/>
+            <lrm_rsc_op id="ip_voip_route_default:0_monitor_1000" operation_key="ip_voip_route_default:0_monitor_1000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="73:9:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;73:9:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="29" rc-code="0" op-status="0" interval="1000" op-digest="0e7476e050747a953c6a79d324201514"/>
+          </lrm_resource>
+          <lrm_resource id="drbd:1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="drbd:1_last_0" operation_key="drbd:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="86:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;86:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="25" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd:1_monitor_31000" operation_key="drbd:1_monitor_31000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="87:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:0;87:6:0:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="27" rc-code="0" op-status="0" interval="31000" op-digest="db2fb3216fa7207fdc0b2bf31bbd09c1"/>
+          </lrm_resource>
+          <lrm_resource id="fonulator" type="fonulator" class="lsb">
+            <lrm_rsc_op id="fonulator_last_0" operation_key="fonulator_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="22:89:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" transition-magic="0:7;22:89:7:d9f6534a-fd61-40c8-8745-b2ed5657ebdb" call-id="41" rc-code="7" op-status="0" interval="0" last-run="1375361274" last-rc-change="1375361274" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,0 +1,171 @@
+
+Current cluster status:
+Online: [ asttest1 asttest2 ]
+
+ Resource Group: voip
+     mysqld	(lsb:mysql):	Started asttest1 
+     dahdi	(lsb:dahdi):	Started asttest1 
+     fonulator	(lsb:fonulator):	Stopped 
+     asterisk	(lsb:asterisk-11.0.1):	Stopped 
+     iax2_mon	(lsb:iax2_mon):	Stopped 
+     httpd	(lsb:apache2):	Stopped 
+     tftp	(lsb:tftp-srce):	Stopped 
+ Resource Group: ip_voip_routes
+     ip_voip_route_test1	(ocf::heartbeat:Route):	Started asttest1 
+     ip_voip_route_test2	(ocf::heartbeat:Route):	Started asttest1 
+ Resource Group: ip_voip_addresses_p
+     ip_voip_vlan850	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan998	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan851	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan852	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan853	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan854	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan855	(ocf::heartbeat:IPaddr2):	Started asttest1 
+     ip_voip_vlan856	(ocf::heartbeat:IPaddr2):	Started asttest1 
+ Clone Set: cl_route [ip_voip_route_default]
+     Started: [ asttest1 asttest2 ]
+ fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest1 
+ Master/Slave Set: ms_drbd [drbd]
+     Masters: [ asttest1 ]
+     Slaves: [ asttest2 ]
+
+Transition Summary:
+ * Move    mysqld	(Started asttest1 -> asttest2)
+ * Move    dahdi	(Started asttest1 -> asttest2)
+ * Start   fonulator	(asttest2)
+ * Start   asterisk	(asttest2)
+ * Start   iax2_mon	(asttest2)
+ * Start   httpd	(asttest2)
+ * Start   tftp	(asttest2)
+ * Move    ip_voip_route_test1	(Started asttest1 -> asttest2)
+ * Move    ip_voip_route_test2	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan850	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan998	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan851	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan852	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan853	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan854	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan855	(Started asttest1 -> asttest2)
+ * Move    ip_voip_vlan856	(Started asttest1 -> asttest2)
+ * Move    fs_drbd	(Started asttest1 -> asttest2)
+ * Demote  drbd:0	(Master -> Slave asttest1)
+ * Promote drbd:1	(Slave -> Master asttest2)
+
+Executing cluster transition:
+ * Pseudo action:   voip_stop_0
+ * Resource action: dahdi           stop on asttest1
+ * Resource action: drbd:1          cancel=31000 on asttest2
+ * Pseudo action:   ms_drbd_pre_notify_demote_0
+ * Resource action: mysqld          stop on asttest1
+ * Resource action: drbd:0          notify on asttest1
+ * Resource action: drbd:1          notify on asttest2
+ * Pseudo action:   ms_drbd_confirmed-pre_notify_demote_0
+ * Pseudo action:   voip_stopped_0
+ * Pseudo action:   ip_voip_routes_stop_0
+ * Resource action: ip_voip_route_test1 stop on asttest1
+ * Resource action: ip_voip_route_test2 stop on asttest1
+ * Pseudo action:   ip_voip_routes_stopped_0
+ * Pseudo action:   ip_voip_addresses_p_stop_0
+ * Resource action: ip_voip_vlan850 stop on asttest1
+ * Resource action: ip_voip_vlan998 stop on asttest1
+ * Resource action: ip_voip_vlan851 stop on asttest1
+ * Resource action: ip_voip_vlan852 stop on asttest1
+ * Resource action: ip_voip_vlan853 stop on asttest1
+ * Resource action: ip_voip_vlan854 stop on asttest1
+ * Resource action: ip_voip_vlan855 stop on asttest1
+ * Resource action: ip_voip_vlan856 stop on asttest1
+ * Pseudo action:   ip_voip_addresses_p_stopped_0
+ * Resource action: fs_drbd         stop on asttest1
+ * Pseudo action:   ms_drbd_demote_0
+ * Pseudo action:   all_stopped
+ * Resource action: drbd:0          demote on asttest1
+ * Pseudo action:   ms_drbd_demoted_0
+ * Pseudo action:   ms_drbd_post_notify_demoted_0
+ * Resource action: drbd:0          notify on asttest1
+ * Resource action: drbd:1          notify on asttest2
+ * Pseudo action:   ms_drbd_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms_drbd_pre_notify_promote_0
+ * Resource action: drbd:0          notify on asttest1
+ * Resource action: drbd:1          notify on asttest2
+ * Pseudo action:   ms_drbd_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms_drbd_promote_0
+ * Resource action: drbd:1          promote on asttest2
+ * Pseudo action:   ms_drbd_promoted_0
+ * Pseudo action:   ms_drbd_post_notify_promoted_0
+ * Resource action: drbd:0          notify on asttest1
+ * Resource action: drbd:1          notify on asttest2
+ * Pseudo action:   ms_drbd_confirmed-post_notify_promoted_0
+ * Resource action: fs_drbd         start on asttest2
+ * Resource action: drbd:0          monitor=31000 on asttest1
+ * Pseudo action:   ip_voip_addresses_p_start_0
+ * Resource action: ip_voip_vlan850 start on asttest2
+ * Resource action: ip_voip_vlan998 start on asttest2
+ * Resource action: ip_voip_vlan851 start on asttest2
+ * Resource action: ip_voip_vlan852 start on asttest2
+ * Resource action: ip_voip_vlan853 start on asttest2
+ * Resource action: ip_voip_vlan854 start on asttest2
+ * Resource action: ip_voip_vlan855 start on asttest2
+ * Resource action: ip_voip_vlan856 start on asttest2
+ * Resource action: fs_drbd         monitor=1000 on asttest2
+ * Pseudo action:   ip_voip_addresses_p_running_0
+ * Resource action: ip_voip_vlan850 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan998 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan851 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan852 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan853 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan854 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan855 monitor=1000 on asttest2
+ * Resource action: ip_voip_vlan856 monitor=1000 on asttest2
+ * Pseudo action:   ip_voip_routes_start_0
+ * Resource action: ip_voip_route_test1 start on asttest2
+ * Resource action: ip_voip_route_test2 start on asttest2
+ * Pseudo action:   ip_voip_routes_running_0
+ * Resource action: ip_voip_route_test1 monitor=1000 on asttest2
+ * Resource action: ip_voip_route_test2 monitor=1000 on asttest2
+ * Pseudo action:   voip_start_0
+ * Resource action: mysqld          start on asttest2
+ * Resource action: dahdi           start on asttest2
+ * Resource action: fonulator       start on asttest2
+ * Resource action: asterisk        start on asttest2
+ * Resource action: iax2_mon        start on asttest2
+ * Resource action: httpd           start on asttest2
+ * Resource action: tftp            start on asttest2
+ * Pseudo action:   voip_running_0
+ * Resource action: mysqld          monitor=1000 on asttest2
+ * Resource action: dahdi           monitor=1000 on asttest2
+ * Resource action: fonulator       monitor=1000 on asttest2
+ * Resource action: asterisk        monitor=1000 on asttest2
+ * Resource action: iax2_mon        monitor=60000 on asttest2
+ * Resource action: httpd           monitor=1000 on asttest2
+ * Resource action: tftp            monitor=60000 on asttest2
+
+Revised cluster status:
+Online: [ asttest1 asttest2 ]
+
+ Resource Group: voip
+     mysqld	(lsb:mysql):	Started asttest2 
+     dahdi	(lsb:dahdi):	Started asttest2 
+     fonulator	(lsb:fonulator):	Started asttest2 
+     asterisk	(lsb:asterisk-11.0.1):	Started asttest2 
+     iax2_mon	(lsb:iax2_mon):	Started asttest2 
+     httpd	(lsb:apache2):	Started asttest2 
+     tftp	(lsb:tftp-srce):	Started asttest2 
+ Resource Group: ip_voip_routes
+     ip_voip_route_test1	(ocf::heartbeat:Route):	Started asttest2 
+     ip_voip_route_test2	(ocf::heartbeat:Route):	Started asttest2 
+ Resource Group: ip_voip_addresses_p
+     ip_voip_vlan850	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan998	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan851	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan852	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan853	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan854	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan855	(ocf::heartbeat:IPaddr2):	Started asttest2 
+     ip_voip_vlan856	(ocf::heartbeat:IPaddr2):	Started asttest2 
+ Clone Set: cl_route [ip_voip_route_default]
+     Started: [ asttest1 asttest2 ]
+ fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest2 
+ Master/Slave Set: ms_drbd [drbd]
+     Masters: [ asttest2 ]
+     Slaves: [ asttest1 ]
+
