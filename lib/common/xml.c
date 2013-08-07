@@ -1063,14 +1063,6 @@ log_data_element(int log_level, const char *file, const char *function, int line
         do_crm_log_alias(log_level, file, function, line, "%s: %s", prefix,
                          "No data to dump as XML");
         return;
-
-    } else if (is_set(options, xml_log_option_diff_short)
-               && is_not_set(options, xml_log_option_diff_all)) {
-        /* Still searching for the actual change */
-        for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
-            log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
-        }
-        return;
     }
 
     name = crm_element_name(data);
@@ -1090,6 +1082,15 @@ log_data_element(int log_level, const char *file, const char *function, int line
             prefix_m[1] = '-';
             prefix = prefix_m;
         }
+    }
+
+    if (is_set(options, xml_log_option_diff_short)
+               && is_not_set(options, xml_log_option_diff_all)) {
+        /* Still searching for the actual change */
+        for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+            log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
+        }
+        return;
     }
 
     insert_prefix(options, &buffer, &offset, &max, depth);
