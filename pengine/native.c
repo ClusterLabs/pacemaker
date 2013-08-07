@@ -364,6 +364,15 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
         }
         clear_bit(flags, pe_weights_init);
 
+    } else if (rsc->variant == pe_group && rsc->children) {
+        GListPtr iter = rsc->children;
+
+        pe_rsc_trace(rsc, "%s: Combining scores from %d children of %s", rhs, g_list_length(iter), rsc->id);
+        work = node_hash_dup(nodes);
+        for(iter = rsc->children; iter->next != NULL; iter = iter->next) {
+            work = rsc_merge_weights(iter->data, rhs, work, attr, factor, flags);
+        }
+
     } else {
         pe_rsc_trace(rsc, "%s: Combining scores from %s", rhs, rsc->id);
         work = node_hash_dup(nodes);
@@ -383,8 +392,22 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
         if (is_set(flags, pe_weights_forward)) {
             gIter = rsc->rsc_cons;
+            crm_trace("Checking %d additional colocation constraints", g_list_length(gIter));
+
+        } else if(rsc->variant == pe_group && rsc->children) {
+            GListPtr last = rsc->children;
+
+            while (last->next != NULL) {
+                last = last->next;
+            }
+
+            gIter = ((resource_t*)last->data)->rsc_cons_lhs;
+            crm_trace("Checking %d additional optional group colocation constraints from %s",
+                      g_list_length(gIter), ((resource_t*)last->data)->id);
+
         } else {
             gIter = rsc->rsc_cons_lhs;
+            crm_trace("Checking %d additional optional colocation constraints %s", g_list_length(gIter), rsc->id);
         }
 
         for (; gIter != NULL; gIter = gIter->next) {
