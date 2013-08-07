@@ -413,15 +413,19 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     if(is_set(rsc->flags, pe_rsc_orphan)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, " ORPHANED ");
     }
-    offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", role2text(rsc->role));
+    if(rsc->role > RSC_ROLE_SLAVE && is_set(rsc->flags, pe_rsc_failed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED %s ", role2text(rsc->role));
+    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
+    } else {
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", role2text(rsc->role));
+    }
+
     if(node) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
     }
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "(unmanaged) ");
-    }
-    if(is_set(rsc->flags, pe_rsc_failed)) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
     }
     if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "(failure ignored)");
