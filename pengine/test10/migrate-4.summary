@@ -3,7 +3,7 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc3	(heartbeat:apache):	Started node2 FAILED
+ rsc3	(heartbeat:apache):	FAILED node2 
 
 Transition Summary:
  * Recover rsc3	(Started node2)

@@ -4,7 +4,7 @@ Online: [ yingying.site ]
 
  Resource Group: group1
      rsc1	(ocf::pacemaker:Dummy):	Started yingying.site 
-     rsc2	(ocf::pacemaker:Dummy):	Started yingying.site (unmanaged) FAILED 
+     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
 
 Transition Summary:
  * Stop    rsc1	(yingying.site - blocked)
@@ -17,5 +17,5 @@ Online: [ yingying.site ]
 
  Resource Group: group1
      rsc1	(ocf::pacemaker:Dummy):	Started yingying.site 
-     rsc2	(ocf::pacemaker:Dummy):	Started yingying.site (unmanaged) FAILED 
+     rsc2	(ocf::pacemaker:Dummy):	FAILED yingying.site (unmanaged) 
 

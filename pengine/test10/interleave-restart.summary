@@ -5,7 +5,7 @@ Online: [ node1 node2 ]
  Clone Set: stonithcloneset [stonithclone]
      Started: [ node1 node2 ]
  Clone Set: evmscloneset [evmsclone]
-     evmsclone	(ocf::heartbeat:EvmsSCC):	Started node1 FAILED 
+     evmsclone	(ocf::heartbeat:EvmsSCC):	FAILED node1 
      Started: [ node2 ]
  Clone Set: imagestorecloneset [imagestoreclone]
      Started: [ node1 node2 ]

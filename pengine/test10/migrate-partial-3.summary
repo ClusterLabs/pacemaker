@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ hex-13 hex-14 ]
 OFFLINE: [ hex-15 ]
 
- test-vm	(ocf::heartbeat:Xen):	Started hex-14 FAILED
+ test-vm	(ocf::heartbeat:Xen):	FAILED hex-14 
  Clone Set: c-clusterfs [dlm]
      Started: [ hex-13 hex-14 ]
      Stopped: [ hex-15 ]

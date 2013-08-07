@@ -8,8 +8,8 @@ Online: [ pcmk-1 ]
  Clone Set: dlm-clone [dlm]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Clone Set: clvm-clone [clvm]
-     clvm	(lsb:clvmd):	Started pcmk-2 FAILED 
-     clvm	(lsb:clvmd):	Started pcmk-3 (unmanaged) FAILED 
+     clvm	(lsb:clvmd):	FAILED pcmk-2 
+     clvm	(lsb:clvmd):	FAILED pcmk-3 (unmanaged) 
      Stopped: [ pcmk-1 pcmk-3 pcmk-4 ]
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Fencing	(stonith:fence_xvm):	Stopped 
@@ -38,7 +38,7 @@ OFFLINE: [ pcmk-2 ]
  Clone Set: dlm-clone [dlm]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Clone Set: clvm-clone [clvm]
-     clvm	(lsb:clvmd):	Started pcmk-3 (unmanaged) FAILED 
+     clvm	(lsb:clvmd):	FAILED pcmk-3 (unmanaged) 
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  ClusterIP	(ocf::heartbeat:IPaddr2):	Stopped 
  Fencing	(stonith:fence_xvm):	Stopped 

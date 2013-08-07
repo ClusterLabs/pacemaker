@@ -3,13 +3,13 @@ Current cluster status:
 Online: [ 18node1 18node2 18node3 lxc2:container2 ]
 OFFLINE: [ lxc1:container1 ]
 
- container1	(ocf::heartbeat:VirtualDomain):	Started 18node2 FAILED
+ container1	(ocf::heartbeat:VirtualDomain):	FAILED 18node2 
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
  shoot1	(stonith:fence_xvm):	Started 18node3
  Clone Set: M-clone [M]
      Started: [ 18node1 18node2 18node3 lxc2 ]
  A	(ocf::pacemaker:Dummy):	Started 18node1
- B	(ocf::pacemaker:Dummy):	Started lxc1 FAILED
+ B	(ocf::pacemaker:Dummy):	FAILED lxc1 
  C	(ocf::pacemaker:Dummy):	Started lxc2
  D	(ocf::pacemaker:Dummy):	Started 18node1
 

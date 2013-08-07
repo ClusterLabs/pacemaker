@@ -4,7 +4,7 @@ Node node2: UNCLEAN (online)
 Online: [ node1 ]
 
  rsc_stonith	(stonith:null):	Started node1
- rsc1	(ocf::pacemaker:Dummy):	Started node2 FAILED
+ rsc1	(ocf::pacemaker:Dummy):	FAILED node2 
  rsc2	(ocf::pacemaker:Dummy):	Started node2
  Master/Slave Set: ms3 [rsc3]
      Masters: [ node2 ]

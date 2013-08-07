@@ -4,7 +4,7 @@ Online: [ bl460g6a bl460g6b ]
 
  Resource Group: dummy-g
      dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a (unmanaged)
-     dummy02	(ocf::heartbeat:Dummy-stop-NG):	Started bl460g6a (unmanaged) FAILED
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a (unmanaged) 
 
 Transition Summary:
 
@@ -16,5 +16,5 @@ Online: [ bl460g6a bl460g6b ]
 
  Resource Group: dummy-g
      dummy01	(ocf::heartbeat:Dummy):	Started bl460g6a (unmanaged)
-     dummy02	(ocf::heartbeat:Dummy-stop-NG):	Started bl460g6a (unmanaged) FAILED
+     dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a (unmanaged) 
 

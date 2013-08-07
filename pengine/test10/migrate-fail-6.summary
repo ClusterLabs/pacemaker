@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ hex-13 hex-14 ]
 
- test-vm	(ocf::heartbeat:Xen):	Started FAILED [ hex-13 hex-14 ]
+ test-vm	(ocf::heartbeat:Xen):	FAILED [ hex-13 hex-14 ]
  Clone Set: c-clusterfs [dlm]
      Started: [ hex-13 hex-14 ]
 

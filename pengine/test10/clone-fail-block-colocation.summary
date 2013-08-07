@@ -10,7 +10,7 @@ Online: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird [d_bird]
      Started: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird6 [d_bird6]
-     d_bird6	(lsb:bird6):	Started DEM-1 (unmanaged) FAILED 
+     d_bird6	(lsb:bird6):	FAILED DEM-1 (unmanaged) 
      Started: [ DEM-2 ]
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
      Started: [ DEM-1 DEM-2 ]
@@ -51,7 +51,7 @@ Online: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird [d_bird]
      Started: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird6 [d_bird6]
-     d_bird6	(lsb:bird6):	Started DEM-1 (unmanaged) FAILED 
+     d_bird6	(lsb:bird6):	FAILED DEM-1 (unmanaged) 
      Started: [ DEM-2 ]
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
      Started: [ DEM-1 DEM-2 ]

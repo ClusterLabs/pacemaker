@@ -4,7 +4,7 @@ Online: [ node1 node2 ]
 
  Resource Group: container-group
      container1	(ocf::pacemaker:Dummy):	Started node1
-     rsc1	(ocf::pacemaker:Dummy):	Started node1 FAILED
+     rsc1	(ocf::pacemaker:Dummy):	FAILED node1 
      rsc2	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
