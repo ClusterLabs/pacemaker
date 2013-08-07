@@ -65,11 +65,11 @@ The monitor operation is automatically created based on the agent's metadata.
 ## Resource defaults
 
     crmsh # crm configure rsc_defaults resource-stickiness=100
-    pcs   # pcs rsc defaults resource-stickiness=100
+    pcs   # pcs resource rsc defaults resource-stickiness=100
     
 Listing the current defaults:
     
-    pcs   # pcs rsc defaults
+    pcs   # pcs resource rsc defaults
     
 ## Operation defaults
 
