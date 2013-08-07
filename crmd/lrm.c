@@ -200,6 +200,19 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     }
 
     if (op->interval > 0) {
+        GListPtr iter = NULL;
+
+        for(iter = entry->recurring_op_list; iter; iter = iter->next) {
+            lrmd_event_data_t *o = iter->data;
+
+            /* op->rsc_id is implied */
+            if(op->interval == o->interval && strcmp(op->op_type, o->op_type) == 0) {
+                crm_trace("Removing existing recurring op entry: %s_%s_%d", op->rsc_id, op->op_type, op->interval);
+                entry->recurring_op_list = g_list_remove(entry->recurring_op_list, o);
+                break;
+            }
+        }
+
         crm_trace("Adding recurring op: %s_%s_%d", op->rsc_id, op->op_type, op->interval);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
