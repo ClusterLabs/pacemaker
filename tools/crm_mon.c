@@ -1383,31 +1383,35 @@ print_status(pe_working_set_t * data_set)
         print_as("\nFailed actions:\n");
         for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
              xml_op = __xml_next(xml_op)) {
-            int val = 0;
+            int status = 0;
+            int rc = 0;
             const char *id = ID(xml_op);
             const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
             const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
             const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
             const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-            const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-            const char *status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+            const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+            const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
-            val = crm_parse_int(status, "0");
-            print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
-                     op_key ? op_key : id, node, call, rc, services_lrm_status_str(val));
+            rc = crm_parse_int(rc_s, "0");
+            status = crm_parse_int(status_s, "0");
 
             if (last) {
                 time_t run_at = crm_parse_int(last, "0");
+                char *run_at_s = ctime(&run_at);
+                if(run_at_s) {
+                    run_at_s[24] = 0; /* Overwrite the newline */
+                }
 
-                print_as(", last-rc-change=%s, queued=%sms, exec=%sms\n",
-                         ctime(&run_at),
-                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
+                print_as("    %s on %s '%s' (%d): call=%s, status=%s, last-rc-change='%s', queued=%sms, exec=%sms\n",
+                         op_key ? op_key : id, node, lrmd_event_rc2str(rc), rc, call, services_lrm_status_str(status),
+                         run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_EXEC), crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
+            } else {
+                print_as("    %s on %s '%s' (%d): call=%s, status=%s\n",
+                         op_key ? op_key : id, node, lrmd_event_rc2str(rc), rc, call, services_lrm_status_str(status));
             }
-
-            val = crm_parse_int(rc, "0");
-            print_as("): %s\n", lrmd_event_rc2str(val));
         }
+        print_as("\n");
     }
 
     if (print_tickets || print_neg_location_prefix) {
