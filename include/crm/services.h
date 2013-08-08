@@ -88,9 +88,10 @@ enum ocf_exitcode {
     PCMK_OCF_RUNNING_MASTER       = 8,
     PCMK_OCF_FAILED_MASTER        = 9,
 
-    PCMK_OCF_STATUS_UNKNOWN       = 14, /* Already in use */
 
     /* 150-199	reserved for application use */
+    PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
+    PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
     PCMK_OCF_SIGNAL        = 194,
     PCMK_OCF_NOT_SUPPORTED = 195,
     PCMK_OCF_PENDING       = 196,
@@ -106,6 +107,7 @@ enum op_status {
     PCMK_LRM_OP_TIMEOUT,
     PCMK_LRM_OP_NOTSUPPORTED,
     PCMK_LRM_OP_ERROR,
+    PCMK_LRM_OP_NOT_INSTALLED,
 };
 
 enum nagios_exitcode {
@@ -263,6 +265,7 @@ enum nagios_exitcode {
                 case PCMK_LRM_OP_TIMEOUT:return "Timed Out";
                 case PCMK_LRM_OP_NOTSUPPORTED:return "NOT SUPPORTED";
                 case PCMK_LRM_OP_ERROR:return "Error";
+                case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
                 default:return "UNKNOWN!";
     }} static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {

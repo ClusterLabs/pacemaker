@@ -548,7 +548,6 @@ action_timer_callback(gpointer data)
         }
 
         if (send_update) {
-            /* cib_action_update(timer->action, PCMK_LRM_OP_PENDING, PCMK_OCF_STATUS_UNKNOWN); */
             cib_action_update(timer->action, PCMK_LRM_OP_TIMEOUT, PCMK_OCF_UNKNOWN_ERROR);
         }
     }

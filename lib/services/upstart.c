@@ -444,6 +444,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
             op->rc = PCMK_OCF_OK;
         } else {
             op->rc = PCMK_OCF_NOT_INSTALLED;
+            op->status = PCMK_LRM_OP_NOT_INSTALLED;
         }
         goto cleanup;
     }

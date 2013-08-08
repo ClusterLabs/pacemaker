@@ -381,6 +381,7 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
 
             } else {
                 op->rc = PCMK_OCF_NOT_INSTALLED;
+                op->status = PCMK_LRM_OP_NOT_INSTALLED;
             }
 
         } else {
@@ -437,6 +438,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
                   error ? error->message : "unknown");
         if (error && strstr(error->message, "systemd1.NoSuchUnit")) {
             op->rc = PCMK_OCF_NOT_INSTALLED;
+            op->status = PCMK_LRM_OP_NOT_INSTALLED;
         }
         g_error_free(error);
         goto cleanup;
