@@ -881,7 +881,11 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     cmd->exec_rc = action->rc;
-    cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+    if(action->status != PCMK_LRM_OP_DONE) {
+        cmd->lrmd_op_status = action->status;
+    } else {
+        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+    }
     services_action_free(action);
     action = NULL;
 
