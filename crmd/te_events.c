@@ -540,7 +540,7 @@ process_graph_event(xmlNode * event, const char *event_node)
             desc = "failed";
         }
         crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num, action, id, callid,
-                 lrmd_event_rc2str(rc), desc);
+                 services_ocf_exitcode_str(rc), desc);
     }
 
   bail:

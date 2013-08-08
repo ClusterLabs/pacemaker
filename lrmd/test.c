@@ -110,7 +110,7 @@ test_exit(int rc)
              lrmd_event_type2str(event->type),                          \
              event->rsc_id,                                             \
              event->op_type ? event->op_type : "none",                  \
-             lrmd_event_rc2str(event->rc),                              \
+             services_ocf_exitcode_str(event->rc),                              \
              services_lrm_status_str(event->op_status));                \
     crm_info("%s", event_buf_v0);;
 

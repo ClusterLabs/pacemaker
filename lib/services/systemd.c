@@ -377,10 +377,10 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
 
             if (safe_str_eq(op->action, "stop")) {
                 crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-                op->rc = PCMK_EXECRA_OK;
+                op->rc = PCMK_OCF_OK;
 
             } else {
-                op->rc = PCMK_EXECRA_NOT_INSTALLED;
+                op->rc = PCMK_OCF_NOT_INSTALLED;
             }
 
         } else {
@@ -394,11 +394,11 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
         g_variant_get(_ret, "(o)", &path);
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
                  path);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
 
     } else {
         crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
     }
 
     operation_finalize(op);
@@ -419,7 +419,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     const char *action = op->action;
     char *name = systemd_service_name(op->agent);
 
-    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
     crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
@@ -427,7 +427,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 
     if (safe_str_eq(op->action, "meta-data")) {
         op->stdout_data = systemd_unit_metadata(op->agent);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
         goto cleanup;
     }
 
@@ -436,7 +436,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         crm_debug("Could not obtain unit named '%s': %s", op->agent,
                   error ? error->message : "unknown");
         if (error && strstr(error->message, "systemd1.NoSuchUnit")) {
-            op->rc = PCMK_EXECRA_NOT_INSTALLED;
+            op->rc = PCMK_OCF_NOT_INSTALLED;
         }
         g_error_free(error);
         goto cleanup;
@@ -446,9 +446,9 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         char *state = systemd_unit_property(unit, BUS_NAME ".Unit", "ActiveState");
 
         if (g_strcmp0(state, "active") == 0) {
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
-            op->rc = PCMK_EXECRA_NOT_RUNNING;
+            op->rc = PCMK_OCF_NOT_RUNNING;
         }
 
         free(state);
@@ -497,7 +497,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     } else if (g_strcmp0(action, "restart") == 0) {
         action = "RestartUnit";
     } else {
-        op->rc = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
         goto cleanup;
     }
 
@@ -518,7 +518,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         if (safe_str_eq(op->action, "stop")
             && strstr(error->message, "systemd1.InvalidName")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
             crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error->message, unit);
         }
@@ -530,11 +530,11 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         g_variant_get(_ret, "(o)", &path);
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
                  path);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
 
     } else {
         crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
     }
 
   cleanup:
@@ -548,5 +548,5 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         operation_finalize(op);
         return TRUE;
     }
-    return op->rc == PCMK_EXECRA_OK;
+    return op->rc == PCMK_OCF_OK;
 }

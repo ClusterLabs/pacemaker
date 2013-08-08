@@ -22,6 +22,7 @@
  * \brief Local Resource Manager 
  * \ingroup lrm
  */
+#include <crm/services.h>
 
 #ifndef LRMD__H
 #  define LRMD__H
@@ -166,21 +167,6 @@ enum lrmd_callback_event {
     lrmd_event_poke,
 };
 
-enum lrmd_exec_rc {
-    PCMK_EXECRA_OK                  = 0,
-    PCMK_EXECRA_UNKNOWN_ERROR       = 1,
-    PCMK_EXECRA_INVALID_PARAM       = 2,
-    PCMK_EXECRA_UNIMPLEMENT_FEATURE = 3,
-    PCMK_EXECRA_INSUFFICIENT_PRIV   = 4,
-    PCMK_EXECRA_NOT_INSTALLED       = 5,
-    PCMK_EXECRA_NOT_CONFIGURED      = 6,
-    PCMK_EXECRA_NOT_RUNNING         = 7,
-    PCMK_EXECRA_RUNNING_MASTER      = 8,
-    PCMK_EXECRA_FAILED_MASTER       = 9,
-
-    /* For status command only */
-    PCMK_EXECRA_STATUS_UNKNOWN      = 14,
-};
 /* *INDENT-ON* */
 
 typedef struct lrmd_event_data_s {
@@ -205,8 +191,8 @@ typedef struct lrmd_event_data_s {
     /*! This operation that just completed is on a deleted rsc. */
     int rsc_deleted;
 
-    /*! The executed ra return code */
-    enum lrmd_exec_rc rc;
+    /*! The executed ra return code mapped to OCF */
+    enum ocf_exitcode rc;
     /*! The lrmd status returned for exec_complete events */
     int op_status;
     /*! stdout from resource agent operation */
@@ -446,38 +432,6 @@ struct lrmd_s {
     lrmd_api_operations_t *cmds;
     void *private;
 };
-
-static inline const char *
-lrmd_event_rc2str(enum lrmd_exec_rc rc)
-{
-    switch (rc) {
-        case PCMK_EXECRA_OK:
-            return "ok";
-        case PCMK_EXECRA_UNKNOWN_ERROR:
-            return "unknown error";
-        case PCMK_EXECRA_INVALID_PARAM:
-            return "invalid parameter";
-        case PCMK_EXECRA_UNIMPLEMENT_FEATURE:
-            return "unimplemented feature";
-        case PCMK_EXECRA_INSUFFICIENT_PRIV:
-            return "insufficient privileges";
-        case PCMK_EXECRA_NOT_INSTALLED:
-            return "not installed";
-        case PCMK_EXECRA_NOT_CONFIGURED:
-            return "not configured";
-        case PCMK_EXECRA_NOT_RUNNING:
-            return "not running";
-        case PCMK_EXECRA_RUNNING_MASTER:
-            return "master";
-        case PCMK_EXECRA_FAILED_MASTER:
-            return "master (failed)";
-        case PCMK_EXECRA_STATUS_UNKNOWN:
-            return "status: unknown";
-        default:
-            break;
-    }
-    return "<unknown>";
-}
 
 static inline const char *
 lrmd_event_type2str(enum lrmd_callback_event type)

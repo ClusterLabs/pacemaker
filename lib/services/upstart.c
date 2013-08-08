@@ -382,12 +382,12 @@ upstart_job_exec_done(GObject * source_object, GAsyncResult * res, gpointer user
         if (safe_str_eq(op->action, "start")
             && strstr(error->message, BUS_MANAGER_IFACE ".Error.AlreadyStarted")) {
             crm_trace("Masking Start failure for %s: already started", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
 
         } else if (safe_str_eq(op->action, "stop")
                    && strstr(error->message, BUS_MANAGER_IFACE ".Error.UnknownInstance")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
             crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
         }
@@ -399,11 +399,11 @@ upstart_job_exec_done(GObject * source_object, GAsyncResult * res, gpointer user
         g_variant_get(_ret, "(o)", &path);
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
                  path);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
 
     } else {
         crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
     }
 
     operation_finalize(op);
@@ -425,12 +425,12 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     GVariant *_ret = NULL;
     GDBusProxy *job_proxy = NULL;
 
-    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
     CRM_ASSERT(upstart_init());
 
     if (safe_str_eq(op->action, "meta-data")) {
         op->stdout_data = upstart_job_metadata(op->agent);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
         goto cleanup;
     }
 
@@ -441,18 +441,18 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     }
     if (pass == FALSE) {
         if (!g_strcmp0(action, "stop")) {
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
-            op->rc = PCMK_EXECRA_NOT_INSTALLED;
+            op->rc = PCMK_OCF_NOT_INSTALLED;
         }
         goto cleanup;
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
         if (upstart_job_running(op->agent)) {
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
-            op->rc = PCMK_EXECRA_NOT_RUNNING;
+            op->rc = PCMK_OCF_NOT_RUNNING;
         }
         goto cleanup;
 
@@ -463,7 +463,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     } else if (!g_strcmp0(action, "restart")) {
         action = "Restart";
     } else {
-        op->rc = PCMK_EXECRA_UNIMPLEMENT_FEATURE;
+        op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
         goto cleanup;
     }
 
@@ -485,11 +485,11 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
         if (safe_str_eq(action, "Start")
             && strstr(error->message, BUS_MANAGER_IFACE ".Error.AlreadyStarted")) {
             crm_trace("Masking Start failure for %s: already started", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else if (safe_str_eq(action, "Stop")
                    && strstr(error->message, BUS_MANAGER_IFACE ".Error.UnknownInstance")) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
         } else {
             crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error->message, job);
         }
@@ -500,11 +500,11 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
         g_variant_get(_ret, "(o)", &path);
         crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
                  path);
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
 
     } else {
         crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
     }
 
   cleanup:
@@ -522,5 +522,5 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
         operation_finalize(op);
         return TRUE;
     }
-    return op->rc == PCMK_EXECRA_OK;
+    return op->rc == PCMK_OCF_OK;
 }

@@ -691,20 +691,20 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
 
     crm_trace("Processing %s: %s.%d=%d",
               rsc_id, entry->last->op_type, entry->last->interval, entry->last->rc);
-    if (entry->last->rc == PCMK_EXECRA_OK && safe_str_eq(entry->last->op_type, CRMD_ACTION_STOP)) {
+    if (entry->last->rc == PCMK_OCF_OK && safe_str_eq(entry->last->op_type, CRMD_ACTION_STOP)) {
         return FALSE;
 
-    } else if (entry->last->rc == PCMK_EXECRA_OK
+    } else if (entry->last->rc == PCMK_OCF_OK
                && safe_str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE)) {
         /* a stricter check is too complex...
          * leave that to the PE
          */
         return FALSE;
 
-    } else if (entry->last->rc == PCMK_EXECRA_NOT_RUNNING) {
+    } else if (entry->last->rc == PCMK_OCF_NOT_RUNNING) {
         return FALSE;
 
-    } else if (entry->last->interval == 0 && entry->last->rc == PCMK_EXECRA_NOT_CONFIGURED) {
+    } else if (entry->last->interval == 0 && entry->last->rc == PCMK_OCF_NOT_CONFIGURED) {
         /* Badly configured resources can't be reliably stopped */
         return FALSE;
     }
@@ -805,10 +805,10 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
 
     if (rc == pcmk_ok) {
         op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_EXECRA_OK;
+        op->rc = PCMK_OCF_OK;
     } else {
         op->op_status = PCMK_LRM_OP_ERROR;
-        op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
     }
 
     send_direct_ack(from_host, from_sys, NULL, op, rsc_id);
@@ -1288,7 +1288,7 @@ do_lrm_invoke(long long action,
         }
         op->interval = 0;
         op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->t_run = time(NULL);
         op->t_rcchange = op->t_run;
 
@@ -1306,7 +1306,7 @@ do_lrm_invoke(long long action,
             crm_info("Failing resource %s...", rsc->id);
             process_lrm_event(lrm_state, op);
             op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
             lrmd_free_rsc_info(rsc);
         } else {
             crm_info("Cannot find/create resource in order to fail it...");
@@ -1418,7 +1418,7 @@ do_lrm_invoke(long long action,
 
             op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
             op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
             CRM_ASSERT(op != NULL);
             send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
             lrmd_free_event(op);
@@ -1479,7 +1479,7 @@ do_lrm_invoke(long long action,
                 g_hash_table_remove(lrm_state->pending_ops, op_key);
             }
 
-            op->rc = PCMK_EXECRA_OK;
+            op->rc = PCMK_OCF_OK;
             op->op_status = PCMK_LRM_OP_DONE;
             send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
 
@@ -1502,9 +1502,9 @@ do_lrm_invoke(long long action,
                 op->op_status = PCMK_LRM_OP_ERROR;
 
                 if (cib_rc == -EACCES) {
-                    op->rc = PCMK_EXECRA_INSUFFICIENT_PRIV;
+                    op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
                 } else {
-                    op->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+                    op->rc = PCMK_OCF_UNKNOWN_ERROR;
                 }
                 send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
                 lrmd_free_event(op);
@@ -2029,7 +2029,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
     }
 
     if (op->op_status == PCMK_LRM_OP_ERROR
-        && (op->rc == PCMK_EXECRA_RUNNING_MASTER || op->rc == PCMK_EXECRA_NOT_RUNNING)) {
+        && (op->rc == PCMK_OCF_RUNNING_MASTER || op->rc == PCMK_OCF_NOT_RUNNING)) {
         /* Leave it up to the TE/PE to decide if this is an error */
         op->op_status = PCMK_LRM_OP_DONE;
         log_level = LOG_INFO;
@@ -2079,7 +2079,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         do_crm_log(log_level,
                    "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s",
                    op_key, op->call_id, op->rc, update_id, removed ? "true" : "false",
-                   lrmd_event_rc2str(op->rc));
+                   services_ocf_exitcode_str(op->rc));
     } else {
         do_crm_log(log_level,
                    "LRM operation %s (call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
