@@ -72,6 +72,7 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                 /* log and record how we got here */
                 crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, message, TRUE, TRUE);
             }
+            break;
 
         case G_LOG_LEVEL_ERROR:
             log_level = LOG_ERR;
