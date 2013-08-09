@@ -1,0 +1,36 @@
+
+Current cluster status:
+Online: [ c6 c7 c8 ]
+
+ Master/Slave Set: ms_drbd-dtest1 [p_drbd-dtest1]
+     Slaves: [ c6 c7 ]
+ p_dtest1	(ocf::heartbeat:Dummy):	Stopped 
+
+Transition Summary:
+ * Promote p_drbd-dtest1:0	(Slave -> Master c7)
+ * Start   p_dtest1	(c7)
+
+Executing cluster transition:
+ * Pseudo action:   ms_drbd-dtest1_pre_notify_promote_0
+ * Resource action: p_drbd-dtest1   notify on c7
+ * Resource action: p_drbd-dtest1   notify on c6
+ * Pseudo action:   ms_drbd-dtest1_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms_drbd-dtest1_promote_0
+ * Resource action: p_drbd-dtest1   promote on c7
+ * Pseudo action:   ms_drbd-dtest1_promoted_0
+ * Pseudo action:   ms_drbd-dtest1_post_notify_promoted_0
+ * Resource action: p_drbd-dtest1   notify on c7
+ * Resource action: p_drbd-dtest1   notify on c6
+ * Pseudo action:   ms_drbd-dtest1_confirmed-post_notify_promoted_0
+ * Resource action: p_dtest1        start on c7
+ * Resource action: p_drbd-dtest1   monitor=10000 on c7
+ * Resource action: p_drbd-dtest1   monitor=20000 on c6
+
+Revised cluster status:
+Online: [ c6 c7 c8 ]
+
+ Master/Slave Set: ms_drbd-dtest1 [p_drbd-dtest1]
+     Masters: [ c7 ]
+     Slaves: [ c6 ]
+ p_dtest1	(ocf::heartbeat:Dummy):	Started c7 
+

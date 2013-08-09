@@ -1,0 +1,123 @@
+<cib epoch="94" num_updates="9" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Jul 30 14:22:13 2013" crm_feature_set="3.0.7" update-origin="c7" update-client="crm_resource" have-quorum="1" dc-uuid="168822235">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-368c726"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1375208009"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="168822234" uname="c7">
+        <instance_attributes id="nodes-168822234">
+          <nvpair id="nodes-168822234-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="168822235" uname="c8">
+        <instance_attributes id="nodes-168822235">
+          <nvpair id="nodes-168822235-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="168822233" uname="c6">
+        <instance_attributes id="nodes-168822233">
+          <nvpair id="nodes-168822233-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <master id="ms_drbd-dtest1">
+        <meta_attributes id="ms_drbd-dtest1-meta_attributes">
+          <nvpair id="ms_drbd-dtest1-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd-dtest1-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd-dtest1-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="ms_drbd-dtest1-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms_drbd-dtest1-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="p_drbd-dtest1" provider="linbit" type="drbd">
+          <instance_attributes id="p_drbd-dtest1-instance_attributes">
+            <nvpair id="p_drbd-dtest1-instance_attributes-drbd_resource" name="drbd_resource" value="dtest1"/>
+          </instance_attributes>
+          <operations>
+            <op id="p_drbd-dtest1-start-0" interval="0" name="start" timeout="240"/>
+            <op id="p_drbd-dtest1-promote-0" interval="0" name="promote" timeout="90"/>
+            <op id="p_drbd-dtest1-demote-0" interval="0" name="demote" timeout="90"/>
+            <op id="p_drbd-dtest1-notify-0" interval="0" name="notify" timeout="90"/>
+            <op id="p_drbd-dtest1-stop-0" interval="0" name="stop" timeout="100"/>
+            <op id="p_drbd-dtest1-monitor-20" interval="20" name="monitor" role="Slave" timeout="20"/>
+            <op id="p_drbd-dtest1-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="p_dtest1" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_location id="l_drbd-dtest1" node="c8" rsc="ms_drbd-dtest1" score="-INFINITY"/>
+      <rsc_location id="l_p_dtest1" node="c8" rsc="p_dtest1" score="-INFINITY"/>
+      <rsc_colocation id="co_dtest1" rsc="p_dtest1" score="INFINITY" with-rsc="ms_drbd-dtest1" with-rsc-role="Master"/>
+      <rsc_order first="ms_drbd-dtest1" first-action="promote" id="o_dtest1" score="INFINITY" then="p_dtest1" then-action="start"/>
+      <rsc_location id="cli-ban-p_dtest1-on-c6" rsc="p_dtest1" node="c6" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="168822234" uname="c7" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="168822234">
+        <instance_attributes id="status-168822234">
+          <nvpair id="status-168822234-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-168822234-last-failure-p_drbd-dtest1" name="last-failure-p_drbd-dtest1" value="1375207922"/>
+          <nvpair id="status-168822234-master-p_drbd-dtest1" name="master-p_drbd-dtest1" value="1000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="168822234">
+        <lrm_resources>
+          <lrm_resource id="p_dtest1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_dtest1_last_0" operation_key="p_dtest1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="40:266:0:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;40:266:0:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="1433" rc-code="0" op-status="0" interval="0" last-run="1375208244" last-rc-change="1375208244" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_drbd-dtest1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="p_drbd-dtest1_last_failure_0" operation_key="p_drbd-dtest1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="6:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;6:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="961" rc-code="0" op-status="0" interval="0" last-run="1375208009" last-rc-change="1375208009" exec-time="143" queue-time="0" op-digest="363723e8a6fd10eb0cd9a93a0140a777"/>
+            <lrm_rsc_op id="p_drbd-dtest1_last_0" operation_key="p_drbd-dtest1_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:267:0:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;7:267:0:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="1442" rc-code="0" op-status="0" interval="0" last-run="1375208245" last-rc-change="1375208245" exec-time="85" queue-time="0" op-digest="363723e8a6fd10eb0cd9a93a0140a777"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="168822233" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" uname="c6" expected="member">
+      <transient_attributes id="168822233">
+        <instance_attributes id="status-168822233">
+          <nvpair id="status-168822233-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-168822233-last-failure-p_drbd-dtest1" name="last-failure-p_drbd-dtest1" value="1375206707"/>
+          <nvpair id="status-168822233-master-p_drbd-dtest1" name="master-p_drbd-dtest1" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="168822233">
+        <lrm_resources>
+          <lrm_resource id="p_dtest1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_dtest1_last_0" operation_key="p_dtest1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="38:269:0:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;38:269:0:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="1478" rc-code="0" op-status="0" interval="0" last-run="1375208533" last-rc-change="1375208533" exec-time="16" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_drbd-dtest1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="p_drbd-dtest1_last_failure_0" operation_key="p_drbd-dtest1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="4:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:8;4:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="987" rc-code="8" op-status="0" interval="0" last-run="1375208009" last-rc-change="1375208009" exec-time="136" queue-time="0" op-digest="363723e8a6fd10eb0cd9a93a0140a777"/>
+            <lrm_rsc_op id="p_drbd-dtest1_last_0" operation_key="p_drbd-dtest1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="10:272:0:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;10:272:0:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="1501" rc-code="0" op-status="0" interval="0" last-run="1375208534" last-rc-change="1375208534" exec-time="209" queue-time="0" op-digest="363723e8a6fd10eb0cd9a93a0140a777"/>
+            <lrm_rsc_op id="p_drbd-dtest1_monitor_10000" operation_key="p_drbd-dtest1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="13:267:8:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:8;13:267:8:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="1474" rc-code="8" op-status="0" interval="10000" last-rc-change="1375208245" exec-time="143" queue-time="0" op-digest="95a72883a36e06f191e479062d0d93e7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="168822235" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" uname="c8" join="member" expected="member">
+      <transient_attributes id="168822235">
+        <instance_attributes id="status-168822235">
+          <nvpair id="status-168822235-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="168822235">
+        <lrm_resources>
+          <lrm_resource id="p_dtest1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="p_dtest1_last_0" operation_key="p_dtest1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="38:181:0:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:0;38:181:0:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="52" rc-code="0" op-status="0" interval="0" last-run="1375207993" last-rc-change="1375207993" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="p_drbd-dtest1" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="p_drbd-dtest1_last_0" operation_key="p_drbd-dtest1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" transition-magic="0:7;8:188:7:32b54583-9d6b-430e-b322-eb998fe53fc6" call-id="76" rc-code="7" op-status="0" interval="0" last-run="1375208009" last-rc-change="1375208009" exec-time="60" queue-time="0" op-digest="363723e8a6fd10eb0cd9a93a0140a777"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -364,6 +364,7 @@ do_test master_monitor_restart "cl#5072 - Ensure master monitor operation will s
 do_test bug-rh-880249 "Handle replacement of an m/s resource with a primitive"
 do_test bug-5143-ms-shuffle "Prevent master shuffling due to promotion score"
 do_test master-demote-block "Block promotion if demote fails with on-fail=block"
+do_test master-dependant-ban "Don't stop instances from being active because a dependant is banned from that host"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
