@@ -313,8 +313,8 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 static void
 services_handle_exec_error(svc_action_t * op, int error)
 {
-    op->stdout_data = NULL;
-    op->stderr_data = NULL;
+    op->rc = PCMK_OCF_EXEC_ERROR;
+    op->status = PCMK_LRM_OP_ERROR;
 
     /* Need to mimic the return codes for each standard as thats what we'll convert back from in get_uniform_rc() */
     if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
@@ -377,8 +377,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
     /* Fail fast */
     if(stat(op->opaque->exec, &st) != 0) {
-        crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(errno), errno);
-        services_handle_exec_error(op, errno);
+        int rc = errno;
+        crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+        services_handle_exec_error(op, rc);
         return FALSE;
     }
 
@@ -395,16 +396,18 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     op->pid = fork();
     switch (op->pid) {
         case -1:
-            crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(errno), errno);
+            {
+                int rc = errno;
 
-            close(stdout_fd[0]);
-            close(stdout_fd[1]);
-            close(stderr_fd[0]);
-            close(stderr_fd[1]);
+                close(stdout_fd[0]);
+                close(stdout_fd[1]);
+                close(stderr_fd[0]);
+                close(stderr_fd[1]);
 
-            services_handle_exec_error(op, errno);
-            return FALSE;
-
+                crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+                services_handle_exec_error(op, rc);
+                return FALSE;
+            }
         case 0:                /* Child */
             /* Man: The call setpgrp() is equivalent to setpgid(0,0)
              * _and_ compiles on BSD variants too
