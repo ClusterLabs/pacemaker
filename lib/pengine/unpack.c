@@ -2057,6 +2057,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     gboolean is_probe = FALSE;
     gboolean clear_past_failure = FALSE;
     gboolean stop_failure_ignored = FALSE;
+    gboolean no_agent = FALSE;
 
     CRM_CHECK(rsc != NULL, return FALSE);
     CRM_CHECK(node != NULL, return FALSE);
@@ -2079,7 +2080,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
     task_status_i = crm_parse_int(task_status, NULL);
 
-    CRM_CHECK(task_status_i <= PCMK_LRM_OP_ERROR, return FALSE);
+    CRM_CHECK(task_status_i <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
     CRM_CHECK(task_status_i >= PCMK_LRM_OP_PENDING, return FALSE);
 
     if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
@@ -2138,7 +2139,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                          target_rc, services_ocf_exitcode_str(target_rc));
         }
 
-    } else if (task_status_i == PCMK_LRM_OP_ERROR) {
+    } else if (task_status_i == PCMK_LRM_OP_ERROR 
+               && actual_rc_i != PCMK_OCF_NOT_INSTALLED) {
         /* let us decide that */
         task_status_i = PCMK_LRM_OP_DONE;
     }
@@ -2253,6 +2255,32 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
             /* else: fall through */
         case PCMK_OCF_INSUFFICIENT_PRIV:
         case PCMK_OCF_NOT_INSTALLED:
+            if (actual_rc_i == PCMK_OCF_NOT_INSTALLED) {
+                /* 1. The agent isn't present: hard error */
+                if (task_status_i == PCMK_LRM_OP_NOT_INSTALLED) {
+                    no_agent = TRUE;
+                    task_status_i = PCMK_LRM_OP_ERROR;
+
+                /* 2. Tools needed by the agent are not present: check if on-fail="ignore" */
+                } else {
+                    gboolean ignore_no_tools = FALSE;
+                    const char *action_key = task_key ? task_key : id;
+
+                    action = custom_action(rsc, strdup(action_key), task, NULL, TRUE, FALSE, data_set);
+
+                    if (action->on_fail == action_fail_ignore) {
+                        ignore_no_tools = TRUE;
+                    }
+
+                    pe_free_action(action);
+                    action = NULL;
+
+                    if (ignore_no_tools == TRUE) {
+                        break; /* Process on-fail="ignore" later */
+                    }
+                }
+            }
+
         case PCMK_OCF_INVALID_PARAM:
             effective_node = node;
             if(pe_can_fence(data_set, node) == FALSE
@@ -2333,6 +2361,13 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
             }
             goto done;
+
+        } else if (no_agent == TRUE && action->on_fail == action_fail_ignore) {
+            crm_warn("Cannot ignore failed %s (status=%s, rc=%s) on %s: "
+                     "Resource agent doesn't exist",
+                     task_key, task_status, actual_rc, node->details->uname);
+            /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
+            *on_fail = action_fail_migrate;
 
         } else if ((action->on_fail == action_fail_ignore) ||
                    (action->on_fail == action_fail_restart_container &&
