@@ -1,0 +1,9 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"rsc1_monitor_10000 sles11-2" [ style=bold color="green" fontcolor="black"]
+"rsc1_start_0 sles11-2" -> "rsc1_monitor_10000 sles11-2" [ style = bold]
+"rsc1_start_0 sles11-2" [ style=bold color="green" fontcolor="black"]
+"rsc1_stop_0 sles11-1" -> "all_stopped" [ style = bold]
+"rsc1_stop_0 sles11-1" -> "rsc1_start_0 sles11-2" [ style = bold]
+"rsc1_stop_0 sles11-1" [ style=bold color="green" fontcolor="black"]
+}

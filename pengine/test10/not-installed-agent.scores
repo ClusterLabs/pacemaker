@@ -1,0 +1,7 @@
+Allocation scores:
+native_color: rsc1 allocation score on sles11-1: -INFINITY
+native_color: rsc1 allocation score on sles11-2: 0
+native_color: rsc2 allocation score on sles11-1: -INFINITY
+native_color: rsc2 allocation score on sles11-2: 0
+native_color: st_sbd allocation score on sles11-1: 1000
+native_color: st_sbd allocation score on sles11-2: 0
