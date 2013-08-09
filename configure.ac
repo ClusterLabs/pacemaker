@@ -440,7 +440,9 @@ dnl
 dnl So keep this section to a bare minimum; regard as a "necessary evil".
 
 case "$host_os" in
-*bsd*)		LIBS="-L/usr/local/lib"
+*bsd*)
+		AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
+		LIBS="-L/usr/local/lib"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 		INIT_EXT=".sh"
 		;;
@@ -708,6 +710,10 @@ if test "X$GLIBCONFIG" != X; then
 	AC_MSG_RESULT($GLIBLIB)
 	LIBS="$LIBS $GLIBLIB"
 fi
+
+dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
+AC_CHECK_LIB([compat], [ftime], [COMPAT_LIBS='-lcompat'])
+AC_SUBST(COMPAT_LIBS)
 
 dnl ========================================================================
 dnl Headers
