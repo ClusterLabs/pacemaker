@@ -2011,6 +2011,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         case PCMK_LRM_OP_ERROR:
         case PCMK_LRM_OP_PENDING:
         case PCMK_LRM_OP_NOTSUPPORTED:
+        case PCMK_LRM_OP_NOT_INSTALLED:
             break;
         case PCMK_LRM_OP_CANCELLED:
             log_level = LOG_INFO;
