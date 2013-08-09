@@ -313,7 +313,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
     }
 }
 
-static GHashTable *
+GHashTable *
 node_hash_dup(GHashTable * hash)
 {
     /* Hack! */

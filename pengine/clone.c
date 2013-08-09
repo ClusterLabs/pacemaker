@@ -385,8 +385,9 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
 {
     node_t *chosen = NULL;
     node_t *local_node = NULL;
+    GHashTable *backup = NULL;
 
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
+    pe_rsc_trace(rsc, "Processing %s %d", rsc->id, all_coloc);
 
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->fns->location(rsc, NULL, FALSE);
@@ -421,15 +422,19 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
         }
     }
 
+    backup = node_hash_dup(rsc->allowed_nodes);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen) {
         local_node = pe_hash_table_lookup(rsc->parent->allowed_nodes, chosen->details->id);
 
         if (prefer && chosen && chosen->details != prefer->details) {
-            crm_err("Pre-allocation failed: got %s instead of %s",
-                    chosen->details->uname, prefer->details->uname);
+            crm_notice("Pre-allocation failed: got %s instead of %s",
+                       chosen->details->uname, prefer->details->uname);
+            g_hash_table_destroy(rsc->allowed_nodes);
+            rsc->allowed_nodes = backup;
             native_deallocate(rsc);
             chosen = NULL;
+            backup = NULL;
 
         } else if (local_node) {
             local_node->count++;
@@ -442,6 +447,9 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
         }
     }
 
+    if(backup) {
+        g_hash_table_destroy(backup);
+    }
     return chosen;
 }
 
@@ -587,7 +595,7 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    pe_rsc_trace(rsc, "Done pre-allocating");
+    pe_rsc_trace(rsc, "Done pre-allocating (%d of %d)", allocated, clone_data->clone_max);
     g_list_free(nodes);
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
