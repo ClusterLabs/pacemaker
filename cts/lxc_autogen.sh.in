@@ -15,7 +15,7 @@ curdir=$(pwd)
 function helptext() {
 	echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
 	echo ""
-	echo "Usage: lxv-autogen [options]"
+	echo "Usage: lxc-autogen [options]"
 	echo ""
 	echo "Options:"
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
@@ -37,7 +37,7 @@ while true ; do
 	-c|--containers) containers="$2"; shift; shift;;
 	-d|--download-agent) download=1; shift;;
 	-n|--network) addr="$2"; shift; shift;;
-	-r|--restore) restore=1; shift;;
+	-r|--restore-libvirt) restore=1; shift;;
 	-p|--restore-cib) restore_pcmk=1; shift;;
 	-g|--generate) generate=1; shift;;
 	-a|--add-cib) cib=1; shift;;
