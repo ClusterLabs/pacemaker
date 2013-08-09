@@ -226,7 +226,8 @@ recurring_action_timer(gpointer data)
     return FALSE;
 }
 
-void
+/* Returns FALSE if 'op' should be free'd by the caller */
+gboolean
 operation_finalize(svc_action_t * op)
 {
     int recurring = 0;
@@ -254,7 +255,9 @@ operation_finalize(svc_action_t * op)
          * It will get freed whenever the action gets cancelled.
          */
         services_action_free(op);
+        return TRUE;
     }
+    return FALSE;
 }
 
 static void
@@ -357,6 +360,7 @@ services_handle_exec_error(svc_action_t * op, int error)
     }
 }
 
+/* Returns FALSE if 'op' should be free'd by the caller */
 gboolean
 services_os_action_execute(svc_action_t * op, gboolean synchronous)
 {
@@ -380,6 +384,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         int rc = errno;
         crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
         services_handle_exec_error(op, rc);
+        if (!synchronous) {
+            return operation_finalize(op);
+        }
         return FALSE;
     }
 
@@ -406,6 +413,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
                 crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
                 services_handle_exec_error(op, rc);
+                if (!synchronous) {
+                    return operation_finalize(op);
+                }
                 return FALSE;
             }
         case 0:                /* Child */
