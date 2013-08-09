@@ -1,0 +1,28 @@
+
+Current cluster status:
+Online: [ sles11-1 sles11-2 ]
+
+ st_sbd	(stonith:external/sbd):	Started sles11-1 
+ rsc1	(ocf::pacemaker:Dummy):	FAILED sles11-1 
+ rsc2	(ocf::pacemaker:Dummy):	FAILED sles11-1 
+
+Transition Summary:
+ * Recover rsc1	(Started sles11-1 -> sles11-2)
+ * Recover rsc2	(Started sles11-1 -> sles11-2)
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on sles11-1
+ * Resource action: rsc2            stop on sles11-1
+ * Pseudo action:   all_stopped
+ * Resource action: rsc1            start on sles11-2
+ * Resource action: rsc2            start on sles11-2
+ * Resource action: rsc1            monitor=10000 on sles11-2
+ * Resource action: rsc2            monitor=10000 on sles11-2
+
+Revised cluster status:
+Online: [ sles11-1 sles11-2 ]
+
+ st_sbd	(stonith:external/sbd):	Started sles11-1 
+ rsc1	(ocf::pacemaker:Dummy):	Started sles11-2 
+ rsc2	(ocf::pacemaker:Dummy):	Started sles11-2 
+
