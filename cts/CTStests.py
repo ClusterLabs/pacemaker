@@ -2574,6 +2574,7 @@ class RemoteSimple(CTSTest):
         return [ """Updating failcount for ping""",
                  """LogActions: Recover ping""",
                  """LogActions: Recover lxc-clone""",
+                 """LogActions: Recover container""",
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
