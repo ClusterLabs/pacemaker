@@ -73,6 +73,7 @@ class CTSTest:
         self.is_loop = 0
         self.is_unsafe = 0
         self.is_experimental = 0
+        self.is_remote = 0
         self.is_valgrind = 0
         self.benchmark = 0  # which tests to benchmark
         self.timer = {}  # timers
@@ -204,6 +205,8 @@ class CTSTest:
         elif self.is_valgrind and not self.CM.Env["valgrind-tests"]:
             return 0
         elif self.is_experimental and not self.CM.Env["experimental-tests"]:
+            return 0
+        elif self.is_remote and not self.CM.Env["remote-tests"]:
             return 0
         elif self.CM.Env["benchmark"] and self.benchmark == 0:
             return 0
@@ -2482,6 +2485,7 @@ class RemoteSimple(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
+        self.is_remote = 1
         self.failed = 0
         self.fail_string = ""
 
