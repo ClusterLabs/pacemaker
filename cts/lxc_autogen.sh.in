@@ -181,6 +181,8 @@ apply_cib_clone()
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -C -x tmp_constraint
 		rm -f tmp_constraint
 	done
 	unset CIB_file
@@ -216,6 +218,8 @@ restore_cib()
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -D -x tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
 		rm -f tmp_constraint
 	done
