@@ -53,7 +53,9 @@ typedef void gnutls_session_t;
 #endif
 
 #include <arpa/inet.h>
-#include <sgtty.h>
+#ifndef ON_BSD
+#  include <sgtty.h>
+#endif
 
 #define DH_BITS 1024
 

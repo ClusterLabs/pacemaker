@@ -31,6 +31,7 @@
 #include <lrmd_private.h>
 
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
