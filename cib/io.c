@@ -288,7 +288,9 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 static int cib_archive_filter(const struct dirent * a)
 {
     /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
-    if(a->d_type != 8) {
+    struct stat s;
+    stat(a->d_name, &s);
+    if ((s.st_mode & S_IFREG) != S_IFREG) {
         crm_trace("%s - wrong type (%d)", a->d_name, a->d_type);
         return 0;
 
