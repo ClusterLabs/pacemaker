@@ -977,7 +977,7 @@ pcmk_errorname(int rc)
         case EXDEV: return "EXDEV";
             
 #ifdef EBADE
-            /* Not available on OSX */    
+            /* Not available on OSX */
         case EBADE: return "EBADE";
         case EBADFD: return "EBADFD";
         case EBADSLT: return "EBADSLT";
@@ -985,10 +985,12 @@ pcmk_errorname(int rc)
         case EBADR: return "EBADR";
         case EBADRQC: return "EBADRQC";
         case ECHRNG: return "ECHRNG";
+#ifdef EISNAM /* Not available on Illumos/Solaris */
         case EISNAM: return "EISNAM";
         case EKEYEXPIRED: return "EKEYEXPIRED";
         case EKEYREJECTED: return "EKEYREJECTED";
         case EKEYREVOKED: return "EKEYREVOKED";
+#endif
         case EL2HLT: return "EL2HLT";
         case EL2NSYNC: return "EL2NSYNC";
         case EL3HLT: return "EL3HLT";
@@ -997,14 +999,18 @@ pcmk_errorname(int rc)
         case ELIBMAX: return "ELIBMAX";
         case ELIBSCN: return "ELIBSCN";
         case ELIBEXEC: return "ELIBEXEC";
+#ifdef ENOMEDIUM  /* Not available on Illumos/Solaris */
         case ENOMEDIUM: return "ENOMEDIUM";
         case EMEDIUMTYPE: return "EMEDIUMTYPE";
+#endif
         case ENONET: return "ENONET";
         case ENOPKG: return "ENOPKG";
         case EREMCHG: return "EREMCHG";
         case ERESTART: return "ERESTART";
         case ESTRPIPE: return "ESTRPIPE";
+#ifdef EUCLEAN  /* Not available on Illumos/Solaris */
         case EUCLEAN: return "EUCLEAN";
+#endif
         case EXFULL: return "EXFULL";
 #endif
 
