@@ -635,8 +635,9 @@ target_list_type(stonith_device_t * dev)
     return check_type;
 }
 
-static void
-schedule_internal_command(stonith_device_t * device,
+void
+schedule_internal_command(const char *origin,
+                          stonith_device_t * device,
                           const char *action,
                           const char *victim,
                           int timeout,
@@ -654,12 +655,12 @@ schedule_internal_command(stonith_device_t * device,
     cmd->action = strdup(action);
     cmd->victim = victim ? strdup(victim) : NULL;
     cmd->device = strdup(device->id);
-    cmd->origin = strdup("st_internal_cmd");
-    cmd->client = strdup("st_internal_client");
-    cmd->client_name = strdup("st_internal_client_name");
+    cmd->origin = strdup(origin);
+    cmd->client = strdup(crm_system_name);
+    cmd->client_name = strdup(crm_system_name);
 
     cmd->internal_user_data = internal_user_data;
-    cmd->done_cb = done_cb;
+    cmd->done_cb = done_cb; /* cmd, not internal_user_data, is passed to 'done_cb' as the userdata */
 
     schedule_stonith_command(cmd, device);
 }
@@ -1093,9 +1094,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
-            schedule_internal_command(dev,
-                                      "list",
-                                      NULL,
+            schedule_internal_command(__FUNCTION__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
 
             /* we'll respond to this search request async in the cb */
@@ -1107,9 +1106,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         }
 
     } else if (safe_str_eq(check_type, "status")) {
-        schedule_internal_command(dev,
-                                  "status",
-                                  search->host,
+        schedule_internal_command(__FUNCTION__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -1393,6 +1390,26 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
     }
 
     free_xml(reply);
+}
+
+void
+unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
+{
+    async_command_t * cmd = user_data;
+    stonith_device_t *dev = g_hash_table_lookup(device_list, cmd->device);
+
+    log_operation(cmd, rc, pid, NULL, output);
+
+    if(dev) {
+        dev->active_pid = 0;
+        mainloop_set_trigger(dev->work);
+    } else {
+        crm_trace("Device %s does not exist", cmd->device);
+    }
+
+    if(rc != 0) {
+        crm_exit(DAEMON_RESPAWN_STOP);
+    }
 }
 
 static void

@@ -162,6 +162,18 @@ bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
+void unfence_cb(GPid pid, int rc, const char *output, gpointer user_data);
+
+void
+schedule_internal_command(const char *origin,
+                          stonith_device_t * device,
+                          const char *action,
+                          const char *victim,
+                          int timeout,
+                          void *internal_user_data,
+                          void (*done_cb) (GPid pid, int rc, const char *output,
+                                           gpointer user_data));
+
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
