@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ ih01 ih02 ]
 
  Resource Group: group_common
-     resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih02 FAILED
+     resource_ip_common	(ocf::heartbeat:IPaddr2):	FAILED ih02 
      resource_idvscommon	(ocf::dfs:idvs):	Started ih02
 
 Transition Summary:

@@ -7,7 +7,7 @@ Online: [ TCS-2 ]
      ip_trf	(ocf::heartbeat:IPaddr2):	Started TCS-2 
      ip_mgmt	(ocf::heartbeat:IPaddr2):	Started TCS-2 
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
-     d_tomcat_nms	(ocf::ntc:tomcat):	Started TCS-2 (unmanaged) FAILED 
+     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 (unmanaged) 
      Stopped: [ TCS-1 ]
 
 Transition Summary:
@@ -29,6 +29,6 @@ Online: [ TCS-2 ]
      ip_trf	(ocf::heartbeat:IPaddr2):	Stopped 
      ip_mgmt	(ocf::heartbeat:IPaddr2):	Stopped 
  Clone Set: cl_tomcat_nms [d_tomcat_nms]
-     d_tomcat_nms	(ocf::ntc:tomcat):	Started TCS-2 (unmanaged) FAILED 
+     d_tomcat_nms	(ocf::ntc:tomcat):	FAILED TCS-2 (unmanaged) 
      Stopped: [ TCS-1 ]
 

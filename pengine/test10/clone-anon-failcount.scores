@@ -298,7 +298,7 @@ native_color: clnUMdummy01:1 allocation score on srv04: -INFINITY
 native_color: clnUMdummy02:0 allocation score on srv01: -INFINITY
 native_color: clnUMdummy02:0 allocation score on srv02: -INFINITY
 native_color: clnUMdummy02:0 allocation score on srv03: -INFINITY
-native_color: clnUMdummy02:0 allocation score on srv04: 100
+native_color: clnUMdummy02:0 allocation score on srv04: 104
 native_color: clnUMdummy02:1 allocation score on srv01: -INFINITY
 native_color: clnUMdummy02:1 allocation score on srv02: -INFINITY
 native_color: clnUMdummy02:1 allocation score on srv03: -INFINITY

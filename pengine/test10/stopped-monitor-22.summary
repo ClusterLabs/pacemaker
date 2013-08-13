@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(ocf::pacemaker:Dummy):	Started FAILED [ node1 node2 ]
+ rsc1	(ocf::pacemaker:Dummy):	FAILED [ node1 node2 ]
 
 Transition Summary:
  * Stop    rsc1	(node1)

@@ -31,6 +31,7 @@ extern "C" {
 
 #  include <glib.h>
 #  include <stdio.h>
+#  include <string.h>
 
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
@@ -59,34 +60,22 @@ enum lsb_exitcode {
     PCMK_LSB_NOT_INSTALLED       = 5,
     PCMK_LSB_NOT_CONFIGURED      = 6,
     PCMK_LSB_NOT_RUNNING         = 7,
-
-    /* 150-199	reserved for application use */
-    PCMK_LSB_SIGNAL        = 194,
-    PCMK_LSB_NOT_SUPPORTED = 195,
-    PCMK_LSB_PENDING       = 196,
-    PCMK_LSB_CANCELLED     = 197,
-    PCMK_LSB_TIMEOUT       = 198,
-    PCMK_LSB_OTHER_ERROR   = 199,
 };
 
 /* The return codes for the status operation are not the same for other
- * operatios - go figure */
+ * operatios - go figure
+ */
 enum lsb_status_exitcode {
     PCMK_LSB_STATUS_OK             = 0,
     PCMK_LSB_STATUS_VAR_PID        = 1,
     PCMK_LSB_STATUS_VAR_LOCK       = 2,
     PCMK_LSB_STATUS_NOT_RUNNING    = 3,
     PCMK_LSB_STATUS_NOT_INSTALLED  = 4,
-
-    /* 150-199 reserved for application use */
-    PCMK_LSB_STATUS_SIGNAL        = 194,
-    PCMK_LSB_STATUS_NOT_SUPPORTED = 195,
-    PCMK_LSB_STATUS_PENDING       = 196,
-    PCMK_LSB_STATUS_CANCELLED     = 197,
-    PCMK_LSB_STATUS_TIMEOUT       = 198,
-    PCMK_LSB_STATUS_OTHER_ERROR   = 199,
 };
 
+/* Uniform exit codes
+ * Everything is mapped to its OCF equivalent so that Pacemaker only deals with one set of codes
+ */
 enum ocf_exitcode {
     PCMK_OCF_OK                   = 0,
     PCMK_OCF_UNKNOWN_ERROR        = 1,
@@ -95,11 +84,14 @@ enum ocf_exitcode {
     PCMK_OCF_INSUFFICIENT_PRIV    = 4,
     PCMK_OCF_NOT_INSTALLED        = 5,
     PCMK_OCF_NOT_CONFIGURED       = 6,
-    PCMK_OCF_NOT_RUNNING          = 7,
+    PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
     PCMK_OCF_RUNNING_MASTER       = 8,
     PCMK_OCF_FAILED_MASTER        = 9,
 
+
     /* 150-199	reserved for application use */
+    PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
+    PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
     PCMK_OCF_SIGNAL        = 194,
     PCMK_OCF_NOT_SUPPORTED = 195,
     PCMK_OCF_PENDING       = 196,
@@ -114,7 +106,8 @@ enum op_status {
     PCMK_LRM_OP_CANCELLED,
     PCMK_LRM_OP_TIMEOUT,
     PCMK_LRM_OP_NOTSUPPORTED,
-    PCMK_LRM_OP_ERROR
+    PCMK_LRM_OP_ERROR,
+    PCMK_LRM_OP_NOT_INSTALLED,
 };
 
 enum nagios_exitcode {
@@ -272,29 +265,30 @@ enum nagios_exitcode {
                 case PCMK_LRM_OP_TIMEOUT:return "Timed Out";
                 case PCMK_LRM_OP_NOTSUPPORTED:return "NOT SUPPORTED";
                 case PCMK_LRM_OP_ERROR:return "Error";
+                case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
                 default:return "UNKNOWN!";
     }} static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:
-                return "OCF_OK";
+                return "ok";
             case PCMK_OCF_UNKNOWN_ERROR:
-                return "OCF_UNKNOWN_ERROR";
+                return "unknown error";
             case PCMK_OCF_INVALID_PARAM:
-                return "OCF_INVALID_PARAM";
+                return "invalid parameter";
             case PCMK_OCF_UNIMPLEMENT_FEATURE:
-                return "OCF_UNIMPLEMENT_FEATURE";
+                return "unimplemented feature";
             case PCMK_OCF_INSUFFICIENT_PRIV:
-                return "OCF_INSUFFICIENT_PRIV";
+                return "insufficient privileges";
             case PCMK_OCF_NOT_INSTALLED:
-                return "OCF_NOT_INSTALLED";
+                return "not installed";
             case PCMK_OCF_NOT_CONFIGURED:
-                return "OCF_NOT_CONFIGURED";
+                return "not configured";
             case PCMK_OCF_NOT_RUNNING:
-                return "OCF_NOT_RUNNING";
+                return "not running";
             case PCMK_OCF_RUNNING_MASTER:
-                return "OCF_RUNNING_MASTER";
+                return "master";
             case PCMK_OCF_FAILED_MASTER:
-                return "OCF_FAILED_MASTER";
+                return "master (failed)";
             case PCMK_OCF_SIGNAL:
                 return "OCF_SIGNAL";
             case PCMK_OCF_NOT_SUPPORTED:

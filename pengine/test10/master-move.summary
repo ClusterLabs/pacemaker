@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ bl460g1n13 bl460g1n14 ]
 
  Resource Group: grpDRBD
-     dummy01	(ocf::pacemaker:Dummy):	Started bl460g1n13 FAILED
+     dummy01	(ocf::pacemaker:Dummy):	FAILED bl460g1n13 
      dummy02	(ocf::pacemaker:Dummy):	Started bl460g1n13
      dummy03	(ocf::pacemaker:Dummy):	Stopped 
  Master/Slave Set: msDRBD [prmDRBD]

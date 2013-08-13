@@ -12,7 +12,7 @@ Online: [ node1 node2 ]
      Started: [ node2 ]
      Stopped: [ node1 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     imagestoreclone	(ocf::heartbeat:Filesystem):	Started node2 FAILED 
+     imagestoreclone	(ocf::heartbeat:Filesystem):	FAILED node2 
      Stopped: [ node1 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node2 ]

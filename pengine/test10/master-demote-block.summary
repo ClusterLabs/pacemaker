@@ -4,7 +4,7 @@ Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
 Online: [ dl380g5d ]
 
  Master/Slave Set: stateful [dummy]
-     dummy	(ocf::pacemaker:Stateful):	Master dl380g5c (unmanaged) FAILED 
+     dummy	(ocf::pacemaker:Stateful):	FAILED Master dl380g5c (unmanaged) 
      Slaves: [ dl380g5d ]
 
 Transition Summary:
@@ -17,6 +17,6 @@ Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
 Online: [ dl380g5d ]
 
  Master/Slave Set: stateful [dummy]
-     dummy	(ocf::pacemaker:Stateful):	Master dl380g5c (unmanaged) FAILED 
+     dummy	(ocf::pacemaker:Stateful):	FAILED Master dl380g5c (unmanaged) 
      Slaves: [ dl380g5d ]
 

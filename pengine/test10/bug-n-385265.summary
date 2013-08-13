@@ -4,7 +4,7 @@ Online: [ ih01 ih02 ]
 
  Resource Group: group_common
      resource_ip_common	(ocf::heartbeat:IPaddr2):	Started ih02
-     resource_idvscommon	(ocf::dfs:idvs):	Started ih02 FAILED
+     resource_idvscommon	(ocf::dfs:idvs):	FAILED ih02 
 
 Transition Summary:
  * Stop    resource_idvscommon	(ih02)

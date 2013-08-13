@@ -8,7 +8,7 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	Started act1
      prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	Started act1
      prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act1
-     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	Started act1 FAILED
+     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	FAILED act1 
  Resource Group: grpPostgreSQLDB2
      prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	Started act2
      prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	Started act2

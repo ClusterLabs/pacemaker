@@ -226,7 +226,8 @@ recurring_action_timer(gpointer data)
     return FALSE;
 }
 
-void
+/* Returns FALSE if 'op' should be free'd by the caller */
+gboolean
 operation_finalize(svc_action_t * op)
 {
     int recurring = 0;
@@ -254,7 +255,9 @@ operation_finalize(svc_action_t * op)
          * It will get freed whenever the action gets cancelled.
          */
         services_action_free(op);
+        return TRUE;
     }
+    return FALSE;
 }
 
 static void
@@ -310,14 +313,63 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     operation_finalize(op);
 }
 
+static void
+services_handle_exec_error(svc_action_t * op, int error)
+{
+    op->rc = PCMK_OCF_EXEC_ERROR;
+    op->status = PCMK_LRM_OP_ERROR;
+
+    /* Need to mimic the return codes for each standard as thats what we'll convert back from in get_uniform_rc() */
+    if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
+        switch (errno) {    /* see execve(2) */
+            case ENOENT:   /* No such file or directory */
+            case EISDIR:   /* Is a directory */
+                op->rc = PCMK_LSB_STATUS_NOT_INSTALLED;
+                op->status = PCMK_LRM_OP_NOT_INSTALLED;
+                break;
+            case EACCES:   /* permission denied (various errors) */
+                /* LSB status ops don't support 'not installed' */
+                break;
+        }
+
+#if SUPPORT_NAGIOS
+    } else if (safe_str_eq(op->standard, "nagios")) {
+        switch (errno) {
+            case ENOENT:   /* No such file or directory */
+            case EISDIR:   /* Is a directory */
+                op->rc = NAGIOS_NOT_INSTALLED;
+                op->status = PCMK_LRM_OP_NOT_INSTALLED;
+                break;
+            case EACCES:   /* permission denied (various errors) */
+                op->rc = NAGIOS_INSUFFICIENT_PRIV;
+                break;
+        }
+#endif
+
+    } else {
+        switch (errno) {
+            case ENOENT:   /* No such file or directory */
+            case EISDIR:   /* Is a directory */
+                op->rc = PCMK_OCF_NOT_INSTALLED; /* Valid for LSB */
+                op->status = PCMK_LRM_OP_NOT_INSTALLED;
+                break;
+            case EACCES:   /* permission denied (various errors) */
+                op->rc = PCMK_OCF_INSUFFICIENT_PRIV; /* Valid for LSB */
+                break;
+        }
+    }
+}
+
+/* Returns FALSE if 'op' should be free'd by the caller */
 gboolean
 services_os_action_execute(svc_action_t * op, gboolean synchronous)
 {
-    int rc, lpc;
+    int lpc;
     int stdout_fd[2];
     int stderr_fd[2];
     sigset_t mask;
     sigset_t old_mask;
+    struct stat st;
 
     if (pipe(stdout_fd) < 0) {
         crm_err("pipe() failed");
@@ -325,6 +377,17 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
     if (pipe(stderr_fd) < 0) {
         crm_err("pipe() failed");
+    }
+
+    /* Fail fast */
+    if(stat(op->opaque->exec, &st) != 0) {
+        int rc = errno;
+        crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+        services_handle_exec_error(op, rc);
+        if (!synchronous) {
+            return operation_finalize(op);
+        }
+        return FALSE;
     }
 
     if (synchronous) {
@@ -340,13 +403,21 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     op->pid = fork();
     switch (op->pid) {
         case -1:
-            crm_err("fork() failed");
-            close(stdout_fd[0]);
-            close(stdout_fd[1]);
-            close(stderr_fd[0]);
-            close(stderr_fd[1]);
-            return FALSE;
+            {
+                int rc = errno;
 
+                close(stdout_fd[0]);
+                close(stdout_fd[1]);
+                close(stderr_fd[0]);
+                close(stderr_fd[1]);
+
+                crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+                services_handle_exec_error(op, rc);
+                if (!synchronous) {
+                    return operation_finalize(op);
+                }
+                return FALSE;
+            }
         case 0:                /* Child */
             /* Man: The call setpgrp() is equivalent to setpgid(0,0)
              * _and_ compiles on BSD variants too
@@ -393,29 +464,9 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
             /* execute the RA */
             execvp(op->opaque->exec, op->opaque->args);
 
-            switch (errno) {    /* see execve(2) */
-                case ENOENT:   /* No such file or directory */
-                case EISDIR:   /* Is a directory */
-                    rc = PCMK_OCF_NOT_INSTALLED;
-#if SUPPORT_NAGIOS
-                    if (safe_str_eq(op->standard, "nagios")) {
-                        rc = NAGIOS_NOT_INSTALLED;
-                    }
-#endif
-                    break;
-                case EACCES:   /* permission denied (various errors) */
-                    rc = PCMK_OCF_INSUFFICIENT_PRIV;
-#if SUPPORT_NAGIOS
-                    if (safe_str_eq(op->standard, "nagios")) {
-                        rc = NAGIOS_INSUFFICIENT_PRIV;
-                    }
-#endif
-                    break;
-                default:
-                    rc = PCMK_OCF_UNKNOWN_ERROR;
-                    break;
-            }
-            _exit(rc);
+            /* Most cases should have been already handled by stat() */
+            services_handle_exec_error(op, errno);
+            _exit(op->rc);
     }
 
     /* Only the parent reaches here */

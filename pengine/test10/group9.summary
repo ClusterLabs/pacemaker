@@ -6,11 +6,11 @@ Online: [ node1 node2 ]
  rsc2	(heartbeat:apache):	Started node1
  Resource Group: foo
      rsc3	(heartbeat:apache):	Started node1
-     rsc4	(heartbeat:apache):	Started node1 FAILED
+     rsc4	(heartbeat:apache):	FAILED node1 
      rsc5	(heartbeat:apache):	Started node1
  Resource Group: bar
      rsc6	(heartbeat:apache):	Started node1
-     rsc7	(heartbeat:apache):	Started node1 FAILED
+     rsc7	(heartbeat:apache):	FAILED node1 
      rsc8	(heartbeat:apache):	Started node1
 
 Transition Summary:

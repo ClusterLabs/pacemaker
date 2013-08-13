@@ -224,7 +224,7 @@ stonith_device_execute(stonith_device_t * device)
         } else {
             crm_err("failed to get secrets for %s, "
                     "considering resource not configured", device->id);
-            exec_rc = PCMK_EXECRA_NOT_CONFIGURED;
+            exec_rc = PCMK_OCF_NOT_CONFIGURED;
             cmd->done_cb(0, exec_rc, NULL, cmd);
             return TRUE;
         }

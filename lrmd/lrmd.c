@@ -460,38 +460,38 @@ static int
 lsb2uniform_rc(const char *action, int rc)
 {
     if (rc < 0) {
-        return PCMK_EXECRA_UNKNOWN_ERROR;
+        return PCMK_OCF_UNKNOWN_ERROR;
     }
 
     /* status has different return codes that everything else. */
     if (!safe_str_eq(action, "status") && !safe_str_eq(action, "monitor")) {
         if (rc > PCMK_LSB_NOT_RUNNING) {
-            return PCMK_EXECRA_UNKNOWN_ERROR;
+            return PCMK_OCF_UNKNOWN_ERROR;
         }
         return rc;
     }
 
     switch (rc) {
         case PCMK_LSB_STATUS_OK:
-            return PCMK_EXECRA_OK;
+            return PCMK_OCF_OK;
         case PCMK_LSB_STATUS_NOT_INSTALLED:
-            return PCMK_EXECRA_NOT_INSTALLED;
+            return PCMK_OCF_NOT_INSTALLED;
         case PCMK_LSB_STATUS_VAR_PID:
         case PCMK_LSB_STATUS_VAR_LOCK:
         case PCMK_LSB_STATUS_NOT_RUNNING:
-            return PCMK_EXECRA_NOT_RUNNING;
+            return PCMK_OCF_NOT_RUNNING;
         default:
-            return PCMK_EXECRA_UNKNOWN_ERROR;
+            return PCMK_OCF_UNKNOWN_ERROR;
     }
 
-    return PCMK_EXECRA_UNKNOWN_ERROR;
+    return PCMK_OCF_UNKNOWN_ERROR;
 }
 
 static int
 ocf2uniform_rc(int rc)
 {
     if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER) {
-        return PCMK_EXECRA_UNKNOWN_ERROR;
+        return PCMK_OCF_UNKNOWN_ERROR;
     }
 
     return rc;
@@ -502,14 +502,14 @@ stonith2uniform_rc(const char *action, int rc)
 {
     if (rc == -ENODEV) {
         if (safe_str_eq(action, "stop")) {
-            rc = PCMK_EXECRA_OK;
+            rc = PCMK_OCF_OK;
         } else if (safe_str_eq(action, "start")) {
-            rc = PCMK_EXECRA_NOT_INSTALLED;
+            rc = PCMK_OCF_NOT_INSTALLED;
         } else {
-            rc = PCMK_EXECRA_NOT_RUNNING;
+            rc = PCMK_OCF_NOT_RUNNING;
         }
     } else if (rc != 0) {
-        rc = PCMK_EXECRA_UNKNOWN_ERROR;
+        rc = PCMK_OCF_UNKNOWN_ERROR;
     }
     return rc;
 }
@@ -519,25 +519,25 @@ static int
 nagios2uniform_rc(const char *action, int rc)
 {
     if (rc < 0) {
-        return PCMK_EXECRA_UNKNOWN_ERROR;
+        return PCMK_OCF_UNKNOWN_ERROR;
     }
 
     switch (rc) {
         case NAGIOS_STATE_OK:
-            return PCMK_EXECRA_OK;
+            return PCMK_OCF_OK;
         case NAGIOS_INSUFFICIENT_PRIV:
-            return PCMK_EXECRA_INSUFFICIENT_PRIV;
+            return PCMK_OCF_INSUFFICIENT_PRIV;
         case NAGIOS_NOT_INSTALLED:
-            return PCMK_EXECRA_NOT_INSTALLED;
+            return PCMK_OCF_NOT_INSTALLED;
         case NAGIOS_STATE_WARNING:
         case NAGIOS_STATE_CRITICAL:
         case NAGIOS_STATE_UNKNOWN:
         case NAGIOS_STATE_DEPENDENT:
         default:
-            return PCMK_EXECRA_UNKNOWN_ERROR;
+            return PCMK_OCF_UNKNOWN_ERROR;
     }
 
-    return PCMK_EXECRA_UNKNOWN_ERROR;
+    return PCMK_OCF_UNKNOWN_ERROR;
 }
 #endif
 
@@ -605,11 +605,11 @@ action_complete(svc_action_t * action)
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, "nagios")) {
         if (safe_str_eq(cmd->action, "monitor") &&
-            cmd->interval == 0 && cmd->exec_rc == PCMK_EXECRA_OK) {
+            cmd->interval == 0 && cmd->exec_rc == PCMK_OCF_OK) {
             /* Successfully executed --version for the nagios plugin */
-            cmd->exec_rc = PCMK_EXECRA_NOT_RUNNING;
+            cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
-        } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_EXECRA_OK) {
+        } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_OCF_OK) {
             int time_sum = 0;
             int timeout_left = 0;
             int delay = cmd->timeout_orig / 10;
@@ -841,7 +841,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
     if (safe_str_eq(rsc->class, "nagios") && safe_str_eq(cmd->action, "stop")) {
-        cmd->exec_rc = PCMK_EXECRA_OK;
+        cmd->exec_rc = PCMK_OCF_OK;
         goto exec_done;
     }
 #endif
@@ -881,7 +881,11 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     cmd->exec_rc = action->rc;
-    cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+    if(action->status != PCMK_LRM_OP_DONE) {
+        cmd->lrmd_op_status = action->status;
+    } else {
+        cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+    }
     services_action_free(action);
     action = NULL;
 

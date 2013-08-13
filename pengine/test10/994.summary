@@ -6,7 +6,7 @@ Online: [ paul ]
      datadisk_1	(heartbeat:datadisk):	Started paul
      Filesystem_2	(ocf::heartbeat:Filesystem):	Started paul
      IPaddr_5	(ocf::heartbeat:IPaddr):	Started paul
-     postfix_9	(lsb:postfix):	Started paul FAILED
+     postfix_9	(lsb:postfix):	FAILED paul 
 
 Transition Summary:
  * Recover postfix_9	(Started paul)

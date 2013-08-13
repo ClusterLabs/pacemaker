@@ -48,6 +48,6 @@ GList *resources_os_list_nagios_agents(void);
 gboolean cancel_recurring_action(svc_action_t * op);
 
 gboolean recurring_action_timer(gpointer data);
-void operation_finalize(svc_action_t * op);
+gboolean operation_finalize(svc_action_t * op);
 
 #endif                          /* __MH_SERVICES_PRIVATE_H__ */

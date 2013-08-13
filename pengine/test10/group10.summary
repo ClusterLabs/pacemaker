@@ -4,7 +4,7 @@ Online: [ c001n01 c001n02 c001n03 c001n08 ]
 
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n08
  Resource Group: group-1
-     child_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n01 FAILED
+     child_192.168.100.181	(ocf::heartbeat:IPaddr):	FAILED c001n01 
      child_192.168.100.182	(ocf::heartbeat:IPaddr):	Started c001n01
      child_192.168.100.183	(ocf::heartbeat:IPaddr):	Started c001n01
  rsc_c001n08	(ocf::heartbeat:IPaddr):	Started c001n08

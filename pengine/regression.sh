@@ -66,6 +66,7 @@ do_test bug-lf-2619 "Move group on clone failure"
 do_test group-fail "Ensure stop order is preserved for partially active groups"
 do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
 do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
+do_test group-dependants "Account for the location preferences of things colocated with a group"
 
 echo ""
 do_test rsc_dep1 "Must not     "
@@ -509,6 +510,10 @@ echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
+
+echo ""
+do_test not-installed-agent "The resource agent is missing"
+do_test not-installed-tools "Something the resource agent needs is missing"
 
 echo ""
 do_test stopped-monitor-00	"Stopped Monitor - initial start"

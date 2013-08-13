@@ -1,0 +1,49 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="rsc1_monitor_10000" on_node="sles11-2" on_node_uuid="sles11-2">
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rsc1_start_0" on_node="sles11-2" on_node_uuid="sles11-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="11" operation="start" operation_key="rsc1_start_0" on_node="sles11-2" on_node_uuid="sles11-2">
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="stop" operation_key="rsc1_stop_0" on_node="sles11-1" on_node_uuid="sles11-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="3" operation="stop" operation_key="rsc1_stop_0" on_node="sles11-1" on_node_uuid="sles11-1">
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.7"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="stop" operation_key="rsc1_stop_0" on_node="sles11-1" on_node_uuid="sles11-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

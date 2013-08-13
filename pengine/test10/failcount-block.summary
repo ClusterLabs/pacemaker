@@ -4,7 +4,7 @@ Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 ]
 
  rsc_pcmk-1	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
- rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	Started pcmk-1 (unmanaged) FAILED 
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	FAILED pcmk-1 (unmanaged) 
  rsc_pcmk-3	(ocf::heartbeat:IPaddr2):	Stopped 
  rsc_pcmk-4	(ocf::heartbeat:IPaddr2):	Stopped 
  rsc_pcmk-5	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
@@ -28,7 +28,7 @@ Online: [ pcmk-1 ]
 OFFLINE: [ pcmk-4 ]
 
  rsc_pcmk-1	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
- rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	Started pcmk-1 (unmanaged) FAILED 
+ rsc_pcmk-2	(ocf::heartbeat:IPaddr2):	FAILED pcmk-1 (unmanaged) 
  rsc_pcmk-3	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
  rsc_pcmk-4	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
  rsc_pcmk-5	(ocf::heartbeat:IPaddr2):	Started pcmk-1 

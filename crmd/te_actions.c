@@ -465,7 +465,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         && safe_str_neq(task, CRMD_ACTION_DELETE)) {
         /* write a "pending" entry to the CIB, inhibit notification */
         crm_debug("Recording pending op %s in the CIB", task_uuid);
-        cib_action_update(action, PCMK_LRM_OP_PENDING, PCMK_EXECRA_STATUS_UNKNOWN);
+        cib_action_update(action, PCMK_LRM_OP_PENDING, PCMK_OCF_UNKNOWN);
     }
 
     return TRUE;

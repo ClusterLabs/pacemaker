@@ -87,7 +87,7 @@ class Test:
 			self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
 
 		if self.verbose:
-			additional_args = additional_args + " -VV "
+			additional_args = additional_args + " -V"
 
 		self.lrmd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/lrmd-regression.log" % (self.daemon_location, additional_args)))
 
@@ -629,7 +629,7 @@ if __name__ == "__main__":
 			test.add_cmd("-c register_rsc -r \"test_rsc\" -C systemd -T this_is_fake1234 -t 3000 "
 				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 3000 "
-				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed\" ")
 			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 3000 "
 				     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -638,7 +638,7 @@ if __name__ == "__main__":
 			test.add_cmd("-c register_rsc -r \"test_rsc\" -C upstart -T this_is_fake1234 -t 3000 "
 				     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 			test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 3000 "
-				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
+				     "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed\" ")
 			test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 3000 "
 				     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -647,7 +647,7 @@ if __name__ == "__main__":
 		test.add_cmd("-c register_rsc -r \"test_rsc\" -C ocf -P pacemaker -T this_is_fake1234 -t 3000 "
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 3000 "
-			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed\" ")
 		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 3000 "
 			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -656,7 +656,7 @@ if __name__ == "__main__":
 		test.add_cmd("-c register_rsc -r \"test_rsc\" -C ocf -P pancakes -T Dummy -t 3000 "
 			"-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 		test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 3000 "
-			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:complete\" ")
+			"-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed\" ")
 		test.add_cmd("-c unregister_rsc -r \"test_rsc\" -t 3000 "
 			"-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 

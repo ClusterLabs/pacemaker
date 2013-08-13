@@ -23,6 +23,7 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
+#include <crm/services.h>
 
 /* #define DELETE_THEN_REFRESH 1  // The crmd will remove the resource from the CIB itself, making this redundant */
 #define INFINITY_HACK   (INFINITY * -100)
@@ -364,6 +365,15 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
         }
         clear_bit(flags, pe_weights_init);
 
+    } else if (rsc->variant == pe_group && rsc->children) {
+        GListPtr iter = rsc->children;
+
+        pe_rsc_trace(rsc, "%s: Combining scores from %d children of %s", rhs, g_list_length(iter), rsc->id);
+        work = node_hash_dup(nodes);
+        for(iter = rsc->children; iter->next != NULL; iter = iter->next) {
+            work = rsc_merge_weights(iter->data, rhs, work, attr, factor, flags);
+        }
+
     } else {
         pe_rsc_trace(rsc, "%s: Combining scores from %s", rhs, rsc->id);
         work = node_hash_dup(nodes);
@@ -383,8 +393,22 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
         if (is_set(flags, pe_weights_forward)) {
             gIter = rsc->rsc_cons;
+            crm_trace("Checking %d additional colocation constraints", g_list_length(gIter));
+
+        } else if(rsc->variant == pe_group && rsc->children) {
+            GListPtr last = rsc->children;
+
+            while (last->next != NULL) {
+                last = last->next;
+            }
+
+            gIter = ((resource_t*)last->data)->rsc_cons_lhs;
+            crm_trace("Checking %d additional optional group colocation constraints from %s",
+                      g_list_length(gIter), ((resource_t*)last->data)->id);
+
         } else {
             gIter = rsc->rsc_cons_lhs;
+            crm_trace("Checking %d additional optional colocation constraints %s", g_list_length(gIter), rsc->id);
         }
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -760,7 +784,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     }
 
     if (rsc->next_role == RSC_ROLE_MASTER) {
-        char *running_master = crm_itoa(PCMK_EXECRA_RUNNING_MASTER);
+        char *running_master = crm_itoa(PCMK_OCF_RUNNING_MASTER);
 
         add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
         free(running_master);
@@ -926,7 +950,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
         stopped_mon = custom_action(rsc, strdup(key), name, stop_node, is_optional, TRUE, data_set);
 
-        rc_inactive = crm_itoa(PCMK_EXECRA_NOT_RUNNING);
+        rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
         add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
         free(rc_inactive);
 
@@ -2377,8 +2401,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     static const char *rc_inactive = NULL;
 
     if (rc_inactive == NULL) {
-        rc_inactive = crm_itoa(PCMK_EXECRA_NOT_RUNNING);
-        rc_master = crm_itoa(PCMK_EXECRA_RUNNING_MASTER);
+        rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
+        rc_master = crm_itoa(PCMK_OCF_RUNNING_MASTER);
     }
 
     CRM_CHECK(node != NULL, return FALSE);

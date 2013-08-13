@@ -211,7 +211,7 @@ retry_start_cmd_cb(gpointer data)
     }
 
     if (rc != 0) {
-        cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->op_status = PCMK_LRM_OP_ERROR;
         report_remote_ra_result(cmd);
 
@@ -236,7 +236,7 @@ monitor_timeout_cb(gpointer data)
     crm_debug("Poke async response timed out for node %s", cmd->rsc_id);
     cmd->monitor_timeout_id = 0;
     cmd->op_status = PCMK_LRM_OP_TIMEOUT;
-    cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+    cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
     lrm_state = lrm_state_find(cmd->rsc_id);
     if (lrm_state && lrm_state->remote_ra_data) {
@@ -291,7 +291,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
               lrmd_event_type2str(op->type),
               op->remote_nodename,
               op->op_type ? op->op_type : "none",
-              lrmd_event_rc2str(op->rc), services_lrm_status_str(op->op_status));
+              services_ocf_exitcode_str(op->rc), services_lrm_status_str(op->op_status));
 
     /* filter all EXEC events up */
     if (op->type == lrmd_event_exec_complete) {
@@ -329,13 +329,13 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                           cmd->remaining_timeout);
             }
             cmd->op_status = PCMK_LRM_OP_TIMEOUT;
-            cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+            cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
             /* make sure we have a clean status section to start with */
             remote_init_cib_status(lrm_state);
 
-            cmd->rc = PCMK_EXECRA_OK;
+            cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
         }
 
@@ -358,7 +358,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
          * For this function, if we get the poke pack, it is always a success. Pokes
          * only fail if the send fails, or the response times out. */
         if (!cmd->reported_success) {
-            cmd->rc = PCMK_EXECRA_OK;
+            cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
             cmd->reported_success = 1;
@@ -448,7 +448,7 @@ handle_remote_ra_exec(gpointer user_data)
                 return TRUE;
             } else {
                 crm_debug("connect failed, not expecting to match any connection event later");
-                cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+                cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
                 cmd->op_status = PCMK_LRM_OP_ERROR;
             }
             report_remote_ra_result(cmd);
@@ -458,13 +458,13 @@ handle_remote_ra_exec(gpointer user_data)
             if (lrm_state_is_connected(lrm_state) == TRUE) {
                 rc = lrm_state_poke_connection(lrm_state);
                 if (rc < 0) {
-                    cmd->rc = PCMK_EXECRA_UNKNOWN_ERROR;
+                    cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
                     cmd->op_status = PCMK_LRM_OP_ERROR;
                 }
             } else {
                 rc = -1;
                 cmd->op_status = PCMK_LRM_OP_DONE;
-                cmd->rc = PCMK_EXECRA_NOT_RUNNING;
+                cmd->rc = PCMK_OCF_NOT_RUNNING;
             }
 
             if (rc == 0) {
@@ -477,7 +477,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (!strcmp(cmd->action, "stop")) {
             lrm_state_disconnect(lrm_state);
-            cmd->rc = PCMK_EXECRA_OK;
+            cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
 
             if (ra_data->cmds) {
@@ -492,7 +492,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (!strcmp(cmd->action, "migrate_to")) {
             /* no-op. */
-            cmd->rc = PCMK_EXECRA_OK;
+            cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
         }

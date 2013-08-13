@@ -4,7 +4,7 @@ Node node2 (uuid2): UNCLEAN (online)
 Online: [ node1 ]
 
  stonith-1	(stonith:dummy):	Stopped 
- rsc1	(heartbeat:apache):	Started node2 FAILED
+ rsc1	(heartbeat:apache):	FAILED node2 
  rsc2	(heartbeat:apache):	Started node2
 
 Transition Summary:

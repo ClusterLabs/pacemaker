@@ -24,7 +24,7 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
      prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
  Clone Set: clnPingd [prmPingd]
-     prmPingd	(ocf::pacemaker:ping):	Started act1 FAILED 
+     prmPingd	(ocf::pacemaker:ping):	FAILED act1 
      Started: [ act2 act3 sby1 sby2 ]
 
 Transition Summary:
