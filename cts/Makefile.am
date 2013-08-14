@@ -38,7 +38,7 @@ ctslib_PYTHON	=	__init__.py		\
 
 cts_DATA	=	README cts.supp
 
-cts_SCRIPTS	=	cluster_test		\
+cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
 			LSBDummy		\
