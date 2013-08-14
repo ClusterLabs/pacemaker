@@ -19,6 +19,8 @@ build=0
 kill=0
 run=0
 boot=0
+setup=0
+target=rhel-7
 
 custom_log=""
 patterns="-e CTS:"
@@ -50,6 +52,23 @@ while true; do
 	--boot|boot|start) boot=1; clean=1; shift; break;;
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
+	--setup|setup) setup=1; shift;;
+
+	[0-9][0-9]|rhel|r*[0-9]|f*[0-9][0-9])
+	    case $1 in
+		[0-9][0-9]|f*|fedora*)
+		    target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
+		    ;;
+		r|rhel)
+		    target="rhel-7"
+		    ;;
+		r*|rhel*)
+		    target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
+		    ;;
+		*) target=`rpm --eval fedora-%{fedora}`;;
+	    esac
+	    shift
+	    ;;
 	local-init)
 	    local_root=
 	    case $cts_root in
@@ -185,6 +204,10 @@ if [ $boot = 1 ]; then
 elif [ $run = 1 ]; then
     $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
     exit $?
+
+elif [ $setup = 1 ]; then
+    cluster-init -g $cluster_name $target -u --test
+    exit 0
 
 elif [ $clean = 1 ]; then
     exit 0
