@@ -321,7 +321,7 @@ services_handle_exec_error(svc_action_t * op, int error)
 
     /* Need to mimic the return codes for each standard as thats what we'll convert back from in get_uniform_rc() */
     if (safe_str_eq(op->standard, "lsb") && safe_str_eq(op->action, "status")) {
-        switch (errno) {    /* see execve(2) */
+        switch (error) {    /* see execve(2) */
             case ENOENT:   /* No such file or directory */
             case EISDIR:   /* Is a directory */
                 op->rc = PCMK_LSB_STATUS_NOT_INSTALLED;
@@ -334,7 +334,7 @@ services_handle_exec_error(svc_action_t * op, int error)
 
 #if SUPPORT_NAGIOS
     } else if (safe_str_eq(op->standard, "nagios")) {
-        switch (errno) {
+        switch (error) {
             case ENOENT:   /* No such file or directory */
             case EISDIR:   /* Is a directory */
                 op->rc = NAGIOS_NOT_INSTALLED;
@@ -347,7 +347,7 @@ services_handle_exec_error(svc_action_t * op, int error)
 #endif
 
     } else {
-        switch (errno) {
+        switch (error) {
             case ENOENT:   /* No such file or directory */
             case EISDIR:   /* Is a directory */
                 op->rc = PCMK_OCF_NOT_INSTALLED; /* Valid for LSB */
