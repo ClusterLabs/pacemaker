@@ -171,6 +171,15 @@ if [ -z $dsh_group ]; then
     dsh_group=1
 fi
 
+for h in $host_list; do
+    ping -c 1 -q $h
+    if [ $? != 0 ]; then
+	echo "Using long names..."
+	host_list=`cluster-helper --list long $host_input`
+	break
+    fi
+done
+
 if [ -z $CTYPE ]; then
     echo ""
     read -p "Where should Pacemaker obtain membership and quorum from? [corosync] (corosync, cman, plugin, openais, heartbeat) " -t 60 CTYPE
@@ -201,7 +210,7 @@ function get_defaults()
     fi
 
     if [ -z $SELINUX ]; then
-	SELINUX="Yes"
+	SELINUX="No"
     fi
 
     if [ -z $IPTABLES ]; then
@@ -215,7 +224,7 @@ function get_defaults()
 	INSTALL="Yes"
     fi
     if [ -z $DATE ]; then
-	DATE="Yes"
+	DATE="No"
     fi
 }
 
@@ -349,7 +358,7 @@ fatal() {
 }
 
 case $SELINUX in
-    [Yy][Ee][Ss]|[Yy]|"")
+    [Yy][Ee][Ss]|[Yy])
 	sed -i.sed "s/enforcing/disabled/g" /etc/selinux/config
 	;;
 esac
