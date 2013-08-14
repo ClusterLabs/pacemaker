@@ -2024,69 +2024,427 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
-gboolean
-unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
-              enum action_fail_response * on_fail, pe_working_set_t * data_set)
+static void
+unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set) 
 {
+                
+    /*
+     * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
+     *
+     * So if a migrate_to is followed by a stop, then we dont need to care what
+     * happended on the target node
+     *
+     * Without the stop, we need to look for a successful migrate_from.
+     * This would also imply we're no longer running on the source
+     *
+     * Without the stop, and without a migrate_from op we make sure the resource
+     * gets stopped on both source and target (assuming the target is up)
+     *
+     */
+    int stop_id = 0;
     int task_id = 0;
+    xmlNode *stop_op =
+        find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id, NULL, data_set);
 
-    const char *id = NULL;
-    const char *key = NULL;
-    const char *task = NULL;
-    const char *task_key = NULL;
-    const char *magic = NULL;
-    const char *actual_rc = NULL;
-
-/* 	const char *target_rc   = NULL;	 */
-    const char *task_status = NULL;
-    const char *interval_s = NULL;
-    const char *op_version = NULL;
-
-    int interval = 0;
-    int task_status_i = -2;
-    int actual_rc_i = 0;
-    int target_rc = -1;
-    time_t last_failure = 0;
-    int clear_failcount = 0;
-
-    action_t *action = NULL;
-    node_t *effective_node = NULL;
-    resource_t *failed = NULL;
-
-    gboolean expired = FALSE;
-    gboolean is_probe = FALSE;
-    gboolean clear_past_failure = FALSE;
-    gboolean stop_failure_ignored = FALSE;
-    gboolean no_agent = FALSE;
-
-    CRM_CHECK(rsc != NULL, return FALSE);
-    CRM_CHECK(node != NULL, return FALSE);
-    CRM_CHECK(xml_op != NULL, return FALSE);
-
-    id = ID(xml_op);
-    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    task_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
-    magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
-    key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
-    actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+    if (stop_op) {
+        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+    }
 
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
 
-    CRM_CHECK(id != NULL, return FALSE);
-    CRM_CHECK(task != NULL, return FALSE);
-    CRM_CHECK(task_status != NULL, return FALSE);
+    if (stop_op == NULL || stop_id < task_id) {
+        int from_rc = 0, from_status = 0;
+        const char *migrate_source =
+            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+        const char *migrate_target =
+            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-    task_status_i = crm_parse_int(task_status, NULL);
+        node_t *target = pe_find_node(data_set->nodes, migrate_target);
+        node_t *source = pe_find_node(data_set->nodes, migrate_source);
+        xmlNode *migrate_from =
+            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
+                        data_set);
 
-    CRM_CHECK(task_status_i <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
-    CRM_CHECK(task_status_i >= PCMK_LRM_OP_PENDING, return FALSE);
+        rsc->role = RSC_ROLE_STARTED;       /* can be master? */
+        if (migrate_from) {
+            crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+            crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
+            pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
+                         ID(migrate_from), migrate_target, from_status, from_rc);
+        }
 
-    if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
-        /* safe to ignore these */
-        return TRUE;
+        if (migrate_from && from_rc == PCMK_OCF_OK
+            && from_status == PCMK_LRM_OP_DONE) {
+            pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
+                         migrate_source);
+
+            /* all good
+             * just need to arrange for the stop action to get sent
+             * but _without_ affecting the target somehow
+             */
+            rsc->role = RSC_ROLE_STOPPED;
+            rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+
+        } else if (migrate_from) {  /* Failed */
+            if (target && target->details->online) {
+                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                             target->details->online);
+                native_add_running(rsc, target, data_set);
+            }
+
+        } else {    /* Pending or complete but erased */
+            node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+
+            if (target && target->details->online) {
+                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                             target->details->online);
+
+                native_add_running(rsc, target, data_set);
+                if (source && source->details->online) {
+                    /* If we make it here we have a partial migration.  The migrate_to
+                     * has completed but the migrate_from on the target has not. Hold on
+                     * to the target and source on the resource. Later on if we detect that
+                     * the resource is still going to run on that target, we may continue
+                     * the migration */
+                    rsc->partial_migration_target = target;
+                    rsc->partial_migration_source = source;
+                }
+            } else {
+                /* Consider it failed here - forces a restart, prevents migration */
+                set_bit(rsc->flags, pe_rsc_failed);
+            }
+        }
     }
+}
+
+static void
+unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set) 
+{
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+
+    if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        int stop_id = 0;
+        int migrate_id = 0;
+        const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+        const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+        xmlNode *stop_op =
+            find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_source, NULL, data_set);
+        xmlNode *migrate_op =
+            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE, migrate_source, migrate_target,
+                        data_set);
+
+        if (stop_op) {
+            crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+        }
+        if (migrate_op) {
+            crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
+        }
+
+        /* Get our state right */
+        rsc->role = RSC_ROLE_STARTED;   /* can be master? */
+
+        if (stop_op == NULL || stop_id < migrate_id) {
+            node_t *source = pe_find_node(data_set->nodes, migrate_source);
+
+            if (source && source->details->online) {
+                native_add_running(rsc, source, data_set);
+            }
+        }
+
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+        int stop_id = 0;
+        int migrate_id = 0;
+        const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+        const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+        xmlNode *stop_op =
+            find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_target, NULL, data_set);
+        xmlNode *migrate_op =
+            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
+                        data_set);
+
+        if (stop_op) {
+            crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+        }
+        if (migrate_op) {
+            crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
+        }
+
+        /* Get our state right */
+        rsc->role = RSC_ROLE_STARTED;   /* can be master? */
+
+        if (stop_op == NULL || stop_id < migrate_id) {
+            node_t *target = pe_find_node(data_set->nodes, migrate_target);
+
+            pe_rsc_trace(rsc, "Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op,
+                         migrate_id);
+            if (target && target->details->online) {
+                native_add_running(rsc, target, data_set);
+            }
+
+        } else if (migrate_op == NULL) {
+            /* Make sure it gets cleaned up, the stop may pre-date the migrate_from */
+            rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+        }
+    }
+}
+
+static const char *get_op_key(xmlNode *xml_op)
+{
+    const char *key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    if(key == NULL) {
+        key = ID(xml_op);
+    }
+    return key;
+}
+
+static void
+unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, enum action_fail_response *on_fail, pe_working_set_t * data_set) 
+{
+    int interval = 0;
+    bool is_probe = FALSE;
+    action_t *action = NULL;
+
+    const char *key = get_op_key(xml_op);
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+
+    crm_warn("Processing failed op %s for %s on %s: %s (%d)",
+             task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
+             rc);
+
+    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+    if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        is_probe = TRUE;
+        pe_rsc_trace(rsc, "is a probe: %s", key);
+    }
+
+    if (rc != PCMK_OCF_NOT_INSTALLED || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+        if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+            add_node_copy(data_set->failed, xml_op);
+        }
+    }
+
+    crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+        add_node_copy(data_set->failed, xml_op);
+    }
+
+    action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
+    if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
+        (action->on_fail == action_fail_restart_container
+         && *on_fail <= action_fail_recover) || (*on_fail == action_fail_restart_container
+                                                 && action->on_fail >=
+                                                 action_fail_migrate)) {
+        pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)", fail2text(*on_fail),
+                     fail2text(action->on_fail), action->uuid, key);
+        *on_fail = action->on_fail;
+    }
+
+    if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+        resource_location(rsc, node, -INFINITY, "__stop_fail__", data_set);
+
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        unpack_rsc_migration_failure(rsc, node, xml_op, data_set);
+
+    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+        rsc->role = RSC_ROLE_MASTER;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+        /*
+         * staying in role=master ends up putting the PE/TE into a loop
+         * setting role=slave is not dangerous because no master will be
+         * promoted until the failed resource has been fully stopped
+         */
+        rsc->next_role = RSC_ROLE_STOPPED;
+        if (action->on_fail == action_fail_block) {
+            rsc->role = RSC_ROLE_MASTER;
+
+        } else {
+            crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
+            rsc->role = RSC_ROLE_SLAVE;
+        }
+
+    } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
+        crm_warn("Compatibility handling for failed op %s on %s", key, node->details->uname);
+        resource_location(rsc, node, -INFINITY, "__legacy_start__", data_set);
+    }
+
+    if(is_probe && rc == PCMK_OCF_NOT_INSTALLED) {
+        /* leave stopped */
+        pe_rsc_trace(rsc, "Leaving %s stopped", rsc->id);
+        rsc->role = RSC_ROLE_STOPPED;
+
+    } else if (rsc->role < RSC_ROLE_STARTED) {
+        pe_rsc_trace(rsc, "Setting %s active", rsc->id);
+        set_active(rsc);
+    }
+
+    pe_rsc_trace(rsc, "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
+                 rsc->id, role2text(rsc->role),
+                 node->details->unclean ? "true" : "false",
+                 fail2text(action->on_fail), role2text(action->fail_role));
+
+    if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {
+        rsc->next_role = action->fail_role;
+    }
+
+    if (action->fail_role == RSC_ROLE_STOPPED) {
+        int score = -INFINITY;
+
+        resource_t *fail_rsc = rsc;
+
+        if (fail_rsc->parent) {
+            resource_t *parent = uber_parent(fail_rsc);
+
+            if ((parent->variant == pe_clone || parent->variant == pe_master)
+                && is_not_set(parent->flags, pe_rsc_unique)) {
+                /* for clone and master resources, if a child fails on an operation
+                 * with on-fail = stop, all the resources fail.  Do this by preventing
+                 * the parent from coming up again. */
+                fail_rsc = parent;
+            }
+        }
+        crm_warn("Making sure %s doesn't come up again", fail_rsc->id);
+        /* make sure it doesnt come up again */
+        g_hash_table_destroy(fail_rsc->allowed_nodes);
+        fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+        g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
+    }
+
+    pe_free_action(action);
+}
+
+static int
+determine_op_status(
+    resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
+{
+    int interval = 0;
+    int result = PCMK_LRM_OP_DONE;
+
+    const char *key = get_op_key(xml_op);
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+
+    bool is_probe = FALSE;
+
+    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+    if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        is_probe = TRUE;
+    }
+
+    if (target_rc >= 0 && target_rc != rc) {
+        result = PCMK_LRM_OP_ERROR;
+        pe_rsc_debug(rsc, "%s on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
+                     key, node->details->uname,
+                     services_ocf_exitcode_str(rc), rc,
+                     services_ocf_exitcode_str(target_rc), target_rc);
+    }
+    
+    /* we could clean this up significantly except for old LRMs and CRMs that
+     * didnt include target_rc and liked to remap status
+     */
+    switch (rc) {
+        case PCMK_OCF_OK:
+            if (is_probe && target_rc == 7) {
+                result = PCMK_LRM_OP_DONE;
+                pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
+                            task, rsc->id, node->details->uname);
+
+                /* legacy code for pre-0.6.5 operations */
+            } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
+                /* catch status ops that return 0 instead of 8 while they
+                 *   are supposed to be in master mode
+                 */
+                result = PCMK_LRM_OP_ERROR;
+            }
+            break;
+
+        case PCMK_OCF_NOT_RUNNING:
+            if (is_probe || target_rc == rc) {
+                result = PCMK_LRM_OP_DONE;
+                rsc->role = RSC_ROLE_STOPPED;
+
+                /* clear any previous failure actions */
+                *on_fail = action_fail_ignore;
+                rsc->next_role = RSC_ROLE_UNKNOWN;
+
+            } else if (safe_str_neq(task, CRMD_ACTION_STOP)) {
+                result = PCMK_LRM_OP_ERROR;
+            }
+            break;
+
+        case PCMK_OCF_RUNNING_MASTER:
+            if (is_probe) {
+                result = PCMK_LRM_OP_DONE;
+                crm_notice("Operation %s found resource %s active in master mode on %s",
+                           task, rsc->id, node->details->uname);
+
+            } else if (target_rc == rc) {
+                /* nothing to do */
+
+            } else if (target_rc >= 0) {
+                result = PCMK_LRM_OP_ERROR;
+
+                /* legacy code for pre-0.6.5 operations */
+            } else if (safe_str_neq(task, CRMD_ACTION_STATUS)
+                       || rsc->role != RSC_ROLE_MASTER) {
+                result = PCMK_LRM_OP_ERROR;
+                if (rsc->role != RSC_ROLE_MASTER) {
+                    crm_err("%s reported %s in master mode on %s",
+                            key, rsc->id, node->details->uname);
+                }
+            }
+            rsc->role = RSC_ROLE_MASTER;
+            break;
+
+        case PCMK_OCF_FAILED_MASTER:
+            rsc->role = RSC_ROLE_MASTER;
+            result = PCMK_LRM_OP_ERROR;
+            break;
+
+        case PCMK_OCF_NOT_CONFIGURED:
+            result = PCMK_LRM_OP_ERROR_FATAL;
+            break;
+
+        case PCMK_OCF_NOT_INSTALLED:
+        case PCMK_OCF_INVALID_PARAM:
+        case PCMK_OCF_INSUFFICIENT_PRIV:
+        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && interval > 0) {
+                result = PCMK_LRM_OP_NOTSUPPORTED;
+                break;
+
+            } else if(pe_can_fence(data_set, node) == FALSE
+               && safe_str_eq(task, CRMD_ACTION_STOP)) {
+                /* If a stop fails and we can't fence, there's nothing else we can do */
+                pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
+                            rsc->id, task, services_ocf_exitcode_str(rc), rc);
+                clear_bit(rsc->flags, pe_rsc_managed);
+                set_bit(rsc->flags, pe_rsc_block);
+            }
+            result = PCMK_LRM_OP_ERROR_HARD;
+            break;
+
+        default:
+            if (result == PCMK_LRM_OP_DONE) {
+                crm_info("Treating %s (rc=%d) on %s as an ERROR",
+                         key, rc, node->details->uname);
+                result = PCMK_LRM_OP_ERROR;
+            }
+    }
+
+    return result;
+}
+
+static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, pe_working_set_t * data_set)
+{
+    bool expired = FALSE;
+    time_t last_failure = 0;
+    int clear_failcount = 0;
+    int interval = 0;
+    const char *key = get_op_key(xml_op);
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
     if (rsc->failure_timeout > 0) {
         int last_run = 0;
@@ -2100,55 +2458,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         }
     }
 
-    pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%s, rc=%s) on %s (role=%s)",
-                 id, task, task_id, task_status, actual_rc, node->details->uname, role2text(rsc->role));
-
-    interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-    interval = crm_parse_int(interval_s, "0");
-
-    if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-        is_probe = TRUE;
-    }
-
-    if (node->details->unclean) {
-        pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
-                     " Further action depends on the value of the stop's on-fail attribue",
-                     node->details->uname, rsc->id);
-    }
-
-    CRM_CHECK(actual_rc != NULL, return FALSE);
-    actual_rc_i = crm_parse_int(actual_rc, NULL);
-
-    if (key) {
-        int dummy = 0;
-        char *dummy_string = NULL;
-
-        decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
-        free(dummy_string);
-    }
-
-    if (task_status_i == PCMK_LRM_OP_DONE && target_rc >= 0) {
-        if (target_rc == actual_rc_i) {
-            task_status_i = PCMK_LRM_OP_DONE;
-
-        } else {
-            task_status_i = PCMK_LRM_OP_ERROR;
-            pe_rsc_debug(rsc, "%s on %s returned %d (%s) instead of the expected value: %d (%s)",
-                         id, node->details->uname,
-                         actual_rc_i, services_ocf_exitcode_str(actual_rc_i),
-                         target_rc, services_ocf_exitcode_str(target_rc));
-        }
-
-    } else if (task_status_i == PCMK_LRM_OP_ERROR 
-               && actual_rc_i != PCMK_OCF_NOT_INSTALLED) {
-        /* let us decide that */
-        task_status_i = PCMK_LRM_OP_DONE;
-    }
-
-    if (task_status_i == PCMK_LRM_OP_NOTSUPPORTED) {
-        actual_rc_i = PCMK_OCF_UNIMPLEMENT_FEATURE;
-    }
-
     if (expired) {
         if (rsc->failure_timeout > 0) {
             int fc = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
@@ -2158,7 +2467,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
             }
         }
 
-    } else if (strstr(id, "last_failure") &&
+    } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
         op_digest_cache_t *digest_data = NULL;
@@ -2167,7 +2476,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
         if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
             crm_trace("rsc op %s on node %s does not have a op digest to compare against", rsc->id,
-                      id, node->details->id);
+                      key, node->details->id);
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
             clear_failcount = 1;
             crm_info
@@ -2184,215 +2493,217 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
         add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     }
 
-    if (expired
-        && actual_rc_i != PCMK_OCF_NOT_RUNNING
-        && actual_rc_i != PCMK_OCF_RUNNING_MASTER && actual_rc_i != PCMK_OCF_OK) {
-        if(interval == 0) {
-            crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
-                       id, actual_rc_i, magic, node->details->uname);
-
-        } else if(node->details->online && node->details->unclean == FALSE) {
-            crm_notice("Re-initiated expired failure %s (rc=%d, magic=%s) on %s",
-                       id, actual_rc_i, magic, node->details->uname);
-            /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
-            crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "failure-timeout");
+    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+    if(expired && interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        switch(rc) {
+            case PCMK_OCF_OK:
+            case PCMK_OCF_NOT_RUNNING:
+            case PCMK_OCF_RUNNING_MASTER:
+                /* Don't expire probes that return these values */ 
+                expired = FALSE;
+                break;
         }
-        goto done;
+    }
+    
+    return expired;
+}
+
+static int get_target_rc(xmlNode *xml_op) 
+{
+    int dummy = 0;
+    int target_rc = 0;
+    char *dummy_string = NULL;
+    const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
+    if (key == NULL) {
+        return -1;
     }
 
-    /* we could clean this up significantly except for old LRMs and CRMs that
-     * didnt include target_rc and liked to remap status
-     */
-    switch (actual_rc_i) {
-        case PCMK_OCF_NOT_RUNNING:
-            if (is_probe || target_rc == actual_rc_i) {
-                task_status_i = PCMK_LRM_OP_DONE;
-                rsc->role = RSC_ROLE_STOPPED;
+    decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
+    free(dummy_string);
+    return target_rc;
+}
 
-                /* clear any previous failure actions */
+static enum action_fail_response
+get_action_on_fail(resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
+{
+    int result = action_fail_recover;
+    action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
+
+    result = action->on_fail;
+    pe_free_action(action);
+
+    return result;
+}
+
+static void
+update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const char *task, int rc,
+                      enum action_fail_response *on_fail, pe_working_set_t * data_set) 
+{
+    gboolean clear_past_failure = FALSE;
+
+    if (rc == PCMK_OCF_NOT_RUNNING) {
+        clear_past_failure = TRUE;
+
+    } else if (rc == PCMK_OCF_NOT_INSTALLED) {
+        rsc->role = RSC_ROLE_STOPPED;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        clear_past_failure = TRUE;
+        if (rsc->role < RSC_ROLE_STARTED) {
+            set_active(rsc);
+        }
+
+    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+        rsc->role = RSC_ROLE_STARTED;
+        clear_past_failure = TRUE;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+        rsc->role = RSC_ROLE_STOPPED;
+        clear_past_failure = TRUE;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+        rsc->role = RSC_ROLE_MASTER;
+        clear_past_failure = TRUE;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+        /* Demote from Master does not clear an error */
+        rsc->role = RSC_ROLE_SLAVE;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        rsc->role = RSC_ROLE_STARTED;
+        clear_past_failure = TRUE;
+
+    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+        unpack_rsc_migration(rsc, node, xml_op, data_set);
+
+    } else if (rsc->role < RSC_ROLE_STARTED) {
+        /* migrate_to and migrate_from will land here */
+        pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
+        set_active(rsc);
+    }
+
+    /* clear any previous failure actions */
+    if (clear_past_failure) {
+        switch (*on_fail) {
+            case action_fail_stop:
+            case action_fail_fence:
+            case action_fail_migrate:
+            case action_fail_standby:
+                pe_rsc_trace(rsc, "%s.%s is not cleared by a completed stop",
+                             rsc->id, fail2text(*on_fail));
+                break;
+
+            case action_fail_block:
+            case action_fail_ignore:
+            case action_fail_recover:
                 *on_fail = action_fail_ignore;
                 rsc->next_role = RSC_ROLE_UNKNOWN;
-
-            } else if (safe_str_neq(task, CRMD_ACTION_STOP)) {
-                task_status_i = PCMK_LRM_OP_ERROR;
-            }
-            break;
-
-        case PCMK_OCF_RUNNING_MASTER:
-            if (is_probe) {
-                task_status_i = PCMK_LRM_OP_DONE;
-                crm_notice("Operation %s found resource %s active in master mode on %s",
-                           task, rsc->id, node->details->uname);
-
-            } else if (target_rc == actual_rc_i) {
-                /* nothing to do */
-
-            } else if (target_rc >= 0) {
-                task_status_i = PCMK_LRM_OP_ERROR;
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (safe_str_neq(task, CRMD_ACTION_STATUS)
-                       || rsc->role != RSC_ROLE_MASTER) {
-                task_status_i = PCMK_LRM_OP_ERROR;
-                if (rsc->role != RSC_ROLE_MASTER) {
-                    crm_err("%s reported %s in master mode on %s",
-                            id, rsc->id, node->details->uname);
-                }
-            }
-            rsc->role = RSC_ROLE_MASTER;
-            break;
-
-        case PCMK_OCF_FAILED_MASTER:
-            rsc->role = RSC_ROLE_MASTER;
-            task_status_i = PCMK_LRM_OP_ERROR;
-            break;
-
-        case PCMK_OCF_UNIMPLEMENT_FEATURE:
-            if (interval > 0) {
-                task_status_i = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
-            }
-            /* else: fall through */
-        case PCMK_OCF_INSUFFICIENT_PRIV:
-        case PCMK_OCF_NOT_INSTALLED:
-            if (actual_rc_i == PCMK_OCF_NOT_INSTALLED) {
-                /* 1. The agent isn't present: hard error */
-                if (task_status_i == PCMK_LRM_OP_NOT_INSTALLED) {
-                    no_agent = TRUE;
-                    task_status_i = PCMK_LRM_OP_ERROR;
 
-                /* 2. Tools needed by the agent are not present: check if on-fail="ignore" */
-                } else {
-                    gboolean ignore_no_tools = FALSE;
-                    const char *action_key = task_key ? task_key : id;
+            case action_fail_restart_container:
+                *on_fail = action_fail_ignore;
+                rsc->next_role = RSC_ROLE_UNKNOWN;
+        }
+    }
+}
 
-                    action = custom_action(rsc, strdup(action_key), task, NULL, TRUE, FALSE, data_set);
+gboolean
+unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
+              enum action_fail_response * on_fail, pe_working_set_t * data_set)
+{
+    int task_id = 0;
 
-                    if (action->on_fail == action_fail_ignore) {
-                        ignore_no_tools = TRUE;
-                    }
+    const char *key = NULL;
+    const char *task = NULL;
+    const char *task_key = NULL;
 
-                    pe_free_action(action);
-                    action = NULL;
+    int rc = 0;
+    int status = PCMK_LRM_OP_PENDING-1;
+    int target_rc = get_target_rc(xml_op);
 
-                    if (ignore_no_tools == TRUE) {
-                        break; /* Process on-fail="ignore" later */
-                    }
-                }
-            }
+    gboolean expired = FALSE;
+    resource_t *parent = rsc;
+    enum action_fail_response failure_strategy = action_fail_recover;
 
-        case PCMK_OCF_INVALID_PARAM:
-            effective_node = node;
-            if(pe_can_fence(data_set, node) == FALSE
-               && safe_str_eq(task, CRMD_ACTION_STOP)) {
-                /* If a stop fails and we can't fence, there's nothing else we can do */
-                pe_proc_err("No further recovery can be attempted for %s: %s action failed with '%s' (%d)",
-                            rsc->id, task, services_ocf_exitcode_str(actual_rc_i), actual_rc_i);
-                clear_bit(rsc->flags, pe_rsc_managed);
-                set_bit(rsc->flags, pe_rsc_block);
-            }
-            /* fall through */
-        case PCMK_OCF_NOT_CONFIGURED:
-            failed = rsc;
-            if (is_not_set(rsc->flags, pe_rsc_unique)) {
-                failed = uber_parent(failed);
-            }
+    CRM_CHECK(rsc != NULL, return FALSE);
+    CRM_CHECK(node != NULL, return FALSE);
+    CRM_CHECK(xml_op != NULL, return FALSE);
 
-            do_crm_log(actual_rc_i == PCMK_OCF_NOT_INSTALLED ? LOG_NOTICE : LOG_ERR,
-                       "Preventing %s from re-starting %s %s: operation %s failed '%s' (rc=%d)",
-                       failed->id,
-                       effective_node ? "on" : "anywhere in the cluster",
-                       effective_node ? effective_node->details->uname : "",
-                       task, services_ocf_exitcode_str(actual_rc_i), actual_rc_i);
+    task_key = get_op_key(xml_op);
 
-            resource_location(failed, effective_node, -INFINITY, "hard-error", data_set);
-            if (is_probe) {
-                /* treat these like stops */
-                task = CRMD_ACTION_STOP;
-                task_status_i = PCMK_LRM_OP_DONE;
-                crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-                if (actual_rc_i != PCMK_OCF_NOT_INSTALLED
-                    || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-                    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-                        add_node_copy(data_set->failed, xml_op);
-                    }
-                }
-            }
-            break;
+    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
-        case PCMK_OCF_OK:
-            if (is_probe && target_rc == 7) {
-                task_status_i = PCMK_LRM_OP_DONE;
-                pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
-                            task, rsc->id, node->details->uname);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
 
-                /* legacy code for pre-0.6.5 operations */
-            } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
-                /* catch status ops that return 0 instead of 8 while they
-                 *   are supposed to be in master mode
-                 */
-                task_status_i = PCMK_LRM_OP_ERROR;
-            }
+    CRM_CHECK(task != NULL, return FALSE);
+    CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
+    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
 
-            break;
-
-        default:
-            if (task_status_i == PCMK_LRM_OP_DONE) {
-                crm_info("Remapping %s (rc=%d) on %s to an ERROR",
-                         id, actual_rc_i, node->details->uname);
-                task_status_i = PCMK_LRM_OP_ERROR;
-            }
+    if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+        /* safe to ignore these */
+        return TRUE;
     }
 
-    if (task_status_i == PCMK_LRM_OP_ERROR
-        || task_status_i == PCMK_LRM_OP_TIMEOUT || task_status_i == PCMK_LRM_OP_NOTSUPPORTED) {
-        const char *action_key = task_key ? task_key : id;
+    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+        parent = uber_parent(rsc);
+    }
+    
+    pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%d, rc=%d) on %s (role=%s)",
+                 task_key, task, task_id, status, rc, node->details->uname, role2text(rsc->role));
 
-        action = custom_action(rsc, strdup(action_key), task, NULL, TRUE, FALSE, data_set);
-        if (expired) {
-            if(interval == 0) {
-                crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
-                           id, actual_rc_i, magic, node->details->uname);
+    if (node->details->unclean) {
+        pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
+                     " Further action depends on the value of the stop's on-fail attribue",
+                     node->details->uname, rsc->id);
+    }
 
-            } else if(node->details->online && node->details->unclean == FALSE) {
-                crm_notice("Re-initiated expired calculated failure %s (rc=%d, magic=%s) on %s",
-                           id, actual_rc_i, magic, node->details->uname);
-                /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
-                crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
-            }
+    if (status == PCMK_LRM_OP_ERROR) {
+        /* Older versions set this if rc != 0 but its up to us to decide */
+        status = PCMK_LRM_OP_DONE;
+    }
+
+    if(status != PCMK_LRM_OP_NOT_INSTALLED) {
+        expired = check_operation_expiry(rsc, node, rc, xml_op, data_set);
+    }
+
+    if (expired && target_rc != rc) {
+        int interval = 0;
+        const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
+
+        pe_rsc_debug(rsc, "Expired operation '%s' on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
+                     key, node->details->uname,
+                     services_ocf_exitcode_str(rc), rc,
+                     services_ocf_exitcode_str(target_rc), target_rc);
+
+        crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+        if(interval == 0) {
+            crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
+                       task_key, rc, magic, node->details->uname);
             goto done;
 
-        } else if (no_agent == TRUE && action->on_fail == action_fail_ignore) {
-            crm_warn("Cannot ignore failed %s (status=%s, rc=%s) on %s: "
-                     "Resource agent doesn't exist",
-                     task_key, task_status, actual_rc, node->details->uname);
-            /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
-            *on_fail = action_fail_migrate;
-
-        } else if ((action->on_fail == action_fail_ignore) ||
-                   (action->on_fail == action_fail_restart_container &&
-                    safe_str_eq(task, CRMD_ACTION_STOP))) {
-            crm_warn("Remapping %s (rc=%d) on %s to DONE: ignore",
-                     id, actual_rc_i, node->details->uname);
-            task_status_i = PCMK_LRM_OP_DONE;
-            set_bit(rsc->flags, pe_rsc_failure_ignored);
-
-            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-            if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-                add_node_copy(data_set->failed, xml_op);
-            }
-
-            if (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) {
-                *on_fail = action->on_fail;
-            }
-
-            if (safe_str_eq(task, CRMD_ACTION_STOP)) {
-                stop_failure_ignored = TRUE;
-            }
+        } else if(node->details->online && node->details->unclean == FALSE) {
+            crm_notice("Re-initiated expired calculated failure %s (rc=%d, magic=%s) on %s",
+                       task_key, rc, magic, node->details->uname);
+            /* This is SO horrible, but we don't have access to CancelXmlOp() yet */
+            crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
+            goto done;
         }
     }
 
-    switch (task_status_i) {
+    if(status == PCMK_LRM_OP_DONE || status == PCMK_LRM_OP_ERROR) {
+        status = determine_op_status(rsc, rc, target_rc, node, xml_op, on_fail, data_set);
+    }
+
+    pe_rsc_trace(rsc, "Handling status: %d", status);
+    switch (status) {
+        case PCMK_LRM_OP_CANCELLED:
+            /* do nothing?? */
+            pe_err("Dont know what to do for cancelled ops yet");
+            break;
+
         case PCMK_LRM_OP_PENDING:
             if (safe_str_eq(task, CRMD_ACTION_START)) {
                 set_bit(rsc->flags, pe_rsc_start_pending);
@@ -2410,323 +2721,71 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
         case PCMK_LRM_OP_DONE:
             pe_rsc_trace(rsc, "%s/%s completed on %s", rsc->id, task, node->details->uname);
+            update_resource_state(rsc, node, xml_op, task, rc, on_fail, data_set);
+            break;
 
-            if (actual_rc_i == PCMK_OCF_NOT_RUNNING) {
-                clear_past_failure = TRUE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
-                clear_past_failure = TRUE;
-                if (rsc->role < RSC_ROLE_STARTED) {
-                    set_active(rsc);
-                }
-
-            } else if (safe_str_eq(task, CRMD_ACTION_START)) {
-                rsc->role = RSC_ROLE_STARTED;
-                clear_past_failure = TRUE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
-                rsc->role = RSC_ROLE_STOPPED;
-                clear_past_failure = TRUE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-                rsc->role = RSC_ROLE_MASTER;
-                clear_past_failure = TRUE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-                /* Demote from Master does not clear an error */
-                rsc->role = RSC_ROLE_SLAVE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-                rsc->role = RSC_ROLE_STARTED;
-                clear_past_failure = TRUE;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
-                /*
-                 * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
-                 *
-                 * So if a migrate_to is followed by a stop, then we dont need to care what
-                 * happended on the target node
-                 *
-                 * Without the stop, we need to look for a successful migrate_from.
-                 * This would also imply we're no longer running on the source
-                 *
-                 * Without the stop, and without a migrate_from op we make sure the resource
-                 * gets stopped on both source and target (assuming the target is up)
-                 *
-                 */
-                int stop_id = 0;
-                xmlNode *stop_op =
-                    find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id, NULL, data_set);
-
-                if (stop_op) {
-                    crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-                }
-
-                if (stop_op == NULL || stop_id < task_id) {
-                    int from_rc = 0, from_status = 0;
-                    const char *migrate_source =
-                        crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-                    const char *migrate_target =
-                        crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-
-                    node_t *target = pe_find_node(data_set->nodes, migrate_target);
-                    node_t *source = pe_find_node(data_set->nodes, migrate_source);
-                    xmlNode *migrate_from =
-                        find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
-                                    data_set);
-
-                    rsc->role = RSC_ROLE_STARTED;       /* can be master? */
-                    if (migrate_from) {
-                        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-                        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
-                        pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                                     ID(migrate_from), migrate_target, from_status, from_rc);
-                    }
-
-                    if (migrate_from && from_rc == PCMK_OCF_OK
-                        && from_status == PCMK_LRM_OP_DONE) {
-                        pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                                     migrate_source);
-
-                        /* all good
-                         * just need to arrange for the stop action to get sent
-                         * but _without_ affecting the target somehow
-                         */
-                        rsc->role = RSC_ROLE_STOPPED;
-                        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
-
-                    } else if (migrate_from) {  /* Failed */
-                        if (target && target->details->online) {
-                            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                                         target->details->online);
-                            native_add_running(rsc, target, data_set);
-                        }
-
-                    } else {    /* Pending or complete but erased */
-                        node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
-
-                        if (target && target->details->online) {
-                            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                                         target->details->online);
-
-                            native_add_running(rsc, target, data_set);
-                            if (source && source->details->online) {
-                                /* If we make it here we have a partial migration.  The migrate_to
-                                 * has completed but the migrate_from on the target has not. Hold on
-                                 * to the target and source on the resource. Later on if we detect that
-                                 * the resource is still going to run on that target, we may continue
-                                 * the migration */
-                                rsc->partial_migration_target = target;
-                                rsc->partial_migration_source = source;
-                            }
-                        } else {
-                            /* Consider it failed here - forces a restart, prevents migration */
-                            set_bit(rsc->flags, pe_rsc_failed);
-                        }
-                    }
-                }
-
-            } else if (rsc->role < RSC_ROLE_STARTED) {
-                /* migrate_to and migrate_from will land here */
-                pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
-                set_active(rsc);
+        case PCMK_LRM_OP_NOT_INSTALLED:
+            failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
+            if (failure_strategy == action_fail_ignore) {
+                crm_warn("Cannot ignore failed %s (status=%d, rc=%d) on %s: "
+                         "Resource agent doesn't exist",
+                         task_key, status, rc, node->details->uname);
+                /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
+                *on_fail = action_fail_migrate;
             }
-
-            /* clear any previous failure actions */
-            if (clear_past_failure) {
-                switch (*on_fail) {
-                    case action_fail_stop:
-                    case action_fail_fence:
-                    case action_fail_migrate:
-                    case action_fail_standby:
-                        pe_rsc_trace(rsc, "%s.%s is not cleared by a completed stop",
-                                     rsc->id, fail2text(*on_fail));
-                        break;
-
-                    case action_fail_block:
-                    case action_fail_ignore:
-                    case action_fail_recover:
-                        *on_fail = action_fail_ignore;
-                        rsc->next_role = RSC_ROLE_UNKNOWN;
-                        break;
-
-                    case action_fail_restart_container:
-                        if (stop_failure_ignored) {
-                            pe_rsc_trace(rsc, "%s.%s is not cleared by an ignored failed stop",
-                                         rsc->id, fail2text(*on_fail));
-
-                        } else {
-                            *on_fail = action_fail_ignore;
-                            rsc->next_role = RSC_ROLE_UNKNOWN;
-                        }
-                }
-            }
+            resource_location(parent, node, -INFINITY, "hard-error", data_set);
+            unpack_rsc_op_failure(rsc, node, rc, xml_op, on_fail, data_set);
             break;
 
         case PCMK_LRM_OP_ERROR:
+        case PCMK_LRM_OP_ERROR_HARD:
+        case PCMK_LRM_OP_ERROR_FATAL:
         case PCMK_LRM_OP_TIMEOUT:
         case PCMK_LRM_OP_NOTSUPPORTED:
-            crm_warn("Processing failed op %s for %s on %s: %s (%d)",
-                     task, rsc->id, node->details->uname, services_ocf_exitcode_str(actual_rc_i),
-                     actual_rc_i);
-            crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-            if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-                add_node_copy(data_set->failed, xml_op);
+
+            failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
+            if ((failure_strategy == action_fail_ignore)
+                || (failure_strategy == action_fail_restart_container
+                    && safe_str_eq(task, CRMD_ACTION_STOP))) {
+
+                crm_warn("Pretending the failure of %s (rc=%d) on %s succeeded",
+                         task_key, rc, node->details->uname);
+
+                update_resource_state(rsc, node, xml_op, task, target_rc, on_fail, data_set);
+                crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+                set_bit(rsc->flags, pe_rsc_failure_ignored);
+
+                if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+                    add_node_copy(data_set->failed, xml_op);
+                }
+                
+                if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
+                    *on_fail = failure_strategy;
+                }
+
+            } else {
+                unpack_rsc_op_failure(rsc, node, rc, xml_op, on_fail, data_set);
+
+                if(status == PCMK_LRM_OP_ERROR_HARD) {
+                    do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
+                               "Preventing %s from re-starting on %s: operation %s failed '%s' (%d)",
+                               parent->id, node->details->uname,
+                               task, services_ocf_exitcode_str(rc), rc);
+
+                    resource_location(parent, node, -INFINITY, "hard-error", data_set);
+
+                } else if(status == PCMK_LRM_OP_ERROR_FATAL) {
+                    crm_err("Preventing %s from re-starting anywhere: operation %s failed '%s' (%d)",
+                            parent->id, task, services_ocf_exitcode_str(rc), rc);
+
+                    resource_location(parent, NULL, -INFINITY, "fatal-error", data_set);
+                }
             }
-
-            if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
-                (action->on_fail == action_fail_restart_container
-                 && *on_fail <= action_fail_recover) || (*on_fail == action_fail_restart_container
-                                                         && action->on_fail >=
-                                                         action_fail_migrate)) {
-                pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)", fail2text(*on_fail),
-                             fail2text(action->on_fail), action->uuid, task_key ? task_key : id);
-                *on_fail = action->on_fail;
-            }
-
-            if (safe_str_eq(task, CRMD_ACTION_STOP)) {
-                resource_location(rsc, node, -INFINITY, "__stop_fail__", data_set);
-
-            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-                int stop_id = 0;
-                int migrate_id = 0;
-                const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-                const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-
-                xmlNode *stop_op =
-                    find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_source, NULL, data_set);
-                xmlNode *migrate_op =
-                    find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE, migrate_source, migrate_target,
-                                data_set);
-
-                if (stop_op) {
-                    crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-                }
-                if (migrate_op) {
-                    crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
-                }
-
-                /* Get our state right */
-                rsc->role = RSC_ROLE_STARTED;   /* can be master? */
-
-                if (stop_op == NULL || stop_id < migrate_id) {
-                    node_t *source = pe_find_node(data_set->nodes, migrate_source);
-
-                    if (source && source->details->online) {
-                        native_add_running(rsc, source, data_set);
-                    }
-                }
-
-            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
-                int stop_id = 0;
-                int migrate_id = 0;
-                const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-                const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-
-                xmlNode *stop_op =
-                    find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_target, NULL, data_set);
-                xmlNode *migrate_op =
-                    find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
-                                data_set);
-
-                if (stop_op) {
-                    crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
-                }
-                if (migrate_op) {
-                    crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
-                }
-
-                /* Get our state right */
-                rsc->role = RSC_ROLE_STARTED;   /* can be master? */
-
-                if (stop_op == NULL || stop_id < migrate_id) {
-                    node_t *target = pe_find_node(data_set->nodes, migrate_target);
-
-                    pe_rsc_trace(rsc, "Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op,
-                                 migrate_id);
-                    if (target && target->details->online) {
-                        native_add_running(rsc, target, data_set);
-                    }
-
-                } else if (migrate_op == NULL) {
-                    /* Make sure it gets cleaned up, the stop may pre-date the migrate_from */
-                    rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
-                }
-
-            } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-                rsc->role = RSC_ROLE_MASTER;
-
-            } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-                /*
-                 * staying in role=master ends up putting the PE/TE into a loop
-                 * setting role=slave is not dangerous because no master will be
-                 * promoted until the failed resource has been fully stopped
-                 */
-                rsc->next_role = RSC_ROLE_STOPPED;
-                if (action->on_fail == action_fail_block) {
-                    rsc->role = RSC_ROLE_MASTER;
-
-                } else {
-                    crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
-                    rsc->role = RSC_ROLE_SLAVE;
-                }
-
-            } else if (compare_version("2.0", op_version) > 0
-                       && safe_str_eq(task, CRMD_ACTION_START)) {
-                crm_warn("Compatibility handling for failed op %s on %s", id, node->details->uname);
-                resource_location(rsc, node, -INFINITY, "__legacy_start__", data_set);
-            }
-
-            if (rsc->role < RSC_ROLE_STARTED) {
-                set_active(rsc);
-            }
-
-            pe_rsc_trace(rsc, "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
-                         rsc->id, role2text(rsc->role),
-                         node->details->unclean ? "true" : "false",
-                         fail2text(action->on_fail), role2text(action->fail_role));
-
-            if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {
-                rsc->next_role = action->fail_role;
-            }
-
-            if (action->fail_role == RSC_ROLE_STOPPED) {
-                int score = -INFINITY;
-
-                resource_t *fail_rsc = rsc;
-
-                if (fail_rsc->parent) {
-                    resource_t *parent = uber_parent(fail_rsc);
-
-                    if ((parent->variant == pe_clone || parent->variant == pe_master)
-                        && is_not_set(parent->flags, pe_rsc_unique)) {
-                        /* for clone and master resources, if a child fails on an operation
-                         * with on-fail = stop, all the resources fail.  Do this by preventing
-                         * the parent from coming up again. */
-                        fail_rsc = parent;
-                    }
-                }
-                crm_warn("Making sure %s doesn't come up again", fail_rsc->id);
-                /* make sure it doesnt come up again */
-                g_hash_table_destroy(fail_rsc->allowed_nodes);
-                fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
-                g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
-            }
-
-            pe_free_action(action);
-            action = NULL;
-            break;
-        case PCMK_LRM_OP_CANCELLED:
-            /* do nothing?? */
-            pe_err("Dont know what to do for cancelled ops yet");
             break;
     }
 
   done:
     pe_rsc_trace(rsc, "Resource %s after %s: role=%s", rsc->id, task, role2text(rsc->role));
-
-    pe_free_action(action);
-
     return TRUE;
 }
 
