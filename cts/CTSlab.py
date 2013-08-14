@@ -243,6 +243,10 @@ if __name__ == '__main__':
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
+           elif args[i+1] == "scsi":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_scsi"
+               Environment["stonith-params"] = "delay=0"
            elif args[i+1] == "ssh" or args[i+1] == "lha":
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "external/ssh"
