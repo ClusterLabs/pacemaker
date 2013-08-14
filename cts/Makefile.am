@@ -40,6 +40,7 @@ cts_DATA	=	README cts.supp
 
 cts_SCRIPTS	=	cluster_test		\
 			CTSlab.py		\
+			lxc_autogen.sh	\
 			LSBDummy		\
 			$(top_srcdir)/fencing/fence_dummy
 

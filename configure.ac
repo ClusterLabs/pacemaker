@@ -440,7 +440,9 @@ dnl
 dnl So keep this section to a bare minimum; regard as a "necessary evil".
 
 case "$host_os" in
-*bsd*)		LIBS="-L/usr/local/lib"
+*bsd*)
+		AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
+		LIBS="-L/usr/local/lib"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 		INIT_EXT=".sh"
 		;;
@@ -708,6 +710,10 @@ if test "X$GLIBCONFIG" != X; then
 	AC_MSG_RESULT($GLIBLIB)
 	LIBS="$LIBS $GLIBLIB"
 fi
+
+dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
+AC_CHECK_LIB([compat], [ftime], [COMPAT_LIBS='-lcompat'])
+AC_SUBST(COMPAT_LIBS)
 
 dnl ========================================================================
 dnl Headers
@@ -1084,6 +1090,10 @@ AC_SUBST(PE_STATE_DIR)
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
+AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
+AC_SUBST(CRM_CONFIG_CTS)
 
 CRM_LEGACY_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
 AC_DEFINE_UNQUOTED(CRM_LEGACY_CONFIG_DIR,"$CRM_LEGACY_CONFIG_DIR", Where Pacemaker used to keep configuration files)
@@ -1791,7 +1801,8 @@ cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
 	cts/benchmark/Makefile					\
-		cts/benchmark/clubench				\
+	cts/benchmark/clubench				\
+	cts/lxc_autogen.sh						\
 cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\

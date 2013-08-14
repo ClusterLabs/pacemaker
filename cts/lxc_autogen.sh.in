@@ -1,0 +1,288 @@
+#!/bin/bash
+
+containers="2"
+download=0
+# different than default libvirt network in case this is run nested in a KVM instance
+addr="192.168.123.1"
+restore=0
+restore_pcmk=0
+generate=0
+cib=0
+add_clone=0
+working_dir="@CRM_CONFIG_CTS@/lxc"
+curdir=$(pwd)
+
+function helptext() {
+	echo "lxc_autogen.sh - A tool for generating libvirt lxc containers for testing purposes."
+	echo ""
+	echo "Usage: lxc-autogen [options]"
+	echo ""
+	echo "Options:"
+	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
+	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
+	echo "-p, --restore-cib      Remove cib entries this script generated."
+	echo ""
+	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
+	echo "-m, --add-clone        Add clone resource shared between remote-nodes"
+	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
+	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
+	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
+	echo ""
+    exit $1
+}
+
+while true ; do
+	case "$1" in
+	--help|-h|-\?) helptext 0;;
+	-c|--containers) containers="$2"; shift; shift;;
+	-d|--download-agent) download=1; shift;;
+	-n|--network) addr="$2"; shift; shift;;
+	-r|--restore-libvirt) restore=1; shift;;
+	-p|--restore-cib) restore_pcmk=1; shift;;
+	-g|--generate) generate=1; shift;;
+	-a|--add-cib) cib=1; shift;;
+	-m|--add-clone) add_clone=1; shift;;
+	"") break;;
+	*) helptext 1;;
+	esac
+done
+
+#strip last digits off addr
+tmp="s/\.$(echo "$addr" | tr '.' ' ' | awk '{print $4}')$//g"
+addr=$(echo $addr | sed -e ${tmp})
+
+set_network()
+{
+	rm -f cur_network.xml
+	cat << END >> cur_network.xml
+<network>
+  <name>default</name>
+  <uuid>41ebdb84-7134-1111-a136-91f0f1119225</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr0' stp='on' delay='0' />
+  <mac address='52:54:00:A8:12:35'/>
+  <ip address='$addr.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='$addr.2' end='$addr.254' />
+    </dhcp>
+  </ip>
+</network>
+END
+
+	ls restore_default.xml > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		virsh net-dumpxml default > restore_default.xml
+	fi
+	virsh net-destroy default
+	virsh net-undefine default
+	virsh net-define cur_network.xml
+	virsh net-start default
+}
+
+generate()
+{
+	set_network
+
+	#generate pacemaker remote key
+	ls /etc/pacemaker/authkey > /dev/null 2>&1
+	if [ $? != 0 ]; then
+			mkdir -p /etc/pacemaker
+			dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+	fi
+
+	# Generate libvirt domains in xml
+	for (( c=1; c <= $containers; c++ ))
+	do
+		rm -rf lxc$c-filesystem
+		mkdir -p lxc$c-filesystem/var/run/
+		mkdir -p lxc$c-filesystem/usr/var/run
+		rm -f lxc$c.xml
+		cat << END >> lxc$c.xml
+<domain type='lxc'>
+  <name>lxc$c</name>
+  <memory>102400</memory>
+  <os>
+    <type>exe</type>
+    <init>$working_dir/lxc$c-filesystem/launch-helper</init>
+  </os>
+  <devices>
+    <console type='pty'/>
+    <filesystem type='mount'>
+      <source dir='$working_dir/lxc$c-filesystem/var/run'/>
+      <target dir='/var/run'/>
+    </filesystem>
+    <filesystem type='mount'>
+      <source dir='$working_dir/lxc$c-filesystem/usr/var/run'/>
+      <target dir='/usr/var/run'/>
+    </filesystem>
+    <interface type='network'>
+      <mac address='52:54:00:$c$c:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$c'/>
+      <source network='default'/>
+    </interface>
+  </devices>
+</domain>
+END
+		rm -f container$c.cib
+		cat << END >> container$c.cib
+      <primitive class="ocf" id="container$c" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="container$c-instance_attributes">
+          <nvpair id="container$c-instance_attributes-force_stop" name="force_stop" value="true"/>
+          <nvpair id="container$c-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
+          <nvpair id="container$c-instance_attributes-config" name="config" value="$working_dir/lxc$c.xml"/>
+          <nvpair id="container$c-instance_attributes-remote-node" name="remote-node" value="lxc$c"/>
+        </instance_attributes>
+        <utilization id="container$c-utilization">
+          <nvpair id="container$c-utilization-cpu" name="cpu" value="1"/>
+          <nvpair id="container$c-utilization-hv_memory" name="hv_memory" value="100"/>
+        </utilization>
+        <meta_attributes id="container$c-meta_attributes">
+          <nvpair id="container$c-meta_attributes-remote-node" name="remote-node" value="lxc$c"/>
+        </meta_attributes>
+      </primitive>
+END
+
+		rm -f lxc-ms$c.cib
+		cat << END >> lxc-ms.cib
+      <clone id="lxc-clone-clone">
+        <primitive class="ocf" id="lxc-clone" provider="pacemaker" type="Dummy">
+          <instance_attributes id="lxc-clone-instance_attributes"/>
+          <operations>
+            <op id="lxc-clone-monitor-interval-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="lxc-clone-meta_attributes">
+          <nvpair id="lxc-clone-meta_attributes-clone-max" name="clone-max" value="3"/>
+        </meta_attributes>
+      </clone>
+END
+
+		rm -f lxc$c-filesystem/launch-helper
+		cat << END >> lxc$c-filesystem/launch-helper
+#!/bin/bash
+ifconfig eth0 $addr.10$c
+route add 0.0.0.0 gw $addr.1 eth0
+/usr/sbin/pacemaker_remoted
+END
+		chmod 711 lxc$c-filesystem/launch-helper
+
+		cat << END >> /etc/hosts
+$addr.10$c     lxc$c
+END
+	done
+}
+
+apply_cib_clone()
+{
+	cibadmin -Q > cur.cib
+	export CIB_file=cur.cib
+
+	cibadmin -o resources -C -x lxc-ms.cib
+	for tmp in $(ls lxc*.xml); do
+		tmp=$(echo $tmp | sed -e 's/\.xml//g')
+		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -C -x tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -C -x tmp_constraint
+		rm -f tmp_constraint
+	done
+	unset CIB_file
+
+	cibadmin --replace --xml-file cur.cib
+	rm -f cur.cib
+}
+
+apply_cib_entries()
+{
+	node=$(crm_node -n)
+
+	cibadmin -Q > cur.cib
+	export CIB_file=cur.cib
+	for tmp in $(ls container*.cib); do
+		cibadmin -o resources -C -x $tmp
+
+		tmp=$(echo $tmp | sed -e 's/\.cib//g')
+		crm_resource -M -r $tmp -H $node
+	done
+	unset CIB_file
+
+	cibadmin --replace --xml-file cur.cib
+	rm -f cur.cib
+}
+
+restore_cib()
+{
+	node=$(crm_node -n)
+	cibadmin -Q > cur.cib
+	export CIB_file=cur.cib
+
+	for tmp in $(ls lxc*.xml); do
+		tmp=$(echo $tmp | sed -e 's/\.xml//g')
+		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -D -x tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		cibadmin -o constraints -D -x tmp_constraint
+		rm -f tmp_constraint
+	done
+	cibadmin -o resources -D -x lxc-ms.cib
+
+	for tmp in $(ls container*.cib); do
+		tmp=$(echo $tmp | sed -e 's/\.cib//g')
+		crm_resource -U -r $tmp -H $node
+		crm_resource -D -r $tmp -t primitive
+	done
+	unset CIB_file
+
+	cibadmin --replace --xml-file cur.cib
+	rm -f  cur.cib 
+}
+
+restore_libvirt()
+{
+	for tmp in $(ls lxc*.xml); do
+		tmp=$(echo $tmp | sed -e 's/\.xml//g')
+		virsh -c lxc:/// destroy $tmp > /dev/null 2>&1
+		virsh -c lxc:/// undefine $tmp > /dev/null 2>&1
+
+		sed -i.bak "/...\....\....\..* ${tmp}/d" /etc/hosts
+		echo "$tmp destroyed"
+	done
+
+	ls restore_default.xml > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		virsh net-destroy default > /dev/null 2>&1
+		virsh net-undefine default > /dev/null 2>&1
+		virsh net-define restore_default.xml
+		virsh net-start default
+		if [ $? -eq 0 ]; then
+			echo "default network restored"
+		fi
+	fi
+	rm -f restore_default.xml > /dev/null 2>&1 
+}
+
+mkdir -p $working_dir
+cd $working_dir
+
+if [ $download -eq 1 ]; then
+	wget https://raw.github.com/ClusterLabs/resource-agents/master/heartbeat/VirtualDomain
+	chmod 755 VirtualDomain
+	mv -f VirtualDomain /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
+fi
+if [ $restore_pcmk -eq 1 ]; then
+	restore_cib
+fi
+if [ $restore -eq 1 ]; then
+	restore_libvirt
+fi
+if [ $generate -eq 1 ]; then
+	generate
+fi
+if [ $cib -eq 1 ]; then
+	apply_cib_entries
+fi
+if [ $add_clone -eq 1 ]; then
+	apply_cib_clone
+fi
+
+cd $curdir
+

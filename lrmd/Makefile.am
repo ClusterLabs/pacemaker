@@ -45,7 +45,7 @@ lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la  \
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la ${COMPAT_LIBS}
 
 
 pacemaker_remoted_SOURCES	= main.c lrmd.c tls_backend.c ipc_proxy.c

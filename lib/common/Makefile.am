@@ -38,7 +38,7 @@ libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
 
 libcrmcommon_la_LDFLAGS	= -version-info 5:0:2
-libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
+libcrmcommon_la_LIBADD  = @LIBADD_DL@ $(GNUTLSLIBS)
 libcrmcommon_la_SOURCES += $(top_builddir)/lib/gnu/md5.c
 
 clean-generic:

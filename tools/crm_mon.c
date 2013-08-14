@@ -485,7 +485,7 @@ main(int argc, char **argv)
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-#ifndef ON_DARWIN
+#if !defined (ON_DARWIN) && !defined (ON_BSD)
     /* prevent zombies */
     signal(SIGCLD, SIG_IGN);
 #endif

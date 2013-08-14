@@ -65,11 +65,11 @@ The monitor operation is automatically created based on the agent's metadata.
 ## Resource defaults
 
     crmsh # crm configure rsc_defaults resource-stickiness=100
-    pcs   # pcs rsc defaults resource-stickiness=100
+    pcs   # pcs resource rsc defaults resource-stickiness=100
     
 Listing the current defaults:
     
-    pcs   # pcs rsc defaults
+    pcs   # pcs resource rsc defaults
     
 ## Operation defaults
 
@@ -112,10 +112,10 @@ With roles:
 ## Moving resources
 
     crmsh # crm resource move WebSite pcmk-1
-    pcs   # pcs constraint location WebSite prefers pcmk-1=INFINITY
+    pcs   # pcs resource move WebSite pcmk-1
     
     crmsh # crm resource unmove WebSite
-    pcs   # pcs constraint rm location-WebSite-pcmk-1-INFINITY
+    pcs   # pcs resource unmove WebSite
     
 ## Creating a clone
 

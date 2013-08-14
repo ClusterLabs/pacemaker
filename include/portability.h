@@ -202,6 +202,22 @@ g_list_free_full(GList * list, GDestroyNotify free_func)
 #    define ENOKEY    195
 #  endif
 
+#  ifndef ENODATA
+#    define ENODATA   196
+#  endif
+
+#  ifndef ETIME
+#    define ETIME     197
+#  endif
+
+#  ifndef ENOSR
+#    define ENOSR     198
+#  endif
+
+#  ifndef ENOSTR
+#    define ENOSTR    199
+#  endif
+
 /*
  * Some compilers (eg. Sun studio) do not define __FUNCTION__
  */
