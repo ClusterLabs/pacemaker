@@ -1019,18 +1019,14 @@ pcmk_errorname(int rc)
         case pcmk_err_cib_backup: return "pcmk_err_cib_backup";
         case pcmk_err_cib_save: return "pcmk_err_cib_save";
     }
-    return "Unknown";    
+    return "Unknown";
 }
 
 
 const char *
 pcmk_strerror(int rc)
 {
-    int error = rc;
-
-    if (rc < 0) {
-        error = 0 - rc;
-    }
+    int error = abs(rc);
 
     if (error == 0) {
         return "OK";
