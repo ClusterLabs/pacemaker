@@ -154,7 +154,7 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 gboolean can_prune_leaf(xmlNode * xml_node);
 
 void print_xml_diff(FILE * where, xmlNode * diff);
-void log_xml_diff(unsigned int log_level, xmlNode * diff, const char *function);
+void log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function);
 
 gboolean apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
 

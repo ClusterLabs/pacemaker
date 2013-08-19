@@ -885,7 +885,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 static xmlNode *
 find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled)
 {
-    int number = 0;
+    unsigned long long number = 0;
     gboolean do_retry = TRUE;
     char *local_key = NULL;
     const char *name = NULL;

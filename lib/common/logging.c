@@ -536,7 +536,7 @@ crm_log_filter(struct qb_log_callsite *cs)
 }
 
 gboolean
-crm_is_callsite_active(struct qb_log_callsite *cs, int level, int tags)
+crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags)
 {
     gboolean refilter = FALSE;
 
@@ -620,7 +620,7 @@ crm_priority2int(const char *name)
 }
 
 gboolean
-crm_log_init(const char *entity, int level, gboolean daemon, gboolean to_stderr,
+crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_stderr,
              int argc, char **argv, gboolean quiet)
 {
     int lpc = 0;

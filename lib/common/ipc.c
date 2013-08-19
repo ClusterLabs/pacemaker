@@ -559,7 +559,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
     }
 
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
-    header->qb.id = request;    /* Replying to a specific request */
+    header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
     *result = iov;
     return header->qb.size;

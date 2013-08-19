@@ -59,7 +59,7 @@ void crm_log_deinit(void);
 
 gboolean crm_log_cli_init(const char *entity);
 
-gboolean crm_log_init(const char *entity, int level, gboolean daemon,
+gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
 void crm_log_args(int argc, char **argv);
@@ -73,7 +73,7 @@ void crm_bump_log_level(int argc, char **argv);
 
 void crm_enable_stderr(int enable);
 
-gboolean crm_is_callsite_active(struct qb_log_callsite *cs, int level, int tags);
+gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags);
 
 void log_data_element(int log_level, const char *file, const char *function, int line,
                       const char *prefix, xmlNode * data, int depth, gboolean formatted);

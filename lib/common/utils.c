@@ -385,6 +385,7 @@ crm_build_path(const char *path_c, mode_t mode)
     if (mkdir(path, mode) < 0 && errno != EEXIST) {
         crm_perror(LOG_ERR, "Could not create directory '%s'", path);
     }
+
     free(path);
 }
 
@@ -829,7 +830,9 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
     len += strlen(op_type);
     len += strlen(rsc_id);
     len += strlen(notify_type);
-    op_id = malloc(len);
+    if(len > 0) {
+        op_id = malloc(len);
+    }
     if (op_id != NULL) {
         sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
     }
@@ -925,8 +928,8 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     CRM_CHECK(action_id != NULL, return FALSE);
     CRM_CHECK(transition_id != NULL, return FALSE);
 
-    *uuid = calloc(1, strlen(key) + 1);
-    res = sscanf(key, "%d:%d:%d:%s", action_id, transition_id, target_rc, *uuid);
+    *uuid = NULL;
+    res = sscanf(key, "%d:%d:%d:%ms", action_id, transition_id, target_rc, uuid);
     switch (res) {
         case 4:
             /* Post Pacemaker 0.6 */
@@ -939,10 +942,10 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
             /* Until Pacemaker 0.6 */
             done = TRUE;
             *target_rc = -1;
-            res = sscanf(key, "%d:%d:%s", action_id, transition_id, *uuid);
+            res = sscanf(key, "%d:%d:%ms", action_id, transition_id, uuid);
             if (res == 2) {
                 *action_id = -1;
-                res = sscanf(key, "%d:%s", transition_id, *uuid);
+                res = sscanf(key, "%d:%ms", transition_id, uuid);
                 CRM_CHECK(res == 2, done = FALSE);
 
             } else if (res != 3) {
@@ -955,7 +958,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
             done = TRUE;
             *action_id = -1;
             *target_rc = -1;
-            res = sscanf(key, "%d:%s", transition_id, *uuid);
+            res = sscanf(key, "%d:%ms", transition_id, uuid);
             CRM_CHECK(res == 2, done = FALSE);
             break;
         default:

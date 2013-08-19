@@ -218,8 +218,8 @@ main(int argc, char **argv)
     int no_connect = 0;
     int tolerance = 0;
 
-    char name[512];
-    char value[512];
+    char *name = NULL;
+    char *value = NULL;
     const char *agent = NULL;
     const char *device = NULL;
     const char *target = NULL;
@@ -311,7 +311,7 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_info("Scanning: -o %s", optarg);
-                rc = sscanf(optarg, "%[^=]=%[^=]", name, value);
+                rc = sscanf(optarg, "%m[^=]=%m[^=]", &name, &value);
                 if (rc != 2) {
                     crm_err("Invalid option: -o %s", optarg);
                     ++argerr;
@@ -319,6 +319,8 @@ main(int argc, char **argv)
                     crm_info("Got: '%s'='%s'", name, value);
                     params = stonith_key_value_add(params, name, value);
                 }
+                free(value);
+                free(name);
                 break;
             case 'e':
                 {

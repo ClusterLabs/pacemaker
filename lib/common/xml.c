@@ -623,7 +623,14 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
 
     do {
-        xml_buffer = realloc(xml_buffer, XML_BUFFER_SIZE + data_length + 1);
+        size_t next = XML_BUFFER_SIZE + data_length + 1;
+
+        if(next <= 0) {
+            crm_err("Buffer size exceeded at: %l + %d", data_length, XML_BUFFER_SIZE);
+            break;
+        }
+
+        xml_buffer = realloc(xml_buffer, next);
         read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
         data_length += read_chars;
     } while (read_chars > 0);
@@ -1464,7 +1471,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
 }
 
 void
-log_xml_diff(unsigned int log_level, xmlNode * diff, const char *function)
+log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function)
 {
     xmlNode *child = NULL;
     xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
