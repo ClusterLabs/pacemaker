@@ -990,7 +990,7 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 
 struct mainloop_timer_s {
         guint id;
-        guint interval;
+        guint period;
         bool repeat;
         char *name;
         GSourceFunc cb;
@@ -1001,45 +1001,75 @@ struct mainloop_timer_s mainloop;
 
 static gboolean mainloop_timer_cb(gpointer user_data)
 {
+    bool repeat = FALSE;
     struct mainloop_timer_s *t = user_data;
+
     if(t && t->cb) {
-        crm_trace("Stopping timer %s", t->name);
-        t->cb(t->userdata);
+        crm_trace("Invoking callbacks for timer %s", t->name);
+        repeat = t->repeat;
+        if(t->cb(t->userdata) == FALSE) {
+            crm_trace("Timer %s complete", t->name);
+            repeat = FALSE;
+        }
     }
-    return t->repeat;
+
+    if(!repeat) {
+        t->id = 0;
+    }
+    return repeat;
 }
 
 void mainloop_timer_start(mainloop_timer_t *t)
 {
     mainloop_timer_stop(t);
-    crm_trace("Starting timer %s", t->name);
-    t->id = g_timeout_add(t->interval, mainloop_timer_cb, t);
+    if(t && t->period > 0) {
+        crm_trace("Starting timer %s", t->name);
+        t->id = g_timeout_add(t->period, mainloop_timer_cb, t);
+    }
 }
 
 void mainloop_timer_stop(mainloop_timer_t *t)
 {
-    if(t->id != 0) {
-        crm_trace("Invoking callbacks for timer %s", t->name);
+    if(t && t->id != 0) {
+        crm_trace("Stopping timer %s", t->name);
         g_source_remove(t->id);
         t->id = 0;
     }
 }
 
+guint mainloop_timer_set_period(mainloop_timer_t *t, guint period)
+{
+    guint last = 0;
+
+    if(t) {
+        last = t->period;
+        t->period = period;
+    }
+
+    if(t && t->id != 0 && last != t->period) {
+        mainloop_timer_start(t);
+    }
+    return last;
+}
+
+
 mainloop_timer_t *
-mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb, void *userdata)
+mainloop_timer_add(const char *name, guint period, bool repeat, GSourceFunc cb, void *userdata)
 {
     mainloop_timer_t *t = calloc(1, sizeof(mainloop_timer_t));
 
     if(t) {
         if(name) {
-            t->name = g_strdup_printf("%s-%u-%d", name, interval, repeat);
+            t->name = g_strdup_printf("%s-%u-%d", name, period, repeat);
         } else {
-            t->name = g_strdup_printf("%p-%u-%d", t, interval, repeat);
+            t->name = g_strdup_printf("%p-%u-%d", t, period, repeat);
         }
-        t->interval = interval;
+        t->id = 0;
+        t->period = period;
         t->repeat = repeat;
         t->cb = cb;
         t->userdata = userdata;
+        crm_trace("Created timer %s", t->name);
     }
     return t;
 }
@@ -1047,8 +1077,11 @@ mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb
 void
 mainloop_timer_del(mainloop_timer_t *t)
 {
-    mainloop_timer_stop(t);
-    free(t->name);
-    free(t);
+    if(t) {
+        crm_trace("Destroying timer %s", t->name);
+        mainloop_timer_stop(t);
+        free(t->name);
+        free(t);
+    }
 }
 

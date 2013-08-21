@@ -86,9 +86,6 @@ get_timer_desc(fsa_timer_t * timer)
     if (timer == election_trigger) {
         return "Election Trigger";
 
-    } else if (timer == election_timeout) {
-        return "Election Timeout";
-
     } else if (timer == shutdown_escalation_timer) {
         return "Shutdown Escalation";
 

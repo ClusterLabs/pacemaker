@@ -37,8 +37,7 @@ gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
 
 int last_peer_update = 0;
-
-extern GHashTable *voted;
+guint highest_born_on = -1;
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
@@ -50,10 +49,8 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     if (crm_is_peer_active(node) == FALSE) {
         crm_update_peer_join(__FUNCTION__, node, crm_join_none);
 
-        if(node->uname) {
-            if (voted != NULL) {
-                g_hash_table_remove(voted, node->uname);
-            }
+        if(node && node->uname) {
+            election_remove(fsa_election, node->uname);
 
             if (safe_str_eq(fsa_our_uname, node->uname)) {
                 crm_err("We're not part of the cluster anymore");

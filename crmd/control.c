@@ -26,6 +26,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
+#include <crm/cluster/election.h>
 #include <crm/common/ipcs.h>
 
 #include <crmd.h>
@@ -50,6 +51,15 @@ gboolean crm_read_options(gpointer user_data);
 gboolean fsa_has_quorum = FALSE;
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
+
+static gboolean
+election_timeout_popped(gpointer data)
+{
+    /* Not everyone voted */
+    crm_info("Election failed: Declaring ourselves the winner");
+    register_fsa_input(C_TIMER_POPPED, I_ELECTION_DC, NULL);
+    return FALSE;
+}
 
 /*	 A_HA_CONNECT	*/
 void
@@ -116,6 +126,7 @@ do_ha_control(long long action,
             }
 #endif
         }
+        fsa_election = election_init(NULL, cluster->uname, 60000/*60s*/, election_timeout_popped);
         fsa_our_uname = cluster->uname;
         fsa_our_uuid = cluster->uuid;
         if(cluster->uuid == NULL) {
@@ -323,10 +334,8 @@ crmd_exit(int rc)
         g_hash_table_destroy(reload_hash); reload_hash = NULL;
     }
 
-    if (voted) {
-        crm_trace("Destroying voted cache with %d members", g_hash_table_size(voted));
-        g_hash_table_destroy(voted); voted = NULL;
-    }
+    election_fini(fsa_election);
+    fsa_election = NULL;
 
     cib_delete(fsa_cib_conn);
     fsa_cib_conn = NULL;
@@ -349,7 +358,7 @@ crmd_exit(int rc)
     crm_timer_stop(integration_timer);
     crm_timer_stop(finalization_timer);
     crm_timer_stop(election_trigger);
-    crm_timer_stop(election_timeout);
+    election_timeout_stop(fsa_election);
     crm_timer_stop(shutdown_escalation_timer);
     crm_timer_stop(wait_timer);
     crm_timer_stop(recheck_timer);
@@ -358,7 +367,7 @@ crmd_exit(int rc)
     free(integration_timer); integration_timer = NULL;
     free(finalization_timer); finalization_timer = NULL;
     free(election_trigger); election_trigger = NULL;
-    free(election_timeout); election_timeout = NULL;
+    election_fini(fsa_election);
     free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
     free(wait_timer); wait_timer = NULL;
     free(recheck_timer); recheck_timer = NULL;
@@ -461,7 +470,6 @@ do_startup(long long action,
     integration_timer = calloc(1, sizeof(fsa_timer_t));
     finalization_timer = calloc(1, sizeof(fsa_timer_t));
     election_trigger = calloc(1, sizeof(fsa_timer_t));
-    election_timeout = calloc(1, sizeof(fsa_timer_t));
     shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
     wait_timer = calloc(1, sizeof(fsa_timer_t));
     recheck_timer = calloc(1, sizeof(fsa_timer_t));
@@ -474,16 +482,6 @@ do_startup(long long action,
         election_trigger->fsa_input = I_DC_TIMEOUT;
         election_trigger->callback = crm_timer_popped;
         election_trigger->repeat = FALSE;
-    } else {
-        was_error = TRUE;
-    }
-
-    if (election_timeout != NULL) {
-        election_timeout->source_id = 0;
-        election_timeout->period_ms = -1;
-        election_timeout->fsa_input = I_ELECTION_DC;
-        election_timeout->callback = crm_timer_popped;
-        election_timeout->repeat = FALSE;
     } else {
         was_error = TRUE;
     }
@@ -893,10 +891,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
+    /* How long to declare an election over - even if not everyone voted */
     crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
-    election_timeout->period_ms = crm_get_msec(value);
+    election_timeout_set_period(fsa_election, crm_get_msec(value));
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_timer->period_ms = crm_get_msec(value);

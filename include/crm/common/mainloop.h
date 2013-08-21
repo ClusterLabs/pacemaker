@@ -52,6 +52,8 @@ void mainloop_timer_start(mainloop_timer_t *t);
 
 void mainloop_timer_stop(mainloop_timer_t *t);
 
+guint mainloop_timer_set_period(mainloop_timer_t *t, guint period);
+
 mainloop_timer_t *mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb, void *userdata);
 
 void mainloop_timer_del(mainloop_timer_t *t);

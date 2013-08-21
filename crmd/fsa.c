@@ -28,6 +28,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/cluster/election.h>
 
 #include <crm/cluster.h>
 
@@ -48,10 +49,11 @@ char *fsa_our_uname = NULL;
 ll_cluster_t *fsa_cluster_conn;
 #endif
 
+election_t *fsa_election = NULL;
+
 fsa_timer_t *wait_timer = NULL;        /* How long to wait before retrying to connect to the cib/lrmd/ccm */
 fsa_timer_t *recheck_timer = NULL;     /* Periodically re-run the PE to account for time based rules/preferences */
 fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
-fsa_timer_t *election_timeout = NULL;  /* How long to declare an election over - even if not everyone voted */
 fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
 fsa_timer_t *integration_timer = NULL;
 fsa_timer_t *finalization_timer = NULL;
@@ -500,8 +502,8 @@ do_state_transition(long long actions,
                state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
     /* the last two clauses might cause trouble later */
-    if (election_timeout != NULL && next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
-        crm_timer_stop(election_timeout);
+    if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
+        election_timeout_stop(fsa_election);
 /* 	} else { */
 /* 		crm_timer_start(election_timeout); */
     }

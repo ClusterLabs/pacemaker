@@ -25,6 +25,7 @@
 #  include <crm/common/xml.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/cluster.h>
+#  include <crm/cluster/election.h>
 #  include <crm/common/ipcs.h>
 
 #  if SUPPORT_HEARTBEAT
@@ -94,6 +95,7 @@ extern char *fsa_our_dc;
 extern char *fsa_our_dc_version;
 extern GListPtr fsa_message_queue;
 
+extern election_t *fsa_election;   /*  */
 extern fsa_timer_t *election_trigger;   /*  */
 extern fsa_timer_t *election_timeout;   /*  */
 extern fsa_timer_t *shutdown_escalation_timer;  /*  */
@@ -112,7 +114,6 @@ extern struct crm_subsystem_s *pe_subsystem;
 
 /* these two should be moved elsewhere... */
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
-extern gboolean do_dc_heartbeat(gpointer data);
 
 #  define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #  define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
