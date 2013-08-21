@@ -271,6 +271,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     CRM_LOG_ASSERT(output != NULL);
 
+    /* refresh our remote-node cache when the pengine is invoked */
+    crm_remote_peer_cache_refresh(output);
+
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 

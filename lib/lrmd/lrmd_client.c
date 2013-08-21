@@ -90,6 +90,11 @@ typedef struct lrmd_private_s {
     gnutls_psk_client_credentials_t psk_cred_c;
 
     int sock;
+    /* since tls requires a round trip across the network for a
+     * request/reply, there are times where we just want to be able
+     * to send a request from the client and not wait around (or even care
+     * about) what the reply is. */
+    int expected_late_replies;
     GList *pending_notify;
     crm_trigger_t *process_notify;
 #endif
@@ -242,9 +247,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         /* this is proxy business */
         lrmd_internal_proxy_dispatch(lrmd, msg);
         return 1;
-    }
-
-    if (!native->callback) {
+    } else if (!native->callback) {
         /* no callback set */
         crm_trace("notify event received but client has not set callback");
         return 1;
@@ -372,7 +375,19 @@ lrmd_tls_dispatch(gpointer userdata)
         xml = crm_remote_parse_buffer(native->remote);
     }
     while (xml) {
-        lrmd_dispatch_internal(lrmd, xml);
+        const char *msg_type = crm_element_value(xml, F_LRMD_REMOTE_MSG_TYPE);
+        if (safe_str_eq(msg_type, "notify")) {
+            lrmd_dispatch_internal(lrmd, xml);
+        } else if (safe_str_eq(msg_type, "reply")) {
+            if (native->expected_late_replies > 0) {
+                native->expected_late_replies--;
+            } else {
+                int reply_id = 0;
+                crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
+                /* if this happens, we want to know about it */
+                crm_err("Got outdated reply %d", reply_id);
+            }
+        }
         free_xml(xml);
         xml = crm_remote_parse_buffer(native->remote);
     }
@@ -618,7 +633,11 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
             free_xml(xml);
             xml = NULL;
         } else if (reply_id != expected_reply_id) {
-            crm_err("Got outdated reply, expected id %d got id %d", expected_reply_id, reply_id);
+            if (native->expected_late_replies > 0) {
+                native->expected_late_replies--;
+            } else {
+                crm_err("Got outdated reply, expected id %d got id %d", expected_reply_id, reply_id);
+            }
             free_xml(xml);
             xml = NULL;
         }
@@ -725,6 +744,12 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case CRM_CLIENT_TLS:
             rc = lrmd_tls_send(lrmd, msg);
+            if (rc == pcmk_ok) {
+                /* we don't want to wait around for the reply, but
+                 * since the request/reply protocol needs to behave the same
+                 * as libqb, a reply will eventually come later anyway. */
+                native->expected_late_replies++;
+            }
             break;
 #endif
         default:
