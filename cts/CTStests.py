@@ -2491,12 +2491,7 @@ class RemoteSimple(CTSTest):
 
     def start_lxc_simple(self, node):
         # restore any artifacts laying around from a previous test.
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p -r &>/dev/null")
-        for num in range(self.num_containers):
-            self.CM.rsh(node, "virsh -c lxc:/// destroy lxc%d" % (num+1))
-            self.CM.rsh(node, "virsh -c lxc:/// undefine lxc%d" % (num+1))
-
-        self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
@@ -2522,8 +2517,7 @@ class RemoteSimple(CTSTest):
         # as best as possible 
         if self.failed == 1:
             # restore libvirt and cib
-            self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p -r &>/dev/null")
-            self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+            self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r container1 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r container2 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
@@ -2549,8 +2543,7 @@ class RemoteSimple(CTSTest):
             self.failed = 1
 
         # cleanup libvirt
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -r &>/dev/null")
-        self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
     def __call__(self, node):
         '''Perform the 'RemoteSimple' test. '''

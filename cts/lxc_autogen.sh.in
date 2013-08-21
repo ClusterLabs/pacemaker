@@ -6,6 +6,7 @@ download=0
 addr="192.168.123.1"
 restore=0
 restore_pcmk=0
+restore_all=0
 generate=0
 cib=0
 add_clone=0
@@ -22,6 +23,7 @@ function helptext() {
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
+	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory"
 	echo ""
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
 	echo "-m, --add-clone        Add clone resource shared between remote-nodes"
@@ -30,7 +32,7 @@ function helptext() {
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
 	echo "-v, --verify           Verify environment is capable of running lxc"
 	echo ""
-    exit $1
+	exit $1
 }
 
 while true ; do
@@ -41,6 +43,11 @@ while true ; do
 	-n|--network) addr="$2"; shift; shift;;
 	-r|--restore-libvirt) restore=1; shift;;
 	-p|--restore-cib) restore_pcmk=1; shift;;
+	-R|--restore-all)
+		restore_all=1
+		restore=1
+		restore_pcmk=1
+		shift;;
 	-g|--generate) generate=1; shift;;
 	-a|--add-cib) cib=1; shift;;
 	-m|--add-clone) add_clone=1; shift;;
@@ -305,3 +312,6 @@ fi
 
 cd $curdir
 
+if [ $restore_all -eq 1 ]; then
+	rm -rf $working_dir
+fi
