@@ -2490,6 +2490,11 @@ class RemoteSimple(CTSTest):
         self.fail_string = ""
 
     def start_lxc_simple(self, node):
+
+        rc = self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
+        if rc == 1:
+            return self.skipped()
+
         # restore any artifacts laying around from a previous test.
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
