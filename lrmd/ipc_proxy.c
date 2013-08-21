@@ -156,7 +156,7 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      * Looking at the chain of events.
      *
      * -----remote node----------------|---- cluster node ------
-     * ipc_client <--1--> this code <--2--> crmd <----3----> ipc server
+     * ipc_client <--1--> this code <--2--> crmd:remote_proxy_cb() <----3----> ipc server
      *
      * This function is receiving a msg from connection 2
      * and forwarding it to connection 1.
