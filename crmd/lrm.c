@@ -367,7 +367,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if (counter > 0) {
-        do_crm_log(log_level, "%d pending LRM operations at %s%s", counter, when);
+        do_crm_log(log_level, "%d pending LRM operations at %s", counter, when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
