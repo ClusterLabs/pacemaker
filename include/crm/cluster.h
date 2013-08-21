@@ -32,6 +32,7 @@
 
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
+extern GHashTable *crm_remote_peer_cache;
 extern unsigned long long crm_peer_seq;
 
 #  ifndef CRM_SERVICE
@@ -55,12 +56,16 @@ enum crm_join_phase
 };
 
 /* *INDENT-ON* */
+enum crm_node_flags
+{
+    crm_remote_node     = 0x0001,
+};
 
 typedef struct crm_peer_node_s {
     uint32_t id;                /* Only used by corosync derivatives */
     uint64_t born;              /* Only used by heartbeat and the legacy plugin */
     uint64_t last_seen;
-    uint64_t flags;             /* Unused, but might be a good place to specify 'remote' */
+    uint64_t flags;             /* Specified by crm_node_flags enum */
 
     int32_t votes;              /* Only used by the legacy plugin */
     uint32_t processes;
@@ -124,11 +129,25 @@ enum crm_ais_msg_types {
     crm_msg_pe       = 8,
     crm_msg_stonith_ng = 9,
 };
+
+/* used with crm_get_peer_full */
+enum crm_get_peer_flags {
+    CRM_GET_PEER_CLUSTER   = 0x0001,
+    CRM_GET_PEER_REMOTE    = 0x0002,
+};
 /* *INDENT-ON* */
 
 gboolean send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service,
                               xmlNode * data, gboolean ordered);
 
+
+/* Initialize and refresh the remote peer cache from a cib config */
+void crm_remote_peer_cache_refresh(xmlNode *cib);
+
+/* allows filtering of remote and cluster nodes using crm_get_peer_flags */
+crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
+
+/* only searches cluster nodes */
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
 guint crm_active_peers(void);
