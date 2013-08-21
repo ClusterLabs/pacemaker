@@ -9,6 +9,7 @@ restore_pcmk=0
 generate=0
 cib=0
 add_clone=0
+verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
 curdir=$(pwd)
 
@@ -27,6 +28,7 @@ function helptext() {
 	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
 	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
+	echo "-v, --verify           Verify environment is capable of running lxc"
 	echo ""
     exit $1
 }
@@ -42,10 +44,27 @@ while true ; do
 	-g|--generate) generate=1; shift;;
 	-a|--add-cib) cib=1; shift;;
 	-m|--add-clone) add_clone=1; shift;;
+	-v|--verify) verify=1; shift;;
 	"") break;;
 	*) helptext 1;;
 	esac
 done
+
+if [ $verify -eq 1 ]; then
+	# verify virsh tool is available and that 
+	# we can connect to lxc driver.
+	virsh -c lxc:/// list --all > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
+		exit 1
+	fi
+
+	cat /etc/selinux/config  | grep -e "SELINUX.*=.*permissive" -e "SELINUX.*=.*enforcing" > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
+		exit 1
+	fi
+fi
 
 #strip last digits off addr
 tmp="s/\.$(echo "$addr" | tr '.' ' ' | awk '{print $4}')$//g"
