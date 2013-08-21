@@ -986,3 +986,69 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
         child_death_dispatch(SIGCHLD);
     }
 }
+
+
+struct mainloop_timer_s {
+        guint id;
+        guint interval;
+        bool repeat;
+        char *name;
+        GSourceFunc cb;
+        void *userdata;
+};
+
+struct mainloop_timer_s mainloop;
+
+static gboolean mainloop_timer_cb(gpointer user_data)
+{
+    struct mainloop_timer_s *t = user_data;
+    if(t && t->cb) {
+        crm_trace("Stopping timer %s", t->name);
+        t->cb(t->userdata);
+    }
+    return t->repeat;
+}
+
+void mainloop_timer_start(mainloop_timer_t *t)
+{
+    mainloop_timer_stop(t);
+    crm_trace("Starting timer %s", t->name);
+    t->id = g_timeout_add(t->interval, mainloop_timer_cb, t);
+}
+
+void mainloop_timer_stop(mainloop_timer_t *t)
+{
+    if(t->id != 0) {
+        crm_trace("Invoking callbacks for timer %s", t->name);
+        g_source_remove(t->id);
+        t->id = 0;
+    }
+}
+
+mainloop_timer_t *
+mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb, void *userdata)
+{
+    mainloop_timer_t *t = calloc(1, sizeof(mainloop_timer_t));
+
+    if(t) {
+        if(name) {
+            t->name = g_strdup_printf("%s-%u-%d", name, interval, repeat);
+        } else {
+            t->name = g_strdup_printf("%p-%u-%d", t, interval, repeat);
+        }
+        t->interval = interval;
+        t->repeat = repeat;
+        t->cb = cb;
+        t->userdata = userdata;
+    }
+    return t;
+}
+
+void
+mainloop_timer_del(mainloop_timer_t *t)
+{
+    mainloop_timer_stop(t);
+    free(t->name);
+    free(t);
+}
+

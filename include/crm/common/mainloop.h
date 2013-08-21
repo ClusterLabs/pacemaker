@@ -29,6 +29,7 @@
 typedef struct trigger_s crm_trigger_t;
 typedef struct mainloop_io_s mainloop_io_t;
 typedef struct mainloop_child_s mainloop_child_t;
+typedef struct mainloop_timer_s mainloop_timer_t;
 
 void mainloop_cleanup(void);
 
@@ -46,6 +47,15 @@ gboolean crm_signal(int sig, void (*dispatch) (int sig));
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
+
+void mainloop_timer_start(mainloop_timer_t *t);
+
+void mainloop_timer_stop(mainloop_timer_t *t);
+
+mainloop_timer_t *mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb, void *userdata);
+
+void mainloop_timer_del(mainloop_timer_t *t);
+
 
 #  include <crm/common/ipc.h>
 #  include <qb/qbipcs.h>
