@@ -313,6 +313,8 @@ ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
     GHashTableIter iter;
     crm_client_t *ipc_client = NULL;
     char *key = NULL;
+    GList *remove_these = NULL;
+    GListPtr gIter = NULL;
 
     if (ipc_providers == NULL) {
         return;
@@ -326,9 +328,19 @@ ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
         if (safe_str_eq(proxy_id, ipc_proxy->id)) {
             crm_info("ipc proxy connection for client %s pid %d destroyed because cluster node disconnected.",
                 ipc_client->id, ipc_client->pid);
-            qb_ipcs_disconnect(ipc_client->ipcs);
+            /* we can't remove during the iteration, so copy items
+             * to a list we can destroy later */
+            remove_these = g_list_append(remove_these, ipc_client);
         }
     }
+
+    for (gIter = remove_these; gIter != NULL; gIter = gIter->next) {
+        ipc_client = gIter->data;
+        qb_ipcs_disconnect(ipc_client->ipcs);
+    }
+
+    /* just frees the list, not the elements in the list */
+    g_list_free(remove_these);
 }
 
 void
