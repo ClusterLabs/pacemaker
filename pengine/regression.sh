@@ -705,6 +705,8 @@ do_test whitebox-start "Start whitebox container with resources assigned to it"
 do_test whitebox-stop "Stop whitebox container with resources assigned to it"
 do_test whitebox-move "Move whitebox container with resources assigned to it"
 do_test whitebox-asymmetric "Verify connection rsc opts-in based on container resource"
+do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
+do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
 
 echo ""
 test_results
