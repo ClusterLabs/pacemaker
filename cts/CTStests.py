@@ -2558,9 +2558,11 @@ class RemoteSimple(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        # TODO add an option to lxc_autogen to verify environment is capable of lxc 
         self.start_lxc_simple(node)
         self.cleanup_lxc_simple(node)
+
+        self.CM.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
 
         if self.failed == 1:
             return self.failure(self.fail_string)
