@@ -171,14 +171,21 @@ mon_timer_popped(gpointer data)
 {
     int rc = pcmk_ok;
 
+#if CURSES_ENABLED
+    if(as_console) {
+        clear();
+        refresh();
+    }
+#endif
+
     if (timer_id > 0) {
         g_source_remove(timer_id);
     }
 
+    print_as("Reconnecting...\n");
     rc = cib_connect(TRUE);
 
     if (rc != pcmk_ok) {
-        print_dot();
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
@@ -189,7 +196,6 @@ mon_cib_connection_destroy(gpointer user_data)
 {
     print_as("Connection to the CIB terminated\n");
     if (cib) {
-        print_as("Reconnecting...");
         cib->cmds->signoff(cib);
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
@@ -654,19 +660,24 @@ main(int argc, char **argv)
 
     if (current_cib == NULL) {
         cib = cib_new();
-        if (!one_shot) {
-            print_as("Attempting connection to the cluster...");
-        }
 
         do {
+            if (!one_shot) {
+                print_as("Attempting connection to the cluster...\n");
+            }
             exit_code = cib_connect(!one_shot);
 
             if (one_shot) {
                 break;
 
             } else if (exit_code != pcmk_ok) {
-                print_dot();
                 sleep(reconnect_msec / 1000);
+#if CURSES_ENABLED
+                if(as_console) {
+                    clear();
+                    refresh();
+                }
+#endif
             }
 
         } while (exit_code == -ENOTCONN);
