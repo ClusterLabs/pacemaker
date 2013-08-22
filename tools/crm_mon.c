@@ -96,6 +96,7 @@ gboolean print_last_updated = TRUE;
 gboolean print_last_change = TRUE;
 gboolean print_tickets = FALSE;
 gboolean watch_fencing = FALSE;
+gboolean hide_headers = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix;
@@ -339,6 +340,7 @@ static struct crm_option long_options[] = {
     {"watch-fencing",  0, 0, 'W', "\t\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
+    {"hide-headers",   0, 0, 'D', "\tHide all headers" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -445,6 +447,9 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                     print_neg_location_prefix = "";
                 }
                 break;
+            case 'D':
+                hide_headers = ! hide_headers;
+                break;
             case '?':
                 config_mode = TRUE;
                 break;
@@ -467,6 +472,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
         print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
         print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
+        print_as("%c D: \t%s\n", hide_headers ? '*': ' ', get_option_desc('D'));
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
     }
@@ -544,6 +550,9 @@ main(int argc, char **argv)
                 break;
             case 'L':
                 print_neg_location_prefix = optarg ?: "";
+                break;
+            case 'D':
+                hide_headers = TRUE;
                 break;
             case 'c':
                 print_tickets = TRUE;
@@ -1157,11 +1166,11 @@ print_status(pe_working_set_t * data_set)
     }
 
     since_epoch = ctime(&a_time);
-    if (since_epoch != NULL && print_last_updated) {
+    if (since_epoch != NULL && print_last_updated && !hide_headers) {
         print_as("Last updated: %s", since_epoch);
     }
 
-    if (print_last_change) {
+    if (print_last_change && !hide_headers) {
         const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
         const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
@@ -1184,13 +1193,15 @@ print_status(pe_working_set_t * data_set)
         get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
     if (stack) {
         stack_s = crm_element_value(stack, XML_NVPAIR_ATTR_VALUE);
-        print_as("Stack: %s\n", stack_s);
+        if (!hide_headers) {
+            print_as("Stack: %s\n", stack_s);
+        }
     }
 
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
     if (dc == NULL) {
         print_as("Current DC: NONE\n");
-    } else {
+    } else if (!hide_headers) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
         if (safe_str_neq(dc->details->uname, dc->details->id)) {
@@ -1211,14 +1222,16 @@ print_status(pe_working_set_t * data_set)
         quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
 
-    if(stack_s && strstr(stack_s, "classic openais") != NULL) {
-        print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
-                 quorum_votes);
-    } else {
-        print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+    if(!hide_headers) {
+        if(stack_s && strstr(stack_s, "classic openais") != NULL) {
+            print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
+                     quorum_votes);
+        } else {
+            print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+        }
+        print_as("%d Resources configured\n", count_resources(data_set, NULL));
+        print_as("\n\n");
     }
-    print_as("%d Resources configured\n", count_resources(data_set, NULL));
-    print_as("\n\n");
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
