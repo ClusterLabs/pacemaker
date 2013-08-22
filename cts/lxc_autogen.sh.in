@@ -9,7 +9,7 @@ restore_pcmk=0
 restore_all=0
 generate=0
 cib=0
-add_clone=0
+add_master=0
 verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
 curdir=$(pwd)
@@ -26,7 +26,7 @@ function helptext() {
 	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory"
 	echo ""
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
-	echo "-m, --add-clone        Add clone resource shared between remote-nodes"
+	echo "-m, --add-master       Add master resource shared between remote-nodes"
 	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
 	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
@@ -50,7 +50,7 @@ while true ; do
 		shift;;
 	-g|--generate) generate=1; shift;;
 	-a|--add-cib) cib=1; shift;;
-	-m|--add-clone) add_clone=1; shift;;
+	-m|--add-master) add_master=1; shift;;
 	-v|--verify) verify=1; shift;;
 	"") break;;
 	*) helptext 1;;
@@ -169,17 +169,18 @@ END
 
 		rm -f lxc-ms$c.cib
 		cat << END >> lxc-ms.cib
-      <clone id="lxc-clone-clone">
-        <primitive class="ocf" id="lxc-clone" provider="pacemaker" type="Dummy">
-          <instance_attributes id="lxc-clone-instance_attributes"/>
+      <master id="lxc-ms-master">
+        <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
+          <instance_attributes id="lxc-ms-instance_attributes"/>
           <operations>
-            <op id="lxc-clone-monitor-interval-10s" interval="10s" name="monitor"/>
+            <op id="lxc-ms-monitor-interval-10s" interval="10s" name="monitor"/>
           </operations>
         </primitive>
-        <meta_attributes id="lxc-clone-meta_attributes">
-          <nvpair id="lxc-clone-meta_attributes-clone-max" name="clone-max" value="3"/>
+        <meta_attributes id="lxc-ms-meta_attributes">
+          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="$containers"/>
         </meta_attributes>
-      </clone>
+      </master>
 END
 
 		rm -f lxc$c-filesystem/launch-helper
@@ -187,6 +188,7 @@ END
 #!/bin/bash
 ifconfig eth0 $addr.10$c
 route add 0.0.0.0 gw $addr.1 eth0
+hostname lxc$c
 /usr/sbin/pacemaker_remoted
 END
 		chmod 711 lxc$c-filesystem/launch-helper
@@ -197,7 +199,7 @@ END
 	done
 }
 
-apply_cib_clone()
+apply_cib_master()
 {
 	cibadmin -Q > cur.cib
 	export CIB_file=cur.cib
@@ -205,7 +207,7 @@ apply_cib_clone()
 	cibadmin -o resources -C -x lxc-ms.cib
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
@@ -243,7 +245,7 @@ restore_cib()
 
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
@@ -306,8 +308,8 @@ fi
 if [ $cib -eq 1 ]; then
 	apply_cib_entries
 fi
-if [ $add_clone -eq 1 ]; then
-	apply_cib_clone
+if [ $add_master -eq 1 ]; then
+	apply_cib_master
 fi
 
 cd $curdir

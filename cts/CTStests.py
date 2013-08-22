@@ -2504,8 +2504,8 @@ class RemoteSimple(CTSTest):
         watch.setwatch()
         pats.append("process_lrm_event: LRM operation lxc1_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc2_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-clone_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-clone_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
 
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
@@ -2527,7 +2527,7 @@ class RemoteSimple(CTSTest):
             self.CM.rsh(node, "crm_resource -C -r container2 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r lxc-clone &>/dev/null")
+            self.CM.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
             time.sleep(20)
 
             return
@@ -2573,7 +2573,7 @@ class RemoteSimple(CTSTest):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for ping""",
                  """LogActions: Recover ping""",
-                 """LogActions: Recover lxc-clone""",
+                 """LogActions: Recover lxc-ms""",
                  """LogActions: Recover container""",
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
