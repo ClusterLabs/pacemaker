@@ -210,7 +210,7 @@ apply_cib_master()
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -C -x tmp_constraint
+		cibadmin -o constraints -C -x tmp_constraint > /dev/null 2>&1
 		rm -f tmp_constraint
 	done
 	unset CIB_file
