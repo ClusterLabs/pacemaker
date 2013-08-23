@@ -20,6 +20,11 @@
     <element name="rsc_location">
       <attribute name="id"><data type="ID"/></attribute>
       <attribute name="rsc"><data type="IDREF"/></attribute>
+      <optional>
+	<attribute name="role">
+	  <ref name="attribute-roles"/>
+	</attribute>
+      </optional>
       <choice>
 	<group>
 	  <externalRef href="score.rng"/>
