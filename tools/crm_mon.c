@@ -171,14 +171,21 @@ mon_timer_popped(gpointer data)
 {
     int rc = pcmk_ok;
 
+#if CURSES_ENABLED
+    if(as_console) {
+        clear();
+        refresh();
+    }
+#endif
+
     if (timer_id > 0) {
         g_source_remove(timer_id);
     }
 
+    print_as("Reconnecting...\n");
     rc = cib_connect(TRUE);
 
     if (rc != pcmk_ok) {
-        print_dot();
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
@@ -189,7 +196,6 @@ mon_cib_connection_destroy(gpointer user_data)
 {
     print_as("Connection to the CIB terminated\n");
     if (cib) {
-        print_as("Reconnecting...");
         cib->cmds->signoff(cib);
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
@@ -654,19 +660,24 @@ main(int argc, char **argv)
 
     if (current_cib == NULL) {
         cib = cib_new();
-        if (!one_shot) {
-            print_as("Attempting connection to the cluster...");
-        }
 
         do {
+            if (!one_shot) {
+                print_as("Attempting connection to the cluster...\n");
+            }
             exit_code = cib_connect(!one_shot);
 
             if (one_shot) {
                 break;
 
             } else if (exit_code != pcmk_ok) {
-                print_dot();
                 sleep(reconnect_msec / 1000);
+#if CURSES_ENABLED
+                if(as_console) {
+                    clear();
+                    refresh();
+                }
+#endif
             }
 
         } while (exit_code == -ENOTCONN);
@@ -706,37 +717,6 @@ main(int argc, char **argv)
 
     clean_up(0);
     return 0;                   /* never reached */
-}
-
-void
-wait_for_refresh(int offset, const char *prefix, int msec)
-{
-    int lpc = msec / 1000;
-    struct timespec sleept = { 1, 0 };
-
-    if (as_console == FALSE) {
-        timer_id = g_timeout_add(msec, mon_timer_popped, NULL);
-        return;
-    }
-
-    crm_notice("%sRefresh in %ds...", prefix ? prefix : "", lpc);
-    while (lpc > 0) {
-#if CURSES_ENABLED
-        move(offset, 0);
-/* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
-        printw("%sRefresh in %ds...\n", prefix ? prefix : "", lpc);
-        clrtoeol();
-        refresh();
-#endif
-        lpc--;
-        if (lpc == 0) {
-            timer_id = g_timeout_add(1000, mon_timer_popped, NULL);
-        } else {
-            if (nanosleep(&sleept, NULL) != 0) {
-                return;
-            }
-        }
-    }
 }
 
 #define mon_warn(fmt...) do {			\
