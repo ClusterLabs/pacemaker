@@ -905,16 +905,19 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
         CMD_ERR("WARNING: Creating rsc_location constraint '%s'"
                 " with a score of -INFINITY for resource %s"
                 " on %s.\n", ID(location), rsc_id, host);
-        CMD_ERR("\tThis will prevent %s from running"
+        CMD_ERR("\tThis will prevent %s from %s"
                 " on %s until the constraint is removed using"
                 " the 'crm_resource --clear' command or manually"
-                " with cibadmin\n", rsc_id, host);
+                " with cibadmin\n", rsc_id, scope_master?"being promoted":"running", host);
         CMD_ERR("\tThis will be the case even if %s is"
                 " the last node in the cluster\n", host);
         CMD_ERR("\tThis message can be disabled with --quiet\n");
     }
 
     crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
+    if(scope_master) {
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
+    }
 
     if (later_s == NULL) {
         /* Short form */
@@ -2003,7 +2006,7 @@ main(int argc, char **argv)
             node_t *current = rsc->running_on->data;
             rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
 
-        } else if(scope_master && rsc->variant == pe_master) {
+        } else if(rsc->variant == pe_master) {
             int count = 0;
             GListPtr iter = NULL;
             node_t *current = NULL;
