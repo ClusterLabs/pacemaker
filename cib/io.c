@@ -289,12 +289,15 @@ static int cib_archive_filter(const struct dirent * a)
 {
     /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
     if(a->d_type != 8) {
+        crm_trace("%s - wrong type (%d)", a->d_name, a->d_type);
         return 0;
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
+        crm_trace("%s - wrong prefix", a->d_name);
         return 0;
 
     } else if(strstr(a->d_name, ".sig") != NULL) {
+        crm_trace("%s - wrong suffix", a->d_name);
         return 0;
     }
     return 1;
@@ -362,7 +365,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     free(sigfile);
 
     if (root == NULL) {
-        crm_warn("Primary configuration corrupt or unusable, trying backups");
+        crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
             crm_perror(LOG_NOTICE, "scandir(%s) failed", cib_root);
