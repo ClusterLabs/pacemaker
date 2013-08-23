@@ -23,7 +23,7 @@ function helptext() {
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
-	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory"
+	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
 	echo ""
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
 	echo "-m, --add-master       Add master resource shared between remote-nodes"
@@ -320,9 +320,8 @@ fi
 if [ $add_master -eq 1 ]; then
 	apply_cib_master
 fi
+if [ $restore_all -eq 1 ]; then
+	ls | grep -v "lxc.\.xml" | xargs rm -rf
+fi
 
 cd $curdir
-
-if [ $restore_all -eq 1 ]; then
-	rm -rf $working_dir
-fi
