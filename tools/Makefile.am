@@ -37,9 +37,6 @@ sbin_SCRIPTS		+= cibsecret
 endif
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
-halibdir		= $(CRM_DAEMON_DIR)
-halib_PROGRAMS		= attrd
-
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
@@ -123,12 +120,6 @@ crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS)
-
-attrd_SOURCES		= attrd.c
-attrd_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
-
-#pingd_SOURCES		= pingd.c
-#pingd_LDADD		= $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(COMMONLIBS)

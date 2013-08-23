@@ -1801,9 +1801,10 @@ cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
 	cts/benchmark/Makefile					\
-	cts/benchmark/clubench				\
-	cts/lxc_autogen.sh						\
+	cts/benchmark/clubench					\
+	cts/lxc_autogen.sh					\
 cib/Makefile							\
+attrd/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
 	pengine/regression.core.sh				\
