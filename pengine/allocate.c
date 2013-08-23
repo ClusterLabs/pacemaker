@@ -1578,6 +1578,8 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         container = remote_rsc->container;
         if (safe_str_eq(action->task, "monitor") ||
             safe_str_eq(action->task, "start") ||
+            safe_str_eq(action->task, "promote") ||
+            safe_str_eq(action->task, "demote") ||
             safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT) ||
             safe_str_eq(action->task, "delete")) {

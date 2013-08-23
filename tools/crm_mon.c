@@ -96,6 +96,7 @@ gboolean print_last_updated = TRUE;
 gboolean print_last_change = TRUE;
 gboolean print_tickets = FALSE;
 gboolean watch_fencing = FALSE;
+gboolean hide_headers = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix;
@@ -171,14 +172,21 @@ mon_timer_popped(gpointer data)
 {
     int rc = pcmk_ok;
 
+#if CURSES_ENABLED
+    if(as_console) {
+        clear();
+        refresh();
+    }
+#endif
+
     if (timer_id > 0) {
         g_source_remove(timer_id);
     }
 
+    print_as("Reconnecting...\n");
     rc = cib_connect(TRUE);
 
     if (rc != pcmk_ok) {
-        print_dot();
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
@@ -189,7 +197,6 @@ mon_cib_connection_destroy(gpointer user_data)
 {
     print_as("Connection to the CIB terminated\n");
     if (cib) {
-        print_as("Reconnecting...");
         cib->cmds->signoff(cib);
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
@@ -315,28 +322,29 @@ static struct crm_option long_options[] = {
     {"quiet",          0, 0, 'Q', "\tDisplay only essential output" },
 
     {"-spacer-",	1, 0, '-', "\nModes:"},
-    {"as-html",        1, 0, 'h', "Write cluster status to the named html file"},
-    {"as-xml",         0, 0, 'X', "\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
-    {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
-    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
-    {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
+    {"as-html",        1, 0, 'h', "\tWrite cluster status to the named html file"},
+    {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
+    {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for cgi"},
+    {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
+    {"snmp-traps",     1, 0, 'S', "\tSend SNMP traps to this station", !ENABLE_SNMP},
     {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
-    {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
+    {"mail-to",        1, 0, 'T', "\tSend Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
 
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
     {"group-by-node",  0, 0, 'n', "\tGroup resources by node"     },
-    {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
+    {"inactive",       0, 0, 'r', "\t\tDisplay inactive resources"  },
     {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
-    {"watch-fencing",  0, 0, 'W', "\t\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
+    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
+    {"hide-headers",   0, 0, 'D', "\tHide all headers" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
-    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit"},
+    {"one-shot",       0, 0, '1', "\t\tDisplay the cluster status once on the console and exit"},
     {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses", !CURSES_ENABLED},
     {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
     {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
@@ -439,6 +447,9 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                     print_neg_location_prefix = "";
                 }
                 break;
+            case 'D':
+                hide_headers = ! hide_headers;
+                break;
             case '?':
                 config_mode = TRUE;
                 break;
@@ -461,6 +472,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("%c t: \t%s\n", print_timing ? '*': ' ', get_option_desc('t'));
         print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
         print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
+        print_as("%c D: \t%s\n", hide_headers ? '*': ' ', get_option_desc('D'));
         print_as("\n");
         print_as("Toggle fields via field letter, type any other key to return");
     }
@@ -538,6 +550,9 @@ main(int argc, char **argv)
                 break;
             case 'L':
                 print_neg_location_prefix = optarg ?: "";
+                break;
+            case 'D':
+                hide_headers = TRUE;
                 break;
             case 'c':
                 print_tickets = TRUE;
@@ -654,19 +669,24 @@ main(int argc, char **argv)
 
     if (current_cib == NULL) {
         cib = cib_new();
-        if (!one_shot) {
-            print_as("Attempting connection to the cluster...");
-        }
 
         do {
+            if (!one_shot) {
+                print_as("Attempting connection to the cluster...\n");
+            }
             exit_code = cib_connect(!one_shot);
 
             if (one_shot) {
                 break;
 
             } else if (exit_code != pcmk_ok) {
-                print_dot();
                 sleep(reconnect_msec / 1000);
+#if CURSES_ENABLED
+                if(as_console) {
+                    clear();
+                    refresh();
+                }
+#endif
             }
 
         } while (exit_code == -ENOTCONN);
@@ -706,37 +726,6 @@ main(int argc, char **argv)
 
     clean_up(0);
     return 0;                   /* never reached */
-}
-
-void
-wait_for_refresh(int offset, const char *prefix, int msec)
-{
-    int lpc = msec / 1000;
-    struct timespec sleept = { 1, 0 };
-
-    if (as_console == FALSE) {
-        timer_id = g_timeout_add(msec, mon_timer_popped, NULL);
-        return;
-    }
-
-    crm_notice("%sRefresh in %ds...", prefix ? prefix : "", lpc);
-    while (lpc > 0) {
-#if CURSES_ENABLED
-        move(offset, 0);
-/* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
-        printw("%sRefresh in %ds...\n", prefix ? prefix : "", lpc);
-        clrtoeol();
-        refresh();
-#endif
-        lpc--;
-        if (lpc == 0) {
-            timer_id = g_timeout_add(1000, mon_timer_popped, NULL);
-        } else {
-            if (nanosleep(&sleept, NULL) != 0) {
-                return;
-            }
-        }
-    }
 }
 
 #define mon_warn(fmt...) do {			\
@@ -1177,11 +1166,11 @@ print_status(pe_working_set_t * data_set)
     }
 
     since_epoch = ctime(&a_time);
-    if (since_epoch != NULL && print_last_updated) {
+    if (since_epoch != NULL && print_last_updated && !hide_headers) {
         print_as("Last updated: %s", since_epoch);
     }
 
-    if (print_last_change) {
+    if (print_last_change && !hide_headers) {
         const char *last_written = crm_element_value(data_set->input, XML_CIB_ATTR_WRITTEN);
         const char *user = crm_element_value(data_set->input, XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
@@ -1204,13 +1193,15 @@ print_status(pe_working_set_t * data_set)
         get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
     if (stack) {
         stack_s = crm_element_value(stack, XML_NVPAIR_ATTR_VALUE);
-        print_as("Stack: %s\n", stack_s);
+        if (!hide_headers) {
+            print_as("Stack: %s\n", stack_s);
+        }
     }
 
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
     if (dc == NULL) {
         print_as("Current DC: NONE\n");
-    } else {
+    } else if (!hide_headers) {
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
         if (safe_str_neq(dc->details->uname, dc->details->id)) {
@@ -1231,14 +1222,16 @@ print_status(pe_working_set_t * data_set)
         quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
 
-    if(stack_s && strstr(stack_s, "classic openais") != NULL) {
-        print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
-                 quorum_votes);
-    } else {
-        print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+    if(!hide_headers) {
+        if(stack_s && strstr(stack_s, "classic openais") != NULL) {
+            print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes),
+                     quorum_votes);
+        } else {
+            print_as("%d Nodes configured\n", g_list_length(data_set->nodes));
+        }
+        print_as("%d Resources configured\n", count_resources(data_set, NULL));
+        print_as("\n\n");
     }
-    print_as("%d Resources configured\n", count_resources(data_set, NULL));
-    print_as("\n\n");
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;

@@ -6,9 +6,11 @@ download=0
 addr="192.168.123.1"
 restore=0
 restore_pcmk=0
+restore_all=0
 generate=0
 cib=0
-add_clone=0
+add_master=0
+verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
 curdir=$(pwd)
 
@@ -21,14 +23,16 @@ function helptext() {
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
+	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory"
 	echo ""
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
-	echo "-m, --add-clone        Add clone resource shared between remote-nodes"
+	echo "-m, --add-master       Add master resource shared between remote-nodes"
 	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
 	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
+	echo "-v, --verify           Verify environment is capable of running lxc"
 	echo ""
-    exit $1
+	exit $1
 }
 
 while true ; do
@@ -39,13 +43,35 @@ while true ; do
 	-n|--network) addr="$2"; shift; shift;;
 	-r|--restore-libvirt) restore=1; shift;;
 	-p|--restore-cib) restore_pcmk=1; shift;;
+	-R|--restore-all)
+		restore_all=1
+		restore=1
+		restore_pcmk=1
+		shift;;
 	-g|--generate) generate=1; shift;;
 	-a|--add-cib) cib=1; shift;;
-	-m|--add-clone) add_clone=1; shift;;
+	-m|--add-master) add_master=1; shift;;
+	-v|--verify) verify=1; shift;;
 	"") break;;
 	*) helptext 1;;
 	esac
 done
+
+if [ $verify -eq 1 ]; then
+	# verify virsh tool is available and that 
+	# we can connect to lxc driver.
+	virsh -c lxc:/// list --all > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
+		exit 1
+	fi
+
+	cat /etc/selinux/config  | grep -e "SELINUX.*=.*permissive" -e "SELINUX.*=.*enforcing" > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
+		exit 1
+	fi
+fi
 
 #strip last digits off addr
 tmp="s/\.$(echo "$addr" | tr '.' ' ' | awk '{print $4}')$//g"
@@ -143,17 +169,18 @@ END
 
 		rm -f lxc-ms$c.cib
 		cat << END >> lxc-ms.cib
-      <clone id="lxc-clone-clone">
-        <primitive class="ocf" id="lxc-clone" provider="pacemaker" type="Dummy">
-          <instance_attributes id="lxc-clone-instance_attributes"/>
+      <master id="lxc-ms-master">
+        <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
+          <instance_attributes id="lxc-ms-instance_attributes"/>
           <operations>
-            <op id="lxc-clone-monitor-interval-10s" interval="10s" name="monitor"/>
+            <op id="lxc-ms-monitor-interval-10s" interval="10s" name="monitor"/>
           </operations>
         </primitive>
-        <meta_attributes id="lxc-clone-meta_attributes">
-          <nvpair id="lxc-clone-meta_attributes-clone-max" name="clone-max" value="3"/>
+        <meta_attributes id="lxc-ms-meta_attributes">
+          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="$containers"/>
         </meta_attributes>
-      </clone>
+      </master>
 END
 
 		rm -f lxc$c-filesystem/launch-helper
@@ -161,6 +188,7 @@ END
 #!/bin/bash
 ifconfig eth0 $addr.10$c
 route add 0.0.0.0 gw $addr.1 eth0
+hostname lxc$c
 /usr/sbin/pacemaker_remoted
 END
 		chmod 711 lxc$c-filesystem/launch-helper
@@ -171,7 +199,7 @@ END
 	done
 }
 
-apply_cib_clone()
+apply_cib_master()
 {
 	cibadmin -Q > cur.cib
 	export CIB_file=cur.cib
@@ -179,10 +207,10 @@ apply_cib_clone()
 	cibadmin -o resources -C -x lxc-ms.cib
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -C -x tmp_constraint
+		cibadmin -o constraints -C -x tmp_constraint > /dev/null 2>&1
 		rm -f tmp_constraint
 	done
 	unset CIB_file
@@ -217,7 +245,7 @@ restore_cib()
 
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
@@ -280,9 +308,12 @@ fi
 if [ $cib -eq 1 ]; then
 	apply_cib_entries
 fi
-if [ $add_clone -eq 1 ]; then
-	apply_cib_clone
+if [ $add_master -eq 1 ]; then
+	apply_cib_master
 fi
 
 cd $curdir
 
+if [ $restore_all -eq 1 ]; then
+	rm -rf $working_dir
+fi

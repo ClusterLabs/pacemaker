@@ -361,6 +361,11 @@ crm_peer_uname(const char *uuid)
 
     CRM_CHECK(uuid != NULL, return NULL);
 
+    /* remote nodes have the same uname and uuid */
+    if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
+        return uuid;
+    }
+
     /* avoid blocking calls where possible */
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {

@@ -33,8 +33,42 @@
 #include <crm/stonith-ng.h>
 
 GHashTable *crm_peer_cache = NULL;
+GHashTable *crm_remote_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
+
+void crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    crm_node_t *node = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    const char *remote = NULL;
+    const char *xpath = NULL;
+    int max = 0;
+    int lpc = 0;
+
+    g_hash_table_remove_all(crm_remote_peer_cache);
+
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
+    xpathObj = xpath_search(cib, xpath);
+    max = numXpathResults(xpathObj);
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *xml = getXpathResult(xpathObj, lpc);
+
+        CRM_CHECK(xml != NULL, continue);
+
+        remote = crm_element_value(xml, "value");
+        if (remote) {
+            crm_trace("added %s to remote cache", remote);
+            node = calloc(1, sizeof(crm_node_t));
+            node->flags = crm_remote_node;
+            CRM_ASSERT(node);
+            node->uname = strdup(remote);
+            node->uuid = strdup(remote);
+            g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
+        }
+    }
+    freeXpathObject(xpathObj);
+}
 
 gboolean
 crm_is_peer_active(const crm_node_t * node)
@@ -146,6 +180,10 @@ crm_peer_init(void)
     if (crm_peer_cache == NULL) {
         crm_peer_cache = g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_crm_node);
     }
+
+    if (crm_remote_peer_cache == NULL) {
+        crm_remote_peer_cache = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, destroy_crm_node);
+    }
 }
 
 void
@@ -155,6 +193,12 @@ crm_peer_destroy(void)
         crm_trace("Destroying peer cache with %d members", g_hash_table_size(crm_peer_cache));
         g_hash_table_destroy(crm_peer_cache);
         crm_peer_cache = NULL;
+    }
+
+    if (crm_remote_peer_cache != NULL) {
+        crm_trace("Destroying remote peer cache with %d members", g_hash_table_size(crm_remote_peer_cache));
+        g_hash_table_destroy(crm_remote_peer_cache);
+        crm_remote_peer_cache = NULL;
     }
 }
 
@@ -184,6 +228,25 @@ static gboolean crm_hash_find_by_data(gpointer key, gpointer value, gpointer use
         return TRUE;
     }
     return FALSE;
+}
+
+crm_node_t *
+crm_get_peer_full(unsigned int id, const char *uname, int flags)
+{
+    crm_node_t *node = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    crm_peer_init();
+
+    if (flags & CRM_GET_PEER_REMOTE) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+    }
+
+    if (node == NULL && (flags & CRM_GET_PEER_CLUSTER)) {
+        node = crm_get_peer(id, uname);
+    }
+    return node;
 }
 
 /* coverity[-alloc] Memory is referenced in one or both hashtables */

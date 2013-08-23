@@ -2490,13 +2490,13 @@ class RemoteSimple(CTSTest):
         self.fail_string = ""
 
     def start_lxc_simple(self, node):
-        # restore any artifacts laying around from a previous test.
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p -r &>/dev/null")
-        for num in range(self.num_containers):
-            self.CM.rsh(node, "virsh -c lxc:/// destroy lxc%d" % (num+1))
-            self.CM.rsh(node, "virsh -c lxc:/// undefine lxc%d" % (num+1))
 
-        self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+        rc = self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
+        if rc == 1:
+            return self.skipped()
+
+        # restore any artifacts laying around from a previous test.
+        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
@@ -2504,8 +2504,8 @@ class RemoteSimple(CTSTest):
         watch.setwatch()
         pats.append("process_lrm_event: LRM operation lxc1_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc2_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-clone_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-clone_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
 
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
@@ -2522,13 +2522,12 @@ class RemoteSimple(CTSTest):
         # as best as possible 
         if self.failed == 1:
             # restore libvirt and cib
-            self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p -r &>/dev/null")
-            self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+            self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r container1 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r container2 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r lxc-clone &>/dev/null")
+            self.CM.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
             time.sleep(20)
 
             return
@@ -2549,8 +2548,7 @@ class RemoteSimple(CTSTest):
             self.failed = 1
 
         # cleanup libvirt
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -r &>/dev/null")
-        self.CM.rsh(node, "rm -rf /var/lib/pacemaker/cts/lxc")
+        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
     def __call__(self, node):
         '''Perform the 'RemoteSimple' test. '''
@@ -2560,9 +2558,11 @@ class RemoteSimple(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        # TODO add an option to lxc_autogen to verify environment is capable of lxc 
         self.start_lxc_simple(node)
         self.cleanup_lxc_simple(node)
+
+        self.CM.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
 
         if self.failed == 1:
             return self.failure(self.fail_string)
@@ -2573,7 +2573,7 @@ class RemoteSimple(CTSTest):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for ping""",
                  """LogActions: Recover ping""",
-                 """LogActions: Recover lxc-clone""",
+                 """LogActions: Recover lxc-ms""",
                  """LogActions: Recover container""",
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
