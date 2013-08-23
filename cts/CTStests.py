@@ -2505,7 +2505,7 @@ class RemoteSimple(CTSTest):
         pats.append("process_lrm_event: LRM operation lxc1_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc2_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_promote_0.*confirmed.*ok")
 
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")

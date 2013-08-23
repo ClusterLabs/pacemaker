@@ -71,6 +71,15 @@ if [ $verify -eq 1 ]; then
 		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
 		exit 1
 	fi
+
+	ps x > /tmp/lxc-autogen-libvirt-test.txt
+	grep "libvirtd" /tmp/lxc-autogen-libvirt-test.txt
+	if [ $? -ne 0 ]; then
+		rm -f /tmp/lxc-autogen-libvirt-test.txt
+		echo "libvirtd isn't up."
+		exit 1
+	fi
+	rm -f /tmp/lxc-autogen-libvirt-test.txt
 fi
 
 #strip last digits off addr
