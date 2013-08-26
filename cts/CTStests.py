@@ -2500,19 +2500,19 @@ class RemoteSimple(CTSTest):
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
-        watch = self.create_watch(pats, 90)
+        watch = self.create_watch(pats, 120)
         watch.setwatch()
         pats.append("process_lrm_event: LRM operation lxc1_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc2_start_0.*confirmed.*ok")
         pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation lxc-ms_promote_0.*confirmed.*ok")
 
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -c %d &>/dev/null" % self.num_containers)
+        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
         watch.lookforall()
         self.log_timer("remoteSimpleInit")
         if watch.unmatched:
-            self.fail_string = "Unmated patterns: %s" % (repr(watch.unmatched))
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
     def cleanup_lxc_simple(self, node):
@@ -2529,10 +2529,9 @@ class RemoteSimple(CTSTest):
             self.CM.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
             self.CM.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
             time.sleep(20)
-
             return
 
-        watch = self.create_watch(pats, 60)
+        watch = self.create_watch(pats, 120)
         watch.setwatch()
 
         pats.append("process_lrm_event: LRM operation container1_stop_0.*confirmed.*ok")
@@ -2544,7 +2543,7 @@ class RemoteSimple(CTSTest):
         self.log_timer("remoteSimpleCleanup")
 
         if watch.unmatched:
-            self.fail_string = "Unmated patterns: %s" % (repr(watch.unmatched))
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
         # cleanup libvirt
@@ -2577,6 +2576,7 @@ class RemoteSimple(CTSTest):
                  """LogActions: Recover container""",
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
+                 """notice: operation_finished: container""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
                 ]
 
