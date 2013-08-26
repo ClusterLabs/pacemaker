@@ -930,7 +930,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         crmd_proxy_send(sys, msg);
 
     } else {
-        crm_err("Unknown Sub-system (%s)... discarding message.", crm_str(sys));
+        crm_debug("Unknown Sub-system (%s)... discarding message.", crm_str(sys));
         send_ok = FALSE;
     }
 
