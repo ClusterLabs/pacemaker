@@ -393,6 +393,12 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
+        const char *key = tmp->key;
+        /* skip over 'remote-' prefix if it exists */
+        if (strstr(key, "remote-")) {
+            key += 7;
+        }
+
         if (safe_str_eq(tmp->key, "addr") || safe_str_eq(tmp->key, "server")) {
             server = tmp->value;
         }
