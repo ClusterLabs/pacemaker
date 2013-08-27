@@ -55,11 +55,16 @@ enum crm_join_phase
     crm_join_confirmed  = 4,
 };
 
-/* *INDENT-ON* */
 enum crm_node_flags
 {
-    crm_remote_node     = 0x0001,
+    /* node is not a cluster node and should not be considered for cluster membership */
+    crm_remote_node          = 0x0001,
+    /* This node is a remote node living within a container resource */
+    crm_remote_container     = 0x0002,
+    /* This node is a bare metal remote-node */
+    crm_remote_baremetal     = 0x0004,
 };
+/* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
     uint32_t id;                /* Only used by corosync derivatives */

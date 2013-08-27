@@ -37,18 +37,15 @@ GHashTable *crm_remote_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 
-void crm_remote_peer_cache_refresh(xmlNode *cib)
+static void
+remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, int flags)
 {
+    const char *remote = NULL;
     crm_node_t *node = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    const char *remote = NULL;
-    const char *xpath = NULL;
     int max = 0;
     int lpc = 0;
 
-    g_hash_table_remove_all(crm_remote_peer_cache);
-
-    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
     xpathObj = xpath_search(cib, xpath);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
@@ -56,11 +53,11 @@ void crm_remote_peer_cache_refresh(xmlNode *cib)
 
         CRM_CHECK(xml != NULL, continue);
 
-        remote = crm_element_value(xml, "value");
+        remote = crm_element_value(xml, field);
         if (remote) {
             crm_trace("added %s to remote cache", remote);
             node = calloc(1, sizeof(crm_node_t));
-            node->flags = crm_remote_node;
+            node->flags = flags;
             CRM_ASSERT(node);
             node->uname = strdup(remote);
             node->uuid = strdup(remote);
@@ -68,6 +65,26 @@ void crm_remote_peer_cache_refresh(xmlNode *cib)
         }
     }
     freeXpathObject(xpathObj);
+}
+
+void crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    const char *xpath = NULL;
+
+    g_hash_table_remove_all(crm_remote_peer_cache);
+
+    /* remote nodes associated with a cluster resource */
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
+    remote_cache_refresh_helper(cib, xpath, "value", crm_remote_node | crm_remote_container);
+
+    /* baremetal nodes defined by connection resources*/
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker']";
+    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
+
+    /* baremetal nodes we have seen in the config that may or may not have connection
+     * resources associated with them anymore */
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@remote_node='true']";
+    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
 }
 
 gboolean
