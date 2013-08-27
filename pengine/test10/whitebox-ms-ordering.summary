@@ -1,7 +1,6 @@
 
 Current cluster status:
 Online: [ 18node1 18node2 18node3 ]
-OFFLINE: [ lxc1:container1 lxc2:container2 ]
 
  shooter	(stonith:fence_xvm):	Started 18node2 
  container1	(ocf::heartbeat:VirtualDomain):	FAILED 
@@ -58,7 +57,8 @@ Executing cluster transition:
  * Pseudo action:   lxc-ms-master_promoted_0
 
 Revised cluster status:
-Online: [ 18node1 18node2 18node3 lxc1:container1 lxc2:container2 ]
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
 
  shooter	(stonith:fence_xvm):	Started 18node2 
  container1	(ocf::heartbeat:VirtualDomain):	Started 18node1 
