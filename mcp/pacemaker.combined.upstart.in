@@ -3,6 +3,7 @@
 # Starts Corosync cluster engine and Pacemaker cluster manager.
 
 kill timeout 3600
+respawn
 
 env prog=pacemakerd
 env rpm_sysconf=@sysconfdir@/sysconfig/pacemaker
@@ -17,10 +18,10 @@ script
 end script
 
 pre-start script
-    # setup the software watchdog which corosync uses in post-stop.
+    # setup the software watchdog which corosync uses.
     # rewrite according to environment.
     modprobe softdog soft_margin=60
-    start corosync
+    pidof corosync || start corosync
 
     # if you use corosync-notifyd, uncomment the line below.
     #start corosync-notifyd
@@ -46,11 +47,12 @@ post-stop script
     [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
     rm -f $LOCK_FILE
     rm -f @localstatedir@/run/$prog.pid
+    pidof crmd || stop corosync
 
-    # when pacemakerd disappeared unexpectedly, a machine is rebooted
-    # by the watchdog of corosync.
-    pidof crmd && killall -q -9 corosync
-    stop corosync || true
+    # if you want to reboot a machine by watchdog of corosync when
+    # pacemakerd disappeared unexpectedly, uncomment the line below
+    # and invalidate above "respawn" stanza.
+    #pidof crmd && killall -q -9 corosync
 
     # if you use corosync-notifyd, uncomment the line below.
     #stop corosync-notifyd || true
