@@ -242,6 +242,7 @@ main(int argc, char **argv)
     }
 
     crm_info("Starting up");
+    attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free_attribute);
     cluster = malloc(sizeof(crm_cluster_t));
 
     cluster->destroy = attrd_cpg_destroy;
@@ -264,6 +265,7 @@ main(int argc, char **argv)
 
     crm_client_disconnect_all(ipcs);
     qb_ipcs_destroy(ipcs);
+    g_hash_table_destroy(attributes);
 
     return crm_exit(pcmk_ok);
 }
