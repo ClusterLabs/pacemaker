@@ -1304,7 +1304,8 @@ stage6(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        if (node->details->remote_rsc) {
+        /* remote-nodes associated with a container resource (such as a vm) are not fenced */
+        if (node->details->remote_rsc && node->details->remote_rsc->container) {
             continue;
         }
 
@@ -1327,7 +1328,12 @@ stage6(pe_working_set_t * data_set)
                 last_stonith = stonith_op;
             }
 
-        } else if (node->details->online && node->details->shutdown) {
+        } else if (node->details->online && node->details->shutdown &&
+                /* TODO define what a shutdown op means for a baremetal remote node.
+                 * For now we do not send shutdown operations for remote nodes, but
+                 * if we can come up with a good use for this in the future, we will. */
+                    node->details->remote_rsc == NULL) {
+
             action_t *down_op = NULL;
 
             crm_notice("Scheduling Node %s for shutdown", node->details->uname);

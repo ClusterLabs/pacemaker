@@ -70,7 +70,8 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     CRM_CHECK(uuid != NULL, return);
 
     /* Make sure the membership and join caches are accurate */
-    peer = crm_get_peer(0, target);
+    peer = crm_get_peer_full(0, target, CRM_GET_PEER_CLUSTER | CRM_GET_PEER_REMOTE);
+
     if (peer->uuid == NULL) {
         crm_info("Recording uuid '%s' for node '%s'", uuid, target);
         peer->uuid = strdup(uuid);
