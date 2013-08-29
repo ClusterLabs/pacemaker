@@ -249,7 +249,10 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
 
     if(election_op) {
-        enum election_result rc = election_count_vote(writer, xml, TRUE);
+        enum election_result rc = 0;
+
+        crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
+        rc = election_count_vote(writer, xml, TRUE);
         switch(rc) {
             case election_start:
                 free(peer_writer);
@@ -261,6 +264,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                 peer_writer = strdup(peer->uname);
                 break;
             default:
+                election_check(writer);
                 break;
         }
         return;

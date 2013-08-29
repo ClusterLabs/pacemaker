@@ -270,6 +270,7 @@ main(int argc, char **argv)
     int flag = 0;
     int index = 0;
     int argerr = 0;
+    crm_node_t *us = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
     mloop = g_main_new(FALSE);
@@ -322,6 +323,9 @@ main(int argc, char **argv)
         goto done;
     }
     crm_info("Cluster connection active");
+
+    us = crm_get_peer(attrd_cluster->nodeid, attrd_cluster->uname);
+    crm_update_peer_state(__FUNCTION__, us, CRM_NODE_MEMBER, 0);
 
     writer = election_init(T_ATTRD, attrd_cluster->uname, 120, attrd_election_cb);
     attrd_ipc_server_init(&ipcs, &ipc_callbacks);
