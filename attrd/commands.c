@@ -28,7 +28,7 @@
 
 #include <internal.h>
 
-cib_t *the_cib = NULL;
+char *peer_writer = NULL;
 GHashTable *attributes = NULL;
 
 typedef struct attribute_s {
@@ -55,7 +55,6 @@ typedef struct attribute_value_s {
 
 
 void write_attribute(attribute_t *a);
-void write_attributes(bool all);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 bool build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *attr_value);
@@ -223,6 +222,12 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         }
 
       send:
+
+        if(peer_writer == NULL) {
+            crm_info("Starting an election to determine the writer");
+            election_vote(writer);
+        }
+
         crm_info("Broadcasting %s[%s] = %s%s", host, attr, value, election_state(writer) == election_won?" (writer)":"");
         crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
         send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
@@ -236,20 +241,44 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
+    int peer_state = 0;
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
 
     if(election_op) {
-        election_count_vote(writer, xml, TRUE);
+        enum election_result rc = election_count_vote(writer, xml, TRUE);
+        switch(rc) {
+            case election_start:
+                free(peer_writer);
+                peer_writer = NULL;
+                election_vote(writer);
+                break;
+            case election_lost:
+                free(peer_writer);
+                peer_writer = strdup(peer->uname);
+                break;
+            default:
+                break;
+        }
         return;
     }
 
-    if(election_state(writer) == election_won && safe_str_neq(peer->uname, cluster->uname)) {
-        int peer_state = 0;
-        crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
-        if(peer_state == election_won) {
-            crm_notice("Detected another attribute writer: %s", peer->uname);
-            election_vote(writer);
+    crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
+    if(election_state(writer) == election_won
+       && peer_state == election_won
+       && safe_str_neq(peer->uname, cluster->uname)) {
+        crm_notice("Detected another attribute writer: %s", peer->uname);
+        election_vote(writer);
+
+    } else if(peer_state == election_won) {
+        if(peer_writer == NULL) {
+            peer_writer = strdup(peer->uname);
+            crm_notice("Recorded attribute writer: %s", peer->uname);
+
+        } else if(safe_str_neq(peer->uname, peer_writer)) {
+            crm_notice("Recorded new attribute writer: %s (was %s)", peer->uname, peer_writer);
+            free(peer_writer);
+            peer_writer = strdup(peer->uname);
         }
     }
 
@@ -262,7 +291,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if(safe_str_eq(op, "sync-response")) {
         xmlNode *child = NULL;
 
-        crm_debug("Processing %s from %s", op, peer->uname);
+        crm_notice("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
             attrd_peer_update(peer, child);
         }
@@ -341,6 +370,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
+    free(peer_writer);
+    peer_writer = strdup(cluster->uname);
     attrd_peer_sync(NULL, NULL);
     return FALSE;
 }
@@ -354,6 +385,14 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
         && safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
 
         attrd_peer_sync(peer, NULL);
+
+    } else if(kind == crm_status_nstate
+       && safe_str_neq(peer->state, CRM_NODE_MEMBER)
+       && safe_str_eq(peer->uname, peer_writer)) {
+
+        free(peer_writer);
+        peer_writer = NULL;
+        crm_notice("Lost attribute writer %s", peer->uname);
     }
 }
 
