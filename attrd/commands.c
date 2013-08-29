@@ -356,6 +356,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
         if(value) {
             v->current = strdup(value);
         }
+        g_hash_table_replace(a->values, strdup(host), v);
         a->changed = TRUE;
 
     } else {
@@ -522,7 +523,7 @@ write_attribute(attribute_t *a)
         build_update_element(xml_top, a, peer, v->requested);
     }
 
-    crm_log_xml_trace(xml_top, "update_attr");
+    crm_log_xml_trace(xml_top, __FUNCTION__);
     rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                          cib_quorum_override, a->user);
 
