@@ -16,12 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+cib_t *the_cib;
 GMainLoop *mloop;
 bool shutting_down;
 crm_cluster_t *cluster;
 GHashTable *attributes;
 election_t *writer;
 
+void write_attributes(bool all);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
 void attrd_client_message(crm_client_t *client, xmlNode *msg);
 void free_attribute(gpointer data);

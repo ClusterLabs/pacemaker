@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -42,6 +42,7 @@
 #include <crm/attrd.h>
 #include <internal.h>
 
+cib_t *the_cib = NULL;
 GMainLoop *mloop = NULL;
 bool shutting_down = FALSE;
 crm_cluster_t *cluster = NULL;
@@ -99,6 +100,81 @@ attrd_cpg_destroy(gpointer unused)
         crm_crit("Lost connection to Corosync service!");
         attrd_shutdown(0);
     }
+}
+
+static void
+attrd_cib_replaced_cb(const char *event, xmlNode * msg)
+{
+    crm_notice("Updating all attributes after %s event", event);
+    if(election_state(writer) == election_won) {
+        write_attributes(TRUE);
+    }
+}
+
+static void
+attrd_cib_destroy_cb(gpointer user_data)
+{
+    cib_t *conn = user_data;
+
+    conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
+
+    if (shutting_down) {
+        crm_info("Connection disconnection complete");
+
+    } else {
+        /* eventually this should trigger a reconnect, not a shutdown */
+        crm_err("Lost connection to CIB service!");
+        attrd_shutdown(0);
+    }
+
+    return;
+}
+
+static cib_t *
+attrd_cib_connect(int max_retry)
+{
+    int rc = -ENOTCONN;
+    static int attempts = 0;
+    cib_t *connection = cib_new();
+
+    do {
+        if(attempts > 0) {
+            sleep(attempts);
+        }
+
+        attempts++;
+        crm_debug("CIB signon attempt %d", attempts);
+        rc = connection->cmds->signon(connection, T_ATTRD, cib_command);
+
+    } while(rc != pcmk_ok && attempts < max_retry);
+
+    if (rc != pcmk_ok) {
+        crm_err("Signon to CIB failed: %s (%d)", pcmk_strerror(rc), rc);
+        goto cleanup;
+    }
+
+    crm_info("Connected to the CIB after %d attempts", attempts);
+
+    rc = connection->cmds->set_connection_dnotify(connection, attrd_cib_destroy_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set disconnection callback");
+        goto cleanup;
+    }
+
+    rc = connection->cmds->add_notify_callback(connection, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
+    if(rc != pcmk_ok) {
+        crm_err("Could not set CIB notification callback");
+        goto cleanup;
+    }
+
+    return connection;
+
+  cleanup:
+    if(connection) {
+        connection->cmds->signoff(connection);
+        cib_delete(connection);
+    }
+    return NULL;
 }
 
 static int32_t
@@ -190,6 +266,7 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_ok;
     int flag = 0;
     int index = 0;
     int argerr = 0;
@@ -241,14 +318,22 @@ main(int argc, char **argv)
 
     if (crm_cluster_connect(cluster) == FALSE) {
         crm_err("Cluster connection failed");
+        rc = DAEMON_RESPAWN_STOP;
+        goto done;
+    }
+    crm_info("Cluster connection active");
+
+    writer = election_init(T_ATTRD, cluster->uname, 120, attrd_election_cb);
+    attrd_ipc_server_init(&ipcs, &ipc_callbacks);
+    crm_info("Accepting attribute updates");
+
+    the_cib = attrd_cib_connect(10);
+    if (the_cib == NULL) {
+        rc = DAEMON_RESPAWN_STOP;
         goto done;
     }
 
-    crm_info("Cluster connection active");
-    writer = election_init(T_ATTRD, cluster->uname, 120, attrd_election_cb);
-    attrd_ipc_server_init(&ipcs, &ipc_callbacks);
-
-    crm_info("Accepting attribute updates");
+    crm_info("CIB connection active");
     g_main_run(mloop);
 
   done:
@@ -259,5 +344,10 @@ main(int argc, char **argv)
     qb_ipcs_destroy(ipcs);
     g_hash_table_destroy(attributes);
 
-    return crm_exit(pcmk_ok);
+    if (the_cib) {
+        the_cib->cmds->signoff(the_cib);
+        cib_delete(the_cib);
+    }
+
+    return crm_exit(rc);
 }

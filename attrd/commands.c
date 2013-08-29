@@ -300,7 +300,6 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml)
 {
-    bool changed = FALSE;
     attribute_value_t *v = NULL;
 
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -319,7 +318,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
         crm_trace("Setting %s[%s] to %s from %s", host, attr, value, peer->uname);
         v = calloc(1, sizeof(attribute_value_t));
         v->current = strdup(value);
-        changed = TRUE;
+        a->changed = TRUE;
 
     } else {
         crm_trace("Setting %s[%s]: %s -> %s from %s", host, attr, v->current, value, peer->uname);
@@ -328,13 +327,13 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
     if(safe_str_neq(v->current, value)) {
         free(v->current);
         v->current = strdup(value);
-        changed = TRUE;
+        a->changed = TRUE;
     }
 
-    if(changed && a->timer) {
+    if(a->changed && a->timer) {
         mainloop_timer_start(a->timer);
 
-    } else if(changed && election_state(writer) == election_won) {
+    } else if(a->changed && election_state(writer) == election_won) {
         write_attribute(a);
     }
 }
@@ -405,6 +404,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         } else {
             free(v->requested);
             v->requested = NULL;
+            a->changed = TRUE; /* Attempt write out again */
         }
     }
   done:
@@ -424,6 +424,8 @@ write_attributes(bool all)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
         if(all || a->changed) {
             write_attribute(a);
+        } else {
+            crm_debug("Skipping unchanged attribute %s", a->id);
         }
     }
 }
