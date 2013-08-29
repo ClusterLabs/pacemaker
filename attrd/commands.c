@@ -156,7 +156,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         a = g_hash_table_lookup(attributes, attr);
 
         if(host == NULL) {
-            host = cluster->uname;
+            host = attrd_cluster->uname;
             crm_xml_add(xml, F_ATTRD_HOST, host);
         }
 
@@ -266,7 +266,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
     if(election_state(writer) == election_won
        && peer_state == election_won
-       && safe_str_neq(peer->uname, cluster->uname)) {
+       && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         crm_notice("Detected another attribute writer: %s", peer->uname);
         election_vote(writer);
 
@@ -371,7 +371,7 @@ gboolean
 attrd_election_cb(gpointer user_data)
 {
     free(peer_writer);
-    peer_writer = strdup(cluster->uname);
+    peer_writer = strdup(attrd_cluster->uname);
     attrd_peer_sync(NULL, NULL);
     return FALSE;
 }

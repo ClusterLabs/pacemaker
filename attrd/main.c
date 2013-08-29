@@ -45,7 +45,7 @@
 cib_t *the_cib = NULL;
 GMainLoop *mloop = NULL;
 bool shutting_down = FALSE;
-crm_cluster_t *cluster = NULL;
+crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
 
 static void
@@ -308,22 +308,22 @@ main(int argc, char **argv)
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
-    cluster = malloc(sizeof(crm_cluster_t));
+    attrd_cluster = malloc(sizeof(crm_cluster_t));
 
-    cluster->destroy = attrd_cpg_destroy;
-    cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
-    cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+    attrd_cluster->destroy = attrd_cpg_destroy;
+    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
+    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
 
     crm_set_status_callback(attrd_peer_change_cb);
 
-    if (crm_cluster_connect(cluster) == FALSE) {
+    if (crm_cluster_connect(attrd_cluster) == FALSE) {
         crm_err("Cluster connection failed");
         rc = DAEMON_RESPAWN_STOP;
         goto done;
     }
     crm_info("Cluster connection active");
 
-    writer = election_init(T_ATTRD, cluster->uname, 120, attrd_election_cb);
+    writer = election_init(T_ATTRD, attrd_cluster->uname, 120, attrd_election_cb);
     attrd_ipc_server_init(&ipcs, &ipc_callbacks);
     crm_info("Accepting attribute updates");
 

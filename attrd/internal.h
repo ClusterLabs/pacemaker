@@ -19,7 +19,7 @@
 cib_t *the_cib;
 GMainLoop *mloop;
 bool shutting_down;
-crm_cluster_t *cluster;
+crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;
 
