@@ -23,6 +23,7 @@
 #include <crm/cluster.h>
 #include <crm/cib.h>
 #include <crm/cluster/internal.h>
+#include <crm/cluster/election.h>
 #include <crm/cib/internal.h>
 
 #include <internal.h>
@@ -54,12 +55,17 @@ typedef struct attribute_value_s {
 
 
 void write_attribute(attribute_t *a);
+void write_attributes(bool all);
+void attrd_peer_update(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 bool build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *attr_value);
 
 static gboolean
 attribute_timer_cb(gpointer user_data)
 {
-    write_attribute(user_data);
+    if(election_state(writer) == election_won) {
+        write_attribute(user_data);
+    }
     return FALSE;
 }
 
@@ -91,11 +97,28 @@ free_attribute(gpointer data)
     }
 }
 
+xmlNode *
+build_attribute_xml(
+    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout, const char *user,
+    const char *peer, const char *value)
+{
+    xmlNode *xml = create_xml_node(parent, __FUNCTION__);
+
+    crm_xml_add(xml, F_ATTRD_ATTRIBUTE, name);
+    crm_xml_add(xml, F_ATTRD_SET, set);
+    crm_xml_add(xml, F_ATTRD_KEY, uuid);
+    crm_xml_add(xml, F_ATTRD_USER, user);
+    crm_xml_add(xml, F_ATTRD_HOST, peer);
+    crm_xml_add(xml, F_ATTRD_VALUE, value);
+    crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout);
+
+    return xml;
+}
+
 static attribute_t *
 create_attribute(xmlNode *xml)
 {
     attribute_t *a = calloc(1, sizeof(attribute_t));
-    const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
 
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
     a->set     = crm_element_value_copy(xml, F_ATTRD_SET);
@@ -109,10 +132,10 @@ create_attribute(xmlNode *xml)
 
     crm_element_value_int(xml, F_ATTRD_DAMPEN, &a->timeout);
     if(a->timeout > 0) {
-        a->timer = mainloop_timer_add(attr, a->timeout, FALSE, attribute_timer_cb, a);
+        a->timer = mainloop_timer_add(strdup(a->id), a->timeout, FALSE, attribute_timer_cb, a);
     }
 
-    g_hash_table_replace(attributes, strdup(attr), a);
+    g_hash_table_replace(attributes, a->id, a);
     return a;
 }
 
@@ -200,65 +223,139 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         }
 
       send:
-        crm_info("Broadcasting %s[%s] = %s", host, attr, value);
+        crm_info("Broadcasting %s[%s] = %s%s", host, attr, value, election_state(writer) == election_won?" (writer)":"");
+        crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
         send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
 
         free(key);
         free(set);
         free(host);
     }
-
 }
 
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
+    const char *election_op = crm_element_value(xml, F_CRM_TASK);
+
+    if(election_op) {
+        election_count_vote(writer, xml, TRUE);
+        return;
+    }
+
+    if(election_state(writer) == election_won && safe_str_neq(peer->uname, cluster->uname)) {
+        int peer_state = 0;
+        crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
+        if(peer_state == election_won) {
+            crm_notice("Detected another attribute writer: %s", peer->uname);
+            election_vote(writer);
+        }
+    }
 
     if(safe_str_eq(op, "update")) {
-        bool changed = FALSE;
-        attribute_value_t *v = NULL;
+        attrd_peer_update(peer, xml);
 
-        const char *host = crm_element_value(xml, F_ATTRD_HOST);
-        const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-        const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+    } else if(safe_str_eq(op, "sync")) {
+        attrd_peer_sync(peer, xml);
 
-        attribute_t *a = g_hash_table_lookup(attributes, attr);
+    } else if(safe_str_eq(op, "sync-response")) {
+        xmlNode *child = NULL;
 
-        if(a == NULL) {
-            a = create_attribute(xml);
-        }
-
-        v = g_hash_table_lookup(a->values, host);
-
-        if(v == NULL) {
-            crm_trace("Setting %s[%s] -> %s", host, attr, value);
-            v = calloc(1, sizeof(attribute_value_t));
-            v->current = strdup(value);
-            changed = TRUE;
-
-        } else {
-            crm_trace("Setting %s[%s]: %s -> %s", host, attr, v->current, value);
-        }
-
-        if(safe_str_neq(v->current, value)) {
-            free(v->current);
-            v->current = strdup(value);
-            changed = TRUE;
-        }
-
-        if(changed && a->timer) {
-            mainloop_timer_start(a->timer);
-
-        } else if(changed) {
-            write_attribute(a);
+        crm_debug("Processing %s from %s", op, peer->uname);
+        for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+            attrd_peer_update(peer, child);
         }
     }
 }
 
 void
-attrd_peer_change_cb(void)
+attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 {
+    GHashTableIter aIter;
+    GHashTableIter vIter;
+    const char *host = NULL;
+
+    attribute_t *a = NULL;
+    attribute_value_t *v = NULL;
+    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+
+    crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, (gpointer *) & v)) {
+            crm_debug("Syncing %s[%s] = %s to %s", a->id, host, v->current, peer->uname);
+            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout, a->user, host, v->current);
+        }
+    }
+
+    crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
+    crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
+    send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
+    free_xml(sync);
+}
+
+void
+attrd_peer_update(crm_node_t *peer, xmlNode *xml)
+{
+    bool changed = FALSE;
+    attribute_value_t *v = NULL;
+
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+    const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+
+    attribute_t *a = g_hash_table_lookup(attributes, attr);
+
+    if(a == NULL) {
+        a = create_attribute(xml);
+    }
+
+    v = g_hash_table_lookup(a->values, host);
+
+    if(v == NULL) {
+        crm_trace("Setting %s[%s] to %s from %s", host, attr, value, peer->uname);
+        v = calloc(1, sizeof(attribute_value_t));
+        v->current = strdup(value);
+        changed = TRUE;
+
+    } else {
+        crm_trace("Setting %s[%s]: %s -> %s from %s", host, attr, v->current, value, peer->uname);
+    }
+
+    if(safe_str_neq(v->current, value)) {
+        free(v->current);
+        v->current = strdup(value);
+        changed = TRUE;
+    }
+
+    if(changed && a->timer) {
+        mainloop_timer_start(a->timer);
+
+    } else if(changed && election_state(writer) == election_won) {
+        write_attribute(a);
+    }
+}
+
+gboolean
+attrd_election_cb(gpointer user_data)
+{
+    attrd_peer_sync(NULL, NULL);
+    return FALSE;
+}
+
+
+void
+attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
+{
+    if(election_state(writer) == election_won
+        && kind == crm_status_nstate
+        && safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+
+        attrd_peer_sync(peer, NULL);
+    }
 }
 
 static void
@@ -312,8 +409,22 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     }
   done:
     free(name);
-    if(a && a->changed) {
+    if(a && a->changed && election_state(writer) == election_won) {
         write_attribute(a);
+    }
+}
+
+void
+write_attributes(bool all)
+{
+    GHashTableIter iter;
+    attribute_t *a = NULL;
+
+    g_hash_table_iter_init(&iter, attributes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
+        if(all || a->changed) {
+            write_attribute(a);
+        }
     }
 }
 

@@ -20,9 +20,15 @@ GMainLoop *mloop;
 bool shutting_down;
 crm_cluster_t *cluster;
 GHashTable *attributes;
+election_t *writer;
 
-void attrd_peer_change_cb(void);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
 void attrd_client_message(crm_client_t *client, xmlNode *msg);
 void free_attribute(gpointer data);
 
+gboolean attrd_election_cb(gpointer user_data);
+void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
+
+xmlNode *build_attribute_xml(
+    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout, const char *user,
+    const char *peer, const char *value);

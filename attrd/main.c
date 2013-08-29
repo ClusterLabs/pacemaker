@@ -34,6 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
+#include <crm/cluster/election.h>
 #include <crm/common/mainloop.h>
 
 #include <crm/common/xml.h>
@@ -44,6 +45,7 @@
 GMainLoop *mloop = NULL;
 bool shutting_down = FALSE;
 crm_cluster_t *cluster = NULL;
+election_t *writer = NULL;
 
 static void
 attrd_shutdown(int nsig) {
@@ -98,21 +100,6 @@ attrd_cpg_destroy(gpointer unused)
         attrd_shutdown(0);
     }
 }
-
-static void
-attrd_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *groupName,
-                    const struct cpg_address *member_list, size_t member_list_entries,
-                    const struct cpg_address *left_list, size_t left_list_entries,
-                    const struct cpg_address *joined_list, size_t joined_list_entries)
-{
-    pcmk_cpg_membership(handle, groupName,
-                        member_list, member_list_entries,
-                        left_list, left_list_entries,
-                        joined_list, joined_list_entries);
-    attrd_peer_change_cb();
-}
-
 
 static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
@@ -242,12 +229,15 @@ main(int argc, char **argv)
     }
 
     crm_info("Starting up");
-    attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free_attribute);
+    attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
+
     cluster = malloc(sizeof(crm_cluster_t));
 
     cluster->destroy = attrd_cpg_destroy;
     cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
-    cluster->cpg.cpg_confchg_fn = attrd_cpg_membership;
+    cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+
+    crm_set_status_callback(attrd_peer_change_cb);
 
     if (crm_cluster_connect(cluster) == FALSE) {
         crm_err("Cluster connection failed");
@@ -255,6 +245,7 @@ main(int argc, char **argv)
     }
 
     crm_info("Cluster connection active");
+    writer = election_init(T_ATTRD, cluster->uname, 120, attrd_election_cb);
     attrd_ipc_server_init(&ipcs, &ipc_callbacks);
 
     crm_info("Accepting attribute updates");
@@ -263,6 +254,7 @@ main(int argc, char **argv)
   done:
     crm_notice("Cleaning up before exit");
 
+    election_fini(writer);
     crm_client_disconnect_all(ipcs);
     qb_ipcs_destroy(ipcs);
     g_hash_table_destroy(attributes);

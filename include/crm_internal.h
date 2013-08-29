@@ -276,6 +276,7 @@ void strip_text_nodes(xmlNode * xml);
 #  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"
 #  define F_ATTRD_HOST		"attr_host"
 #  define F_ATTRD_USER		"attr_user"
+#  define F_ATTRD_WRITER	"attr_writer"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
