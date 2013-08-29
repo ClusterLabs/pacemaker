@@ -156,21 +156,24 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         a = g_hash_table_lookup(attributes, attr);
 
         if(host == NULL) {
-            host = attrd_cluster->uname;
+            crm_trace("Inferring host");
+            host = strdup(attrd_cluster->uname);
             crm_xml_add(xml, F_ATTRD_HOST, host);
         }
 
         if (set == NULL) {
+            crm_trace("Inferring set");
             if(a == NULL) {
                 set = g_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, host);
 
             } else if(set == NULL) {
-                set = a->set;
+                set = strdup(a->set);
             }
-            crm_xml_add(xml, F_ATTRD_SET, a->set);
+            crm_xml_add(xml, F_ATTRD_SET, set);
         }
 
         if (key == NULL) {
+            crm_trace("Inferring key");
             if(a == NULL) {
                 int lpc = 0;
                 key = g_strdup_printf("%s-%s", set, attr);
@@ -183,7 +186,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
                     }
                 }
             } else if(key == NULL) {
-                key = a->uuid;
+                key = strdup(a->uuid);
             }
             crm_xml_add(xml, F_ATTRD_KEY, key);
         }
@@ -346,7 +349,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
     if(v == NULL) {
         crm_trace("Setting %s[%s] to %s from %s", host, attr, value, peer->uname);
         v = calloc(1, sizeof(attribute_value_t));
-        v->current = strdup(value);
+        if(value) {
+            v->current = strdup(value);
+        }
         a->changed = TRUE;
 
     } else {
@@ -355,7 +360,11 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
 
     if(safe_str_neq(v->current, value)) {
         free(v->current);
-        v->current = strdup(value);
+        if(value) {
+            v->current = strdup(value);
+        } else {
+            v->current = NULL;
+        }
         a->changed = TRUE;
     }
 
