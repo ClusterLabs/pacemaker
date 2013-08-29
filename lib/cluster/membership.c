@@ -37,6 +37,15 @@ GHashTable *crm_remote_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 
+int
+crm_remote_peer_cache_size(void)
+{
+    if (crm_remote_peer_cache == NULL) {
+        return 0;
+    }
+    return g_hash_table_size(crm_remote_peer_cache);
+}
+
 static void
 remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, int flags)
 {
@@ -61,6 +70,7 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, 
             CRM_ASSERT(node);
             node->uname = strdup(remote);
             node->uuid = strdup(remote);
+            node->state = strdup(CRM_NODE_MEMBER);
             g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
         }
     }
@@ -91,6 +101,12 @@ gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
     if(node == NULL) {
+        return FALSE;
+    }
+
+    if (is_set(node->flags, crm_remote_node)) {
+        /* remote nodes are never considered active members. This
+         * guarantees they will never be considered for DC membership.*/
         return FALSE;
     }
 #if SUPPORT_COROSYNC
@@ -567,7 +583,11 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
     if (changed) {
         crm_notice("%s: Node %s[%u] - state is now %s (was %s)", source, node->uname, node->id, state, last);
         if (crm_status_callback) {
-            crm_status_callback(crm_status_nstate, node, last);
+            enum crm_status_type status_type = crm_status_nstate;
+            if (is_set(node->flags, crm_remote_node)) {
+                status_type = crm_status_rstate;
+            }
+            crm_status_callback(status_type, node, last);
         }
         free(last);
     } else {
