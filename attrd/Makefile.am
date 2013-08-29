@@ -20,27 +20,28 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-COMMONLIBS	= 							\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/cib/libcib.la			\
-		$(CURSESLIBS) $(CLUSTERLIBS)
-
-headerdir               = $(pkgincludedir)/crm
-header_HEADERS		=
-
-
 halibdir		= $(CRM_DAEMON_DIR)
-halib_PROGRAMS		= attrd attrd-ng
+halib_PROGRAMS		= attrd
 ## SOURCES
 
 noinst_HEADERS		=
 
-# The original implementation
-attrd_SOURCES	= legacy.c
-attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
+attrd_SOURCES		=
+attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la 		\
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(CLUSTERLIBS)
 
-attrd_ng_SOURCES	= main.c commands.c
-attrd_ng_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
+if BUILD_HEARTBEAT_SUPPORT
+attrd_SOURCES	+= legacy.c
+else
+if BUILD_CS_PLUGIN
+attrd_SOURCES	+= legacy.c
+else
+# Only build the new version where CPG is exclusively used for communication
+attrd_SOURCES	+= main.c commands.c
+endif
+endif
 
 %.8:	% crm_attribute
 	echo Creating $@
