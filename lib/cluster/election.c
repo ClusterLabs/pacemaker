@@ -33,13 +33,39 @@
 
 struct election_s
 {
+        enum election_result state;
         guint count;
         char *name;
         char *uname;
+        GSourceFunc cb;
         GHashTable *voted;
         mainloop_timer_t *trigger; /* When to start */
         mainloop_timer_t *timeout; /* When to stop if not everyone casts a vote */
 };
+
+static gboolean election_timer_cb(gpointer user_data)
+{
+    election_t *e = user_data;
+
+    crm_info("Election %s complete", e->name);
+    e->state = election_won;
+
+    if(e->cb) {
+        e->cb(e);
+    }
+
+    election_reset(e);
+    return FALSE;
+}
+
+enum election_result
+election_state(election_t *e)
+{
+    if(e) {
+        return e->state;
+    }
+    return election_error;
+}
 
 election_t *
 election_init(const char *name, const char *uname, guint period, GSourceFunc cb)
@@ -54,6 +80,7 @@ election_init(const char *name, const char *uname, guint period, GSourceFunc cb)
             e->name = g_strdup_printf("election-%u", count++);
         }
 
+        e->cb = cb;
         e->uname = strdup(uname);
         e->timeout = mainloop_timer_add(e->name, period, FALSE, cb, &e);
         crm_trace("Created %s", e->name);
@@ -198,6 +225,7 @@ election_vote(election_t *e)
         return;
     }
 
+    e->state = election_in_progress;
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     e->count++;
@@ -260,9 +288,8 @@ election_check(election_t *e)
             }
 
         }
-        crm_debug("Destroying voted hash");
-        g_hash_table_destroy(e->voted);
-        e->voted = NULL;
+
+        election_timer_cb(e);
         return TRUE;
 
     } else {
@@ -454,7 +481,8 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     if (done) {
         do_crm_log(log_level + 1, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
                    election_id, e->count, election_owner, op, from, reason);
-        return election_in_progress;
+        e->state = election_in_progress;
+        return e->state;
 
     } else if(we_loose == FALSE) {
         do_crm_log(log_level, "Election %d (owner: %s) pass: %s from %s (%s)",
@@ -467,7 +495,8 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
             election_timeout_stop(e);
 
             /* Start a new election by voting down this, and other, peers */
-            return election_start;
+            e->state = election_start;
+            return e->state;
         }
 
         crm_info("Election %d ignore: We already lost an election less than %ds ago (%s)",
@@ -489,5 +518,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     free_xml(novote);
 
     last_election_loss = tm_now;
-    return election_lost;
+    e->state = election_lost;
+    return e->state;
 }

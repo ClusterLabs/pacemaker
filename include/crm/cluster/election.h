@@ -45,6 +45,7 @@ void election_timeout_stop(election_t *e);
 void election_vote(election_t *e);
 bool election_check(election_t *e);
 void election_remove(election_t *e, const char *uname);
+enum election_result election_state(election_t *e);
 enum election_result election_count_vote(election_t *e, xmlNode *vote, bool can_win);
 
 #endif
