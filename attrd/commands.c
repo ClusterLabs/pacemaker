@@ -38,7 +38,7 @@ typedef struct attribute_s {
 
     GHashTable *values;
 
-    int timeout;
+    int timeout_ms;
     bool changed;
     bool updating;
     mainloop_timer_t *timer;
@@ -98,7 +98,7 @@ free_attribute(gpointer data)
 
 xmlNode *
 build_attribute_xml(
-    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout, const char *user,
+    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
     const char *peer, const char *value)
 {
     xmlNode *xml = create_xml_node(parent, __FUNCTION__);
@@ -109,7 +109,7 @@ build_attribute_xml(
     crm_xml_add(xml, F_ATTRD_USER, user);
     crm_xml_add(xml, F_ATTRD_HOST, peer);
     crm_xml_add(xml, F_ATTRD_VALUE, value);
-    crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout);
+    crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms);
 
     return xml;
 }
@@ -117,6 +117,7 @@ build_attribute_xml(
 static attribute_t *
 create_attribute(xmlNode *xml)
 {
+    int dampen = 0;
     attribute_t *a = calloc(1, sizeof(attribute_t));
 
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
@@ -129,9 +130,10 @@ create_attribute(xmlNode *xml)
     a->user = crm_element_value_copy(xml, F_ATTRD_USER);
 #endif
 
-    crm_element_value_int(xml, F_ATTRD_DAMPEN, &a->timeout);
-    if(a->timeout > 0) {
-        a->timer = mainloop_timer_add(strdup(a->id), a->timeout, FALSE, attribute_timer_cb, a);
+    crm_element_value_int(xml, F_ATTRD_DAMPEN, &dampen);
+    if(dampen > 0) {
+        a->timeout_ms = dampen * 1000;
+        a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
     }
 
     g_hash_table_replace(attributes, a->id, a);
@@ -324,7 +326,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, (gpointer *) & v)) {
             crm_debug("Syncing %s[%s] = %s to %s", a->id, host, v->current, peer?peer->uname:"everyone");
-            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout, a->user, host, v->current);
+            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, host, v->current);
         }
     }
 
@@ -512,7 +514,7 @@ write_attribute(attribute_t *a)
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_info("Update for %s[%s]=%s: %s (%d)", a->id, peer, v->requested, pcmk_strerror(rc), rc);
+        crm_info("Update for %s[%s]=%s: %s (%d)", a->id, peer, v->current, pcmk_strerror(rc), rc);
         if(v->current) {
             free(v->requested);
             v->requested = strdup(v->current);

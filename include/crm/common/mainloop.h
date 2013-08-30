@@ -48,13 +48,15 @@ gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
 
+bool mainloop_timer_running(mainloop_timer_t *t);
+
 void mainloop_timer_start(mainloop_timer_t *t);
 
 void mainloop_timer_stop(mainloop_timer_t *t);
 
-guint mainloop_timer_set_period(mainloop_timer_t *t, guint period);
+guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms);
 
-mainloop_timer_t *mainloop_timer_add(const char *name, guint interval, bool repeat, GSourceFunc cb, void *userdata);
+mainloop_timer_t *mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata);
 
 void mainloop_timer_del(mainloop_timer_t *t);
 

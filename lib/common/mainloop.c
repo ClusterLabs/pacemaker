@@ -990,7 +990,7 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 
 struct mainloop_timer_s {
         guint id;
-        guint period;
+        guint period_ms;
         bool repeat;
         char *name;
         GSourceFunc cb;
@@ -1019,12 +1019,20 @@ static gboolean mainloop_timer_cb(gpointer user_data)
     return repeat;
 }
 
+bool mainloop_timer_running(mainloop_timer_t *t)
+{
+    if(t && t->id != 0) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void mainloop_timer_start(mainloop_timer_t *t)
 {
     mainloop_timer_stop(t);
-    if(t && t->period > 0) {
+    if(t && t->period_ms > 0) {
         crm_trace("Starting timer %s", t->name);
-        t->id = g_timeout_add(t->period, mainloop_timer_cb, t);
+        t->id = g_timeout_add(t->period_ms, mainloop_timer_cb, t);
     }
 }
 
@@ -1037,16 +1045,16 @@ void mainloop_timer_stop(mainloop_timer_t *t)
     }
 }
 
-guint mainloop_timer_set_period(mainloop_timer_t *t, guint period)
+guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 {
     guint last = 0;
 
     if(t) {
-        last = t->period;
-        t->period = period;
+        last = t->period_ms;
+        t->period_ms = period_ms;
     }
 
-    if(t && t->id != 0 && last != t->period) {
+    if(t && t->id != 0 && last != t->period_ms) {
         mainloop_timer_start(t);
     }
     return last;
@@ -1054,18 +1062,18 @@ guint mainloop_timer_set_period(mainloop_timer_t *t, guint period)
 
 
 mainloop_timer_t *
-mainloop_timer_add(const char *name, guint period, bool repeat, GSourceFunc cb, void *userdata)
+mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)
 {
     mainloop_timer_t *t = calloc(1, sizeof(mainloop_timer_t));
 
     if(t) {
         if(name) {
-            t->name = g_strdup_printf("%s-%u-%d", name, period, repeat);
+            t->name = g_strdup_printf("%s-%u-%d", name, period_ms, repeat);
         } else {
-            t->name = g_strdup_printf("%p-%u-%d", t, period, repeat);
+            t->name = g_strdup_printf("%p-%u-%d", t, period_ms, repeat);
         }
         t->id = 0;
-        t->period = period;
+        t->period_ms = period_ms;
         t->repeat = repeat;
         t->cb = cb;
         t->userdata = userdata;
