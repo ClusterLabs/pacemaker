@@ -354,6 +354,23 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
     }
 
+    if(options & cib_mixed_update) {
+        int max = 0, lpc;
+        xmlXPathObjectPtr xpathObj = xpath_search(*result_cib, "//@__delete__");
+
+        if (xpathObj) {
+            max = numXpathResults(xpathObj);
+            crm_log_xml_info(*result_cib, "Mixed result");
+        }
+
+        for (lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = getXpathResult(xpathObj, lpc);
+            crm_debug("Destroying %s", (char *)xmlGetNodePath(match));
+            free_xml(match);
+        }
+
+        freeXpathObject(xpathObj);
+    }
     return pcmk_ok;
 }
 

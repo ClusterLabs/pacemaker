@@ -503,6 +503,7 @@ write_attribute(attribute_t *a)
     const char *peer = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
+    enum cib_call_options flags = cib_quorum_override;
 
     if (a == NULL) {
         return;
@@ -531,13 +532,14 @@ write_attribute(attribute_t *a)
         } else {
             free(v->requested);
             v->requested = NULL;
+            flags |= cib_mixed_update;
         }
         build_update_element(xml_top, a, peer, v->requested);
     }
 
     crm_log_xml_trace(xml_top, __FUNCTION__);
     rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
-                         cib_quorum_override, a->user);
+                         flags, a->user);
 
     crm_debug("Sent update %d for %s, id=%s, set=%s",
               rc, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
@@ -567,7 +569,11 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, con
     xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
     crm_xml_add(xml_obj, XML_ATTR_ID, a->uuid);
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, value);
-
+    if(value) {
+        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, value);
+    } else {
+        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
+        crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
+    }
     return TRUE;
 }

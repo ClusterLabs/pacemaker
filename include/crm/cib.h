@@ -63,6 +63,7 @@ enum cib_call_options {
 	cib_discard_reply   = 0x00000010,
 	cib_no_children     = 0x00000020,
         cib_xpath_address   = 0x00000040,
+        cib_mixed_update    = 0x00000080,
 	cib_scope_local     = 0x00000100,
 	cib_dryrun    	    = 0x00000200,
 	cib_sync_call       = 0x00001000,
