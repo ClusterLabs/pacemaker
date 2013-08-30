@@ -827,6 +827,7 @@ probe_resources(pe_working_set_t * data_set)
 {
     action_t *probe_complete = NULL;
     action_t *probe_node_complete = NULL;
+    action_t *probe_cluster_nodes_complete = NULL;
 
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
@@ -842,12 +843,16 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
-        } else if (node->details->remote_rsc) {
-            /* TODO need to figure out how to probe remote resources */
+        } else if (node->details->remote_rsc && node->details->remote_rsc->container) {
+            /* TODO for now we are only probing baremetal remote-nodes. We
+             * may need to consider probing container nodes as well. */
             continue;
 
         } else if (probe_complete == NULL) {
             probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
+            if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+                probe_cluster_nodes_complete = get_pseudo_op(CRM_OP_NODES_PROBED, data_set);
+            }
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
@@ -877,19 +882,32 @@ probe_resources(pe_working_set_t * data_set)
                      probe_node_complete->uuid, probe_node_complete->node->details->uname);
         }
 
-        order_actions(probe_node_complete, probe_complete,
+        if (node->details->remote_rsc) {
+            order_actions(probe_node_complete, probe_complete,
                       pe_order_runnable_left /*|pe_order_implies_then */ );
+		} else if (probe_cluster_nodes_complete == NULL) {
+            order_actions(probe_node_complete, probe_complete,
+                      pe_order_runnable_left /*|pe_order_implies_then */ );
+        } else {
+            order_actions(probe_node_complete, probe_cluster_nodes_complete,
+                      pe_order_runnable_left /*|pe_order_implies_then */ );
+        }
 
         gIter2 = data_set->resources;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             resource_t *rsc = (resource_t *) gIter2->data;
 
             if (rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set)) {
-
                 update_action_flags(probe_complete, pe_action_optional | pe_action_clear);
                 update_action_flags(probe_node_complete, pe_action_optional | pe_action_clear);
 
-                wait_for_probe(rsc, RSC_START, probe_complete, data_set);
+                if (rsc->is_remote_node) {
+                    update_action_flags(probe_cluster_nodes_complete, pe_action_optional | pe_action_clear);
+                    /* allow remote resources to run after all cluster nodes are probed */
+                    wait_for_probe(rsc, RSC_START, probe_cluster_nodes_complete, data_set);
+                } else {
+                    wait_for_probe(rsc, RSC_START, probe_complete, data_set);
+                }
             }
         }
     }
@@ -898,7 +916,12 @@ probe_resources(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
+        if (rsc->is_remote_node) {
+            /* allow remote resources to run after all cluster nodes are probed */
+            wait_for_probe(rsc, RSC_STOP, probe_cluster_nodes_complete, data_set);
+        } else {
+            wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
+        }
     }
 
     return TRUE;
