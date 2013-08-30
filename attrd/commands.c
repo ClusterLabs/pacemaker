@@ -295,7 +295,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if(safe_str_eq(op, "sync")) {
         attrd_peer_sync(peer, xml);
 
-    } else if(safe_str_eq(op, "sync-response")) {
+    } else if(safe_str_eq(op, "sync-response")
+              && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         xmlNode *child = NULL;
 
         crm_notice("Processing %s from %s", op, peer->uname);
@@ -322,7 +323,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s] = %s to %s", a->id, host, v->current, peer->uname);
+            crm_debug("Syncing %s[%s] = %s to %s", a->id, host, v->current, peer?peer->uname:"everyone");
             build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout, a->user, host, v->current);
         }
     }
