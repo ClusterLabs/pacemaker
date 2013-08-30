@@ -982,12 +982,12 @@ case $SUPPORT_PROFILING in
 	SUPPORT_PROFILING=1
 
 	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fno-omit-frame-pointer -fno-inline"
+	CFLAGS="$CFLAGS -fno-omit-frame-pointer -fno-inline -fno-builtin "
 	dnl CFLAGS="$CFLAGS -fno-inline-functions -fno-default-inline -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 
 	dnl Turn off optimization so tools can get accurate line numbers
 	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g' -e 's/-D_FORTIFY_SOURCE=.\ //g'`
-	CFLAGS="$CFLAGS -O0"
+	CFLAGS="$CFLAGS -O0 -g3 -gdwarf-2"
 
 	dnl Update features
 	PCMK_FEATURES="$PCMK_FEATURES profile"
