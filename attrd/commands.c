@@ -131,6 +131,8 @@ create_attribute(xmlNode *xml)
 #endif
 
     crm_element_value_int(xml, F_ATTRD_DAMPEN, &dampen);
+
+    crm_trace("Created attribute %s with delay %ds", a->id, dampen);
     if(dampen > 0) {
         a->timeout_ms = dampen * 1000;
         a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
@@ -233,7 +235,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             election_vote(writer);
         }
 
-        crm_info("Broadcasting %s[%s] = %s%s", host, attr, value, election_state(writer) == election_won?" (writer)":"");
+        crm_info("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
         crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
         send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
 
@@ -354,7 +356,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
     v = g_hash_table_lookup(a->values, host);
 
     if(v == NULL) {
-        crm_trace("Setting %s[%s] to %s from %s", host, attr, value, peer->uname);
+        crm_trace("Setting %s[%s] to %s from %s", attr, host, value, peer->uname);
         v = calloc(1, sizeof(attribute_value_t));
         if(value) {
             v->current = strdup(value);
@@ -362,11 +364,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
         g_hash_table_replace(a->values, strdup(host), v);
         a->changed = TRUE;
 
-    } else {
-        crm_trace("Setting %s[%s]: %s -> %s from %s", host, attr, v->current, value, peer->uname);
-    }
-
-    if(safe_str_neq(v->current, value)) {
+    } else if(safe_str_neq(v->current, value)) {
+        crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
         free(v->current);
         if(value) {
             v->current = strdup(value);
@@ -374,13 +373,23 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
             v->current = NULL;
         }
         a->changed = TRUE;
+
+    } else {
+        crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
 
-    if(a->changed && a->timer) {
-        mainloop_timer_start(a->timer);
 
-    } else if(a->changed && election_state(writer) == election_won) {
-        write_attribute(a);
+    if(a->changed) {
+        if(a->timer) {
+            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
+            mainloop_timer_start(a->timer);
+
+        } else if(election_state(writer) == election_won) {
+            write_attribute(a);
+
+        } else {
+            crm_trace("Someone else will write out %s", a->id);
+        }
     }
 }
 
@@ -514,7 +523,7 @@ write_attribute(attribute_t *a)
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_info("Update for %s[%s]=%s: %s (%d)", a->id, peer, v->current, pcmk_strerror(rc), rc);
+        crm_info("Update for %s[%s]=%s: %s (%d)", peer, a->id, v->current, pcmk_strerror(rc), rc);
         if(v->current) {
             free(v->requested);
             v->requested = strdup(v->current);
@@ -535,7 +544,7 @@ write_attribute(attribute_t *a)
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_debug("Update %d for %s[%s]=%s", rc, a->id, peer, v->requested);
+        crm_debug("Update %d for %s[%s]=%s", rc, peer, a->id, v->requested);
     }
 
     the_cib->cmds->register_callback(the_cib, rc, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
