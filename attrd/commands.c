@@ -427,7 +427,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 {
     int level = LOG_ERR;
     GHashTableIter iter;
-    const char *key = NULL;
+    const char *peer = NULL;
     attribute_value_t *v = NULL;
 
     char *name = user_data;
@@ -459,8 +459,9 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     do_crm_log(level, "Update %d for %s: %s (%d)", call_id, name, pcmk_strerror(rc), rc);
 
     g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & v)) {
-        crm_info("Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, v->requested, pcmk_strerror(rc), rc);
+    while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
+        crm_info("Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
+
         if(rc == pcmk_ok) {
             free(v->stored);
             v->stored = v->requested;
