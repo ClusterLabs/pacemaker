@@ -341,7 +341,10 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
         } else {
             /* make sure we have a clean status section to start with */
+            lrm_state_reset_tables(lrm_state);
             remote_init_cib_status(lrm_state->node_name);
+            erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+            erase_status_tag(lrm_state->node_name, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
@@ -444,15 +447,6 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
-            xmlNode *status = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-            /* clear node status in cib */
-            crm_xml_add(status, XML_ATTR_ID, lrm_state->node_name);
-            lrm_state_reset_tables(lrm_state);
-            fsa_cib_delete(XML_CIB_TAG_STATUS, status, cib_quorum_override, rc, NULL);
-            crm_info("Forced a remote LRM refresh before connection start: call=%d", rc);
-            crm_log_xml_trace(status, "CLEAR LRM");
-            free_xml(status);
 
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
