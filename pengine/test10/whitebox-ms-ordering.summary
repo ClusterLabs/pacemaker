@@ -33,6 +33,7 @@ Executing cluster transition:
  * Resource action: lxc2            monitor on 18node3
  * Resource action: lxc2            monitor on 18node2
  * Resource action: lxc2            monitor on 18node1
+ * Pseudo action:   probe_nodes_complete
  * Pseudo action:   probe_complete
  * Resource action: container1      start on 18node1
  * Resource action: container2      start on 18node1
