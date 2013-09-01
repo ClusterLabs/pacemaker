@@ -38,9 +38,9 @@ typedef struct attribute_s {
 
     GHashTable *values;
 
+    int update;
     int timeout_ms;
     bool changed;
-    bool updating;
     mainloop_timer_t *timer;
 
     char *user;
@@ -230,7 +230,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
 
       send:
 
-        if(peer_writer == NULL) {
+        if(peer_writer == NULL && election_state(writer) != election_in_progress) {
             crm_info("Starting an election to determine the writer");
             election_vote(writer);
         }
@@ -398,7 +398,12 @@ attrd_election_cb(gpointer user_data)
 {
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
+
+    /* Update the peers after an election */
     attrd_peer_sync(NULL, NULL);
+
+    /* Update the CIB after an election */
+    write_attributes(TRUE);
     return FALSE;
 }
 
@@ -438,11 +443,11 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         goto done;
     }
 
+    a->update = 0;
     if (rc == pcmk_ok && call_id < 0) {
         rc = call_id;
     }
 
-    a->updating = FALSE;
     switch (rc) {
         case pcmk_ok:
             level = LOG_INFO;
@@ -510,22 +515,19 @@ write_attribute(attribute_t *a)
         return;
 
     } else if (the_cib == NULL) {
-        crm_info("Delaying storing %s: cib not connected", a->id);
+        crm_info("Write out of %s delayed: cib not connected", a->id);
         return;
 
-    } else if(a->updating) {
-        crm_info("Delaying storing %s: update in progress", a->id);
+    } else if(a->update) {
+        crm_info("Write out of %s delayed: update %d in progress", a->id, a->update);
         return;
     }
-
-    a->changed = FALSE;
-    a->updating = TRUE;
 
     xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_info("Update for %s[%s]=%s: %s (%d)", peer, a->id, v->current, pcmk_strerror(rc), rc);
+        crm_debug("Update: %s[%s]=%s", peer, a->id, v->requested);
         if(v->current) {
             free(v->requested);
             v->requested = strdup(v->current);
@@ -539,18 +541,21 @@ write_attribute(attribute_t *a)
     }
 
     crm_log_xml_trace(xml_top, __FUNCTION__);
-    rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
+
+    a->changed = FALSE;
+    a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                          flags, a->user);
 
     crm_debug("Sent update %d for %s, id=%s, set=%s",
-              rc, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
+              a->update, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_debug("Update %d for %s[%s]=%s", rc, peer, a->id, v->requested);
+        crm_info("Update %d for %s[%s]=%s: %s (%d)", a->update, peer, a->id, v->current, pcmk_strerror(rc), rc);
     }
 
-    the_cib->cmds->register_callback(the_cib, rc, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
+    the_cib->cmds->register_callback(
+        the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
 }
 
 bool
