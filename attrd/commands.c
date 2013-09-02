@@ -55,7 +55,7 @@ typedef struct attribute_value_s {
 
 
 void write_attribute(attribute_t *a);
-void attrd_peer_update(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, const char *source);
 bool build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *attr_value);
@@ -308,7 +308,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     }
 
     if(safe_str_eq(op, "update")) {
-        attrd_peer_update(peer, xml);
+        attrd_peer_update(peer, xml, FALSE);
 
     } else if(safe_str_eq(op, "sync")) {
         attrd_peer_sync(peer, xml);
@@ -323,7 +323,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
         crm_notice("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
-            attrd_peer_update(peer, child);
+            attrd_peer_update(peer, child, TRUE);
         }
     }
 }
@@ -362,6 +362,8 @@ attrd_peer_remove(const char *host, const char *source)
     attribute_t *a = NULL;
     GHashTableIter aIter;
 
+    crm_notice("Removing all %s attributes for %s", host, source);
+
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         if(g_hash_table_remove(a->values, host)) {
@@ -371,7 +373,7 @@ attrd_peer_remove(const char *host, const char *source)
 }
 
 void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml)
+attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 {
     attribute_value_t *v = NULL;
 
@@ -396,6 +398,21 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
         g_hash_table_replace(a->values, strdup(host), v);
         a->changed = TRUE;
 
+    } else if(filter
+              && safe_str_neq(v->current, value)
+              && safe_str_eq(host, attrd_cluster->uname)) {
+        xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+        crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
+                   a->id, host, v->current, value, peer->uname);
+
+        crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
+        v = g_hash_table_lookup(a->values, host);
+        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, host, v->current);
+
+        crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
+        send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
+        free_xml(sync);
+
     } else if(safe_str_neq(v->current, value)) {
         crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
         free(v->current);
@@ -409,7 +426,6 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml)
     } else {
         crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
-
 
     if(a->changed) {
         if(a->timer) {
