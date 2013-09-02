@@ -57,6 +57,7 @@ typedef struct attribute_value_s {
 void write_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_remove(const char *host, const char *source);
 bool build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *attr_value);
 
 static gboolean
@@ -145,10 +146,19 @@ create_attribute(xmlNode *xml)
 void
 attrd_client_message(crm_client_t *client, xmlNode *xml)
 {
+    bool broadcast = FALSE;
     static int plus_plus_len = 5;
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
 
-    if(safe_str_eq(op, "update")) {
+    if(safe_str_eq(op, "peer-remove")) {
+        const char *host = crm_element_value(xml, F_ATTRD_HOST);
+
+        crm_info("Client %s is requesting all values for %s be removed", client->name, host);
+        if(host) {
+            broadcast = TRUE;
+        }
+
+    } else if(safe_str_eq(op, "update")) {
         attribute_t *a = NULL;
         attribute_value_t *v = NULL;
         char *key = crm_element_value_copy(xml, F_ATTRD_KEY);
@@ -236,12 +246,16 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         }
 
         crm_info("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
-        crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
-        send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
+        broadcast = TRUE;
 
         free(key);
         free(set);
         free(host);
+    }
+
+    if(broadcast) {
+        crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
+        send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
     }
 }
 
@@ -299,6 +313,10 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if(safe_str_eq(op, "sync")) {
         attrd_peer_sync(peer, xml);
 
+    } else if(safe_str_eq(op, "peer-remove")) {
+        const char *host = crm_element_value(xml, F_ATTRD_HOST);
+        attrd_peer_remove(host, peer->uname);
+
     } else if(safe_str_eq(op, "sync-response")
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
         xmlNode *child = NULL;
@@ -336,6 +354,20 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
     send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
     free_xml(sync);
+}
+
+void
+attrd_peer_remove(const char *host, const char *source)
+{
+    attribute_t *a = NULL;
+    GHashTableIter aIter;
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        if(g_hash_table_remove(a->values, host)) {
+            crm_debug("Removed %s[%s] for %s", a->id, host, source);
+        }
+    }
 }
 
 void
@@ -418,12 +450,14 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
         attrd_peer_sync(peer, NULL);
 
     } else if(kind == crm_status_nstate
-       && safe_str_neq(peer->state, CRM_NODE_MEMBER)
-       && safe_str_eq(peer->uname, peer_writer)) {
+              && safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
 
-        free(peer_writer);
-        peer_writer = NULL;
-        crm_notice("Lost attribute writer %s", peer->uname);
+        attrd_peer_remove(peer->uname, __FUNCTION__);
+        if(safe_str_eq(peer->uname, peer_writer)) {
+            free(peer_writer);
+            peer_writer = NULL;
+            crm_notice("Lost attribute writer %s", peer->uname);
+        }
     }
 }
 
