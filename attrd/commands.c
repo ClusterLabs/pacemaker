@@ -119,6 +119,7 @@ static attribute_t *
 create_attribute(xmlNode *xml)
 {
     int dampen = 0;
+    const char *value = crm_element_value_copy(xml, F_ATTRD_DAMPEN);
     attribute_t *a = calloc(1, sizeof(attribute_t));
 
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
@@ -131,11 +132,11 @@ create_attribute(xmlNode *xml)
     a->user = crm_element_value_copy(xml, F_ATTRD_USER);
 #endif
 
-    crm_element_value_int(xml, F_ATTRD_DAMPEN, &dampen);
+    dampen = crm_get_msec(value);
 
     crm_trace("Created attribute %s with delay %ds", a->id, dampen);
     if(dampen > 0) {
-        a->timeout_ms = dampen * 1000;
+        a->timeout_ms = dampen;
         a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
     }
 
