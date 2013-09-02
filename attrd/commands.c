@@ -58,7 +58,7 @@ void write_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, const char *source);
-bool build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *attr_value);
+void build_update_element(xmlNode *parent, attribute_t *a, const char *uname, const char *attr_value);
 
 static gboolean
 attribute_timer_cb(gpointer user_data)
@@ -615,16 +615,22 @@ write_attribute(attribute_t *a)
         the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
 }
 
-bool
-build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, const char *value)
+void
+build_update_element(xmlNode *parent, attribute_t *a, const char *uname, const char *value)
 {
     xmlNode *xml_obj = NULL;
+    crm_node_t *peer = crm_get_peer(0, uname);
+
+    CRM_LOG_ASSERT(peer->uuid != NULL);
+    if(peer->uuid == NULL) {
+        return;
+    }
 
     xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
-    crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+    crm_xml_add(xml_obj, XML_ATTR_ID, peer->uuid);
 
     xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+    crm_xml_add(xml_obj, XML_ATTR_ID, peer->uuid);
 
     xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
     crm_xml_add(xml_obj, XML_ATTR_ID, a->set);
@@ -638,5 +644,4 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *node_uuid, con
         crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
         crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
     }
-    return TRUE;
 }
