@@ -843,7 +843,7 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
-        } else if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        } else if (is_container_remote_node(node)) {
             /* TODO for now we are only probing baremetal remote-nodes. We
              * may need to consider probing container nodes as well. */
             continue;
@@ -882,7 +882,7 @@ probe_resources(pe_working_set_t * data_set)
                      probe_node_complete->uuid, probe_node_complete->node->details->uname);
         }
 
-        if (node->details->remote_rsc) {
+        if (is_remote_node(node)) {
             order_actions(probe_node_complete, probe_complete,
                       pe_order_runnable_left /*|pe_order_implies_then */ );
 		} else if (probe_cluster_nodes_complete == NULL) {
@@ -1328,7 +1328,7 @@ stage6(pe_working_set_t * data_set)
         node_t *node = (node_t *) gIter->data;
 
         /* remote-nodes associated with a container resource (such as a vm) are not fenced */
-        if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        if (is_container_remote_node(node)) {
             continue;
         }
 
@@ -1355,7 +1355,7 @@ stage6(pe_working_set_t * data_set)
                 /* TODO define what a shutdown op means for a baremetal remote node.
                  * For now we do not send shutdown operations for remote nodes, but
                  * if we can come up with a good use for this in the future, we will. */
-                    node->details->remote_rsc == NULL) {
+                    is_remote_node(node) == FALSE) {
 
             action_t *down_op = NULL;
 
@@ -1596,9 +1596,9 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         resource_t *remote_rsc = NULL;
         resource_t *container = NULL;
 
-        if (!action->node ||
-            !action->node->details->remote_rsc ||
-            !action->rsc ||
+        if (action->node == NULL ||
+            is_remote_node(action->node) == FALSE ||
+            action->rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
             continue;
         }

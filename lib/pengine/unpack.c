@@ -51,9 +51,8 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
     CRM_CHECK(node, return);
 
-    /* fence remote nodes living in a container by marking
-     * the container as failed. */
-    if (node->details->remote_rsc && node->details->remote_rsc->container) {
+    /* fence remote nodes living in a container by marking the container as failed. */
+    if (is_container_remote_node(node)) {
         resource_t *rsc = node->details->remote_rsc->container;
         if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
             crm_warn("Remote node %s will be fenced by recovering container resource %s",
@@ -266,19 +265,6 @@ create_node(const char *id, const char *uname, const char *type, const char *sco
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
-}
-
-gboolean
-is_remote_node(xmlNode *xml)
-{
-    const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
-    const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
-    const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
-
-    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker") && safe_str_eq(class, "ocf")) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 static const char *
@@ -615,7 +601,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         const char *new_node_id = NULL;
 
         /* remote rsc can be defined as primitive, or exist within the metadata of another rsc */
-        if (is_remote_node(xml_obj)) {
+        if (xml_contains_remote_node(xml_obj)) {
             new_node_id = ID(xml_obj);
             /* This check is here to make sure we don't iterate over
              * an expanded node that has already been added to the node list. */
@@ -707,7 +693,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
 
-            if (is_remote_node(xml_obj)) {
+            if (xml_contains_remote_node(xml_obj)) {
                 new_rsc->is_remote_node = TRUE;
             }
             print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
@@ -963,7 +949,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                 crm_config_warn("Node %s in status section no longer exists", uname);
                 continue;
 
-            } else if (this_node->details->remote_rsc) {
+            } else if (is_remote_node(this_node)) {
                 /* online state for remote nodes is determined by the rsc state
                  * after all the unpacking is done. */
                 continue;
@@ -1015,7 +1001,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_info("Node %s is unknown", id);
             continue;
 
-        } else if (this_node->details->remote_rsc) {
+        } else if (is_remote_node(this_node)) {
 
             /* online status of remote node can not be determined until all other
              * resource status is unpacked. */
@@ -1056,7 +1042,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         this_node = gIter->data;
 
-        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
             continue;
         }
         determine_remote_online_status(this_node);
@@ -1073,7 +1059,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         uname = crm_element_value(state, XML_ATTR_UNAME);
         this_node = pe_find_node_any(data_set->nodes, id, uname);
 
-        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
             continue;
         }
         crm_trace("Processing remote node id=%s, uname=%s", id, uname);
@@ -1099,7 +1085,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         uname = crm_element_value(state, XML_ATTR_UNAME);
         this_node = pe_find_node_any(data_set->nodes, id, uname);
 
-        if ((this_node == NULL) || (this_node->details->remote_rsc == NULL)) {
+        if ((this_node == NULL) || (is_remote_node(this_node) == FALSE)) {
             continue;
         }
         crm_trace("Processing lrm resource entries on healthy remote node: %s",
@@ -1632,7 +1618,7 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
                 action_t *clear_op = NULL;
                 action_t *ready = NULL;
 
-                if (node->details->remote_rsc) {
+                if (is_remote_node(node)) {
                     char *pseudo_op_name = crm_concat(CRM_OP_PROBED, node->details->id, '_');
                     ready = get_pseudo_op(pseudo_op_name, data_set);
                     free(pseudo_op_name);
@@ -1692,7 +1678,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
          * and remote connenction are re-established, the status section will
          * get reset in the crmd freeing up this resource to run again once we
          * are sure we know the resources state. */
-        if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        if (is_container_remote_node(node)) {
             set_bit(rsc->flags, pe_rsc_failed);
 
             should_fence = TRUE;
@@ -2953,7 +2939,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             this_node = pe_find_node(data_set->nodes, uname);
             CRM_CHECK(this_node != NULL, continue);
 
-            if (this_node->details->remote_rsc) {
+            if (is_remote_node(this_node)) {
                 determine_remote_online_status(this_node);
             } else {
                 determine_online_status(node_state, this_node, data_set);

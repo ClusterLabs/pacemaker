@@ -543,7 +543,7 @@ print_cluster_status(pe_working_set_t * data_set)
         const char *node_mode = NULL;
         char *node_name = NULL;
 
-        if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        if (is_container_remote_node(node)) {
             node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
         } else {
             node_name = g_strdup_printf("%s", node->details->uname);
@@ -584,9 +584,9 @@ print_cluster_status(pe_working_set_t * data_set)
 
         } else if (node->details->online) {
             node_mode = "online";
-            if (node->details->remote_rsc && node->details->remote_rsc->container) {
+            if (is_container_remote_node(node)) {
                 online_remote_containers = add_list_element(online_remote_containers, node_name);
-            } else if (node->details->remote_rsc) {
+            } else if (is_baremetal_remote_node(node)) {
                 online_remote_nodes = add_list_element(online_remote_nodes, node_name);
             } else {
                 online_nodes = add_list_element(online_nodes, node_name);
@@ -596,12 +596,10 @@ print_cluster_status(pe_working_set_t * data_set)
 
         } else {
             node_mode = "OFFLINE";
-            if (node->details->remote_rsc) {
-                if (node->details->remote_rsc->container == NULL) {
-                    offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
-                } else {
-                    /* ignore displaying offline container nodes */
-                }
+            if (is_baremetal_remote_node(node)) {
+                offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
+            } else if (is_container_remote_node(node)) {
+                /* ignore offline container nodes */
             } else {
                 offline_nodes = add_list_element(offline_nodes, node_name);
             }
@@ -609,9 +607,9 @@ print_cluster_status(pe_working_set_t * data_set)
             continue;
         }
 
-        if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        if (is_container_remote_node(node)) {
             printf("ContainerNode %s: %s\n", node_name, node_mode);
-        } else if (node->details->remote_rsc) {
+        } else if (is_baremetal_remote_node(node)) {
             printf("RemoteNode %s: %s\n", node_name, node_mode);
         } else if (safe_str_eq(node->details->uname, node->details->id)) {
             printf("Node %s: %s\n", node_name, node_mode);

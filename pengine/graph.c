@@ -567,7 +567,7 @@ get_router_node(action_t *action)
     node_t *ended_on = NULL;
     node_t *router_node = NULL;
 
-    if (action->node->details->remote_rsc == NULL) {
+    if (is_remote_node(action->node) == FALSE) {
         return NULL;
     }
 
