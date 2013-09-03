@@ -1,0 +1,65 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="16" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5">
+        <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="21" operation="monitor" operation_key="FAKE2_monitor_60000" on_node="18builder" on_node_uuid="5">
+        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="FAKE2_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="20" operation="start" operation_key="FAKE2_start_0" on_node="18builder" on_node_uuid="5">
+        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="19" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
+        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.7"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="stop" operation_key="remote1_stop_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

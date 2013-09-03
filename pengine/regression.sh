@@ -709,4 +709,11 @@ do_test whitebox-ms-ordering "Verify promote/demote can not occur before connect
 do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
 
 echo ""
+do_test remote-startup-probes  "Baremetal remote-node startup probes"
+do_test remote-startup         "Startup a newly discovered remote-nodes with no status."
+do_test remote-fence-unclean "Fence unclean baremetal remote-node"
+do_test remote-move    "Move remote-node connection resource"
+do_test remote-disable "Disable a baremetal remote-node"
+
+echo ""
 test_results
