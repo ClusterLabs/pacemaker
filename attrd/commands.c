@@ -523,7 +523,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_info("Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
+        crm_notice("Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
 
         if(rc == pcmk_ok) {
             free(v->stored);
@@ -562,7 +562,6 @@ write_attributes(bool all)
 void
 write_attribute(attribute_t *a)
 {
-    int rc = pcmk_ok;
     xmlNode *xml_top = NULL;
     const char *peer = NULL;
     attribute_value_t *v = NULL;
@@ -585,7 +584,7 @@ write_attribute(attribute_t *a)
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_debug("Update: %s[%s]=%s", peer, a->id, v->requested);
+        crm_debug("Update: %s[%s]=%s", peer, a->id, v->current);
         if(v->current) {
             free(v->requested);
             v->requested = strdup(v->current);
@@ -604,13 +603,8 @@ write_attribute(attribute_t *a)
     a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                          flags, a->user);
 
-    crm_debug("Sent update %d for %s, id=%s, set=%s",
+    crm_notice("Sent update %d for %s, id=%s, set=%s",
               a->update, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
-
-    g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_info("Update %d for %s[%s]=%s: %s (%d)", a->update, peer, a->id, v->current, pcmk_strerror(rc), rc);
-    }
 
     the_cib->cmds->register_callback(
         the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
