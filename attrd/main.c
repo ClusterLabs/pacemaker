@@ -47,6 +47,7 @@ GMainLoop *mloop = NULL;
 bool shutting_down = FALSE;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
+int attrd_error = pcmk_ok;
 
 static void
 attrd_shutdown(int nsig) {
@@ -98,6 +99,7 @@ attrd_cpg_destroy(gpointer unused)
 
     } else {
         crm_crit("Lost connection to Corosync service!");
+        attrd_error = ECONNRESET;
         attrd_shutdown(0);
     }
 }
@@ -124,6 +126,7 @@ attrd_cib_destroy_cb(gpointer user_data)
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
         crm_err("Lost connection to CIB service!");
+        attrd_error = ECONNRESET;
         attrd_shutdown(0);
     }
 
@@ -349,5 +352,8 @@ main(int argc, char **argv)
         cib_delete(the_cib);
     }
 
+    if(attrd_error) {
+        return crm_exit(attrd_error);
+    }
     return crm_exit(rc);
 }

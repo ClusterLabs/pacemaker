@@ -22,6 +22,7 @@ bool shutting_down;
 crm_cluster_t *attrd_cluster;
 GHashTable *attributes;
 election_t *writer;
+int attrd_error;
 
 void write_attributes(bool all);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
