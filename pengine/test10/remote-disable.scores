@@ -1,0 +1,25 @@
+Allocation scores:
+native_color: FAKE1 allocation score on 18builder: 0
+native_color: FAKE1 allocation score on 18node1: 0
+native_color: FAKE1 allocation score on 18node2: 0
+native_color: FAKE1 allocation score on remote1: 0
+native_color: FAKE2 allocation score on 18builder: 0
+native_color: FAKE2 allocation score on 18node1: 0
+native_color: FAKE2 allocation score on 18node2: 0
+native_color: FAKE2 allocation score on remote1: 0
+native_color: FAKE3 allocation score on 18builder: 0
+native_color: FAKE3 allocation score on 18node1: 0
+native_color: FAKE3 allocation score on 18node2: 0
+native_color: FAKE3 allocation score on remote1: 0
+native_color: FAKE4 allocation score on 18builder: 0
+native_color: FAKE4 allocation score on 18node1: 0
+native_color: FAKE4 allocation score on 18node2: 0
+native_color: FAKE4 allocation score on remote1: 0
+native_color: remote1 allocation score on 18builder: -INFINITY
+native_color: remote1 allocation score on 18node1: -INFINITY
+native_color: remote1 allocation score on 18node2: -INFINITY
+native_color: remote1 allocation score on remote1: -INFINITY
+native_color: shooter allocation score on 18builder: 0
+native_color: shooter allocation score on 18node1: 0
+native_color: shooter allocation score on 18node2: 0
+native_color: shooter allocation score on remote1: -INFINITY

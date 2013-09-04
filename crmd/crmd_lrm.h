@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <crmd_messages.h>
+
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name);
 void lrm_op_callback(lrmd_event_data_t * op);
@@ -145,3 +147,5 @@ int remote_ra_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *acti
                    int start_delay,     /* ms */
                    lrmd_key_value_t * params);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
+
+xmlNode *simple_remote_node_status(const char *node_name, xmlNode *parent, const char *source);

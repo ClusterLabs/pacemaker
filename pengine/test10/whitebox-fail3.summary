@@ -1,7 +1,6 @@
 
 Current cluster status:
 Online: [ dvossel-laptop2 ]
-OFFLINE: [ 18builder:vm 18node1:vm2 ]
 
  vm	(ocf::heartbeat:VirtualDomain):	Stopped 
  vm2	(ocf::heartbeat:VirtualDomain):	Stopped 
@@ -25,6 +24,7 @@ Executing cluster transition:
  * Pseudo action:   W-master_start_0
  * Pseudo action:   X-master_start_0
  * Resource action: 18builder       monitor on dvossel-laptop2
+ * Pseudo action:   probe_nodes_complete
  * Pseudo action:   probe_complete
  * Resource action: FAKE            stop on dvossel-laptop2
  * Resource action: 18builder       start on dvossel-laptop2
@@ -39,8 +39,8 @@ Executing cluster transition:
  * Resource action: X               monitor=10000 on 18builder
 
 Revised cluster status:
-Online: [ 18builder:vm dvossel-laptop2 ]
-OFFLINE: [ 18node1:vm2 ]
+Online: [ dvossel-laptop2 ]
+Containers: [ 18builder:vm ]
 
  vm	(ocf::heartbeat:VirtualDomain):	Started dvossel-laptop2 
  vm2	(ocf::heartbeat:VirtualDomain):	Stopped 

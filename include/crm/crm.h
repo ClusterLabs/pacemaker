@@ -130,6 +130,7 @@ extern char *crm_system_name;
 #  define CRM_OP_LRM_DELETE	"lrm_delete"
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"
+#  define CRM_OP_NODES_PROBED	"probe_nodes_complete"
 #  define CRM_OP_REPROBE		"probe_again"
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 #  define CRM_OP_RELAXED_SET  "one-or-more"

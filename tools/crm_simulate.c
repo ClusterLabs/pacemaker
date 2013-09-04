@@ -531,7 +531,10 @@ static void
 print_cluster_status(pe_working_set_t * data_set)
 {
     char *online_nodes = NULL;
+    char *online_remote_nodes = NULL;
+    char *online_remote_containers = NULL;
     char *offline_nodes = NULL;
+    char *offline_remote_nodes = NULL;
 
     GListPtr gIter = NULL;
 
@@ -540,7 +543,7 @@ print_cluster_status(pe_working_set_t * data_set)
         const char *node_mode = NULL;
         char *node_name = NULL;
 
-        if(node->details->remote_rsc) {
+        if (is_container_remote_node(node)) {
             node_name = g_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
         } else {
             node_name = g_strdup_printf("%s", node->details->uname);
@@ -577,24 +580,43 @@ print_cluster_status(pe_working_set_t * data_set)
                 node_mode = "OFFLINE (maintenance)";
             }
 
+
+
         } else if (node->details->online) {
             node_mode = "online";
-            online_nodes = add_list_element(online_nodes, node_name);
+            if (is_container_remote_node(node)) {
+                online_remote_containers = add_list_element(online_remote_containers, node_name);
+            } else if (is_baremetal_remote_node(node)) {
+                online_remote_nodes = add_list_element(online_remote_nodes, node_name);
+            } else {
+                online_nodes = add_list_element(online_nodes, node_name);
+            }
             free(node_name);
             continue;
 
         } else {
             node_mode = "OFFLINE";
-            offline_nodes = add_list_element(offline_nodes, node_name);
+            if (is_baremetal_remote_node(node)) {
+                offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
+            } else if (is_container_remote_node(node)) {
+                /* ignore offline container nodes */
+            } else {
+                offline_nodes = add_list_element(offline_nodes, node_name);
+            }
             free(node_name);
             continue;
         }
 
-        if (safe_str_eq(node_name, node->details->id)) {
+        if (is_container_remote_node(node)) {
+            printf("ContainerNode %s: %s\n", node_name, node_mode);
+        } else if (is_baremetal_remote_node(node)) {
+            printf("RemoteNode %s: %s\n", node_name, node_mode);
+        } else if (safe_str_eq(node->details->uname, node->details->id)) {
             printf("Node %s: %s\n", node_name, node_mode);
         } else {
             printf("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
         }
+
         free(node_name);
     }
 
@@ -605,6 +627,18 @@ print_cluster_status(pe_working_set_t * data_set)
     if (offline_nodes) {
         printf("OFFLINE: [%s ]\n", offline_nodes);
         free(offline_nodes);
+    }
+    if (online_remote_nodes) {
+        printf("RemoteOnline: [%s ]\n", online_remote_nodes);
+        free(online_remote_nodes);
+    }
+    if (offline_remote_nodes) {
+        printf("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
+        free(offline_remote_nodes);
+    }
+    if (online_remote_containers) {
+        printf("Containers: [%s ]\n", online_remote_containers);
+        free(online_remote_containers);
     }
 
     fprintf(stdout, "\n");

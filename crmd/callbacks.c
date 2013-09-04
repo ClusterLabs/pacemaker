@@ -117,6 +117,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* If we've never seen the node, then it also wont be in the status section */
             crm_info("%s is now %s", node->uname, node->state);
             return;
+        case crm_status_rstate:
+            crm_info("Remote node %s is now %s (was %s)", node->uname, node->state, (const char *)data);
+
         case crm_status_nstate:
             crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
             if (safe_str_eq(data, node->state)) {

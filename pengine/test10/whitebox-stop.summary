@@ -1,6 +1,7 @@
 
 Current cluster status:
-Online: [ 18node1 18node2 18node3 lxc1:container1 lxc2:container2 ]
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
 
  container1	(ocf::heartbeat:VirtualDomain):	Started 18node2
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node2
@@ -30,8 +31,8 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
 
 Revised cluster status:
-Online: [ 18node1 18node2 18node3 lxc2:container2 ]
-OFFLINE: [ lxc1:container1 ]
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc2:container2 ]
 
  container1	(ocf::heartbeat:VirtualDomain):	Stopped 
  container2	(ocf::heartbeat:VirtualDomain):	Started 18node2

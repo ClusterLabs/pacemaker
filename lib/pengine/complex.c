@@ -592,7 +592,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
-    } else if (is_remote_node(xml_obj) && g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+    } else if (xml_contains_remote_node(xml_obj) && g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
         /* remote resources tied to a container resource must always be allowed
          * to opt-in to the cluster. Whether the connection resource is actually
          * allowed to be placed on a node is dependent on the container resource */

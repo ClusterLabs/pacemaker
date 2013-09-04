@@ -28,6 +28,7 @@
 #include <crm/cluster/internal.h>
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
+#include <crmd_lrm.h>
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 #include <tengine.h>
@@ -132,6 +133,10 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
 {
     const char *value = NULL;
     xmlNode *node_state;
+
+    if (is_set(node->flags, crm_remote_node)) {
+        return simple_remote_node_status(node->uname, parent, source);
+    }
 
     if (!node->state) {
         crm_info("Node update for %s cancelled: no state, not seen yet", node->uname);
@@ -264,6 +269,13 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             do_update_node_cib(node, flags, node_list, source);
+        }
+
+        if (crm_remote_peer_cache) {
+            g_hash_table_iter_init(&iter, crm_remote_peer_cache);
+            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+                do_update_node_cib(node, flags, node_list, source);
+            }
         }
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);

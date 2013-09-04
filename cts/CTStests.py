@@ -2582,4 +2582,166 @@ class RemoteSimple(CTSTest):
 
 AllTestClasses.append(RemoteSimple)
 
+
+###################################################################
+class RemoteBaremetal(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="RemoteBaremetal"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.stop = StopTest(cm)
+        self.pcmk_started=0
+        self.rsc_added=0
+        self.is_remote = 1
+        self.failed = 0
+        self.fail_string = ""
+        self.cib_cmd="""cibadmin -C -o %s -X '%s' """
+
+    def del_connection_rsc(self, node):
+
+        if self.rsc_added == 0:
+            return
+
+        for othernode in self.CM.Env["nodes"]:
+            if othernode == node:
+                # we don't want to try and use the cib that we just shutdown.
+                # find a cluster node that is not our soon to be remote-node.
+                continue
+
+            rc = self.CM.rsh(othernode, "crm_resource -D -r remote1 -t primitive")
+            if rc != 0:
+                self.fail_string = ("Connection resource removal failed")
+                self.failed = 1
+            else:
+                self.fail_string = ""
+                self.failed = 0
+                break
+
+    def add_connection_rsc(self, node):
+        rsc_xml="""
+<primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
+    <instance_attributes id="remote1-instance_attributes"/>
+        <instance_attributes id="remote1-instance_attributes">
+          <nvpair id="remote1-instance_attributes-server" name="server" value="%s"/>
+        </instance_attributes>
+    <operations>
+      <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
+          <op id="remote1-name-start-interval-0-timeout-60" interval="0" name="start" timeout="60"/>
+    </operations>
+    <meta_attributes id="remote1-meta_attributes"/>
+</primitive>""" % node
+
+        for othernode in self.CM.Env["nodes"]:
+            if othernode == node:
+                # we don't want to try and use the cib that we just shutdown.
+                # find a cluster node that is not our soon to be remote-node.
+                continue
+
+            rc = self.CM.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+            if rc != 0:
+                self.fail_string = "Connection resource creation failed"
+                self.failed = 1
+            else:
+                self.fail_string = ""
+                self.failed = 0
+                self.rsc_added = 1
+                break
+
+    def start_metal(self, node):
+        pcmk_started=0
+
+        # make sure the resource doesn't already exist for some reason
+        self.CM.rsh(node, "crm_resource -D -r remote1 -t primitive")
+
+        if not self.stop(node):
+            self.failed = 1
+            self.fail_string = "Failed to shutdown cluster node %s" % (node)
+            return
+
+        for i in range(10):
+            rc = self.CM.rsh(node, "service pacemaker_remote start")
+            if rc != 0:
+                time.sleep(6)
+            else:
+                self.pcmk_started = 1
+                break
+
+        if self.pcmk_started == 0:
+            self.failed = 1
+            self.fail_string = "Failed to start pacemaker_remote on node %s" % (node)
+            return
+
+        # convert node to baremetal node now that it has shutdow the cluster stack
+        pats = [ ]
+        watch = self.create_watch(pats, 120)
+        watch.setwatch()
+        pats.append("process_lrm_event: LRM operation remote1_start_0.*confirmed.*ok")
+
+        self.add_connection_rsc(node)
+
+        self.set_timer("remoteMetalInit")
+        watch.lookforall()
+        self.log_timer("remoteMetalInit")
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.failed = 1
+
+
+    def cleanup_metal(self, node):
+        if self.pcmk_started == 0:
+            return
+
+        pats = [ ]
+
+        watch = self.create_watch(pats, 120)
+        watch.setwatch()
+        pats.append("process_lrm_event: LRM operation remote1_stop_0.*confirmed.*ok")
+
+        self.del_connection_rsc(node)
+        self.set_timer("remoteMetalCleanup")
+        watch.lookforall()
+        self.log_timer("remoteMetalCleanup")
+
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.failed = 1
+
+        # disable pcmk remote
+        for i in range(10):
+            rc = self.CM.rsh(node, "service pacemaker_remote stop")
+            if rc != 0:
+                time.sleep(6)
+            else:
+                break
+
+
+    def __call__(self, node):
+        '''Perform the 'RemoteBaremetal' test. '''
+        self.incr("calls")
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.start_metal(node)
+        self.cleanup_metal(node)
+
+        self.CM.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+        if self.failed == 1:
+            return self.failure(self.fail_string)
+
+        return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ """is running on remote1 which isn't allowed""",
+                 """Connection terminated""",
+                 """Failed to send remote""",
+                ]
+
+AllTestClasses.append(RemoteBaremetal)
+
 # vim:ts=4:sw=4:et:
