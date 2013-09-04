@@ -379,6 +379,7 @@ attrd_peer_remove(const char *host, const char *source)
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 {
+    bool changed = FALSE;
     attribute_value_t *v = NULL;
 
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -400,7 +401,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
             v->current = strdup(value);
         }
         g_hash_table_replace(a->values, strdup(host), v);
-        a->changed = TRUE;
+        changed = TRUE;
 
     } else if(filter
               && safe_str_neq(v->current, value)
@@ -425,13 +426,14 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         } else {
             v->current = NULL;
         }
-        a->changed = TRUE;
+        changed = TRUE;
 
     } else {
         crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
 
-    if(a->changed) {
+    a->changed |= changed;
+    if(changed) {
         if(a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
             mainloop_timer_start(a->timer);
