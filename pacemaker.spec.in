@@ -288,6 +288,7 @@ install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
 install -m 644 mcp/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
 install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
+install -m 644 mcp/pacemaker.combined_extra.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined_extra.conf
 %endif
 
 # Scripts that should be executable
@@ -448,6 +449,7 @@ exit 0
 %if %{with upstart_job}
 %config(noreplace) %{_sysconfdir}/init/pacemaker.conf
 %config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
+%config(noreplace) %{_sysconfdir}/init/pacemaker.combined_extra.conf
 %endif
 
 %files cli
