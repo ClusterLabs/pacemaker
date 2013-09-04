@@ -63,9 +63,12 @@ class LogAudit(ClusterAudit):
         self.CM.debug("Restarting logging on: %s" % repr(nodes))
 
         for node in nodes:
-            cmd="service %s restart 2>&1 > /dev/null" % self.CM.Env["syslogd"]
-            if self.CM.rsh(node, cmd, synchronous=0) != 0:
-                self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
+            if self.CM.rsh(node, "service %s restart" % self.CM.Env["syslogd"]) != 0:
+                self.CM.log ("ERROR: Cannot restart '%s' on %s" % (node, self.CM.Env["syslogd"]))
+
+            if self.CM.Env["have_systemd"]:
+                if self.CM.rsh(node, "service systemd-journald restart") != 0:
+                    self.CM.log ("ERROR: Cannot restart 'systemd-journald' on %s" % node)
 
     def TestLogging(self):
         patterns = []
