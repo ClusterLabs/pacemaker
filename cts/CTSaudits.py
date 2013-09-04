@@ -64,7 +64,7 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             if self.CM.rsh(node, "service %s restart" % self.CM.Env["syslogd"]) != 0:
-                self.CM.log ("ERROR: Cannot restart '%s' on %s" % (node, self.CM.Env["syslogd"]))
+                self.CM.log ("ERROR: Cannot restart '%s' on %s" % (self.CM.Env["syslogd"], node))
 
             if self.CM.Env["have_systemd"]:
                 if self.CM.rsh(node, "service systemd-journald restart") != 0:
