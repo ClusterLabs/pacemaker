@@ -2221,14 +2221,10 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     }
 
     if (rc != PCMK_OCF_NOT_INSTALLED || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             add_node_copy(data_set->failed, xml_op);
         }
-    }
-
-    crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
-        add_node_copy(data_set->failed, xml_op);
     }
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
@@ -2756,9 +2752,10 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 set_bit(rsc->flags, pe_rsc_failure_ignored);
 
                 if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+                    crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
                     add_node_copy(data_set->failed, xml_op);
                 }
-                
+
                 if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
                     *on_fail = failure_strategy;
                 }
