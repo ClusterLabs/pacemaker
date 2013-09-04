@@ -72,15 +72,29 @@ glibc
 #
 # keep the user posted
 #
+record() {
+    if [ x != x"$REPORT_HOME" -a -d "${REPORT_HOME}/$shorthost" ]; then
+        rec="${REPORT_HOME}/$shorthost/report.out"
+
+    elif [ x != x"${l_base}" ]; then
+        rec="${l_base}/report.summary"
+
+    else
+        rec="/dev/null"
+    fi
+    printf "%-10s  $*\n" "$shorthost:" 2>&1 >> "${rec}"
+}
 
 log() {
     printf "%-10s  $*\n" "$shorthost:" 1>&2
+    record "$*"
 }
 
 debug() {
     if [ $verbose -gt 0 ]; then
 	log "Debug: $*"
     fi
+    record "Debug: $*"
 }
 
 info() {
