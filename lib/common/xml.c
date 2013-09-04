@@ -1740,6 +1740,45 @@ in_upper_context(int depth, int context, xmlNode * xml_node)
     return 0;
 }
 
+static xmlNode *
+find_xml_comment(xmlNode * root, xmlNode * search_comment)
+{
+    xmlNode *a_child = NULL;
+
+    CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
+
+    for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
+        if (a_child->type != XML_COMMENT_NODE) {
+            continue;
+        }
+        if (safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
+            return a_child;
+        }
+    }
+
+    return NULL;
+}
+
+static xmlNode *
+subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right,
+                     gboolean * changed)
+{
+    CRM_CHECK(left != NULL, return NULL);
+    CRM_CHECK(left->type == XML_COMMENT_NODE, return NULL);
+
+    if (right == NULL
+        || safe_str_neq((const char *)left->content, (const char *)right->content)) {
+        xmlNode *deleted = NULL;
+
+        deleted = add_node_copy(parent, left);
+        *changed = TRUE;
+
+        return deleted;
+    }
+
+    return NULL;
+}
+
 xmlNode *
 subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                     gboolean full, gboolean * changed, const char *marker)
@@ -1765,6 +1804,10 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
     if (left == NULL) {
         return NULL;
+    }
+
+    if (left->type == XML_COMMENT_NODE) {
+        return subtract_xml_comment(parent, left, right, changed);
     }
 
     id = ID(left);
@@ -1804,7 +1847,13 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
          left_child = __xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
-        right_child = find_entity(right, crm_element_name(left_child), ID(left_child));
+        if (left_child->type == XML_COMMENT_NODE) {
+            right_child = find_xml_comment(right, left_child);
+
+        } else {
+            right_child = find_entity(right, crm_element_name(left_child), ID(left_child));
+        }
+
         subtract_xml_object(diff, left_child, right_child, full, &child_changed, marker);
         if (child_changed) {
             *changed = TRUE;
@@ -1916,6 +1965,28 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     return diff;
 }
 
+static int
+add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
+{
+    CRM_CHECK(update != NULL, return 0);
+    CRM_CHECK(update->type == XML_COMMENT_NODE, return 0);
+
+    if (target == NULL) {
+        target = find_xml_comment(parent, update);
+    } 
+    
+    if (target == NULL) {
+        add_node_copy(parent, update);
+
+    /* We wont reach here currently */
+    } else if (safe_str_neq((const char *)target->content, (const char *)update->content)) {
+        xmlFree(target->content);
+        target->content = xmlStrdup(update->content);
+    }
+
+    return 0;
+}
+
 int
 add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff)
 {
@@ -1929,6 +2000,10 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 #endif
 
     CRM_CHECK(update != NULL, return 0);
+
+    if (update->type == XML_COMMENT_NODE) {
+        return add_xml_comment(parent, target, update);
+    }
 
     object_name = crm_element_name(update);
     object_id = ID(update);
