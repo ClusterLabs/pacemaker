@@ -187,7 +187,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 #endif
 
      if (st_event->result == pcmk_ok) {
-         crm_node_t *peer = crm_get_peer(0, st_event->target);
+         crm_node_t *peer = crm_get_peer_full(0, st_event->target, CRM_GET_PEER_REMOTE | CRM_GET_PEER_CLUSTER);
          const char *uuid = crm_peer_uuid(peer);
          gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
@@ -222,7 +222,6 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
         }
 
-        /* Everyone records them as safely down */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
         crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
         crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);

@@ -128,6 +128,7 @@ struct node_shared_s {
     gboolean standby_onfail;
     gboolean pending;
     gboolean unclean;
+    gboolean unseen;
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;

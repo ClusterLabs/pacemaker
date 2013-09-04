@@ -1,7 +1,6 @@
 
 Current cluster status:
 Online: [ 18builder ]
-OFFLINE: [ 18node2:container2 ]
 
  fence_false	(stonith:fence_false):	Stopped 
  container2	(ocf::pacemaker:Dummy):	Started 18builder 
@@ -22,7 +21,8 @@ Executing cluster transition:
  * Resource action: nfs_mount       monitor=10000 on 18node2
 
 Revised cluster status:
-Online: [ 18builder 18node2:container2 ]
+Online: [ 18builder ]
+Containers: [ 18node2:container2 ]
 
  fence_false	(stonith:fence_false):	Stopped 
  container2	(ocf::pacemaker:Dummy):	Started 18builder 

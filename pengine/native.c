@@ -579,6 +579,11 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
             crm_trace("Setting remote node %s to ONLINE", remote_node->details->id);
             remote_node->details->online = TRUE;
+            /* We shouldn't consider an unseen remote-node unclean if we are going
+             * to try and connect to it. Otherwise we get an unnecessary fence */
+            if (remote_node->details->unseen == TRUE) {
+                remote_node->details->unclean = FALSE;
+            }
 
         } else {
             crm_trace("Setting remote node %s to SHUTDOWN.  next role = %s, allocated=%s",
@@ -2409,6 +2414,18 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if (force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
+    }
+
+    if (node->details->remote_rsc) {
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+        if (safe_str_eq(class, "stonith")) {
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes do not run stonith agents.", rsc->id, node->details->id);
+            return FALSE;
+        } else if (rsc->is_remote_node) {
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run connection resources.", rsc->id, node->details->id);
+            return FALSE;
+        }
     }
 
     if (rsc->children) {

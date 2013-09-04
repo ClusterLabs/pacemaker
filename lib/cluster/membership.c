@@ -37,18 +37,24 @@ GHashTable *crm_remote_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 
-void crm_remote_peer_cache_refresh(xmlNode *cib)
+int
+crm_remote_peer_cache_size(void)
 {
+    if (crm_remote_peer_cache == NULL) {
+        return 0;
+    }
+    return g_hash_table_size(crm_remote_peer_cache);
+}
+
+static void
+remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, int flags)
+{
+    const char *remote = NULL;
     crm_node_t *node = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    const char *remote = NULL;
-    const char *xpath = NULL;
     int max = 0;
     int lpc = 0;
 
-    g_hash_table_remove_all(crm_remote_peer_cache);
-
-    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
     xpathObj = xpath_search(cib, xpath);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
@@ -56,24 +62,51 @@ void crm_remote_peer_cache_refresh(xmlNode *cib)
 
         CRM_CHECK(xml != NULL, continue);
 
-        remote = crm_element_value(xml, "value");
+        remote = crm_element_value(xml, field);
         if (remote) {
             crm_trace("added %s to remote cache", remote);
             node = calloc(1, sizeof(crm_node_t));
-            node->flags = crm_remote_node;
+            node->flags = flags;
             CRM_ASSERT(node);
             node->uname = strdup(remote);
             node->uuid = strdup(remote);
+            node->state = strdup(CRM_NODE_MEMBER);
             g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
         }
     }
     freeXpathObject(xpathObj);
 }
 
+void crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    const char *xpath = NULL;
+
+    g_hash_table_remove_all(crm_remote_peer_cache);
+
+    /* remote nodes associated with a cluster resource */
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR "[@name='remote-node']";
+    remote_cache_refresh_helper(cib, xpath, "value", crm_remote_node | crm_remote_container);
+
+    /* baremetal nodes defined by connection resources*/
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker']";
+    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
+
+    /* baremetal nodes we have seen in the config that may or may not have connection
+     * resources associated with them anymore */
+    xpath = "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@remote_node='true']";
+    remote_cache_refresh_helper(cib, xpath, "id", crm_remote_node | crm_remote_baremetal);
+}
+
 gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
     if(node == NULL) {
+        return FALSE;
+    }
+
+    if (is_set(node->flags, crm_remote_node)) {
+        /* remote nodes are never considered active members. This
+         * guarantees they will never be considered for DC membership.*/
         return FALSE;
     }
 #if SUPPORT_COROSYNC
@@ -550,7 +583,11 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
     if (changed) {
         crm_notice("%s: Node %s[%u] - state is now %s (was %s)", source, node->uname, node->id, state, last);
         if (crm_status_callback) {
-            crm_status_callback(crm_status_nstate, node, last);
+            enum crm_status_type status_type = crm_status_nstate;
+            if (is_set(node->flags, crm_remote_node)) {
+                status_type = crm_status_rstate;
+            }
+            crm_status_callback(status_type, node, last);
         }
         free(last);
     } else {

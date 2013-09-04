@@ -248,6 +248,62 @@ status_from_rc(crm_action_t * action, int orig_status, int rc, int target_rc)
     return status;
 }
 
+static void
+process_remote_node_action(crm_action_t *action, xmlNode *event)
+{
+    xmlNode *child = NULL;
+
+    /* The whole point of this function is to detect when a remote-node
+     * is integrated into the cluster, and abort the transition if that remote-node
+     * was fenced earlier in the transition. This allows a new transition to be
+     * generated so resources can be placed on the new node.
+     */
+
+    if (crm_remote_peer_cache_size() == 0) {
+        return;
+    } else if (action->type != action_type_rsc) {
+        return;
+    } else if (action->failed || action->confirmed == FALSE) {
+        return;
+    } else if (safe_str_neq(crm_element_value(action->xml, XML_LRM_ATTR_TASK), "start")) {
+        return;
+    }
+
+    for (child = __xml_first_child(action->xml); child != NULL; child = __xml_next(child)) {
+        const char *provider;
+        const char *type;
+        const char *rsc;
+        crm_node_t *remote_peer;
+
+        if (safe_str_neq(crm_element_name(child), XML_CIB_TAG_RESOURCE)) {
+            continue;
+        }
+
+        provider = crm_element_value(child, XML_AGENT_ATTR_PROVIDER);
+        type = crm_element_value(child, XML_ATTR_TYPE);
+        rsc = ID(child);
+
+        if (safe_str_neq(provider, "pacemaker") || safe_str_neq(type, "remote") || rsc == NULL) {
+            break;
+        }
+
+        remote_peer = crm_get_peer_full(0, rsc, CRM_GET_PEER_REMOTE);
+        if (remote_peer == NULL) {
+            break;
+        }
+
+        /* A remote node will be placed in the "lost" state after
+         * it has been successfully fenced.  After successfully connecting
+         * to a remote-node after being fenced, we need to abort the transition
+         * so resources can be placed on the newly integrated remote-node */
+        if (safe_str_eq(remote_peer->state, CRM_NODE_LOST)) {
+            abort_transition(INFINITY, tg_restart, "Remote-node re-discovered.", event);
+        }
+
+        return;
+    }
+}
+
 /*
  * returns the ID of the action if a match is found
  * returns -1 if a match was not found
@@ -318,6 +374,8 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
     crm_info("Action %s (%d) confirmed on %s (rc=%d)",
              crm_str(this_event), action->id, crm_str(target), op_status);
 
+    /* determine if this action affects a remote-node's online/offline status */
+    process_remote_node_action(action, event);
     return action->id;
 }
 
