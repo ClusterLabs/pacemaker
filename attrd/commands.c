@@ -364,6 +364,9 @@ attrd_peer_remove(const char *host, const char *source)
     GHashTableIter aIter;
 
     crm_notice("Removing all %s attributes for %s", host, source);
+    if(host == NULL) {
+        return;
+    }
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
@@ -470,7 +473,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
               && safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
 
         attrd_peer_remove(peer->uname, __FUNCTION__);
-        if(safe_str_eq(peer->uname, peer_writer)) {
+        if(peer_writer && safe_str_eq(peer->uname, peer_writer)) {
             free(peer_writer);
             peer_writer = NULL;
             crm_notice("Lost attribute writer %s", peer->uname);
