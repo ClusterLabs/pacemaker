@@ -46,14 +46,14 @@ cat<<EOF
 crm_report - Create a tarball containing everything needed when reporting cluster problems
 
 
-Usage: `basename $0` -f "YYYY-M-D H:M:S" [-t "YYYY-M-D H:M:S"] [additional options] [dest]
+Usage: `basename $0` --from date-time [--to date-time] [additional options] [dest]
 
 Options:
   -V			increase verbosity
   -v,--version          software version
      --features         software features
-  -f, --from time	time to start from: "YYYY-M-D H:M:S"  (do not forget the quotes)
-  -t, --to time		time to finish at (default: now)
+  -f, --from time       time prior to problems beginning: "YYYY-M-D H:M:S"  (do not forget the quotes)
+  -t, --to time	        time at which all problems were resolved: "YYYY-M-D H:M:S" (default: 'now')
   -T, --cts test	CTS test or set of tests to extract
       --cts-log		CTS master logfile
   -n, --nodes nodes	node names for this cluster
