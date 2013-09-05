@@ -247,6 +247,7 @@ create_node(const char *id, const char *uname, const char *type, const char *sco
 
     if (safe_str_eq(type, "remote")) {
         new_node->details->type = node_remote;
+        set_bit(data_set->flags, pe_flag_have_remote_nodes);
     } else if (type == NULL || safe_str_eq(type, "member")
         || safe_str_eq(type, NORMALNODE)) {
         new_node->details->type = node_member;
@@ -615,7 +616,6 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         if (new_node_id) {
-            set_bit(data_set->flags, pe_flag_have_remote_nodes);
             crm_trace("detected remote node %s", new_node_id);
             create_node(new_node_id, new_node_id, "remote", NULL, data_set);
         }
@@ -1437,6 +1437,14 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 
     if (!common_unpack(xml_rsc, &rsc, NULL, data_set)) {
         return NULL;
+    }
+
+    if (xml_contains_remote_node(xml_rsc)) {
+
+        crm_debug("Detected orphaned remote node %s", rsc_id);
+        rsc->is_remote_node = TRUE;
+        create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        link_rsc2remotenode(data_set, rsc);
     }
 
     set_bit(rsc->flags, pe_rsc_orphan);
