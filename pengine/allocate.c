@@ -848,6 +848,13 @@ probe_resources(pe_working_set_t * data_set)
              * may need to consider probing container nodes as well. */
             continue;
 
+        } else if (is_baremetal_remote_node(node) && node->details->shutdown) {
+            /* Don't try and probe a remote node we're shutting down.
+             * It causes constraint conflicts to try and run any sort of action
+             * other that 'stop' on resources living within a remote-node when
+             * it is being shutdown. */ 
+            continue;
+
         } else if (probe_complete == NULL) {
             probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
             if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {

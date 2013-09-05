@@ -1440,11 +1440,18 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     }
 
     if (xml_contains_remote_node(xml_rsc)) {
+        node_t *node;
+
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
         rsc->is_remote_node = TRUE;
-        create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
         link_rsc2remotenode(data_set, rsc);
+
+        if (node) {
+            crm_trace("Setting node %s as shutting down due to orphaned connection resource", rsc_id);
+            node->details->shutdown = TRUE;
+        }
     }
 
     set_bit(rsc->flags, pe_rsc_orphan);
