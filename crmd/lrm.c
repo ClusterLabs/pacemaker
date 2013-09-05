@@ -1357,7 +1357,7 @@ do_lrm_invoke(long long action,
     } else if (safe_str_eq(operation, CRM_OP_PROBED)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name, is_remote_node);
 
-    } else if (safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+    } else if (safe_str_eq(operation, CRM_OP_REPROBE) || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
         GHashTableIter gIter;
         rsc_history_t *entry = NULL;
 
@@ -1377,7 +1377,8 @@ do_lrm_invoke(long long action,
          */
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 
-        if(strcmp(CRM_SYSTEM_CRMD, from_sys) != 0) {
+        if(strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0
+           && strcmp(CRM_SYSTEM_TENGINE, from_sys) != 0) {
             xmlNode *reply = create_request(
                 CRM_OP_INVOKE_LRM, NULL,
                 from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
