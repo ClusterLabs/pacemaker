@@ -1001,10 +1001,18 @@ struct mainloop_timer_s mainloop;
 
 static gboolean mainloop_timer_cb(gpointer user_data)
 {
+    int id = 0;
     bool repeat = FALSE;
     struct mainloop_timer_s *t = user_data;
 
-    if(t && t->cb) {
+    CRM_ASSERT(t != NULL);
+
+    id = t->id;
+    t->id = 0; /* Ensure its unset during callbacks so that
+                * mainloop_timer_running() works as expected
+                */
+
+    if(t->cb) {
         crm_trace("Invoking callbacks for timer %s", t->name);
         repeat = t->repeat;
         if(t->cb(t->userdata) == FALSE) {
@@ -1013,9 +1021,11 @@ static gboolean mainloop_timer_cb(gpointer user_data)
         }
     }
 
-    if(!repeat) {
-        t->id = 0;
+    if(repeat) {
+        /* Restore if repeating */
+        t->id = id;
     }
+
     return repeat;
 }
 

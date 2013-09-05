@@ -48,6 +48,8 @@ typedef struct attribute_s {
 } attribute_t;
 
 typedef struct attribute_value_s {
+        uint32_t nodeid;
+        char *nodename;
         char *current;
         char *requested;
         char *stored;
@@ -58,7 +60,6 @@ void write_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, const char *source);
-void build_update_element(xmlNode *parent, attribute_t *a, const char *uname, const char *attr_value);
 
 static gboolean
 attribute_timer_cb(gpointer data)
@@ -76,6 +77,7 @@ free_attribute_value(gpointer data)
 {
     attribute_value_t *v = data;
 
+    free(v->nodename);
     free(v->current);
     free(v->requested);
     free(v->stored);
@@ -102,7 +104,7 @@ free_attribute(gpointer data)
 xmlNode *
 build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
-    const char *peer, const char *value)
+    const char *peer, uint32_t peerid, const char *value)
 {
     xmlNode *xml = create_xml_node(parent, __FUNCTION__);
 
@@ -111,6 +113,7 @@ build_attribute_xml(
     crm_xml_add(xml, F_ATTRD_KEY, uuid);
     crm_xml_add(xml, F_ATTRD_USER, user);
     crm_xml_add(xml, F_ATTRD_HOST, peer);
+    crm_xml_add_int(xml, F_ATTRD_HOST_ID, peerid);
     crm_xml_add(xml, F_ATTRD_VALUE, value);
     crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms);
 
@@ -127,7 +130,7 @@ create_attribute(xmlNode *xml)
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
     a->set     = crm_element_value_copy(xml, F_ATTRD_SET);
     a->uuid    = crm_element_value_copy(xml, F_ATTRD_KEY);
-    a->values = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free_attribute_value);
+    a->values = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute_value);
 
 #if ENABLE_ACL
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
@@ -176,6 +179,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             crm_trace("Inferring host");
             host = strdup(attrd_cluster->uname);
             crm_xml_add(xml, F_ATTRD_HOST, host);
+            crm_xml_add_int(xml, F_ATTRD_HOST_ID, attrd_cluster->nodeid);
         }
 
         if (set == NULL) {
@@ -336,7 +340,6 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
-    const char *host = NULL;
 
     attribute_t *a = NULL;
     attribute_value_t *v = NULL;
@@ -347,9 +350,9 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s] = %s to %s", a->id, host, v->current, peer?peer->uname:"everyone");
-            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, host, v->current);
+        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+            crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
+            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, v->nodename, v->nodeid, v->current);
         }
     }
 
@@ -402,7 +405,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         if(value) {
             v->current = strdup(value);
         }
-        g_hash_table_replace(a->values, strdup(host), v);
+        v->nodename = strdup(host);
+        g_hash_table_replace(a->values, v->nodename, v);
         changed = TRUE;
 
     } else if(filter
@@ -414,7 +418,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 
         crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
         v = g_hash_table_lookup(a->values, host);
-        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, host, v->current);
+        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, v->nodename, v->nodeid, v->current);
 
         crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
         send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
@@ -435,6 +439,17 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
     }
 
     a->changed |= changed;
+
+    if(v->nodeid == 0) {
+        if(crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0) {
+            /* Create the name/id association */
+            crm_node_t *peer = crm_get_peer(v->nodeid, host);
+            crm_trace("We know %s's node id now: %s", peer->uname, peer->uuid);
+            write_attributes(FALSE);
+            return;
+        }
+    }
+
     if(changed) {
         if(a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
@@ -566,11 +581,38 @@ write_attributes(bool all)
     }
 }
 
+static void
+build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const char *value)
+{
+    xmlNode *xml_obj = NULL;
+
+    xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
+    crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
+
+    xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
+    crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
+
+    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+    crm_xml_add(xml_obj, XML_ATTR_ID, a->set);
+
+    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    crm_xml_add(xml_obj, XML_ATTR_ID, a->uuid);
+    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
+
+    if(value) {
+        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, value);
+
+    } else {
+        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
+        crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
+    }
+}
+
 void
 write_attribute(attribute_t *a)
 {
+    int updates = 0;
     xmlNode *xml_top = NULL;
-    const char *peer = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
     enum cib_call_options flags = cib_quorum_override;
@@ -585,65 +627,55 @@ write_attribute(attribute_t *a)
     } else if(a->update) {
         crm_info("Write out of %s delayed: update %d in progress", a->id, a->update);
         return;
-    }
 
-    xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-
-    g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_debug("Update: %s[%s]=%s", peer, a->id, v->current);
-        if(v->current) {
-            free(v->requested);
-            v->requested = strdup(v->current);
-
-        } else {
-            free(v->requested);
-            v->requested = NULL;
-            flags |= cib_mixed_update;
-        }
-        build_update_element(xml_top, a, peer, v->requested);
-    }
-
-    crm_log_xml_trace(xml_top, __FUNCTION__);
-
-    a->changed = FALSE;
-    a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
-                         flags, a->user);
-
-    crm_notice("Sent update %d for %s, id=%s, set=%s",
-              a->update, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
-
-    the_cib->cmds->register_callback(
-        the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
-}
-
-void
-build_update_element(xmlNode *parent, attribute_t *a, const char *uname, const char *value)
-{
-    xmlNode *xml_obj = NULL;
-    crm_node_t *peer = crm_get_peer(0, uname);
-
-    CRM_LOG_ASSERT(peer->uuid != NULL);
-    if(peer->uuid == NULL) {
+    } else if(mainloop_timer_running(a->timer)) {
+        crm_info("Write out of %s delayed: timer is running", a->id);
         return;
     }
 
-    xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
-    crm_xml_add(xml_obj, XML_ATTR_ID, peer->uuid);
+    a->changed = FALSE;
+    xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
-    xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, peer->uuid);
+    g_hash_table_iter_init(&iter, a->values);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
+        crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename, CRM_GET_PEER_REMOTE|CRM_GET_PEER_CLUSTER);
 
-    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, a->set);
+        if(peer && peer->id && v->nodeid == 0) {
+            crm_trace("Updating value's nodeid");
+            v->nodeid = peer->id;
+        }
 
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, a->uuid);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
-    if(value) {
-        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, value);
-    } else {
-        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
-        crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
+        if(peer == NULL || peer->uuid == NULL) {
+            a->changed = TRUE;
+            crm_notice("Update error: %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
+
+        } else {
+            crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id, v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
+            build_update_element(xml_top, a, peer->uuid, v->current);
+            updates++;
+
+            free(v->requested);
+            v->requested = NULL;
+
+            if(v->current) {
+                v->requested = strdup(v->current);
+
+            } else {
+                flags |= cib_mixed_update;
+            }
+        }
+    }
+
+    if(updates) {
+        crm_log_xml_trace(xml_top, __FUNCTION__);
+
+        a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
+                                    flags, a->user);
+
+        crm_notice("Sent update %d with %d chanages for %s, id=%s, set=%s",
+                   a->update, updates, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
+
+        the_cib->cmds->register_callback(
+            the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
     }
 }
