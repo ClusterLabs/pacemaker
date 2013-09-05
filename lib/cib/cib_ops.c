@@ -360,7 +360,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
         if (xpathObj) {
             max = numXpathResults(xpathObj);
-            crm_log_xml_info(*result_cib, "Mixed result");
+            crm_log_xml_trace(*result_cib, "Mixed result");
         }
 
         for (lpc = 0; lpc < max; lpc++) {
