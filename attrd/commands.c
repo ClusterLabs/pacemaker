@@ -61,10 +61,12 @@ void attrd_peer_remove(const char *host, const char *source);
 void build_update_element(xmlNode *parent, attribute_t *a, const char *uname, const char *attr_value);
 
 static gboolean
-attribute_timer_cb(gpointer user_data)
+attribute_timer_cb(gpointer data)
 {
+    attribute_t *a = data;
+    crm_trace("Dampen interval expired for %s in state %d", a->id, election_state(writer));
     if(election_state(writer) == election_won) {
-        write_attribute(user_data);
+        write_attribute(a);
     }
     return FALSE;
 }
