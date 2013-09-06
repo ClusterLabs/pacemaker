@@ -729,6 +729,13 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.class);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
 
+        if (entry->last && entry->last->params) {
+            const char *container = g_hash_table_lookup(entry->last->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
+            if (container) {
+                crm_trace("Resource %s is a part of container resource %s", entry->id, container);
+                crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
+            }
+        }
         build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
         build_operation_update(xml_rsc, &(entry->rsc), entry->failed, __FUNCTION__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
@@ -1930,9 +1937,19 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
     build_operation_update(iter, rsc, op, __FUNCTION__);
 
     if (rsc) {
+        const char *container = NULL;
+
         crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
         crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
         crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER, rsc->provider);
+
+        if (op->params) {
+            container = g_hash_table_lookup(op->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
+        }
+        if (container) {
+            crm_trace("Resource %s is a part of container resource %s", op->rsc_id, container);
+            crm_xml_add(iter, XML_RSC_ATTR_CONTAINER, container);
+        }
 
         CRM_CHECK(rsc->type != NULL, crm_err("Resource %s has no value for type", op->rsc_id));
         CRM_CHECK(rsc->class != NULL, crm_err("Resource %s has no value for class", op->rsc_id));

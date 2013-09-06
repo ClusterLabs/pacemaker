@@ -707,6 +707,8 @@ do_test whitebox-move "Move whitebox container with resources assigned to it"
 do_test whitebox-asymmetric "Verify connection rsc opts-in based on container resource"
 do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
 do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
+do_test whitebox-orphaned    "Properly shutdown orphaned whitebox container"
+do_test whitebox-orphan-ms   "Properly tear down orphan ms resources on remote-nodes"
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
