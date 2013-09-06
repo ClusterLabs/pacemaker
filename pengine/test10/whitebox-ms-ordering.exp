@@ -357,7 +357,7 @@
     <action_set>
       <rsc_op id="43" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -370,7 +370,7 @@
     <action_set>
       <rsc_op id="42" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -386,7 +386,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="lxc1_monitor_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -395,7 +395,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="lxc1_monitor_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -404,7 +404,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="lxc1_monitor_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -413,7 +413,7 @@
     <action_set>
       <rsc_op id="45" operation="monitor" operation_key="lxc2_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -426,7 +426,7 @@
     <action_set>
       <rsc_op id="44" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -442,7 +442,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="lxc2_monitor_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -451,7 +451,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="lxc2_monitor_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -460,7 +460,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="lxc2_monitor_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>

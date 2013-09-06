@@ -32,7 +32,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="18node2_monitor_30000" on_node="18builder" on_node_uuid="5">
         <primitive id="18node2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="13" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="18node2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs/>

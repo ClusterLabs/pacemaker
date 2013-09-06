@@ -159,6 +159,10 @@ get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc,
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
                                meta_hash, NULL, FALSE, data_set->now);
 
+    if (rsc->container) {
+        g_hash_table_replace(meta_hash, strdup(CRM_META"_"XML_RSC_ATTR_CONTAINER), strdup(rsc->container->id));
+    }
+
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
         get_rsc_attributes(meta_hash, rsc->parent, node, data_set);

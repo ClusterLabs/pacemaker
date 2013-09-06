@@ -1442,7 +1442,6 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     if (xml_contains_remote_node(xml_rsc)) {
         node_t *node;
 
-
         crm_debug("Detected orphaned remote node %s", rsc_id);
         rsc->is_remote_node = TRUE;
         node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
@@ -1454,6 +1453,11 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
         }
     }
 
+    if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
+        /* This orphaned rsc needs to be mapped to a container. */
+        crm_trace("Detected orphaned container filler %s", rsc_id);
+        set_bit(rsc->flags, pe_rsc_orphan_container_filler);
+    }
     set_bit(rsc->flags, pe_rsc_orphan);
     data_set->resources = g_list_append(data_set->resources, rsc);
     return rsc;
@@ -1915,7 +1919,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
     }
 }
 
-static void
+static resource_t *
 unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
@@ -1951,7 +1955,7 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
 
     if (op_list == NULL) {
         /* if there are no operations, there is nothing to do */
-        return;
+        return NULL;
     }
 
     /* find the resource */
@@ -2004,12 +2008,55 @@ unpack_lrm_rsc_state(node_t * node, xmlNode * rsc_entry, pe_working_set_t * data
     if (saved_role > rsc->role) {
         rsc->role = saved_role;
     }
+
+    return rsc;
+}
+
+static void
+handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
+{
+    xmlNode *rsc_entry = NULL;
+    for (rsc_entry = __xml_first_child(lrm_rsc_list); rsc_entry != NULL;
+        rsc_entry = __xml_next(rsc_entry)) {
+
+        resource_t *rsc;
+        resource_t *container;
+        const char *rsc_id;
+        const char *container_id;
+
+        if (safe_str_neq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE)) {
+            continue;
+        }
+
+        container_id = crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER);
+        rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        if (container_id == NULL || rsc_id == NULL) {
+            continue;
+        }
+
+        container = pe_find_resource(data_set->resources, container_id);
+        if (container == NULL) {
+            continue;
+        }
+
+        rsc = pe_find_resource(data_set->resources, rsc_id);
+        if (rsc == NULL ||
+            is_set(rsc->flags, pe_rsc_orphan_container_filler) == FALSE ||
+            rsc->container != NULL) {
+            continue;
+        }
+
+        pe_rsc_trace(rsc, "Mapped orphaned rsc %s's container to  %s", rsc->id, container_id);
+        rsc->container = container;
+        container->fillers = g_list_append(container->fillers, rsc);
+    }
 }
 
 gboolean
 unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
 {
     xmlNode *rsc_entry = NULL;
+    gboolean found_orphaned_container_filler = FALSE;
 
     CRM_CHECK(node != NULL, return FALSE);
 
@@ -2017,9 +2064,21 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
 
     for (rsc_entry = __xml_first_child(lrm_rsc_list); rsc_entry != NULL;
          rsc_entry = __xml_next(rsc_entry)) {
+
         if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-            unpack_lrm_rsc_state(node, rsc_entry, data_set);
+            resource_t *rsc;
+            rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
+            if (rsc && is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+                found_orphaned_container_filler = TRUE;
+            }
         }
+    }
+
+    /* now that all the resource state has been unpacked for this node
+     * we have to go back and map any orphaned container fillers to their
+     * container resource */
+    if (found_orphaned_container_filler) {
+        handle_orphaned_container_fillers(lrm_rsc_list, data_set);
     }
 
     return TRUE;
