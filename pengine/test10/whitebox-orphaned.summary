@@ -1,0 +1,55 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ container2	(ocf::heartbeat:VirtualDomain):	Started 18node2 
+ shoot1	(stonith:fence_xvm):	Started 18node3 
+ Clone Set: M-clone [M]
+     M	(ocf::pacemaker:Dummy):	 ORPHANED Started lxc1 
+     Started: [ 18node1 18node2 18node3 lxc2 ]
+ A	(ocf::pacemaker:Dummy):	Started 18node1 
+ B	(ocf::pacemaker:Dummy):	Started lxc1 
+ C	(ocf::pacemaker:Dummy):	Started lxc2 
+ D	(ocf::pacemaker:Dummy):	Started 18node1 
+ container1	(ocf::heartbeat:VirtualDomain):	 ORPHANED Started 18node2 
+ lxc1	(ocf::pacemaker:remote):	 ORPHANED Started 18node2 
+
+Transition Summary:
+ * Stop    M:4	(lxc1)
+ * Move    B	(Started lxc1 -> lxc2)
+ * Stop    container1	(18node2)
+ * Stop    lxc1	(18node2)
+
+Executing cluster transition:
+ * Pseudo action:   M-clone_stop_0
+ * Resource action: B               stop on lxc1
+ * Cluster action:  clear_failcount for container1 on 18node2
+ * Cluster action:  clear_failcount for lxc1 on 18node2
+ * Resource action: M               stop on lxc1
+ * Pseudo action:   M-clone_stopped_0
+ * Resource action: B               start on lxc2
+ * Resource action: lxc1            stop on 18node2
+ * Resource action: lxc1            delete on 18node3
+ * Resource action: lxc1            delete on 18node2
+ * Resource action: lxc1            delete on 18node1
+ * Resource action: B               monitor=10000 on lxc2
+ * Resource action: container1      stop on 18node2
+ * Resource action: container1      delete on 18node3
+ * Resource action: container1      delete on 18node2
+ * Resource action: container1      delete on 18node1
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc2:container2 ]
+
+ container2	(ocf::heartbeat:VirtualDomain):	Started 18node2 
+ shoot1	(stonith:fence_xvm):	Started 18node3 
+ Clone Set: M-clone [M]
+     Started: [ 18node1 18node2 18node3 lxc2 ]
+ A	(ocf::pacemaker:Dummy):	Started 18node1 
+ B	(ocf::pacemaker:Dummy):	Started lxc2 
+ C	(ocf::pacemaker:Dummy):	Started lxc2 
+ D	(ocf::pacemaker:Dummy):	Started 18node1 
+
