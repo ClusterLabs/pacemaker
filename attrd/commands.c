@@ -445,8 +445,10 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
             /* Create the name/id association */
             crm_node_t *peer = crm_get_peer(v->nodeid, host);
             crm_trace("We know %s's node id now: %s", peer->uname, peer->uuid);
-            write_attributes(FALSE);
-            return;
+            if(election_state(writer) == election_won) {
+                write_attributes(FALSE);
+                return;
+            }
         }
     }
 
