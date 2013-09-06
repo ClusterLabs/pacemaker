@@ -287,22 +287,32 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 
 static int cib_archive_filter(const struct dirent * a)
 {
+    int rc = 0;
     /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
     struct stat s;
-    stat(a->d_name, &s);
-    if ((s.st_mode & S_IFREG) != S_IFREG) {
+    char *a_path = g_strdup_printf("%s/%s", cib_root, a->d_name);
+
+    if(stat(a_path, &s) != 0) {
+        rc = errno;
+        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_strerror(rc), rc);
+        rc = 0;
+
+    } else if ((s.st_mode & S_IFREG) != S_IFREG) {
         crm_trace("%s - wrong type (%d)", a->d_name, a->d_type);
-        return 0;
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
-        return 0;
 
     } else if(strstr(a->d_name, ".sig") != NULL) {
         crm_trace("%s - wrong suffix", a->d_name);
-        return 0;
+
+    } else {
+        crm_debug("%s - candidate", a->d_name);
+        rc = 1;
     }
-    return 1;
+
+    free(a_path);
+    return rc;
 }
 
 static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
@@ -375,6 +385,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     while (root == NULL && lpc > 1) {
+        crm_debug("Testing %d candidates", lpc);
+
         lpc--;
 
         filename = g_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
