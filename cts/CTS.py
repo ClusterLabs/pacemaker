@@ -720,22 +720,10 @@ class SearchObj:
         self.name = name
         self.filename = filename
 
-        self.cache = []
         self.offset = "EOF"
 
         if host == None:
             host = "localhost"
-
-        global has_log_watcher
-        if not has_log_watcher.has_key(host):
-
-            global log_watcher
-            global log_watcher_bin
-            self.debug("Installing %s on %s" % (log_watcher_bin, host))
-            self.Env.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin), silent=True)
-            has_log_watcher[host] = 1
-
-        self.next()
 
     def __str__(self):
         if self.host:
@@ -757,27 +745,71 @@ class SearchObj:
             self.Env.debug(message)
 
     def next(self):
-        cache = []
-        if not len(self.cache):
+        self.log("Not implemented")
+
+class FileObj(SearchObj):
+    def __init__(self, Env, filename, host=None, name=None):
+        global has_log_watcher
+        SearchObj.__init__(self, Env, filename, host, name)
+
+        if not has_log_watcher.has_key(host):
+
+            global log_watcher
             global log_watcher_bin
-            (rc, lines) = self.Env.rsh(
+
+            self.debug("Installing %s on %s" % (log_watcher_bin, host))
+            self.Env.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin), silent=True)
+            has_log_watcher[host] = 1
+
+        self.next()
+
+    def next(self):
+        cache = []
+
+        global log_watcher_bin
+        (rc, lines) = self.Env.rsh(
                 self.host,
                 "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
                 stdout=None, silent=True, blocking=False)
 
-            for line in lines:
-                match = re.search("^CTSwatcher:Last read: (\d+)", line)
-                if match:
-                    last_offset = self.offset
-                    self.offset = match.group(1)
-                    #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+        for line in lines:
+            match = re.search("^CTSwatcher:Last read: (\d+)", line)
+            if match:
+                last_offset = self.offset
+                self.offset = match.group(1)
+                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
 
-                elif re.search("^CTSwatcher:.*truncated", line):
-                    self.log(line)
-                elif re.search("^CTSwatcher:", line):
-                    self.debug("Got control line: "+ line)
-                else:
-                    cache.append(line)
+            elif re.search("^CTSwatcher:.*truncated", line):
+                self.log(line)
+            elif re.search("^CTSwatcher:", line):
+                self.debug("Got control line: "+ line)
+            else:
+                cache.append(line)
+
+        return cache
+
+class JournalObj(SearchObj):
+
+    def __init__(self, Env, host=None, name=None):
+        SearchObj.__init__(self, Env, name, host, name)
+        self.next()
+
+    def next(self):
+        cache = []
+        command = "journalctl -q --after-cursor='%s' --show-cursor" % (self.offset)
+        if self.offset == "EOF":
+            command = "journalctl -q -n 0 --show-cursor"
+
+        (rc, lines) = self.Env.rsh(self.host, command, stdout=None, silent=True, blocking=False)
+
+        for line in lines:
+            match = re.search("^-- cursor: ([^.]+)", line)
+            if match:
+                last_offset = self.offset
+                self.offset = match.group(1)
+                if last_offset == "EOF": self.debug("Got %d lines, new cursor: %s" % (len(lines), self.offset))
+            else:
+                cache.append(line)
 
         return cache
 
@@ -795,7 +827,7 @@ class LogWatcher(RemoteExec):
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False, hosts=None):
+    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False, hosts=None, kind=None):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
@@ -804,6 +836,11 @@ class LogWatcher(RemoteExec):
         #  Validate our arguments.  Better sooner than later ;-)
         for regex in regexes:
             assert re.compile(regex)
+
+        if kind:
+            self.kind    = kind
+        else:
+            self.kind    = self.Env["LogWatcher"]
 
         self.name        = name
         self.regexes     = regexes
@@ -842,12 +879,16 @@ class LogWatcher(RemoteExec):
         '''Mark the place to start watching the log from.
         '''
 
-        if self.Env["LogWatcher"] == "remote":
+        if self.kind == "remote":
             for node in self.hosts:
-                self.file_list.append(SearchObj(self.Env, self.filename, node, self.name))
+                self.file_list.append(FileObj(self.Env, self.filename, node, self.name))
+
+        elif self.kind == "journal":
+            for node in self.hosts:
+                self.file_list.append(JournalObj(self.Env, node, self.name))
 
         else:
-            self.file_list.append(SearchObj(self.Env, self.filename))
+            self.file_list.append(FileObj(self.Env, self.filename))
 
     def __del__(self):
         if self.debug_level > 1: self.debug("Destroy")
