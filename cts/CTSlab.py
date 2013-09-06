@@ -521,10 +521,10 @@ if __name__ == '__main__':
     if not Environment.has_key("syslogd") or not Environment["syslogd"]:
         if Environment["have_systemd"]:
             # Systemd
-            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1)
+            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1).strip()
         else:
             # SYS-V
-            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1)
+            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1).strip()
 
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
             # default
@@ -548,10 +548,16 @@ if __name__ == '__main__':
     # Try to determinw an offset for IPaddr resources
     if Environment["CIBResource"] and not Environment.has_key("IPBase"):
         network=rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
-        Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | tail -n 1 | awk '{print $NF}' | sed 's:(::' | sed 's:)::'" % network, stdout=1).strip()
+        Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, stdout=1).strip()
         if not Environment["IPBase"]:
-            Environment["IPBase"] = "127.0.0.10"
+            Environment["IPBase"] = "11.0.0.1"
             Environment.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
+            Environment.log("Defaulting to '%s', use --test-ip-base to override" % Environment["IPBase"])
+
+        elif int(Environment["IPBase"].split('.')[3]) >= 240:
+            Environment.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
+                            % (Environment["IPBase"], Environment["IPBase"].split('.')[3]))
+            Environment["IPBase"] = "11.0.0.1"
             Environment.log("Defaulting to '%s', use --test-ip-base to override" % Environment["IPBase"])
 
     # Create the Cluster Manager object
