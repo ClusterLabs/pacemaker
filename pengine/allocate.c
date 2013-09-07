@@ -1612,10 +1612,10 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
         remote_rsc = action->node->details->remote_rsc;
         container = remote_rsc->container;
+
         if (safe_str_eq(action->task, "monitor") ||
             safe_str_eq(action->task, "start") ||
             safe_str_eq(action->task, "promote") ||
-            safe_str_eq(action->task, "demote") ||
             safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT) ||
             safe_str_eq(action->task, "delete")) {
@@ -1628,6 +1628,39 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 action,
                 pe_order_implies_then | pe_order_runnable_left,
                 data_set);
+
+        } else if (safe_str_eq(action->task, "demote")) {
+
+            /* If the connection is being torn down, we don't want
+             * to build a constraint between a resource's demotion and
+             * the connection resource starting... because the connection
+             * resource can not start. The connection might already be up,
+             * but the START action would not be allowed which in turn would
+             * block the demotion of any resournces living in the remote-node.
+             *
+             * In this case, only build the constraint between the demotion and
+             * the connection's stop action. This allows the connection and all the
+             * resources within the remote-node to be torn down properly. */
+            if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
+                custom_action_order(action->rsc,
+                    NULL,
+                    action,
+                    remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_STOP, 0),
+                    NULL,
+                    pe_order_implies_first,
+                    data_set);
+            } else {
+
+                custom_action_order(remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_START, 0),
+                    NULL,
+                    action->rsc,
+                    NULL,
+                    action,
+                    pe_order_implies_then | pe_order_runnable_left,
+                    data_set);
+            }
 
         } else if (safe_str_eq(action->task, "stop") &&
                    container &&
