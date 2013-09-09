@@ -2574,6 +2574,13 @@ class RemoteSimple(CTSTest):
                  """LogActions: Recover ping""",
                  """LogActions: Recover lxc-ms""",
                  """LogActions: Recover container""",
+                 # The orphaned lxc-ms resource causes an expected transition error
+                 # that is a result of the pengine not having knowledge that the 
+                 # ms resource used to be a clone.  As a result it looks like that 
+                 # resource is running in multiple locations when it shouldn't... But in
+                 # this instance we know why this error is occurring and that it is expected.
+                 """Calculated Transition .* /var/lib/pacemaker/pengine/pe-error""",
+                 """Resource lxc-ms .* is active on 2 nodes attempting recovery""",
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
                  """notice: operation_finished: container""",

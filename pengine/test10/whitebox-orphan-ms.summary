@@ -1,0 +1,85 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ Fencing	(stonith:fence_xvm):	Started 18node2 
+ FencingPass	(stonith:fence_dummy):	Started 18node3 
+ FencingFail	(stonith:fence_dummy):	Started 18node3 
+ rsc_18node1	(ocf::heartbeat:IPaddr2):	Started 18node1 
+ rsc_18node2	(ocf::heartbeat:IPaddr2):	Started 18node2 
+ rsc_18node3	(ocf::heartbeat:IPaddr2):	Started 18node3 
+ migrator	(ocf::pacemaker:Dummy):	Started 18node1 
+ Clone Set: Connectivity [ping-1]
+     Started: [ 18node1 18node2 18node3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ 18node1 ]
+     Slaves: [ 18node2 18node3 ]
+ Resource Group: group-1
+     r192.168.122.87	(ocf::heartbeat:IPaddr2):	Started 18node1 
+     r192.168.122.88	(ocf::heartbeat:IPaddr2):	Started 18node1 
+     r192.168.122.89	(ocf::heartbeat:IPaddr2):	Started 18node1 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started 18node1 
+ container2	(ocf::heartbeat:VirtualDomain):	 ORPHANED Started 18node1 
+ lxc1	(ocf::pacemaker:remote):	 ORPHANED Started 18node1 
+ lxc-ms	(ocf::pacemaker:Stateful):	 ORPHANED Master [ lxc1 lxc2 ]
+ lxc2	(ocf::pacemaker:remote):	 ORPHANED Started 18node1 
+ container1	(ocf::heartbeat:VirtualDomain):	 ORPHANED Started 18node1 
+
+Transition Summary:
+ * Move    FencingFail	(Started 18node3 -> 18node1)
+ * Stop    container2	(18node1)
+ * Stop    lxc1	(18node1)
+ * Demote  lxc-ms	(Master -> Stopped lxc1)
+ * Stop    lxc2	(18node1)
+ * Stop    container1	(18node1)
+
+Executing cluster transition:
+ * Resource action: FencingFail     stop on 18node3
+ * Resource action: lxc-ms          demote on lxc2
+ * Resource action: lxc-ms          demote on lxc1
+ * Resource action: FencingFail     start on 18node1
+ * Resource action: lxc-ms          stop on lxc2
+ * Resource action: lxc-ms          stop on lxc1
+ * Resource action: lxc-ms          delete on 18node3
+ * Resource action: lxc-ms          delete on 18node2
+ * Resource action: lxc-ms          delete on 18node1
+ * Resource action: lxc2            stop on 18node1
+ * Resource action: lxc2            delete on 18node3
+ * Resource action: lxc2            delete on 18node2
+ * Resource action: lxc2            delete on 18node1
+ * Resource action: container2      stop on 18node1
+ * Resource action: container2      delete on 18node3
+ * Resource action: container2      delete on 18node2
+ * Resource action: container2      delete on 18node1
+ * Resource action: lxc1            stop on 18node1
+ * Resource action: lxc1            delete on 18node3
+ * Resource action: lxc1            delete on 18node2
+ * Resource action: lxc1            delete on 18node1
+ * Resource action: container1      stop on 18node1
+ * Resource action: container1      delete on 18node3
+ * Resource action: container1      delete on 18node2
+ * Resource action: container1      delete on 18node1
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ Fencing	(stonith:fence_xvm):	Started 18node2 
+ FencingPass	(stonith:fence_dummy):	Started 18node3 
+ FencingFail	(stonith:fence_dummy):	Started 18node1 
+ rsc_18node1	(ocf::heartbeat:IPaddr2):	Started 18node1 
+ rsc_18node2	(ocf::heartbeat:IPaddr2):	Started 18node2 
+ rsc_18node3	(ocf::heartbeat:IPaddr2):	Started 18node3 
+ migrator	(ocf::pacemaker:Dummy):	Started 18node1 
+ Clone Set: Connectivity [ping-1]
+     Started: [ 18node1 18node2 18node3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Masters: [ 18node1 ]
+     Slaves: [ 18node2 18node3 ]
+ Resource Group: group-1
+     r192.168.122.87	(ocf::heartbeat:IPaddr2):	Started 18node1 
+     r192.168.122.88	(ocf::heartbeat:IPaddr2):	Started 18node1 
+     r192.168.122.89	(ocf::heartbeat:IPaddr2):	Started 18node1 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Started 18node1 
+
