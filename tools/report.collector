@@ -689,7 +689,10 @@ for f in $cf $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
 done
 
 # Grab logs
-#debug "Gathering logs: $logfiles $EXTRA_LOGS"
+start=`date -d @${LOG_START} +"%F %T"`
+end=`date -d @${LOG_END} +"%F %T"`
+
+debug "Gathering logs from $start to $end: $logfiles $EXTRA_LOGS"
 trap '[ -z "$pattfile" ] || rm -f "$pattfile"' 0
 pattfile=`mktemp` || fatal "cannot create temporary files"
 for p in $LOG_PATTERNS; do
@@ -710,6 +713,13 @@ for l in $logfiles $EXTRA_LOGS; do
     echo "Log patterns $REPORT_TARGET:"  > $ANALYSIS_F
     cat $b | grep -f $pattfile >> $ANALYSIS_F
 done
+
+which journalctl 2>&1 > /dev/null
+if [ $? = 0 ]; then
+   log "Including segment [$LOG_START-$LOG_END] from journald"
+   journalctl --since "$start" --until "$end" > journal.log
+   cat journal.log | grep -f $pattfile >> $ANALYSIS_F
+fi
 
 rm -f $pattfile
 trap "" 0
