@@ -158,7 +158,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
                 /* Did the DC leave us? */
-                crm_notice("Our peer on the DC is dead");
+                crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
             }
             break;
