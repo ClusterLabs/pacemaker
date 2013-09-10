@@ -65,8 +65,10 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             if self.CM.Env["have_systemd"]:
-                if self.CM.rsh(node, "systemctl restart systemd-journald.socket") != 0:
-                    self.CM.log ("ERROR: Cannot restart 'systemd-journald' on %s" % node)
+                if self.CM.rsh(node, "systemctl stop systemd-journald.socket") != 0:
+                    self.CM.log ("ERROR: Cannot stop 'systemd-journald' on %s" % node)
+                if self.CM.rsh(node, "systemctl start systemd-journald.service") != 0:
+                    self.CM.log ("ERROR: Cannot start 'systemd-journald' on %s" % node)
 
             if self.CM.rsh(node, "service %s restart" % self.CM.Env["syslogd"]) != 0:
                 self.CM.log ("ERROR: Cannot restart '%s' on %s" % (self.CM.Env["syslogd"], node))
@@ -154,7 +156,7 @@ class DiskAudit(ClusterAudit):
 
     def __call__(self):
         result=1
-        dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
+        dfcmd="df -BM /var/log | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
@@ -163,15 +165,24 @@ class DiskAudit(ClusterAudit):
                 self.CM.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
             else:
                 try:
-                    idfout = int(dfout)
+                    (used, remain)=dfout.split()
+                    used_percent = int(used)
+                    remaining_mb = int(remain)
                 except (ValueError, TypeError):
-                    self.CM.log("Warning: df output from %s was invalid [%s]" % (node, dfout))
+                    self.CM.log("Warning: df output '%s' from %s was invalid [%s, %s]"
+                                % (dfout, node, used, remain))
                 else:
-                    if idfout == 0:
-                        self.CM.log("CRIT: Completely out of log disk space on %s" % node)
+                    if remaining_mb < 10 or used_percent > 95:
+                        self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMb)"
+                                    % (node, used_percent, remaining_mb))
                         result=None
-                    elif idfout <= 1000:
-                        self.CM.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
+                        answer = raw_input('Continue? [nY] ')
+                        if answer and answer == "n":
+                            raise ValueError("Disk full on %s" % (node))
+                            ret = 0
+
+                    elif remaining_mb < 100 or used_percent > 90:
+                        self.CM.log("WARN: Low on log disk space (%d Mbytes) on %s" % (remaining_mb, node))
         return result
     
     def is_applicable(self):
