@@ -57,6 +57,7 @@ typedef struct attribute_value_s {
 
 
 void write_attribute(attribute_t *a);
+void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, const char *source);
@@ -66,9 +67,7 @@ attribute_timer_cb(gpointer data)
 {
     attribute_t *a = data;
     crm_trace("Dampen interval expired for %s in state %d", a->id, election_state(writer));
-    if(election_state(writer) == election_won) {
-        write_attribute(a);
-    }
+    write_or_elect_attribute(a);
     return FALSE;
 }
 
@@ -456,13 +455,24 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         if(a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
             mainloop_timer_start(a->timer);
-
-        } else if(election_state(writer) == election_won) {
-            write_attribute(a);
-
         } else {
-            crm_trace("Someone else will write out %s", a->id);
+            write_or_elect_attribute(a);
         }
+    }
+}
+
+void
+write_or_elect_attribute(attribute_t *a)
+{
+    if(election_state(writer) == election_won) {
+        write_attribute(a);
+
+    } else if(peer_writer == NULL && election_state(writer) != election_in_progress) {
+        crm_info("Starting an election to determine who will write out %s", a->id);
+        election_vote(writer);
+
+    } else {
+        crm_trace("%s will write out %s, we are in state %d", peer_writer, a->id, election_state(writer));
     }
 }
 
