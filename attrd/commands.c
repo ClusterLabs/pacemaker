@@ -181,36 +181,6 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             crm_xml_add_int(xml, F_ATTRD_HOST_ID, attrd_cluster->nodeid);
         }
 
-        if (set == NULL) {
-            crm_trace("Inferring set");
-            if(a == NULL) {
-                set = g_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, host);
-
-            } else if(set == NULL) {
-                set = strdup(a->set);
-            }
-            crm_xml_add(xml, F_ATTRD_SET, set);
-        }
-
-        if (key == NULL) {
-            crm_trace("Inferring key");
-            if(a == NULL) {
-                int lpc = 0;
-                key = g_strdup_printf("%s-%s", set, attr);
-
-                /* Minimal attempt at sanitizing automatic IDs */
-                for (lpc = 0; key[lpc] != 0; lpc++) {
-                    switch (key[lpc]) {
-                        case ':':
-                            key[lpc] = '.';
-                    }
-                }
-            } else if(key == NULL) {
-                key = strdup(a->uuid);
-            }
-            crm_xml_add(xml, F_ATTRD_KEY, key);
-        }
-
         if (value) {
             int offset = 1;
             int int_value = 0;
@@ -596,7 +566,30 @@ write_attributes(bool all)
 static void
 build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const char *value)
 {
+    char *set = NULL;
+    char *uuid = NULL;
     xmlNode *xml_obj = NULL;
+
+    if(a->set) {
+        set = g_strdup(a->set);
+    } else {
+        set = g_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, nodeid);
+    }
+
+    if(a->uuid) {
+        uuid = g_strdup(a->uuid);
+    } else {
+        int lpc;
+        uuid = g_strdup_printf("%s-%s", set, a->id);
+
+        /* Minimal attempt at sanitizing automatic IDs */
+        for (lpc = 0; uuid[lpc] != 0; lpc++) {
+            switch (uuid[lpc]) {
+                case ':':
+                    uuid[lpc] = '.';
+            }
+        }
+    }
 
     xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
@@ -605,10 +598,10 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
 
     xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, a->set);
+    crm_xml_add(xml_obj, XML_ATTR_ID, set);
 
     xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, a->uuid);
+    crm_xml_add(xml_obj, XML_ATTR_ID, uuid);
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
 
     if(value) {
@@ -618,6 +611,9 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
         crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
         crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
     }
+
+    g_free(uuid);
+    g_free(set);
 }
 
 void
