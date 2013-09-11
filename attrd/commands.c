@@ -28,6 +28,7 @@
 
 #include <internal.h>
 
+int last_cib_op_done = 0;
 char *peer_writer = NULL;
 GHashTable *attributes = NULL;
 
@@ -521,6 +522,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     switch (rc) {
         case pcmk_ok:
             level = LOG_INFO;
+            last_cib_op_done = call_id;
             break;
         case -pcmk_err_diff_failed:    /* When an attr changes while the CIB is syncing */
         case -ETIME:           /* When an attr changes while there is a DC election */
@@ -639,6 +641,9 @@ write_attribute(attribute_t *a)
     } else if (the_cib == NULL) {
         crm_info("Write out of %s delayed: cib not connected", a->id);
         return;
+
+    } else if(a->update && a->update < last_cib_op_done) {
+        crm_info("Write out of %s continuing: update %d considered lost", a->id, a->update);
 
     } else if(a->update) {
         crm_info("Write out of %s delayed: update %d in progress", a->id, a->update);
