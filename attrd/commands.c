@@ -114,7 +114,7 @@ build_attribute_xml(
     crm_xml_add(xml, F_ATTRD_HOST, peer);
     crm_xml_add_int(xml, F_ATTRD_HOST_ID, peerid);
     crm_xml_add(xml, F_ATTRD_VALUE, value);
-    crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms);
+    crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms/1000);
 
     return xml;
 }
@@ -136,9 +136,13 @@ create_attribute(xmlNode *xml)
     a->user = crm_element_value_copy(xml, F_ATTRD_USER);
 #endif
 
-    dampen = crm_get_msec(value);
+    if(value) {
+        dampen = crm_get_msec(value);
+        crm_trace("Created attribute %s with delay %dms (%s)", a->id, dampen, value);
+    } else {
+        crm_trace("Created attribute %s with no delay", a->id);
+    }
 
-    crm_trace("Created attribute %s with delay %ds", a->id, dampen);
     if(dampen > 0) {
         a->timeout_ms = dampen;
         a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
