@@ -438,15 +438,19 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 void
 write_or_elect_attribute(attribute_t *a)
 {
-    if(election_state(writer) == election_won) {
+    enum election_result rc = election_state(writer);
+    if(rc == election_won) {
         write_attribute(a);
 
-    } else if(peer_writer == NULL && election_state(writer) != election_in_progress) {
+    } else if(rc == election_in_progress) {
+        crm_trace("Election in progress to determine who will write out %s", a->id);
+
+    } else if(peer_writer == NULL) {
         crm_info("Starting an election to determine who will write out %s", a->id);
         election_vote(writer);
 
     } else {
-        crm_trace("%s will write out %s, we are in state %d", peer_writer, a->id, election_state(writer));
+        crm_trace("%s will write out %s, we are in state %d", peer_writer, a->id, rc);
     }
 }
 
