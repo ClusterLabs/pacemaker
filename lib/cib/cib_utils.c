@@ -857,7 +857,7 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
     }
 
     if (input != NULL) {
-        rc = cib_process_diff(NULL, cib_none, NULL, NULL, diff, input, output, NULL);
+        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output, NULL);
 
         if (rc != pcmk_ok) {
             crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);

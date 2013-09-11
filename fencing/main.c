@@ -776,7 +776,12 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
         return;
+
+    } else if(msg == NULL) {
+        crm_trace("Missing %s update", event);
+        return;
     }
+
     if (cib_apply_patch_event == NULL) {
         cib_apply_patch_event = find_library_function(&cib_library, CIB_LIBRARY, "cib_apply_patch_event", TRUE);
     }

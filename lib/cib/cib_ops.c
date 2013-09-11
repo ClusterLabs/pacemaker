@@ -639,10 +639,11 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
         } else {
             apply_diff = FALSE;
-            log_level = LOG_NOTICE;
+            log_level = LOG_INFO;
+            /* Can happen if the cib is replaced with the same version during a global sync */
             reason = "+ and - versions in the diff did not change";
-            crm_log_xml_notice(req, "Bad update");
-            /* log_cib_diff(LOG_NOTICE, input, __FUNCTION__); */
+            crm_log_xml_debug(req, "Bad update");
+            log_cib_diff(LOG_NOTICE, input, __FUNCTION__);
         }
     }
 
