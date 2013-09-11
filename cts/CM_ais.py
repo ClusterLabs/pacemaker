@@ -121,6 +121,7 @@ class crm_ais(crm_lha):
                 r"Parse error: Ignoring unknown option .*nodename",
                 r"error: log_operation: Operation 'reboot' .* with device 'FencingFail' returned:",
                 r"Child process .* terminated with signal 9",
+                r"getinfo response error: 1$",
                 ]
         return []
 
@@ -167,7 +168,8 @@ class crm_ais(crm_lha):
                     "error: mainloop_gio_callback: Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
                     "Child process crmd .* exited: Generic Pacemaker error",
-                    "Child process attrd .* exited: Transport endpoint is not connected",
+                    "Child process attrd .* exited: Connection reset by peer",
+                     "error: attrd_cib_destroy_cb: Lost connection to CIB service",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd.*Could not recover from internal error",
@@ -322,7 +324,6 @@ class crm_cs_v0(crm_ais):
             r"error: pcmk_cpg_dispatch: Connection to the CPG API failed: Library error",
             r"pacemakerd.*error: pcmk_child_exit: Child process .* exited",
             r"cib.*error: cib_cs_destroy: Corosync connection lost",
-            r"attrd.*error: attrd_cib_connection_destroy: Connection to the CIB terminated",
             r"stonith-ng.*error: stonith_peer_cs_destroy: Corosync connection terminated",
             r"error: pcmk_child_exit: Child process cib .* exited: Invalid argument",
             r"error: pcmk_child_exit: Child process attrd .* exited: Transport endpoint is not connected",
@@ -337,13 +338,13 @@ class crm_cs_v0(crm_ais):
             r"crmd.*error: crmd_fast_exit: Could not recover from internal error",
             r"error: crm_ipc_read: Connection to cib_shm failed",
             r"error: mainloop_gio_callback: Connection to cib_shm.* closed",
-
+            r"error: stonith_connection_failed: STONITH connection failed",
             ]
 
         self.complist.append(Process(self, "corosync", pats = [
                     r"pacemakerd.*error: cfg_connection_destroy: Connection destroyed",
                     r"pacemakerd.*error: mcp_cpg_destroy: Connection destroyed",
-                    r"attrd_cs_destroy: Lost connection to Corosync service!",
+                    r"crit: attrd_cpg_destroy: Lost connection to Corosync service",
                     r"stonith_peer_cs_destroy: Corosync connection terminated",
                     r"cib_cs_destroy: Corosync connection lost!  Exiting.",
                     r"crmd_(cs|quorum)_destroy: connection terminated",
@@ -411,6 +412,11 @@ class crm_mcp(crm_cs_v0):
             "Pat:PacemakerUp"  : "%s pacemakerd.*Starting Pacemaker",
         })
 
+        if self.Env["have_systemd"]:
+            self.update({
+                # When systemd is in use, we can look for this instead
+                "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
+            })
 
 class crm_cman(crm_cs_v0):
     '''
