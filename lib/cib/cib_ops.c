@@ -627,7 +627,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
             apply_diff = FALSE;
             log_level = LOG_ERR;
             reason = "+ and - versions in the diff did not change in global update";
-            crm_log_xml_warn(input, "Bad global update");
+            crm_log_xml_warn(req, "Bad global update");
 
         } else if (diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
             diff_add_epoch = this_epoch;
@@ -641,7 +641,8 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
             apply_diff = FALSE;
             log_level = LOG_NOTICE;
             reason = "+ and - versions in the diff did not change";
-            log_cib_diff(LOG_NOTICE, input, __FUNCTION__);
+            crm_log_xml_notice(req, "Bad update");
+            /* log_cib_diff(LOG_NOTICE, input, __FUNCTION__); */
         }
     }
 
