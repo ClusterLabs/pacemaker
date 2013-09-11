@@ -481,7 +481,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     if (done) {
         do_crm_log(log_level + 1, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
                    election_id, e->count, election_owner, op, from, reason);
-        e->state = election_in_progress;
         return e->state;
 
     } else if(we_loose == FALSE) {
