@@ -567,39 +567,23 @@ int
 set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value)
 {
     int rc = pcmk_ok;
-    int str_length = 3;
     char *attr_id = NULL;
-    char *set_name = NULL;
-    const char *attr_name = "standby";
-
-    CRM_CHECK(standby_value != NULL, return -EINVAL);
-    if (scope == NULL) {
-        scope = XML_CIB_TAG_NODES;
-    }
 
     CRM_CHECK(uuid != NULL, return -EINVAL);
-    str_length += strlen(attr_name);
-    str_length += strlen(uuid);
+    CRM_CHECK(standby_value != NULL, return -EINVAL);
 
     if (safe_str_eq(scope, "reboot") || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {
-        const char *extra = "transient";
-
         scope = XML_CIB_TAG_STATUS;
-
-        str_length += strlen(extra);
-        attr_id = calloc(1, str_length);
-        sprintf(attr_id, "%s-%s-%s", extra, attr_name, uuid);
+        attr_id = g_strdup_printf("transient-standby-%.256s", uuid);
 
     } else {
         scope = XML_CIB_TAG_NODES;
-        attr_id = calloc(1, str_length);
-        sprintf(attr_id, "%s-%s", attr_name, uuid);
+        attr_id = g_strdup_printf("standby-%.256s", uuid);
     }
 
-    rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, set_name,
-                              attr_id, attr_name, standby_value, TRUE, NULL);
+    rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
+                              attr_id, "standby", standby_value, TRUE, NULL);
 
-    free(attr_id);
-    free(set_name);
+    g_free(attr_id);
     return rc;
 }
