@@ -86,7 +86,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     }
 
     xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%.128s", get_object_path(section));
 
     if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", node_type);
@@ -105,7 +105,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
 
     if (set_name) {
         offset +=
-            snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", set_type,
+            snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%.128s']", set_type,
                      set_name);
     } else {
         offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
@@ -120,7 +120,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         if (attr_id) {
             offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name='%s'", attr_name);
+        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name='%.128s'", attr_name);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
 
