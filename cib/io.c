@@ -623,7 +623,6 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
 int
 write_cib_contents(gpointer p)
 {
-    int fd = -1;
     int exit_rc = pcmk_ok;
     char *digest = NULL;
     xmlNode *cib_status_root = NULL;
@@ -696,17 +695,15 @@ write_cib_contents(gpointer p)
     /* Always write out with num_updates=0 */
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
-    fd = open(primary_file, O_NOFOLLOW);
-    if (fd >= 0) {
+    /* check the admin didnt modify it underneath us */
+    if (validate_on_disk_cib(primary_file, NULL) == FALSE) {
+        crm_err("%s was manually modified while the cluster was active!", primary_file);
+        exit_rc = pcmk_err_cib_modified;
+        goto cleanup;
+
+    } else {
         int rc = 0;
         int seq = get_last_sequence(cib_root, CIB_SERIES);
-
-        /* check the admin didnt modify it underneath us */
-        if (validate_on_disk_cib(primary_file, NULL) == FALSE) {
-            crm_err("%s was manually modified while the cluster was active!", primary_file);
-            exit_rc = pcmk_err_cib_modified;
-            goto cleanup;
-        }
 
         backup_file = generate_series_filename(cib_root, CIB_SERIES, seq, CIB_SERIES_BZIP);
         backup_digest = crm_concat(backup_file, "sig", '.');
@@ -716,8 +713,16 @@ write_cib_contents(gpointer p)
 
         rc = link(primary_file, backup_file);
         if (rc < 0) {
-            exit_rc = pcmk_err_cib_backup;
-            crm_perror(LOG_ERR, "Cannot link %s to %s", primary_file, backup_file);
+            rc = errno;
+            switch(rc) {
+                case ENOENT:
+                    /* No file to back up */
+                    goto writeout;
+                    break;
+                default:
+                    exit_rc = pcmk_err_cib_backup;
+                    crm_err("Cannot link %s to %s: %s (%d)", primary_file, backup_file, pcmk_strerror(rc), rc);
+            }
             goto cleanup;
         }
 
@@ -733,6 +738,7 @@ write_cib_contents(gpointer p)
         crm_info("Archived previous version as %s", backup_file);
     }
 
+  writeout:
     /* Given that we discard the status section on startup
      *   there is no point writing it out in the first place
      *   since users just get confused by it
@@ -793,10 +799,6 @@ write_cib_contents(gpointer p)
 
     free_xml(cib_tmp);
     free_xml(cib_local);
-
-    if (fd >= 0) {
-        close(fd);
-    }
 
     if (p == NULL) {
         /* exit() could potentially affect the parent by closing things it shouldn't
