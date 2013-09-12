@@ -173,7 +173,6 @@ update_attr_delegate(cib_t * the_cib, int call_options,
 
     char *local_attr_id = NULL;
     char *local_set_name = NULL;
-    gboolean use_attributes_tag = FALSE;
 
     CRM_CHECK(section != NULL, return -EINVAL);
     CRM_CHECK(attr_value != NULL, return -EINVAL);
@@ -192,38 +191,16 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         /*     return -EINVAL; */
 
     } else {
-        const char *value = NULL;
         const char *node_type = NULL;
-        xmlNode *cib_top = NULL;
 
         crm_trace("%s does not exist, create it", attr_name);
-        rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top,
-                             cib_sync_call | cib_scope_local | cib_xpath | cib_no_children,
-                             user_name);
-
-        value = crm_element_value(cib_top, "ignore_dtd");
-        if (value != NULL) {
-            use_attributes_tag = TRUE;
-
-        } else {
-            value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
-            if (value && strstr(value, "-0.6")) {
-                use_attributes_tag = TRUE;
-            }
-        }
-        free_xml(cib_top);
-
         if (safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
             node_uuid = NULL;
             section = XML_CIB_TAG_STATUS;
             node_type = XML_CIB_TAG_TICKETS;
 
-            xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
-            if (xml_top == NULL) {
-                xml_top = xml_obj;
-            }
-
-            xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_TICKETS);
+            xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
+            xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
         } else if (safe_str_eq(section, XML_CIB_TAG_NODES)) {
             tag = XML_CIB_TAG_NODE;
@@ -237,11 +214,9 @@ update_attr_delegate(cib_t * the_cib, int call_options,
                 return -EINVAL;
             }
 
-            xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
-            crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
-            if (xml_top == NULL) {
-                xml_top = xml_obj;
-            }
+            xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
+            crm_xml_add(xml_top, XML_ATTR_ID, node_uuid);
+            xml_obj = xml_top;
 
         } else {
             tag = section;
@@ -314,10 +289,6 @@ update_attr_delegate(cib_t * the_cib, int call_options,
 
         if (xml_top == NULL) {
             xml_top = xml_obj;
-        }
-
-        if (use_attributes_tag) {
-            xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
         }
     }
 
