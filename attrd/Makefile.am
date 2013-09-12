@@ -35,12 +35,20 @@ attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la 		\
 if BUILD_HEARTBEAT_SUPPORT
 attrd_SOURCES	+= legacy.c
 else
+
+if BUILD_CS_SUPPORT
+
 if BUILD_CS_PLUGIN
 attrd_SOURCES	+= legacy.c
 else
 # Only build the new version where CPG is exclusively used for communication
 attrd_SOURCES	+= main.c commands.c
 endif
+
+else
+attrd_SOURCES	+= legacy.c
+endif
+
 endif
 
 %.8:	% crm_attribute
