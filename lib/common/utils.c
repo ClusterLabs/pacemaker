@@ -928,8 +928,8 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     CRM_CHECK(action_id != NULL, return FALSE);
     CRM_CHECK(transition_id != NULL, return FALSE);
 
-    *uuid = NULL;
-    res = sscanf(key, "%d:%d:%d:%ms", action_id, transition_id, target_rc, uuid);
+    *uuid = calloc(1, 37);
+    res = sscanf(key, "%d:%d:%d:%36s", action_id, transition_id, target_rc, *uuid);
     switch (res) {
         case 4:
             /* Post Pacemaker 0.6 */
@@ -942,10 +942,10 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
             /* Until Pacemaker 0.6 */
             done = TRUE;
             *target_rc = -1;
-            res = sscanf(key, "%d:%d:%ms", action_id, transition_id, uuid);
+            res = sscanf(key, "%d:%d:%36s", action_id, transition_id, *uuid);
             if (res == 2) {
                 *action_id = -1;
-                res = sscanf(key, "%d:%ms", transition_id, uuid);
+                res = sscanf(key, "%d:%36s", transition_id, *uuid);
                 CRM_CHECK(res == 2, done = FALSE);
 
             } else if (res != 3) {
@@ -958,12 +958,11 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
             done = TRUE;
             *action_id = -1;
             *target_rc = -1;
-            res = sscanf(key, "%d:%ms", transition_id, uuid);
+            res = sscanf(key, "%d:%36s", transition_id, *uuid);
             CRM_CHECK(res == 2, done = FALSE);
             break;
         default:
             crm_crit("Unhandled sscanf result (%d) for %s", res, key);
-
     }
 
     if (strlen(*uuid) != 36) {
