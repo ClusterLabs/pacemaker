@@ -430,6 +430,8 @@ get_remote_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
                          cib_sync_call | cib_scope_local | cib_xpath, NULL);
     free(xpath_string);
     free(xml_search);
+    xml_search = NULL;
+    xpath_string = NULL;
 
     if (rc != pcmk_ok) {
         len = strlen(REMOTE_NODE_XPATH2) + strlen(uname) + 1;

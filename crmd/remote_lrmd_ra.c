@@ -255,27 +255,35 @@ monitor_timeout_cb(gpointer data)
     return FALSE;
 }
 
-static void
-remote_init_cib_status(lrm_state_t *lrm_state)
+xmlNode *
+simple_remote_node_status(const char *node_name, xmlNode * parent, const char *source)
 {
-    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-    xmlNode *state = NULL;
+    xmlNode *state = create_xml_node(parent, XML_CIB_TAG_STATE);
+
+    crm_xml_add(state, XML_NODE_IS_REMOTE, "true");
+    crm_xml_add(state, XML_ATTR_UUID,  node_name);
+    crm_xml_add(state, XML_ATTR_UNAME, node_name);
+    crm_xml_add(state, XML_ATTR_ORIGIN, source);
+
+    return state;
+}
+
+static void
+remote_init_cib_status(const char *node_name)
+{
     int call_id = 0;
     int call_opt = cib_quorum_override;
+    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+
+    simple_remote_node_status(node_name, update,__FUNCTION__);
 
     if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
         call_opt |= cib_scope_local;
     }
-    state = create_xml_node(update, XML_CIB_TAG_STATE);
-
-    crm_xml_add(state, XML_NODE_IS_REMOTE, "true");
-    crm_xml_add(state, XML_ATTR_UUID,  lrm_state->node_name);
-    crm_xml_add(state, XML_ATTR_UNAME, lrm_state->node_name);
-    crm_xml_add(state, XML_ATTR_ORIGIN, __FUNCTION__);
 
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
     if (call_id != pcmk_ok) {
-        crm_debug("Failed to init status section for remote-node %s", lrm_state->node_name);
+        crm_debug("Failed to init status section for remote-node %s", node_name);
     }
     free_xml(update);
 }
@@ -333,7 +341,10 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
         } else {
             /* make sure we have a clean status section to start with */
-            remote_init_cib_status(lrm_state);
+            lrm_state_reset_tables(lrm_state);
+            remote_init_cib_status(lrm_state->node_name);
+            erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+            erase_status_tag(lrm_state->node_name, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
@@ -393,6 +404,12 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
+        const char *key = tmp->key;
+        /* skip over 'remote-' prefix if it exists */
+        if (strstr(key, "remote-")) {
+            key += 7;
+        }
+
         if (safe_str_eq(tmp->key, "addr") || safe_str_eq(tmp->key, "server")) {
             server = tmp->value;
         }
@@ -430,15 +447,6 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
-            xmlNode *status = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-            /* clear node status in cib */
-            crm_xml_add(status, XML_ATTR_ID, lrm_state->node_name);
-            lrm_state_reset_tables(lrm_state);
-            fsa_cib_delete(XML_CIB_TAG_STATUS, status, cib_quorum_override, rc, NULL);
-            crm_info("Forced a remote LRM refresh before connection start: call=%d", rc);
-            crm_log_xml_trace(status, "CLEAR LRM");
-            free_xml(status);
 
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {

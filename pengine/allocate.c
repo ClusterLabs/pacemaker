@@ -827,6 +827,7 @@ probe_resources(pe_working_set_t * data_set)
 {
     action_t *probe_complete = NULL;
     action_t *probe_node_complete = NULL;
+    action_t *probe_cluster_nodes_complete = NULL;
 
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
@@ -842,12 +843,23 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
-        } else if (node->details->remote_rsc) {
-            /* TODO need to figure out how to probe remote resources */
+        } else if (is_container_remote_node(node)) {
+            /* TODO for now we are only probing baremetal remote-nodes. We
+             * may need to consider probing container nodes as well. */
+            continue;
+
+        } else if (is_baremetal_remote_node(node) && node->details->shutdown) {
+            /* Don't try and probe a remote node we're shutting down.
+             * It causes constraint conflicts to try and run any sort of action
+             * other that 'stop' on resources living within a remote-node when
+             * it is being shutdown. */ 
             continue;
 
         } else if (probe_complete == NULL) {
             probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
+            if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+                probe_cluster_nodes_complete = get_pseudo_op(CRM_OP_NODES_PROBED, data_set);
+            }
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
@@ -877,19 +889,32 @@ probe_resources(pe_working_set_t * data_set)
                      probe_node_complete->uuid, probe_node_complete->node->details->uname);
         }
 
-        order_actions(probe_node_complete, probe_complete,
+        if (is_remote_node(node)) {
+            order_actions(probe_node_complete, probe_complete,
                       pe_order_runnable_left /*|pe_order_implies_then */ );
+		} else if (probe_cluster_nodes_complete == NULL) {
+            order_actions(probe_node_complete, probe_complete,
+                      pe_order_runnable_left /*|pe_order_implies_then */ );
+        } else {
+            order_actions(probe_node_complete, probe_cluster_nodes_complete,
+                      pe_order_runnable_left /*|pe_order_implies_then */ );
+        }
 
         gIter2 = data_set->resources;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             resource_t *rsc = (resource_t *) gIter2->data;
 
             if (rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set)) {
-
                 update_action_flags(probe_complete, pe_action_optional | pe_action_clear);
                 update_action_flags(probe_node_complete, pe_action_optional | pe_action_clear);
 
-                wait_for_probe(rsc, RSC_START, probe_complete, data_set);
+                if (rsc->is_remote_node) {
+                    update_action_flags(probe_cluster_nodes_complete, pe_action_optional | pe_action_clear);
+                    /* allow remote resources to run after all cluster nodes are probed */
+                    wait_for_probe(rsc, RSC_START, probe_cluster_nodes_complete, data_set);
+                } else {
+                    wait_for_probe(rsc, RSC_START, probe_complete, data_set);
+                }
             }
         }
     }
@@ -898,7 +923,12 @@ probe_resources(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
+        if (rsc->is_remote_node) {
+            /* allow remote resources to run after all cluster nodes are probed */
+            wait_for_probe(rsc, RSC_STOP, probe_cluster_nodes_complete, data_set);
+        } else {
+            wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
+        }
     }
 
     return TRUE;
@@ -1304,7 +1334,8 @@ stage6(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        if (node->details->remote_rsc) {
+        /* remote-nodes associated with a container resource (such as a vm) are not fenced */
+        if (is_container_remote_node(node)) {
             continue;
         }
 
@@ -1327,7 +1358,12 @@ stage6(pe_working_set_t * data_set)
                 last_stonith = stonith_op;
             }
 
-        } else if (node->details->online && node->details->shutdown) {
+        } else if (node->details->online && node->details->shutdown &&
+                /* TODO define what a shutdown op means for a baremetal remote node.
+                 * For now we do not send shutdown operations for remote nodes, but
+                 * if we can come up with a good use for this in the future, we will. */
+                    is_remote_node(node) == FALSE) {
+
             action_t *down_op = NULL;
 
             crm_notice("Scheduling Node %s for shutdown", node->details->uname);
@@ -1567,19 +1603,19 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         resource_t *remote_rsc = NULL;
         resource_t *container = NULL;
 
-        if (!action->node ||
-            !action->node->details->remote_rsc ||
-            !action->rsc ||
+        if (action->node == NULL ||
+            is_remote_node(action->node) == FALSE ||
+            action->rsc == NULL ||
             is_set(action->flags, pe_action_pseudo)) {
             continue;
         }
 
         remote_rsc = action->node->details->remote_rsc;
         container = remote_rsc->container;
+
         if (safe_str_eq(action->task, "monitor") ||
             safe_str_eq(action->task, "start") ||
             safe_str_eq(action->task, "promote") ||
-            safe_str_eq(action->task, "demote") ||
             safe_str_eq(action->task, CRM_OP_LRM_REFRESH) ||
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT) ||
             safe_str_eq(action->task, "delete")) {
@@ -1592,6 +1628,39 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 action,
                 pe_order_implies_then | pe_order_runnable_left,
                 data_set);
+
+        } else if (safe_str_eq(action->task, "demote")) {
+
+            /* If the connection is being torn down, we don't want
+             * to build a constraint between a resource's demotion and
+             * the connection resource starting... because the connection
+             * resource can not start. The connection might already be up,
+             * but the START action would not be allowed which in turn would
+             * block the demotion of any resournces living in the remote-node.
+             *
+             * In this case, only build the constraint between the demotion and
+             * the connection's stop action. This allows the connection and all the
+             * resources within the remote-node to be torn down properly. */
+            if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
+                custom_action_order(action->rsc,
+                    NULL,
+                    action,
+                    remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_STOP, 0),
+                    NULL,
+                    pe_order_implies_first,
+                    data_set);
+            } else {
+
+                custom_action_order(remote_rsc,
+                    generate_op_key(remote_rsc->id, RSC_START, 0),
+                    NULL,
+                    action->rsc,
+                    NULL,
+                    action,
+                    pe_order_implies_then | pe_order_runnable_left,
+                    data_set);
+            }
 
         } else if (safe_str_eq(action->task, "stop") &&
                    container &&

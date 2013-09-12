@@ -41,6 +41,7 @@
 #include <crm/attrd.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 
 bool scope_master = FALSE;
 gboolean do_force = FALSE;
@@ -694,7 +695,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-        if (node && node->details->remote_rsc) {
+        if (node && is_remote_node(node)) {
             if (node->details->remote_rsc->running_on) {
                 node = node->details->remote_rsc->running_on->data;
                 router_node = node->details->uname;
@@ -811,7 +812,7 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
         }
 
         attr_name = crm_concat("fail-count", id, '-');
-        if (node && node->details->remote_rsc) {
+        if (node && is_remote_node(node)) {
             /* TODO talk directly to cib for remote nodes until we can re-write
              * attrd to handle remote-nodes */
             rc = delete_attr_delegate(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, node->details->id, NULL, NULL,

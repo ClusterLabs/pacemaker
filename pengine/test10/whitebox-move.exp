@@ -1,59 +1,59 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="15" operation="start" operation_key="container1_start_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="16" operation="start" operation_key="container1_start_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml" crm_feature_set="3.0.7" force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="15" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="14" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="15" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml" crm_feature_set="3.0.7" force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="37" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="27" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2">
+      <rsc_op id="28" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2">
         <primitive id="M" long-id="M:3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="27" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="M-clone_start_0"/>
+        <pseudo_event id="31" operation="start" operation_key="M-clone_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="26" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
+      <rsc_op id="27" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="M" long-id="M:3" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="M-clone_stop_0"/>
+        <pseudo_event id="33" operation="stop" operation_key="M-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -66,31 +66,31 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="27" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
+        <rsc_op id="28" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
       </trigger>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5" priority="1000000">
     <action_set>
-      <pseudo_event id="33" operation="stopped" operation_key="M-clone_stopped_0">
+      <pseudo_event id="34" operation="stopped" operation_key="M-clone_stopped_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="27" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="M-clone_stop_0"/>
+        <pseudo_event id="33" operation="stop" operation_key="M-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <pseudo_event id="32" operation="stop" operation_key="M-clone_stop_0">
+      <pseudo_event id="33" operation="stop" operation_key="M-clone_stop_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
@@ -98,50 +98,50 @@
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <pseudo_event id="31" operation="running" operation_key="M-clone_running_0">
+      <pseudo_event id="32" operation="running" operation_key="M-clone_running_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="27" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
+        <rsc_op id="28" operation="start" operation_key="M_start_0" internal_operation_key="M:3_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="M-clone_start_0"/>
+        <pseudo_event id="31" operation="start" operation_key="M-clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="30" operation="start" operation_key="M-clone_start_0">
+      <pseudo_event id="31" operation="start" operation_key="M-clone_start_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="stopped" operation_key="M-clone_stopped_0"/>
+        <pseudo_event id="34" operation="stopped" operation_key="M-clone_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="35" operation="start" operation_key="A_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2">
+      <rsc_op id="36" operation="start" operation_key="A_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="35" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="34" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
+      <rsc_op id="35" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
@@ -157,55 +157,55 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="35" operation="start" operation_key="A_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
+        <rsc_op id="36" operation="start" operation_key="A_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node2"/>
       </trigger>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="38" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="39" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="37" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="15" operation="start" operation_key="container1_start_0" on_node="18node2" on_node_uuid="2"/>
+        <rsc_op id="16" operation="start" operation_key="container1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="37" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="36" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="37" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="27" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="35" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -217,16 +217,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="15" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="26" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="27" operation="stop" operation_key="M_stop_0" internal_operation_key="M:3_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="35" operation="stop" operation_key="A_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="37" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>

@@ -128,6 +128,7 @@ struct node_shared_s {
     gboolean standby_onfail;
     gboolean pending;
     gboolean unclean;
+    gboolean unseen;
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
@@ -160,6 +161,7 @@ struct node_s {
 #  define pe_rsc_orphan		0x00000001ULL
 #  define pe_rsc_managed	0x00000002ULL
 #  define pe_rsc_block          0x00000004ULL   /* Further operations are prohibited due to failure policy */
+#  define pe_rsc_orphan_container_filler	0x00000008ULL
 
 #  define pe_rsc_notify		0x00000010ULL
 #  define pe_rsc_unique		0x00000020ULL

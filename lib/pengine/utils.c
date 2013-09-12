@@ -1777,3 +1777,44 @@ const char *rsc_printable_id(resource_t *rsc)
     }
     return rsc->id;
 }
+
+gboolean
+is_baremetal_remote_node(node_t *node)
+{
+    if (node->details->remote_rsc && (node->details->remote_rsc->container == FALSE)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
+is_container_remote_node(node_t *node)
+{
+    if (node->details->remote_rsc && node->details->remote_rsc->container) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
+is_remote_node(node_t *node)
+{
+    if (node->details->remote_rsc) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
+xml_contains_remote_node(xmlNode *xml)
+{
+    const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
+    const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
+    const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
+
+    if (safe_str_eq(agent, "remote") && safe_str_eq(provider, "pacemaker") && safe_str_eq(class, "ocf")) {
+        return TRUE;
+    }
+    return FALSE;
+}
+

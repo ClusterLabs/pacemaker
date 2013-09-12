@@ -2,6 +2,7 @@
 
 containers="2"
 download=0
+share_configs=0
 # different than default libvirt network in case this is run nested in a KVM instance
 addr="192.168.123.1"
 restore=0
@@ -23,11 +24,12 @@ function helptext() {
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
-	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory"
+	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
 	echo ""
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
 	echo "-m, --add-master       Add master resource shared between remote-nodes"
 	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
+	echo "-s, --share-configs    Copy container configs to all other known cluster nodes, (crm_node -l)"
 	echo "-c, --containers       Specify the number of containers to generate, defaults to $containers. Used with -g"
 	echo "-n, --network          What network to override default libvirt network to. Example: -n 192.168.123.1. Used with -g"
 	echo "-v, --verify           Verify environment is capable of running lxc"
@@ -40,6 +42,7 @@ while true ; do
 	--help|-h|-\?) helptext 0;;
 	-c|--containers) containers="$2"; shift; shift;;
 	-d|--download-agent) download=1; shift;;
+	-s|--share-configs) share_configs=1; shift;;
 	-n|--network) addr="$2"; shift; shift;;
 	-r|--restore-libvirt) restore=1; shift;;
 	-p|--restore-cib) restore_pcmk=1; shift;;
@@ -71,6 +74,21 @@ if [ $verify -eq 1 ]; then
 		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
 		exit 1
 	fi
+
+	ps x > /tmp/lxc-autogen-libvirt-test.txt
+	grep "libvirtd" /tmp/lxc-autogen-libvirt-test.txt
+	if [ $? -ne 0 ]; then
+		rm -f /tmp/lxc-autogen-libvirt-test.txt
+		echo "libvirtd isn't up."
+		exit 1
+	fi
+	rm -f /tmp/lxc-autogen-libvirt-test.txt
+
+	which rsync > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "rsync is required"
+	fi
+
 fi
 
 #strip last digits off addr
@@ -288,6 +306,17 @@ restore_libvirt()
 	rm -f restore_default.xml > /dev/null 2>&1 
 }
 
+distribute_configs()
+{
+	local node
+	local id
+	while read id node
+	do
+		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' $working_dir/lxc*.xml $node:/$working_dir
+		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' $working_dir/lxc*-filesystem $node:/$working_dir
+	done < <(crm_node -l)
+}
+
 mkdir -p $working_dir
 cd $working_dir
 
@@ -311,9 +340,11 @@ fi
 if [ $add_master -eq 1 ]; then
 	apply_cib_master
 fi
+if [ $share_configs -eq 1 ]; then
+	distribute_configs
+fi
+if [ $restore_all -eq 1 ]; then
+	ls | grep -v "lxc.\.xml" | xargs rm -rf
+fi
 
 cd $curdir
-
-if [ $restore_all -eq 1 ]; then
-	rm -rf $working_dir
-fi

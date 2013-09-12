@@ -1,0 +1,46 @@
+
+Current cluster status:
+RemoteNode remote1: UNCLEAN (offline)
+Online: [ 18builder 18node1 18node2 ]
+
+ shooter	(stonith:fence_xvm):	Started 18builder 
+ remote1	(ocf::pacemaker:remote):	FAILED 18node1 
+ FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
+ FAKE2	(ocf::heartbeat:Dummy):	Started remote1 
+ FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
+ FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
+
+Transition Summary:
+ * Recover remote1	(Started 18node1)
+ * Move    FAKE2	(Started remote1 -> 18builder)
+ * Move    FAKE3	(Started 18builder -> 18node1)
+ * Move    FAKE4	(Started 18node1 -> 18node2)
+
+Executing cluster transition:
+ * Resource action: remote1         stop on 18node1
+ * Resource action: FAKE3           stop on 18builder
+ * Resource action: FAKE4           stop on 18node1
+ * Fencing remote1
+ * Pseudo action:   stonith_complete
+ * Resource action: remote1         start on 18node1
+ * Resource action: remote1         monitor=60000 on 18node1
+ * Pseudo action:   FAKE2_stop_0
+ * Resource action: FAKE3           start on 18node1
+ * Resource action: FAKE4           start on 18node2
+ * Pseudo action:   all_stopped
+ * Resource action: FAKE2           start on 18builder
+ * Resource action: FAKE3           monitor=60000 on 18node1
+ * Resource action: FAKE4           monitor=60000 on 18node2
+ * Resource action: FAKE2           monitor=60000 on 18builder
+
+Revised cluster status:
+Online: [ 18builder 18node1 18node2 ]
+RemoteOnline: [ remote1 ]
+
+ shooter	(stonith:fence_xvm):	Started 18builder 
+ remote1	(ocf::pacemaker:remote):	Started 18node1 
+ FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
+ FAKE2	(ocf::heartbeat:Dummy):	Started 18builder 
+ FAKE3	(ocf::heartbeat:Dummy):	Started 18node1 
+ FAKE4	(ocf::heartbeat:Dummy):	Started 18node2 
+
