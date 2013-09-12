@@ -511,6 +511,7 @@ ssize_t
 crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 {
     static int biggest = 0;
+    static int compressed_size_warning = 0;
 
     struct iovec *iov;
     unsigned int total = 0;
@@ -540,9 +541,9 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 
         if (total > biggest) {
             biggest = 2 * QB_MAX(total, biggest);
-            crm_notice("Message exceeds the configured ipc limit (%d bytes), "
-                       "consider configuring PCMK_ipc_buffer to %d or higher "
-                       "to avoid compression overheads", ipc_buffer_max, biggest);
+            crm_info("Message exceeds the configured ipc limit (%d bytes), "
+                     "consider configuring PCMK_ipc_buffer to %d or higher "
+                     "to avoid compression overheads", ipc_buffer_max, biggest);
         }
 
         if (crm_compress_string
@@ -556,6 +557,12 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 
             free(buffer);
 
+            if (!compressed_size_warning && (new_size * 10 > ipc_buffer_max * 8)) {
+                crm_warn("Compressed message exceeds 80%% of configured ipc limit (%d bytes), "
+                         "please increase PCMK_ipc_buffer to avoid IPC failures (%d bytes suggested)",
+                         new_size, ipc_buffer_max, iggest);
+                compressed_size_warning = 1;
+	    }
         } else {
             ssize_t rc = -EMSGSIZE;
 
