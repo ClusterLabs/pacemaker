@@ -76,16 +76,7 @@ print_spaces(char *buffer, int depth, int max)
 static char *
 get_shadow_prompt(const char *name)
 {
-    int len = 16;
-    char *prompt = NULL;
-
-    CRM_ASSERT(name != NULL);
-
-    len += strlen(name);
-    prompt = calloc(1, len);
-
-    snprintf(prompt, len, "shadow[%s] # ", name);
-    return prompt;
+    return g_strdup_printf("shadow[%.40s] # ", name);
 }
 
 static void
