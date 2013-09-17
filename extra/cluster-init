@@ -171,6 +171,10 @@ if [ -z $dsh_group ]; then
     dsh_group=1
 fi
 
+if [ $num_hosts -gt 9 ]; then
+    cs_port=66
+fi
+
 for h in $host_list; do
     ping -c 1 -q $h
     if [ $? != 0 ]; then
