@@ -351,6 +351,43 @@ if __name__ == '__main__':
            Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
 
            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
+
+           # Hacks to make my life easier
+           if args[i+1] == "r6":
+               Environment["Stack"] = "cman"
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_xvm"
+               Environment["stonith-params"] = "delay=0"
+               Environment["IPBase"] = " 11.0.0.1"
+
+           elif args[i] == "virt1":
+               Environment["Stack"] = "corosync"
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_xvm"
+               Environment["stonith-params"] = "delay=0"
+               Environment["IPBase"] = " 12.0.0.1"
+
+           elif args[i] == "east16":
+               Environment["Stack"] = "corosync"
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_apc"
+               Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
+               Environment["IPBase"] = " 11.0.0.1"
+
+           elif args[i] == "corosync8":
+               Environment["Stack"] = "corosync"
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_rhevm"
+
+               print "Obtaining RHEV-M credentials from the current environment"
+               Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
+                   os.environ['RHEVM_USERNAME'],
+                   os.environ['RHEVM_PASSWORD'],
+                   os.environ['RHEVM_SERVER'],
+                   os.environ['RHEVM_PORT'],
+                   )
+               Environment["IPBase"] = " 11.0.0.1"
+
            if os.path.isfile(dsh_file):
                node_list = []
                f = open(dsh_file, 'r')
