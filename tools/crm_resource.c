@@ -1942,6 +1942,17 @@ main(int argc, char **argv)
         } else if (rsc->variant < pe_clone && g_list_length(rsc->running_on) > 1) {
             CMD_ERR("Resource '%s' not moved: active on multiple nodes\n", rsc_id);
             goto bail;
+
+        } else if (rsc->variant < pe_clone && scope_master) {
+            resource_t *p = uber_parent(rsc);
+            if(p->variant == pe_master) {
+                CMD_ERR("Resource '%s' not moved: The --master option is not a valid for %s resources."
+                        "  Did you mean '%s'?\n", rsc_id, get_resource_typename(rsc->variant), p->id);
+            } else {
+                CMD_ERR("Resource '%s' not moved: The --master option is not a valid for %s resources.\n",
+                        rsc_id, get_resource_typename(rsc->variant));
+            }
+            goto bail;
         }
 
         if(dest == NULL) {
