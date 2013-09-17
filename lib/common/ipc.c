@@ -538,13 +538,6 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
     } else {
         unsigned int new_size = 0;
 
-        if (total > biggest) {
-            biggest = 2 * QB_MAX(total, biggest);
-            crm_notice("Message exceeds the configured ipc limit (%d bytes), "
-                       "consider configuring PCMK_ipc_buffer to %d or higher "
-                       "to avoid compression overheads", ipc_buffer_max, biggest);
-        }
-
         if (crm_compress_string
             (buffer, header->size_uncompressed, ipc_buffer_max, &compressed, &new_size)) {
 
@@ -556,10 +549,15 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 
             free(buffer);
 
+            if (header->size_compressed > biggest) {
+                biggest = 2 * QB_MAX(header->size_compressed, biggest);
+            }
+
         } else {
             ssize_t rc = -EMSGSIZE;
 
             crm_log_xml_trace(message, "EMSGSIZE");
+            biggest = 2 * QB_MAX(header->size_uncompressed, biggest);
 
             crm_err
                 ("Could not compress the message into less than the configured ipc limit (%d bytes)."
@@ -682,7 +680,7 @@ crm_ipcs_send_ack(crm_client_t * c, uint32_t request, const char *tag, const cha
 /* Client... */
 
 #define MIN_MSG_SIZE    12336   /* sizeof(struct qb_ipc_connection_response) */
-#define MAX_MSG_SIZE    50*1024 /* 50k default */
+#define MAX_MSG_SIZE    128*1024 /* 128k default */
 
 struct crm_ipc_s {
     struct pollfd pfd;
@@ -1021,6 +1019,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     long rc = 0;
     struct iovec *iov;
     static uint32_t id = 0;
+    static int factor = 8;
     struct crm_ipc_response_header *header;
 
     crm_ipc_init();
@@ -1057,6 +1056,15 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     header = iov[0].iov_base;
     header->flags |= flags;
+
+    if(header->flags | crm_ipc_compressed) {
+        if(factor < 10 && (ipc_buffer_max / 10) < (rc / factor)) {
+            crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%d bytes), "
+                       "consider setting PCMK_ipc_buffer to %d or higher",
+                       factor, ipc_buffer_max, 2*ipc_buffer_max);
+            factor++;
+        }
+    }
 
     if (ms_timeout == 0) {
         ms_timeout = 5000;
