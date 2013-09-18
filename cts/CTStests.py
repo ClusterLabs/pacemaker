@@ -73,7 +73,7 @@ class CTSTest:
         self.is_loop = 0
         self.is_unsafe = 0
         self.is_experimental = 0
-        self.is_remote = 0
+        self.is_container = 0
         self.is_valgrind = 0
         self.benchmark = 0  # which tests to benchmark
         self.timer = {}  # timers
@@ -206,7 +206,7 @@ class CTSTest:
             return 0
         elif self.is_experimental and not self.CM.Env["experimental-tests"]:
             return 0
-        elif self.is_remote and not self.CM.Env["remote-tests"]:
+        elif self.is_container and not self.CM.Env["container-tests"]:
             return 0
         elif self.CM.Env["benchmark"] and self.benchmark == 0:
             return 0
@@ -2477,15 +2477,15 @@ def TestList(cm, audits):
     return result
 
 ###################################################################
-class RemoteSimple(CTSTest):
+class RemoteLXC(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RemoteSimple"
+        self.name="RemoteLXC"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
-        self.is_remote = 1
+        self.is_container = 1
         self.failed = 0
         self.fail_string = ""
 
@@ -2550,7 +2550,7 @@ class RemoteSimple(CTSTest):
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
     def __call__(self, node):
-        '''Perform the 'RemoteSimple' test. '''
+        '''Perform the 'RemoteLXC' test. '''
         self.incr("calls")
 
         ret = self.startall(None)
@@ -2587,7 +2587,7 @@ class RemoteSimple(CTSTest):
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
                 ]
 
-AllTestClasses.append(RemoteSimple)
+AllTestClasses.append(RemoteLXC)
 
 
 ###################################################################
@@ -2601,7 +2601,6 @@ class RemoteBaremetal(CTSTest):
         self.stop = StopTest(cm)
         self.pcmk_started=0
         self.rsc_added=0
-        self.is_remote = 1
         self.failed = 0
         self.fail_string = ""
         self.cib_cmd="""cibadmin -C -o %s -X '%s' """
