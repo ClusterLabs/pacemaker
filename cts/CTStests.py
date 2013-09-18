@@ -73,7 +73,7 @@ class CTSTest:
         self.is_loop = 0
         self.is_unsafe = 0
         self.is_experimental = 0
-        self.is_remote = 0
+        self.is_container = 0
         self.is_valgrind = 0
         self.benchmark = 0  # which tests to benchmark
         self.timer = {}  # timers
@@ -206,7 +206,7 @@ class CTSTest:
             return 0
         elif self.is_experimental and not self.CM.Env["experimental-tests"]:
             return 0
-        elif self.is_remote and not self.CM.Env["remote-tests"]:
+        elif self.is_container and not self.CM.Env["container-tests"]:
             return 0
         elif self.CM.Env["benchmark"] and self.benchmark == 0:
             return 0
@@ -2477,15 +2477,15 @@ def TestList(cm, audits):
     return result
 
 ###################################################################
-class RemoteSimple(CTSTest):
+class RemoteLXC(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RemoteSimple"
+        self.name="RemoteLXC"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
-        self.is_remote = 1
+        self.is_container = 1
         self.failed = 0
         self.fail_string = ""
 
@@ -2550,7 +2550,7 @@ class RemoteSimple(CTSTest):
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
     def __call__(self, node):
-        '''Perform the 'RemoteSimple' test. '''
+        '''Perform the 'RemoteLXC' test. '''
         self.incr("calls")
 
         ret = self.startall(None)
@@ -2587,7 +2587,7 @@ class RemoteSimple(CTSTest):
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
                 ]
 
-AllTestClasses.append(RemoteSimple)
+AllTestClasses.append(RemoteLXC)
 
 
 ###################################################################
@@ -2601,7 +2601,6 @@ class RemoteBaremetal(CTSTest):
         self.stop = StopTest(cm)
         self.pcmk_started=0
         self.rsc_added=0
-        self.is_remote = 1
         self.failed = 0
         self.fail_string = ""
         self.cib_cmd="""cibadmin -C -o %s -X '%s' """
@@ -2723,6 +2722,28 @@ class RemoteBaremetal(CTSTest):
             else:
                 break
 
+    def setup_env(self):
+        sync_key = 0
+
+        # we are assuming if all nodes have a key, that it is
+        # the right key... If any node doesn't have a remote
+        # key, we regenerate it everywhere.
+        for node in self.CM.Env["nodes"]:
+            rc = self.CM.rsh(node, "ls /etc/pacemaker/authkey")
+            if rc != 0:
+                sync_key = 1
+                break
+
+        if sync_key == 0:
+            return
+
+        # create key locally
+        os.system("/usr/share/pacemaker/tests/cts/lxc_autogen.sh -k &> /dev/null")
+
+        # sync key throughout the cluster
+        for node in self.CM.Env["nodes"]:
+            rc = self.CM.rsh(node, "mkdir /etc/pacemaker")
+            self.CM.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
@@ -2732,6 +2753,7 @@ class RemoteBaremetal(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
+        self.setup_env()
         self.start_metal(node)
         self.cleanup_metal(node)
 
