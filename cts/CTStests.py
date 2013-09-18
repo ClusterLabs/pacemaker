@@ -2723,6 +2723,28 @@ class RemoteBaremetal(CTSTest):
             else:
                 break
 
+    def setup_env(self):
+        sync_key = 0
+
+        # we are assuming if all nodes have a key, that it is
+        # the right key... If any node doesn't have a remote
+        # key, we regenerate it everywhere.
+        for node in self.CM.Env["nodes"]:
+            rc = self.CM.rsh(node, "ls /etc/pacemaker/authkey")
+            if rc != 0:
+                sync_key = 1
+                break
+
+        if sync_key == 0:
+            return
+
+        # create key locally
+        os.system("/usr/share/pacemaker/tests/cts/lxc_autogen.sh -k &> /dev/null")
+
+        # sync key throughout the cluster
+        for node in self.CM.Env["nodes"]:
+            rc = self.CM.rsh(node, "mkdir /etc/pacemaker")
+            self.CM.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
@@ -2732,6 +2754,7 @@ class RemoteBaremetal(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
+        self.setup_env()
         self.start_metal(node)
         self.cleanup_metal(node)
 

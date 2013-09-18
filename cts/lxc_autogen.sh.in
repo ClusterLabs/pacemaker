@@ -9,6 +9,7 @@ restore=0
 restore_pcmk=0
 restore_all=0
 generate=0
+key_gen=0
 cib=0
 add_master=0
 verify=0
@@ -22,6 +23,7 @@ function helptext() {
 	echo ""
 	echo "Options:"
 	echo "-g, --generate         Generate libvirt lxc environment in the directory this script is run from."
+	echo "-k, --key-gen          Generate local pacemaker remote key only."
 	echo "-r, --restore-libvirt  Restore the default network, and libvirt config to before this script ran."
 	echo "-p, --restore-cib      Remove cib entries this script generated."
 	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
@@ -52,6 +54,7 @@ while true ; do
 		restore_pcmk=1
 		shift;;
 	-g|--generate) generate=1; shift;;
+	-k|--key-gen) key_gen=1; shift;;
 	-a|--add-cib) cib=1; shift;;
 	-m|--add-master) add_master=1; shift;;
 	-v|--verify) verify=1; shift;;
@@ -123,16 +126,19 @@ END
 	virsh net-start default
 }
 
-generate()
+generate_key()
 {
-	set_network
-
 	#generate pacemaker remote key
 	ls /etc/pacemaker/authkey > /dev/null 2>&1
 	if [ $? != 0 ]; then
 			mkdir -p /etc/pacemaker
 			dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 	fi
+}
+
+generate()
+{
+	set_network
 
 	# Generate libvirt domains in xml
 	for (( c=1; c <= $containers; c++ ))
@@ -331,7 +337,13 @@ fi
 if [ $restore -eq 1 ]; then
 	restore_libvirt
 fi
+if [ $key_gen -eq 1 ]; then
+	generate_key
+fi
 if [ $generate -eq 1 ]; then
+	if [ $key_gen -eq 0]; then
+		generate_key
+	fi
 	generate
 fi
 if [ $cib -eq 1 ]; then
