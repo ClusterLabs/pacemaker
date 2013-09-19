@@ -46,6 +46,29 @@ crm_remote_peer_cache_size(void)
     return g_hash_table_size(crm_remote_peer_cache);
 }
 
+void
+crm_remote_peer_cache_add(const char *node_name)
+{
+    crm_node_t *node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
+
+    if (node == NULL) {
+            crm_trace("added %s to remote cache", node_name);
+            node = calloc(1, sizeof(crm_node_t));
+            node->flags = crm_remote_node;
+            CRM_ASSERT(node);
+            node->uname = strdup(node_name);
+            node->uuid = strdup(node_name);
+            node->state = strdup(CRM_NODE_MEMBER);
+            g_hash_table_replace(crm_remote_peer_cache, node->uname, node);
+    }
+}
+
+void
+crm_remote_peer_cache_remove(const char *node_name)
+{
+    g_hash_table_remove(crm_remote_peer_cache, node_name);
+}
+
 static void
 remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, int flags)
 {

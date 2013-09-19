@@ -21,6 +21,6 @@
 
 int attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host,
                           const char *name, const char *value, const char *section,
-                          const char *set, const char *dampen, const char *user_name);
+                          const char *set, const char *dampen, const char *user_name, gboolean is_remote);
 
 #endif

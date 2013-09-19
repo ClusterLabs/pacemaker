@@ -50,6 +50,7 @@ typedef struct attribute_s {
 
 typedef struct attribute_value_s {
         uint32_t nodeid;
+        gboolean is_remote;
         char *nodename;
         char *current;
         char *requested;
@@ -353,6 +354,9 @@ attrd_peer_remove(const char *host, const char *source)
             crm_debug("Removed %s[%s] for %s", a->id, host, source);
         }
     }
+
+    /* if this matches a remote peer, it will be removed from the cache */
+    crm_remote_peer_cache_remove(host);
 }
 
 void
@@ -380,7 +384,13 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
             v->current = strdup(value);
         }
         v->nodename = strdup(host);
+        crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &v->is_remote);
         g_hash_table_replace(a->values, v->nodename, v);
+
+        if (v->is_remote == TRUE) {
+            crm_remote_peer_cache_add(host);
+        }
+
         changed = TRUE;
 
     } else if(filter
@@ -414,7 +424,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 
     a->changed |= changed;
 
-    if(v->nodeid == 0) {
+    /* this only involves cluster nodes. */
+    if(v->nodeid == 0 && (v->is_remote == FALSE)) {
         if(crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0) {
             /* Create the name/id association */
             crm_node_t *peer = crm_get_peer(v->nodeid, host);
