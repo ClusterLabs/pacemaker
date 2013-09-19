@@ -150,6 +150,8 @@ int crm_remote_peer_cache_size(void);
 
 /* Initialize and refresh the remote peer cache from a cib config */
 void crm_remote_peer_cache_refresh(xmlNode *cib);
+void crm_remote_peer_cache_add(const char *node_name);
+void crm_remote_peer_cache_remove(const char *node_name);
 
 /* allows filtering of remote and cluster nodes using crm_get_peer_flags */
 crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);

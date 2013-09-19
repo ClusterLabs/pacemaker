@@ -142,7 +142,7 @@ main(int argc, char **argv)
 
     } else {
         int rc = attrd_update_delegate(NULL, command, NULL, attr_name, attr_value, attr_section,
-                                       attr_set, attr_dampen, NULL);
+                                       attr_set, attr_dampen, NULL, FALSE);
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not update %s=%s: %s (%d)\n", attr_name, attr_value, pcmk_strerror(rc), rc);
         }
