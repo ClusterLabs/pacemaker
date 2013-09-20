@@ -45,6 +45,7 @@ function helptext() {
     echo ""
     echo "--copy file(s) host:file   Pass subsequent arguments to scp or qacp"
     echo "                           Any occurances of {} are replaced with the node name"
+    echo "--key            Install an ssh key"
     echo ""
     exit $1
 }
@@ -53,7 +54,7 @@ while true ; do
     case "$1" in
 	--help|-h|-\?) helptext 0;;
 	-x)  set -x; shift;;
-	--ssh) ssh="ssh"; scp="scp"; shift;;
+	--ssh) ssh="ssh"; scp="scp"; pdsh=""; shift;;
 	-g|--group) group="$2"; shift; shift;;
 	-w|--host) for h in $2; do
 		hosts="$hosts -w $h";
@@ -66,6 +67,7 @@ while true ; do
 	--create|create) group="$2", command=group-create; shift; shift;;
 	--run|run) command=run; shift;;
 	--copy|copy) command=copy; shift; break ;;
+	--key|key) command=key; shift; break ;;
 	--xargs) command=xargs; shift; break ;;
 	--) command=run; shift; break ;;
 	"") break;;
@@ -118,6 +120,12 @@ function expand() {
 
 if [ $command = list ]; then
     expand $format
+
+elif [ $command = key ]; then
+    hosts=`expand oneline`
+    for h in $hosts; do
+	ssh-copy-id root@$h
+    done
 
 elif [ $command = group-create ]; then
 
