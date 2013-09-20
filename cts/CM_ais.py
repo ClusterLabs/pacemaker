@@ -87,12 +87,12 @@ class crm_ais(crm_lha):
                 r"Unknown node -> we will not deliver message",
                 r"crm_write_blackbox",
                 r"pacemakerd.*Could not connect to Cluster Configuration Database API",
-                r"Recieving messages from a node we think is dead",
+                r"Receiving messages from a node we think is dead",
                 r"share the same cluster nodeid",
                 r"share the same name",
 
                 #r"crm_ipc_send:.*Request .* failed",
-                #r"crm_ipc_send:.*Sending to .* is disabled until pending reply is recieved",
+                #r"crm_ipc_send:.*Sending to .* is disabled until pending reply is received",
 
                 # Not inherently bad, but worth tracking
                 #r"No need to invoke the TE",

@@ -304,7 +304,7 @@ Using a cloned group is a much better way of achieving the same result.
 
  * notify
    If true, inform peers before and after any clone is stopped or started.
-   If an action failed, you will (currently) not recieve a post-notification.
+   If an action failed, you will (currently) not receive a post-notification.
    Instead you can next expect to see a pre-notification for a stop.
    If a stop fails, and you have fencing you will get a post-notification for the stop after the fencing operation has completed.
    In order to use the notification service ALL decendants of the clone MUST support the notify action.

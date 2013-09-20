@@ -66,7 +66,7 @@ CRM to unpack the message and pass it on to the correct sub-system.  If
 the destination sub-system is the DC and the DC is not running on the
 current node, the message is discarded without error.
 
-Where the DC recieves a message from another node, it will also keep
+Where the DC receives a message from another node, it will also keep
 track of the sending host and the reference number so that it can direct
 the replies appropriately.  The exception to this is where the message
 is from the DC.  
