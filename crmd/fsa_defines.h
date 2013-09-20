@@ -117,7 +117,7 @@ Description:
 
       Once we have the latest CIB, we then enter the S_POLICY_ENGINE state
       where invoke the Policy Engine. It is possible that between
-      invoking the Policy Engine and recieving an answer, that we recieve
+      invoking the Policy Engine and receiving an answer, that we receive
       more input. In this case we would discard the orginal result and
       invoke it again.
 
@@ -154,7 +154,7 @@ Description:
  *	the "register" (see below) and the contents or source of messages.
  *
  *	At this point, my plan is to have a loop of some sort that keeps
- *	going until recieving I_NULL
+ *	going until receiving I_NULL
  *
  *======================================*/
 enum crmd_fsa_input {

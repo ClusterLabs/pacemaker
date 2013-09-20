@@ -45,7 +45,7 @@
 
 # Enable blackbox logging globally or per-subsystem
 # The blackbox contains a rolling buffer of all logs (including info+debug+trace)
-# and is written after a crash, assertion failure and/or when SIGTRAP is recieved
+# and is written after a crash, assertion failure and/or when SIGTRAP is received
 #
 # The blackbox recorder can also be enabled for Pacemaker daemons at runtime by sending SIGUSR1
 #

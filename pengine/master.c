@@ -408,7 +408,7 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
         resource_t *active = parent->fns->find_rsc(child, key, node, pe_find_clone|pe_find_current);
 
         /*
-         * Look for an active instance on $node, if there is one, only it recieves the master score
+         * Look for an active instance on $node, if there is one, only it receives the master score
          * Use ->find_rsc() because we might be a cloned group
          */
         if(rsc == active) {
