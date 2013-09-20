@@ -400,16 +400,16 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     if (op->interval > 0) {
         g_hash_table_replace(recurring_actions, op->id, op);
     }
+    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
-    if (strcasecmp(op->standard, "upstart") == 0) {
         return upstart_job_exec(op, FALSE);
-    }
 #endif
+    }
+    if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
-    if (strcasecmp(op->standard, "systemd") == 0) {
         return systemd_unit_exec(op, FALSE);
-    }
 #endif
+    }
     return services_os_action_execute(op, FALSE);
 }
 
@@ -418,11 +418,15 @@ services_action_sync(svc_action_t * op)
 {
     gboolean rc = TRUE;
 
-    if (strcasecmp(op->standard, "upstart") == 0) {
+    if (op == NULL) {
+        crm_trace("No operation to execute");
+        return FALSE;
+
+    } else if (op->standard == NULL && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
         rc = upstart_job_exec(op, TRUE);
 #endif
-    } else if (strcasecmp(op->standard, "systemd") == 0) {
+    } else if (op->standard == NULL && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
         rc = systemd_unit_exec(op, TRUE);
 #endif
