@@ -271,6 +271,7 @@ void strip_text_nodes(xmlNode * xml);
 #  define F_ATTRD_TASK		"task"
 #  define F_ATTRD_VALUE		"attr_value"
 #  define F_ATTRD_SET		"attr_set"
+#  define F_ATTRD_IS_REMOTE	"attr_is_remote"
 #  define F_ATTRD_SECTION	"attr_section"
 #  define F_ATTRD_DAMPEN	"attr_dampening"
 #  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"

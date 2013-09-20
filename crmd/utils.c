@@ -1016,35 +1016,11 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
 crm_ipc_t *attrd_ipc = NULL;
 
-static int
-update_without_attrd(const char *host_uuid, const char *name, const char *value, const char *user_name)
-{
-    if (fsa_cib_conn == NULL) {
-        return -1;
-    }
-
-    crm_trace("updating status for host_uuid %s, %s=%s", host_uuid, name ? name : "<null>", value ? value : "<null>");
-    return update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, host_uuid, NULL, NULL,
-                              NULL, name, value, FALSE, user_name);
-}
-
-void
-update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node)
+static void
+update_attrd_helper(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node, char command)
 {
     gboolean rc;
     int max = 5;
-
-    /* TODO eventually we will want to update/replace the attrd with
-     * something that can handle remote nodes as well as cluster nodes */
-    if (is_remote_node) {
-        /* host is required for updating a remote node */
-        CRM_CHECK(host != NULL, return;);
-        /* remote node uname and uuid are equal */
-        if (update_without_attrd(host, name, value, user_name) < pcmk_ok) {
-            crm_err("Could not update attribute %s for remote-node %s", name, host);
-        }
-        return;
-    }
 
     if (attrd_ipc == NULL) {
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);
@@ -1057,8 +1033,8 @@ update_attrd(const char *host, const char *name, const char *value, const char *
             crm_ipc_connect(attrd_ipc);
         }
 
-        rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL,
-                                   NULL, user_name);
+        rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
+                                   NULL, user_name, is_remote_node);
         if (rc == pcmk_ok) {
             break;
 
@@ -1087,4 +1063,17 @@ update_attrd(const char *host, const char *name, const char *value, const char *
             register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
+}
+
+void
+update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node)
+{
+    update_attrd_helper(host, name, value, user_name, is_remote_node, 'U');
+}
+
+void
+update_attrd_remote_node_removed(const char *host, const char *user_name)
+{
+    crm_trace("telling attrd to clear attributes for remote host %s", host);
+    update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
 }

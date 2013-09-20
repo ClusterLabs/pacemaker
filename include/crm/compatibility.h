@@ -263,14 +263,14 @@ attrd_update(crm_ipc_t * cluster, char command, const char *host, const char *na
              const char *value, const char *section, const char *set, const char *dampen)
 {
     return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen,
-                                 NULL) > 0;
+                                 NULL, FALSE) > 0;
 }
 
 static inline gboolean
 attrd_lazy_update(char command, const char *host, const char *name,
                   const char *value, const char *section, const char *set, const char *dampen)
 {
-    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL) > 0;
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL, FALSE) > 0;
 }
 
 static inline gboolean
@@ -278,7 +278,7 @@ attrd_update_no_mainloop(int *connection, char command, const char *host,
                          const char *name, const char *value, const char *section,
                          const char *set, const char *dampen)
 {
-    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL) > 0;
+    return attrd_update_delegate(NULL, command, host, name, value, section, set, dampen, NULL, FALSE) > 0;
 }
 #  endif
 

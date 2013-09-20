@@ -485,6 +485,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (!strcmp(cmd->action, "stop")) {
             lrm_state_disconnect(lrm_state);
+            update_attrd_remote_node_removed(lrm_state->node_name, NULL);
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
 
