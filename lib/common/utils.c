@@ -1936,6 +1936,9 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
         case 'q':
             crm_xml_add(update, F_ATTRD_TASK, "query");
             break;
+        case 'C':
+            crm_xml_add(update, F_ATTRD_TASK, "peer-remove");
+            break;
     }
 
     crm_xml_add(update, F_ATTRD_VALUE, value);

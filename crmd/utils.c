@@ -1016,8 +1016,8 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
 crm_ipc_t *attrd_ipc = NULL;
 
-void
-update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node)
+static void
+update_attrd_helper(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node, char command)
 {
     gboolean rc;
     int max = 5;
@@ -1033,7 +1033,7 @@ update_attrd(const char *host, const char *name, const char *value, const char *
             crm_ipc_connect(attrd_ipc);
         }
 
-        rc = attrd_update_delegate(attrd_ipc, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL,
+        rc = attrd_update_delegate(attrd_ipc, command, host, name, value, XML_CIB_TAG_STATUS, NULL,
                                    NULL, user_name, is_remote_node);
         if (rc == pcmk_ok) {
             break;
@@ -1063,4 +1063,17 @@ update_attrd(const char *host, const char *name, const char *value, const char *
             register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
+}
+
+void
+update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node)
+{
+    update_attrd_helper(host, name, value, user_name, is_remote_node, 'U');
+}
+
+void
+update_attrd_remote_node_removed(const char *host, const char *user_name)
+{
+    crm_trace("telling attrd to clear attributes for remote host %s", host);
+    update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
 }
