@@ -669,12 +669,24 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         if(have_fence_scsi == FALSE && safe_str_eq(agent, "fence_scsi")) {
             stonith_device_t *device = g_hash_table_lookup(device_list, rsc->id);
 
-            if(device) {
-                have_fence_scsi = TRUE;
-                crm_notice("Unfencing ourselves with %s (%s)", agent, device->id);
-                schedule_internal_command(__FUNCTION__, device, "on", stonith_our_uname, 0, NULL, unfence_cb);
+            if(stonith_our_uname == NULL) {
+                crm_trace("Cannot unfence ourselves: no local host name");
+
+            } else if(device == NULL) {
+                crm_err("Cannot unfence ourselves: no such device '%s'", rsc->id);
+
             } else {
-                crm_err("Device %s does not exist", rsc->id);
+                const char *alias = g_hash_table_lookup(device->aliases, stonith_our_uname);
+
+                if (!alias) {
+                    alias = stonith_our_uname;
+                }
+
+                if (device->targets && string_in_list(device->targets, alias)) {
+                    have_fence_scsi = TRUE;
+                    crm_notice("Unfencing ourselves with %s (%s)", agent, device->id);
+                    schedule_internal_command(__FUNCTION__, device, "on", stonith_our_uname, 0, NULL, unfence_cb);
+                }
             }
         }
 

@@ -164,6 +164,8 @@ int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
 void unfence_cb(GPid pid, int rc, const char *output, gpointer user_data);
 
+gboolean string_in_list(GListPtr list, const char *item);
+
 void
 schedule_internal_command(const char *origin,
                           stonith_device_t * device,

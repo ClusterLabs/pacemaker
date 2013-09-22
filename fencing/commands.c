@@ -665,7 +665,7 @@ schedule_internal_command(const char *origin,
     schedule_stonith_command(cmd, device);
 }
 
-static gboolean
+gboolean
 string_in_list(GListPtr list, const char *item)
 {
     int lpc = 0;
