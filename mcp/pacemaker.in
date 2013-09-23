@@ -109,6 +109,13 @@ cman_pre_start()
     pid=$(pidof corosync 2>/dev/null)
     if [ $? -ne 0 ]; then
 	service cman start
+	rc=$?
+
+	if [ $rc != 0 ]; then
+	    echo "Not starting $desc"
+	    exit $rc
+	fi
+
 	sleep 2
     fi
 }
