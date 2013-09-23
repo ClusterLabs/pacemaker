@@ -417,7 +417,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
 
     } else {
         crm_trace
-            ("Verfied message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
+            ("Verified message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
              ais_data_len(msg), msg->header.size);
