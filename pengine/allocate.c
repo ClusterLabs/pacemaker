@@ -843,12 +843,7 @@ probe_resources(pe_working_set_t * data_set)
         } else if (node->details->unclean) {
             continue;
 
-        } else if (is_container_remote_node(node)) {
-            /* TODO for now we are only probing baremetal remote-nodes. We
-             * may need to consider probing container nodes as well. */
-            continue;
-
-        } else if (is_baremetal_remote_node(node) && node->details->shutdown) {
+        } else if (is_remote_node(node) && node->details->shutdown) {
             /* Don't try and probe a remote node we're shutting down.
              * It causes constraint conflicts to try and run any sort of action
              * other that 'stop' on resources living within a remote-node when
@@ -892,7 +887,7 @@ probe_resources(pe_working_set_t * data_set)
         if (is_remote_node(node)) {
             order_actions(probe_node_complete, probe_complete,
                       pe_order_runnable_left /*|pe_order_implies_then */ );
-		} else if (probe_cluster_nodes_complete == NULL) {
+        } else if (probe_cluster_nodes_complete == NULL) {
             order_actions(probe_node_complete, probe_complete,
                       pe_order_runnable_left /*|pe_order_implies_then */ );
         } else {
@@ -908,9 +903,11 @@ probe_resources(pe_working_set_t * data_set)
                 update_action_flags(probe_complete, pe_action_optional | pe_action_clear);
                 update_action_flags(probe_node_complete, pe_action_optional | pe_action_clear);
 
-                if (rsc->is_remote_node) {
+                if (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc)) {
                     update_action_flags(probe_cluster_nodes_complete, pe_action_optional | pe_action_clear);
-                    /* allow remote resources to run after all cluster nodes are probed */
+                    /* allow remote connection resources and resources
+                     * containing remote connection resources to run after all
+                     * cluster nodes are probed */
                     wait_for_probe(rsc, RSC_START, probe_cluster_nodes_complete, data_set);
                 } else {
                     wait_for_probe(rsc, RSC_START, probe_complete, data_set);
@@ -923,8 +920,9 @@ probe_resources(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *rsc = (resource_t *) gIter->data;
 
-        if (rsc->is_remote_node) {
-            /* allow remote resources to run after all cluster nodes are probed */
+        if (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc)) {
+            /* allow remote connection resources and any resources containing
+             * remote connection resources to run after cluster nodes are probed.*/
             wait_for_probe(rsc, RSC_STOP, probe_cluster_nodes_complete, data_set);
         } else {
             wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);

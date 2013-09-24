@@ -385,40 +385,54 @@ delete_attr_delegate(cib_t * the_cib, int options,
     return rc;
 }
 
+static gboolean
+found_remote_node_xpath(cib_t *the_cib, const char *xpath)
+{
+    int rc = pcmk_ok;
+    xmlNode *xml_search = NULL;
+
+    rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath, NULL, &xml_search,
+                         cib_sync_call | cib_scope_local | cib_xpath, NULL);
+    free(xml_search);
+
+    return rc == pcmk_ok ? TRUE : FALSE;
+}
+
 static int
 get_remote_node_uuid(cib_t * the_cib, const char *uname, char **uuid)
 {
-#define REMOTE_NODE_XPATH "//nvpair[@name='remote-node'][@value='%s']"
-#define REMOTE_NODE_XPATH2 "//primitive[@type='remote'][@provider='pacemaker'][@id='%s']"
+#define CONTAINER_REMOTE_NODE_XPATH "//" XML_CIB_TAG_NVPAIR "[@name='remote-node'][@value='%s']"
+#define BAREMETAL_REMOTE_NODE_XPATH "//" XML_CIB_TAG_RESOURCE "[@type='remote'][@provider='pacemaker'][@id='%s']"
+#define ORPHAN_REMOTE_NODE_XPATH "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE "[@id='%s'][@remote_node='true']"
+    int len = 128 + strlen(uname);
     int rc = pcmk_ok;
-    char *xpath_string = NULL;
-    size_t len = strlen(REMOTE_NODE_XPATH) + strlen(uname) + 1;
-    xmlNode *xml_search = NULL;
+    char *xpath_string = calloc(1, len);
 
-    xpath_string = calloc(1, len);
-    sprintf(xpath_string, REMOTE_NODE_XPATH, uname);
-    rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
-                         cib_sync_call | cib_scope_local | cib_xpath, NULL);
-    free(xpath_string);
-    free(xml_search);
-    xml_search = NULL;
-    xpath_string = NULL;
-
-    if (rc != pcmk_ok) {
-        len = strlen(REMOTE_NODE_XPATH2) + strlen(uname) + 1;
-        xpath_string = calloc(1, len);
-        sprintf(xpath_string, REMOTE_NODE_XPATH2, uname);
-        rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
-                             cib_sync_call | cib_scope_local | cib_xpath, NULL);
-
-        free(xpath_string);
-        free(xml_search);
+    sprintf(xpath_string, CONTAINER_REMOTE_NODE_XPATH, uname);
+    if (found_remote_node_xpath(the_cib, xpath_string)) {
+        goto found_remote;
     }
 
+    sprintf(xpath_string, BAREMETAL_REMOTE_NODE_XPATH, uname);
+    if (found_remote_node_xpath(the_cib, xpath_string)) {
+        goto found_remote;
+    }
+
+    sprintf(xpath_string, ORPHAN_REMOTE_NODE_XPATH, uname);
+    if (found_remote_node_xpath(the_cib, xpath_string)) {
+        goto found_remote;
+    }
+
+    rc = -1;
+found_remote:
     if (rc == pcmk_ok) {
-        *uuid = strdup(uname);
+        /* reuse allocation */
+        *uuid = xpath_string;
+        strcpy(*uuid, uname);
+    } else {
+        *uuid = NULL;
+        free(xpath_string);
     }
-
     return rc;
 }
 

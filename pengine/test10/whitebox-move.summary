@@ -18,10 +18,12 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   M-clone_stop_0
- * Resource action: A               stop on lxc1
+ * Resource action: A               monitor on lxc2
+ * Pseudo action:   probe_complete
  * Resource action: M               stop on lxc1
  * Pseudo action:   M-clone_stopped_0
  * Pseudo action:   M-clone_start_0
+ * Resource action: A               stop on lxc1
  * Resource action: lxc1            stop on 18node1
  * Resource action: container1      stop on 18node1
  * Pseudo action:   all_stopped

@@ -2584,6 +2584,7 @@ class RemoteLXC(CTSTest):
                  """Unknown operation: fail""",
                  """notice: operation_finished: ping-""",
                  """notice: operation_finished: container""",
+                 """notice: operation_finished: .*_monitor_0:.*:stderr""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
                 ]
 

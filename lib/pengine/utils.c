@@ -1806,6 +1806,26 @@ is_remote_node(node_t *node)
 }
 
 gboolean
+rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc)
+{
+    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
+        return FALSE;
+    }
+
+    if (rsc->fillers) {
+        GListPtr gIter = NULL;
+        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
+            resource_t *filler = (resource_t *) gIter->data;
+
+            if (filler->is_remote_node) {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+gboolean
 xml_contains_remote_node(xmlNode *xml)
 {
     const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
