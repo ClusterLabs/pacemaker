@@ -127,6 +127,11 @@ controld_start() {
 	   fi
     	fi
 
+    if ! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`";then
+        ocf_log err "stonith-enalbed should be true"
+        return $OCF_ERR_CONFIGURED
+    fi
+
     ${OCF_RESKEY_daemon} $OCF_RESKEY_args
 
     while true
