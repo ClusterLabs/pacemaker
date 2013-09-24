@@ -25,16 +25,19 @@ Executing cluster transition:
  * Pseudo action:   X-master_start_0
  * Resource action: 18builder       monitor on dvossel-laptop2
  * Pseudo action:   probe_nodes_complete
+ * Resource action: 18builder       start on dvossel-laptop2
+ * Resource action: FAKE            monitor on 18builder
+ * Resource action: W               monitor on 18builder
+ * Resource action: X               monitor on 18builder
+ * Resource action: 18builder       monitor=30000 on dvossel-laptop2
  * Pseudo action:   probe_complete
  * Resource action: FAKE            stop on dvossel-laptop2
- * Resource action: 18builder       start on dvossel-laptop2
- * Pseudo action:   all_stopped
- * Resource action: FAKE            start on 18builder
  * Resource action: W               start on 18builder
  * Pseudo action:   W-master_running_0
  * Resource action: X               start on 18builder
  * Pseudo action:   X-master_running_0
- * Resource action: 18builder       monitor=30000 on dvossel-laptop2
+ * Pseudo action:   all_stopped
+ * Resource action: FAKE            start on 18builder
  * Resource action: W               monitor=10000 on 18builder
  * Resource action: X               monitor=10000 on 18builder
 
