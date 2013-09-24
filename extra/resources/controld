@@ -74,6 +74,20 @@ The daemon to start - supports gfs_controld(.pcmk) and dlm_controld(.pcmk)
 <content type="string" default="dlm_controld.pcmk" />
 </parameter>
 
+<parameter name="allow_stonith_disabled">
+<longdesc lang="en">
+Allow DLM start-up even if STONITH/fencing is disabled in the cluster.
+
+Setting this option to true will cause cluster malfunction and hangs on
+fail-over for DLM clients that require fencing (such as GFS2, OCFS2, and
+cLVM2).
+
+This option is advanced use only.
+</longdesc>
+<shortdesc lang="en">Allow start-up even without STONITH/fencing</shortdesc>
+<content type="string" default="false" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -127,8 +141,9 @@ controld_start() {
 	   fi
     	fi
 
-    if ! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`";then
-        ocf_log err "stonith-enalbed should be true"
+    if ! ocf_is_true "$OCF_RESKEY_allow_stonith_disabled" && \
+    	! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`"; then
+        ocf_log err "The cluster property stonith-enabled may not be deactivated to use the DLM"
         return $OCF_ERR_CONFIGURED
     fi
 
