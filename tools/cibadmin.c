@@ -532,8 +532,12 @@ main(int argc, char **argv)
     free_xml(input);
     free(admin_input_xml);
     free(admin_input_file);
-    the_cib->cmds->signoff(the_cib);
+    flag = the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
+
+    if(exit_code == pcmk_ok) {
+        exit_code = flag;
+    }
   bail:
     return crm_exit(exit_code);
 }

@@ -186,7 +186,7 @@ cib_file_signoff(cib_t * cib)
         rc = pcmk_ok;
 
     } else {
-        crm_err("Could not write CIB to %s", private->filename);
+        crm_err("Could not write CIB to %s: %s (%d)", private->filename, pcmk_strerror(rc), rc);
     }
     free_xml(in_mem_cib);
 
