@@ -24,7 +24,7 @@ GHashTable *attributes;
 election_t *writer;
 int attrd_error;
 
-void write_attributes(bool all);
+void write_attributes(bool all, bool peer_discovered);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
 void attrd_client_message(crm_client_t *client, xmlNode *msg);
 void free_attribute(gpointer data);
