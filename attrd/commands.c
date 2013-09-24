@@ -42,6 +42,7 @@ typedef struct attribute_s {
     int update;
     int timeout_ms;
     bool changed;
+    bool unknown_peer_uuids;
     mainloop_timer_t *timer;
 
     char *user;
@@ -431,7 +432,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
             crm_node_t *peer = crm_get_peer(v->nodeid, host);
             crm_trace("We know %s's node id now: %s", peer->uname, peer->uuid);
             if(election_state(writer) == election_won) {
-                write_attributes(FALSE);
+                write_attributes(FALSE, TRUE);
                 return;
             }
         }
@@ -476,7 +477,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    write_attributes(TRUE);
+    write_attributes(TRUE, FALSE);
     return FALSE;
 }
 
@@ -569,13 +570,18 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 }
 
 void
-write_attributes(bool all)
+write_attributes(bool all, bool peer_discovered)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
+        if (peer_discovered && a->unknown_peer_uuids) {
+            /* a new peer uuid has been discovered, try writing this attribute again. */
+            a->changed = TRUE;
+        }
+
         if(all || a->changed) {
             write_attribute(a);
         } else {
@@ -666,6 +672,7 @@ write_attribute(attribute_t *a)
     }
 
     a->changed = FALSE;
+    a->unknown_peer_uuids = FALSE;
     xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
     g_hash_table_iter_init(&iter, a->values);
@@ -677,9 +684,14 @@ write_attribute(attribute_t *a)
             v->nodeid = peer->id;
         }
 
-        if(peer == NULL || peer->uuid == NULL) {
-            a->changed = TRUE;
-            crm_notice("Update error: %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
+        if (peer == NULL) {
+            /* If the user is trying to set an attribute on an unknown peer, ignore it. */
+            crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
+
+        } else if (peer->uuid == NULL) {
+            /* peer is found, but we don't know the uuid yet. Wait until we discover a new uuid before attempting to write */
+            a->unknown_peer_uuids = FALSE;
+            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)", v->nodename, a->id, v->current, peer);
 
         } else {
             crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id, v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
