@@ -704,7 +704,7 @@ write_attribute(attribute_t *a)
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);
 
-        crm_notice("Sent update %d with %d chanages for %s, id=%s, set=%s",
+        crm_notice("Sent update %d with %d changes for %s, id=%s, set=%s",
                    a->update, updates, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
 
         the_cib->cmds->register_callback(
