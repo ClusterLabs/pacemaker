@@ -662,7 +662,7 @@ case $cluster in
 	    *objctl)  $tool -a > corosync.dump  2>/dev/null;;
 	    *cmapctl) $tool    > corosync.dump  2>/dev/null;;
 	esac
-	corosync-quorumtool -s -i > corosync.quorum
+	corosync-quorumtool -s -i > corosync.quorum 2>&1
 	;;
 esac
 
