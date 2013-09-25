@@ -714,7 +714,7 @@ for l in $logfiles $EXTRA_LOGS; do
     cat $b | grep -f $pattfile >> $ANALYSIS_F
 done
 
-which journalctl 2>&1 > /dev/null
+which journalctl > /dev/null 2>&1
 if [ $? = 0 ]; then
    log "Including segment [$LOG_START-$LOG_END] from journald"
    journalctl --since "$start" --until "$end" > journal.log
