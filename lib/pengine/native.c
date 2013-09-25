@@ -294,8 +294,13 @@ native_print_attr(gpointer key, gpointer value, gpointer user_data)
 static void
 native_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
+    enum rsc_role_e role = rsc->role;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+
+    if(role == RSC_ROLE_STARTED && uber_parent(rsc)->variant == pe_master) {
+        role = RSC_ROLE_SLAVE;
+    }
 
     /* resource information. */
     status_print("%s<resource ", pre_text);
@@ -303,7 +308,7 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     status_print("resource_agent=\"%s%s%s:%s\" ",
                  class,
                  prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
-    status_print("role=\"%s\" ", role2text(rsc->role));
+    status_print("role=\"%s\" ", role2text(role));
     status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
     status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
