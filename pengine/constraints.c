@@ -774,6 +774,124 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     return custom_action_order(lh_rsc, lh_key, NULL, rh_rsc, rh_key, NULL, type, data_set);
 }
 
+static char *
+task_from_action_or_key(action_t *action, const char *key)
+{
+    char *res = NULL;
+    char *rsc_id = NULL;
+    char *op_type = NULL;
+    int interval = 0;
+
+    if (action) {
+        res = strdup(action->task);
+    } else if (key) {
+        int rc = 0;
+        rc = parse_op_key(key, &rsc_id, &op_type, &interval);
+        if (rc == TRUE) {
+            res = op_type;
+            op_type = NULL;
+        }
+        free(rsc_id);
+        free(op_type);
+    }
+
+    return res;
+}
+
+/* when order constraints are made between two resources start and stop actions
+ * those constraints have to be mirrored against the corresponding
+ * migration actions to ensure start/stop ordering is preserved during
+ * a migration */
+static void
+handle_migration_ordering(order_constraint_t *order, pe_working_set_t *data_set)
+{
+    char *lh_task = NULL;
+    char *rh_task = NULL;
+    gboolean rh_migratable;
+    gboolean lh_migratable;
+
+    if (order->lh_rsc == NULL || order->rh_rsc == NULL) {
+        return;
+    } else if (order->lh_rsc == order->rh_rsc) {
+        return;
+    /* don't mess with those constraints built between parent
+     * resources and the children */
+    } else if (is_parent(order->lh_rsc, order->rh_rsc)) {
+        return;
+    } else if (is_parent(order->rh_rsc, order->lh_rsc)) {
+        return;
+    }
+
+    lh_migratable = is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
+    rh_migratable = is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
+
+    /* one of them has to be migratable for
+     * the migrate ordering logic to be applied */
+    if (lh_migratable == FALSE && rh_migratable == FALSE) {
+        return;
+    }
+
+    /* at this point we have two resources which allow migrations that have an
+     * order dependency set between them.  If those order dependencies involve
+     * start/stop actions, we need to mirror the corresponding migrate actions
+     * so order will be preserved. */
+    lh_task = task_from_action_or_key(order->lh_action, order->lh_action_task);
+    rh_task = task_from_action_or_key(order->rh_action, order->rh_action_task);
+    if (lh_task == NULL || rh_task == NULL) {
+        goto cleanup_order;
+    }
+
+    if (safe_str_eq(lh_task, RSC_START) && safe_str_eq(rh_task, RSC_START)) {
+        int flags = pe_order_optional;
+
+        if (lh_migratable && rh_migratable) {
+            /* A start then B start
+             * A migrate_from then B migrate_to */
+            custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_MIGRATED, 0), NULL,
+                                order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
+                                flags, data_set);
+        }
+
+        if (rh_migratable) {
+            if (lh_migratable) {
+                flags |= pe_order_apply_first_non_migratable;
+            }
+
+            /* A start then B start
+             * A start then B migrate_to... only if A start is not a part of a migration*/
+            custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_START, 0), NULL,
+                                order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
+                                flags, data_set);
+        }
+
+    } else if (rh_migratable == TRUE && safe_str_eq(lh_task, RSC_STOP) && safe_str_eq(rh_task, RSC_STOP)) {
+        int flags = pe_order_optional;
+
+        if (lh_migratable) {
+            flags |= pe_order_apply_first_non_migratable;
+        }
+
+        /* rh side is at the bottom of the stack during a stop. If we have a constraint
+         * stop B then stop A, if B is migrating via stop/start, and A is migrating using migration actions,
+         * we need to enforce that A's migrate_to action occurs after B's stop action. */
+        custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_STOP, 0), NULL,
+                            order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
+                            flags, data_set);
+
+        /* We need to build the stop constraint against migrate_from as well
+         * to account for partial migrations. */
+        if (order->rh_rsc->partial_migration_target) {
+            custom_action_order(order->lh_rsc, generate_op_key(order->lh_rsc->id, RSC_STOP, 0), NULL,
+                                order->rh_rsc, generate_op_key(order->rh_rsc->id, RSC_MIGRATED, 0), NULL,
+                                flags, data_set);
+        }
+    }
+
+cleanup_order:
+    free(lh_task);
+    free(rh_task);
+}
+
 /* LHS before RHS */
 int
 custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_action,
@@ -825,6 +943,7 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
     }
 
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints, order);
+    handle_migration_ordering(order, data_set);
 
     return order->id;
 }

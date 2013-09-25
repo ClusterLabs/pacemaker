@@ -2249,6 +2249,7 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
             } else {
                 /* Consider it failed here - forces a restart, prevents migration */
                 set_bit(rsc->flags, pe_rsc_failed);
+                clear_bit(rsc->flags, pe_rsc_allow_migrate);
             }
         }
     }
