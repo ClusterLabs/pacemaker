@@ -264,4 +264,5 @@ gboolean xml_contains_remote_node(xmlNode *xml);
 gboolean is_baremetal_remote_node(node_t *node);
 gboolean is_container_remote_node(node_t *node);
 gboolean is_remote_node(node_t *node);
+gboolean rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
 #endif

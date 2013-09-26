@@ -418,13 +418,13 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         }
 
     } else if (reply_id <= 0) {
-        crm_err("Recieved bad reply: No id set");
+        crm_err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         rc = -ENOMSG;
         goto done;
 
     } else {
-        crm_err("Recieved bad reply: %d (wanted %d)", reply_id, cib->call_id);
+        crm_err("Received bad reply: %d (wanted %d)", reply_id, cib->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         rc = -ENOMSG;
         goto done;

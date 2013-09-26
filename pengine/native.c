@@ -2425,6 +2425,9 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         } else if (rsc->is_remote_node) {
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run connection resources.", rsc->id, node->details->id);
             return FALSE;
+        } else if (rsc_contains_remote_node(data_set, rsc)) {
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run resources that contain connection resources.", rsc->id, node->details->id);
+            return FALSE;
         }
     }
 

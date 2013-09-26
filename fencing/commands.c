@@ -1858,7 +1858,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
             xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
             const char *target = crm_element_value(dev, F_STONITH_TARGET);
 
-            crm_notice("Recieved manual confirmation that %s is fenced", target);
+            crm_notice("Received manual confirmation that %s is fenced", target);
             rop = initiate_remote_stonith_op(client, request, TRUE);
             rc = stonith_manual_ack(request, rop);
 

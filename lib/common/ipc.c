@@ -904,12 +904,12 @@ crm_ipc_read(crm_ipc_t * client)
         }
 
         header = (struct crm_ipc_response_header *)client->buffer;
-        crm_trace("Recieved %s event %d, size=%d, rc=%d, text: %.100s",
+        crm_trace("Received %s event %d, size=%d, rc=%d, text: %.100s",
                   client->name, header->qb.id, header->qb.size, client->msg_size,
                   client->buffer + hdr_offset);
 
     } else {
-        crm_trace("No message from %s recieved: %s", client->name, pcmk_strerror(client->msg_size));
+        crm_trace("No message from %s received: %s", client->name, pcmk_strerror(client->msg_size));
     }
 
     if (crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
@@ -1038,7 +1038,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         crm_trace("Trying again to obtain pending reply from %s", client->name);
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
         if (rc < 0) {
-            crm_warn("Sending to %s (%p) is disabled until pending reply is recieved", client->name,
+            crm_warn("Sending to %s (%p) is disabled until pending reply is received", client->name,
                      client->ipc);
             return -EALREADY;
 
@@ -1108,7 +1108,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     if (rc > 0) {
         struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)client->buffer;
 
-        crm_trace("Recieved response %d, size=%d, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
+        crm_trace("Received response %d, size=%d, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
                   rc, crm_ipc_buffer(client));
 
         if (reply) {
@@ -1116,7 +1116,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         }
 
     } else {
-        crm_trace("Response not recieved: rc=%ld, errno=%d", rc, errno);
+        crm_trace("Response not received: rc=%ld, errno=%d", rc, errno);
     }
 
   send_cleanup:

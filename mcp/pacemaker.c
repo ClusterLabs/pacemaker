@@ -778,7 +778,7 @@ mcp_cpg_deliver(cpg_handle_t handle,
     xmlNode *xml = string2xml(msg);
     const char *task = crm_element_value(xml, F_CRM_TASK);
 
-    crm_trace("Recieved %s %.200s", task, msg);
+    crm_trace("Received %s %.200s", task, msg);
     if (task == NULL && nodeid != local_nodeid) {
         uint32_t procs = 0;
         const char *uname = crm_element_value(xml, "uname");

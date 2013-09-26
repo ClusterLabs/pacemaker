@@ -22,10 +22,16 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: container1      start on 18node1
  * Pseudo action:   M-clone_start_0
+ * Resource action: A               monitor on lxc2
+ * Resource action: D               monitor on lxc2
  * Resource action: lxc1            start on 18node1
  * Resource action: M               start on lxc1
  * Pseudo action:   M-clone_running_0
+ * Resource action: A               monitor on lxc1
+ * Resource action: C               monitor on lxc1
+ * Resource action: D               monitor on lxc1
  * Resource action: lxc1            monitor=30000 on 18node1
+ * Pseudo action:   probe_complete
  * Resource action: M               monitor=10000 on lxc1
 
 Revised cluster status:

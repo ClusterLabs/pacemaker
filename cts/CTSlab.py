@@ -95,7 +95,7 @@ class LabEnvironment(CtsLab):
         #self["valgrind-opts"] = """--trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
 
         self["experimental-tests"] = 0
-        self["remote-tests"] = 0
+        self["container-tests"] = 0
         self["valgrind-tests"] = 0
         self["unsafe-tests"] = 1
         self["loop-tests"] = 1
@@ -149,7 +149,7 @@ def usage(arg, status=1):
     print "\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd"
     print "\t [--valgrind-tests]           include tests using valgrind"
     print "\t [--experimental-tests]       include experimental tests"
-    print "\t [--remote-tests]             include pacemaker_remote tests"
+    print "\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources"
     print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]"
     print "\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH"
     print "\t [--seed random_seed]"
@@ -470,8 +470,8 @@ if __name__ == '__main__':
        elif args[i] == "--experimental-tests":
            Environment["experimental-tests"] = 1
 
-       elif args[i] == "--remote-tests":
-           Environment["remote-tests"] = 1
+       elif args[i] == "--container-tests":
+           Environment["container-tests"] = 1
 
        elif args[i] == "--set":
            skipthis=1
