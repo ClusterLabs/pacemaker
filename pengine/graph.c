@@ -689,11 +689,35 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     if (needs_node_info && action->node != NULL) {
         node_t *router_node = get_router_node(action);
+        const char *value = NULL;
 
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
         if (router_node) {
             crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        }
+
+        value = g_hash_table_lookup(action->node->details->attrs, "actions-limit");
+        if (value == NULL) {
+            value = pe_pref(data_set->config_hash, "actions-limit");
+        }
+
+        if (crm_int_helper(value, NULL) != 0) {
+            crm_xml_add(action_xml, "actions-limit", value);
+            crm_trace("Node %s: actions-limit=%s", action->node->details->uname, value);
+        }
+
+        if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
+            || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
+            value = g_hash_table_lookup(action->node->details->attrs, "migration-limit");
+            if (value == NULL) {
+                value = pe_pref(data_set->config_hash, "migration-limit");
+            }
+
+            if (crm_int_helper(value, NULL) != 0) {
+                crm_xml_add(action_xml, "migration-limit", value);
+                crm_trace("Node %s: migration-limit=%s", action->node->details->uname, value);
+            }
         }
     }
 

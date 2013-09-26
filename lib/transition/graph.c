@@ -25,6 +25,8 @@
 /* #include <sys/param.h> */
 /*  */
 
+#include <graph.h>
+
 crm_graph_functions_t *graph_fns = NULL;
 
 static gboolean
@@ -223,7 +225,7 @@ fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 }
 
 static gboolean
-count_migrating(crm_graph_t * graph, synapse_t * synapse)
+count_actions(crm_graph_t * graph, synapse_t * synapse)
 {
     GListPtr lpc = NULL;
 
@@ -233,65 +235,195 @@ count_migrating(crm_graph_t * graph, synapse_t * synapse)
         crm_action_t *action = (crm_action_t *) lpc->data;
 
         const char *task = NULL;
+        const char *node = NULL;
+        GListPtr lpc2 = NULL;
 
         if (action->type != action_type_rsc) {
             continue;
         }
 
         task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+        node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-        if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
-            || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-            const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        for (lpc2 = graph->action_counters; lpc2 != NULL; lpc2 = lpc2->next) {
+            action_counter_t *action_counter = (action_counter_t *) lpc2->data;
+            gboolean matched = FALSE;
 
-            int *counter = g_hash_table_lookup(graph->migrating, node);
+            if (action_counter->tasks == NULL || g_list_length(action_counter->tasks) == 0) {
+                matched = TRUE;
 
-            if (counter == NULL) {
-                counter = calloc(1, sizeof(int));
-                g_hash_table_insert(graph->migrating, strdup(node), counter);
+            } else {
+                GListPtr lpc3 = NULL;
+
+                for (lpc3 = action_counter->tasks; lpc3 != NULL; lpc3 = lpc3->next) {
+                    const char *counter_task = (const char *) lpc3->data;
+
+                    if (safe_str_eq(task, counter_task)) {
+                        matched = TRUE;
+                        break;
+                    }
+                }
             }
 
-            (*counter)++;
+            if (matched) {
+                int *count = g_hash_table_lookup(action_counter->counts, node);
+
+                if (count == NULL) {
+                    count = calloc(1, sizeof(int));
+                    g_hash_table_insert(action_counter->counts, strdup(node), count);
+                }
+
+                (*count)++;
+            }
         }
     }
     return TRUE;
 }
 
-static gboolean
-migration_overrun(crm_graph_t * graph, synapse_t * synapse)
+static int
+get_num_cpus(void)
 {
+    int nprocs = -1;
+
+#ifdef _SC_NPROCESSORS_ONLN
+    nprocs = sysconf(_SC_NPROCESSORS_ONLN);
+    if (nprocs < 1) {
+        crm_debug("Couldn't get the number of processors");
+
+    } else {
+	crm_trace("%d processors online", nprocs);
+    }
+#else
+    crm_debug("Cannot get the number of processors on this platform");
+#endif
+
+    return nprocs;
+}
+
+static gboolean
+action_overrun(crm_graph_t * graph, synapse_t * synapse)
+{
+    int num_cpus = get_num_cpus();
     GListPtr lpc = NULL;
 
     CRM_CHECK(synapse != NULL, return FALSE);
-
-    if (graph->migration_limit < 0) {
-        return FALSE;
-    }
 
     for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
         const char *task = NULL;
+        const char *node = NULL;
+        const char *node_name = NULL;
+        const char *value = NULL;
+        int actions_limit = 0;
+        int migration_limit = 0;
+        GListPtr lpc2 = NULL;
 
         if (action->type != action_type_rsc) {
             continue;
         }
 
         task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+        node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        node_name = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-        if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
-            || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-            const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        value = crm_element_value(action->xml, "actions-limit");
+        /* If set to zero or unset, defaults to at least 4 or twice the number of CPU cores on the DC. */
+        if (value == NULL || crm_int_helper(value, NULL) == 0) {
+            actions_limit = num_cpus > 1 ? num_cpus * 2 : 4;
 
-            int *counter = g_hash_table_lookup(graph->migrating, node);
+        } else {
+            actions_limit = crm_int_helper(value, NULL);
+        }
 
-            if (counter && *counter >= graph->migration_limit) {
-                return TRUE;
+        value = crm_element_value(action->xml, "migration-limit");
+        /* If set to zero or unset, defaults to half the number of CPU cores on the DC, or 1. */
+        if (value == NULL || crm_int_helper(value, NULL) == 0) {
+            migration_limit = num_cpus > 1 ? num_cpus / 2 : 1;
+
+        } else {
+            migration_limit = crm_int_helper(value, NULL);
+        }
+
+        for (lpc2 = graph->action_counters; lpc2 != NULL; lpc2 = lpc2->next) {
+            action_counter_t *action_counter = (action_counter_t *) lpc2->data;
+            int *count = g_hash_table_lookup(action_counter->counts, node);
+
+            if (action_counter->tasks == NULL || g_list_length(action_counter->tasks) == 0) {
+
+                /* unlimited */
+                if (actions_limit < 0) {
+                    continue;
+                }
+
+                if (count && *count >= actions_limit) {
+                    crm_debug("Throttling output: actions limit (%d) reached on node %s",
+                               actions_limit, node_name);
+                    return TRUE;
+                }
+
+            } else if (safe_str_eq(g_list_nth_data(action_counter->tasks, 0), CRMD_ACTION_MIGRATE)
+                       && safe_str_eq(g_list_nth_data(action_counter->tasks, 1), CRMD_ACTION_MIGRATED)) {
+
+                /* unlimited */
+                if (migration_limit < 0) {
+                    continue;
+                }
+
+                if (safe_str_neq(task, CRMD_ACTION_MIGRATE)
+                    && safe_str_neq(task, CRMD_ACTION_MIGRATED)) {
+                    continue;
+                }
+            
+                if (count && *count >= migration_limit) {
+                    crm_debug("Throttling output: migration limit (%d) reached on node %s",
+                               migration_limit, node_name);
+                    return TRUE;
+                }
             }
-
         }
     }
+
     return FALSE;
+}
+
+static GListPtr
+action_counters_init(GListPtr action_counters)
+{
+    if (action_counters == NULL) {
+        int lpc = 0;
+
+        for (lpc = 0; lpc < 2; lpc++) {
+            action_counter_t *action_counter = calloc(1, sizeof(action_counter_t));
+
+            switch (lpc) {
+                case 0:
+                    action_counter->tasks = NULL;
+                    break;
+                case 1:
+                    action_counter->tasks = g_list_append(action_counter->tasks, strdup(CRMD_ACTION_MIGRATE));
+                    action_counter->tasks = g_list_append(action_counter->tasks, strdup(CRMD_ACTION_MIGRATED));
+                    break;
+            }
+
+            action_counter->counts = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+
+            action_counters = g_list_append(action_counters, action_counter);
+        }
+
+    } else {
+        GListPtr lpc2 = NULL;
+
+        for (lpc2 = action_counters; lpc2 != NULL; lpc2 = lpc2->next) {
+            action_counter_t *action_counter = (action_counter_t *) lpc2->data;
+
+            if (action_counter->counts) {
+                g_hash_table_remove_all(action_counter->counts);
+            }
+        }
+    }
+
+    return action_counters;
 }
 
 int
@@ -315,7 +447,9 @@ run_graph(crm_graph_t * graph)
     graph->skipped = 0;
     graph->completed = 0;
     graph->incomplete = 0;
-    g_hash_table_remove_all(graph->migrating);
+
+    graph->action_counters = action_counters_init(graph->action_counters);
+
     crm_trace("Entering graph %d callback", graph->id);
 
     /* Pre-calculate the number of completed and in-flight operations */
@@ -330,9 +464,7 @@ run_graph(crm_graph_t * graph)
             crm_trace("Synapse %d: confirmation pending", synapse->id);
             graph->pending++;
 
-            if (graph->migration_limit >= 0) {
-                count_migrating(graph, synapse);
-            }
+            count_actions(graph, synapse);
         }
     }
 
@@ -343,8 +475,7 @@ run_graph(crm_graph_t * graph)
         if (graph->batch_limit > 0 && graph->pending >= graph->batch_limit) {
             crm_debug("Throttling output: batch limit (%d) reached", graph->batch_limit);
             break;
-        } else if (graph->migration_limit >= 0 && migration_overrun(graph, synapse)) {
-            crm_debug("Throttling output: migration limit (%d) reached", graph->migration_limit);
+        } else if (action_overrun(graph, synapse)) {
             break;
 
         } else if (synapse->failed) {
@@ -374,9 +505,7 @@ run_graph(crm_graph_t * graph)
             if (synapse->confirmed == FALSE) {
                 graph->pending++;
 
-                if (graph->migration_limit >= 0) {
-                    count_migrating(graph, synapse);
-                }
+                count_actions(graph, synapse);
             }
 
         } else {
