@@ -124,6 +124,7 @@ END
 	virsh net-undefine default
 	virsh net-define cur_network.xml
 	virsh net-start default
+	virsh net-autostart default
 }
 
 generate_key()
@@ -138,19 +139,32 @@ generate_key()
 
 generate()
 {
+	local curaddr
 	set_network
 
 	# Generate libvirt domains in xml
 	for (( c=1; c <= $containers; c++ ))
 	do
+		if [ "$c" -lt "10" ]; then
+			curaddr=$addr.10$c
+		elif [ "$c" -lt "100" ]; then
+			curaddr=$addr.1$c
+		elif [ "$c" -lt "255" ]; then
+			curaddr=$addr.$c
+		else
+			echo "ERROR: Limited to 254 containers due to ip address space."
+			return
+		fi
+
 		rm -rf lxc$c-filesystem
 		mkdir -p lxc$c-filesystem/var/run/
 		mkdir -p lxc$c-filesystem/usr/var/run
 		rm -f lxc$c.xml
+
 		cat << END >> lxc$c.xml
 <domain type='lxc'>
   <name>lxc$c</name>
-  <memory>102400</memory>
+  <memory>66688</memory>
   <os>
     <type>exe</type>
     <init>$working_dir/lxc$c-filesystem/launch-helper</init>
@@ -166,7 +180,7 @@ generate()
       <target dir='/usr/var/run'/>
     </filesystem>
     <interface type='network'>
-      <mac address='52:54:00:$c$c:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$c'/>
+      <mac address='52:54:$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9)):$(($RANDOM % 9))$(($RANDOM % 9))'/>
       <source network='default'/>
     </interface>
   </devices>
@@ -179,7 +193,6 @@ END
           <nvpair id="container$c-instance_attributes-force_stop" name="force_stop" value="true"/>
           <nvpair id="container$c-instance_attributes-hypervisor" name="hypervisor" value="lxc:///"/>
           <nvpair id="container$c-instance_attributes-config" name="config" value="$working_dir/lxc$c.xml"/>
-          <nvpair id="container$c-instance_attributes-remote-node" name="remote-node" value="lxc$c"/>
         </instance_attributes>
         <utilization id="container$c-utilization">
           <nvpair id="container$c-utilization-cpu" name="cpu" value="1"/>
@@ -210,7 +223,7 @@ END
 		rm -f lxc$c-filesystem/launch-helper
 		cat << END >> lxc$c-filesystem/launch-helper
 #!/bin/bash
-ifconfig eth0 $addr.10$c
+ifconfig eth0 $curaddr
 route add 0.0.0.0 gw $addr.1 eth0
 hostname lxc$c
 /usr/sbin/pacemaker_remoted
@@ -218,7 +231,7 @@ END
 		chmod 711 lxc$c-filesystem/launch-helper
 
 		cat << END >> /etc/hosts
-$addr.10$c     lxc$c
+$curaddr     lxc$c
 END
 	done
 }
@@ -231,7 +244,7 @@ apply_cib_master()
 	cibadmin -o resources -C -x lxc-ms.cib
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -C -x tmp_constraint > /dev/null 2>&1
@@ -269,7 +282,7 @@ restore_cib()
 
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
-		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms\" score=\"INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
@@ -341,7 +354,7 @@ if [ $key_gen -eq 1 ]; then
 	generate_key
 fi
 if [ $generate -eq 1 ]; then
-	if [ $key_gen -eq 0]; then
+	if [ $key_gen -eq 0 ]; then
 		generate_key
 	fi
 	generate
