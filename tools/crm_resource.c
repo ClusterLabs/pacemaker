@@ -207,7 +207,7 @@ print_cts_constraints(pe_working_set_t * data_set)
                    cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
 
         } else if (safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
-            /* unpack_rsc_location(xml_obj, data_set); */
+            /* unpack_location(xml_obj, data_set); */
         }
     }
 }

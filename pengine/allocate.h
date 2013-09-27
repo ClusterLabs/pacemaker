@@ -139,7 +139,7 @@ extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
 extern gboolean unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set);
 
-extern gboolean unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t * data_set);
+extern gboolean unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 

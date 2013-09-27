@@ -19,6 +19,8 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -85,7 +87,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             unpack_rsc_colocation(xml_obj, data_set);
 
         } else if (safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
-            unpack_rsc_location(xml_obj, data_set);
+            unpack_location(xml_obj, data_set);
 
         } else if (safe_str_eq(XML_CONS_TAG_RSC_TICKET, crm_element_name(xml_obj))) {
             unpack_rsc_ticket(xml_obj, data_set);
@@ -339,14 +341,66 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+gboolean unpack_rsc_location(xmlNode * xml_obj, resource_t *rsc_lh, pe_working_set_t * data_set);
+
 gboolean
-unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+{
+    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *value = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+
+    if(value) {
+        resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
+
+        return unpack_rsc_location(xml_obj, rsc_lh, data_set);
+    }
+
+    value = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE"-pattern");
+    if(value) {
+        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        bool invert = FALSE;
+        GListPtr rIter = NULL;
+
+        if(value[0] == '!') {
+            value++;
+            invert = TRUE;
+        }
+
+        if (regcomp(r_patt, value, REG_EXTENDED)) {
+            crm_config_err("Bad regex '%s' for constraint '%s'\n", value, id);
+            return FALSE;
+        }
+
+        for (rIter = data_set->resources; rIter; rIter = rIter->next) {
+            resource_t *r = rIter->data;
+            int status = regexec(r_patt, r->id, 0, NULL, 0);
+
+            if(invert == FALSE && status == 0) {
+                crm_debug("'%s' matched '%s' for %s", r->id, value, id);
+                unpack_rsc_location(xml_obj, r, data_set);
+
+            } if(invert && status != 0) {
+                crm_debug("'%s' is an inverted match of '%s' for %s", r->id, value, id);
+                unpack_rsc_location(xml_obj, r, data_set);
+
+            } else {
+                crm_trace("'%s' does not match '%s' for %s", r->id, value, id);
+            }
+        }
+
+        regfree(r_patt);
+    }
+
+    return FALSE;
+}
+
+gboolean
+unpack_rsc_location(xmlNode * xml_obj, resource_t *rsc_lh, pe_working_set_t * data_set)
 {
     gboolean empty = TRUE;
     rsc_to_node_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     const char *domain = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
