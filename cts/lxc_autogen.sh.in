@@ -72,6 +72,7 @@ if [ $verify -eq 1 ]; then
 		exit 1
 	fi
 
+
 	cat /etc/selinux/config  | grep -e "SELINUX.*=.*permissive" -e "SELINUX.*=.*enforcing" > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo "/etc/selinux/config must have SELINUX set to permissive or enforcing mode."
@@ -92,11 +93,14 @@ if [ $verify -eq 1 ]; then
 		echo "rsync is required"
 	fi
 
+	which pacemaker_remoted > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "pacemaker_remoted is required"
+	fi
 fi
 
 #strip last digits off addr
-tmp="s/\.$(echo "$addr" | tr '.' ' ' | awk '{print $4}')$//g"
-addr=$(echo $addr | sed -e ${tmp})
+addr=$(echo $addr | awk -F. '{print $1"."$2"."$3}')
 
 set_network()
 {
@@ -139,27 +143,23 @@ generate_key()
 
 generate()
 {
-	local curaddr
 	set_network
 
 	# Generate libvirt domains in xml
 	for (( c=1; c <= $containers; c++ ))
 	do
-		if [ "$c" -lt "10" ]; then
-			curaddr=$addr.10$c
-		elif [ "$c" -lt "100" ]; then
-			curaddr=$addr.1$c
-		elif [ "$c" -lt "255" ]; then
-			curaddr=$addr.$c
-		else
-			echo "ERROR: Limited to 254 containers due to ip address space."
-			return
-		fi
-
 		rm -rf lxc$c-filesystem
 		mkdir -p lxc$c-filesystem/var/run/
 		mkdir -p lxc$c-filesystem/usr/var/run
 		rm -f lxc$c.xml
+
+		suffix=$((10 + $c))
+		prefix=$(echo $addr | awk -F. '{print $1"."$2}')
+		subnet=$(echo $addr | awk -F. '{print $3}')
+		while [ $suffix -gt 255 ]; do
+		    subnet=$(($subnet + 1))
+		    suffix=$(($subnet - 255))
+		done
 
 		cat << END >> lxc$c.xml
 <domain type='lxc'>
@@ -223,7 +223,7 @@ END
 		rm -f lxc$c-filesystem/launch-helper
 		cat << END >> lxc$c-filesystem/launch-helper
 #!/bin/bash
-ifconfig eth0 $curaddr
+ifconfig eth0 $prefix.$subnet.$suffix
 route add 0.0.0.0 gw $addr.1 eth0
 hostname lxc$c
 /usr/sbin/pacemaker_remoted
@@ -231,7 +231,7 @@ END
 		chmod 711 lxc$c-filesystem/launch-helper
 
 		cat << END >> /etc/hosts
-$curaddr     lxc$c
+$prefix.$subnet.$suffix     lxc$c
 END
 	done
 }
@@ -241,13 +241,13 @@ apply_cib_master()
 	cibadmin -Q > cur.cib
 	export CIB_file=cur.cib
 
-	cibadmin -o resources -C -x lxc-ms.cib
+	cibadmin -o resources -Mc -x lxc-ms.cib
 	for tmp in $(ls lxc*.xml); do
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -C -x tmp_constraint
+		cibadmin -o constraints -Mc -x tmp_constraint
 		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -C -x tmp_constraint > /dev/null 2>&1
+		cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
 		rm -f tmp_constraint
 	done
 	unset CIB_file
@@ -263,11 +263,15 @@ apply_cib_entries()
 	cibadmin -Q > cur.cib
 	export CIB_file=cur.cib
 	for tmp in $(ls container*.cib); do
-		cibadmin -o resources -C -x $tmp
+		cibadmin -o resources -Mc -x $tmp
 
 		tmp=$(echo $tmp | sed -e 's/\.cib//g')
 		crm_resource -M -r $tmp -H $node
 	done
+
+	# Make sure the version changes even if the contents doesn't
+	cibadmin -B
+
 	unset CIB_file
 
 	cibadmin --replace --xml-file cur.cib
@@ -327,13 +331,12 @@ restore_libvirt()
 
 distribute_configs()
 {
-	local node
-	local id
-	while read id node
-	do
+    nodes=`crm_node -l | awk '{print $2}'`
+    for node in $nodes; do
+		ssh $node -- mkdir -p /$working_dir
 		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' $working_dir/lxc*.xml $node:/$working_dir
 		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' $working_dir/lxc*-filesystem $node:/$working_dir
-	done < <(crm_node -l)
+    done
 }
 
 mkdir -p $working_dir
