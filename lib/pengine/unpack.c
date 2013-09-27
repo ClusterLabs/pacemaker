@@ -2904,7 +2904,9 @@ gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
     g_hash_table_insert(node->details->attrs,
-                        strdup("#" XML_ATTR_UNAME), strdup(node->details->uname));
+                        strdup("#uname"), strdup(node->details->uname));
+    g_hash_table_insert(node->details->attrs,
+                        strdup("#kind"), strdup(node->details->remote_rsc?"container":"cluster"));
     g_hash_table_insert(node->details->attrs, strdup("#" XML_ATTR_ID), strdup(node->details->id));
     if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
         data_set->dc_node = node;

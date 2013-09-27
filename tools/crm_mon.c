@@ -104,7 +104,7 @@ const char *print_neg_location_prefix_toggle;
 
 #define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
 	    "last-failure", "probe_complete", "#id", "#uname",		\
-	    "#is_dc", NULL}
+	    "#is_dc", "#kind", NULL}
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
