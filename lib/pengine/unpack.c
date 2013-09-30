@@ -88,6 +88,11 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_info("Startup probes: disabled (dangerous)");
     }
 
+    set_config_flag(data_set, "enable-container-probes", pe_flag_container_probes);
+    if(is_not_set(data_set->flags, pe_flag_container_probes)) {
+        crm_info("Container probes: disabled");
+    }
+
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = crm_get_msec(value);
     crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
