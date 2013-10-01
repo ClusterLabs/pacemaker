@@ -1114,7 +1114,6 @@ crm_time_add_seconds(crm_time_t * a_time, int extra)
         days++;
     }
 
-    days = 0;
     while (a_time->seconds < 0) {
         crm_trace("s=%d, d=%d", a_time->seconds, days);
         a_time->seconds += seconds;
