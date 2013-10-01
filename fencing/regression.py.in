@@ -753,7 +753,7 @@ class Tests:
 		test = self.new_test("cpg_unfence_on_target_2",
 				"Verify failure unfencing with on_target = true", 1)
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_metadata_helper -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
-		test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", 143)
+		test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", 237)
 		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 
