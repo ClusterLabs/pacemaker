@@ -911,6 +911,8 @@ ban_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * ci
     crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
     if(scope_master) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
+    } else {
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
     }
 
     if (later_s == NULL) {
@@ -976,6 +978,11 @@ prefer_resource(const char *rsc_id, const char *host, cib_t * cib_conn)
     free(id);
 
     crm_xml_add(location, XML_COLOC_ATTR_SOURCE, rsc_id);
+    if(scope_master) {
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
+    } else {
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
+    }
 
     if (later_s == NULL) {
         /* Short form */
@@ -1918,8 +1925,11 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+        int count = 0;
+        node_t *current = NULL;
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
+        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
         rc = -EINVAL;
 
@@ -1928,23 +1938,40 @@ main(int argc, char **argv)
             rc = -ENXIO;
             goto bail;
 
-        } else if(rsc->variant == pe_clone) {
-            CMD_ERR("Resource '%s' not moved: moving a clone makes no sense\n", rsc_id);
-            goto bail;
-
-        } else if (rsc->variant < pe_clone && g_list_length(rsc->running_on) > 1) {
-            CMD_ERR("Resource '%s' not moved: active on multiple nodes\n", rsc_id);
-            goto bail;
-
-        } else if (rsc->variant < pe_clone && scope_master) {
+        } else if (scope_master && rsc->variant < pe_master) {
             resource_t *p = uber_parent(rsc);
             if(p->variant == pe_master) {
-                CMD_ERR("Resource '%s' not moved: The --master option is not a valid for %s resources."
-                        "  Did you mean '%s'?\n", rsc_id, get_resource_typename(rsc->variant), p->id);
+                CMD_ERR("Using parent '%s' for --move command instead of '%s'.\n", rsc->id, rsc_id);
+                rsc_id = p->id;
+                rsc = p;
+
             } else {
-                CMD_ERR("Resource '%s' not moved: The --master option is not a valid for %s resources.\n",
-                        rsc_id, get_resource_typename(rsc->variant));
+                CMD_ERR("Ignoring '--master' option: not valid for %s resources.\n",
+                        get_resource_typename(rsc->variant));
+                scope_master = FALSE;
             }
+        }
+
+        if(rsc->variant == pe_master) {
+            GListPtr iter = NULL;
+
+            for(iter = rsc->children; iter; iter = iter->next) {
+                resource_t *child = (resource_t *)iter->data;
+                if(child->role == RSC_ROLE_MASTER) {
+                    rsc = child;
+                    count++;
+                }
+            }
+
+            if(scope_master == FALSE && count == 0) {
+                count = g_list_length(rsc->running_on);
+            }
+
+        } else if (rsc->variant > pe_group) {
+            count = g_list_length(rsc->running_on);
+
+        } else if (g_list_length(rsc->running_on) > 1) {
+            CMD_ERR("Resource '%s' not moved: active on multiple nodes\n", rsc_id);
             goto bail;
         }
 
@@ -1955,13 +1982,19 @@ main(int argc, char **argv)
         }
 
         if(g_list_length(rsc->running_on) == 1) {
-            node_t *current = rsc->running_on->data;
+            current = rsc->running_on->data;
+        }
 
-            if (safe_str_eq(current->details->uname, dest->details->uname)) {
-                CMD_ERR("Error performing operation: %s is already active on %s\n", rsc_id, dest->details->uname);
-                goto bail;
-            }
-            /* } else if (rsc->variant == pe_master) { Find the master and ban it */
+        if(current == NULL) {
+            /* Nothing to check */
+
+        } else if(scope_master && rsc->role != RSC_ROLE_MASTER) {
+            crm_trace("%s is already active on %s but not in correct state", rsc_id, dest->details->uname);
+
+        } else if (safe_str_eq(current->details->uname, dest->details->uname)) {
+            CMD_ERR("Error performing operation: %s is already %s on %s\n",
+                    rsc_id, scope_master?"promoted":"active", dest->details->uname);
+            goto bail;
         }
 
         /* Clear any previous constraints for 'dest' */
@@ -1970,11 +2003,23 @@ main(int argc, char **argv)
         /* Record an explicit preference for 'dest' */
         rc = prefer_resource(rsc_id, dest->details->uname, cib_conn);
 
-        if(do_force && g_list_length(rsc->running_on) == 1) {
-            node_t *current = rsc->running_on->data;
+        crm_trace("%s%s now prefers node %s%s",
+                  rsc->id, scope_master?" (master)":"", dest->details->uname, do_force?"(forced)":"");
 
-            /* Ban the original location */
-            ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
+        if(do_force) {
+            /* Ban the original location if possible */
+            if(current) {
+                ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
+
+            } else if(count > 1) {
+                CMD_ERR("Resource '%s' is currently %s in %d locations.  One may now move one to %s\n",
+                        rsc_id, scope_master?"promoted":"active", count, dest->details->uname);
+                CMD_ERR("You can prevent '%s' from being %s at a specific location with:"
+                        " --ban %s--host <name>\n", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
+
+            } else {
+                crm_trace("Not banning %s from it's current location: not active", rsc_id);
+            }
         }
 
     } else if (rsc_cmd == 'B' && host_uname) {
@@ -2028,7 +2073,8 @@ main(int argc, char **argv)
                 rc = ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
 
             } else {
-                CMD_ERR("Resource '%s' not moved: currently promoted in %d locations.\n", rsc_id, count);
+                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).\n", rsc_id, g_list_length(rsc->running_on), count);
+                CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
                 CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
                         " --ban --master --host <name>\n", rsc_id);
             }
@@ -2036,12 +2082,6 @@ main(int argc, char **argv)
         } else {
             CMD_ERR("Resource '%s' not moved: active in %d locations.\n", rsc_id, g_list_length(rsc->running_on));
             CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --host <name>\n", rsc_id);
-
-            if(rsc->variant == pe_master && g_list_length(rsc->running_on) > 0) {
-                CMD_ERR("You can prevent '%s' from being promoted at its current location with: --ban --master\n", rsc_id);
-                CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
-                        " --ban --master --host <name>\n", rsc_id);
-            }
         }
 
     } else if (rsc_cmd == 'G') {
