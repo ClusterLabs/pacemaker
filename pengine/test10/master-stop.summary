@@ -1,0 +1,23 @@
+
+Current cluster status:
+Online: [ node1 node2 node3 ]
+
+ Master/Slave Set: m [dummy]
+     Slaves: [ node1 node2 node3 ]
+
+Transition Summary:
+ * Stop    dummy:2	(node3)
+
+Executing cluster transition:
+ * Pseudo action:   m_stop_0
+ * Resource action: dummy:2         stop on node3
+ * Pseudo action:   m_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node1 node2 node3 ]
+
+ Master/Slave Set: m [dummy]
+     Slaves: [ node1 node2 ]
+     Stopped: [ node3 ]
+

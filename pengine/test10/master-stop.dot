@@ -1,0 +1,13 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"dummy:2_stop_0 node3" -> "all_stopped" [ style = bold]
+"dummy:2_stop_0 node3" -> "m_stopped_0" [ style = bold]
+"dummy:2_stop_0 node3" [ style=bold color="green" fontcolor="black"]
+"m_stop_0" -> "dummy:2_stop_0 node3" [ style = bold]
+"m_stop_0" -> "m_stopped_0" [ style = bold]
+"m_stop_0" [ style=bold color="green" fontcolor="orange"]
+"m_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"probe_complete node1" [ style=bold color="green" fontcolor="black"]
+"probe_complete node2" [ style=bold color="green" fontcolor="black"]
+"probe_complete node3" [ style=bold color="green" fontcolor="black"]
+}
