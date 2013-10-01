@@ -374,6 +374,23 @@ remote_op_query_timeout(gpointer data)
     return FALSE;
 }
 
+static gboolean
+topology_is_empty(stonith_topology_t *tp)
+{
+    int i;
+
+    if (tp == NULL) {
+        return TRUE;
+    }
+
+    for (i = 0; i < ST_LEVEL_MAX; i++) {
+        if (tp->levels[i] != NULL) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 static int
 stonith_topology_next(remote_fencing_op_t * op)
 {
@@ -383,7 +400,7 @@ stonith_topology_next(remote_fencing_op_t * op)
         /* Queries don't have a target set */
         tp = g_hash_table_lookup(topology, op->target);
     }
-    if (tp == NULL) {
+    if (topology_is_empty(tp)) {
         return pcmk_ok;
     }
 
