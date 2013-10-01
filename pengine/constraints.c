@@ -456,13 +456,17 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t *rsc_lh, pe_working_set_t * da
             return FALSE;
 
         } else {
-            location->role_filter = text2role(role);
-            if (location->role_filter == RSC_ROLE_SLAVE) {
-                /* Fold slave back into Started for simplicity
-                 * At the point Slave location constraints are evaluated,
-                 * all resources are still either stopped or started
-                 */
-                location->role_filter = RSC_ROLE_STARTED;
+            enum rsc_role_e r = text2role(role);
+            switch(r) {
+                case RSC_ROLE_UNKNOWN:
+                case RSC_ROLE_STARTED:
+                case RSC_ROLE_SLAVE:
+                    /* Applies to all */
+                    location->role_filter = RSC_ROLE_UNKNOWN;
+                    break;
+                default:
+                    location->role_filter = r;
+                    break;
             }
         }
     }
