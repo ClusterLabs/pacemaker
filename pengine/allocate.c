@@ -847,7 +847,11 @@ probe_resources(pe_working_set_t * data_set)
             /* Don't try and probe a remote node we're shutting down.
              * It causes constraint conflicts to try and run any sort of action
              * other that 'stop' on resources living within a remote-node when
-             * it is being shutdown. */ 
+             * it is being shutdown. */
+            continue;
+
+        } else if (is_container_remote_node(node) && is_not_set(data_set->flags, pe_flag_container_probes)) {
+            /* skip container nodes if container node probes are disabled */
             continue;
 
         } else if (probe_complete == NULL) {
