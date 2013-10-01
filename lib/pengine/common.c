@@ -116,6 +116,8 @@ pe_cluster_option pe_opts[] = {
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
 	{ "enable-startup-probes", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster check for active resources during startup", NULL },
+	{ "enable-container-probes", NULL, "boolean", NULL, "true", &check_boolean,
+	  "Should the cluster check for active resources on container nodes during startup", NULL },
 
 	/* Stonith Options */
 	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
