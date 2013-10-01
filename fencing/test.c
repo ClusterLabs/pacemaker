@@ -67,7 +67,7 @@ enum test_modes {
     test_standard = 0,
     /* watch notifications only */
     test_passive,
-    /* sanity test stonith client api using fence_true and fence_false */
+    /* sanity test stonith client api using fence_dummy */
     test_api_sanity,
     /* sanity test mainloop code with async respones. */
     test_api_mainloop,
@@ -182,16 +182,17 @@ run_fence_failure_test(void)
     stonith_key_value_t *params = NULL;
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, "mode", "fail");
 
     single_test(st->
-                cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_false", params),
+                cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_dummy", params),
                 "Register device1 for failure test", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
-                "Fence failure results off", 1, -62);
+                "Fence failure results off", 1, -201);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
-                "Fence failure results reboot", 1, -62);
+                "Fence failure results reboot", 1, -201);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for failure test", 1, 0);
@@ -205,13 +206,18 @@ run_fence_failure_rollover_test(void)
     stonith_key_value_t *params = NULL;
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, "mode", "fail");
 
     single_test(st->
-                cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_false", params),
+                cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_dummy", params),
                 "Register device1 for rollover test", 1, 0);
+    stonith_key_value_freeall(params, 1, 1);
+    params = NULL;
+    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, "mode", "pass");
 
     single_test(st->
-                cmds->register_device(st, st_opts, "test-id2", "stonith-ng", "fence_true", params),
+                cmds->register_device(st, st_opts, "test-id2", "stonith-ng", "fence_dummy", params),
                 "Register device2 for rollover test", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
@@ -235,9 +241,10 @@ run_standard_test(void)
     stonith_key_value_t *params = NULL;
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, "mode", "pass");
 
     single_test(st->
-                cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_true", params),
+                cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_dummy", params),
                 "Register", 1, 0);
 
     single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1), "list", 1, 0);
@@ -475,19 +482,23 @@ test_register_async_devices(int check_event)
     stonith_key_value_t *params = NULL;
 
     params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2");
-    st->cmds->register_device(st, st_opts, "false_1", "stonith-ng", "fence_false", params);
+    params = stonith_key_value_add(params, "mode", "fail");
+    st->cmds->register_device(st, st_opts, "false_1", "stonith-ng", "fence_dummy", params);
     stonith_key_value_freeall(params, 1, 1);
 
     params = NULL;
     params = stonith_key_value_add(params, "pcmk_host_map", "true_1_node1=1,2");
-    st->cmds->register_device(st, st_opts, "true_1", "stonith-ng", "fence_true", params);
+    params = stonith_key_value_add(params, "mode", "pass");
+    st->cmds->register_device(st, st_opts, "true_1", "stonith-ng", "fence_dummy", params);
     stonith_key_value_freeall(params, 1, 1);
 
     params = NULL;
     params = stonith_key_value_add(params, "pcmk_host_map", "custom_timeout_node1=1,2");
+    params = stonith_key_value_add(params, "mode", "fail");
+    params = stonith_key_value_add(params, "delay", "1000");
     snprintf(buf, sizeof(buf) - 1, "%d", MAINLOOP_DEFAULT_TIMEOUT + CUSTOM_TIMEOUT_ADDITION);
     params = stonith_key_value_add(params, "pcmk_off_timeout", buf);
-    st->cmds->register_device(st, st_opts, "false_custom_timeout", "stonith-ng", "fence_false",
+    st->cmds->register_device(st, st_opts, "false_custom_timeout", "stonith-ng", "fence_dummy",
                               params);
     stonith_key_value_freeall(params, 1, 1);
 
