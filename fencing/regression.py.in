@@ -334,9 +334,9 @@ class Tests:
 		# custom timeout without topology
 		test = self.new_test("cpg_custom_timeout_1",
 				"Verify per device timeouts work as expected without using topology.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4\"")
 		test.add_cmd("stonith_admin", "-F node3 -t 2")
 		# timeout is 2+1+4 = 7
 		test.add_stonith_log_pattern("remote op timeout set to 7")
@@ -344,9 +344,9 @@ class Tests:
 		# custom timeout _WITH_ topology
 		test = self.new_test("cpg_custom_timeout_2",
 				"Verify per device timeouts work as expected _WITH_ topology.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4000\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=1\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\" -o \"pcmk_off_timeout=4000\"")
 		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
 		test.add_cmd("stonith_admin", "-r node3 -i 3 -v false2")
@@ -359,9 +359,9 @@ class Tests:
 		### Simple test that overlapping fencing operations get merged
 		test = self.new_test("cpg_custom_merge_single",
 				"Verify overlapping identical fencing operations are merged, no fencing levels used.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
 		test.add_cmd("stonith_admin", "-F node3 -t 10")
 		### one merger will happen
@@ -373,9 +373,9 @@ class Tests:
 		### Test that multiple mergers occur
 		test = self.new_test("cpg_custom_merge_multiple",
 				"Verify multiple overlapping identical fencing operations are merged", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
 		test.add_cmd_no_wait("stonith_admin", "-F node3 -t 10")
@@ -396,9 +396,9 @@ class Tests:
 		### Test that multiple mergers occur with topologies used
 		test = self.new_test("cpg_custom_merge_with_topology",
 				"Verify multiple overlapping identical fencing operations are merged with fencing levels.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false2")
 		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
@@ -422,9 +422,9 @@ class Tests:
 
 		test = self.new_test("cpg_custom_no_merge",
 				"Verify differing fencing operations are not merged", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3 node2\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3 node2\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3 node2\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3 node2\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
 		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 		test.add_cmd("stonith_admin", "-r node3 -i 1 -v false2")
 		test.add_cmd("stonith_admin", "-r node3 -i 2 -v true1")
@@ -448,25 +448,26 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_fence_multi_device_failure" % test_type["prefix"],
 					"Verify that all devices timeout, a fencing failure is returned.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false2  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false3 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
-
+			test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
 			if test_type["use_cpg"] == 1:
+				test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
 				test.add_stonith_log_pattern("remote op timeout set to 6")
+			else:
+				test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 55)
 
-			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false3' returned: -62")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: ")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: ")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false3' returned: ")
 
 		# test what happens when multiple devices can fence a node, but the first device fails.
 		for test_type in test_types:
 			test = self.new_test("%s_fence_device_failure_rollover" % test_type["prefix"],
 					"Verify that when one fence device fails for a node, the others are tried.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
 			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
 			if test_type["use_cpg"] == 1:
@@ -479,7 +480,7 @@ class Tests:
 
 			test = self.new_test("%s_topology_simple" % test_type["prefix"],
 					"Verify all fencing devices at a level are used.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true")
 			test.add_cmd("stonith_admin", "-F node3 -t 2")
@@ -494,15 +495,15 @@ class Tests:
 
 			test = self.new_test("%s_topology_device_fails" % test_type["prefix"],
 					"Verify if one device in a level fails, the other is tried.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R false  -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false")
 			test.add_cmd("stonith_admin", "-r node3 -i 2 -v true")
 			test.add_cmd("stonith_admin", "-F node3 -t 20")
 
-			test.add_stonith_log_pattern("remote op timeout set to 4")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -62")
+			test.add_stonith_log_pattern("remote op timeout set to 40")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -201")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
 
 		# test what happens when the first fencing level fails.
@@ -512,12 +513,12 @@ class Tests:
 
 			test = self.new_test("%s_topology_multi_level_fails" % test_type["prefix"],
 					"Verify if one level fails, the next leve is tried.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
@@ -529,8 +530,8 @@ class Tests:
 			test.add_cmd("stonith_admin", "-F node3 -t 2")
 
 			test.add_stonith_log_pattern("remote op timeout set to 12")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -62")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -201")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -201")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
 
@@ -542,10 +543,10 @@ class Tests:
 
 			test = self.new_test("%s_topology_missing_devices" % test_type["prefix"],
 					"Verify topology can continue with missing devices.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
@@ -563,12 +564,12 @@ class Tests:
 
 			test = self.new_test("%s_topology_level_removal" % test_type["prefix"],
 					"Verify level removal works.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true4  -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v false1")
 			test.add_cmd("stonith_admin", "-r node3 -i 1 -v true1")
@@ -585,9 +586,8 @@ class Tests:
 			test.add_cmd("stonith_admin", "-F node3 -t 20")
 
 			test.add_stonith_log_pattern("remote op timeout set to 8")
-			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -62")
-			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -62")
-			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: -1001")
+			test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -201")
+			test.add_stonith_negative_log_pattern("for host 'node3' with device 'false2' returned: ")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
 			test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
 
@@ -595,9 +595,9 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_list_devices" % test_type["prefix"],
 					"Verify list of devices that can fence a node is correct", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
-			test.add_cmd("stonith_admin", "-R true2 -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
-			test.add_cmd("stonith_admin", "-R true3 -a fence_true -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
 
 			test.add_cmd_check_stdout("stonith_admin", "-l node1 -V", "true2", "true1")
 			test.add_cmd_check_stdout("stonith_admin", "-l node1 -V", "true3", "true1")
@@ -606,8 +606,8 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_monitor" % test_type["prefix"],
 					"Verify device is reachable", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
-			test.add_cmd("stonith_admin", "-R false1  -a fence_false -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R false1  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 
 			test.add_cmd("stonith_admin", "-Q true1")
 			test.add_cmd("stonith_admin", "-Q false1")
@@ -633,7 +633,7 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_register" % test_type["prefix"],
 					"Verify devices can be registered and un-registered", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
 
 			test.add_cmd("stonith_admin", "-Q true1")
 
@@ -646,7 +646,7 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_reboot" % test_type["prefix"],
 					"Verify devices can be rebooted", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
 
 			test.add_cmd("stonith_admin", "-B node3 -t 2")
 
@@ -660,7 +660,7 @@ class Tests:
 				continue
 			test = self.new_test("%s_fence_history" % test_type["prefix"],
 					"Verify last fencing operation is returned.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
 
 			test.add_cmd("stonith_admin", "-F node3 -t 2 -V")
 
@@ -670,9 +670,9 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
 					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true")
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
 
 			test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -681,9 +681,9 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
 					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true")
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy_list")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy_list")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy_list")
 
 			test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V");
 
@@ -691,9 +691,9 @@ class Tests:
 		for test_type in test_types:
 			test = self.new_test("%s_status_query" % test_type["prefix"],
 					"Verify dynamic list of fencing devices can be retrieved.", test_type["use_cpg"])
-			test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_check=status\"")
-			test.add_cmd("stonith_admin", "-R true2  -a fence_true -o \"pcmk_host_check=status\"")
-			test.add_cmd("stonith_admin", "-R true3  -a fence_true -o \"pcmk_host_check=status\"")
+			test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
+			test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
+			test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
 
 			test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -715,7 +715,7 @@ class Tests:
 		test = self.new_test("cpg_do_not_supply_nodeid",
 				"Verify nodeid is _NOT_ given when fence agent does not have nodeid as parameter", 1)
 
-		test.add_cmd("stonith_admin", "-R true1 -a fence_true -o \"pcmk_host_list=%s\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-F %s -t 3" % (our_uname))
 		test.add_stonith_negative_log_pattern("For stonith action (off) for victim %s, adding nodeid" % (our_uname))
 
@@ -736,9 +736,9 @@ class Tests:
 		### Simple test unfencing works
 		test = self.new_test("cpg_unfence_simple",
 				"Verify simple unfencing.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_true -o \"pcmk_host_list=node3\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
 		test.add_cmd("stonith_admin", "-U node3 -t 3")
 
 		### verify unfencing using on_target device
@@ -761,8 +761,8 @@ class Tests:
 		test = self.new_test("cpg_unfence_on_target_3",
 				"Verify unfencing with on_target = true using topology", 1)
 
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node3\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node3\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_metadata_helper -o \"pcmk_host_list=%s node3\"" % (our_uname))
 
 		test.add_cmd("stonith_admin", "-r %s -i 1 -v false1" % (our_uname))
@@ -776,23 +776,23 @@ class Tests:
 		test = self.new_test("cpg_unfence_on_target_4",
 				"Verify unfencing failure with on_target = true using topology", 1)
 
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_metadata_helper -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 
 		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
 		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
 		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
 
-		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 194)
+		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 143)
 		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 
 		### verify use of on_target = true for "on" action does not interfere with "off" action
 		test = self.new_test("cpg_unfence_on_target_ignored",
 				"Verify on target is ignored for other actions", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_false -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_metadata_helper -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
 		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
@@ -851,6 +851,21 @@ def main():
 if __name__ == "__main__":
     main()
 """)
+
+		dynamic_list_agent = ("""#!/usr/bin/python
+import sys
+def main():
+    for line in sys.stdin.readlines():
+        if line.count("list") > 0:
+            print "fake_port_1"
+            sys.exit(0)
+        if line.count("off") > 0:
+            sys.exit(0)
+    sys.exit(-1)
+if __name__ == "__main__":
+    main()
+""")
+
 		on_target_agent = ("""#!/usr/bin/python
 import sys
 def main():
@@ -904,10 +919,13 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_metadata_helper\n%s\nEND" % (on_target_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_metadata_helper")
 
+		os.system("cat <<-END >>/usr/sbin/fence_dummy_list\n%s\nEND" % (dynamic_list_agent))
+		os.system("chmod 711 /usr/sbin/fence_dummy_list")
+
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor_fail\n%s\nEND" % (monitor_fail_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor_fail")
-		os.system("cp /usr/share/pacemaker/tests/cts/fence_false /usr/sbin/fence_false")
-		os.system("cp /usr/share/pacemaker/tests/cts/fence_true /usr/sbin/fence_true")
+
+		os.system("cp /usr/share/pacemaker/tests/cts/fence_dummy /usr/sbin/fence_dummy")
 
 	def cleanup_environment(self, use_corosync):
 		if use_corosync:
@@ -925,6 +943,8 @@ if __name__ == "__main__":
 
 		os.system("rm -f /usr/sbin/fence_dummy_metadata_helper")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor_fail")
+		os.system("rm -f /usr/sbin/fence_dummy_list")
+		os.system("rm -f /usr/sbin/fence_dummy")
 
 class TestOptions:
 	def __init__(self):
