@@ -103,17 +103,19 @@ initialize_join(gboolean before)
 static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
-    const char *join_to = NULL;
-    const crm_node_t *member = value;
+    xmlNode *offer = NULL;
+    crm_node_t *member = (crm_node_t *)value;
 
     CRM_ASSERT(member != NULL);
     if (crm_is_peer_active(member) == FALSE) {
-        crm_trace("Not making an offer to %s: not active", member->uname);
+        crm_info("Not making an offer to %s: not active (%s)", member->uname, member->state);
+        if(member->expected == NULL && safe_str_eq(member->state, CRM_NODE_LOST)) {
+            crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_DOWN);
+        }
         return;
     }
 
-    join_to = member->uname;
-    if (join_to == NULL) {
+    if (member->uname == NULL) {
         crm_err("No recipient for welcome message");
         return;
     }
@@ -130,26 +132,18 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     crm_update_peer_join(__FUNCTION__, (crm_node_t*)member, crm_join_none);
 
-    if (crm_is_peer_active(member)) {
-        crm_node_t *peer = crm_get_peer(0, join_to);
-        xmlNode *offer = create_request(CRM_OP_JOIN_OFFER, NULL, join_to,
-                                        CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
+    offer = create_request(CRM_OP_JOIN_OFFER, NULL, member->uname,
+                           CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 
-        crm_xml_add_int(offer, F_CRM_JOIN_ID, current_join_id);
-        /* send the welcome */
-        crm_info("join-%d: Sending offer to %s", current_join_id, join_to);
+    crm_xml_add_int(offer, F_CRM_JOIN_ID, current_join_id);
+    /* send the welcome */
+    crm_info("join-%d: Sending offer to %s", current_join_id, member->uname);
 
-        send_cluster_message(peer, crm_msg_crmd, offer, TRUE);
-        free_xml(offer);
+    send_cluster_message(member, crm_msg_crmd, offer, TRUE);
+    free_xml(offer);
 
-        crm_update_peer_join(__FUNCTION__, peer, crm_join_welcomed);
-        /* crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_PENDING); */
-
-    } else {
-        crm_info("Peer process on %s is not active (yet?): %.8lx %d",
-                 join_to, (long)member->processes, g_hash_table_size(crm_peer_cache));
-    }
-
+    crm_update_peer_join(__FUNCTION__, member, crm_join_welcomed);
+    /* crm_update_peer_expected(__FUNCTION__, member, CRMD_JOINSTATE_PENDING); */
 }
 
 /*	 A_DC_JOIN_OFFER_ALL	*/

@@ -575,8 +575,8 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
     }
 
     if (changed) {
-        crm_info("%s: Node %s[%u] - expected state is now %s", source, node->uname, node->id,
-                 expected);
+        crm_info("%s: Node %s[%u] - expected state is now %s (was %s)", source, node->uname, node->id,
+                 expected, last);
         free(last);
     } else {
         crm_trace("%s: Node %s[%u] - expected state is unchanged (%s)", source, node->uname,
