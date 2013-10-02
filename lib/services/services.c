@@ -422,11 +422,11 @@ services_action_sync(svc_action_t * op)
         crm_trace("No operation to execute");
         return FALSE;
 
-    } else if (op->standard == NULL && strcasecmp(op->standard, "upstart") == 0) {
+    } else if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
         rc = upstart_job_exec(op, TRUE);
 #endif
-    } else if (op->standard == NULL && strcasecmp(op->standard, "systemd") == 0) {
+    } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
         rc = systemd_unit_exec(op, TRUE);
 #endif
