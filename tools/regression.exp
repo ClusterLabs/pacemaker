@@ -1317,7 +1317,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -2027,7 +2027,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -2113,8 +2113,8 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
-      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" node="node2" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" role="Started" node="node2" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -2217,8 +2217,8 @@ Online: [ node1 node2 node3 ]
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" node="node1" score="-INFINITY"/>
-      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" node="node2" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" role="Started" node="node2" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -2300,8 +2300,8 @@ Online: [ node1 node2 node3 ]
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" node="node2" score="-INFINITY"/>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" role="Started" node="node2" score="-INFINITY"/>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -2383,7 +2383,7 @@ Online: [ node1 node2 node3 ]
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
