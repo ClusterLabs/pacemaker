@@ -226,6 +226,7 @@ END
 ifconfig eth0 $prefix.$subnet.$suffix
 route add 0.0.0.0 gw $addr.1 eth0
 hostname lxc$c
+export PCMK_debugfile=/var/log/pacemaker_remote_lxc$c.log
 /usr/sbin/pacemaker_remoted
 END
 		chmod 711 lxc$c-filesystem/launch-helper
