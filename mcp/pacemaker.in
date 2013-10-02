@@ -21,7 +21,6 @@
 
 desc="Pacemaker Cluster Manager"
 prog="pacemakerd"
-cman=0
 
 # set secure PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
@@ -42,6 +41,17 @@ success()
 failure()
 {
 	echo -ne "[FAILED]\r"
+}
+
+log() 
+{
+    logger -t pacemaker -p daemon.notice "$*"
+}
+
+notify()
+{
+    log "$*"
+    echo -n "$*"
 }
 
 status()
@@ -76,7 +86,7 @@ fi
 
 start()
 {
-	echo -n "Starting $desc: "
+	notify "Starting $desc"
 
 	# most recent distributions use tmpfs for $@localstatedir@/run
 	# to avoid to clean it up on every boot.
@@ -106,31 +116,45 @@ start()
 
 cman_pre_start()
 {
-    pid=$(pidof corosync 2>/dev/null)
+    # start cman if it's not running
+    service cman status >/dev/null 2>&1
     if [ $? -ne 0 ]; then
 	service cman start
-	rc=$?
-
-	if [ $rc != 0 ]; then
-	    echo "Not starting $desc"
-	    exit $rc
+	if [ $? -ne 0 ]; then
+	    notify "Aborting startup of $desc"
+	    echo
+	    exit 1
 	fi
-
-	sleep 2
     fi
+
+    # start cman's friends if they're not running but were configured to start automatically
+    for cservice in clvmd cmirror gfs2; do
+	chkconfig --list $cservice 2>/dev/null | grep -q ":on"
+	if [ $? -eq 0 ]; then
+	    service $cservice status >/dev/null 2>&1
+	    if [ $? -ne 0 ]; then
+		log "Attempting to start $cservice"
+		service $cservice start
+	    fi
+	fi
+    done
 }
 
 cman_pre_stop()
 {
-    pid=$(pidof fenced 2>/dev/null)
+    # if cman is not running there is nothing we need to do here
+    service cman status >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-	: CMAN is not running, nothing to do here
 	return
     fi
+
+    has_lvm=`crm_resource -c | grep Resource: | grep LVM`
+
+    # migrate resources to another node or shut them down
     cname=`crm_node --name`
     crm_attribute -N $cname -n standby -v true -l reboot
-    logger -t pacemaker -p daemon.notice "Waiting for shutdown of managed resources"
-    echo -n "Waiting for shutdown of managed resources"
+    notify "Waiting for shutdown of managed resources"
+
 
     while [ 1 = 1 ]; do
 	# 0x0000000000000002 means managed
@@ -138,20 +162,40 @@ cman_pre_stop()
 	if [ $active = 0 ]; then
 	    break;
 	fi
-	sleep 1
+	sleep 2
 	echo -n "."
     done
     success
     echo
 
-    logger -t pacemaker -p daemon.notice "Leaving fence domain"
-    echo -n "Leaving fence domain"
+    if [ -d /sys/kernel/dlm/ ]; then
+	lockspace="$(ls -1 /sys/kernel/dlm/)"
+	if [ -n "$lockspace" ]; then
+	    notify "DLM lockspace still in use"
+	    echo ""
+
+	    for cservice in gfs2 clvmd cmirrord; do
+		service $cservice status >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    if [ -n "$has_lvm" ] && [ "$cservice" = "clvmd" ]; then
+			# allow HA-LVM to take a lock on vg/lv before clvmd can exit
+			notify "Waiting for LVM services to start somewhere else"
+			sleep 15
+			success
+		    fi
+		    log "Attempting to shutdown $cservice"
+		    service $cservice stop
+		fi
+	    done
+	fi
+    fi
+
+    notify "Leaving fence domain"
     fence_tool leave -w 10
     checkrc
 
-    logger -t pacemaker -p daemon.notice "Stopping fenced"
     fenced=$(pidof fenced)
-    echo -n "Stopping fenced $fenced"
+    notify "Stopping fenced $fenced"
     kill -KILL $fenced > /dev/null 2>&1
     checkrc
 }
@@ -164,12 +208,12 @@ stop()
 	fi
 
 	if status $shutdown_prog > /dev/null 2>&1; then
-	    echo -n "Signaling $desc to terminate: "
+	    notify "Signaling $desc to terminate"
 	    kill -TERM $(pidof $prog) > /dev/null 2>&1
-	    success
+	    checkrc
 	    echo
 
-	    echo -n "Waiting for cluster services to unload:"
+	    notify "Waiting for cluster services to unload"
 	    while status $prog > /dev/null 2>&1; do
 		sleep 1
 		echo -n "."
@@ -210,7 +254,7 @@ status)
 stop)
 	#
 	# stonithd needs to be around until fenced is stopped
-	# fenced can't be stopped until any cluster filesystems are unmounted
+	# fenced can't be stopped until any resource using dlm is active
 	#
 	# So:
 	# 1. put the node into standby
