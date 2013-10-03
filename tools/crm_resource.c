@@ -802,11 +802,15 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
 
     printf("Cleaning up %s on %s\n", rsc->id, host_uname);
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+
     if (rc == pcmk_ok) {
         char *attr_name = NULL;
         const char *id = rsc->id;
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
+        if(node->details->remote_rsc == NULL) {
+            crmd_replies_needed++;
+        }
         if (rsc->clone_name) {
             id = rsc->clone_name;
         }
@@ -2159,6 +2163,7 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of %s on %s", rsc_id, host_uname);
         if(rsc) {
+            crmd_replies_needed = 0;
             rc = delete_lrm_rsc(cib_conn, crmd_channel, host_uname, rsc, &data_set);
         } else {
             rc = -ENODEV;
