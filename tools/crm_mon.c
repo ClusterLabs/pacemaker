@@ -1424,7 +1424,7 @@ print_status(pe_working_set_t * data_set)
 
                 print_as("    %s on %s '%s' (%d): call=%s, status=%s, last-rc-change='%s', queued=%sms, exec=%sms\n",
                          op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status),
-                         run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_EXEC), crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
+                         run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_QUEUE), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
             } else {
                 print_as("    %s on %s '%s' (%d): call=%s, status=%s\n",
                          op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status));
