@@ -220,7 +220,7 @@ destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;
 
-    crm_trace("Destroying entry for node %u", node->id);
+    crm_trace("Destroying entry for node %u: %s", node->id, node->uname);
 
     free(node->addr);
     free(node->uname);
