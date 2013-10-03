@@ -730,9 +730,17 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     /* process new constraints */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
     if (numXpathResults(xpath_obj) > 0) {
+        int max = numXpathResults(xpath_obj), lpc = 0;
+
         /* Safest and simplest to always recompute */
         needs_update = TRUE;
         reason = "new location constraint";
+
+        for (lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = getXpathResult(xpath_obj, lpc);
+
+            crm_log_xml_trace(match, "new constraint");
+        }
     }
     freeXpathObject(xpath_obj);
 
@@ -746,8 +754,24 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     /* process additions */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
     if (numXpathResults(xpath_obj) > 0) {
-        needs_update = TRUE;
-        reason = "new resource";
+        int max = numXpathResults(xpath_obj), lpc = 0;
+
+        for (lpc = 0; lpc < max; lpc++) {
+            const char *rsc_id = NULL;
+            const char *standard = NULL;
+            xmlNode *match = getXpathResult(xpath_obj, lpc);
+
+            rsc_id = crm_element_value(match, XML_ATTR_ID);
+            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+
+            if (safe_str_neq(standard, "stonith")) {
+                continue;
+            }
+
+            crm_trace("Fencing resource %s was added or modified", rsc_id);
+            reason = "new resource";
+            needs_update = TRUE;
+        }
     }
     freeXpathObject(xpath_obj);
 
