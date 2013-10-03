@@ -701,7 +701,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         crm_add_logfile(logfile);
     }
 
-    if (daemon_option_enabled(crm_system_name, "blackbox")) {
+    if (crm_is_daemon && daemon_option_enabled(crm_system_name, "blackbox")) {
         crm_enable_blackbox(0);
     }
 
