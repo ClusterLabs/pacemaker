@@ -23,8 +23,6 @@ Executing cluster transition:
  * Resource action: vm              start on dvossel-laptop2
  * Pseudo action:   W-master_start_0
  * Pseudo action:   X-master_start_0
- * Resource action: 18builder       monitor on dvossel-laptop2
- * Pseudo action:   probe_nodes_complete
  * Resource action: 18builder       start on dvossel-laptop2
  * Resource action: FAKE            monitor on 18builder
  * Resource action: W               monitor on 18builder
