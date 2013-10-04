@@ -164,13 +164,17 @@ generate()
 		cat << END >> lxc$c.xml
 <domain type='lxc'>
   <name>lxc$c</name>
-  <memory>66688</memory>
+  <memory unit='KiB'>200704</memory>
   <os>
     <type>exe</type>
     <init>$working_dir/lxc$c-filesystem/launch-helper</init>
   </os>
   <devices>
     <console type='pty'/>
+    <filesystem type='ram'>
+        <source usage='154140672'/>
+        <target dir='/dev/shm'/>
+    </filesystem>
     <filesystem type='mount'>
       <source dir='$working_dir/lxc$c-filesystem/var/run'/>
       <target dir='/var/run'/>
@@ -226,6 +230,7 @@ END
 ifconfig eth0 $prefix.$subnet.$suffix
 route add 0.0.0.0 gw $addr.1 eth0
 hostname lxc$c
+df > $working_dir/lxc$c-filesystem/disk_usage.txt
 export PCMK_debugfile=/var/log/pacemaker_remote_lxc$c.log
 /usr/sbin/pacemaker_remoted
 END
