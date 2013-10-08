@@ -168,7 +168,7 @@ class crm_ais(crm_lha):
                     "error: mainloop_gio_callback: Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
                     "Child process crmd .* exited: Generic Pacemaker error",
-                    "Child process attrd .* exited: Connection reset by peer",
+                    "Child process attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
                      "error: attrd_cib_destroy_cb: Lost connection to CIB service",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
@@ -344,7 +344,7 @@ class crm_cs_v0(crm_ais):
         self.complist.append(Process(self, "corosync", pats = [
                     r"pacemakerd.*error: cfg_connection_destroy: Connection destroyed",
                     r"pacemakerd.*error: mcp_cpg_destroy: Connection destroyed",
-                    r"crit: attrd_cpg_destroy: Lost connection to Corosync service",
+                    r"crit: attrd_(cs|cpg)_destroy: Lost connection to Corosync service",
                     r"stonith_peer_cs_destroy: Corosync connection terminated",
                     r"cib_cs_destroy: Corosync connection lost!  Exiting.",
                     r"crmd_(cs|quorum)_destroy: connection terminated",
