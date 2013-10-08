@@ -1,9 +1,6 @@
 #!/bin/bash
 
 cts_root=`dirname $0`
-stonith=rhcs
-schema=1.1
-stack=mcp
 
 logfile=0
 summary=0
@@ -195,14 +192,14 @@ if [ $install = 1 ]; then
 fi
 
 if [ $boot = 1 ]; then
-    $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack --boot
+    $cts_root/CTSlab.py -r -c -g $cluster_name --boot
     rc=$?
     if [ $rc = 0 ]; then
 	echo "The cluster is ready..."
     fi
     exit $rc
 elif [ $run = 1 ]; then
-    $cts_root/CTSlab.py -g $cluster_name -r --stonith $stonith -c --schema pacemaker-$schema --stack $stack 500 $*
+    $cts_root/CTSlab.py -r -c -g $cluster_name 500 $*
     exit $?
 
 elif [ $setup = 1 ]; then
