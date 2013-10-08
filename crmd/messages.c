@@ -42,12 +42,8 @@ void handle_response(xmlNode * stored_msg);
 enum crmd_fsa_input handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause);
 enum crmd_fsa_input handle_shutdown_request(xmlNode * stored_msg);
 
-#ifdef MSG_LOG
-#  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x);	\
-    crm_log_xml_trace(msg, "router.log");
-#else
-#  define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
-#endif
+#define ROUTER_RESULT(x)	crm_trace("Router result: %s", x)
+
 /* debug only, can wrap all it likes */
 int last_data_id = 0;
 
