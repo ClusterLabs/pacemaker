@@ -8,6 +8,7 @@ do_heartbeat=0
 plugin_ver=-1
 pcmk_ver=11
 nodelist=0
+limit=0
 
 pkgs="corosync xinetd nmap abrt-cli fence-agents perl-TimeDate gdb"
 
@@ -21,7 +22,11 @@ rpm_repo=
 distro=
 
 dsh_group=0
-cluster=dummy0
+if [ ! -z $cluster_name ]; then
+    cluster=$cluster_name
+else
+    cluster=dummy0
+fi
 
 #  Corosync/OpenAIS Settings
 cs_port=666
@@ -79,7 +84,8 @@ function helptext() {
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
     echo "--hosts             Copy /etc/hosts from the test master to the nodes"
-    echo "-e, --extra package-list"
+    echo "-e, --extra list    Whitespace separated list of extra packages to install"
+    echo "-l, --limit N       Use the first N hosts from the named group" 
     echo "                    Extra packages to install"
     exit $1
 }
@@ -116,6 +122,7 @@ while true; do
 	-u|--unicast) nodelist=1; transport=udpu; inaddr_any="yes"; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
 	-t|--test)  rpm_repo=rpm-test-next; pkgs="$pkgs valgrind"; shift;;
+	-l|--limit) limit=$2; shift; shift;;
 
 	r*[0-9])
 	    rhel=`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`
@@ -143,9 +150,9 @@ while true; do
     esac
 done
 
-if [ x = "x$host_input" -a x = "x$cluster_name" ]; then
+if [ x = "x$host_input" -a x = "x$cluster" ]; then
     if [ -d $HOME/.dsh/group ]; then
-        read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 cluster_name
+        read -p "Please specify a dsh group you'd like to configure as a cluster? [] " -t 60 cluster
     else
         read -p "Please specify a whitespace delimetered list of nodes you'd like to configure as a cluster? [] " -t 60 host_list
 
@@ -155,9 +162,9 @@ if [ x = "x$host_input" -a x = "x$cluster_name" ]; then
     fi
 fi
 
-if [ ! -z $cluster_name ]; then
-    host_input="-g $cluster_name"
-    dsh_group=`echo $cluster_name | sed s/[a-zA-Z]*//`
+if [ ! -z $cluster ]; then
+    host_input="-g $cluster"
+    dsh_group=`echo $cluster | sed s/[a-zA-Z]*//`
 fi
 
 if [ -z "$host_input" ]; then
@@ -165,8 +172,14 @@ if [ -z "$host_input" ]; then
     exit 1
 fi
 
-host_list=`cluster-helper --list short $host_input`
+if [ $limit -gt 0 ]; then
+    echo "Using only the first $limit hosts in $cluster group"
+    host_list=`cluster-helper --list bullet $host_input | head -n $limit | tr '\n*' '  '`
+else
+    host_list=`cluster-helper --list short $host_input`
+fi
 num_hosts=`echo $host_list | wc -w`
+
 if [ -z $dsh_group ]; then
     dsh_group=1
 fi
