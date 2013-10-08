@@ -130,7 +130,7 @@ unsigned int get_crm_log_level(void);
 #  define do_crm_log_xml(level, text, xml) do {                       \
         static struct qb_log_callsite *xml_cs = NULL;                   \
         if(xml_cs == NULL) {                                            \
-            xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blog", level, __LINE__, 0); \
+            xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob", level, __LINE__, 0); \
         }                                                               \
         if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
             log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 1, xml_log_option_formatted); \

@@ -22,6 +22,7 @@
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
+typedef struct node_s pe_node_t;
 typedef struct node_s node_t;
 typedef struct pe_action_s action_t;
 typedef struct pe_action_s pe_action_t;
