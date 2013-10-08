@@ -42,6 +42,8 @@ log_stats = """
 #!/bin/bash
 # Tool for generating system load reports while CTS runs
 
+trap "" 1
+
 f=$1; shift
 action=$1; shift
 base=`basename $0`
@@ -88,6 +90,10 @@ function start() {
 case $action in
     start)
         start
+        ;;
+    start-bg|bg)
+        # Use c --ssh -- ./stats.sh file start-bg
+        nohup $0 $f start >/dev/null 2>&1 </dev/null &
         ;;
     stop)
 	killpid
@@ -609,7 +615,10 @@ class RemoteExec:
             proc.stderr.close()
             if not silent:
                 for err in errors:
-                    self.debug("cmd: stderr: %s" % err)
+                    if stdout == 3:
+                        result.append("error: "+err)
+                    else:
+                        self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if not silent and result:
