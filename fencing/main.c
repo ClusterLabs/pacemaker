@@ -103,7 +103,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     request = crm_ipcs_recv(c, data, size, &id, &flags);
     if (request == NULL) {
-        crm_ipcs_send_ack(c, id, "nack", __FUNCTION__, __LINE__);
+        crm_ipcs_send_ack(c, id, flags, "nack", __FUNCTION__, __LINE__);
         return 0;
     }
 

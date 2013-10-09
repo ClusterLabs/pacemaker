@@ -124,11 +124,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_client_t *client = crm_client_get(c);
     xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
 
-    if (flags & crm_ipc_client_response) {
-        crm_trace("Ack'ing msg from %d (%p)", crm_ipcs_client_pid(c), c);
-        crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
-    }
-
+    crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
     if (msg == NULL) {
         crm_debug("No msg from %d (%p)", crm_ipcs_client_pid(c), c);
         return 0;

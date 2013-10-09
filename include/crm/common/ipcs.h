@@ -67,6 +67,7 @@ struct crm_client_s {
 
     long long options;
 
+    bool have_events;           /* ipc_proxy code only */
     int request_id;
     void *userdata;
 
@@ -109,8 +110,8 @@ crm_client_t *crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid);
 void crm_client_destroy(crm_client_t * c);
 void crm_client_disconnect_all(qb_ipcs_service_t *s);
 
-void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, const char *tag, const char *function,
-                       int line);
+void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags,
+                       const char *tag, const char *function, int line);
 ssize_t crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec **result);
 ssize_t crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
                       enum crm_ipc_server_flags flags);

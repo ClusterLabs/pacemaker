@@ -636,10 +636,7 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *msg = crm_ipcs_recv(client, data, size, &id, &flags);
 
     crm_trace("Invoked: %s", crm_client_name(client));
-
-    if (flags & crm_ipc_client_response) {
-        crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
-    }
+    crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
 
     if (msg == NULL) {
         return 0;

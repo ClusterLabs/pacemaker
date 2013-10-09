@@ -666,15 +666,19 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 }
 
 void
-crm_ipcs_send_ack(crm_client_t * c, uint32_t request, const char *tag, const char *function,
+crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags, const char *tag, const char *function,
                   int line)
 {
-    xmlNode *ack = create_xml_node(NULL, tag);
+    if (flags & crm_ipc_client_response) {
+        xmlNode *ack = create_xml_node(NULL, tag);
 
-    crm_xml_add(ack, "function", function);
-    crm_xml_add_int(ack, "line", line);
-    crm_ipcs_send(c, request, ack, 0);
-    free_xml(ack);
+        crm_trace("Ack'ing msg from %s (%p)", crm_client_name(c), c);
+        c->request_id = 0;
+        crm_xml_add(ack, "function", function);
+        crm_xml_add_int(ack, "line", line);
+        crm_ipcs_send(c, request, ack, is_set(flags, crm_ipc_client_event));
+        free_xml(ack);
+    }
 }
 
 /* Client... */
@@ -1034,9 +1038,13 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         return -ENOTCONN;
     }
 
+    if (ms_timeout == 0) {
+        ms_timeout = 5000;
+    }
+
     if (client->need_reply) {
         crm_trace("Trying again to obtain pending reply from %s", client->name);
-        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 300);
+        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, ms_timeout/2);
         if (rc < 0) {
             crm_warn("Sending to %s (%p) is disabled until pending reply is received", client->name,
                      client->ipc);
@@ -1049,7 +1057,9 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         }
     }
 
-    rc = crm_ipc_prepare(++id, message, &iov);
+    id++;
+    CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
+    rc = crm_ipc_prepare(id, message, &iov);
     if(rc < 0) {
         return rc;
     }
@@ -1066,14 +1076,12 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         }
     }
 
-    if (ms_timeout == 0) {
-        ms_timeout = 5000;
-    }
-
     crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg...",
               client->name, header->qb.id, header->qb.size, ms_timeout);
 
-    if (ms_timeout > 0) {
+    if (ms_timeout > 0
+        || is_not_set(flags, crm_ipc_client_response)
+        || is_set(flags, crm_ipc_client_event)) {
 
         rc = internal_ipc_send_request(client, iov, ms_timeout);
 
@@ -1082,7 +1090,8 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
                       client->name, header->qb.id, header->qb.size);
             goto send_cleanup;
 
-        } else if (is_not_set(flags, crm_ipc_client_response)) {
+        } else if (is_not_set(flags, crm_ipc_client_response)
+                   || is_set(flags, crm_ipc_client_event)) {
             crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes...",
                       header->qb.id, client->name, header->qb.size);
 

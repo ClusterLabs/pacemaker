@@ -1789,7 +1789,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID, client->id);
-        crm_ipcs_send(client, id, reply, FALSE);
+        crm_ipcs_send(client, id, reply, is_set(flags, crm_ipc_client_event));
         client->request_id = 0;
         free_xml(reply);
         return 0;
@@ -1830,8 +1830,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         }
 
         if (flags & crm_ipc_client_response) {
-            crm_ipcs_send_ack(client, id, "ack", __FUNCTION__, __LINE__);
-            client->request_id = 0;
+            crm_ipcs_send_ack(client, id, flags, "ack", __FUNCTION__, __LINE__);
         }
         return 0;
 

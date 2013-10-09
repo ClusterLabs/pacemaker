@@ -90,6 +90,7 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
 #define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
+#define F_LRMD_IPC_CLIENT       "lrmd_ipc_client"
 #define F_LRMD_IPC_PROXY_NODE   "lrmd_ipc_proxy_node"
 #define F_LRMD_IPC_USER         "lrmd_ipc_user"
 #define F_LRMD_IPC_MSG          "lrmd_ipc_msg"

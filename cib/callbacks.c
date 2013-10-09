@@ -171,7 +171,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
-            crm_ipcs_send(cib_client, id, ack, FALSE);
+            crm_ipcs_send(cib_client, id, ack, is_set(flags, crm_ipc_client_event));
             cib_client->request_id = 0;
             free_xml(ack);
         }
@@ -212,8 +212,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         if (flags & crm_ipc_client_response) {
             /* TODO - include rc */
-            crm_ipcs_send_ack(cib_client, id, "ack", __FUNCTION__, __LINE__);
-            cib_client->request_id = 0;
+            crm_ipcs_send_ack(cib_client, id, flags, "ack", __FUNCTION__, __LINE__);
         }
         return;
     }
@@ -237,7 +236,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_trace("Inbound: %.200s", data);
     if (op_request == NULL) {
         crm_trace("Invalid message from %p", c);
-        crm_ipcs_send_ack(cib_client, id, "nack", __FUNCTION__, __LINE__);
+        crm_ipcs_send_ack(cib_client, id, flags, "nack", __FUNCTION__, __LINE__);
         return 0;
 
     } else if(cib_client == NULL) {
@@ -582,7 +581,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
     } else if (originator != NULL) {
         /* send reply via HA to originating node */
-        crm_trace("Sending request result to originator only");
+        crm_trace("Sending request result to %s only", originator);
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         return send_cluster_message(crm_get_peer(0, originator), crm_msg_cib, msg, FALSE);
     }

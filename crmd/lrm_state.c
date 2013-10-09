@@ -331,6 +331,7 @@ remote_proxy_relay_event(lrmd_t *lrmd, const char *session_id, xmlNode *msg)
     crm_xml_add(event, F_LRMD_IPC_OP, "event");
     crm_xml_add(event, F_LRMD_IPC_SESSION, session_id);
     add_message_xml(event, F_LRMD_IPC_MSG, msg);
+    crm_log_xml_explicit(event, "EventForProxy");
     lrmd_internal_proxy_send(lrmd, event);
     free_xml(event);
 }
@@ -351,6 +352,7 @@ remote_proxy_relay_response(lrmd_t *lrmd, const char *session_id, xmlNode *msg, 
 static int
 remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
 {
+    /* Async responses from cib and friends back to clients via pacemaker_remoted */
     xmlNode *xml = NULL;
     remote_proxy_t *proxy = userdata;
     lrm_state_t *lrm_state = lrm_state_find(proxy->node_name);
@@ -365,6 +367,7 @@ remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer user
         return 1;
     }
 
+    crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
     remote_proxy_relay_event(lrm_state->conn, proxy->session_id, xml);
     free_xml(xml);
     return 1;
@@ -431,8 +434,10 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     if (!proxy) {
         return;
     }
+    crm_log_xml_trace(msg, "to-proxy");
     lrm_state = lrm_state_find(proxy->node_name);
     if (lrm_state) {
+        crm_trace("Sending event to %.8s on %s", proxy->session_id, proxy->node_name);
         remote_proxy_relay_event(lrm_state->conn, session, msg);
     }
 }
@@ -460,7 +465,6 @@ static void
 remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    xmlNode *op_reply = NULL;
     const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
     const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
     const char *user = crm_element_value(msg, F_LRMD_IPC_USER);
@@ -484,13 +488,14 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         if (remote_proxy_new(lrm_state->node_name, session, channel) == NULL) {
             remote_proxy_notify_destroy(lrmd, session);
         }
-        crm_info("new remote proxy client established, session id %s", session);
+        crm_info("new remote proxy client established to %s, session id %s", channel, session);
     } else if (safe_str_eq(op, "destroy")) {
         g_hash_table_remove(proxy_table, session);
 
     } else if (safe_str_eq(op, "request")) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
+        const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
         remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
         CRM_CHECK(request != NULL, return);
@@ -509,21 +514,61 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             /* this is for the crmd, which we are, so don't try
              * and connect/send to ourselves over ipc. instead
              * do it directly. */
+            crmd_proxy_dispatch(user, session, request);
             if (flags & crm_ipc_client_response) {
-                op_reply = create_xml_node(NULL, "ack");
+                xmlNode *op_reply = create_xml_node(NULL, "ack");
+
                 crm_xml_add(op_reply, "function", __FUNCTION__);
                 crm_xml_add_int(op_reply, "line", __LINE__);
+                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
+                free_xml(op_reply);
             }
-            crmd_proxy_dispatch(user, session, request);
-        } else {
-            /* TODO make this async. */
-            crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
-        }
-    }
 
-    if (op_reply) {
-        remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
-        free_xml(op_reply);
+        } else if(is_set(flags, crm_ipc_client_event)) {
+            int rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
+
+            if(rc < 0) {
+                xmlNode *op_reply = create_xml_node(NULL, "nack");
+
+                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
+                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+
+                /* Send a n'ack so the caller doesn't block */
+                crm_xml_add(op_reply, "function", __FUNCTION__);
+                crm_xml_add_int(op_reply, "line", __LINE__);
+                crm_xml_add_int(op_reply, "rc", rc);
+                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
+                free_xml(op_reply);
+
+            } else {
+                crm_trace("Relayed %s request %d from %s to %s for %s",
+                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+            }
+
+        } else {
+            int rc = pcmk_ok;
+            xmlNode *op_reply = NULL;
+            /* For backwards compatibility with pacemaker_remoted <= 1.1.10 */
+
+            crm_trace("Relaying %s request %d from %s to %s for %s",
+                      op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+
+            rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
+            if(rc < 0) {
+                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
+                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+            } else {
+                crm_trace("Relayed %s request %d from %s to %s for %s",
+                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+            }
+
+            if(op_reply) {
+                remote_proxy_relay_response(lrmd, session, op_reply, msg_id);
+                free_xml(op_reply);
+            }
+        }
+    } else {
+        crm_err("Unknown proxy operation: %s", op);
     }
 }
 
