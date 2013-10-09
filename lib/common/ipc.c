@@ -508,10 +508,9 @@ crm_ipcs_flush_events(crm_client_t * c)
 }
 
 ssize_t
-crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
+crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int32_t max_send_size)
 {
     static int biggest = 0;
-
     struct iovec *iov;
     unsigned int total = 0;
     char *compressed = NULL;
@@ -519,6 +518,10 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
     struct crm_ipc_response_header *header = calloc(1, sizeof(struct crm_ipc_response_header));
 
     CRM_ASSERT(result != NULL);
+
+    if (max_send_size == 0) {
+        max_send_size = ipc_buffer_max;
+    }
 
     *result = NULL;
     iov = calloc(2, sizeof(struct iovec));
@@ -531,7 +534,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
     header->size_uncompressed = 1 + strlen(buffer);
     total = hdr_offset + header->size_uncompressed;
 
-    if (total < ipc_buffer_max) {
+    if (total < max_send_size) {
         iov[1].iov_base = buffer;
         iov[1].iov_len = header->size_uncompressed;
 
@@ -539,7 +542,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
         unsigned int new_size = 0;
 
         if (crm_compress_string
-            (buffer, header->size_uncompressed, ipc_buffer_max, &compressed, &new_size)) {
+            (buffer, header->size_uncompressed, max_send_size, &compressed, &new_size)) {
 
             header->flags |= crm_ipc_compressed;
             header->size_compressed = new_size;
@@ -561,7 +564,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 
             crm_err
                 ("Could not compress the message into less than the configured ipc limit (%d bytes)."
-                 "Set PCMK_ipc_buffer to a higher value (%d bytes suggested)", ipc_buffer_max,
+                 "Set PCMK_ipc_buffer to a higher value (%d bytes suggested)", max_send_size,
                  biggest);
 
             free(compressed);
@@ -647,12 +650,19 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 {
     struct iovec *iov = NULL;
     ssize_t rc = 0;
+    int32_t max_msg_size = ipc_buffer_max;
 
     if(c == NULL) {
         return -EDESTADDRREQ;
     }
 
-    rc = crm_ipc_prepare(request, message, &iov);
+    /* when sending from server to client, we need to use the client's
+     * max buffer size if possible */
+#ifdef HAVE_IPCS_GET_BUFFER_SIZE
+    max_msg_size = qb_ipcs_connection_get_buffer_size(c->ipcs);
+#endif
+
+    rc = crm_ipc_prepare(request, message, &iov, max_msg_size);
     if (rc > 0) {
         rc = crm_ipcs_sendv(c, iov, flags | crm_ipc_server_free);
 
@@ -685,6 +695,9 @@ crm_ipcs_send_ack(crm_client_t * c, uint32_t request, const char *tag, const cha
 struct crm_ipc_s {
     struct pollfd pfd;
 
+    /* the max size we can send/receive over ipc */
+    int max_buf_size;
+    /* Size of the allocated 'buffer' */
     int buf_size;
     int msg_size;
     int need_reply;
@@ -726,6 +739,9 @@ crm_ipc_new(const char *name, size_t max_size)
     client->name = strdup(name);
     client->buf_size = pick_ipc_buffer(max_size);
     client->buffer = malloc(client->buf_size);
+
+    /* Clients initiating connection pick the max buf size */
+    client->max_buf_size = client->buf_size;
 
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -868,7 +884,14 @@ crm_ipc_decompress(crm_ipc_t * client)
             return -EILSEQ;
         }
 
-        CRM_ASSERT((header->size_uncompressed + hdr_offset) >= ipc_buffer_max);
+        /*
+         * This assert no longer holds true.  For an identical msg, some clients may
+         * require compression, and others may not. If that same msg (event) is sent
+         * to multiple clients, it could result in some clients receiving a compressed
+         * msg even though compression was not explicitly required for them.
+         *
+         * CRM_ASSERT((header->size_uncompressed + hdr_offset) >= ipc_buffer_max);
+         */
         CRM_ASSERT(size_u == header->size_uncompressed);
 
         memcpy(uncompressed, client->buffer, hdr_offset);       /* Preserve the header */
@@ -1049,7 +1072,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         }
     }
 
-    rc = crm_ipc_prepare(++id, message, &iov);
+    rc = crm_ipc_prepare(++id, message, &iov, ipc_buffer_max);
     if(rc < 0) {
         return rc;
     }
