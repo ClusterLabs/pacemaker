@@ -937,6 +937,8 @@ crm_read_options(gpointer user_data)
     return TRUE;
 }
 
+void throttle_init(void);
+
 /*	 A_READCONFIG	*/
 void
 do_read_config(long long action,
@@ -944,6 +946,7 @@ do_read_config(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    throttle_init();
     mainloop_set_trigger(config_read);
 }
 
