@@ -822,6 +822,10 @@ lrmd_send_command(lrmd_t * lrmd, const char *op, xmlNode * data, xmlNode ** outp
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
         rc = -ECOMM;
         goto done;
+
+    } else if(op_reply == NULL) {
+        rc = -ENOMSG;
+        goto done;
     }
 
     rc = pcmk_ok;
