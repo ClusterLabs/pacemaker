@@ -895,7 +895,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     if (client_channel != NULL) {
         /* Transient clients such as crmadmin */
-        send_ok = crm_ipcs_send(client_channel, 0, msg, TRUE);
+        send_ok = crm_ipcs_send(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);

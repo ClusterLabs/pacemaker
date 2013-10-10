@@ -338,7 +338,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
 {
     int rc = pcmk_ok;
     int reply_id = 0;
-    enum crm_ipc_flags ipc_flags = crm_ipc_client_none;
+    enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;

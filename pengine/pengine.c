@@ -161,7 +161,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         crm_xml_add_int(reply, "config-errors", crm_config_error);
         crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
-        if (crm_ipcs_send(sender, 0, reply, TRUE) == FALSE) {
+        if (crm_ipcs_send(sender, 0, reply, crm_ipc_server_event) == FALSE) {
             crm_err("Couldn't send transition graph to peer, discarding");
         }
 

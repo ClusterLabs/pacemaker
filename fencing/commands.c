@@ -1789,7 +1789,7 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID, client->id);
-        crm_ipcs_send(client, id, reply, is_set(flags, crm_ipc_client_event));
+        crm_ipcs_send(client, id, reply, flags);
         client->request_id = 0;
         free_xml(reply);
         return 0;

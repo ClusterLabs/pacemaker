@@ -739,7 +739,7 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
 
     switch (native->type) {
         case CRM_CLIENT_IPC:
-            rc = crm_ipc_send(native->ipc, msg, crm_ipc_client_none, 0, NULL);
+            rc = crm_ipc_send(native->ipc, msg, crm_ipc_flags_none, 0, NULL);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case CRM_CLIENT_TLS:

@@ -167,14 +167,14 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
     if (safe_str_eq(msg_type, "event")) {
         if(ipc_client->request_id) {
             crm_info("Sending response for request %u to %s", ipc_client->request_id, ipc_client->id);
-            CRM_LOG_ASSERT(ipc_client->have_events == FALSE);
+            CRM_LOG_ASSERT(is_not_set(ipc_client->flags, crm_client_flag_have_events));
             rc = crm_ipcs_send(ipc_client, ipc_client->request_id, msg, FALSE);
             ipc_client->request_id = 0;
 
         } else {
             crm_info("Sending event to %s", ipc_client->request_id, ipc_client->id);
-            ipc_client->have_events = TRUE;
-            rc = crm_ipcs_send(ipc_client, 0, msg, TRUE);
+            set_bit(ipc_client->flags, crm_client_flag_have_events);
+            rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
         }
 
     } else if (safe_str_eq(msg_type, "response")) {
@@ -248,7 +248,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      * though
      */
 
-    set_bit(flags, crm_ipc_client_event);
+    set_bit(flags, crm_ipc_proxied);
 
     /* Now clear the sync option from each message type
      * Not ideal, but necessary
@@ -260,7 +260,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
         clear_bit(api_options, cib_sync_call);
         crm_xml_add_int(request, F_CIB_CALLOPTS, api_options);
-        CRM_LOG_ASSERT(client->have_events == FALSE);
+        CRM_LOG_ASSERT(is_not_set(client->flags, crm_client_flag_have_events));
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &api_options);
@@ -270,7 +270,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
         clear_bit(api_options, st_opt_sync_call);
         crm_xml_add_int(request, F_STONITH_CALLOPTS, api_options);
-        CRM_LOG_ASSERT(client->have_events == FALSE);
+        CRM_LOG_ASSERT(is_not_set(client->flags, crm_client_flag_have_events));
     }
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);

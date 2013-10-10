@@ -171,7 +171,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
-            crm_ipcs_send(cib_client, id, ack, is_set(flags, crm_ipc_client_event));
+            crm_ipcs_send(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             free_xml(ack);
         }
@@ -315,7 +315,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
 
         switch (client_obj->kind) {
             case CRM_CLIENT_IPC:
-                if (crm_ipcs_send(client_obj, rid, notify_src, !sync_reply) < 0) {
+                if (crm_ipcs_send(client_obj, rid, notify_src, sync_reply?crm_ipc_flags_none:crm_ipc_server_event) < 0) {
                     local_rc = -ENOMSG;
                 }
                 break;

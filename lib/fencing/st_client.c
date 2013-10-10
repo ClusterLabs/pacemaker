@@ -2051,7 +2051,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 {
     int rc = 0;
     int reply_id = -1;
-    enum crm_ipc_flags ipc_flags = crm_ipc_client_none;
+    enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;

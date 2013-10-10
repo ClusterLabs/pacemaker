@@ -40,10 +40,19 @@ xmlNode *create_request_adv(const char *task, xmlNode * xml_data, const char *ho
 /* *INDENT-OFF* */
 enum crm_ipc_flags
 {
-    crm_ipc_client_none     = 0x0000,
-    crm_ipc_client_response = 0x0001, /* A Response is expected in reply */
-    crm_ipc_compressed      = 0x0002, /* Message has been compressed */
-    crm_ipc_client_event    = 0x0004, /* An a-sync event is expected in reply */
+    crm_ipc_flags_none      = 0x00000000,
+
+    crm_ipc_compressed      = 0x00000001, /* Message has been compressed */
+
+    crm_ipc_proxied         = 0x00000100, /* _ALL_ replies to proxied connections need to be sent as events */
+    crm_ipc_client_response = 0x00000200, /* A Response is expected in reply */
+
+    /* These options are just options for crm_ipcs_sendv() */
+    crm_ipc_server_event    = 0x00010000, /* Send an Event instead of a Response */
+    crm_ipc_server_free     = 0x00020000, /* Free the iovec after sending */
+
+    crm_ipc_server_info     = 0x00100000, /* Log failures as LOG_INFO */
+    crm_ipc_server_error    = 0x00200000, /* Log failures as LOG_ERR */
 };
 /* *INDENT-ON* */
 

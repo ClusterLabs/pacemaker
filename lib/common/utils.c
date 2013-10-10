@@ -1892,7 +1892,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
 {
     int rc = -ENOTCONN;
     int max = 5;
-    enum crm_ipc_flags flags = crm_ipc_client_none;
+    enum crm_ipc_flags flags = crm_ipc_flags_none;
     xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 
     static gboolean connected = TRUE;

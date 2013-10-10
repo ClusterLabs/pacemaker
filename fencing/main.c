@@ -263,7 +263,7 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                       client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
-        local_rc = crm_ipcs_send(client_obj, rid, notify_src, !sync_reply);
+        local_rc = crm_ipcs_send(client_obj, rid, notify_src, sync_reply?crm_ipc_flags_none:crm_ipc_server_event);
     }
 
     if (local_rc < pcmk_ok && client_obj != NULL) {

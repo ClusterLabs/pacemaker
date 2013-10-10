@@ -55,6 +55,11 @@ struct crm_remote_s {
 #  endif
 };
 
+enum crm_client_flags
+{
+    crm_client_flag_have_events = 0x00001, /* ipc_proxy code only */
+};
+
 struct crm_client_s {
     uint pid;
 
@@ -67,8 +72,8 @@ struct crm_client_s {
 
     long long options;
 
-    bool have_events;           /* ipc_proxy code only */
     int request_id;
+    uint32_t flags;
     void *userdata;
 
     int event_timer;
@@ -83,19 +88,6 @@ struct crm_client_s {
 
     struct crm_remote_s *remote;        /* TCP/TLS */
 };
-
-/* *INDENT-OFF* */
-enum crm_ipc_server_flags
-{
-    crm_ipc_server_none  = 0x0000,
-    crm_ipc_server_event = 0x0001, /* Send an Event instead of a Response */
-    crm_ipc_server_free  = 0x0002, /* Free the iovec after sending */
-
-    crm_ipc_server_info  = 0x0010, /* Log failures as LOG_INFO */
-    crm_ipc_server_error = 0x0020, /* Log failures as LOG_ERR */
-
-};
-/* *INDENT-ON* */
 
 extern GHashTable *client_connections;
 
@@ -114,8 +106,8 @@ void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags,
                        const char *tag, const char *function, int line);
 ssize_t crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec **result);
 ssize_t crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
-                      enum crm_ipc_server_flags flags);
-ssize_t crm_ipcs_sendv(crm_client_t * c, struct iovec *iov, enum crm_ipc_server_flags flags);
+                      enum crm_ipc_flags flags);
+ssize_t crm_ipcs_sendv(crm_client_t * c, struct iovec *iov, enum crm_ipc_flags flags);
 xmlNode *crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t * flags);
 
 int crm_ipcs_client_pid(qb_ipcs_connection_t * c);

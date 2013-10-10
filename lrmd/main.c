@@ -200,7 +200,7 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
                 crm_trace("Asked to send event to disconnected local client");
                 return -1;
             }
-            return crm_ipcs_send(client, 0, msg, TRUE);
+            return crm_ipcs_send(client, 0, msg, crm_ipc_server_event);
 #ifdef ENABLE_PCMK_REMOTE
         case CRM_CLIENT_TLS:
             if (client->remote == NULL) {

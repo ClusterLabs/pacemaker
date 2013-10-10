@@ -524,7 +524,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                 free_xml(op_reply);
             }
 
-        } else if(is_set(flags, crm_ipc_client_event)) {
+        } else if(is_set(flags, crm_ipc_proxied)) {
             int rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
 
             if(rc < 0) {

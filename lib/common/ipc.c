@@ -35,11 +35,14 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 
+#define PCMK_IPC_VERSION 1
+
 struct crm_ipc_response_header {
     struct qb_ipc_response_header qb;
     uint32_t size_uncompressed;
     uint32_t size_compressed;
     uint32_t flags;
+    uint8_t  version; /* Protect against version changes for anyone that might bother to statically link us */
 };
 
 static int hdr_offset = 0;
@@ -403,10 +406,16 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
         *flags = header->flags;
     }
 
-    if (header->flags & crm_ipc_compressed) {
+    if(header->version > PCMK_IPC_VERSION) {
+        crm_err("Filtering incompatible v%d IPC message, we only support versions <= %d",
+                header->version, PCMK_IPC_VERSION);
+        return NULL;
+    }
+
+    if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = calloc(1, hdr_offset + size_u);
+        uncompressed = calloc(1, size_u);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                   header->size_compressed, size_u);
@@ -470,7 +479,7 @@ crm_ipcs_flush_events(crm_client_t * c)
 
         sent++;
         header = event[0].iov_base;
-        if (header->flags & crm_ipc_compressed) {
+        if (header->size_compressed) {
             crm_trace("Event %d to %p[%d] (%d compressed bytes) sent",
                       header->qb.id, c->ipcs, c->pid, rc);
         } else {
@@ -528,8 +537,9 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
     iov[0].iov_len = hdr_offset;
     iov[0].iov_base = header;
 
+    header->version = PCMK_IPC_VERSION;
     header->size_uncompressed = 1 + strlen(buffer);
-    total = hdr_offset + header->size_uncompressed;
+    total = iov[0].iov_len + header->size_uncompressed;
 
     if (total < ipc_buffer_max) {
         iov[1].iov_base = buffer;
@@ -581,11 +591,16 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result)
 }
 
 ssize_t
-crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_server_flags flags)
+crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 {
     ssize_t rc;
     static uint32_t id = 1;
     struct crm_ipc_response_header *header = iov[0].iov_base;
+
+    if (flags & crm_ipc_proxied) {
+        /* _ALL_ replies to proxied connections need to be sent as events */
+        flags |= crm_ipc_server_event;
+    }
 
     if (flags & crm_ipc_server_event) {
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
@@ -643,7 +658,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_server_flags f
 
 ssize_t
 crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
-              enum crm_ipc_server_flags flags)
+              enum crm_ipc_flags flags)
 {
     struct iovec *iov = NULL;
     ssize_t rc = 0;
@@ -676,7 +691,7 @@ crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags, const char
         c->request_id = 0;
         crm_xml_add(ack, "function", function);
         crm_xml_add_int(ack, "line", line);
-        crm_ipcs_send(c, request, ack, is_set(flags, crm_ipc_client_event));
+        crm_ipcs_send(c, request, ack, flags);
         free_xml(ack);
     }
 }
@@ -855,7 +870,7 @@ crm_ipc_decompress(crm_ipc_t * client)
 {
     struct crm_ipc_response_header *header = (struct crm_ipc_response_header *)client->buffer;
 
-    if (header->flags & crm_ipc_compressed) {
+    if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
         char *uncompressed = calloc(1, hdr_offset + size_u);
@@ -908,6 +923,12 @@ crm_ipc_read(crm_ipc_t * client)
         }
 
         header = (struct crm_ipc_response_header *)client->buffer;
+        if(header->version > PCMK_IPC_VERSION) {
+            crm_err("Filtering incompatible v%d IPC message, we only support versions <= %d",
+                    header->version, PCMK_IPC_VERSION);
+            return -EBADMSG;
+        }
+
         crm_trace("Received %s event %d, size=%d, rc=%d, text: %.100s",
                   client->name, header->qb.id, header->qb.size, client->msg_size,
                   client->buffer + hdr_offset);
@@ -1044,7 +1065,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     if (client->need_reply) {
         crm_trace("Trying again to obtain pending reply from %s", client->name);
-        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, ms_timeout/2);
+        rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, ms_timeout);
         if (rc < 0) {
             crm_warn("Sending to %s (%p) is disabled until pending reply is received", client->name,
                      client->ipc);
@@ -1067,7 +1088,12 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     header = iov[0].iov_base;
     header->flags |= flags;
 
-    if(header->flags | crm_ipc_compressed) {
+    if(is_set(flags, crm_ipc_proxied)) {
+        /* Don't look for a synchronous response */
+        clear_bit(flags, crm_ipc_client_response);
+    }
+
+    if(header->size_compressed) {
         if(factor < 10 && (ipc_buffer_max / 10) < (rc / factor)) {
             crm_notice("Compressed message exceeds %d0%% of the configured ipc limit (%d bytes), "
                        "consider setting PCMK_ipc_buffer to %d or higher",
@@ -1079,9 +1105,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     crm_trace("Sending from client: %s request id: %d bytes: %u timeout:%d msg...",
               client->name, header->qb.id, header->qb.size, ms_timeout);
 
-    if (ms_timeout > 0
-        || is_not_set(flags, crm_ipc_client_response)
-        || is_set(flags, crm_ipc_client_event)) {
+    if (ms_timeout > 0 || is_not_set(flags, crm_ipc_client_response)) {
 
         rc = internal_ipc_send_request(client, iov, ms_timeout);
 
@@ -1090,8 +1114,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
                       client->name, header->qb.id, header->qb.size);
             goto send_cleanup;
 
-        } else if (is_not_set(flags, crm_ipc_client_response)
-                   || is_set(flags, crm_ipc_client_event)) {
+        } else if (is_not_set(flags, crm_ipc_client_response)) {
             crm_trace("Message sent, not waiting for reply to %d from %s to %u bytes...",
                       header->qb.id, client->name, header->qb.size);
 

@@ -537,12 +537,12 @@ update_process_clients(crm_client_t *client)
     }
 
     if(client) {
-        crm_ipcs_send(client, 0, update, TRUE);
+        crm_ipcs_send(client, 0, update, crm_ipc_server_event);
 
     } else {
         g_hash_table_iter_init(&iter, client_connections);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & client)) {
-            crm_ipcs_send(client, 0, update, TRUE);
+            crm_ipcs_send(client, 0, update, crm_ipc_server_event);
         }
     }
 
