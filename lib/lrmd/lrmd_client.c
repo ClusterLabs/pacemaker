@@ -1438,7 +1438,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
+    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 30000, options, TRUE);
     free_xml(data);
 
     if (!output) {
@@ -1744,7 +1744,7 @@ generic_get_metadata(const char *standard, const char *provider, const char *typ
                                                    type,
                                                    "meta-data",
                                                    0,
-                                                   5000,
+                                                   30000,
                                                    NULL);
 
     if (!(services_action_sync(action))) {
