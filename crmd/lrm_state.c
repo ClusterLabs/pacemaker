@@ -60,6 +60,13 @@ history_cache_destroy(gpointer data)
     free(entry->id);
     free(entry);
 }
+static void
+free_rsc_info(gpointer value)
+{
+    lrmd_rsc_info_t *rsc_info = value;
+
+    lrmd_free_rsc_info(rsc_info);
+}
 
 static void
 free_deletion_op(gpointer value)
@@ -98,6 +105,9 @@ lrm_state_create(const char *node_name)
     }
 
     state->node_name = strdup(node_name);
+
+    state->rsc_info_cache = g_hash_table_new_full(crm_str_hash,
+                                                g_str_equal, NULL, free_rsc_info);
 
     state->deletion_ops = g_hash_table_new_full(crm_str_hash,
                                                 g_str_equal, g_hash_destroy_str, free_deletion_op);
@@ -146,6 +156,10 @@ internal_lrm_state_destroy(gpointer data)
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
+    if (lrm_state->rsc_info_cache) {
+        crm_trace("Destroying rsc info cache with %d members", g_hash_table_size(lrm_state->rsc_info_cache));
+        g_hash_table_destroy(lrm_state->rsc_info_cache);
+    }
     if (lrm_state->resource_history) {
         crm_trace("Destroying history op cache with %d members", g_hash_table_size(lrm_state->resource_history));
         g_hash_table_destroy(lrm_state->resource_history);
@@ -180,6 +194,11 @@ lrm_state_reset_tables(lrm_state_t * lrm_state)
         crm_trace("Re-setting pending op cache with %d members",
                   g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_remove_all(lrm_state->pending_ops);
+    }
+    if (lrm_state->rsc_info_cache) {
+        crm_trace("Re-setting rsc info cache with %d members",
+                  g_hash_table_size(lrm_state->rsc_info_cache));
+        g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
 }
 
@@ -590,16 +609,28 @@ lrm_state_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
 lrmd_rsc_info_t *
 lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_call_options options)
 {
+    lrmd_rsc_info_t *rsc = NULL;
+
     if (!lrm_state->conn) {
         return NULL;
     }
-    /* optimize this... this function is a synced round trip from client to daemon.
-     * It should be possible to cache the resource info in the lrmd client to prevent this. */
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         return remote_ra_get_rsc_info(lrm_state, rsc_id);
     }
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->get_rsc_info(lrm_state->conn, rsc_id, options);
+    rsc = g_hash_table_lookup(lrm_state->rsc_info_cache, rsc_id);
+    if (rsc == NULL) {
+        /* only contact the lrmd if we don't already have a cached rsc info */
+        rsc = ((lrmd_t *) lrm_state->conn)->cmds->get_rsc_info(lrm_state->conn, rsc_id, options);
+        if (rsc == NULL) {
+		    return NULL;
+        }
+        /* cache the result */
+        g_hash_table_insert(lrm_state->rsc_info_cache, rsc->id, rsc);
+    }
+
+    return lrmd_copy_rsc_info(rsc);
+
 }
 
 int
@@ -666,6 +697,8 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
         lrm_state_destroy(rsc_id);
         return pcmk_ok;
     }
+
+    g_hash_table_remove(lrm_state->rsc_info_cache, rsc_id);
 
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }

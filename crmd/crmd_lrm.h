@@ -58,6 +58,8 @@ typedef struct lrm_state_s {
     GHashTable *pending_ops;
     GHashTable *deletion_ops;
 
+    GHashTable *rsc_info_cache;
+
     int num_lrm_register_fails;
 } lrm_state_t;
 
