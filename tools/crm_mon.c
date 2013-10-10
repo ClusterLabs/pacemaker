@@ -2320,14 +2320,27 @@ handle_rsc_op(xmlNode * rsc_op)
     free(task);
 }
 
+static gboolean
+mon_trigger_refresh(gpointer user_data)
+{
+    mainloop_set_trigger(refresh_trigger);
+    return FALSE;
+}
+
 void
 crm_diff_update(const char *event, xmlNode * msg)
 {
     int rc = -1;
     long now = time(NULL);
     static bool stale = FALSE;
+    static int updates = 0;
+    static mainloop_timer_t *refresh_timer = NULL;
 
     print_dot();
+
+    if(refresh_timer == NULL) {
+        refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
+    }
 
     if (current_cib != NULL) {
         xmlNode *cib_last = current_cib;
@@ -2342,6 +2355,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
             case pcmk_ok:
+                updates++;
                 break;
             default:
                 crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
@@ -2376,12 +2390,23 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     stale = FALSE;
+    /* Refresh
+     * - immediately if the last update was more than 5s ago
+     * - every 10 updates
+     * - at most 2s after the last update
+     */
     if ((now - last_refresh) > (reconnect_msec / 1000)) {
-        /* Force a refresh */
-        mon_refresh_display(NULL);
+        mainloop_set_trigger(refresh_trigger);
+        mainloop_timer_stop(refresh_timer);
+        updates = 0;
+
+    } else if(updates > 10) {
+        mainloop_set_trigger(refresh_trigger);
+        mainloop_timer_stop(refresh_timer);
+        updates = 0;
 
     } else {
-        mainloop_set_trigger(refresh_trigger);
+        mainloop_timer_start(refresh_timer);
     }
 }
 
