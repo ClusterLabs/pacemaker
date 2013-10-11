@@ -233,7 +233,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
     }
 
-    crm_trace("Inbound: %.200s", data);
     if (op_request == NULL) {
         crm_trace("Invalid message from %p", c);
         crm_ipcs_send_ack(cib_client, id, flags, "nack", __FUNCTION__, __LINE__);
@@ -246,9 +245,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
     if (is_set(call_options, cib_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
-    }
-
-    if (flags & crm_ipc_client_response) {
         CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
         cib_client->request_id = id;    /* Reply only to the last one */
     }
