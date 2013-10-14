@@ -43,6 +43,7 @@ int pending_updates = 0;
 struct cib_notification_s {
     xmlNode *msg;
     struct iovec *iov;
+    int32_t iov_size;
 };
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
@@ -115,6 +116,28 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (do_send) {
         switch (client->kind) {
             case CRM_CLIENT_IPC:
+#ifdef HAVE_IPCS_GET_BUFFER_SIZE
+            {
+                int max_send_size = qb_ipcs_connection_get_buffer_size(client->ipcs);
+                if (max_send_size < update->iov_size) {
+                    struct iovec *iov;
+                    int new_size = crm_ipc_prepare(0, update->msg, &iov, max_send_size);
+
+                    if (new_size > 0) {
+                        free(update->iov[0].iov_base);
+                        free(update->iov[1].iov_base);
+                        free(update->iov);
+
+                        update->iov = iov;
+                        update->iov_size = new_size;
+                    } else {
+                        crm_warn("Preparing notification for client %s/%s failed", client->name, client->id);
+                        return FALSE;
+                    }
+                }
+            }
+#endif
+
                 if (crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
@@ -139,13 +162,14 @@ cib_notify_send(xmlNode * xml)
     struct iovec *iov;
     struct cib_notification_s update;
 
-    ssize_t rc = crm_ipc_prepare(0, xml, &iov);
+    ssize_t rc = crm_ipc_prepare(0, xml, &iov, 0);
 
     crm_trace("Notifying clients");
 
     if (rc > 0) {
         update.msg = xml;
         update.iov = iov;
+        update.iov_size = rc;
         g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
 
     } else {

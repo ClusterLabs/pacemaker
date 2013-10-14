@@ -1352,7 +1352,7 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
                crm_str_eq(cmd->action, "list", TRUE) || crm_str_eq(cmd->action, "status", TRUE)) {
         crm_trace("Never broadcast %s replies", cmd->action);
 
-    } else if (!stand_alone && safe_str_eq(cmd->origin, cmd->victim)) {
+    } else if (!stand_alone && safe_str_eq(cmd->origin, cmd->victim) && safe_str_neq(cmd->action, "on")) {
         crm_trace("Broadcast %s reply for %s", cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         bcast = TRUE;

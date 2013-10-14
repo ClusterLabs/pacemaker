@@ -1,0 +1,44 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc2:container2 ]
+
+ container1	(ocf::heartbeat:VirtualDomain):	Stopped 
+ container2	(ocf::heartbeat:VirtualDomain):	Started 18node2 
+ shoot1	(stonith:fence_xvm):	Started 18node3 
+ Clone Set: M-clone [M]
+     Started: [ 18node1 18node2 18node3 lxc2 ]
+     Stopped: [ lxc1 ]
+ A	(ocf::pacemaker:Dummy):	Started 18node1 
+ B	(ocf::pacemaker:Dummy):	Started lxc2 
+ C	(ocf::pacemaker:Dummy):	Started lxc2 
+ D	(ocf::pacemaker:Dummy):	Started 18node1 
+
+Transition Summary:
+ * Start   container1	(18node1)
+ * Start   M:4	(lxc1)
+ * Start   lxc1	(18node1)
+
+Executing cluster transition:
+ * Resource action: container1      start on 18node1
+ * Pseudo action:   M-clone_start_0
+ * Resource action: lxc1            start on 18node1
+ * Resource action: M               start on lxc1
+ * Pseudo action:   M-clone_running_0
+ * Resource action: lxc1            monitor=30000 on 18node1
+ * Resource action: M               monitor=10000 on lxc1
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+Containers: [ lxc1:container1 lxc2:container2 ]
+
+ container1	(ocf::heartbeat:VirtualDomain):	Started 18node1 
+ container2	(ocf::heartbeat:VirtualDomain):	Started 18node2 
+ shoot1	(stonith:fence_xvm):	Started 18node3 
+ Clone Set: M-clone [M]
+     Started: [ 18node1 18node2 18node3 lxc1 lxc2 ]
+ A	(ocf::pacemaker:Dummy):	Started 18node1 
+ B	(ocf::pacemaker:Dummy):	Started lxc2 
+ C	(ocf::pacemaker:Dummy):	Started lxc2 
+ D	(ocf::pacemaker:Dummy):	Started 18node1 
+

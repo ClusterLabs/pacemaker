@@ -2414,16 +2414,22 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if (force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
+    } else if (force == FALSE && is_container_remote_node(node) && is_not_set(data_set->flags, pe_flag_container_probes)) {
+        pe_rsc_trace(rsc, "Skipping active resource detection for %s on container %s",
+                     rsc->id, node->details->id);
+        return FALSE;
     }
 
-    if (node->details->remote_rsc) {
+    if (rsc->is_remote_node) {
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, connection resources are not probed", rsc->id, node->details->id);
+            return FALSE;
+    }
+
+    if (is_remote_node(node)) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, "stonith")) {
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes do not run stonith agents.", rsc->id, node->details->id);
-            return FALSE;
-        } else if (rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run connection resources.", rsc->id, node->details->id);
             return FALSE;
         } else if (rsc_contains_remote_node(data_set, rsc)) {
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run resources that contain connection resources.", rsc->id, node->details->id);

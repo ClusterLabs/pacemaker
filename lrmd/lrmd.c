@@ -982,7 +982,7 @@ free_rsc(gpointer data)
              * let service library cancel it and tell us via the callback
              * when it is cancelled. The rsc can be safely destroyed
              * even if we are waiting for the cancel result */
-            services_action_cancel(rsc->rsc_id, cmd->action, cmd->interval);
+            services_action_cancel(rsc->rsc_id, normalize_action_name(rsc, cmd->action), cmd->interval);
         }
     }
     /* frees list, but not list elements. */

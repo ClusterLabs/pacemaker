@@ -107,9 +107,10 @@ void crm_client_disconnect_all(qb_ipcs_service_t *s);
 
 void crm_ipcs_send_ack(crm_client_t * c, uint32_t request, uint32_t flags,
                        const char *tag, const char *function, int line);
-ssize_t crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec **result);
-ssize_t crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
-                      enum crm_ipc_flags flags);
+
+/* when max_send_size is 0, default ipc buffer size is used */
+ssize_t crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec **result, int32_t max_send_size);
+ssize_t crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message, enum crm_ipc_flags flags);
 ssize_t crm_ipcs_sendv(crm_client_t * c, struct iovec *iov, enum crm_ipc_flags flags);
 xmlNode *crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t * flags);
 
