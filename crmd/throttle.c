@@ -95,7 +95,7 @@ static float throttle_load_avg(void)
     if(fgets(buffer, sizeof(buffer), stream)) {
         /* Grab the 1-minute average, ignore the rest */
         load = strtof(buffer, NULL);
-        crm_info("Current load is %f (full: %s)", load, buffer);
+        crm_debug("Current load is %f (full: %s)", load, buffer);
     }
 
     fclose(stream);
@@ -142,7 +142,7 @@ throttle_timer_cb(gpointer data)
     enum throttle_state_e now = throttle_mode();
 
     if(now != last) {
-        crm_info("New throttle mode: %.4x (was %.4x)", now, last);
+        crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
         last = now;
     }
     return TRUE;
@@ -154,8 +154,8 @@ void
 throttle_init(void) 
 {
     throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
-    crm_notice("load avg: %f on %d cores", throttle_load_avg(), throttle_num_cores());
-    mainloop_timer_start(throttle_timer);
+    crm_debug("load avg: %f on %d cores", throttle_load_avg(), throttle_num_cores());
+    /* mainloop_timer_start(throttle_timer); */
 }
 
 void
