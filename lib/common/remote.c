@@ -460,7 +460,7 @@ crm_remote_recv_once(crm_remote_t * remote)
         } else if (rc == GNUTLS_E_AGAIN) {
             rc = -EAGAIN;
         } else if (rc < 0) {
-            crm_info("TLS receive failed: %s (%d)", gnutls_strerror(rc), rc);
+            crm_debug("TLS receive failed: %s (%d)", gnutls_strerror(rc), rc);
             rc = -pcmk_err_generic;
         }
 #endif
@@ -483,9 +483,9 @@ crm_remote_recv_once(crm_remote_t * remote)
         crm_debug("EOF encoutered after %u bytes", remote->buffer_offset);
         return -ENOTCONN;
 
-    } else if (rc <= 0) {
+    } else {
         crm_debug("Error receiving message after %u bytes: %s (%d)",
-                  remote->buffer_offset, gnutls_strerror(rc), rc);
+                  remote->buffer_offset, pcmk_strerror(rc), rc);
         return -ENOTCONN;
     }
 
