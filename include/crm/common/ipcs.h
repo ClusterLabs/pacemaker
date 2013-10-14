@@ -41,14 +41,17 @@ enum client_type {
 struct crm_remote_s {
     /* Shared */
     char *buffer;
+    size_t buffer_size;
+    size_t buffer_offset;
     int auth_timeout;
-    bool authenticated;         /* CIB-only */
+    int tcp_socket;
     mainloop_io_t *source;
 
-    char *token;                /* CIB Only */
+    /* CIB-only */
+    bool authenticated;
+    char *token;
 
-    int tcp_socket;
-
+    /* TLS only */
 #  ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
     bool tls_handshake_complete;
