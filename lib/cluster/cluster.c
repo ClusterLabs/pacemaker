@@ -253,7 +253,7 @@ crm_cluster_disconnect(crm_cluster_t * cluster)
             return;
 
         } else if (cluster->hb_conn) {
-            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, FALSE);
+            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, TRUE);
             cluster->hb_conn = NULL;
             crm_info("Disconnected from %s", type_str);
             return;
