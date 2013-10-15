@@ -98,40 +98,38 @@ static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 static void
 pcmk_setscheduler(crm_child_t * child)
 {
-#if defined(HAVE_SCHED_GETPARAM) && defined(HAVE_SCHED_SETPARAM) && defined(HAVE_SCHED_GET_PRIORITY_MIN)
+#if defined(HAVE_SCHED_SETSCHEDULER)
     int policy = sched_getscheduler(0);
 
     if (policy == -1) {
-        ais_perror("Could not get the scheduler policy for %s", child->name);
+        ais_perror("Could not get scheduling policy for %s", child->name);
 
-    } else if (policy == SCHED_RR) {
-        struct sched_param param;
+    } else {
+        int priority = -10;
 
-        if (sched_getparam(0, &param) == -1) {
-            ais_perror("Could not get the scheduling parameters for %s", child->name);
+        if (policy != SCHED_OTHER) {
+            struct sched_param sp;
 
-        } else {
-            int min_priority = sched_get_priority_min(SCHED_RR);
+            policy = SCHED_OTHER;
+#  if defined(SCHED_RESET_ON_FORK)
+            policy |= SCHED_RESET_ON_FORK;
+#  endif
+            memset(&sp, 0, sizeof(sp));
+            sp.sched_priority = 0;
 
-            if (min_priority == -1) {
-                ais_perror("Could not get the minimum scheduler priority of SCHED_RR policy for %s",
-                           child->name);
-
-            } else if (param.sched_priority > min_priority) {
-                param.sched_priority = min_priority;
-                if (sched_setparam(0, &param) == -1) {
-                    ais_perror("Could not set SCHED_RR to priority %d for %s",
-                               param.sched_priority, child->name);
-
-                } else {
-                    ais_debug("Set SCHED_RR to priority %d for %s",
-                              param.sched_priority, child->name);
-                }
+            if (sched_setscheduler(0, policy, &sp) == -1) {
+                ais_perror("Could not reset scheduling policy to SCHED_OTHER for %s", child->name);
+                return;
             }
+        }
+
+        errno = 0;
+        if (nice(priority) == -1 && errno != 0) {
+            ais_perror("Could not reset process priority to %d for %s", priority, child->name);
         }
     }
 #else
-    ais_info("The Platform is missing process priority setting features. Leaving at default.");
+    ais_info("The platform is missing process priority setting features. Leaving at default.");
 #endif
 }
 
