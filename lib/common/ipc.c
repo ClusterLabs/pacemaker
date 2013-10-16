@@ -865,7 +865,10 @@ crm_ipc_ready(crm_ipc_t * client)
 static int
 crm_ipc_decompress(crm_ipc_t * client)
 {
-    struct crm_ipc_response_header *header = (struct crm_ipc_response_header *)client->buffer;
+    struct crm_ipc_response_header client_buf;
+    struct crm_ipc_response_header* header = &client_buf;
+
+    memcpy(header, client->buffer, sizeof(*header));
 
     if (header->flags & crm_ipc_compressed) {
         int rc = 0;
@@ -895,7 +898,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         CRM_ASSERT(size_u == header->size_uncompressed);
 
         memcpy(uncompressed, client->buffer, hdr_offset);       /* Preserve the header */
-        header = (struct crm_ipc_response_header *)uncompressed;
+        memcpy(header, uncompressed, sizeof(*header));
 
         free(client->buffer);
         client->buf_size = hdr_offset + size_u;
@@ -909,6 +912,7 @@ crm_ipc_decompress(crm_ipc_t * client)
 long
 crm_ipc_read(crm_ipc_t * client)
 {
+    struct crm_ipc_response_header header_buf;
     struct crm_ipc_response_header *header = NULL;
 
     CRM_ASSERT(client != NULL);
@@ -926,7 +930,8 @@ crm_ipc_read(crm_ipc_t * client)
             return rc;
         }
 
-        header = (struct crm_ipc_response_header *)client->buffer;
+        memcpy(&header_buf, client->buffer, sizeof(header_buf));
+        header = &header_buf;
         crm_trace("Received %s event %d, size=%d, rc=%d, text: %.100s",
                   client->name, header->qb.id, header->qb.size, client->msg_size,
                   client->buffer + hdr_offset);
@@ -999,7 +1004,7 @@ internal_ipc_get_reply(crm_ipc_t * client, int request_id, int ms_timeout)
 
         rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
         if (rc > 0) {
-            struct crm_ipc_response_header *hdr = NULL;
+            struct crm_ipc_response_header hdr;
 
             int rc = crm_ipc_decompress(client);
 
@@ -1007,22 +1012,22 @@ internal_ipc_get_reply(crm_ipc_t * client, int request_id, int ms_timeout)
                 return rc;
             }
 
-            hdr = (struct crm_ipc_response_header *)client->buffer;
-            if (hdr->qb.id == request_id) {
+            memcpy(&hdr, client->buffer, sizeof(hdr));
+            if (hdr.qb.id == request_id) {
                 /* Got it */
                 break;
-            } else if (hdr->qb.id < request_id) {
+            } else if (hdr.qb.id < request_id) {
                 xmlNode *bad = string2xml(crm_ipc_buffer(client));
 
-                crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+                crm_err("Discarding old reply %d (need %d)", hdr.qb.id, request_id);
                 crm_log_xml_notice(bad, "OldIpcReply");
 
             } else {
                 xmlNode *bad = string2xml(crm_ipc_buffer(client));
 
-                crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+                crm_err("Discarding newer reply %d (need %d)", hdr.qb.id, request_id);
                 crm_log_xml_notice(bad, "ImpossibleReply");
-                CRM_ASSERT(hdr->qb.id <= request_id);
+                CRM_ASSERT(hdr.qb.id <= request_id);
             }
         } else if (crm_ipc_connected(client) == FALSE) {
             crm_err("Server disconnected client %s while waiting for msg id %d", client->name,
@@ -1129,9 +1134,10 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     if (rc > 0) {
-        struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)client->buffer;
+        struct crm_ipc_response_header hdr;
+        memcpy(&hdr, client->buffer, sizeof(hdr));
 
-        crm_trace("Received response %d, size=%d, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
+        crm_trace("Received response %d, size=%d, rc=%ld, text: %.200s", hdr.qb.id, hdr.qb.size,
                   rc, crm_ipc_buffer(client));
 
         if (reply) {
