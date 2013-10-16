@@ -866,11 +866,11 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
             continue;
         }
         if (addr->sa_family == AF_INET6) {
-            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr;
+            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void *)addr;
 
             addr_in->sin6_port = htons(port);
         } else {
-            struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+            struct sockaddr_in *addr_in = (struct sockaddr_in *)(void *)addr;
 
             addr_in->sin_port = htons(port);
             crm_info("Attempting to connect to remote server at %s:%d",
