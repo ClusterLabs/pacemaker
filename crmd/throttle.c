@@ -40,7 +40,10 @@ struct throttle_record_s
 };
 
 int throttle_job_max = 0;
-float throttle_load_target = 0.8; /* Ie. 80% configured by the user */
+float throttle_load_target = 0.0;
+
+#define THROTTLE_FACTOR_LOW 0.33
+#define THROTTLE_FACTOR_MEDIUM 0.66
 
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
@@ -196,6 +199,11 @@ throttle_mode(void)
 
     enum throttle_state_e mode = throttle_none;
 
+    if(throttle_load_target <= 0) {
+        /* If we ever make this a valid value, the cluster will at least behave as expected */
+        return mode;
+    }
+
     if(throttle_load_avg(&load)) {
         float simple_load = 0.0;
 
@@ -206,13 +214,13 @@ throttle_mode(void)
         }
 
         if(simple_load > throttle_load_target) {
-            crm_notice("Extreme CPU load detected: %f (%f)", simple_load, throttle_load_target);
+            crm_notice("High CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
             mode |= throttle_high;
-        } else if(simple_load > 0.66 * throttle_load_target) {
-            crm_info("High CPU load detected: %f", simple_load);
+        } else if(simple_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+            crm_info("Moderate CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
             mode |= throttle_med;
-        } else if(simple_load > 0.33 * throttle_load_target) {
-            crm_debug("Moderate CPU load detected: %f", simple_load);
+        } else if(simple_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
+            crm_debug("Noticable CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
             mode |= throttle_low;
         }
     }
@@ -221,13 +229,13 @@ throttle_mode(void)
         float blocked_ratio = 0.0;
 
         if(load > throttle_load_target) {
-            crm_notice("Extreme IO load detected: %f (%f)", load, throttle_load_target);
+            crm_notice("High IO load detected: %f (limit: %f)", load, throttle_load_target);
             mode |= throttle_high;
-        } else if(load > 0.66 * throttle_load_target) {
-            crm_info("High IO load detected: %f", load);
+        } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+            crm_info("Moderate IO load detected: %f (limit: %f)", load, throttle_load_target);
             mode |= throttle_med;
-        } else if(load > 0.33 * throttle_load_target) {
-            crm_info("Moderate IO load detected: %f", load);
+        } else if(load > THROTTLE_FACTOR_LOW * throttle_load_target) {
+            crm_info("Noticable IO load detected: %f (limit: %f)", load, throttle_load_target);
             mode |= throttle_low;
         }
 
@@ -238,13 +246,13 @@ throttle_mode(void)
         }
 
         if(blocked_ratio > throttle_load_target) {
-            crm_notice("Extreme IO indicator detected: %f (%f)", blocked_ratio, throttle_load_target);
+            crm_notice("High IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
             mode |= throttle_high;
-        } else if(blocked_ratio > 0.66 * throttle_load_target) {
-            crm_info("High IO indicator detected: %f", blocked_ratio);
+        } else if(blocked_ratio > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+            crm_info("Moderate IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
             mode |= throttle_med;
-        } else if(blocked_ratio > 0.33 * throttle_load_target) {
-            crm_debug("Moderate IO indicator detected: %f", blocked_ratio);
+        } else if(blocked_ratio > THROTTLE_FACTOR_LOW * throttle_load_target) {
+            crm_debug("Noticable IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
             mode |= throttle_low;
         }
     }
@@ -305,7 +313,6 @@ throttle_init(void)
 
     throttle_records = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, throttle_record_free);
     throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
-    crm_debug("load avg: %f on %d cores", load, throttle_num_cores());
     mainloop_timer_start(throttle_timer);
 }
 
