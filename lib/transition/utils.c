@@ -106,7 +106,7 @@ actiontype2text(action_type_e type)
 {
     switch (type) {
         case action_type_pseudo:
-            return "pseduo";
+            return "pseudo";
         case action_type_rsc:
             return "rsc";
         case action_type_crm:
