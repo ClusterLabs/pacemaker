@@ -49,8 +49,6 @@ int throttle_num_cores(void)
 {
     static int cores = 0;
     char buffer[256];
-    char *iter = NULL;
-    char *processor = NULL;
     FILE *stream = NULL;
     const char *cpufile = "/proc/cpuinfo";
 
@@ -61,33 +59,21 @@ int throttle_num_cores(void)
     stream = fopen(cpufile, "r");
     if(stream == NULL) {
         int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", cpufile, pcmk_strerror(rc), rc);
-        return 0;
+        crm_warn("Couldn't read %s, assuming a single processor: %s (%d)", cpufile, pcmk_strerror(rc), rc);
+        return 1;
     }
 
     while (fgets(buffer, sizeof(buffer), stream)) {
         if(strstr(buffer, "processor") == buffer) {
-            free(processor);
-            processor = strdup(buffer);
+            cores++;
         }
     }
 
-    if(processor == NULL) {
-        crm_warn("No processors found in %s", cpufile);
-        return 0;
+    if(cores == 0) {
+        crm_warn("No processors found in %s, assuming 1", cpufile);
+        return 1;
     }
 
-    iter = processor + strlen("processor");
-    while(iter[0] == ':' || isspace(iter[0])) {
-        iter++;
-    }
-
-    cores = strtol(iter, NULL, 10);
-    crm_trace("Got %d from %s", cores, iter);
-
-    cores++; /* Counting starts at 0 */
-
-    free(processor);
     fclose(stream);
     return cores;
 }
