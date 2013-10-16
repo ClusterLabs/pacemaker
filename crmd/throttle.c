@@ -20,6 +20,9 @@
 #include <ctype.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
+#include <crm/cluster.h>
+#include <throttle.h>
 
 enum throttle_state_e 
 {
@@ -29,8 +32,16 @@ enum throttle_state_e
     throttle_none = 0x0000,
 };
 
-void throttle_init(void);
-void throttle_fini(void);
+struct throttle_record_s 
+{
+        int cores;
+        enum throttle_state_e mode;
+        char *node;
+};
+
+static float cpu_target = 0.8; /* Ie. 80% configured by the user */
+GHashTable *throttle_records = NULL;
+mainloop_timer_t *throttle_timer = NULL;
 
 static int throttle_num_cores(void)
 {
@@ -93,8 +104,12 @@ static float throttle_load_avg(void)
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
+        char *nl = strstr(buffer, "\n");
+
         /* Grab the 1-minute average, ignore the rest */
         load = strtof(buffer, NULL);
+        if(nl) { nl[0] = 0; }
+
         crm_debug("Current load is %f (full: %s)", load, buffer);
     }
 
@@ -117,11 +132,11 @@ throttle_mode(void)
         simple_load = load;
     }
 
-    if(simple_load > 0.8) {
+    if(simple_load > cpu_target) {
         mode |= throttle_high;
-    } else if(simple_load > 0.6) {
+    } else if(simple_load > 0.5 * cpu_target) {
         mode |= throttle_med;
-    } else if(simple_load > 0.4) {
+    } else if(simple_load > 0.25 * cpu_target) {
         mode |= throttle_low;
     }
 
@@ -135,6 +150,22 @@ throttle_mode(void)
     return throttle_none;
 }
 
+static void
+throttle_send_command(enum throttle_state_e mode)
+{
+    xmlNode *xml = NULL;
+    int cores = throttle_num_cores();
+
+    xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
+    crm_xml_add_int(xml, F_CRM_THROTTLE_CORES, cores);
+
+    send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
+    free_xml(xml);
+
+    crm_info("Updated throttle state to %.4x", mode);
+}
+
 static gboolean
 throttle_timer_cb(gpointer data)
 {
@@ -143,24 +174,99 @@ throttle_timer_cb(gpointer data)
 
     if(now != last) {
         crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
+        throttle_send_command(now);
         last = now;
     }
     return TRUE;
 }
 
-mainloop_timer_t *throttle_timer = NULL;
-
-void
-throttle_init(void) 
+static void
+throttle_record_free(gpointer p)
 {
-    throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
-    crm_debug("load avg: %f on %d cores", throttle_load_avg(), throttle_num_cores());
-    /* mainloop_timer_start(throttle_timer); */
+    struct throttle_record_s *r = p;
+    free(r->node);
+    free(r);
 }
 
 void
-throttle_fini(void) 
+throttle_init(void)
 {
-    mainloop_timer_del(throttle_timer);
+    throttle_records = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, throttle_record_free);
+    throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
+    crm_debug("load avg: %f on %d cores", throttle_load_avg(), throttle_num_cores());
+    mainloop_timer_start(throttle_timer);
+}
+
+void
+throttle_fini(void)
+{
+    mainloop_timer_del(throttle_timer); throttle_timer = NULL;
+    g_hash_table_destroy(throttle_records); throttle_records = NULL;
+}
+
+int
+throttle_get_job_limit(const char *node)
+{
+    int jobs = 1;
+    int cores = 0;
+    enum throttle_state_e mode = 0;
+    struct throttle_record_s *r = NULL;
+
+    r = g_hash_table_lookup(throttle_records, node);
+    if(r == NULL) {
+        crm_trace("Defaulting to local values for unknown node %s", node);
+        mode = throttle_mode();
+        cores = throttle_num_cores();
+
+    } else {
+        mode = r->mode;
+        cores = r->cores;
+    }
+
+    switch(mode) {
+        case throttle_high:
+            jobs = 1; /* At least one job must always be allowed */
+            break;
+        case throttle_med:
+            jobs = QB_MAX(1, cores / 2);
+            break;
+        case throttle_low:
+            jobs = QB_MAX(1, cores);
+            break;
+        case throttle_none:
+            jobs = QB_MAX(1, cores * 2);
+            break;
+        default:
+            crm_err("Unknown throttle mode %.4x", mode);
+            break;
+    }
+    return jobs;
+}
+
+
+void
+throttle_update(xmlNode *xml)
+{
+    int cores = 0;
+    enum throttle_state_e mode = 0;
+    struct throttle_record_s *r = NULL;
+    const char *from = crm_element_value(xml, F_CRM_HOST_FROM);
+
+    crm_element_value_int(xml, F_CRM_THROTTLE_MODE, (int*)&mode);
+    crm_element_value_int(xml, F_CRM_THROTTLE_CORES, &cores);
+
+    r = g_hash_table_lookup(throttle_records, from);
+
+    if(r == NULL) {
+        r = calloc(1, sizeof(struct throttle_record_s));
+        r->node = strdup(from);
+        g_hash_table_insert(throttle_records, r->node, r);
+    }
+
+    r->cores = cores;
+    r->mode = mode;
+
+    crm_debug("Host %s has %d cores and throttle mode %.4x.  Job limit = %d",
+              from, cores, mode, throttle_get_job_limit(from));
 }
 

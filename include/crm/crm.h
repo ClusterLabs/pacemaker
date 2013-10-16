@@ -102,6 +102,7 @@ extern char *crm_system_name;
 #  define CRM_OP_DIE		"die_no_respawn"
 #  define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #  define CRM_OP_PING		"ping"
+#  define CRM_OP_THROTTLE	"throttle"
 #  define CRM_OP_VOTE		"vote"
 #  define CRM_OP_NOVOTE		"no-vote"
 #  define CRM_OP_HELLO		"hello"

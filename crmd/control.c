@@ -36,6 +36,7 @@
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
 #include <tengine.h>
+#include <throttle.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -936,8 +937,6 @@ crm_read_options(gpointer user_data)
     crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
-
-void throttle_init(void);
 
 /*	 A_READCONFIG	*/
 void

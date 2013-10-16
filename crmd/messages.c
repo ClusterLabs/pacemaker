@@ -34,6 +34,7 @@
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <crmd_lrm.h>
+#include <throttle.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
@@ -697,6 +698,10 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         fsa_input.msg = stored_msg;
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
                                A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE, __FUNCTION__);
+
+    } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
+        throttle_update(stored_msg);
+        return I_NULL;
 
     } else if (strcmp(op, CRM_OP_CLEAR_FAILCOUNT) == 0) {
         return handle_failcount_op(stored_msg);

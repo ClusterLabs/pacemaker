@@ -71,6 +71,9 @@
 #  define F_CRM_TGRAPH			"crm-tgraph"
 #  define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
 
+#  define F_CRM_THROTTLE_MODE		"crm-limit-mode"
+#  define F_CRM_THROTTLE_CORES		"crm-limit-cores"
+
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
 #  define XML_ATTR_TAGNAME		F_XML_TAGNAME
