@@ -133,7 +133,7 @@ pe_cluster_option pe_opts[] = {
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
 	  "Round trip delay over the network (excluding action execution)",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
-	{ "batch-limit", NULL, "integer", NULL, "30", &check_number,
+	{ "batch-limit", NULL, "integer", NULL, "0", &check_number,
 	  "The number of jobs that the TE is allowed to execute in parallel",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number,

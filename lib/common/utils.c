@@ -162,6 +162,21 @@ check_number(const char *value)
     return TRUE;
 }
 
+gboolean
+check_utilization(const char *value)
+{
+    char *end = NULL;
+    long number = strtol(value, &end, 10);
+
+    if(end && end[0] != '%') {
+        return FALSE;
+    } else if(number < 10) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int
 char2score(const char *score)
 {

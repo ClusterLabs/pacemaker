@@ -825,6 +825,10 @@ pe_cluster_option crmd_opts[] = {
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
 	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
+	{ "utililization-limit", NULL, "percentage", NULL, "80%", &check_utilization,
+	  "The maximum amount of system resources that should be used by the cluster",
+	  "The cluster will slow down its recovery process when the amount of system resources used"
+          " (currently CPU) approaches this limit", },
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
@@ -888,6 +892,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
+
+    value = crmd_pref(config_hash, "utililization-limit");
+    if(value) {
+        throttle_cpu_target = strtof(value, NULL) / 100;
+        crm_notice("Maximum utilization is %f based on utililization-limit=%s",
+                   throttle_cpu_target, value);
+    }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);

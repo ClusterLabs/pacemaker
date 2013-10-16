@@ -124,6 +124,7 @@ gboolean check_time(const char *value);
 gboolean check_timer(const char *value);
 gboolean check_boolean(const char *value);
 gboolean check_number(const char *value);
+gboolean check_utilization(const char *value);
 
 /* Shared PE/crmd functionality */
 void filter_action_parameters(xmlNode * param_set, const char *version);

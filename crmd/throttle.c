@@ -39,7 +39,7 @@ struct throttle_record_s
         char *node;
 };
 
-static float cpu_target = 0.5; /* Ie. 50% configured by the user */
+float throttle_cpu_target = 0.5; /* Ie. 50% configured by the user */
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
 
@@ -132,11 +132,11 @@ throttle_mode(void)
         simple_load = load;
     }
 
-    if(simple_load > cpu_target) {
+    if(simple_load > throttle_cpu_target) {
         mode |= throttle_high;
-    } else if(simple_load > 0.66 * cpu_target) {
+    } else if(simple_load > 0.66 * throttle_cpu_target) {
         mode |= throttle_med;
-    } else if(simple_load > 0.33 * cpu_target) {
+    } else if(simple_load > 0.33 * throttle_cpu_target) {
         mode |= throttle_low;
     }
 
