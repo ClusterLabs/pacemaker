@@ -118,6 +118,7 @@ typedef struct crm_graph_functions_s {
     gboolean(*rsc) (crm_graph_t * graph, crm_action_t * action);
     gboolean(*crmd) (crm_graph_t * graph, crm_action_t * action);
     gboolean(*stonith) (crm_graph_t * graph, crm_action_t * action);
+    gboolean(*allowed) (crm_graph_t * graph, crm_action_t * action);
 } crm_graph_functions_t;
 
 enum transition_status {

@@ -39,7 +39,7 @@ struct throttle_record_s
         char *node;
 };
 
-static float cpu_target = 0.8; /* Ie. 80% configured by the user */
+static float cpu_target = 0.5; /* Ie. 50% configured by the user */
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
 
@@ -134,9 +134,9 @@ throttle_mode(void)
 
     if(simple_load > cpu_target) {
         mode |= throttle_high;
-    } else if(simple_load > 0.5 * cpu_target) {
+    } else if(simple_load > 0.66 * cpu_target) {
         mode |= throttle_med;
-    } else if(simple_load > 0.25 * cpu_target) {
+    } else if(simple_load > 0.33 * cpu_target) {
         mode |= throttle_low;
     }
 
@@ -208,36 +208,34 @@ int
 throttle_get_job_limit(const char *node)
 {
     int jobs = 1;
-    int cores = 0;
-    enum throttle_state_e mode = 0;
     struct throttle_record_s *r = NULL;
 
     r = g_hash_table_lookup(throttle_records, node);
     if(r == NULL) {
+        r = calloc(1, sizeof(struct throttle_record_s));
+        r->node = strdup(node);
+        r->mode = throttle_mode();
+        r->cores = throttle_num_cores();
         crm_trace("Defaulting to local values for unknown node %s", node);
-        mode = throttle_mode();
-        cores = throttle_num_cores();
 
-    } else {
-        mode = r->mode;
-        cores = r->cores;
+        g_hash_table_insert(throttle_records, r->node, r);
     }
 
-    switch(mode) {
+    switch(r->mode) {
         case throttle_high:
             jobs = 1; /* At least one job must always be allowed */
             break;
         case throttle_med:
-            jobs = QB_MAX(1, cores / 2);
+            jobs = QB_MAX(1, r->cores / 2);
             break;
         case throttle_low:
-            jobs = QB_MAX(1, cores);
+            jobs = QB_MAX(1, r->cores);
             break;
         case throttle_none:
-            jobs = QB_MAX(1, cores * 2);
+            jobs = QB_MAX(1, r->cores * 2);
             break;
         default:
-            crm_err("Unknown throttle mode %.4x", mode);
+            crm_err("Unknown throttle mode %.4x on %s", r->mode, node);
             break;
     }
     return jobs;
@@ -266,7 +264,7 @@ throttle_update(xmlNode *xml)
     r->cores = cores;
     r->mode = mode;
 
-    crm_debug("Host %s has %d cores and throttle mode %.4x.  Job limit = %d",
+    crm_debug("Host %s has %d cores and throttle mode %.4x.  New job limit is %d",
               from, cores, mode, throttle_get_job_limit(from));
 }
 

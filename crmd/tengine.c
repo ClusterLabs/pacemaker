@@ -207,6 +207,7 @@ do_te_invoke(long long action,
         crm_info("Processing graph %d (ref=%s) derived from %s", transition_graph->id, ref,
                  graph_input);
 
+        te_reset_job_counts();
         value = crm_element_value(graph_data, "failed-stop-offset");
         if (value) {
             free(failed_stop_offset);

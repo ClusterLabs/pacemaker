@@ -353,7 +353,7 @@ match_graph_event(int action_id, xmlNode * event, const char *event_node,
 
     /* stop this event's timer if it had one */
     stop_te_timer(action->timer);
-    action->confirmed = TRUE;
+    te_action_confirmed(action);
 
     update_graph(transition_graph, action);
     trigger_graph();
@@ -396,7 +396,7 @@ get_action(int id, gboolean confirmed)
             if (action->id == id) {
                 if (confirmed) {
                     stop_te_timer(action->timer);
-                    action->confirmed = TRUE;
+                    te_action_confirmed(action);
                 }
                 return action;
             }

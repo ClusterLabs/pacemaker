@@ -71,4 +71,8 @@ extern char *failed_stop_offset;
 extern char *failed_start_offset;
 extern int active_timeout;
 extern int stonith_op_active;
+
+void te_action_confirmed(crm_action_t * action);
+void te_reset_job_counts(void);
+
 #endif

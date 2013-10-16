@@ -445,7 +445,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 
         crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
-            action->confirmed = TRUE;
+            te_action_confirmed(action);
             if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);
             }
@@ -534,7 +534,7 @@ action_timer_callback(gpointer data)
         print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
 
         timer->action->failed = TRUE;
-        timer->action->confirmed = TRUE;
+        te_action_confirmed(timer->action);
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
 
         update_graph(transition_graph, timer->action);

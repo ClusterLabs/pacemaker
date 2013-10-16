@@ -29,10 +29,12 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crm/cluster.h>
+#include <throttle.h>
 
 char *te_uuid = NULL;
-
+GHashTable *te_targets = NULL;
 void send_rsc_command(crm_action_t * action);
+static void te_update_job_count(crm_action_t * action, int offset);
 
 static void
 te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
@@ -51,7 +53,7 @@ static gboolean
 te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 {
     crm_debug("Pseudo action %d fired and confirmed", pseudo->id);
-    pseudo->confirmed = TRUE;
+    te_action_confirmed(pseudo);
     update_graph(graph, pseudo);
     trigger_graph();
     return TRUE;
@@ -214,7 +216,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         crm_info("crm-event (%s) is a local shutdown", crm_str(id));
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
-        action->confirmed = TRUE;
+        te_action_confirmed(action);
         update_graph(graph, action);
         trigger_graph();
         return TRUE;
@@ -239,7 +241,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
 
     } else if (no_wait) {
-        action->confirmed = TRUE;
+        te_action_confirmed(action);
         update_graph(graph, action);
         trigger_graph();
 
@@ -443,13 +445,16 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     free_xml(cmd);
 
     action->executed = TRUE;
+
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
         return FALSE;
 
     } else if (no_wait) {
         crm_info("Action %d confirmed - no wait", action->id);
-        action->confirmed = TRUE;
+        action->confirmed = TRUE; /* Just mark confirmed.
+                                   * Don't bump the job count only to immediately decrement it
+                                   */
         update_graph(transition_graph, action);
         trigger_graph();
 
@@ -459,6 +464,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
                     action->id, task, task_uuid, on_node, action->timeout, graph->network_delay);
             action->timeout = graph->network_delay;
         }
+        te_update_job_count(action, 1);
         te_start_action_timer(graph, action);
     }
 
@@ -474,11 +480,156 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
+struct te_peer_s
+{
+        char *name;
+        int jobs;
+};
+
+static void te_peer_free(gpointer p)
+{
+    struct te_peer_s *peer = p;
+
+    free(peer->name);
+    free(peer);
+}
+
+void te_reset_job_counts(void)
+{
+    GHashTableIter iter;
+    struct te_peer_s *peer = NULL;
+
+    if(te_targets == NULL) {
+        te_targets = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, te_peer_free);
+    }
+
+    g_hash_table_iter_init(&iter, te_targets);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & peer)) {
+        peer->jobs = 0;
+    }
+}
+
+static void
+te_update_job_count_on(const char *target, int offset)
+{
+    struct te_peer_s *r = NULL;
+
+    if(target == NULL || te_targets == NULL) {
+        return;
+    }
+
+    r = g_hash_table_lookup(te_targets, target);
+    if(r == NULL) {
+        r = calloc(1, sizeof(struct te_peer_s));
+        r->name = strdup(target);
+        g_hash_table_insert(te_targets, r->name, r);
+    }
+
+    r->jobs += offset;
+    crm_trace("jobs[%s] = %d", target, r->jobs);
+}
+
+static void
+te_update_job_count(crm_action_t * action, int offset)
+{
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+
+    if (action->type != action_type_rsc || target == NULL) {
+        /* No limit on these */
+        return;
+    }
+
+    if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        xmlNode *meta = get_xpath_object("//[@"XML_LRM_ATTR_MIGRATE_SOURCE"]", action->xml, LOG_ERR);
+        const char *t1 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_SOURCE);
+        const char *t2 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_TARGET);
+
+        te_update_job_count_on(t1, offset);
+        te_update_job_count_on(t2, offset);
+
+    } else {
+
+        te_update_job_count_on(target, offset);
+    }
+}
+
+static gboolean
+te_should_perform_action_on(const char *action, const char *target)
+{
+    int limit = 0;
+    struct te_peer_s *r = NULL;
+
+    if(target == NULL) {
+        /* No limit on these */
+        return TRUE;
+
+    } else if(te_targets == NULL) {
+        return FALSE;
+    }
+
+    r = g_hash_table_lookup(te_targets, target);
+    limit = throttle_get_job_limit(target);
+
+    if(r == NULL) {
+        r = calloc(1, sizeof(struct te_peer_s));
+        r->name = strdup(target);
+        g_hash_table_insert(te_targets, r->name, r);
+    }
+
+    if(limit <= r->jobs) {
+        crm_trace("Peer %s is over their job limit of %d (%d): deferring %s",
+                  target, limit, r->jobs, action);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
+te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
+{
+    const char *target = NULL;
+    const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+
+    if (action->type != action_type_rsc) {
+        /* No limit on these */
+        return TRUE;
+    }
+
+    if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
+        if(te_should_perform_action_on(id, target) == FALSE) {
+            return FALSE;
+        }
+
+        target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
+
+    } else {
+        target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    }
+
+    return te_should_perform_action_on(id, target);
+}
+
+void
+te_action_confirmed(crm_action_t * action)
+{
+    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+
+    if (action->confirmed == FALSE && action->type == action_type_rsc && target != NULL) {
+        te_update_job_count(action, -1);
+    }
+    action->confirmed = TRUE;
+}
+
+
 crm_graph_functions_t te_graph_fns = {
     te_pseudo_action,
     te_rsc_command,
     te_crm_command,
-    te_fence_node
+    te_fence_node,
+    te_should_perform_action,
 };
 
 void

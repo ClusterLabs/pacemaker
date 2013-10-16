@@ -128,7 +128,7 @@ update_graph(crm_graph_t * graph, crm_action_t * action)
 }
 
 static gboolean
-should_fire_synapse(synapse_t * synapse)
+should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 {
     GListPtr lpc = NULL;
 
@@ -149,6 +149,16 @@ should_fire_synapse(synapse_t * synapse)
         }
     }
 
+    if(synapse->ready && graph_fns->allowed) {
+        for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+            crm_action_t *a = (crm_action_t *) lpc->data;
+
+            if(graph_fns->allowed(graph, a) == FALSE) {
+                return FALSE;
+            }
+        }
+    }
+
     return synapse->ready;
 }
 
@@ -164,11 +174,11 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
 
     action->executed = TRUE;
     if (action->type == action_type_pseudo) {
-        crm_trace("Executing pseudo-event: %d", action->id);
+        crm_trace("Executing pseudo-event: %s (%d)", id, action->id);
         return graph_fns->pseudo(graph, action);
 
     } else if (action->type == action_type_rsc) {
-        crm_trace("Executing rsc-event: %d", action->id);
+        crm_trace("Executing rsc-event: %s (%d)", id, action->id);
         return graph_fns->rsc(graph, action);
 
     } else if (action->type == action_type_crm) {
@@ -178,11 +188,11 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
         CRM_CHECK(task != NULL, return FALSE);
 
         if (safe_str_eq(task, CRM_OP_FENCE)) {
-            crm_trace("Executing STONITH-event: %d", action->id);
+            crm_trace("Executing STONITH-event: %s (%d)", id, action->id);
             return graph_fns->stonith(graph, action);
         }
 
-        crm_trace("Executing crm-event: %d", action->id);
+        crm_trace("Executing crm-event: %s (%d)", id, action->id);
         return graph_fns->crmd(graph, action);
     }
 
@@ -360,7 +370,7 @@ run_graph(crm_graph_t * graph)
             crm_trace("Skipping synapse %d: aborting", synapse->id);
             graph->skipped++;
 
-        } else if (should_fire_synapse(synapse)) {
+        } else if (should_fire_synapse(graph, synapse)) {
             crm_trace("Synapse %d fired", synapse->id);
             graph->fired++;
             if(fire_synapse(graph, synapse) == FALSE) {
