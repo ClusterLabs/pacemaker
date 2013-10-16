@@ -105,7 +105,7 @@ dnl ===============================================
 dnl Helpers
 dnl ===============================================
 cc_supports_flag() {
-         local CFLAGS="$@"
+         local CFLAGS="-Werror $@"
          AC_MSG_CHECKING(whether $CC supports "$@")
          AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])], [RC=0; AC_MSG_RESULT(yes)],[RC=1; AC_MSG_RESULT(no)])
          return $RC
