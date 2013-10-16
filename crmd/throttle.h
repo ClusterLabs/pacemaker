@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-extern float throttle_cpu_target;
-extern unsigned int throttle_job_multiplier;
+extern int throttle_job_max;
+extern float throttle_load_target;
 
 void throttle_init(void);
 void throttle_fini(void);

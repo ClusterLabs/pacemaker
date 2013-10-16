@@ -829,6 +829,8 @@ pe_cluster_option crmd_opts[] = {
 	  "The maximum amount of system resources that should be used by the cluster",
 	  "The cluster will slow down its recovery process when the amount of system resources used"
           " (currently CPU) approaches this limit", },
+	{ "action-limit", NULL, "integer", NULL, "0", &check_number,
+          "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
@@ -867,6 +869,7 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
+    int value_i = 0;
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -896,31 +899,32 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
 
-    value = crmd_pref(config_hash, "utililization-limit");
-    if(value) {
-        throttle_cpu_target = strtof(value, NULL) / 100;
-        crm_notice("Maximum utilization is %f based on utililization-limit=%s",
-                   throttle_cpu_target, value);
-    }
-
     value = getenv("LRMD_MAX_CHILDREN");
-    if (value) {
-        int multi = crm_int_helper(value, NULL) / throttle_num_cores();
-
-        throttle_job_multiplier = QB_MAX(multi, 1);
-        crm_notice("Inferred a job multiplier of %d based on the deprecated LRMD_MAX_CHILDREN=%s",
-                   throttle_job_multiplier, value);
+    value_i = crm_int_helper(value, NULL);
+    if(value_i > 0) {
+        throttle_job_max = value_i;
+        crm_debug("Inferred a maximum number of %d jobs based on the deprecated LRMD_MAX_CHILDREN=%s",
+                  throttle_job_max, value);
     }
 
     value = crmd_pref(config_hash, "migration-limit");
-    if (value) {
-        int multi = crm_int_helper(value, NULL) / throttle_num_cores();
+    if(value_i > 0) {
+        throttle_job_max = value_i;
+        crm_debug("Inferred a maximum number of %d jobs based on migration-limit=%s",
+                  throttle_job_max, value);
+    }
 
-        if(multi > 0 && multi < throttle_job_multiplier) {
-            throttle_job_multiplier = QB_MAX(multi, 1);
-            crm_notice("Inferred a job multiplier of %d based on migration-limit=%s",
-                       throttle_job_multiplier, value);
-        }
+    value = crmd_pref(config_hash, "utililization-limit");
+    if(value) {
+        throttle_load_target = strtof(value, NULL) / 100;
+        crm_debug("Maximum utilization is %f based on utililization-limit=%s",
+                   throttle_load_target, value);
+    }
+
+    value = crmd_pref(config_hash, "action-limit");
+    value_i = crm_int_helper(value, NULL);
+    if(value_i > 0) {
+        throttle_job_max = value_i;
     }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
