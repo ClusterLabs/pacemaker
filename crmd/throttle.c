@@ -90,27 +90,109 @@ static int throttle_num_cores(void)
     return cores;
 }
 
-static float throttle_load_avg(void)
+static bool throttle_load_avg(float *load)
 {
-    float load = 0.0;
     char buffer[256];
+    FILE *stream = NULL;
     const char *loadfile = "/proc/loadavg";
-    FILE *stream = fopen(loadfile, "r");
 
+    if(load == NULL) {
+        return FALSE;
+    }
+
+    stream = fopen(loadfile, "r");
     if(stream == NULL) {
         int rc = errno;
         crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
-        return 0;
+        return FALSE;
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
         char *nl = strstr(buffer, "\n");
 
         /* Grab the 1-minute average, ignore the rest */
-        load = strtof(buffer, NULL);
+        *load = strtof(buffer, NULL);
         if(nl) { nl[0] = 0; }
 
-        crm_debug("Current load is %f (full: %s)", load, buffer);
+        crm_debug("Current load is %f (full: %s)", *load, buffer);
+    }
+
+    fclose(stream);
+    return TRUE;
+}
+
+static bool throttle_io_load(float *load, unsigned int *blocked)
+{
+    char buffer[64*1024];
+    FILE *stream = NULL;
+    const char *loadfile = "/proc/stat";
+
+    if(load == NULL) {
+        return FALSE;
+    }
+
+    stream = fopen(loadfile, "r");
+    if(stream == NULL) {
+        int rc = errno;
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
+        return FALSE;
+    }
+
+    if(fgets(buffer, sizeof(buffer), stream)) {
+        /* Borrowed from procps-ng's sysinfo.c */
+
+        char *b = NULL;
+        long long cpu_use = 0;
+        long long cpu_nic = 0;
+        long long cpu_sys = 0;
+        long long cpu_idl = 0;
+        long long cpu_iow = 0; /* not separated out until the 2.5.41 kernel */
+        long long cpu_xxx = 0; /* not separated out until the 2.6.0-test4 kernel */
+        long long cpu_yyy = 0; /* not separated out until the 2.6.0-test4 kernel */
+        long long cpu_zzz = 0; /* not separated out until the 2.6.11 kernel */
+
+        long long divo2 = 0;
+        long long duse = 0;
+        long long dsys = 0;
+        long long didl =0;
+        long long diow =0;
+        long long dstl = 0;
+        long long Div = 0;
+
+        b = strstr(buffer, "cpu ");
+        if(b) sscanf(b,  "cpu  %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
+               &cpu_use, &cpu_nic, &cpu_sys, &cpu_idl, &cpu_iow, &cpu_xxx, &cpu_yyy, &cpu_zzz);
+
+        if(blocked) {
+            b = strstr(buffer, "procs_blocked ");
+            if(b) sscanf(b,  "procs_blocked %u", blocked);
+        }
+
+        duse = cpu_use + cpu_nic;
+        dsys = cpu_sys + cpu_xxx + cpu_yyy;
+        didl = cpu_idl;
+        diow = cpu_iow;
+        dstl = cpu_zzz;
+        Div = duse + dsys + didl + diow + dstl;
+        if (!Div) Div = 1, didl = 1;
+        divo2 = Div / 2UL;
+
+        /* vmstat output:
+         *
+         * procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu---- 
+         * r  b   swpd   free   buff  cache     si   so    bi    bo   in   cs us sy id wa
+         * 1  0 5537800 958592 204180 1737740    1    1    12    15    0    0  2  1 97  0
+         *
+         * The last four columns are calculated as:
+         *
+         * (unsigned)( (100*duse			+ divo2) / Div ),
+         * (unsigned)( (100*dsys			+ divo2) / Div ),
+         * (unsigned)( (100*didl			+ divo2) / Div ),
+         * (unsigned)( (100*diow			+ divo2) / Div )
+         *
+         */
+        *load = (diow + divo2) / Div;
+        crm_debug("Current IO load is %f", *load);
     }
 
     fclose(stream);
@@ -120,24 +202,63 @@ static float throttle_load_avg(void)
 static enum throttle_state_e
 throttle_mode(void) 
 {
-    float load = throttle_load_avg();
+    float load;
+    unsigned int blocked = 0;
     int cores = throttle_num_cores();
-    float simple_load = 0.0;
 
     enum throttle_state_e mode = throttle_none;
 
-    if(cores) {
-        simple_load = load / cores;
-    } else {
-        simple_load = load;
+    if(throttle_load_avg(&load)) {
+        float simple_load = 0.0;
+
+        if(cores) {
+            simple_load = load / cores;
+        } else {
+            simple_load = load;
+        }
+
+        if(simple_load > throttle_cpu_target) {
+            crm_notice("Extreme CPU load detected: %f", simple_load);
+            mode |= throttle_high;
+        } else if(simple_load > 0.66 * throttle_cpu_target) {
+            crm_info("High CPU load detected: %f", simple_load);
+            mode |= throttle_med;
+        } else if(simple_load > 0.33 * throttle_cpu_target) {
+            crm_debug("Moderate CPU load detected: %f", simple_load);
+            mode |= throttle_low;
+        }
     }
 
-    if(simple_load > throttle_cpu_target) {
-        mode |= throttle_high;
-    } else if(simple_load > 0.66 * throttle_cpu_target) {
-        mode |= throttle_med;
-    } else if(simple_load > 0.33 * throttle_cpu_target) {
-        mode |= throttle_low;
+    if(throttle_io_load(&load, &blocked)) {
+        float blocked_ratio = 0.0;
+
+        if(load > throttle_cpu_target) {
+            crm_notice("Extreme IO load detected: %f", load);
+            mode |= throttle_high;
+        } else if(load > 0.66 * throttle_cpu_target) {
+            crm_info("High IO load detected: %f", load);
+            mode |= throttle_med;
+        } else if(load > 0.33 * throttle_cpu_target) {
+            crm_info("Moderate IO load detected: %f", load);
+            mode |= throttle_low;
+        }
+
+        if(cores) {
+            blocked_ratio = blocked / cores;
+        } else {
+            blocked_ratio = blocked;
+        }
+
+        if(blocked_ratio > throttle_cpu_target) {
+            crm_notice("Extreme IO indicator detected: %f", blocked_ratio);
+            mode |= throttle_high;
+        } else if(blocked_ratio > 0.66 * throttle_cpu_target) {
+            crm_info("High IO indicator detected: %f", blocked_ratio);
+            mode |= throttle_med;
+        } else if(blocked_ratio > 0.33 * throttle_cpu_target) {
+            crm_debug("Moderate IO indicator detected: %f", blocked_ratio);
+            mode |= throttle_low;
+        }
     }
 
     if(mode & throttle_high) {
@@ -191,9 +312,12 @@ throttle_record_free(gpointer p)
 void
 throttle_init(void)
 {
+    float load = 0.0;
+    throttle_load_avg(&load);
+
     throttle_records = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, throttle_record_free);
     throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
-    crm_debug("load avg: %f on %d cores", throttle_load_avg(), throttle_num_cores());
+    crm_debug("load avg: %f on %d cores", load, throttle_num_cores());
     mainloop_timer_start(throttle_timer);
 }
 
