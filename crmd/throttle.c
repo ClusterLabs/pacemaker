@@ -40,10 +40,12 @@ struct throttle_record_s
 };
 
 float throttle_cpu_target = 0.5; /* Ie. 50% configured by the user */
+unsigned int throttle_job_multiplier = 2;
+
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
 
-static int throttle_num_cores(void)
+int throttle_num_cores(void)
 {
     static int cores = 0;
     char buffer[256];
@@ -218,7 +220,7 @@ throttle_mode(void)
         }
 
         if(simple_load > throttle_cpu_target) {
-            crm_notice("Extreme CPU load detected: %f", simple_load);
+            crm_notice("Extreme CPU load detected: %f (%f)", simple_load, throttle_cpu_target);
             mode |= throttle_high;
         } else if(simple_load > 0.66 * throttle_cpu_target) {
             crm_info("High CPU load detected: %f", simple_load);
@@ -233,7 +235,7 @@ throttle_mode(void)
         float blocked_ratio = 0.0;
 
         if(load > throttle_cpu_target) {
-            crm_notice("Extreme IO load detected: %f", load);
+            crm_notice("Extreme IO load detected: %f (%f)", load, throttle_cpu_target);
             mode |= throttle_high;
         } else if(load > 0.66 * throttle_cpu_target) {
             crm_info("High IO load detected: %f", load);
@@ -250,7 +252,7 @@ throttle_mode(void)
         }
 
         if(blocked_ratio > throttle_cpu_target) {
-            crm_notice("Extreme IO indicator detected: %f", blocked_ratio);
+            crm_notice("Extreme IO indicator detected: %f (%f)", blocked_ratio, throttle_cpu_target);
             mode |= throttle_high;
         } else if(blocked_ratio > 0.66 * throttle_cpu_target) {
             crm_info("High IO indicator detected: %f", blocked_ratio);
@@ -350,13 +352,13 @@ throttle_get_job_limit(const char *node)
             jobs = 1; /* At least one job must always be allowed */
             break;
         case throttle_med:
-            jobs = QB_MAX(1, r->cores / 2);
+            jobs = QB_MAX(1, r->cores * throttle_job_multiplier / 4);
             break;
         case throttle_low:
-            jobs = QB_MAX(1, r->cores);
+            jobs = QB_MAX(1, r->cores * throttle_job_multiplier / 2);
             break;
         case throttle_none:
-            jobs = QB_MAX(1, r->cores * 2);
+            jobs = QB_MAX(1, r->cores * throttle_job_multiplier);
             break;
         default:
             crm_err("Unknown throttle mode %.4x on %s", r->mode, node);

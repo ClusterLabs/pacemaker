@@ -17,9 +17,11 @@
  */
 
 extern float throttle_cpu_target;
+extern unsigned int throttle_job_multiplier;
 
 void throttle_init(void);
 void throttle_fini(void);
 
+int throttle_num_cores(void);
 void throttle_update(xmlNode *xml);
 int throttle_get_job_limit(const char *node);

@@ -834,6 +834,9 @@ pe_cluster_option crmd_opts[] = {
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
+	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number, NULL}, /* Dup from the PE */
+
+
 #if SUPPORT_PLUGIN
 	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
 #endif
@@ -898,6 +901,26 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         throttle_cpu_target = strtof(value, NULL) / 100;
         crm_notice("Maximum utilization is %f based on utililization-limit=%s",
                    throttle_cpu_target, value);
+    }
+
+    value = getenv("LRMD_MAX_CHILDREN");
+    if (value) {
+        int multi = crm_int_helper(value, NULL) / throttle_num_cores();
+
+        throttle_job_multiplier = QB_MAX(multi, 1);
+        crm_notice("Inferred a job multiplier of %d based on the deprecated LRMD_MAX_CHILDREN=%s",
+                   throttle_job_multiplier, value);
+    }
+
+    value = crmd_pref(config_hash, "migration-limit");
+    if (value) {
+        int multi = crm_int_helper(value, NULL) / throttle_num_cores();
+
+        if(multi > 0 && multi < throttle_job_multiplier) {
+            throttle_job_multiplier = QB_MAX(multi, 1);
+            crm_notice("Inferred a job multiplier of %d based on migration-limit=%s",
+                       throttle_job_multiplier, value);
+        }
     }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
