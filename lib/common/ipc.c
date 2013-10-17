@@ -519,14 +519,17 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int
 
     CRM_ASSERT(result != NULL);
 
+    crm_ipc_init();
+
     if (max_send_size == 0) {
         max_send_size = ipc_buffer_max;
     }
 
+    CRM_LOG_ASSERT(max_send_size != 0);
+
     *result = NULL;
     iov = calloc(2, sizeof(struct iovec));
 
-    crm_ipc_init();
 
     iov[0].iov_len = hdr_offset;
     iov[0].iov_base = header;
@@ -650,14 +653,16 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 {
     struct iovec *iov = NULL;
     ssize_t rc = 0;
-    int32_t max_msg_size = ipc_buffer_max;
+    int32_t max_msg_size = 0;
 
     if(c == NULL) {
         return -EDESTADDRREQ;
     }
+    crm_ipc_init();
 
     /* when sending from server to client, we need to use the client's
      * max buffer size if possible */
+    max_msg_size = ipc_buffer_max;
 #ifdef HAVE_IPCS_GET_BUFFER_SIZE
     max_msg_size = qb_ipcs_connection_get_buffer_size(c->ipcs);
 #endif
