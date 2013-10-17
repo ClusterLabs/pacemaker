@@ -875,7 +875,9 @@ crm_ipc_decompress(crm_ipc_t * client)
     if (header->flags & crm_ipc_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        char *uncompressed = calloc(1, hdr_offset + size_u);
+        /* never let buf size fall below our max size required for ipc reads. */
+        unsigned int new_buf_size = QB_MAX((hdr_offset + size_u), client->max_buf_size);
+        char *uncompressed = calloc(1, new_buf_size);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->size_compressed, size_u);
@@ -903,7 +905,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         header = (struct crm_ipc_response_header *)uncompressed;
 
         free(client->buffer);
-        client->buf_size = hdr_offset + size_u;
+        client->buf_size = new_buf_size;
         client->buffer = uncompressed;
     }
 
