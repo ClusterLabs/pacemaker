@@ -105,6 +105,8 @@ typedef struct remote_fencing_op_s {
     /*! The current topology level being executed */
     guint level;
     /*! The device list of all the devices at the current executing topology level. */
+    GListPtr devices_list;
+    /*! Current entry in the topology device list */
     GListPtr devices;
 
     /*! List of duplicate operations attached to this operation. Once this operation
