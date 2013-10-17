@@ -825,18 +825,17 @@ pe_cluster_option crmd_opts[] = {
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
 	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
-	{ "utililization-limit", NULL, "percentage", NULL, "80%", &check_utilization,
+	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
 	  "The maximum amount of system resources that should be used by the cluster",
 	  "The cluster will slow down its recovery process when the amount of system resources used"
           " (currently CPU) approaches this limit", },
-	{ "action-limit", NULL, "integer", NULL, "0", &check_number,
+	{ "node-action-limit", "migration-limit", "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
-	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number, NULL}, /* Dup from the PE */
 
 
 #if SUPPORT_PLUGIN
@@ -899,33 +898,22 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
 
-    value = getenv("LRMD_MAX_CHILDREN");
+
+    value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
     value_i = crm_int_helper(value, NULL);
+    if(value_i <= 0) {
+        value = getenv("LRMD_MAX_CHILDREN");
+        value_i = crm_int_helper(value, NULL);
+    }
     if(value_i > 0) {
         throttle_job_max = value_i;
-        crm_debug("Inferred a maximum number of %d jobs based on the deprecated LRMD_MAX_CHILDREN=%s",
-                  throttle_job_max, value);
     }
 
-    value = crmd_pref(config_hash, "migration-limit");
-    if(value_i > 0) {
-        throttle_job_max = value_i;
-        crm_debug("Inferred a maximum number of %d jobs based on migration-limit=%s",
-                  throttle_job_max, value);
-    }
-
-    value = crmd_pref(config_hash, "utililization-limit");
+    value = crmd_pref(config_hash, "load-threshold");
     if(value) {
         throttle_load_target = strtof(value, NULL) / 100;
-        crm_debug("Maximum utilization is %f based on utililization-limit=%s",
-                   throttle_load_target, value);
     }
 
-    value = crmd_pref(config_hash, "action-limit");
-    value_i = crm_int_helper(value, NULL);
-    if(value_i > 0) {
-        throttle_job_max = value_i;
-    }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
