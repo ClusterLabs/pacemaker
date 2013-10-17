@@ -421,7 +421,7 @@ remote_proxy_new(const char *node_name, const char *session_id, const char *chan
     if (safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
         proxy->is_local = TRUE;
     } else {
-        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, &proxy_callbacks);
+        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, proxy, &proxy_callbacks);
         proxy->ipc = mainloop_get_ipc_client(proxy->source);
 
         if (proxy->source == NULL) {
