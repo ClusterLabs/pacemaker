@@ -743,10 +743,6 @@ do_stop(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (is_heartbeat_cluster()) {
-        stop_subsystem(pe_subsystem, FALSE);
-    }
-
     crm_trace("Closing IPC server");
     mainloop_del_ipc_server(ipcs); ipcs = NULL;
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
