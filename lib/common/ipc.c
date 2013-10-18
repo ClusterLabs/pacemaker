@@ -735,22 +735,19 @@ struct crm_ipc_s {
 static int
 pick_ipc_buffer(int max)
 {
-    const char *env = getenv("PCMK_ipc_buffer");
+    static int global_max = 0;
 
-    if (env) {
-        max = crm_parse_int(env, "0");
+    if(global_max == 0) {
+        const char *env = getenv("PCMK_ipc_buffer");
+
+        if (env) {
+            global_max = crm_parse_int(env, "0");
+        } else {
+            global_max = MAX_MSG_SIZE;
+        }
     }
 
-    if (max <= 0) {
-        max = MAX_MSG_SIZE;
-    }
-
-    if (max < MIN_MSG_SIZE) {
-        max = MIN_MSG_SIZE;
-    }
-
-    crm_trace("Using max message size of %d", max);
-    return max;
+    return QB_MAX(max, global_max);
 }
 
 crm_ipc_t *
