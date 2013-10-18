@@ -124,6 +124,10 @@ free_remote_op(gpointer data)
         free_xml(op->request);
         op->request = NULL;
     }
+    if (op->devices_list) {
+        g_list_free_full(op->devices_list, free);
+        op->devices_list = NULL;
+    }
     free(op);
 }
 
@@ -391,6 +395,22 @@ topology_is_empty(stonith_topology_t *tp)
     return TRUE;
 }
 
+/* deep copy the device list */
+static void
+set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
+{
+    GListPtr lpc = NULL;
+
+    if (op->devices_list) {
+        g_list_free_full(op->devices_list, free);
+        op->devices_list = NULL;
+    }
+    for (lpc = devices; lpc != NULL; lpc = lpc->next) {
+        op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
+    }
+    op->devices = op->devices_list;
+}
+
 static int
 stonith_topology_next(remote_fencing_op_t * op)
 {
@@ -415,7 +435,7 @@ stonith_topology_next(remote_fencing_op_t * op)
         crm_trace("Attempting fencing level %d for %s (%d devices) - %s@%s.%.8s",
                   op->level, op->target, g_list_length(tp->levels[op->level]),
                   op->client_name, op->originator, op->id);
-        op->devices = tp->levels[op->level];
+        set_op_device_list(op, tp->levels[op->level]);
         return pcmk_ok;
     }
 
