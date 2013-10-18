@@ -733,11 +733,11 @@ mainloop_gio_destroy(gpointer c)
 }
 
 mainloop_io_t *
-mainloop_add_ipc_client(const char *name, int priority, void *userdata,
+mainloop_add_ipc_client(const char *name, int priority, size_t max_size, void *userdata,
                         struct ipc_client_callbacks *callbacks)
 {
     mainloop_io_t *client = NULL;
-    crm_ipc_t *conn = crm_ipc_new(name, 0);
+    crm_ipc_t *conn = crm_ipc_new(name, max_size);
 
     if (conn && crm_ipc_connect(conn)) {
         int32_t fd = crm_ipc_get_fd(conn);

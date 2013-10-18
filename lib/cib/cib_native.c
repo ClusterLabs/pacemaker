@@ -220,7 +220,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
 
     } else {
         native->source =
-            mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, cib,
+            mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , cib,
                                     &cib_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
