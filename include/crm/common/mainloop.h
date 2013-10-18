@@ -74,7 +74,7 @@ qb_ipcs_service_t *mainloop_add_ipc_server(const char *name, enum qb_ipc_type ty
 
 void mainloop_del_ipc_server(qb_ipcs_service_t * server);
 
-mainloop_io_t *mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
+mainloop_io_t *mainloop_add_ipc_client(const char *name, int priority,
                                        void *userdata, struct ipc_client_callbacks *callbacks);
 
 void mainloop_del_ipc_client(mainloop_io_t * client);

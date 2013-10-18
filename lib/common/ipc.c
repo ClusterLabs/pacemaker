@@ -528,14 +528,17 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int
 
     CRM_ASSERT(result != NULL);
 
+    crm_ipc_init();
+
     if (max_send_size == 0) {
         max_send_size = ipc_buffer_max;
     }
 
+    CRM_LOG_ASSERT(max_send_size != 0);
+
     *result = NULL;
     iov = calloc(2, sizeof(struct iovec));
 
-    crm_ipc_init();
 
     iov[0].iov_len = hdr_offset;
     iov[0].iov_base = header;
@@ -665,14 +668,16 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 {
     struct iovec *iov = NULL;
     ssize_t rc = 0;
-    int32_t max_msg_size = ipc_buffer_max;
+    int32_t max_msg_size = 0;
 
     if(c == NULL) {
         return -EDESTADDRREQ;
     }
+    crm_ipc_init();
 
     /* when sending from server to client, we need to use the client's
      * max buffer size if possible */
+    max_msg_size = ipc_buffer_max;
 #ifdef HAVE_IPCS_GET_BUFFER_SIZE
     max_msg_size = qb_ipcs_connection_get_buffer_size(c->ipcs);
 #endif
@@ -889,7 +894,9 @@ crm_ipc_decompress(crm_ipc_t * client)
     if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        char *uncompressed = calloc(1, hdr_offset + size_u);
+        /* never let buf size fall below our max size required for ipc reads. */
+        unsigned int new_buf_size = QB_MAX((hdr_offset + size_u), client->max_buf_size);
+        char *uncompressed = calloc(1, new_buf_size);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->size_compressed, size_u);
@@ -917,7 +924,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         header = (struct crm_ipc_response_header *)uncompressed;
 
         free(client->buffer);
-        client->buf_size = hdr_offset + size_u;
+        client->buf_size = new_buf_size;
         client->buffer = uncompressed;
     }
 

@@ -949,7 +949,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
             rc = -ENOTCONN;
         }
     } else {
-        native->source = mainloop_add_ipc_client("lrmd", G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
+        native->source = mainloop_add_ipc_client("lrmd", G_PRIORITY_HIGH, lrmd, &lrmd_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
 

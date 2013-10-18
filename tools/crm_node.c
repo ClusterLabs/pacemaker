@@ -707,7 +707,7 @@ try_corosync(int command, enum cluster_type_e stack)
             /* Go to pacemakerd */
             amainloop = g_main_new(FALSE);
             ipc =
-                mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, 0, NULL,
+                mainloop_add_ipc_client(CRM_SYSTEM_MCP, G_PRIORITY_DEFAULT, NULL,
                                         &node_callbacks);
             if (ipc != NULL) {
                 /* Sending anything will get us a list of nodes */
