@@ -42,8 +42,9 @@ struct throttle_record_s
 int throttle_job_max = 0;
 float throttle_load_target = 0.0;
 
-#define THROTTLE_FACTOR_LOW 0.33
-#define THROTTLE_FACTOR_MEDIUM 0.66
+#define THROTTLE_FACTOR_LOW    0.6
+#define THROTTLE_FACTOR_MEDIUM 0.8
+#define THROTTLE_FACTOR_HIGH   1.2
 
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
@@ -213,7 +214,7 @@ throttle_mode(void)
             simple_load = load;
         }
 
-        if(simple_load > throttle_load_target) {
+        if(simple_load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
             crm_notice("High CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
             mode |= throttle_high;
         } else if(simple_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
@@ -228,7 +229,7 @@ throttle_mode(void)
     if(throttle_io_load(&load, &blocked)) {
         float blocked_ratio = 0.0;
 
-        if(load > throttle_load_target) {
+        if(load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
             crm_notice("High IO load detected: %f (limit: %f)", load, throttle_load_target);
             mode |= throttle_high;
         } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
@@ -245,7 +246,7 @@ throttle_mode(void)
             blocked_ratio = blocked;
         }
 
-        if(blocked_ratio > throttle_load_target) {
+        if(blocked_ratio > THROTTLE_FACTOR_HIGH * throttle_load_target) {
             crm_notice("High IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
             mode |= throttle_high;
         } else if(blocked_ratio > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {

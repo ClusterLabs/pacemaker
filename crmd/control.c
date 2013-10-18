@@ -826,7 +826,7 @@ pe_cluster_option crmd_opts[] = {
 	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
 	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
-	  "The maximum amount of system resources that should be used by the cluster",
+	  "The maximum amount of system resources that should be used by nodes in the cluster",
 	  "The cluster will slow down its recovery process when the amount of system resources used"
           " (currently CPU) approaches this limit", },
 	{ "node-action-limit", "migration-limit", "integer", NULL, "0", &check_number,
