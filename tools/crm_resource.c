@@ -94,6 +94,7 @@ static void
 start_mainloop(void)
 {
     mainloop = g_main_new(FALSE);
+    crmd_replies_needed++;      /* The welcome message */
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
 
@@ -755,7 +756,6 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     free_xml(msg_data);
 
     if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
-        crmd_replies_needed++;
         rc = 0;
 
     } else {
@@ -2179,7 +2179,6 @@ main(int argc, char **argv)
 
         crm_debug("Re-checking the state of all resources on %s", host_uname);
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
-            crmd_replies_needed++;
             start_mainloop();
         }
 
