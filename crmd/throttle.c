@@ -22,6 +22,8 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>
+
+#include <crmd_fsa.h>
 #include <throttle.h>
 
 enum throttle_state_e 
@@ -287,10 +289,20 @@ throttle_send_command(enum throttle_state_e mode)
 static gboolean
 throttle_timer_cb(gpointer data)
 {
+    static bool send_updates = FALSE;
     static enum throttle_state_e last = throttle_none;
     enum throttle_state_e now = throttle_mode();
 
-    if(now != last) {
+    if(send_updates == FALSE) {
+        /* Optimize for the true case */
+        if(compare_version(fsa_our_dc_version, "3.0.8") < 0) {
+            crm_trace("DC version %s doesn't support throttling", fsa_our_dc_version);
+        } else {
+            send_updates = TRUE;
+        }
+    }
+
+    if(send_updates && now != last) {
         crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
         throttle_send_command(now);
         last = now;

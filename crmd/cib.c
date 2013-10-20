@@ -74,8 +74,8 @@ static void
 revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     int cmp = -1;
-    const char *revision = NULL;
     xmlNode *generation = NULL;
+    const char *revision = NULL;
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -94,7 +94,7 @@ revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     cmp = compare_version(revision, CRM_FEATURE_SET);
 
     if (cmp > 0) {
-        crm_err("This build (%s) does not support the current" " resource configuration", VERSION);
+        crm_err("This build (%s) does not support the current resource configuration", VERSION);
         crm_err("We can only support up to CRM feature set %s (current=%s)",
                 CRM_FEATURE_SET, revision);
         crm_err("Shutting down the CRM");
