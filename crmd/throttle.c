@@ -17,7 +17,13 @@
  */
 
 #include <crm_internal.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <unistd.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -25,6 +31,7 @@
 
 #include <crmd_fsa.h>
 #include <throttle.h>
+
 
 enum throttle_state_e 
 {
@@ -84,6 +91,186 @@ int throttle_num_cores(void)
     return cores;
 }
 
+static char *find_cib_loadfile(void) 
+{
+    DIR *dp;
+    struct dirent *entry;
+    struct stat statbuf;
+    char *match = NULL;
+
+    dp = opendir("/proc");
+    if (!dp) {
+        /* no proc directory to search through */
+        crm_notice("Can not read /proc directory to track existing components");
+        return FALSE;
+    }
+
+    while ((entry = readdir(dp)) != NULL) {
+        char procpath[128];
+        char value[64];
+        char key[16];
+        FILE *file;
+        int pid;
+
+        strcpy(procpath, "/proc/");
+        /* strlen("/proc/") + strlen("/status") + 1 = 14
+         * 128 - 14 = 114 */
+        strncat(procpath, entry->d_name, 114);
+
+        if (lstat(procpath, &statbuf)) {
+            continue;
+        }
+        if (!S_ISDIR(statbuf.st_mode) || !isdigit(entry->d_name[0])) {
+            continue;
+        }
+
+        strcat(procpath, "/status");
+
+        file = fopen(procpath, "r");
+        if (!file) {
+            continue;
+        }
+        if (fscanf(file, "%15s%63s", key, value) != 2) {
+            fclose(file);
+            continue;
+        }
+        fclose(file);
+
+        if (safe_str_neq("cib", value)) {
+            continue;
+        }
+
+        pid = atoi(entry->d_name);
+        if (pid <= 0) {
+            continue;
+        }
+
+        match = g_strdup_printf("/proc/%d/stat", pid);
+        break;
+    }
+
+    closedir(dp);
+    return match;
+}
+
+static bool throttle_cib_load(float *load) 
+{
+/*
+       /proc/[pid]/stat
+              Status information about the process.  This is used by ps(1).  It is defined in /usr/src/linux/fs/proc/array.c.
+
+              The fields, in order, with their proper scanf(3) format specifiers, are:
+
+              pid %d      (1) The process ID.
+
+              comm %s     (2) The filename of the executable, in parentheses.  This is visible whether or not the executable is swapped out.
+
+              state %c    (3) One character from the string "RSDZTW" where R is running, S is sleeping in an interruptible wait, D is waiting in uninterruptible disk sleep, Z is zombie, T is traced or stopped (on a signal), and W is paging.
+
+              ppid %d     (4) The PID of the parent.
+
+              pgrp %d     (5) The process group ID of the process.
+
+              session %d  (6) The session ID of the process.
+
+              tty_nr %d   (7) The controlling terminal of the process.  (The minor device number is contained in the combination of bits 31 to 20 and 7 to 0; the major device number is in bits 15 to 8.)
+
+              tpgid %d    (8) The ID of the foreground process group of the controlling terminal of the process.
+
+              flags %u (%lu before Linux 2.6.22)
+                          (9) The kernel flags word of the process.  For bit meanings, see the PF_* defines in the Linux kernel source file include/linux/sched.h.  Details depend on the kernel version.
+
+              minflt %lu  (10) The number of minor faults the process has made which have not required loading a memory page from disk.
+
+              cminflt %lu (11) The number of minor faults that the process's waited-for children have made.
+
+              majflt %lu  (12) The number of major faults the process has made which have required loading a memory page from disk.
+
+              cmajflt %lu (13) The number of major faults that the process's waited-for children have made.
+
+              utime %lu   (14) Amount of time that this process has been scheduled in user mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).  This includes guest time, guest_time (time spent running a virtual CPU, see below), so that applications that are not aware of the guest time field do not lose that time from their calculations.
+
+              stime %lu   (15) Amount of time that this process has been scheduled in kernel mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+ */
+
+    static char *loadfile = NULL;
+    static time_t last_call = 0;
+    static long ticks_per_s = 0;
+    static unsigned long last_utime, last_stime;
+
+    char buffer[64*1024];
+    FILE *stream = NULL;
+    time_t now = time(NULL);
+
+    if(load == NULL) {
+        return FALSE;
+    } else {
+        *load = 0.0;
+    }
+
+    if(loadfile == NULL) {
+        last_call = 0;
+        last_utime = 0;
+        last_stime = 0;
+        loadfile = find_cib_loadfile();
+        ticks_per_s = sysconf(_SC_CLK_TCK);
+        crm_trace("Found %s", loadfile);
+    }
+
+    stream = fopen(loadfile, "r");
+    if(stream == NULL) {
+        int rc = errno;
+
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
+        free(loadfile); loadfile = NULL;
+        return FALSE;
+    }
+
+    if(fgets(buffer, sizeof(buffer), stream)) {
+        char *comm = calloc(1, 256);
+        char state = 0;
+        int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
+        unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
+
+        rc = sscanf(buffer,  "%d %[^ ] %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu",
+                    &pid, comm, &state,
+                    &ppid, &pgrp, &session, &tty_nr, &tpgid,
+                    &flags, &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime);
+
+        if(rc != 15) {
+            crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            return FALSE;
+
+        } else if(last_call > 0
+           && last_call < now
+           && last_utime <= utime
+           && last_stime <= stime) {
+
+            time_t elapsed = now - last_call;
+            unsigned long delta_utime = utime - last_utime;
+            unsigned long delta_stime = stime - last_stime;
+
+            *load = (delta_utime + delta_stime); /* Cast to a float before division */
+            *load /= ticks_per_s;
+            *load /= elapsed;
+            crm_debug("Current CIB load from %lu ticks in %ds is %f (@%lu tps)", delta_utime + delta_stime, elapsed, *load, ticks_per_s);
+
+        } else {
+            crm_debug("Init %lu + %lu ticks at %d (%lu tps)", utime, stime, now, ticks_per_s);
+        }
+
+        last_call = now;
+        last_utime = utime;
+        last_stime = stime;
+
+        fclose(stream);
+        return TRUE;
+    }
+
+    fclose(stream);
+    return FALSE;
+}
+
 static bool throttle_load_avg(float *load)
 {
     char buffer[256];
@@ -109,10 +296,12 @@ static bool throttle_load_avg(float *load)
         if(nl) { nl[0] = 0; }
 
         crm_debug("Current load is %f (full: %s)", *load, buffer);
+        fclose(stream);
+        return TRUE;
     }
 
     fclose(stream);
-    return TRUE;
+    return FALSE;
 }
 
 static bool throttle_io_load(float *load, unsigned int *blocked)
@@ -187,14 +376,37 @@ static bool throttle_io_load(float *load, unsigned int *blocked)
          */
         *load = (diow + divo2) / Div;
         crm_debug("Current IO load is %f", *load);
+
+        fclose(stream);
+        return TRUE;
     }
 
     fclose(stream);
-    return load;
+    return FALSE;
 }
 
 static enum throttle_state_e
-throttle_mode(void) 
+throttle_handle_load(float load, const char *desc)
+{
+    if(load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
+        crm_notice("High %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        return throttle_high;
+
+    } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+        crm_info("Moderate %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        return throttle_med;
+
+    } else if(load > THROTTLE_FACTOR_LOW * throttle_load_target) {
+        crm_debug("Noticable %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        return throttle_low;
+    }
+
+    crm_trace("Negligable %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+    return throttle_none;
+}
+
+static enum throttle_state_e
+throttle_mode(void)
 {
     float load;
     unsigned int blocked = 0;
@@ -208,39 +420,34 @@ throttle_mode(void)
     }
 
     if(throttle_load_avg(&load)) {
-        float simple_load = 0.0;
+        float simple = load / cores;
+        mode |= throttle_handle_load(simple, "CPU load");
+    }
 
-        if(cores) {
-            simple_load = load / cores;
-        } else {
-            simple_load = load;
-        }
+    if(throttle_cib_load(&load)) {
+        const char *desc = "CIB load";
 
-        if(simple_load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
-            crm_notice("High CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
+        if(load > 0.9) {
+            crm_notice("High %s detected: %f", desc, load);
             mode |= throttle_high;
-        } else if(simple_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
-            crm_info("Moderate CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
+
+        } else if(load > 0.8) {
+            crm_info("Moderate %s detected: %f", desc, load);
             mode |= throttle_med;
-        } else if(simple_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
-            crm_debug("Noticable CPU load detected: %f (limit: %f)", simple_load, throttle_load_target);
+
+        } else if(load > 0.7) {
+            crm_debug("Noticable %s detected: %f", desc, load);
             mode |= throttle_low;
+
+        } else {
+            crm_trace("Negligable %s detected: %f", desc, load);
         }
     }
 
     if(throttle_io_load(&load, &blocked)) {
         float blocked_ratio = 0.0;
 
-        if(load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
-            crm_notice("High IO load detected: %f (limit: %f)", load, throttle_load_target);
-            mode |= throttle_high;
-        } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
-            crm_info("Moderate IO load detected: %f (limit: %f)", load, throttle_load_target);
-            mode |= throttle_med;
-        } else if(load > THROTTLE_FACTOR_LOW * throttle_load_target) {
-            crm_info("Noticable IO load detected: %f (limit: %f)", load, throttle_load_target);
-            mode |= throttle_low;
-        }
+        mode |= throttle_handle_load(load, "IO load");
 
         if(cores) {
             blocked_ratio = blocked / cores;
@@ -248,16 +455,7 @@ throttle_mode(void)
             blocked_ratio = blocked;
         }
 
-        if(blocked_ratio > THROTTLE_FACTOR_HIGH * throttle_load_target) {
-            crm_notice("High IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
-            mode |= throttle_high;
-        } else if(blocked_ratio > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
-            crm_info("Moderate IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
-            mode |= throttle_med;
-        } else if(blocked_ratio > THROTTLE_FACTOR_LOW * throttle_load_target) {
-            crm_debug("Noticable IO indicator detected: %f (limit: %f)", blocked_ratio, throttle_load_target);
-            mode |= throttle_low;
-        }
+        mode |= throttle_handle_load(blocked_ratio, "blocked IO ratio");
     }
 
     if(mode & throttle_high) {
