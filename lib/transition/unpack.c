@@ -185,9 +185,6 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->stonith_timeout = -1;
     new_graph->completion_action = tg_done;
 
-    new_graph->migrating = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                 g_hash_destroy_str, g_hash_destroy_str);
-
     if (reference) {
         new_graph->source = strdup(reference);
     } else {
@@ -282,7 +279,6 @@ destroy_graph(crm_graph_t * graph)
         destroy_synapse(synapse);
     }
 
-    g_hash_table_destroy(graph->migrating);
     free(graph->source);
     free(graph);
 }

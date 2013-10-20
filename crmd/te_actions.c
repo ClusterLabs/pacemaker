@@ -484,6 +484,7 @@ struct te_peer_s
 {
         char *name;
         int jobs;
+        int migrate_jobs;
 };
 
 static void te_peer_free(gpointer p)
@@ -506,11 +507,12 @@ void te_reset_job_counts(void)
     g_hash_table_iter_init(&iter, te_targets);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & peer)) {
         peer->jobs = 0;
+        peer->migrate_jobs = 0;
     }
 }
 
 static void
-te_update_job_count_on(const char *target, int offset)
+te_update_job_count_on(const char *target, int offset, bool migrate)
 {
     struct te_peer_s *r = NULL;
 
@@ -526,6 +528,9 @@ te_update_job_count_on(const char *target, int offset)
     }
 
     r->jobs += offset;
+    if(migrate) {
+        r->migrate_jobs += offset;
+    }
     crm_trace("jobs[%s] = %d", target, r->jobs);
 }
 
@@ -545,20 +550,22 @@ te_update_job_count(crm_action_t * action, int offset)
         const char *t1 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_SOURCE);
         const char *t2 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_TARGET);
 
-        te_update_job_count_on(t1, offset);
-        te_update_job_count_on(t2, offset);
+        te_update_job_count_on(t1, offset, TRUE);
+        te_update_job_count_on(t2, offset, TRUE);
 
     } else {
 
-        te_update_job_count_on(target, offset);
+        te_update_job_count_on(target, offset, FALSE);
     }
 }
 
 static gboolean
-te_should_perform_action_on(const char *action, const char *target)
+te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const char *target)
 {
     int limit = 0;
     struct te_peer_s *r = NULL;
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
     if(target == NULL) {
         /* No limit on these */
@@ -579,9 +586,17 @@ te_should_perform_action_on(const char *action, const char *target)
 
     if(limit <= r->jobs) {
         crm_trace("Peer %s is over their job limit of %d (%d): deferring %s",
-                  target, limit, r->jobs, action);
+                  target, limit, r->jobs, id);
         return FALSE;
+
+    } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
+        if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+            crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
+                      target, graph->migration_limit, r->migrate_jobs, id);
+            return FALSE;
+        }
     }
+
     return TRUE;
 }
 
@@ -589,7 +604,6 @@ static gboolean
 te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
 {
     const char *target = NULL;
-    const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
     if (action->type != action_type_rsc) {
@@ -599,7 +613,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
 
     if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
-        if(te_should_perform_action_on(id, target) == FALSE) {
+        if(te_should_perform_action_on(graph, action, target) == FALSE) {
             return FALSE;
         }
 
@@ -609,7 +623,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
         target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     }
 
-    return te_should_perform_action_on(id, target);
+    return te_should_perform_action_on(graph, action, target);
 }
 
 void
