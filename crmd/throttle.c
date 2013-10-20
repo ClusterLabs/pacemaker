@@ -44,9 +44,9 @@ struct throttle_record_s
 int throttle_job_max = 0;
 float throttle_load_target = 0.0;
 
-#define THROTTLE_FACTOR_LOW    0.6
-#define THROTTLE_FACTOR_MEDIUM 0.8
-#define THROTTLE_FACTOR_HIGH   1.2
+#define THROTTLE_FACTOR_LOW    1.2
+#define THROTTLE_FACTOR_MEDIUM 1.6
+#define THROTTLE_FACTOR_HIGH   2.0
 
 GHashTable *throttle_records = NULL;
 mainloop_timer_t *throttle_timer = NULL;
