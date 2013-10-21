@@ -3,14 +3,41 @@
 == Overview ==
 The recent addition of the +pacemaker_remote+ service supported by +Pacemaker version 1.1.10 and greater+ allows nodes not running the cluster stack (pacemaker+corosync) to integrate into the cluster and have the cluster manage their resources just as if they were a real cluster node.  This means that pacemaker clusters are now capable of managing both launching virtual environments (KVM/LXC) as well as launching the resources that live within those virtual environments without requiring the virtual environments to run pacemaker or corosync.
 
+
 == Terms ==
-+cluster-node+ - A baremetal hardware node running the High Availability stack (pacemaker + corosync)
++cluster-node+ - A node running the High Availability stack (pacemaker + corosync)
 
-+remote-node+  - A virtual guest node running the pacemaker_remote service.
++remote-node+  - A node running pacemaker_remote without the rest of the High Availability stack.  There are two types of remote-nodes, container and baremetal.
 
-+pacemaker_remote+ - A service daemon capable of performing remote application management within virtual guests (kvm and lxc) in both pacemaker cluster environments and standalone (non-cluster) environments. This service is an enhanced version of pacemaker's local resource manage daemon (LRMD) that is capable of managing and monitoring LSB, OCF, upstart, and systemd resources on a guest remotely.  It also allows for most of pacemaker's cli tools (crm_mon, crm_resource, crm_master, crm_attribute, ect..) to work natively on remote-nodes.
++container+ - A pacemaker resource that contains additional resources.  For example, a KVM virtual machine resource that contains a webserver resource.
+
++container remote-node+ - A virtual guest remote-node running the pacemaker_remote service.  This describes a specific remote-node use case where a virtual guest resource managed by the cluster is both started by the cluster and integrated into the cluster as a remote-node.
+
++baremetal+ - Term used to describe an environment that is not virtualized.
+
++baremetal remote-node+ - A baremetal hardware node running pacemaker_remote.  This describes a specific remote-node use case where a hardware node not running the High Availability stack is integrated into the cluster as a remote-node through the use of pacemaker_remote.
+
++pacemaker_remote+ - A service daemon capable of performing remote application management within guest nodes (baremetal, kvm, and lxc) in both pacemaker cluster environments and standalone (non-cluster) environments. This service is an enhanced version of pacemaker's local resource manage daemon (LRMD) that is capable of managing and monitoring LSB, OCF, upstart, and systemd resources on a guest remotely.  It also allows for most of pacemaker's cli tools (crm_mon, crm_resource, crm_master, crm_attribute, ect..) to work natively on remote-nodes.
 
 +LXC+ - A Linux Container defined by the libvirt-lxc Linux container driver. http://libvirt.org/drvlxc.html
+
+== Version Info ==
+
+This feature is in ongoing development.
+
++Pacemaker v1.1.10+
+
+* Initial pacemaker_remote daemon and integration support.
+* Only supports pacemaker in KVM/LXC environments.
+* pacemaker_remote daemon unit test suite.
+* Known bugs include (These are likely resolved if you have received an 1.1.10.x point release): Errors when setting remote-node attributes, Failures when stopping orphaned (deleted from cib while running) remote-nodes, Fixes remote-node usage in asymmetric clusters.
+
++Currently in Master github branch and scheduled for Pacemaker v1.1.11+
+
+* Baremetal remote-node support.
+* Improvements to scaling remote-node integration.  Performance testing here included 16 cluster nodes running 64 remote-nodes living in LXC containers. As part of this testing, several performance enhancements were introduced into the integration code.
+* CTS tests. RemoteLXC and RemoteBaremetal.  These two CTS tests allow us to perform automated verification of pacemaker_remote integration.
+* Fixes for known bugs in 1.1.10 release.
 
 == Virtual Machine Use Case ==
 The use of pacemaker_remote in virtual machines solves a deployment scenario that has traditionally been difficult to solve.
@@ -25,15 +52,21 @@ With the pacemaker_remote service we have a new option.
 * The virtual remote-nodes run the pacemaker_remote service (nearly zero configuration required on the virtual machine side)
 * The cluster stack on the cluster-nodes launch the virtual machines and immediately connect to the pacemaker_remote service, allowing the virtual machines to integrate into the cluster just as if they were a real cluster-node.
 
-The key difference here between the virtual machine remote-nodes and the cluster-nodes is that the remote-nodes are not running the cluster stack.  This means the remote nodes will never become the DC, and they do not take place in quorum.  On the hand this also means that the remote-nodes are not bound to the scalability limits associated with the cluster stack either. +No 16 node corosync member limits+ to deal with.  That isn't to say remote-nodes can scale indefinitely, but the expectation is that remote-nodes scale horizontally much further than cluster-nodes.  Other than the quorum limitation, these remote-nodes behave just like cluster nodes in respects to resource management.  The cluster is fully capable of managing and monitoring resources on each remote-node.  You can build constraints against remote-nodes, put them in standby, or whatever else you'd expect to be able to do with normal cluster-nodes. They even show up in the crm_mon output as you would expect cluster-nodes to.
+The key difference here between the virtual machine remote-nodes and the cluster-nodes is that the remote-nodes are not running the cluster stack.  This means the remote nodes will never become the DC, and they do not take place in quorum.  On the other hand this also means that remote-nodes are not bound to the scalability limits associated with the cluster stack either. +No 16 node corosync member limits+ to deal with.  That isn't to say remote-nodes can scale indefinitely, but it is known that remote-nodes scale horizontally much further than cluster-nodes.  Other than the quorum limitation, these remote-nodes behave just like cluster nodes in respects to resource management.  The cluster is fully capable of managing and monitoring resources on each remote-node.  You can build constraints against remote-nodes, put them in standby, or whatever else you'd expect to be able to do with normal cluster-nodes. They even show up in the crm_mon output as you would expect cluster-nodes to.
 
-To solidify the concept, an example cluster deployment integrating remote-nodes could look like this.
+To solidify the concept, below is an example deployment that is very similar to an actual deployment we test in our developer environment to verify remote-node scalability.
 
 * 16 cluster-nodes running corosync+pacemaker stack.
 * 64 pacemaker managed virtual machine resources running pacemaker_remote configured as remote-nodes.
 * 64 pacemaker managed webserver and database resources configured to run on the 64 remote-nodes.
 
-With this deployment you would have 64 webservers and databases running on 64 virtual machines on 16 hardware nodes all of which are managed and monitored by the same pacemaker deployment.
+With this deployment you would have 64 webservers and databases running on 64 virtual machines on 16 hardware nodes all of which are managed and monitored by the same pacemaker deployment.  It is known that pacemaker_remote can scale to these lengths and possibly much further depending on the specific scenario.
+
+== Baremetal remote-node Use Case ==
+
++"I want my traditional High Availability cluster to scale beyond the limits imposed by the corosync messaging layer."+
+
+Ultimately the primary advantage of baremetal remote-nodes over traditional nodes running the Corosync+Pacemaker stack is scalability.  There are likely some other use cases related to geographically distributed HA clusters that baremetal remote-nodes may serve a purpose in, but those use cases not well understood at this point.  The only limitations baremetal remote-nodes have that cluster-nodes do not is the ability to take place in cluster quorum, and the ability to execute fencing agents via stonith. That is not to say however that fencing of a baremetal node works any differently than that of a normal cluster-node.  The Pacemaker policy engine understands how to fence baremetal remote-nodes. As long as a fencing device exists, the cluster is capable of ensuring baremetal nodes are fenced in the exact same way as normal cluster-nodes are fenced.
 
 == Linux Container Use Case ==
 
@@ -47,9 +80,6 @@ Using pacemaker_remote with Linux containers (libvirt-lxc) opens up some interes
 
 image::images/pcmk-ha-cluster-stack.png["The Traditional Pacemaker Corosync HA Stack.",width="17cm",height="9cm",align="center"]
 
-
-=== Remote-Node Enabled HA Stack ===
-
-The stack grows one additional layer vertical so we can go further horizontal.
+=== Remote-Node Enabled HA Stack Using Virtual guest nodes ===
 
 image::images/pcmk-ha-remote-stack.png["Placing Pacemaker Remote into the Traditional HA Stack.",width="20cm",height="10cm",align="center"]

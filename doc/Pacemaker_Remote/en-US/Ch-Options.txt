@@ -2,7 +2,7 @@
 
 The walk-through examples use some of these options, but don't explain exactly what they mean or do.  This section is meant to be the go-to resource for all the options available for configuring remote-nodes.
 
-== Resource Options ==
+== Container remote-node Resource Options ==
 
 When configuring a virtual machine or lxc resource to act as a remote-node, these are the metadata options available to both enable the resource as a remote-node and define the connection parameters.
 
@@ -31,6 +31,32 @@ When configuring a virtual machine or lxc resource to act as a remote-node, thes
 |How long before a pending guest connection will time out.
 
 |=========================================================
+
+== Baremetal remote-node Options ==
+
+Baremetal remote-nodes are defined by a connection resource. That connection resource has the following instance attributes that define where the baremetal remote-node is located on the network and how to communicate with that remote-node.  Descriptions of these options can be retrieved using the following pcs command.
+
+[source,C]
+----
+# pcs resource describe remote
+  Resource options for: ocf:pacemaker:remote
+    server: Server location to connect to. This can be an ip address or hostname.
+   port: tcp port to connect to.
+----
+
+When defining a baremetal remote-node's connection resource, it is common and recommended to name the connection resource the same name as the baremeatal remote-node's hostname.  By default, if no "server" option is provided, the cluster will attempt to contact the remote-node using the resource name as the hostname.
+
+Example, defining a baremetal remote-node with the hostname "remote1"
+[source,C]
+----
+# pcs resource create remote1 remote
+----
+
+Example, defining a baremetal remote-node to connect to a specific ip and port.
+[source,C]
+----
+# pcs resource create remote1 remote server=192.168.122.200 port=8938
+----
 
 == Host and Guest Authentication ==
 

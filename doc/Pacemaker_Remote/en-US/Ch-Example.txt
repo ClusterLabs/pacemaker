@@ -1,4 +1,4 @@
-= Quick Example =
+= KVM Remote-node Quick Example =
 
 If you already know how to use pacemaker, you'll likely be able to grasp this new concept of remote-nodes by reading through this quick example without having to sort through all the detailed walk-through steps. Here are the key configuration ingredients that make this possible using libvirt and KVM virtual guests.  These steps strip everything down to the very basics.
 
@@ -13,7 +13,7 @@ Run this command if you want to make a somewhat random authkey.
 dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 ----
 
-* +Install pacemaker_remote packages every virtual machine, enable pacemaker_remote on startup, and poke hole in firewall for tcp port 3121.+
+* +Install pacemaker_remote packages on every virtual machine, enable pacemaker_remote on startup, and poke hole in firewall for tcp port 3121.+
 
 [source,C]
 ----
