@@ -43,7 +43,7 @@ enum throttle_state_e
 
 struct throttle_record_s 
 {
-        int cores;
+        int max;
         enum throttle_state_e mode;
         char *node;
 };
@@ -389,19 +389,19 @@ static enum throttle_state_e
 throttle_handle_load(float load, const char *desc)
 {
     if(load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
-        crm_notice("High %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        crm_notice("High %s detected: %f", desc, load);
         return throttle_high;
 
     } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
-        crm_info("Moderate %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        crm_info("Moderate %s detected: %f", desc, load);
         return throttle_med;
 
     } else if(load > THROTTLE_FACTOR_LOW * throttle_load_target) {
-        crm_debug("Noticable %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+        crm_debug("Noticable %s detected: %f", desc, load);
         return throttle_low;
     }
 
-    crm_trace("Negligable %s detected: %f (limit: %f)", desc, load, throttle_load_target);
+    crm_trace("Negligable %s detected: %f", desc, load);
     return throttle_none;
 }
 
@@ -472,11 +472,10 @@ static void
 throttle_send_command(enum throttle_state_e mode)
 {
     xmlNode *xml = NULL;
-    int cores = throttle_num_cores();
 
     xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
     crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
-    crm_xml_add_int(xml, F_CRM_THROTTLE_CORES, cores);
+    crm_xml_add_int(xml, F_CRM_THROTTLE_MAX, throttle_job_max);
 
     send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
     free_xml(xml);
@@ -517,13 +516,48 @@ throttle_record_free(gpointer p)
 }
 
 void
+throttle_update_job_max(const char *preference) 
+{
+    int max = 0;
+
+    throttle_job_max = 2 * throttle_num_cores();
+
+    if(preference) {
+        /* Global preference from the CIB */
+        max = crm_int_helper(preference, NULL);
+        if(max > 0) {
+            throttle_job_max = max;
+        }
+    }
+
+    preference = getenv("LRMD_MAX_CHILDREN");
+    if(preference) {
+        /* Legacy env variable */
+        max = crm_int_helper(preference, NULL);
+        if(max > 0) {
+            throttle_job_max = max;
+        }
+    }
+
+    preference = getenv("PCMK_node_action_limit");
+    if(preference) {
+        /* Per-node override */
+        max = crm_int_helper(preference, NULL);
+        if(max > 0) {
+            throttle_job_max = max;
+        }
+    }
+}
+
+
+void
 throttle_init(void)
 {
-    float load = 0.0;
-    throttle_load_avg(&load);
-
-    throttle_records = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, throttle_record_free);
+    throttle_records = g_hash_table_new_full(
+        crm_str_hash, g_str_equal, NULL, throttle_record_free);
     throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
+
+    throttle_update_job_max(NULL);
     mainloop_timer_start(throttle_timer);
 }
 
@@ -539,7 +573,6 @@ int
 throttle_get_job_limit(const char *node)
 {
     int jobs = 1;
-    int job_max = throttle_job_max;
     struct throttle_record_s *r = NULL;
 
     r = g_hash_table_lookup(throttle_records, node);
@@ -547,14 +580,10 @@ throttle_get_job_limit(const char *node)
         r = calloc(1, sizeof(struct throttle_record_s));
         r->node = strdup(node);
         r->mode = throttle_mode();
-        r->cores = throttle_num_cores();
+        r->max = throttle_job_max;
         crm_trace("Defaulting to local values for unknown node %s", node);
 
         g_hash_table_insert(throttle_records, r->node, r);
-    }
-
-    if(job_max <= 0) {
-        job_max = r->cores * 2;
     }
 
     switch(r->mode) {
@@ -562,13 +591,13 @@ throttle_get_job_limit(const char *node)
             jobs = 1; /* At least one job must always be allowed */
             break;
         case throttle_med:
-            jobs = QB_MAX(1, job_max / 4);
+            jobs = QB_MAX(1, r->max / 4);
             break;
         case throttle_low:
-            jobs = QB_MAX(1, job_max / 2);
+            jobs = QB_MAX(1, r->max / 2);
             break;
         case throttle_none:
-            jobs = QB_MAX(1, job_max);
+            jobs = QB_MAX(1, r->max);
             break;
         default:
             crm_err("Unknown throttle mode %.4x on %s", r->mode, node);
@@ -581,13 +610,13 @@ throttle_get_job_limit(const char *node)
 void
 throttle_update(xmlNode *xml)
 {
-    int cores = 0;
+    int max = 0;
     enum throttle_state_e mode = 0;
     struct throttle_record_s *r = NULL;
     const char *from = crm_element_value(xml, F_CRM_HOST_FROM);
 
     crm_element_value_int(xml, F_CRM_THROTTLE_MODE, (int*)&mode);
-    crm_element_value_int(xml, F_CRM_THROTTLE_CORES, &cores);
+    crm_element_value_int(xml, F_CRM_THROTTLE_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
 
@@ -597,10 +626,10 @@ throttle_update(xmlNode *xml)
         g_hash_table_insert(throttle_records, r->node, r);
     }
 
-    r->cores = cores;
+    r->max = max;
     r->mode = mode;
 
-    crm_debug("Host %s has %d cores and throttle mode %.4x.  New job limit is %d",
-              from, cores, mode, throttle_get_job_limit(from));
+    crm_debug("Host %s supports a maximum of %d jobs and throttle mode %.4x.  New job limit is %d",
+              from, max, mode, throttle_get_job_limit(from));
 }
 

@@ -868,7 +868,6 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    int value_i = 0;
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -898,16 +897,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
 
-
     value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
-    value_i = crm_int_helper(value, NULL);
-    if(value_i <= 0) {
-        value = getenv("LRMD_MAX_CHILDREN");
-        value_i = crm_int_helper(value, NULL);
-    }
-    if(value_i > 0) {
-        throttle_job_max = value_i;
-    }
+    throttle_update_job_max(value);
 
     value = crmd_pref(config_hash, "load-threshold");
     if(value) {

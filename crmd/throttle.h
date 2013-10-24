@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-extern int throttle_job_max;
+
 extern float throttle_load_target;
 
 void throttle_init(void);
@@ -24,4 +24,5 @@ void throttle_fini(void);
 
 int throttle_num_cores(void);
 void throttle_update(xmlNode *xml);
+void throttle_update_job_max(const char *preference);
 int throttle_get_job_limit(const char *node);
