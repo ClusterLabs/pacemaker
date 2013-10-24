@@ -425,17 +425,33 @@ throttle_mode(void)
     }
 
     if(throttle_cib_load(&load)) {
+        float cib_max_cpu = 0.95;
         const char *desc = "CIB load";
+        /* The CIB is a single threaded task and thus cannot consume
+         * more than 100% of a CPU (and 1/cores of the overall system
+         * load).
+         *
+         * On a many cored system, the CIB might therefor be maxed out
+         * (causing operations to fail or appear to fail) even though
+         * the overall system load is still reasonable.
+         *
+         * Therefor the 'normal' thresholds can not apply here and we
+         * need a special case.
+         */
 
-        if(load > 0.9) {
+        if(throttle_load_target < cib_max_cpu) {
+            cib_max_cpu = throttle_load_target;
+        }
+
+        if(load > cib_max_cpu) {
             crm_notice("High %s detected: %f", desc, load);
             mode |= throttle_high;
 
-        } else if(load > 0.8) {
+        } else if(load > cib_max_cpu * 0.9) {
             crm_info("Moderate %s detected: %f", desc, load);
             mode |= throttle_med;
 
-        } else if(load > 0.7) {
+        } else if(load > cib_max_cpu * 0.8) {
             crm_debug("Noticable %s detected: %f", desc, load);
             mode |= throttle_low;
 
