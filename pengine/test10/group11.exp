@@ -1,8 +1,8 @@
- <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
       <pseudo_event id="12" operation="stopped" operation_key="group1_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
     <inputs>
@@ -20,7 +20,7 @@
    <synapse id="1">
      <action_set>
       <pseudo_event id="11" operation="stop" operation_key="group1_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
     <inputs/>
@@ -28,7 +28,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="9" operation="start" operation_key="group1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
      <inputs>
@@ -41,7 +41,7 @@
      <action_set>
       <rsc_op id="7" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="rsc2" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" target_role="Stopped"/>
+        <attributes CRM_meta_timeout="20000"  target_role="Stopped"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -57,7 +57,7 @@
      <action_set>
       <rsc_op id="8" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="uuid1">
         <primitive id="rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" target_role="started"/>
+        <attributes CRM_meta_timeout="20000"  target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -69,7 +69,7 @@
   <synapse id="5" priority="1000000">
     <action_set>
       <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -77,7 +77,7 @@
   <synapse id="6">
      <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
        </pseudo_event>
      </action_set>
      <inputs>

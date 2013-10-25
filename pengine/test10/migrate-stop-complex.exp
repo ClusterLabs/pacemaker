@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="6" operation="start" operation_key="top_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="top" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="top_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="top" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="35" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.7" xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="34" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.7" xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="8" operation="start" operation_key="domU-test01_start_0">
-        <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.7" xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="domU-test01_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.7" xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -81,7 +81,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="19" operation="stopped" operation_key="dom0-iscsi1:1_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -96,7 +96,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="18" operation="stop" operation_key="dom0-iscsi1:1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -109,7 +109,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" internal_operation_key="dom0-iscsi1-cnx1:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="dom0-iscsi1-cnx1" long-id="dom0-iscsi1-cnx1:0" class="ocf" provider="heartbeat" type="iscsi"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7" portal="192.168.99.1" target="frontal-01:test01"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  portal="192.168.99.1" target="frontal-01:test01"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -121,7 +121,7 @@
   <synapse id="9" priority="1000000">
     <action_set>
       <pseudo_event id="23" operation="stopped" operation_key="clone-dom0-iscsi1_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -136,7 +136,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="22" operation="stop" operation_key="clone-dom0-iscsi1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -149,7 +149,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="bottom:0_stop_0" internal_operation_key="bottom:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="bottom" long-id="bottom:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -161,7 +161,7 @@
   <synapse id="12" priority="1000000">
     <action_set>
       <pseudo_event id="30" operation="stopped" operation_key="clone-bottom_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -176,7 +176,7 @@
   <synapse id="13">
     <action_set>
       <pseudo_event id="29" operation="stop" operation_key="clone-bottom_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -188,7 +188,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="dummy2_start_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
         <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="dummy2_stop_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan">
         <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="dummy4_monitor_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
         <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="dummy4_monitor_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan">
         <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -47,7 +47,7 @@
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="dummy4_monitor_0" on_node="c19.chepkov.lan" on_node_uuid="c19.chepkov.lan">
         <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -56,7 +56,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="dummy3_stop_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
         <primitive id="dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_timeout="120000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="120000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
   <synapse id="6" priority="1000000">
     <action_set>
       <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -80,7 +80,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c19.chepkov.lan" on_node_uuid="c19.chepkov.lan">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -104,7 +104,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -122,7 +122,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

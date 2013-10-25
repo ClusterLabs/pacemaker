@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="10" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="45" operation="start" operation_key="FencingFail_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="FencingFail" class="stonith" type="fence_dummy"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7" delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
+        <attributes CRM_meta_timeout="90000"  delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="44" operation="stop" operation_key="FencingFail_stop_0" on_node="18node3" on_node_uuid="3">
         <primitive id="FencingFail" class="stonith" type="fence_dummy"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7" delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
+        <attributes CRM_meta_timeout="90000"  delay="20" mode="fail" pcmk_host_list="18node1 18node3" random_sleep_range="30"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="92" operation="stop" operation_key="container2_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="30" operation="delete" operation_key="container2_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="25" operation="delete" operation_key="container2_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="20" operation="delete" operation_key="container2_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -77,7 +77,7 @@
     <action_set>
       <rsc_op id="93" operation="stop" operation_key="lxc1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -93,7 +93,7 @@
     <action_set>
       <rsc_op id="31" operation="delete" operation_key="lxc1_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -106,7 +106,7 @@
     <action_set>
       <rsc_op id="26" operation="delete" operation_key="lxc1_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -119,7 +119,7 @@
     <action_set>
       <rsc_op id="21" operation="delete" operation_key="lxc1_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -132,7 +132,7 @@
     <action_set>
       <rsc_op id="97" operation="stop" operation_key="lxc-ms_stop_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -148,7 +148,7 @@
     <action_set>
       <rsc_op id="96" operation="stop" operation_key="lxc-ms_stop_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -164,7 +164,7 @@
     <action_set>
       <rsc_op id="95" operation="demote" operation_key="lxc-ms_demote_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -173,7 +173,7 @@
     <action_set>
       <rsc_op id="94" operation="demote" operation_key="lxc-ms_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -182,7 +182,7 @@
     <action_set>
       <rsc_op id="32" operation="delete" operation_key="lxc-ms_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -198,7 +198,7 @@
     <action_set>
       <rsc_op id="27" operation="delete" operation_key="lxc-ms_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -214,7 +214,7 @@
     <action_set>
       <rsc_op id="22" operation="delete" operation_key="lxc-ms_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc-ms" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -230,7 +230,7 @@
     <action_set>
       <rsc_op id="98" operation="stop" operation_key="lxc2_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -246,7 +246,7 @@
     <action_set>
       <rsc_op id="33" operation="delete" operation_key="lxc2_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -259,7 +259,7 @@
     <action_set>
       <rsc_op id="28" operation="delete" operation_key="lxc2_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -272,7 +272,7 @@
     <action_set>
       <rsc_op id="23" operation="delete" operation_key="lxc2_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container2" CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -285,7 +285,7 @@
     <action_set>
       <rsc_op id="99" operation="stop" operation_key="container1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -298,7 +298,7 @@
     <action_set>
       <rsc_op id="34" operation="delete" operation_key="container1_delete_0" on_node="18node3" on_node_uuid="3">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -311,7 +311,7 @@
     <action_set>
       <rsc_op id="29" operation="delete" operation_key="container1_delete_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -324,7 +324,7 @@
     <action_set>
       <rsc_op id="24" operation="delete" operation_key="container1_delete_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="90000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="90000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -336,7 +336,7 @@
   <synapse id="25">
     <action_set>
       <pseudo_event id="19" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="16" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml" crm_feature_set="3.0.7" force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="M_monitor_10000" internal_operation_key="M:4_monitor_10000" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="M" long-id="M:4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="29" operation="start" operation_key="M_start_0" internal_operation_key="M:4_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="M" long-id="M:4" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -43,7 +43,7 @@
   <synapse id="3" priority="1000000">
     <action_set>
       <pseudo_event id="32" operation="running" operation_key="M-clone_running_0">
-        <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -58,7 +58,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="31" operation="start" operation_key="M-clone_start_0">
-        <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -67,7 +67,7 @@
     <action_set>
       <rsc_op id="44" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -80,7 +80,7 @@
     <action_set>
       <rsc_op id="43" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

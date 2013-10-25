@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="main_rsc_monitor_10000" on_node="srv03" on_node_uuid="e2ffc1ed-3ebe-47e2-b51b-b0f04b454311">
         <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="14" operation="start" operation_key="main_rsc_start_0" on_node="srv03" on_node_uuid="e2ffc1ed-3ebe-47e2-b51b-b0f04b454311">
         <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="main_rsc_stop_0" on_node="srv01" on_node_uuid="45f985d7-e7c8-4834-b01b-16b99526672b">
         <primitive id="main_rsc" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="prmPingd:0_stop_0" on_node="srv01" on_node_uuid="45f985d7-e7c8-4834-b01b-16b99526672b">
         <primitive id="prmPingd" long-id="prmPingd:0" class="ocf" provider="pacemaker" type="ping"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000" crm_feature_set="3.0.7" host_list="192.168.40.1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_timeout="60000"  host_list="192.168.40.1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -50,7 +50,7 @@
   <synapse id="4" priority="1000000">
     <action_set>
       <pseudo_event id="34" operation="stopped" operation_key="clnPingd_stopped_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -65,7 +65,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="33" operation="stop" operation_key="clnPingd_stop_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -73,7 +73,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

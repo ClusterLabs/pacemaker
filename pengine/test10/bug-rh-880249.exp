@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="16" operation="start" operation_key="dummystateful_start_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -22,7 +22,7 @@
     <action_set>
       <rsc_op id="15" operation="stop" operation_key="dummystateful_stop_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="14" operation="stop" operation_key="dummystateful_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -60,7 +60,7 @@
     <action_set>
       <rsc_op id="13" operation="stop" operation_key="dummystateful_stop_0" on_node="18node2" on_node_uuid="2">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
     <action_set>
       <rsc_op id="12" operation="demote" operation_key="dummystateful_demote_0" on_node="18node3" on_node_uuid="3">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -88,7 +88,7 @@
     <action_set>
       <rsc_op id="11" operation="demote" operation_key="dummystateful_demote_0" on_node="18node1" on_node_uuid="1">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -97,7 +97,7 @@
     <action_set>
       <rsc_op id="10" operation="demote" operation_key="dummystateful_demote_0" on_node="18node2" on_node_uuid="2">
         <primitive id="dummystateful" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -105,7 +105,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="10" operation="start" operation_key="Fencing_start_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -18,7 +18,7 @@
   <synapse id="1">
     <action_set>
       <crm_event id="15" operation="stonith" operation_key="stonith-pcmk-8" on_node="pcmk-8" on_node_uuid="108">
-        <attributes CRM_meta_on_node="pcmk-8" CRM_meta_on_node_uuid="108" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_on_node="pcmk-8" CRM_meta_on_node_uuid="108" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs>
@@ -30,7 +30,7 @@
   <synapse id="2">
     <action_set>
       <crm_event id="14" operation="stonith" operation_key="stonith-pcmk-7" on_node="pcmk-7" on_node_uuid="107">
-        <attributes CRM_meta_on_node="pcmk-7" CRM_meta_on_node_uuid="107" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_on_node="pcmk-7" CRM_meta_on_node_uuid="107" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs>
@@ -42,7 +42,7 @@
   <synapse id="3">
     <action_set>
       <crm_event id="13" operation="stonith" operation_key="stonith-pcmk-5" on_node="pcmk-5" on_node_uuid="105">
-        <attributes CRM_meta_on_node="pcmk-5" CRM_meta_on_node_uuid="105" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_on_node="pcmk-5" CRM_meta_on_node_uuid="105" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs>
@@ -54,7 +54,7 @@
   <synapse id="4">
     <action_set>
       <crm_event id="12" operation="stonith" operation_key="stonith-pcmk-10" on_node="pcmk-10" on_node_uuid="110">
-        <attributes CRM_meta_on_node="pcmk-10" CRM_meta_on_node_uuid="110" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_on_node="pcmk-10" CRM_meta_on_node_uuid="110" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs/>
@@ -62,7 +62,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="11" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -74,7 +74,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

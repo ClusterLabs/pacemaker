@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="16" operation="start" operation_key="test-vm_start_0" on_node="hex-13" on_node_uuid="hex-13">
         <primitive id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000"  name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -19,7 +19,7 @@
     <action_set>
       <rsc_op id="1" operation="stop" operation_key="test-vm_stop_0" on_node="hex-14" on_node_uuid="hex-14">
         <primitive id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000" crm_feature_set="3.0.7" name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="600000"  name="test-vm" xmfile="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -27,7 +27,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="4" operation="load_stopped_hex-13" operation_key="load_stopped_hex-13">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -35,7 +35,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="3" operation="load_stopped_hex-14" operation_key="load_stopped_hex-14">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -47,7 +47,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

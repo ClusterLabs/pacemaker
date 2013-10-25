@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="2" operation="cancel" operation_key="res_Dummy_1_monitor_10000" on_node="lenny-b" on_node_uuid="lenny-b">
         <primitive id="res_Dummy_1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_call_id="3" CRM_meta_interval="10000" CRM_meta_operation="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_call_id="3" CRM_meta_interval="10000" CRM_meta_operation="monitor" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="1" operation="cancel" operation_key="res_Dummy_3_monitor_10000" on_node="lenny-a" on_node_uuid="lenny-a">
         <primitive id="res_Dummy_3" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_call_id="10" CRM_meta_interval="10000" CRM_meta_operation="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_call_id="10" CRM_meta_interval="10000" CRM_meta_operation="monitor" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

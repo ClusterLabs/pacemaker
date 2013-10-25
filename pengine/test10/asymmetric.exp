@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="10" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="10" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
    <synapse id="0">
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_19000" internal_operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0_monitor_19000" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <primitive id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3" long-id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="19000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="10000" crm_feature_set="3.0.7" drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="19000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="10000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
       <rsc_op id="14" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0_monitor_20000" internal_operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_20000" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <primitive id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3" long-id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="10000" crm_feature_set="3.0.7" drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="10000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +21,7 @@
      <action_set>
       <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
       <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0.7" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -38,7 +38,7 @@
   <synapse id="4" priority="1000000">
      <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
      <inputs>
@@ -50,7 +50,7 @@
    <synapse id="5" priority="1000000">
      <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
-        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
      <inputs>
@@ -62,7 +62,7 @@
   <synapse id="6">
      <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
      </action_set>
      <inputs>

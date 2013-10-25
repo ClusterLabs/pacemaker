@@ -1,9 +1,9 @@
- <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
      <action_set>
       <rsc_op id="65" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="64" operation="notify" operation_key="drbd0:1_pre_notify_demote_0" internal_operation_key="drbd0:0_pre_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
       <rsc_op id="61" operation="notify" operation_key="drbd0:1_post_notify_promote_0" internal_operation_key="drbd0:0_post_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -42,7 +42,7 @@
      <action_set>
       <rsc_op id="60" operation="notify" operation_key="drbd0:1_pre_notify_promote_0" internal_operation_key="drbd0:0_pre_notify_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -55,7 +55,7 @@
      <action_set>
       <rsc_op id="10" operation="monitor" operation_key="drbd0:1_monitor_10000" internal_operation_key="drbd0:0_monitor_10000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -74,7 +74,7 @@
      <action_set>
       <rsc_op id="9" operation="promote" operation_key="drbd0:1_promote_0" internal_operation_key="drbd0:0_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -90,7 +90,7 @@
      <action_set>
       <rsc_op id="1" operation="cancel" operation_key="drbd0:1_cancel_12000" internal_operation_key="drbd0:0_monitor_12000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="drbd0" long-id="drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
     <inputs/>
@@ -99,7 +99,7 @@
      <action_set>
       <rsc_op id="67" operation="notify" operation_key="drbd0:0_post_notify_demote_0" internal_operation_key="drbd0:1_post_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -112,7 +112,7 @@
      <action_set>
       <rsc_op id="66" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" internal_operation_key="drbd0:1_pre_notify_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -125,7 +125,7 @@
      <action_set>
       <rsc_op id="63" operation="notify" operation_key="drbd0:0_post_notify_promote_0" internal_operation_key="drbd0:1_post_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -138,7 +138,7 @@
      <action_set>
       <rsc_op id="62" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" internal_operation_key="drbd0:1_pre_notify_promote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -151,7 +151,7 @@
      <action_set>
       <rsc_op id="14" operation="monitor" operation_key="drbd0:0_monitor_12000" internal_operation_key="drbd0:1_monitor_12000" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -170,7 +170,7 @@
      <action_set>
       <rsc_op id="12" operation="demote" operation_key="drbd0:0_demote_0" internal_operation_key="drbd0:1_demote_0" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_notify_demote_uname="frigg " CRM_meta_notify_inactive_resource="drbd0:2 " CRM_meta_notify_master_resource="drbd0:1 " CRM_meta_notify_master_uname="frigg " CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_promote_uname="odin " CRM_meta_notify_slave_resource="drbd0:0 " CRM_meta_notify_slave_uname="odin " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -186,7 +186,7 @@
      <action_set>
       <rsc_op id="2" operation="cancel" operation_key="drbd0:0_cancel_10000" internal_operation_key="drbd0:1_monitor_10000" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_timeout="5000" crm_feature_set="3.0.7" drbd_resource="r0"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_timeout="5000"  drbd_resource="r0"/>
        </rsc_op>
      </action_set>
     <inputs/>
@@ -194,7 +194,7 @@
   <synapse id="14" priority="1000000">
      <action_set>
       <pseudo_event id="38" operation="notified" operation_key="ms_drbd_confirmed-post_notify_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -212,7 +212,7 @@
    <synapse id="15" priority="1000000">
      <action_set>
       <pseudo_event id="37" operation="notify" operation_key="ms_drbd_post_notify_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -227,7 +227,7 @@
    <synapse id="16">
      <action_set>
       <pseudo_event id="36" operation="notified" operation_key="ms_drbd_confirmed-pre_notify_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
     <inputs>
@@ -245,7 +245,7 @@
    <synapse id="17">
      <action_set>
       <pseudo_event id="35" operation="notify" operation_key="ms_drbd_pre_notify_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -253,7 +253,7 @@
   <synapse id="18" priority="1000000">
     <action_set>
       <pseudo_event id="34" operation="demoted" operation_key="ms_drbd_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -268,7 +268,7 @@
   <synapse id="19">
      <action_set>
       <pseudo_event id="33" operation="demote" operation_key="ms_drbd_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -280,7 +280,7 @@
   <synapse id="20" priority="1000000">
      <action_set>
       <pseudo_event id="32" operation="notified" operation_key="ms_drbd_confirmed-post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -298,7 +298,7 @@
   <synapse id="21" priority="1000000">
      <action_set>
       <pseudo_event id="31" operation="notify" operation_key="ms_drbd_post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -313,7 +313,7 @@
   <synapse id="22">
      <action_set>
       <pseudo_event id="30" operation="notified" operation_key="ms_drbd_confirmed-pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -331,7 +331,7 @@
    <synapse id="23">
      <action_set>
       <pseudo_event id="29" operation="notify" operation_key="ms_drbd_pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -343,7 +343,7 @@
    <synapse id="24" priority="1000000">
      <action_set>
       <pseudo_event id="28" operation="promoted" operation_key="ms_drbd_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -355,7 +355,7 @@
   <synapse id="25">
      <action_set>
       <pseudo_event id="27" operation="promote" operation_key="ms_drbd_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -370,7 +370,7 @@
    <synapse id="26">
      <action_set>
       <pseudo_event id="43" operation="running" operation_key="group_running_0">
-        <attributes CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -388,7 +388,7 @@
    <synapse id="27">
      <action_set>
       <pseudo_event id="42" operation="start" operation_key="group_start_0">
-        <attributes CRM_meta_timeout="5000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="5000" />
        </pseudo_event>
      </action_set>
      <inputs>
@@ -401,7 +401,7 @@
      <action_set>
       <rsc_op id="40" operation="monitor" operation_key="IPaddr0_monitor_5000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="IPaddr0" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="3.0.7" ip="141.89.59.22" netmask="24" nic="bond0"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000"  ip="141.89.59.22" netmask="24" nic="bond0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -414,7 +414,7 @@
      <action_set>
       <rsc_op id="39" operation="start" operation_key="IPaddr0_start_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="IPaddr0" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="5000" crm_feature_set="3.0.7" ip="141.89.59.22" netmask="24" nic="bond0"/>
+        <attributes CRM_meta_timeout="5000"  ip="141.89.59.22" netmask="24" nic="bond0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -427,7 +427,7 @@
      <action_set>
       <rsc_op id="41" operation="start" operation_key="MailTo_start_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
         <primitive id="MailTo" class="ocf" provider="heartbeat" type="MailTo"/>
-        <attributes CRM_meta_timeout="5000" crm_feature_set="3.0.7" email="kittan@cs.uni-potsdam.de"/>
+        <attributes CRM_meta_timeout="5000"  email="kittan@cs.uni-potsdam.de"/>
        </rsc_op>
      </action_set>
      <inputs>

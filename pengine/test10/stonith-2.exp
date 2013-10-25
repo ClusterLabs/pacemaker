@@ -1,9 +1,9 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
       <rsc_op id="56" operation="monitor" operation_key="rsc_sles-5_monitor_5000" on_node="sles-6" on_node_uuid="e7840e57-67e1-44dc-9804-edd22d282394">
         <primitive id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.188"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000"  ip="192.168.100.188"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="55" operation="start" operation_key="rsc_sles-5_start_0" on_node="sles-6" on_node_uuid="e7840e57-67e1-44dc-9804-edd22d282394">
         <primitive id="rsc_sles-5" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" ip="192.168.100.188"/>
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.188"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
   <synapse id="2">
     <action_set>
       <crm_event id="102" operation="stonith" operation_key="stonith-sles-5" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
-        <attributes CRM_meta_on_node="sles-5" CRM_meta_on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_on_node="sles-5" CRM_meta_on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs/>
@@ -36,7 +36,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="101" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -48,7 +48,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

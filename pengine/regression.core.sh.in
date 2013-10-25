@@ -268,6 +268,7 @@ function do_test {
 	rm -f $dot_output
     fi
 
+    sed -i -e 's/crm_feature_set="[^"]*"//' -e 's/batch-limit="[0-9]*"//' $expected $output
     diff $diff_opts $expected $output >/dev/null
     rc2=$?
     if [ $rc2 != 0 ]; then

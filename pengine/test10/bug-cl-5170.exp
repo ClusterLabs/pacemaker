@@ -1,8 +1,8 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <pseudo_event id="12" operation="stopped" operation_key="svc_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -20,7 +20,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="11" operation="stop" operation_key="svc_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="7" operation="stop" operation_key="ip_trf_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
         <primitive id="ip_trf" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.18.19.51" crm_feature_set="3.0.7" iflabel="ha" ip="172.18.19.51" nic="bond0.3019"/>
+        <attributes CRM_meta_timeout="20000" broadcast="172.18.19.51"  iflabel="ha" ip="172.18.19.51" nic="bond0.3019"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -45,7 +45,7 @@
     <action_set>
       <rsc_op id="8" operation="stop" operation_key="ip_mgmt_stop_0" on_node="TCS-2" on_node_uuid="TCS-2">
         <primitive id="ip_mgmt" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" broadcast="172.20.1.51" crm_feature_set="3.0.7" iflabel="ha" ip="172.20.1.51" nic="bond0"/>
+        <attributes CRM_meta_timeout="20000" broadcast="172.20.1.51"  iflabel="ha" ip="172.20.1.51" nic="bond0"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -57,7 +57,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
       </pseudo_event>
     </action_set>
     <inputs>

@@ -1,8 +1,8 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
       <pseudo_event id="9" operation="running" operation_key="group_test1_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -17,7 +17,7 @@
   <synapse id="1">
     <action_set>
       <pseudo_event id="8" operation="start" operation_key="group_test1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -26,7 +26,7 @@
     <action_set>
       <rsc_op id="7" operation="start" operation_key="resource_t11_start_0" on_node="power720-3" on_node_uuid="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f">
         <primitive id="resource_t11" class="lsb" type="nfsserver"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
   <synapse id="3">
     <action_set>
       <pseudo_event id="14" operation="running" operation_key="group_test2_running_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -53,7 +53,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="13" operation="start" operation_key="group_test2_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="resource_t21_start_0" on_node="power720-4" on_node_uuid="1e626dc7-fa07-492e-bb21-8c838bfe7f46">
         <primitive id="resource_t21" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7"/>
+        <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

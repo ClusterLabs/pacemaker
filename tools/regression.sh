@@ -331,9 +331,15 @@ echo "Testing dates"
 test_date > $test_home/regression.out
 echo "Testing tools"
 test_tools >> $test_home/regression.out
-sed -i.sed 's/cib-last-written.*>/>/' $test_home/regression.out
-sed -i.sed 's/ last-run=\"[0-9]*\"//' $test_home/regression.out
-sed -i.sed 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.out
+sed -i -e 's/cib-last-written.*>/>/'	\
+    -e 's/ last-run=\"[0-9]*\"//'	\
+    -e 's/crm_feature_set="[^"]*"//'	\
+    -e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.out
+
+sed -i -e 's/cib-last-written.*>/>/'	\
+    -e 's/ last-run=\"[0-9]*\"//'	\
+    -e 's/crm_feature_set="[^"]*"//'	\
+    -e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.exp
 
 if [ $do_save = 1 ]; then
     cp $test_home/regression.out $test_home/regression.exp

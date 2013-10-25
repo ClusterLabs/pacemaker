@@ -1,9 +1,9 @@
- <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
       <rsc_op id="6" operation="stop" operation_key="the-future-of-vaj_stop_0" on_node="hb2" on_node_uuid="86ad895f-1387-461e-a9b5-c52ed9537e13">
         <primitive id="the-future-of-vaj" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.7" target_role="started"/>
+        <attributes CRM_meta_timeout="20000"  target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -11,7 +11,7 @@
    <synapse id="1">
      <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.7"/>
+        <attributes />
        </pseudo_event>
      </action_set>
      <inputs>
