@@ -170,7 +170,7 @@ check_utilization(const char *value)
 
     if(end && end[0] != '%') {
         return FALSE;
-    } else if(number < 10) {
+    } else if(number < 0) {
         return FALSE;
     }
 

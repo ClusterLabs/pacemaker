@@ -414,16 +414,6 @@ throttle_mode(void)
 
     enum throttle_state_e mode = throttle_none;
 
-    if(throttle_load_target <= 0) {
-        /* If we ever make this a valid value, the cluster will at least behave as expected */
-        return mode;
-    }
-
-    if(throttle_load_avg(&load)) {
-        float simple = load / cores;
-        mode |= throttle_handle_load(simple, "CPU load");
-    }
-
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
         const char *desc = "CIB load";
@@ -439,7 +429,7 @@ throttle_mode(void)
          * need a special case.
          */
 
-        if(throttle_load_target < cib_max_cpu) {
+        if(throttle_load_target > 0.0 && throttle_load_target < cib_max_cpu) {
             cib_max_cpu = throttle_load_target;
         }
 
@@ -458,6 +448,16 @@ throttle_mode(void)
         } else {
             crm_trace("Negligable %s detected: %f", desc, load);
         }
+    }
+
+    if(throttle_load_target <= 0) {
+        /* If we ever make this a valid value, the cluster will at least behave as expected */
+        return mode;
+    }
+
+    if(throttle_load_avg(&load)) {
+        float simple = load / cores;
+        mode |= throttle_handle_load(simple, "CPU load");
     }
 
     if(throttle_io_load(&load, &blocked)) {
