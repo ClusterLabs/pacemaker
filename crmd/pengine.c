@@ -84,7 +84,6 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 pe_ipc_destroy(gpointer user_data)
 {
-    clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
@@ -106,9 +105,13 @@ pe_ipc_destroy(gpointer user_data)
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
+        if (is_heartbeat_cluster()) {
+            stop_subsystem(pe_subsystem, FALSE);
+        }
         crm_info("Connection to the Policy Engine released");
     }
 
+    clear_bit(fsa_input_register, pe_subsystem->flag_connected);
     pe_subsystem->pid = -1;
     pe_subsystem->source = NULL;
     pe_subsystem->client = NULL;

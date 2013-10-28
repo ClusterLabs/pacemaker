@@ -10,6 +10,7 @@
 	<xi:include href="Ch-Example.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-KVM-Tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ch-Baremetal-Tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-LXC-Tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Future.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>

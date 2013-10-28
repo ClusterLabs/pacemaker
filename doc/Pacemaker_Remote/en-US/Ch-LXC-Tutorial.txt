@@ -1,5 +1,7 @@
 = Linux Container (LXC) Walk-through =
 
++Warning: Continued development in the VirtualDomain agent, libvirt, and the lxc_autogen script have rendered this tutorial (in its current form) obsolete.+  The high level approach of this tutorial remains accurate, but many of the specifics related to configuring the lxc environment have changed. This walk-through needs to be updated to reflect the current tested methodology.
+
 +What this tutorial is:+ This tutorial demonstrates how pacemaker_remote can be used with Linux containers (managed by libvirt-lxc) to run cluster resources in an isolated environment.
 
 +What this tutorial is not:+  This tutorial is not a realistic deployment scenario.  The steps shown here are meant to introduce users to the concept of managing Linux container environments with Pacemaker.

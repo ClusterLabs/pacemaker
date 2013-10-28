@@ -305,14 +305,6 @@ crmd_exit(int rc)
 
 /* Clean up as much memory as possible for valgrind */
 
-#if SUPPORT_HEARTBEAT
-    if (fsa_cluster_conn) {
-        crm_trace("Disconnecting heartbeat");
-        fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
-        fsa_cluster_conn = NULL;
-    }
-#endif
-
     for (gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
         fsa_data_t *fsa_data = gIter->data;
 
@@ -409,6 +401,45 @@ crmd_exit(int rc)
 
         crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
+
+#if SUPPORT_HEARTBEAT
+        /* Do this only after g_main_loop_quit().
+         *
+         * This interface was broken (incomplete) since it was introduced.
+         * ->delete() does cleanup and free most of it, but it does not
+         * actually remove and destroy the corresponding GSource, so the next
+         * prepare/check iteratioin would find a corrupt (because partially
+         * freed) GSource, and segfault.
+         *
+         * Apparently one was supposed to store the GSource as returned by
+         * G_main_add_ll_cluster(), and g_source_destroy() that "by hand".
+         *
+         * But no-one ever did this, not even in the old hb code when this was
+         * introduced.
+         *
+         * Note that fsa_cluster_conn was set as an "alias" to cluster->hb_conn
+         * in do_ha_control() right after crm_cluster_connect(), and only
+         * happens to still point at that object, because do_ha_control() does
+         * not reset it to NULL after crm_cluster_disconnect() above does
+         * reset cluster->hb_conn to NULL.
+         * Not sure if that's something to cleanup, too.
+         *
+         * I'll try to fix this up in heartbeat proper, so ->delete
+         * will actually remove, and destroy, and unref, and free this thing.
+         * Doing so after g_main_loop_quit() is valid with both old,
+         * and eventually fixed heartbeat.
+         *
+         * If we introduce the "by hand" destroy/remove/unref,
+         * this may break again once heartbeat is fixed :-(
+         *
+         *                                              -- Lars Ellenberg
+         */
+        if (fsa_cluster_conn) {
+            crm_trace("Deleting heartbeat api object");
+            fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
+            fsa_cluster_conn = NULL;
+        }
+#endif
 
         /* Won't do anything yet, since we're inside it now */
         g_main_loop_unref(mloop);
@@ -710,10 +741,6 @@ do_stop(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (is_heartbeat_cluster()) {
-        stop_subsystem(pe_subsystem, FALSE);
-    }
-
     crm_trace("Closing IPC server");
     mainloop_del_ipc_server(ipcs); ipcs = NULL;
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
