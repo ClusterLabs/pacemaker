@@ -546,9 +546,8 @@ te_update_job_count(crm_action_t * action, int offset)
     }
 
     if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-        xmlNode *meta = get_xpath_object("//[@"XML_LRM_ATTR_MIGRATE_SOURCE"]", action->xml, LOG_ERR);
-        const char *t1 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *t2 = crm_element_value(meta, XML_LRM_ATTR_MIGRATE_TARGET);
+        const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
+        const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
 
         te_update_job_count_on(t1, offset, TRUE);
         te_update_job_count_on(t2, offset, TRUE);
