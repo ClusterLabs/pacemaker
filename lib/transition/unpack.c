@@ -26,6 +26,8 @@
 #include <crm/transition.h>
 #include <sys/stat.h>
 
+#include <graph.h>
+
 CRM_TRACE_INIT_DATA(transitioner);
 
 static crm_action_t *
@@ -185,8 +187,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->stonith_timeout = -1;
     new_graph->completion_action = tg_done;
 
-    new_graph->migrating = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                 g_hash_destroy_str, g_hash_destroy_str);
+    new_graph->action_counters = NULL;
 
     if (reference) {
         new_graph->source = strdup(reference);
@@ -214,9 +215,6 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
 
         t_id = crm_element_value(xml_graph, "batch-limit");
         new_graph->batch_limit = crm_parse_int(t_id, "0");
-
-        t_id = crm_element_value(xml_graph, "migration-limit");
-        new_graph->migration_limit = crm_parse_int(t_id, "-1");
     }
 
     for (synapse = __xml_first_child(xml_graph); synapse != NULL; synapse = __xml_next(synapse)) {
@@ -269,6 +267,19 @@ destroy_synapse(synapse_t * synapse)
     free(synapse);
 }
 
+static void
+destroy_action_counter(action_counter_t * action_counter)
+{
+    if (action_counter->tasks) {
+        g_list_free_full(action_counter->tasks, free);
+    }
+
+    if (action_counter->counts) {
+        g_hash_table_destroy(action_counter->counts);
+    }
+    free(action_counter);
+}
+
 void
 destroy_graph(crm_graph_t * graph)
 {
@@ -282,7 +293,13 @@ destroy_graph(crm_graph_t * graph)
         destroy_synapse(synapse);
     }
 
-    g_hash_table_destroy(graph->migrating);
+    while (g_list_length(graph->action_counters) > 0) {
+        action_counter_t *action_counter = g_list_nth_data(graph->action_counters, 0);
+
+        graph->action_counters = g_list_remove(graph->action_counters, action_counter);
+        destroy_action_counter(action_counter);
+    }
+
     free(graph->source);
     free(graph);
 }

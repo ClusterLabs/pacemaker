@@ -2392,11 +2392,6 @@ stage8(pe_working_set_t * data_set)
 
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
-    value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_int_helper(value, NULL) > 0) {
-        crm_xml_add(data_set->graph, "migration-limit", value);
-    }
-
 /* errors...
    slist_iter(action, action_t, action_list, lpc,
    if(action->optional == FALSE && action->runnable == FALSE) {

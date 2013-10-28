@@ -108,8 +108,7 @@ typedef struct crm_graph_s {
 
     GListPtr synapses;          /* synpase_t* */
 
-    int migration_limit;
-    GHashTable *migrating;
+    GListPtr action_counters;   /* action_counter_t* */
 
 } crm_graph_t;
 
