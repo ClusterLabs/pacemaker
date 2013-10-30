@@ -415,9 +415,6 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
         case CRM_CLIENT_TLS:
             if (native->pending_notify) {
                 return 1;
-            } else if (native->remote->buffer
-                       && strstr(native->remote->buffer, REMOTE_MSG_TERMINATOR)) {
-                return 1;
             }
 
             return crm_remote_ready(native->remote, 0);

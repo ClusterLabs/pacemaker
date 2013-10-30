@@ -44,9 +44,7 @@
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
-#endif
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 const int psk_tls_kx_order[] = {
     GNUTLS_KX_DHE_PSK,
     GNUTLS_KX_PSK,
@@ -59,17 +57,87 @@ const int anon_tls_kx_order[] = {
     GNUTLS_KX_RSA,
     0
 };
+#endif
+
+/* Swab macros from linux/swab.h */
+#ifdef HAVE_LINUX_SWAB_H
+#  include <linux/swab.h>
+#else
+/*
+ * casts are necessary for constants, because we never know how for sure
+ * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
+ */
+#define ___swab16(x) ((__u16)(                                  \
+        (((__u16)(x) & (__u16)0x00ffU) << 8) |                  \
+        (((__u16)(x) & (__u16)0xff00U) >> 8)))
+
+#define ___swab32(x) ((__u32)(                                  \
+        (((__u32)(x) & (__u32)0x000000ffUL) << 24) |            \
+        (((__u32)(x) & (__u32)0x0000ff00UL) <<  8) |            \
+        (((__u32)(x) & (__u32)0x00ff0000UL) >>  8) |            \
+        (((__u32)(x) & (__u32)0xff000000UL) >> 24)))
+
+#define ___swab64(x) ((__u64)(                                  \
+        (((__u64)(x) & (__u64)0x00000000000000ffULL) << 56) |   \
+        (((__u64)(x) & (__u64)0x000000000000ff00ULL) << 40) |   \
+        (((__u64)(x) & (__u64)0x0000000000ff0000ULL) << 24) |   \
+        (((__u64)(x) & (__u64)0x00000000ff000000ULL) <<  8) |   \
+        (((__u64)(x) & (__u64)0x000000ff00000000ULL) >>  8) |   \
+        (((__u64)(x) & (__u64)0x0000ff0000000000ULL) >> 24) |   \
+        (((__u64)(x) & (__u64)0x00ff000000000000ULL) >> 40) |   \
+        (((__u64)(x) & (__u64)0xff00000000000000ULL) >> 56)))
+#endif
+
+#define REMOTE_MSG_VERSION 1
+#define ENDIAN_LOCAL 0xBADADBBD
 
 struct crm_remote_header_v0 
 {
+    uint32_t endian;    /* Detect messages from hosts with different endian-ness */
+    uint32_t version;
     uint64_t id;
     uint64_t flags;
-    uint32_t error;
-    uint32_t version;
     uint32_t size_total;
-    uint32_t payload_uncompressed;
+    uint32_t payload_offset;
     uint32_t payload_compressed;
-};
+    uint32_t payload_uncompressed;
+
+        /* New fields get added here */
+
+} __attribute__ ((packed));
+
+static struct crm_remote_header_v0 *
+crm_remote_header(crm_remote_t * remote)
+{
+    struct crm_remote_header_v0 *header = (struct crm_remote_header_v0 *)remote->buffer;
+    if(remote->buffer_offset < sizeof(struct crm_remote_header_v0)) {
+        return NULL;
+
+    } else if(header->endian != ENDIAN_LOCAL) {
+        uint32_t endian = __swab32(header->endian);
+
+        CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
+        if(endian != ENDIAN_LOCAL) {
+            crm_err("Invalid message detected, endian mismatch: %lx is neither %lx nor the swab'd %lx",
+                    ENDIAN_LOCAL, header->endian, endian);
+            return NULL;
+        }
+
+        header->id = __swab64(header->id);
+        header->flags = __swab64(header->flags);
+        header->endian = __swab32(header->endian);
+
+        header->version = __swab32(header->version);
+        header->size_total = __swab32(header->size_total);
+        header->payload_offset = __swab32(header->payload_offset);
+        header->payload_compressed = __swab32(header->payload_compressed);
+        header->payload_uncompressed = __swab32(header->payload_uncompressed);
+    }
+
+    return header;
+}
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
 crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
@@ -254,13 +322,11 @@ crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
     return rc;
 }
 
-#define PCMK_TLS_VERSION 1
-
 int
 crm_remote_send(crm_remote_t * remote, xmlNode * msg)
 {
-    static uint64_t id = 0;
     int rc = -1;
+    static uint64_t id = 0;
     char *xml_text = dump_xml_unformatted(msg);
 
     struct iovec iov[2];
@@ -279,18 +345,24 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
 
     id++;
     header->id = id;
-    header->version = PCMK_TLS_VERSION;
-    header->size_total = iov[0].iov_len + iov[1].iov_len;
+    header->endian = ENDIAN_LOCAL;
+    header->version = REMOTE_MSG_VERSION;
+    header->payload_offset = iov[0].iov_len;
     header->payload_uncompressed = iov[1].iov_len;
+    header->size_total = iov[0].iov_len + iov[1].iov_len;
 
+    crm_trace("Sending len[0]=%d, start=%x\n",
+              (int)iov[0].iov_len, *(int*)xml_text);
     rc = crm_remote_sendv(remote, iov, 2);
     if (rc < 0) {
         crm_err("Failed to send remote msg, rc = %d", rc);
     }
 
-    free(xml_text);
+    free(iov[0].iov_base);
+    free(iov[1].iov_base);
     return rc;
 }
+
 
 /*!
  * \internal
@@ -301,34 +373,35 @@ xmlNode *
 crm_remote_parse_buffer(crm_remote_t * remote)
 {
     xmlNode *xml = NULL;
-    size_t offset = sizeof(struct crm_remote_header_v0);
-    struct crm_remote_header_v0 *header = NULL;
+    struct crm_remote_header_v0 *header = crm_remote_header(remote);
 
-    if (remote->buffer == NULL) {
-        return NULL;
-
-    } else if(remote->buffer_offset < sizeof(struct crm_remote_header_v0)) {
+    if (remote->buffer == NULL || header == NULL) {
         return NULL;
     }
 
     /* take ownership of the buffer */
     remote->buffer_offset = 0;
 
-    header = (struct crm_remote_header_v0 *)remote->buffer;
     /* Support compression on the receiving end now, in case we ever want to add it later */
     if (header->payload_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->payload_uncompressed;
-        char *uncompressed = calloc(1, offset + size_u);
+        char *uncompressed = calloc(1, header->payload_offset + size_u);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->payload_compressed, size_u);
 
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed + offset, &size_u,
-                                        remote->buffer + offset,
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
+                                        remote->buffer + header->payload_offset,
                                         header->payload_compressed, 1, 0);
 
-        if (rc != BZ_OK) {
+        if (rc != BZ_OK && header->version > REMOTE_MSG_VERSION) {
+            crm_warn("Couldn't decompress v%d message, we only understand v%d",
+                     header->version, REMOTE_MSG_VERSION);
+            free(uncompressed);
+            return NULL;
+
+        } else if (rc != BZ_OK) {
             crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
             free(uncompressed);
             return NULL;
@@ -336,19 +409,23 @@ crm_remote_parse_buffer(crm_remote_t * remote)
 
         CRM_ASSERT(size_u == header->payload_uncompressed);
 
-        memcpy(uncompressed, remote->buffer, offset);       /* Preserve the header */
-        header = (struct crm_remote_header_v0 *)uncompressed;
+        memcpy(uncompressed, remote->buffer, header->payload_offset);       /* Preserve the header */
+        remote->buffer_size = header->payload_offset + size_u;
 
         free(remote->buffer);
-        remote->buffer_size = offset + size_u;
         remote->buffer = uncompressed;
+        header = crm_remote_header(remote);
     }
 
-    CRM_ASSERT(remote->buffer[sizeof(struct crm_remote_header_v0) + header->payload_uncompressed - 1] == 0);
+    CRM_LOG_ASSERT(remote->buffer[sizeof(struct crm_remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
-    xml = string2xml(remote->buffer + offset);
-    if (xml == NULL) {
-        crm_err("Couldn't parse: '%.120s'", remote->buffer + offset);
+    xml = string2xml(remote->buffer + header->payload_offset);
+    if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
+        crm_warn("Couldn't parse v%d message, we only understand v%d",
+                 header->version, REMOTE_MSG_VERSION);
+
+    } else if (xml == NULL) {
+        crm_err("Couldn't parse: '%.120s'", remote->buffer + header->payload_offset);
     }
 
     return xml;
@@ -425,16 +502,16 @@ crm_remote_recv_once(crm_remote_t * remote)
 {
     int rc = 0;
     size_t read_len = sizeof(struct crm_remote_header_v0);
+    struct crm_remote_header_v0 *header = crm_remote_header(remote);
 
-    if(remote->buffer_offset >= sizeof(struct crm_remote_header_v0)) {
-        struct crm_remote_header_v0 *hdr = (struct crm_remote_header_v0 *)remote->buffer;
-
-        read_len = hdr->size_total;
+    if(header) {
+        /* Stop at the end of the current message */
+        read_len = header->size_total;
     }
 
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
-        remote->buffer_size = 2 * read_len;
+           remote->buffer_size = 2 * read_len;
         crm_trace("Expanding buffer to %u bytes", remote->buffer_size);
 
         remote->buffer = realloc(remote->buffer, remote->buffer_size + 1);
@@ -489,23 +566,18 @@ crm_remote_recv_once(crm_remote_t * remote)
         return -ENOTCONN;
     }
 
-    if(remote->buffer_offset < sizeof(struct crm_remote_header_v0)) {
-        crm_trace("Not enough data to fill header: %u < %u bytes",
-                  remote->buffer_offset, sizeof(struct crm_remote_header_v0));
-        return -EAGAIN;
-
-    } else {
-        struct crm_remote_header_v0 *hdr = (struct crm_remote_header_v0 *)remote->buffer;
-
-        if(remote->buffer_offset < hdr->size_total) {
+    header = crm_remote_header(remote);
+    if(header) {
+        if(remote->buffer_offset < header->size_total) {
             crm_trace("Read less than the advertised length: %u < %u bytes",
-                      remote->buffer_offset, hdr->size_total);
-            return -EAGAIN;
+                      remote->buffer_offset, header->size_total);
+        } else {
+            crm_trace("Read full message of %u bytes", remote->buffer_offset);
+            return remote->buffer_offset;
         }
     }
 
-    crm_trace("Read full message of %u bytes", remote->buffer_offset);
-    return remote->buffer_offset;
+    return -EAGAIN;
 }
 
 /*!
