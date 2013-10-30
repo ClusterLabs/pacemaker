@@ -53,7 +53,7 @@
 #  define GMTOFF(tm) ((tm)->tm_gmtoff)
 #else
 /* Note: extern variable; macro argument not actually used.  */
-#  define GMTOFF(tm) (timezone)
+#  define GMTOFF(tm) (-timezone+daylight)
 #endif
 
 struct crm_time_s {
