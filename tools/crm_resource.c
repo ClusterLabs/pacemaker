@@ -62,7 +62,7 @@ char *our_pid = NULL;
 crm_ipc_t *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
-int crmd_replies_needed = 0;
+int crmd_replies_needed = 1; /* The welcome message */
 GMainLoop *mainloop = NULL;
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
@@ -94,7 +94,6 @@ static void
 start_mainloop(void)
 {
     mainloop = g_main_new(FALSE);
-    crmd_replies_needed++;      /* The welcome message */
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
 
