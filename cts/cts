@@ -185,6 +185,7 @@ if [ $clean = 1 ]; then
     rm -f $cluster_log; cluster-clean -g $cluster_name --kill
 elif [ $kill = 1 ]; then
     cluster-clean -g $cluster_name --kill-only
+    exit 0
 fi
 
 if [ $install = 1 ]; then

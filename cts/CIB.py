@@ -55,9 +55,15 @@ class ConfigBase:
         return self.version
 
     def NextIP(self):
-        fields = string.split(self.CM.Env["IPBase"], '.')
-        fields[3] = str(int(fields[3])+1)
-        ip = string.join(fields, '.')
+        ip = self.CM.Env["IPBase"]
+        if ":" in ip:
+            (prefix, sep, suffix) = ip.rpartition(":")
+            suffix = str(hex(int(suffix, 16)+1)).lstrip("0x")
+        else:
+            (prefix, sep, suffix) = ip.rpartition(".")
+            suffix = str(int(suffix)+1)
+
+        ip = prefix + sep + suffix
         self.CM.Env["IPBase"] = ip
         return ip.strip()
 
@@ -76,11 +82,20 @@ class CIB11(ConfigBase):
     def NewIP(self, name=None, standard="ocf"):
         ip = self.NextIP()
         if not name:
-            name = "r"+ip
+            if ":" in ip:
+                (prefix, sep, suffix) = ip.rpartition(":")
+                name = "r"+suffix
+            else:
+                name = "r"+ip
 
         r = Resource(self.Factory, name, "IPaddr2", standard)
         r["ip"] = ip
-        r["cidr_netmask"] = "32"
+        
+        if ":" in ip:
+            r["cidr_netmask"] = "64"
+        else:
+            r["cidr_netmask"] = "32"
+
         r.add_op("monitor", "5s")
         return r
 
@@ -162,21 +177,19 @@ class CIB11(ConfigBase):
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
-                    stt = Resource(self.Factory, "FencingPass", "stonith:fence_dummy", "stonith")
+                    stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
                     stt["pcmk_host_list"] = string.join(stt_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stt["delay"] = "20"
-                    stt["random_sleep_range"] = "10"
+                    stt["random_sleep_range"] = "30"
                     stt["mode"] = "pass"
                     stt.commit()
 
                 # Create a Dummy agent that always fails for levels-or
                 if len(stf_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
-                    stf = Resource(self.Factory, "FencingFail", "stonith:fence_dummy", "stonith")
+                    stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
                     stf["pcmk_host_list"] = string.join(stf_nodes, " ")
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stf["delay"] = "20"
                     stf["random_sleep_range"] = "30"
                     stf["mode"] = "fail"
                     stf.commit()
@@ -377,7 +390,7 @@ if __name__ == '__main__':
     env["nodes"].append("pcmk-4")
 
     env["CIBResource"] = 1
-    env["IPBase"] = "10.0.0.10"
+    env["IPBase"] = "fe80::1234:56:7890:1000"
     env["DoStonith"]=1
     env["stonith-type"] = "fence_xvm"
     env["stonith-params"] = "pcmk_arg_map=domain:uname"

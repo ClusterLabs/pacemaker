@@ -358,23 +358,23 @@ if __name__ == '__main__':
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "delay=0"
-               Environment["IPBase"] = " 11.0.0.1"
+               Environment["IPBase"] = " fe80::1234:56:7890:4000"
 
-           elif args[i] == "virt1":
+           elif args[i+1] == "virt1":
                Environment["Stack"] = "corosync"
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "delay=0"
-               Environment["IPBase"] = " 12.0.0.1"
+               Environment["IPBase"] = " fe80::1234:56:7890:1000"
 
-           elif args[i] == "east16":
+           elif args[i+1] == "east16":
                Environment["Stack"] = "corosync"
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
-               Environment["IPBase"] = " 11.0.0.1"
+               Environment["IPBase"] = " fe80::1234:56:7890:2000"
 
-           elif args[i] == "corosync8":
+           elif args[i+1] == "corosync8":
                Environment["Stack"] = "corosync"
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_rhevm"
@@ -386,7 +386,7 @@ if __name__ == '__main__':
                    os.environ['RHEVM_SERVER'],
                    os.environ['RHEVM_PORT'],
                    )
-               Environment["IPBase"] = " 11.0.0.1"
+               Environment["IPBase"] = " fe80::1234:56:7890:3000"
 
            if os.path.isfile(dsh_file):
                node_list = []
@@ -587,14 +587,14 @@ if __name__ == '__main__':
         network=rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
         Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, stdout=1).strip()
         if not Environment["IPBase"]:
-            Environment["IPBase"] = "11.0.0.1"
+            Environment["IPBase"] = " fe80::1234:56:7890:1000"
             Environment.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
             Environment.log("Defaulting to '%s', use --test-ip-base to override" % Environment["IPBase"])
 
         elif int(Environment["IPBase"].split('.')[3]) >= 240:
             Environment.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
                             % (Environment["IPBase"], Environment["IPBase"].split('.')[3]))
-            Environment["IPBase"] = "11.0.0.1"
+            Environment["IPBase"] = " fe80::1234:56:7890:1000"
             Environment.log("Defaulting to '%s', use --test-ip-base to override" % Environment["IPBase"])
 
     # Create the Cluster Manager object

@@ -55,7 +55,7 @@ class LogAudit(ClusterAudit):
 
     def __init__(self, cm):
         self.CM = cm
-        self.kinds = [ "local syslog", "journal", "remote" ]
+        self.kinds = [ "combined syslog", "journal", "remote" ]
 
     def RestartClusterLogging(self, nodes=None):
         if not nodes:

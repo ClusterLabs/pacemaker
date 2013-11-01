@@ -2260,11 +2260,7 @@ class BSC_AddResource(CTSTest):
         watch = self.create_watch(patterns, self.CM["DeadTime"])
         watch.setwatch()
 
-        fields = string.split(self.CM.Env["IPBase"], '.')
-        fields[3] = str(int(fields[3])+1)
-        ip = string.join(fields, '.')
-        self.CM.Env["IPBase"] = ip
-
+        ip = self.NextIP()
         if not self.make_ip_resource(node, r_id, "ocf", "IPaddr", ip):
             return self.failure("Make resource %s failed" % r_id)
 
@@ -2282,6 +2278,20 @@ class BSC_AddResource(CTSTest):
             return self.failure("Unstable cluster")
 
         return self.success()
+
+    def NextIP(self):
+        ip = self.CM.Env["IPBase"]
+        if ":" in ip:
+            fields = ip.rpartition(":")
+            fields[2] = str(hex(int(fields[2], 16)+1))
+            print str(hex(int(f[2], 16)+1))
+        else:
+            fields = ip.rpartition('.')
+            fields[2] = str(int(fields[2])+1)
+
+        ip = fields[0] + fields[1] + fields[3];
+        self.CM.Env["IPBase"] = ip
+        return ip.strip()
 
     def make_ip_resource(self, node, id, rclass, type, ip):
         self.CM.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
