@@ -394,12 +394,14 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     } else {
         struct timeval your_age;
         const char *your_version = crm_element_value(vote, F_CRM_VERSION);
+        int tv_sec = 0;
+        int tv_usec = 0;
 
-        your_age.tv_sec = 0;
-        your_age.tv_usec = 0;
+        crm_element_value_int(vote, F_CRM_ELECTION_AGE_S, &tv_sec);
+        crm_element_value_int(vote, F_CRM_ELECTION_AGE_US, &tv_usec);
 
-        crm_element_value_int(vote, F_CRM_ELECTION_AGE_S, (int *)&(your_age.tv_sec));
-        crm_element_value_int(vote, F_CRM_ELECTION_AGE_US, (int *)&(your_age.tv_usec));
+        your_age.tv_sec = tv_sec;
+        your_age.tv_usec = tv_usec;
 
         age = crm_compare_age(your_age);
         if(your_age.tv_sec == 0 && your_age.tv_usec == 0) {

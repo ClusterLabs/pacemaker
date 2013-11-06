@@ -558,6 +558,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
+    int call_options = 0;
 
     if (remote_op_list == NULL) {
         remote_op_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_remote_op);
@@ -612,7 +613,9 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
-    crm_element_value_int(request, F_STONITH_CALLOPTS, (int *)&(op->call_options));
+    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    op->call_options = call_options;
+    
     crm_element_value_int(request, F_STONITH_CALLID, (int *)&(op->client_callid));
 
     crm_trace("%s new stonith op: %s - %s of %s for %s",
