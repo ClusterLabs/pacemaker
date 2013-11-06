@@ -813,6 +813,7 @@ int
 crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
                              void *userdata, void (*callback) (void *userdata, int sock))
 {
+    char buffer[256];
     struct addrinfo *res = NULL;
     struct addrinfo *rp = NULL;
     struct addrinfo hints;
@@ -856,17 +857,22 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
             crm_err("Socket creation failed for remote client connection.");
             continue;
         }
+
+        memset(buffer, 0, DIMOF(buffer));
         if (addr->sa_family == AF_INET6) {
             struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr;
 
             addr_in->sin6_port = htons(port);
+            inet_ntop(addr->sa_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
+
         } else {
             struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
 
             addr_in->sin_port = htons(port);
-            crm_info("Attempting to connect to remote server at %s:%d",
-                     inet_ntoa(addr_in->sin_addr), port);
+            inet_ntop(addr->sa_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
         }
+
+        crm_info("Attempting to connect to remote server at %s:%d", buffer, port);
 
         if (callback) {
             if (internal_tcp_connect_async
