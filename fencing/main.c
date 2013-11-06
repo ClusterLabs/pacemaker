@@ -583,6 +583,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     node_t *node = NULL;
     const char *value = NULL;
     const char *rclass = NULL;
+    node_t *parent = NULL;
 
     if(rsc->children) {
         GListPtr gIter = NULL;
@@ -622,6 +623,18 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
+    if (rsc->parent && rsc->parent->variant == pe_group) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, rsc->parent->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&parent)) {
+            if(parent && strcmp(parent->details->uname, stonith_our_uname) == 0) {
+                break;
+            }
+            parent = NULL;
+        }
+    }
+
     if(node == NULL) {
         GHashTableIter iter;
 
@@ -633,8 +646,8 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 
         return;
 
-    } else if(node->weight < 0) {
-        char *score = score2char(node->weight);
+    } else if(node->weight < 0 || (parent && parent->weight < 0)) {
+        char *score = score2char((node->weight < 0) ? node->weight : parent->weight);
 
         crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
         free(score);
