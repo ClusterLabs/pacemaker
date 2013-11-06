@@ -30,6 +30,7 @@
 
 #include <lrmd_private.h>
 
+#include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -39,7 +40,7 @@
 #  define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
-static int ssock = 0;
+static int ssock = -1;
 extern int lrmd_call_id;
 
 static void
@@ -254,12 +255,72 @@ lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_da
     return lrmd_tls_set_key(key);
 }
 
+static int
+bind_and_listen(struct addrinfo *addr)
+{
+    int optval;
+    int fd;
+    int rc;
+    char buffer[256] = { 0, };
+
+    if (addr->ai_family == AF_INET6) {
+        struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr->ai_addr;
+        inet_ntop(addr->ai_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
+
+    } else {
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)addr->ai_addr;
+        inet_ntop(addr->ai_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
+    }
+
+    crm_trace("Attempting to bind on address %s", buffer);
+
+    fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+    if (fd < 0) {
+        return -1;
+    }
+
+    /* reuse address */
+    optval = 1;
+    rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    if (rc < 0) {
+        crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener, bind address %s", buffer);
+        close(fd);
+        return -1;
+    }
+
+    if (addr->ai_family == AF_INET6) {
+        optval = 0;
+        rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
+        if (rc < 0) {
+            crm_perror(LOG_INFO, "Couldn't disable IPV6 only on address %s", buffer);
+            close(fd);
+            return -1;
+        }
+    }
+
+    if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
+        close(fd);
+        return -1;
+    }
+
+    if (listen(fd, 10) == -1) {
+        crm_err("Can not start listen on address %s", buffer);
+        close(fd);
+        return -1;
+    }
+
+    crm_notice("Listening on address %s", buffer);
+
+    return fd;
+}
+
 int
 lrmd_init_remote_tls_server(int port)
 {
     int rc;
-    struct sockaddr_in saddr;
-    int optval;
+    int filter;
+    struct addrinfo hints, *res = NULL, *iter;
+    char port_str[16];
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
@@ -276,34 +337,39 @@ lrmd_init_remote_tls_server(int port)
     gnutls_psk_set_server_credentials_function(psk_cred_s, lrmd_tls_server_key_cb);
     gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);
 
-    /* create server socket */
-    ssock = socket(AF_INET, SOCK_STREAM, 0);
-    if (ssock == -1) {
-        crm_err("Can not create server socket.");
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_flags = AI_PASSIVE; /* Only return socket addresses with wildcard INADDR_ANY or IN6ADDR_ANY_INIT */
+    hints.ai_family = AF_UNSPEC; /* Return IPv6 or IPv4 */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    snprintf(port_str, sizeof(port_str), "%d", port);
+    rc = getaddrinfo(NULL, port_str, &hints, &res);
+    if (rc) {
+        crm_err("getaddrinfo: %s", gai_strerror(rc));
         return -1;
     }
 
-    /* reuse address */
-    optval = 1;
-    rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-    if (rc < 0) {
-        crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
+    iter = res;
+    filter = AF_INET6;
+    /* Try IPv6 addresses first, then IPv4 */
+    while (iter) {
+        if (iter->ai_family == filter) {
+            ssock = bind_and_listen(iter);
+        }
+        if (ssock != -1) {
+            break;
+        }
+
+        iter = iter->ai_next;
+        if (iter == NULL && filter == AF_INET6) {
+            iter = res;
+            filter = AF_INET;
+        }
     }
 
-    rc = -1;
-
-    /* bind server socket */
-    memset(&saddr, '\0', sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    saddr.sin_addr.s_addr = INADDR_ANY;
-    saddr.sin_port = htons(port);
-    if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        crm_err("Can not bind server socket.");
-        goto init_remote_cleanup;
-    }
-
-    if (listen(ssock, 10) == -1) {
-        crm_err("Can not start listen.");
+    if (ssock < 0) {
+        crm_err("unable to bind to address");
         goto init_remote_cleanup;
     }
 
@@ -315,6 +381,7 @@ lrmd_init_remote_tls_server(int port)
         close(ssock);
         ssock = 0;
     }
+    freeaddrinfo(res);
     return rc;
 
 }
