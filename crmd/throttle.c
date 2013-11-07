@@ -482,7 +482,9 @@ throttle_mode(void)
         mode |= throttle_handle_load(blocked_ratio, "blocked IO ratio");
     }
 
-    if(mode & throttle_high) {
+    if(mode & throttle_extreme) {
+        return throttle_extreme;
+    } else if(mode & throttle_high) {
         return throttle_high;
     } else if(mode & throttle_med) {
         return throttle_med;
@@ -512,7 +514,7 @@ throttle_timer_cb(gpointer data)
 {
     static bool send_updates = FALSE;
     static enum throttle_state_e last = throttle_none;
-    enum throttle_state_e now = throttle_mode();
+    enum throttle_state_e now = throttle_none;
 
     if(send_updates == FALSE) {
         /* Optimize for the true case */
@@ -523,6 +525,7 @@ throttle_timer_cb(gpointer data)
         }
     }
 
+    now = throttle_mode();
     if(send_updates && now != last) {
         crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
         throttle_send_command(now);
@@ -608,13 +611,13 @@ throttle_get_total_job_limit(int l)
         switch(r->mode) {
 
             case throttle_extreme:
-                if(limit > peers/2) {
+                if(limit == 0 || limit > peers/2) {
                     limit = peers/2;
                 }
                 break;
 
             case throttle_high:
-                if(limit > peers) {
+                if(limit == 0 || limit > peers) {
                     limit = peers;
                 }
                 break;
@@ -644,7 +647,7 @@ throttle_get_job_limit(const char *node)
     if(r == NULL) {
         r = calloc(1, sizeof(struct throttle_record_s));
         r->node = strdup(node);
-        r->mode = throttle_mode();
+        r->mode = throttle_low;
         r->max = throttle_job_max;
         crm_trace("Defaulting to local values for unknown node %s", node);
 
