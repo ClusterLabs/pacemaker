@@ -1776,6 +1776,10 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
         return -EINVAL;
     }
 
+    if (safe_str_eq(class, "service")) {
+        class = resources_find_service_class(type);
+    }
+
     if (safe_str_eq(class, "stonith")) {
         return stonith_get_metadata(provider, type, output);
     } else if (safe_str_eq(class, "lsb")) {

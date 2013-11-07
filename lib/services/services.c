@@ -56,6 +56,42 @@ services_action_create(const char *name, const char *action, int interval, int t
     return resources_action_create(name, "lsb", NULL, name, action, interval, timeout, NULL);
 }
 
+const char *
+resources_find_service_class(const char *agent)
+{
+    /* Priority is:
+     * - lsb
+     * - systemd
+     * - upstart
+     */
+    int rc = 0;
+    struct stat st;
+    char *path = NULL;
+
+#ifdef LSB_ROOT_DIR
+    rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, agent);
+    if (rc > 0 && stat(path, &st) == 0) {
+        free(path);
+        return "lsb";
+    }
+    free(path);
+#endif
+
+#if SUPPORT_SYSTEMD
+    if (systemd_unit_exists(agent)) {
+        return "systemd";
+    }
+#endif
+
+#if SUPPORT_UPSTART
+    if (upstart_job_exists(agent)) {
+        return "upstart";
+    }
+#endif
+    return NULL;
+}
+
+
 svc_action_t *
 resources_action_create(const char *name, const char *standard, const char *provider,
                         const char *agent, const char *action, int interval, int timeout,
@@ -116,50 +152,20 @@ resources_action_create(const char *name, const char *standard, const char *prov
     }
 
     if (strcasecmp(op->standard, "service") == 0) {
-        /* Work it out and then fall into the if-else block below.
-         * Priority is:
-         * - lsb
-         * - systemd
-         * - upstart
-         */
-        int rc = 0;
-        struct stat st;
-        char *path = NULL;
+        const char *expanded = resources_find_service_class(op->agent);
 
-#ifdef LSB_ROOT_DIR
-        rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, op->agent);
-        if (rc > 0 && stat(path, &st) == 0) {
-            crm_debug("Found an lsb agent for %s/% the", op->rsc, op->agent);
-            free(path);
+        if(expanded) {
+            crm_debug("Found a %s agent for %s/%s", expanded, op->rsc, op->agent);
+            free(op->standard);
+            op->standard = strdup(expanded);
+
+        } else {
+            crm_info("Cannot determine the standard for %s (%s)", op->rsc, op->agent);
             free(op->standard);
             op->standard = strdup("lsb");
-            goto expanded;
         }
-        free(path);
-#endif
-
-#if SUPPORT_SYSTEMD
-        if (systemd_unit_exists(op->agent)) {
-            crm_debug("Found a systemd agent for %s/%s", op->rsc, op->agent);
-            free(op->standard);
-            op->standard = strdup("systemd");
-            goto expanded;
-        }
-#endif
-
-#if SUPPORT_UPSTART
-        if (upstart_job_exists(op->agent)) {
-            crm_debug("Found an upstart agent for %s/%s", op->rsc, op->agent);
-            free(op->standard);
-            op->standard = strdup("upstart");
-            goto expanded;
-        }
-#endif
-
-        crm_info("Cannot determine the standard for %s (%s)", op->rsc, op->agent);
     }
 
-  expanded:
     if (strcasecmp(op->standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;

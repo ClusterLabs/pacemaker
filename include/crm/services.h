@@ -226,6 +226,14 @@ enum nagios_exitcode {
                                           int timeout /* ms */ , GHashTable * params);
 
 /**
+ * Find the first class that can provide service::${agent}
+ *
+ * \param[in] agent which agent to search for
+ * \return NULL, or the first class that provides the named agent
+ */
+    const char *resources_find_service_class(const char *agent);
+
+/**
  * Utilize services API to execute an arbitrary command.
  *
  * This API has useful infrastructure in place to be able to run a command

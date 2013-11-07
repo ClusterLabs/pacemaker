@@ -495,8 +495,8 @@ crm_ipcs_flush_events(crm_client_t * c)
 
     queue_len -= sent;
     if (sent > 0 || c->event_queue) {
-        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s",
-                  sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc < 0 ? rc : 0));
+        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%d)",
+                  sent, queue_len, c->ipcs, c->pid, pcmk_strerror(rc < 0 ? rc : 0), rc);
     }
 
     if (c->event_queue) {
