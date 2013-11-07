@@ -26,3 +26,4 @@ int throttle_num_cores(void);
 void throttle_update(xmlNode *xml);
 void throttle_update_job_max(const char *preference);
 int throttle_get_job_limit(const char *node);
+int throttle_get_total_job_limit(int l);

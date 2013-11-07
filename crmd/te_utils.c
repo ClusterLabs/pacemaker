@@ -27,6 +27,7 @@
 #include <tengine.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
+#include <throttle.h>
 #include <crm/fencing/internal.h>
 
 crm_trigger_t *stonith_reconnect = NULL;
@@ -328,7 +329,12 @@ te_graph_trigger(gpointer user_data)
     }
 
     if (transition_graph->complete == FALSE) {
+        int limit = transition_graph->batch_limit;
+
+        transition_graph->batch_limit = throttle_get_total_job_limit(limit);
         graph_rc = run_graph(transition_graph);
+        transition_graph->batch_limit = limit; /* Restore the configured value */
+
         print_graph(LOG_DEBUG_3, transition_graph);
 
         if (graph_rc == transition_active) {

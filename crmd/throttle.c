@@ -35,6 +35,7 @@
 
 enum throttle_state_e 
 {
+    throttle_extreme = 0x1000,
     throttle_high = 0x0100,
     throttle_med  = 0x0010,
     throttle_low  = 0x0001,
@@ -253,7 +254,7 @@ static bool throttle_cib_load(float *load)
             *load = (delta_utime + delta_stime); /* Cast to a float before division */
             *load /= ticks_per_s;
             *load /= elapsed;
-            crm_debug("Current CIB load from %lu ticks in %ds is %f (@%lu tps)", delta_utime + delta_stime, elapsed, *load, ticks_per_s);
+            crm_debug("cib load: %f (%lu ticks in %ds)", *load, delta_utime + delta_stime, elapsed);
 
         } else {
             crm_debug("Init %lu + %lu ticks at %d (%lu tps)", utime, stime, now, ticks_per_s);
@@ -428,12 +429,19 @@ throttle_mode(void)
          * Therefor the 'normal' thresholds can not apply here and we
          * need a special case.
          */
-
+        if(cores == 1) {
+            cib_max_cpu = 0.4;
+        }
         if(throttle_load_target > 0.0 && throttle_load_target < cib_max_cpu) {
             cib_max_cpu = throttle_load_target;
         }
 
-        if(load > cib_max_cpu) {
+        if(load > 1.5 * cib_max_cpu) {
+            /* Can only happen on machines with a low number of cores */
+            crm_notice("Extreme %s detected: %f", desc, load);
+            mode |= throttle_extreme;
+
+        } else if(load > cib_max_cpu) {
             crm_notice("High %s detected: %f", desc, load);
             mode |= throttle_high;
 
@@ -586,6 +594,47 @@ throttle_fini(void)
 
 
 int
+throttle_get_total_job_limit(int l)
+{
+    /* Cluster-wide limit */
+    GHashTableIter iter;
+    int limit = 0;
+    int peers = crm_active_peers();
+    struct throttle_record_s *r = NULL;
+
+    g_hash_table_iter_init(&iter, throttle_records);
+
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &r)) {
+        switch(r->mode) {
+
+            case throttle_extreme:
+                if(limit > peers/2) {
+                    limit = peers/2;
+                }
+                break;
+
+            case throttle_high:
+                if(limit > peers) {
+                    limit = peers;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    if(limit == l) {
+        crm_trace("No change to batch-limit=%d", limit);
+
+    } else if(l == 0) {
+        crm_trace("Using batch-limit=%d", limit);
+
+    } else {
+        crm_trace("Using batch-limit=%d instead of %d", limit, l);
+    }
+    return limit;
+}
+
+int
 throttle_get_job_limit(const char *node)
 {
     int jobs = 1;
@@ -603,6 +652,7 @@ throttle_get_job_limit(const char *node)
     }
 
     switch(r->mode) {
+        case throttle_extreme:
         case throttle_high:
             jobs = 1; /* At least one job must always be allowed */
             break;
@@ -621,7 +671,6 @@ throttle_get_job_limit(const char *node)
     }
     return jobs;
 }
-
 
 void
 throttle_update(xmlNode *xml)
