@@ -229,8 +229,8 @@ controld_validate() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$HA_quorum_type" in
-    cman|corosync) daemon_ext="";;
-    *) daemon_ext=".pcmk";;
+    pcmk) daemon_ext=".pcmk";;
+    *) daemon_ext="";;
 esac
 
 case "$OCF_RESOURCE_INSTANCE" in
