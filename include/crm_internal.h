@@ -280,6 +280,7 @@ void strip_text_nodes(xmlNode * xml);
 #  define F_ATTRD_HOST_ID	"attr_host_id"
 #  define F_ATTRD_USER		"attr_user"
 #  define F_ATTRD_WRITER	"attr_writer"
+#  define F_ATTRD_VERSION	"attr_version"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB

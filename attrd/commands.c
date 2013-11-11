@@ -28,6 +28,8 @@
 
 #include <internal.h>
 
+#define ATTRD_PROTOCOL_VERSION "1"
+
 int last_cib_op_done = 0;
 char *peer_writer = NULL;
 GHashTable *attributes = NULL;
@@ -64,6 +66,17 @@ void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, const char *source);
+
+static gboolean
+send_attrd_message(crm_node_t * node, xmlNode * data)
+{
+    crm_xml_add(data, F_TYPE, T_ATTRD);
+    crm_xml_add(data, F_ATTRD_IGNORE_LOCALLY, "atomic-version"); /* Tell older versions to ignore our messages */
+    crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
+    crm_xml_add_int(data, F_ATTRD_WRITER, election_state(writer));
+
+    return send_cluster_message(node, crm_msg_attrd, data, TRUE);
+}
 
 static gboolean
 attribute_timer_cb(gpointer data)
@@ -237,8 +250,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
     }
 
     if(broadcast) {
-        crm_xml_add_int(xml, F_ATTRD_WRITER, election_state(writer));
-        send_cluster_message(NULL, crm_msg_attrd, xml, TRUE);
+        send_attrd_message(NULL, xml);
     }
 }
 
@@ -246,6 +258,7 @@ void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
     int peer_state = 0;
+    const char *v = crm_element_value(xml, F_ATTRD_VERSION);
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
 
@@ -269,6 +282,34 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                 break;
         }
         return;
+
+    } else if(v == NULL) {
+        /* From the non-atomic version */
+        if(safe_str_eq(op, "update")) {
+            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+
+            crm_trace("Compatibility update of %s from %s", name, peer->uname);
+            attrd_peer_update(peer, xml, FALSE);
+
+        } else if(safe_str_eq(op, "flush")) {
+            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
+            attribute_t *a = g_hash_table_lookup(attributes, name);
+
+            if(a) {
+                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
+                write_or_elect_attribute(a);
+            }
+
+        } else if(safe_str_eq(op, "refresh")) {
+            GHashTableIter aIter;
+            attribute_t *a = NULL;
+
+            g_hash_table_iter_init(&aIter, attributes);
+            while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
+                write_or_elect_attribute(a);
+            }
+        }
     }
 
     crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
@@ -333,8 +374,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
-    crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
-    send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
+    send_attrd_message(peer, sync);
     free_xml(sync);
 }
 
@@ -406,7 +446,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, v->nodename, v->nodeid, v->current);
 
         crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
-        send_cluster_message(peer, crm_msg_attrd, sync, TRUE);
+        send_attrd_message(peer, sync);
         free_xml(sync);
 
     } else if(safe_str_neq(v->current, value)) {
