@@ -601,7 +601,7 @@ throttle_get_total_job_limit(int l)
 {
     /* Cluster-wide limit */
     GHashTableIter iter;
-    int limit = 0;
+    int limit = l;
     int peers = crm_active_peers();
     struct throttle_record_s *r = NULL;
 
@@ -626,7 +626,7 @@ throttle_get_total_job_limit(int l)
         }
     }
     if(limit == l) {
-        crm_trace("No change to batch-limit=%d", limit);
+        /* crm_trace("No change to batch-limit=%d", limit); */
 
     } else if(l == 0) {
         crm_trace("Using batch-limit=%d", limit);
