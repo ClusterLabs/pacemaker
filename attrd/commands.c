@@ -705,7 +705,10 @@ write_attribute(attribute_t *a)
                 v->requested = strdup(v->current);
 
             } else {
-                flags |= cib_mixed_update;
+                /* Older versions don't know about the cib_mixed_update flag
+                 * Make sure it goes to the local cib which does
+                 */
+                flags |= cib_mixed_update|cib_scope_local;
             }
         }
     }
