@@ -1557,15 +1557,21 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
         key = generate_op_key(lh_rsc->id, op_type, interval);
 
-        if (lh_rsc->fns->state(lh_rsc, TRUE) != RSC_ROLE_STOPPED || safe_str_neq(op_type, RSC_STOP)) {
+        if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
+            free(key);
+            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
+                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+
+        } else if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_SLAVE && safe_str_eq(op_type, RSC_DEMOTE)) {
+            free(key);
+            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
+                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+
+        } else {
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - creating",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
-        } else {
-            free(key);
-            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
-                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
         }
 
         free(op_type);

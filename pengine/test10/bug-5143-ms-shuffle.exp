@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <rsc_op id="191" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:0_post_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2">
+      <rsc_op id="188" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:0_post_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2">
         <primitive id="drbd-r1" long-id="drbd-r1:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd-r1:1 " CRM_meta_notify_promote_uname="hex-3 " CRM_meta_notify_slave_resource="drbd-r1:0 drbd-r1:1 " CRM_meta_notify_slave_uname="hex-2 hex-3 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  drbd_resource="r1"/>
       </rsc_op>
@@ -14,7 +14,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="190" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:0_pre_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2">
+      <rsc_op id="187" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:0_pre_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2">
         <primitive id="drbd-r1" long-id="drbd-r1:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd-r1:1 " CRM_meta_notify_promote_uname="hex-3 " CRM_meta_notify_slave_resource="drbd-r1:0 drbd-r1:1 " CRM_meta_notify_slave_uname="hex-2 hex-3 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  drbd_resource="r1"/>
       </rsc_op>
@@ -40,7 +40,7 @@
   </synapse>
   <synapse id="3" priority="1000000">
     <action_set>
-      <rsc_op id="193" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:1_post_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3">
+      <rsc_op id="190" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:1_post_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3">
         <primitive id="drbd-r1" long-id="drbd-r1:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd-r1:1 " CRM_meta_notify_promote_uname="hex-3 " CRM_meta_notify_slave_resource="drbd-r1:0 drbd-r1:1 " CRM_meta_notify_slave_uname="hex-2 hex-3 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  drbd_resource="r1"/>
       </rsc_op>
@@ -53,7 +53,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="192" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:1_pre_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3">
+      <rsc_op id="189" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:1_pre_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3">
         <primitive id="drbd-r1" long-id="drbd-r1:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd-r1:1 " CRM_meta_notify_promote_uname="hex-3 " CRM_meta_notify_slave_resource="drbd-r1:0 drbd-r1:1 " CRM_meta_notify_slave_uname="hex-2 hex-3 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  drbd_resource="r1"/>
       </rsc_op>
@@ -104,10 +104,10 @@
         <pseudo_event id="123" operation="notify" operation_key="ms-r1_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="191" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:0_post_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2"/>
+        <rsc_op id="188" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:0_post_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="193" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:1_post_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3"/>
+        <rsc_op id="190" operation="notify" operation_key="drbd-r1_post_notify_promote_0" internal_operation_key="drbd-r1:1_post_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -137,10 +137,10 @@
         <pseudo_event id="121" operation="notify" operation_key="ms-r1_pre_notify_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="190" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:0_pre_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2"/>
+        <rsc_op id="187" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:0_pre_notify_promote_0" on_node="hex-2" on_node_uuid="hex-2"/>
       </trigger>
       <trigger>
-        <rsc_op id="192" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:1_pre_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3"/>
+        <rsc_op id="189" operation="notify" operation_key="drbd-r1_pre_notify_promote_0" internal_operation_key="drbd-r1:1_pre_notify_promote_0" on_node="hex-3" on_node_uuid="hex-3"/>
       </trigger>
     </inputs>
   </synapse>

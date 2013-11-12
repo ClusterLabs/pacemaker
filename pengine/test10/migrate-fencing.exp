@@ -353,20 +353,20 @@
   </synapse>
   <synapse id="22" priority="1000000">
     <action_set>
-      <rsc_op id="106" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="103" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="105" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="102" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23">
     <action_set>
-      <rsc_op id="105" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="102" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -414,7 +414,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="106" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
+        <rsc_op id="103" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
       </trigger>
     </inputs>
   </synapse>

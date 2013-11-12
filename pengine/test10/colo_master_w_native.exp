@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <rsc_op id="56" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_demote_0" on_node="node2" on_node_uuid="1048225984">
+      <rsc_op id="55" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_demote_0" on_node="node2" on_node_uuid="1048225984">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -14,7 +14,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="55" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_demote_0" on_node="node2" on_node_uuid="1048225984">
+      <rsc_op id="54" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_demote_0" on_node="node2" on_node_uuid="1048225984">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -27,7 +27,7 @@
   </synapse>
   <synapse id="2" priority="1000000">
     <action_set>
-      <rsc_op id="52" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_promote_0" on_node="node2" on_node_uuid="1048225984">
+      <rsc_op id="51" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_promote_0" on_node="node2" on_node_uuid="1048225984">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -40,7 +40,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="51" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_promote_0" on_node="node2" on_node_uuid="1048225984">
+      <rsc_op id="50" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_promote_0" on_node="node2" on_node_uuid="1048225984">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -85,7 +85,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <rsc_op id="58" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_demote_0" on_node="node1" on_node_uuid="1031448768">
+      <rsc_op id="57" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_demote_0" on_node="node1" on_node_uuid="1031448768">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -98,7 +98,7 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="57" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_demote_0" on_node="node1" on_node_uuid="1031448768">
+      <rsc_op id="56" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_demote_0" on_node="node1" on_node_uuid="1031448768">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -111,7 +111,7 @@
   </synapse>
   <synapse id="8" priority="1000000">
     <action_set>
-      <rsc_op id="54" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_promote_0" on_node="node1" on_node_uuid="1031448768">
+      <rsc_op id="53" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_promote_0" on_node="node1" on_node_uuid="1031448768">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -124,7 +124,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="53" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_promote_0" on_node="node1" on_node_uuid="1031448768">
+      <rsc_op id="52" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_promote_0" on_node="node1" on_node_uuid="1031448768">
         <primitive id="MS_RSC_NATIVE" long-id="MS_RSC_NATIVE:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_demote_uname="node2 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="MS_RSC_NATIVE:0 " CRM_meta_notify_master_uname="node2 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_promote_uname="node1 " CRM_meta_notify_slave_resource="MS_RSC_NATIVE:1 " CRM_meta_notify_slave_uname="node1 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -171,10 +171,10 @@
         <pseudo_event id="38" operation="notify" operation_key="MS_RSC_post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="56" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_demote_0" on_node="node2" on_node_uuid="1048225984"/>
+        <rsc_op id="55" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_demote_0" on_node="node2" on_node_uuid="1048225984"/>
       </trigger>
       <trigger>
-        <rsc_op id="58" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_demote_0" on_node="node1" on_node_uuid="1031448768"/>
+        <rsc_op id="57" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_demote_0" on_node="node1" on_node_uuid="1031448768"/>
       </trigger>
     </inputs>
   </synapse>
@@ -204,10 +204,10 @@
         <pseudo_event id="36" operation="notify" operation_key="MS_RSC_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="55" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_demote_0" on_node="node2" on_node_uuid="1048225984"/>
+        <rsc_op id="54" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_demote_0" on_node="node2" on_node_uuid="1048225984"/>
       </trigger>
       <trigger>
-        <rsc_op id="57" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_demote_0" on_node="node1" on_node_uuid="1031448768"/>
+        <rsc_op id="56" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_demote_0" on_node="node1" on_node_uuid="1031448768"/>
       </trigger>
     </inputs>
   </synapse>
@@ -257,10 +257,10 @@
         <pseudo_event id="32" operation="notify" operation_key="MS_RSC_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="52" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_promote_0" on_node="node2" on_node_uuid="1048225984"/>
+        <rsc_op id="51" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_promote_0" on_node="node2" on_node_uuid="1048225984"/>
       </trigger>
       <trigger>
-        <rsc_op id="54" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_promote_0" on_node="node1" on_node_uuid="1031448768"/>
+        <rsc_op id="53" operation="notify" operation_key="MS_RSC_NATIVE:1_post_notify_promote_0" on_node="node1" on_node_uuid="1031448768"/>
       </trigger>
     </inputs>
   </synapse>
@@ -290,10 +290,10 @@
         <pseudo_event id="30" operation="notify" operation_key="MS_RSC_pre_notify_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="51" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_promote_0" on_node="node2" on_node_uuid="1048225984"/>
+        <rsc_op id="50" operation="notify" operation_key="MS_RSC_NATIVE:0_pre_notify_promote_0" on_node="node2" on_node_uuid="1048225984"/>
       </trigger>
       <trigger>
-        <rsc_op id="53" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_promote_0" on_node="node1" on_node_uuid="1031448768"/>
+        <rsc_op id="52" operation="notify" operation_key="MS_RSC_NATIVE:1_pre_notify_promote_0" on_node="node1" on_node_uuid="1031448768"/>
       </trigger>
     </inputs>
   </synapse>

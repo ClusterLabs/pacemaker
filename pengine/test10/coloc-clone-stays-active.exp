@@ -1,20 +1,20 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <rsc_op id="672" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1">
+      <rsc_op id="662" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1">
         <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="s01-0" CRM_meta_migrate_target="s01-1" CRM_meta_timeout="20000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml"  hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="671" operation="migrate_to" operation_key="mgmt-vm_migrate_to_0" on_node="s01-0" on_node_uuid="s01-0"/>
+        <rsc_op id="661" operation="migrate_to" operation_key="mgmt-vm_migrate_to_0" on_node="s01-0" on_node_uuid="s01-0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="671" operation="migrate_to" operation_key="mgmt-vm_migrate_to_0" on_node="s01-0" on_node_uuid="s01-0">
+      <rsc_op id="661" operation="migrate_to" operation_key="mgmt-vm_migrate_to_0" on_node="s01-0" on_node_uuid="s01-0">
         <primitive id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>
         <attributes CRM_meta_migrate_source="s01-0" CRM_meta_migrate_target="s01-1" CRM_meta_timeout="20000" config="/mnt/vm_meta/mgmt.prague.vds-ok.com.xml"  hypervisor="qemu:///system" migration_transport="tls" refresh_config="1"/>
       </rsc_op>
@@ -55,7 +55,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="672" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1"/>
+        <rsc_op id="662" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1"/>
       </trigger>
     </inputs>
   </synapse>

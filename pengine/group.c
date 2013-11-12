@@ -401,7 +401,7 @@ group_action_flags(action_t * action, node_t * node)
                 pe_clear_action_bit(action, pe_action_runnable);
             }
 
-        } else if (task != stop_rsc) {
+        } else if (task != stop_rsc && task != action_demote) {
             pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)",
                          action->uuid, task_s, child->id);
             clear_bit(flags, pe_action_runnable);
