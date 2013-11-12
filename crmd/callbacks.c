@@ -169,6 +169,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
     if (AM_I_DC) {
         xmlNode *update = NULL;
+        int flags = node_update_peer;
         gboolean alive = crm_is_peer_active(node);
         crm_action_t *down = match_down_event(0, node->uuid, NULL, appeared);
 
@@ -197,6 +198,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* down->confirmed = TRUE; Only stonith-ng returning should imply completion */
                 stop_te_timer(down->timer);
 
+                flags |= node_update_join | node_update_expected;
                 crm_update_peer_join(__FUNCTION__, node, crm_join_none);
                 crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
                 check_join_state(fsa_state, __FUNCTION__);
@@ -221,7 +223,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             crm_trace("Other %p", down);
         }
 
-        update = do_update_node_cib(node, node_update_peer, NULL, __FUNCTION__);
+        update = do_update_node_cib(node, flags, NULL, __FUNCTION__);
         fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
                             cib_scope_local | cib_quorum_override | cib_can_create);
         free_xml(update);
