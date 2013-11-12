@@ -366,6 +366,7 @@ do_test bug-5143-ms-shuffle "Prevent master shuffling due to promotion score"
 do_test master-demote-block "Block promotion if demote fails with on-fail=block"
 do_test master-dependant-ban "Don't stop instances from being active because a dependant is banned from that host"
 do_test master-stop "Stop instances due to location constraint with role=Started"
+do_test master-partially-demoted-group "Allow partially demoted group to finish demoting"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"

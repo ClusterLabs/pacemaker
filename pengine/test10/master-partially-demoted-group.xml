@@ -1,0 +1,412 @@
+<cib admin_epoch="0" num_updates="6" crm_feature_set="3.0.8" epoch="214" validate-with="pacemaker-1.2" cib-last-written="Mon Nov 11 15:48:14 2013" update-origin="sd01-0" update-client="crm_resource" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>
+        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+        <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
+        <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-2.10.el6-31d19d8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="batch-limit" value="30" id="cib-bootstrap-options-batch-limit"/>
+        <nvpair name="cluster-delay" value="60s" id="cib-bootstrap-options-cluster-delay"/>
+        <nvpair name="cluster-recheck-interval" value="10m" id="cib-bootstrap-options-cluster-recheck-interval"/>
+        <nvpair name="crmd-transition-delay" value="0s" id="cib-bootstrap-options-crmd-transition-delay"/>
+        <nvpair name="dc-deadtime" value="20s" id="cib-bootstrap-options-dc-deadtime"/>
+        <nvpair name="default-action-timeout" value="20s" id="cib-bootstrap-options-default-action-timeout"/>
+        <nvpair name="default-resource-stickiness" value="100" id="cib-bootstrap-options-default-resource-stickiness"/>
+        <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
+        <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
+        <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
+        <nvpair name="enable-container-probes" value="true" id="cib-bootstrap-options-enable-container-probes"/>
+        <nvpair name="migration-limit" value="4" id="cib-bootstrap-options-migration-limit"/>
+        <nvpair name="node-health-green" value="0" id="cib-bootstrap-options-node-health-green"/>
+        <nvpair name="node-health-red" value="-INFINITY" id="cib-bootstrap-options-node-health-red"/>
+        <nvpair name="node-health-strategy" value="none" id="cib-bootstrap-options-node-health-strategy"/>
+        <nvpair name="node-health-yellow" value="0" id="cib-bootstrap-options-node-health-yellow"/>
+        <nvpair name="placement-strategy" value="utilization" id="cib-bootstrap-options-placement-strategy"/>
+        <nvpair name="remove-after-stop" value="false" id="cib-bootstrap-options-remove-after-stop"/>
+        <nvpair name="shutdown-escalation" value="20m" id="cib-bootstrap-options-shutdown-escalation"/>
+        <nvpair name="start-failure-is-fatal" value="true" id="cib-bootstrap-options-start-failure-is-fatal"/>
+        <nvpair name="startup-fencing" value="true" id="cib-bootstrap-options-startup-fencing"/>
+        <nvpair name="stonith-action" value="reboot" id="cib-bootstrap-options-stonith-action"/>
+        <nvpair name="stonith-timeout" value="60s" id="cib-bootstrap-options-stonith-timeout"/>
+        <nvpair name="stop-orphan-actions" value="true" id="cib-bootstrap-options-stop-orphan-actions"/>
+        <nvpair name="symmetric-cluster" value="true" id="cib-bootstrap-options-symmetric-cluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1383203544"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node uname="sd01-0" id="1">
+        <instance_attributes id="sd01-0-instance_attributes">
+          <nvpair name="standby" value="off" id="sd01-0-instance_attributes-standby"/>
+          <nvpair name="storage" value="true" id="sd01-0-instance_attributes-storage"/>
+        </instance_attributes>
+      </node>
+      <node uname="sd01-1" id="2">
+        <instance_attributes id="sd01-1-instance_attributes">
+          <nvpair name="standby" value="off" id="sd01-1-instance_attributes-standby"/>
+          <nvpair name="storage" value="true" id="sd01-1-instance_attributes-storage"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="stonith-xvm-sd01-0" class="stonith" type="fence_xvm">
+        <instance_attributes id="stonith-xvm-sd01-0-instance_attributes">
+          <nvpair name="domain" value="sd01-0.cdev.ttc.prague.cz.vds-ok.com" id="stonith-xvm-sd01-0-instance_attributes-domain"/>
+          <nvpair name="pcmk_host_check" value="static-list" id="stonith-xvm-sd01-0-instance_attributes-pcmk_host_check"/>
+          <nvpair name="pcmk_host_list" value="sd01-0" id="stonith-xvm-sd01-0-instance_attributes-pcmk_host_list"/>
+          <nvpair name="pcmk_host_argument" value="none" id="stonith-xvm-sd01-0-instance_attributes-pcmk_host_argument"/>
+          <nvpair name="pcmk_reboot_action" value="off" id="stonith-xvm-sd01-0-instance_attributes-pcmk_reboot_action"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="60s" timeout="60" id="stonith-xvm-sd01-0-monitor-60s"/>
+          <op name="start" interval="0" timeout="60" id="stonith-xvm-sd01-0-start-0"/>
+          <op name="stop" interval="0" timeout="60" id="stonith-xvm-sd01-0-stop-0"/>
+        </operations>
+        <meta_attributes id="stonith-xvm-sd01-0-meta_attributes">
+          <nvpair name="target-role" value="Started" id="stonith-xvm-sd01-0-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="stonith-xvm-sd01-1" class="stonith" type="fence_xvm">
+        <instance_attributes id="stonith-xvm-sd01-1-instance_attributes">
+          <nvpair name="domain" value="sd01-1.cdev.ttc.prague.cz.vds-ok.com" id="stonith-xvm-sd01-1-instance_attributes-domain"/>
+          <nvpair name="pcmk_host_check" value="static-list" id="stonith-xvm-sd01-1-instance_attributes-pcmk_host_check"/>
+          <nvpair name="pcmk_host_list" value="sd01-1" id="stonith-xvm-sd01-1-instance_attributes-pcmk_host_list"/>
+          <nvpair name="pcmk_host_argument" value="none" id="stonith-xvm-sd01-1-instance_attributes-pcmk_host_argument"/>
+          <nvpair name="pcmk_reboot_action" value="off" id="stonith-xvm-sd01-1-instance_attributes-pcmk_reboot_action"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="60s" timeout="60" id="stonith-xvm-sd01-1-monitor-60s"/>
+          <op name="start" interval="0" timeout="60" id="stonith-xvm-sd01-1-start-0"/>
+          <op name="stop" interval="0" timeout="60" id="stonith-xvm-sd01-1-stop-0"/>
+        </operations>
+        <meta_attributes id="stonith-xvm-sd01-1-meta_attributes">
+          <nvpair name="target-role" value="Started" id="stonith-xvm-sd01-1-meta_attributes-target-role"/>
+        </meta_attributes>
+      </primitive>
+      <group id="cdev-pool-0-iscsi-export">
+        <meta_attributes id="cdev-pool-0-iscsi-export-meta_attributes">
+          <nvpair name="target-role" value="Started" id="cdev-pool-0-iscsi-export-meta_attributes-target-role"/>
+        </meta_attributes>
+        <primitive id="cdev-pool-0-iscsi-target" class="ocf" provider="vds-ok" type="iSCSITarget">
+          <instance_attributes id="cdev-pool-0-iscsi-target-instance_attributes">
+            <nvpair name="implementation" value="iet" id="cdev-pool-0-iscsi-target-instance_attributes-implementation"/>
+            <nvpair name="iqn" value="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" id="cdev-pool-0-iscsi-target-instance_attributes-iqn"/>
+            <nvpair name="tid" value="1" id="cdev-pool-0-iscsi-target-instance_attributes-tid"/>
+            <nvpair name="incoming_username" value="cdev-vds-ok-pool-0" id="cdev-pool-0-iscsi-target-instance_attributes-incoming_username"/>
+            <nvpair name="incoming_password" value="123456" id="cdev-pool-0-iscsi-target-instance_attributes-incoming_password"/>
+            <nvpair name="allowed_initiators" value="10.5.4.0/24" id="cdev-pool-0-iscsi-target-instance_attributes-allowed_initiators"/>
+            <nvpair name="portals" value="10.5.4.164 10.5.4.165" id="cdev-pool-0-iscsi-target-instance_attributes-portals"/>
+            <nvpair name="cluster_managed" value="yes" id="cdev-pool-0-iscsi-target-instance_attributes-cluster_managed"/>
+            <nvpair name="additional_parameters" value="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" id="cdev-pool-0-iscsi-target-instance_attributes-additional_parameters"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10" timeout="10" id="cdev-pool-0-iscsi-target-monitor-10"/>
+            <op name="start" interval="0" timeout="30" id="cdev-pool-0-iscsi-target-start-0"/>
+            <op name="stop" interval="0" timeout="60" id="cdev-pool-0-iscsi-target-stop-0"/>
+          </operations>
+        </primitive>
+        <primitive id="cdev-pool-0-iscsi-lun-1" class="ocf" provider="vds-ok" type="iSCSILogicalUnit">
+          <instance_attributes id="cdev-pool-0-iscsi-lun-1-instance_attributes">
+            <nvpair name="implementation" value="iet" id="cdev-pool-0-iscsi-lun-1-instance_attributes-implementation"/>
+            <nvpair name="target_iqn" value="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" id="cdev-pool-0-iscsi-lun-1-instance_attributes-target_iqn"/>
+            <nvpair name="lun" value="1" id="cdev-pool-0-iscsi-lun-1-instance_attributes-lun"/>
+            <nvpair name="path" value="/dev/drbd/by-res/cdev-pool-0/0" id="cdev-pool-0-iscsi-lun-1-instance_attributes-path"/>
+            <nvpair name="scsi_id" value="kjhdSDFDSfklnjlf" id="cdev-pool-0-iscsi-lun-1-instance_attributes-scsi_id"/>
+            <nvpair name="scsi_sn" value="kjhdSDFDSfklnjlf" id="cdev-pool-0-iscsi-lun-1-instance_attributes-scsi_sn"/>
+            <nvpair name="cluster_managed" value="yes" id="cdev-pool-0-iscsi-lun-1-instance_attributes-cluster_managed"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="10" timeout="10" id="cdev-pool-0-iscsi-lun-1-monitor-10"/>
+            <op name="start" interval="0" timeout="30" id="cdev-pool-0-iscsi-lun-1-start-0"/>
+            <op name="stop" interval="0" timeout="60" id="cdev-pool-0-iscsi-lun-1-stop-0"/>
+          </operations>
+          <meta_attributes id="cdev-pool-0-iscsi-lun-1-meta_attributes">
+            <nvpair name="source_storage" value="cdev-pool-0-drbd" id="cdev-pool-0-iscsi-lun-1-meta_attributes-source_storage"/>
+          </meta_attributes>
+        </primitive>
+      </group>
+      <master id="ms-cdev-pool-0-drbd">
+        <meta_attributes id="ms-cdev-pool-0-drbd-meta_attributes">
+          <nvpair name="master-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-master-max"/>
+          <nvpair name="master-node-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-master-node-max"/>
+          <nvpair name="clone-max" value="2" id="ms-cdev-pool-0-drbd-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-clone-node-max"/>
+          <nvpair name="notify" value="true" id="ms-cdev-pool-0-drbd-meta_attributes-notify"/>
+          <nvpair name="interleave" value="true" id="ms-cdev-pool-0-drbd-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="ms-cdev-pool-0-drbd-meta_attributes-target-role"/>
+        </meta_attributes>
+        <primitive id="cdev-pool-0-drbd" class="ocf" provider="linbit" type="drbd">
+          <instance_attributes id="cdev-pool-0-drbd-instance_attributes">
+            <nvpair name="drbd_resource" value="cdev-pool-0" id="cdev-pool-0-drbd-instance_attributes-drbd_resource"/>
+          </instance_attributes>
+          <meta_attributes id="cdev-pool-0-drbd-meta_attributes">
+            <nvpair name="source_storage" value="cdev-pool-0-replica-lv" id="cdev-pool-0-drbd-meta_attributes-source_storage"/>
+          </meta_attributes>
+          <operations>
+            <op name="start" interval="0" timeout="240" id="cdev-pool-0-drbd-start-0"/>
+            <op name="stop" interval="0" timeout="100" id="cdev-pool-0-drbd-stop-0"/>
+            <op name="monitor" interval="20" role="Slave" timeout="20" id="cdev-pool-0-drbd-monitor-20"/>
+            <op name="promote" interval="0" timeout="95" id="cdev-pool-0-drbd-promote-0"/>
+            <op name="demote" interval="0" timeout="90" id="cdev-pool-0-drbd-demote-0"/>
+            <op name="notify" interval="0" timeout="90" id="cdev-pool-0-drbd-notify-0"/>
+            <op name="monitor" interval="10" role="Master" timeout="20" id="cdev-pool-0-drbd-monitor-10"/>
+          </operations>
+        </primitive>
+      </master>
+      <clone id="cl-ietd">
+        <meta_attributes id="cl-ietd-meta_attributes">
+          <nvpair name="interleave" value="true" id="cl-ietd-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="cl-ietd-meta_attributes-target-role"/>
+          <nvpair name="clone-max" value="2" id="cl-ietd-meta_attributes-clone-max"/>
+        </meta_attributes>
+        <primitive id="ietd" class="lsb" type="iscsi-target">
+          <operations>
+            <op name="monitor" interval="10" timeout="15" id="ietd-monitor-10"/>
+            <op name="start" interval="0" timeout="30" id="ietd-start-0"/>
+            <op name="stop" interval="0" timeout="90" id="ietd-stop-0"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="cl-vlan1-net">
+        <meta_attributes id="cl-vlan1-net-meta_attributes">
+          <nvpair name="interleave" value="true" id="cl-vlan1-net-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="cl-vlan1-net-meta_attributes-target-role"/>
+          <nvpair name="clone-max" value="2" id="cl-vlan1-net-meta_attributes-clone-max"/>
+        </meta_attributes>
+        <primitive id="vlan1-net" class="ocf" provider="vds-ok" type="BridgedVlan">
+          <instance_attributes id="vlan1-net-instance_attributes">
+            <nvpair name="name" value="vlan1" id="vlan1-net-instance_attributes-name"/>
+            <nvpair name="source_name" value="bond0" id="vlan1-net-instance_attributes-source_name"/>
+            <nvpair name="vlan_id" value="1" id="vlan1-net-instance_attributes-vlan_id"/>
+            <nvpair name="mtu" value="9192" id="vlan1-net-instance_attributes-mtu"/>
+            <nvpair name="stp" value="1" id="vlan1-net-instance_attributes-stp"/>
+            <nvpair name="gentmpl" value="1" id="vlan1-net-instance_attributes-gentmpl"/>
+            <nvpair name="unmanaged" value="1" id="vlan1-net-instance_attributes-unmanaged"/>
+            <nvpair name="gencfg" value="0" id="vlan1-net-instance_attributes-gencfg"/>
+          </instance_attributes>
+          <meta_attributes id="vlan1-net-meta_attributes">
+            <nvpair name="description" value="Physical network" id="vlan1-net-meta_attributes-description"/>
+            <nvpair name="access" value="private" id="vlan1-net-meta_attributes-access"/>
+            <nvpair name="ipv4" value="(10.5.4.0/0)/24" id="vlan1-net-meta_attributes-ipv4"/>
+          </meta_attributes>
+          <operations>
+            <op name="start" interval="0" timeout="120" id="vlan1-net-start-0"/>
+            <op name="stop" interval="0" timeout="120" id="vlan1-net-stop-0"/>
+            <op name="monitor" interval="120" timeout="60" id="vlan1-net-monitor-120"/>
+          </operations>
+        </primitive>
+      </clone>
+      <group id="cdev-pool-0-iscsi-vips">
+        <meta_attributes id="cdev-pool-0-iscsi-vips-meta_attributes">
+          <nvpair name="target-role" value="Started" id="cdev-pool-0-iscsi-vips-meta_attributes-target-role"/>
+        </meta_attributes>
+        <primitive id="vip-164" class="ocf" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="vip-164-instance_attributes">
+            <nvpair name="ip" value="10.5.4.164" id="vip-164-instance_attributes-ip"/>
+            <nvpair name="cidr_netmask" value="32" id="vip-164-instance_attributes-cidr_netmask"/>
+            <nvpair name="nic" value="vlan1" id="vip-164-instance_attributes-nic"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="30" id="vip-164-monitor-30"/>
+            <op name="start" interval="0" timeout="30" id="vip-164-start-0"/>
+            <op name="stop" interval="0" timeout="60" id="vip-164-stop-0"/>
+          </operations>
+        </primitive>
+        <primitive id="vip-165" class="ocf" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="vip-165-instance_attributes">
+            <nvpair name="ip" value="10.5.4.165" id="vip-165-instance_attributes-ip"/>
+            <nvpair name="cidr_netmask" value="32" id="vip-165-instance_attributes-cidr_netmask"/>
+            <nvpair name="nic" value="vlan1" id="vip-165-instance_attributes-nic"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="30" id="vip-165-monitor-30"/>
+            <op name="start" interval="0" timeout="30" id="vip-165-start-0"/>
+            <op name="stop" interval="0" timeout="60" id="vip-165-stop-0"/>
+          </operations>
+        </primitive>
+      </group>
+      <master id="ms-cdev-pool-0-iscsi-vips-fw">
+        <meta_attributes id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes">
+          <nvpair name="master-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-master-max"/>
+          <nvpair name="master-node-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-master-node-max"/>
+          <nvpair name="clone-max" value="2" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-clone-node-max"/>
+          <nvpair name="notify" value="false" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-notify"/>
+          <nvpair name="interleave" value="true" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-interleave"/>
+          <nvpair name="target-role" value="Started" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-target-role"/>
+        </meta_attributes>
+        <group id="cdev-pool-0-iscsi-vips-fw">
+          <primitive id="vip-164-fw" class="ocf" provider="vds-ok" type="VIPfirewall">
+            <instance_attributes id="vip-164-fw-instance_attributes">
+              <nvpair name="vip" value="10.5.4.164" id="vip-164-fw-instance_attributes-vip"/>
+              <nvpair name="allow_action" value="pass" id="vip-164-fw-instance_attributes-allow_action"/>
+            </instance_attributes>
+            <operations>
+              <op name="monitor" interval="10" timeout="10" start-delay="10" id="vip-164-fw-monitor-10"/>
+              <op name="start" interval="0" timeout="30" id="vip-164-fw-start-0"/>
+              <op name="stop" interval="0" timeout="60" id="vip-164-fw-stop-0"/>
+            </operations>
+          </primitive>
+          <primitive id="vip-165-fw" class="ocf" provider="vds-ok" type="VIPfirewall">
+            <instance_attributes id="vip-165-fw-instance_attributes">
+              <nvpair name="vip" value="10.5.4.165" id="vip-165-fw-instance_attributes-vip"/>
+              <nvpair name="allow_action" value="pass" id="vip-165-fw-instance_attributes-allow_action"/>
+            </instance_attributes>
+            <operations>
+              <op name="monitor" interval="10" timeout="10" start-delay="10" id="vip-165-fw-monitor-10"/>
+              <op name="start" interval="0" timeout="30" id="vip-165-fw-start-0"/>
+              <op name="stop" interval="0" timeout="60" id="vip-165-fw-stop-0"/>
+            </operations>
+          </primitive>
+        </group>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_location id="loc-ietd-requires-storage" rsc="cl-ietd">
+        <rule id="ietd-requires-storage" score="-INFINITY" boolean-op="or">
+          <expression operation="not_defined" attribute="storage" id="loc-ietd-requires-storage-expression"/>
+          <expression attribute="storage" operation="ne" value="true" id="loc-ietd-requires-storage-expression-0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="loc-stonith-xvm-sd01-0" rsc="stonith-xvm-sd01-0" score="-INFINITY" node="sd01-0"/>
+      <rsc_location id="loc-stonith-xvm-sd01-1" rsc="stonith-xvm-sd01-1" score="-INFINITY" node="sd01-1"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-target-with-ietd" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="cl-ietd"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-target-with-storage" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="ms-cdev-pool-0-drbd" with-rsc-role="Master"/>
+      <rsc_order id="cdev-pool-0-iscsi-target-after-ietd" score="INFINITY" first="cl-ietd" first-action="start" then="cdev-pool-0-iscsi-export" then-action="start"/>
+      <rsc_order id="cdev-pool-0-iscsi-target-after-storage" score="INFINITY" first="ms-cdev-pool-0-drbd" first-action="promote" then="cdev-pool-0-iscsi-export" then-action="start"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-vips-fw-with-vips" score="INFINITY" rsc="ms-cdev-pool-0-iscsi-vips-fw" rsc-role="Master" with-rsc="cdev-pool-0-iscsi-vips" with-rsc-role="Started"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-vips-with-target" score="INFINITY" rsc="cdev-pool-0-iscsi-vips" with-rsc="cdev-pool-0-iscsi-export"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-after-target" score="INFINITY" first="cdev-pool-0-iscsi-export" first-action="start" then="cdev-pool-0-iscsi-vips" then-action="start"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-target" score="INFINITY" first="cdev-pool-0-iscsi-export" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-vips" score="INFINITY" first="cdev-pool-0-iscsi-vips" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
+      <rsc_location id="cli-prefer-cdev-pool-0-iscsi-export" rsc="cdev-pool-0-iscsi-export" role="Started" node="sd01-0" score="INFINITY"/>
+    </constraints>
+    <fencing-topology>
+      <fencing-level target="sd01-0" devices="stonith-xvm-sd01-0" index="1" id="fencing"/>
+      <fencing-level target="sd01-1" devices="stonith-xvm-sd01-1" index="1" id="fencing-0"/>
+    </fencing-topology>
+    <rsc_defaults>
+      <meta_attributes id="rsc_options">
+        <nvpair name="allow-migrate" value="false" id="rsc_options-allow-migrate"/>
+        <nvpair name="failure-timeout" value="10m" id="rsc_options-failure-timeout"/>
+        <nvpair name="migration-threshold" value="INFINITY" id="rsc_options-migration-threshold"/>
+        <nvpair name="multiple-active" value="stop_start" id="rsc_options-multiple-active"/>
+        <nvpair name="priority" value="0" id="rsc_options-priority"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="2" uname="sd01-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="stonith-xvm-sd01-1" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="stonith-xvm-sd01-1_last_0" operation_key="stonith-xvm-sd01-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="11:0:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:7;11:0:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="88" rc-code="7" op-status="0" interval="0" last-run="1384184330" last-rc-change="1384184330" exec-time="0" queue-time="0" op-digest="997b19de5938886ff2342c202b29db79"/>
+          </lrm_resource>
+          <lrm_resource id="cdev-pool-0-drbd" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="cdev-pool-0-drbd_last_failure_0" operation_key="cdev-pool-0-drbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="12:0:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:8;12:0:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="90" rc-code="8" op-status="0" interval="0" last-run="1384184331" last-rc-change="1384184331" exec-time="71" queue-time="0" op-digest="b35452ed743cff4d85231ded8064b585"/>
+          </lrm_resource>
+          <lrm_resource id="ietd" type="iscsi-target" class="lsb">
+            <lrm_rsc_op id="ietd_last_failure_0" operation_key="ietd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="8:1:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;8:1:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="93" rc-code="0" op-status="0" interval="0" last-run="1384184332" last-rc-change="1384184332" exec-time="17" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ietd_monitor_10000" operation_key="ietd_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="53:2:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;53:2:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="94" rc-code="0" op-status="0" interval="10000" last-rc-change="1384184342" exec-time="27" queue-time="1" op-digest="3ef575c5f050ae086f0f31bc8f085fdc"/>
+          </lrm_resource>
+          <lrm_resource id="vlan1-net" type="BridgedVlan" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vlan1-net_last_failure_0" operation_key="vlan1-net_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="11:2:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;11:2:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="96" rc-code="0" op-status="0" interval="0" last-run="1384184342" last-rc-change="1384184342" exec-time="64" queue-time="0" op-digest="978034d28e3b68f470f46198f871d78a"/>
+            <lrm_rsc_op id="vlan1-net_monitor_120000" operation_key="vlan1-net_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="61:3:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;61:3:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="99" rc-code="0" op-status="0" interval="120000" last-rc-change="1384184352" exec-time="55" queue-time="0" op-digest="d0fe42d191b3184fd359e3ee84308aa4"/>
+          </lrm_resource>
+          <lrm_resource id="vip-164-fw" type="VIPfirewall" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vip-164-fw_last_failure_0" operation_key="vip-164-fw_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="12:2:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:8;12:2:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="98" rc-code="8" op-status="0" interval="0" last-run="1384184342" last-rc-change="1384184342" exec-time="153" queue-time="0" op-digest="218cbb168336f689aeb8e0dc850ed90f"/>
+          </lrm_resource>
+          <lrm_resource id="cdev-pool-0-iscsi-target" type="iSCSITarget" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="cdev-pool-0-iscsi-target_last_failure_0" operation_key="cdev-pool-0-iscsi-target_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="14:3:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;14:3:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="103" rc-code="0" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="71" queue-time="0" op-digest="d297d8f65058024554cedafe4a2c28b4"/>
+            <lrm_rsc_op id="cdev-pool-0-iscsi-target_monitor_10000" operation_key="cdev-pool-0-iscsi-target_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="22:4:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;22:4:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="104" rc-code="0" op-status="0" interval="10000" last-rc-change="1384184352" exec-time="49" queue-time="0" op-digest="04d871dec65f4bf253aa914fc79fa35f"/>
+          </lrm_resource>
+          <lrm_resource id="vip-165-fw" type="VIPfirewall" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vip-165-fw_last_failure_0" operation_key="vip-165-fw_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="13:3:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:8;13:3:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="101" rc-code="8" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="164" queue-time="0" op-digest="5f98ffb1eb7961e721eb7af6765088e2"/>
+            <lrm_rsc_op id="vip-165-fw_last_0" operation_key="vip-165-fw_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="44:7:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;44:7:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="118" rc-code="0" op-status="0" interval="0" last-run="1384184894" last-rc-change="1384184894" exec-time="117" queue-time="0" op-digest="5f98ffb1eb7961e721eb7af6765088e2"/>
+          </lrm_resource>
+          <lrm_resource id="cdev-pool-0-iscsi-lun-1" type="iSCSILogicalUnit" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="cdev-pool-0-iscsi-lun-1_last_failure_0" operation_key="cdev-pool-0-iscsi-lun-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="14:4:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;14:4:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="106" rc-code="0" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="51" queue-time="0" op-digest="f9c537560f4fbdc8291ec0d27f1dbaff"/>
+            <lrm_rsc_op id="cdev-pool-0-iscsi-lun-1_monitor_10000" operation_key="cdev-pool-0-iscsi-lun-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="21:5:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;21:5:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="109" rc-code="0" op-status="0" interval="10000" last-rc-change="1384184352" exec-time="56" queue-time="0" op-digest="850481ccde49fbdf049641683e2f2a2d"/>
+          </lrm_resource>
+          <lrm_resource id="vip-164" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-164_last_failure_0" operation_key="vip-164_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="15:4:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;15:4:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="108" rc-code="0" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="59" queue-time="0" op-digest="6f2dd94c2208ecfda807d7da8c7255b2"/>
+            <lrm_rsc_op id="vip-164_monitor_30000" operation_key="vip-164_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="28:5:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;28:5:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="110" rc-code="0" op-status="0" interval="30000" last-rc-change="1384184352" exec-time="97" queue-time="0" op-digest="00a21cecf5d55cb3f416406f049d5f17"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-xvm-sd01-0" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="stonith-xvm-sd01-0_last_failure_0" operation_key="stonith-xvm-sd01-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="16:5:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;16:5:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="114" rc-code="0" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="0" queue-time="0" op-digest="a18c4ca18819aab8daaa8cd123f88b05"/>
+            <lrm_rsc_op id="stonith-xvm-sd01-0_monitor_60000" operation_key="stonith-xvm-sd01-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="74:6:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;74:6:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="116" rc-code="0" op-status="0" interval="60000" last-rc-change="1384184352" exec-time="18" queue-time="0" op-digest="af2a2b51a213c6769711594b4b5bb776"/>
+          </lrm_resource>
+          <lrm_resource id="vip-165" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-165_last_failure_0" operation_key="vip-165_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="15:5:7:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;15:5:7:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="112" rc-code="0" op-status="0" interval="0" last-run="1384184352" last-rc-change="1384184352" exec-time="83" queue-time="0" op-digest="55c19680b6dfb7cdbfbf6383eb3d396f"/>
+            <lrm_rsc_op id="vip-165_monitor_30000" operation_key="vip-165_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="21:6:0:3868c024-b089-4ef0-b197-737c8f713c5e" transition-magic="0:0;21:6:0:3868c024-b089-4ef0-b197-737c8f713c5e" call-id="115" rc-code="0" op-status="0" interval="30000" last-rc-change="1384184352" exec-time="65" queue-time="0" op-digest="86bb250639e930ae80ffda4771a89580"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-master-vip-165-fw" name="master-vip-165-fw" value="1000"/>
+          <nvpair id="status-2-master-vip-164-fw" name="master-vip-164-fw" value="1000"/>
+          <nvpair id="status-2-master-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="sd01-0" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-master-vip-165-fw" name="master-vip-165-fw" value="1000"/>
+          <nvpair id="status-1-master-vip-164-fw" name="master-vip-164-fw" value="1000"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-master-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="cdev-pool-0-iscsi-target" type="iSCSITarget" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="cdev-pool-0-iscsi-target_last_0" operation_key="cdev-pool-0-iscsi-target_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="14:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:7;14:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1384184099" last-rc-change="1384184099" exec-time="65" queue-time="0" op-digest="d297d8f65058024554cedafe4a2c28b4"/>
+          </lrm_resource>
+          <lrm_resource id="ietd" type="iscsi-target" class="lsb">
+            <lrm_rsc_op id="ietd_last_0" operation_key="ietd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="103:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;103:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1384184111" last-rc-change="1384184111" exec-time="46" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ietd_monitor_10000" operation_key="ietd_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="104:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;104:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="57" rc-code="0" op-status="0" interval="10000" last-rc-change="1384184111" exec-time="31" queue-time="0" op-digest="3ef575c5f050ae086f0f31bc8f085fdc"/>
+          </lrm_resource>
+          <lrm_resource id="vip-165-fw" type="VIPfirewall" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vip-165-fw_last_0" operation_key="vip-165-fw_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="52:4:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;52:4:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1384184101" last-rc-change="1384184101" exec-time="76" queue-time="0" op-digest="5f98ffb1eb7961e721eb7af6765088e2"/>
+          </lrm_resource>
+          <lrm_resource id="vip-164-fw" type="VIPfirewall" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vip-164-fw_last_0" operation_key="vip-164-fw_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="50:4:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;50:4:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1384184100" last-rc-change="1384184100" exec-time="140" queue-time="0" op-digest="218cbb168336f689aeb8e0dc850ed90f"/>
+          </lrm_resource>
+          <lrm_resource id="vlan1-net" type="BridgedVlan" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="vlan1-net_last_0" operation_key="vlan1-net_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="111:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;111:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1384184111" last-rc-change="1384184111" exec-time="67" queue-time="0" op-digest="978034d28e3b68f470f46198f871d78a"/>
+            <lrm_rsc_op id="vlan1-net_monitor_120000" operation_key="vlan1-net_monitor_120000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="112:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;112:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="59" rc-code="0" op-status="0" interval="120000" last-rc-change="1384184111" exec-time="52" queue-time="0" op-digest="d0fe42d191b3184fd359e3ee84308aa4"/>
+          </lrm_resource>
+          <lrm_resource id="vip-164" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-164_last_0" operation_key="vip-164_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="12:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:7;12:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1384184099" last-rc-change="1384184099" exec-time="104" queue-time="0" op-digest="6f2dd94c2208ecfda807d7da8c7255b2"/>
+          </lrm_resource>
+          <lrm_resource id="vip-165" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-165_last_0" operation_key="vip-165_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="13:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:7;13:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1384184099" last-rc-change="1384184099" exec-time="104" queue-time="0" op-digest="55c19680b6dfb7cdbfbf6383eb3d396f"/>
+          </lrm_resource>
+          <lrm_resource id="cdev-pool-0-iscsi-lun-1" type="iSCSILogicalUnit" class="ocf" provider="vds-ok">
+            <lrm_rsc_op id="cdev-pool-0-iscsi-lun-1_last_0" operation_key="cdev-pool-0-iscsi-lun-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="15:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:7;15:3:7:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1384184099" last-rc-change="1384184099" exec-time="67" queue-time="0" op-digest="f9c537560f4fbdc8291ec0d27f1dbaff"/>
+          </lrm_resource>
+          <lrm_resource id="cdev-pool-0-drbd" type="drbd" class="ocf" provider="linbit">
+            <lrm_rsc_op id="cdev-pool-0-drbd_last_0" operation_key="cdev-pool-0-drbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="75:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;75:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1384184111" last-rc-change="1384184111" exec-time="1181" queue-time="0" op-digest="b35452ed743cff4d85231ded8064b585"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-xvm-sd01-0" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="stonith-xvm-sd01-0_last_0" operation_key="stonith-xvm-sd01-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="12:4:7:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:7;12:4:7:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1384184099" last-rc-change="1384184099" exec-time="1" queue-time="0" op-digest="a18c4ca18819aab8daaa8cd123f88b05"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-xvm-sd01-1" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="stonith-xvm-sd01-1_last_0" operation_key="stonith-xvm-sd01-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="117:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;117:5:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1384184111" last-rc-change="1384184111" exec-time="2025" queue-time="0" op-digest="997b19de5938886ff2342c202b29db79"/>
+            <lrm_rsc_op id="stonith-xvm-sd01-1_monitor_60000" operation_key="stonith-xvm-sd01-1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="71:6:0:18018321-2ace-400b-a8ef-49d92cfabdc0" transition-magic="0:0;71:6:0:18018321-2ace-400b-a8ef-49d92cfabdc0" call-id="62" rc-code="0" op-status="0" interval="60000" last-rc-change="1384184114" exec-time="12" queue-time="0" op-digest="fec46e8112551bf10fbdc98dd2deef34"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

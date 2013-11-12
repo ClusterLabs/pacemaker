@@ -1,0 +1,117 @@
+
+Current cluster status:
+Online: [ sd01-0 sd01-1 ]
+
+ stonith-xvm-sd01-0	(stonith:fence_xvm):	Started sd01-1 
+ stonith-xvm-sd01-1	(stonith:fence_xvm):	Started sd01-0 
+ Resource Group: cdev-pool-0-iscsi-export
+     cdev-pool-0-iscsi-target	(ocf::vds-ok:iSCSITarget):	Started sd01-1 
+     cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started sd01-1 
+ Master/Slave Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd]
+     Masters: [ sd01-1 ]
+     Slaves: [ sd01-0 ]
+ Clone Set: cl-ietd [ietd]
+     Started: [ sd01-0 sd01-1 ]
+ Clone Set: cl-vlan1-net [vlan1-net]
+     Started: [ sd01-0 sd01-1 ]
+ Resource Group: cdev-pool-0-iscsi-vips
+     vip-164	(ocf::heartbeat:IPaddr2):	Started sd01-1 
+     vip-165	(ocf::heartbeat:IPaddr2):	Started sd01-1 
+ Master/Slave Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw]
+     Masters: [ sd01-1 ]
+     Slaves: [ sd01-0 ]
+
+Transition Summary:
+ * Move    vip-164	(Started sd01-1 -> sd01-0)
+ * Move    vip-165	(Started sd01-1 -> sd01-0)
+ * Move    cdev-pool-0-iscsi-target	(Started sd01-1 -> sd01-0)
+ * Move    cdev-pool-0-iscsi-lun-1	(Started sd01-1 -> sd01-0)
+ * Demote  vip-164-fw:0	(Master -> Slave sd01-1)
+ * Promote vip-164-fw:1	(Slave -> Master sd01-0)
+ * Promote vip-165-fw:1	(Slave -> Master sd01-0)
+ * Demote  cdev-pool-0-drbd:0	(Master -> Slave sd01-1)
+ * Promote cdev-pool-0-drbd:1	(Slave -> Master sd01-0)
+
+Executing cluster transition:
+ * Resource action: vip-165-fw      monitor=10000 on sd01-1
+ * Pseudo action:   ms-cdev-pool-0-iscsi-vips-fw_demote_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_pre_notify_demote_0
+ * Pseudo action:   cdev-pool-0-iscsi-vips-fw:0_demote_0
+ * Resource action: vip-164-fw      demote on sd01-1
+ * Resource action: cdev-pool-0-drbd notify on sd01-1
+ * Resource action: cdev-pool-0-drbd notify on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-drbd_confirmed-pre_notify_demote_0
+ * Pseudo action:   cdev-pool-0-iscsi-vips-fw:0_demoted_0
+ * Resource action: vip-164-fw      monitor=10000 on sd01-1
+ * Pseudo action:   ms-cdev-pool-0-iscsi-vips-fw_demoted_0
+ * Pseudo action:   cdev-pool-0-iscsi-vips_stop_0
+ * Resource action: vip-165         stop on sd01-1
+ * Resource action: vip-164         stop on sd01-1
+ * Pseudo action:   cdev-pool-0-iscsi-vips_stopped_0
+ * Pseudo action:   cdev-pool-0-iscsi-export_stop_0
+ * Resource action: cdev-pool-0-iscsi-lun-1 stop on sd01-1
+ * Resource action: cdev-pool-0-iscsi-target stop on sd01-1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   cdev-pool-0-iscsi-export_stopped_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_demote_0
+ * Resource action: cdev-pool-0-drbd demote on sd01-1
+ * Pseudo action:   ms-cdev-pool-0-drbd_demoted_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_post_notify_demoted_0
+ * Resource action: cdev-pool-0-drbd notify on sd01-1
+ * Resource action: cdev-pool-0-drbd notify on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-drbd_confirmed-post_notify_demoted_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_pre_notify_promote_0
+ * Resource action: cdev-pool-0-drbd notify on sd01-1
+ * Resource action: cdev-pool-0-drbd notify on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-drbd_confirmed-pre_notify_promote_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_promote_0
+ * Resource action: cdev-pool-0-drbd promote on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-drbd_promoted_0
+ * Pseudo action:   ms-cdev-pool-0-drbd_post_notify_promoted_0
+ * Resource action: cdev-pool-0-drbd notify on sd01-1
+ * Resource action: cdev-pool-0-drbd notify on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-drbd_confirmed-post_notify_promoted_0
+ * Pseudo action:   cdev-pool-0-iscsi-export_start_0
+ * Resource action: cdev-pool-0-iscsi-target start on sd01-0
+ * Resource action: cdev-pool-0-iscsi-lun-1 start on sd01-0
+ * Resource action: cdev-pool-0-drbd monitor=20000 on sd01-1
+ * Resource action: cdev-pool-0-drbd monitor=10000 on sd01-0
+ * Pseudo action:   cdev-pool-0-iscsi-export_running_0
+ * Resource action: cdev-pool-0-iscsi-target monitor=10000 on sd01-0
+ * Resource action: cdev-pool-0-iscsi-lun-1 monitor=10000 on sd01-0
+ * Pseudo action:   cdev-pool-0-iscsi-vips_start_0
+ * Resource action: vip-164         start on sd01-0
+ * Resource action: vip-165         start on sd01-0
+ * Pseudo action:   cdev-pool-0-iscsi-vips_running_0
+ * Resource action: vip-164         monitor=30000 on sd01-0
+ * Resource action: vip-165         monitor=30000 on sd01-0
+ * Pseudo action:   ms-cdev-pool-0-iscsi-vips-fw_promote_0
+ * Pseudo action:   cdev-pool-0-iscsi-vips-fw:0_promote_0
+ * Pseudo action:   cdev-pool-0-iscsi-vips-fw:1_promote_0
+ * Resource action: vip-164-fw      promote on sd01-0
+ * Resource action: vip-165-fw      promote on sd01-0
+ * Pseudo action:   cdev-pool-0-iscsi-vips-fw:1_promoted_0
+ * Pseudo action:   ms-cdev-pool-0-iscsi-vips-fw_promoted_0
+
+Revised cluster status:
+Online: [ sd01-0 sd01-1 ]
+
+ stonith-xvm-sd01-0	(stonith:fence_xvm):	Started sd01-1 
+ stonith-xvm-sd01-1	(stonith:fence_xvm):	Started sd01-0 
+ Resource Group: cdev-pool-0-iscsi-export
+     cdev-pool-0-iscsi-target	(ocf::vds-ok:iSCSITarget):	Started sd01-0 
+     cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	Started sd01-0 
+ Master/Slave Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd]
+     Masters: [ sd01-0 ]
+     Slaves: [ sd01-1 ]
+ Clone Set: cl-ietd [ietd]
+     Started: [ sd01-0 sd01-1 ]
+ Clone Set: cl-vlan1-net [vlan1-net]
+     Started: [ sd01-0 sd01-1 ]
+ Resource Group: cdev-pool-0-iscsi-vips
+     vip-164	(ocf::heartbeat:IPaddr2):	Started sd01-0 
+     vip-165	(ocf::heartbeat:IPaddr2):	Started sd01-0 
+ Master/Slave Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw]
+     Masters: [ sd01-0 ]
+     Slaves: [ sd01-1 ]
+

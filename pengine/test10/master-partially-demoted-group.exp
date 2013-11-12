@@ -1,0 +1,862 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0" migration-limit="4">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="24" operation="stopped" operation_key="cdev-pool-0-iscsi-vips_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="stop" operation_key="vip-164_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="23" operation="stop" operation_key="cdev-pool-0-iscsi-vips_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="23" operation="stop" operation_key="cdev-pool-0-iscsi-vips_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="71" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="22" operation="running" operation_key="cdev-pool-0-iscsi-vips_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="vip-164_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="vip-165_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="start" operation_key="cdev-pool-0-iscsi-vips_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="21" operation="start" operation_key="cdev-pool-0-iscsi-vips_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="24" operation="stopped" operation_key="cdev-pool-0-iscsi-vips_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="running" operation_key="cdev-pool-0-iscsi-export_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="17" operation="monitor" operation_key="vip-164_monitor_30000" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-164" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.5.4.164" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="vip-164_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="16" operation="start" operation_key="vip-164_start_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-164" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="30000" cidr_netmask="32"  ip="10.5.4.164" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="stop" operation_key="vip-164_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="start" operation_key="cdev-pool-0-iscsi-vips_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="15" operation="stop" operation_key="vip-164_stop_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="vip-164" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.164" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="23" operation="stop" operation_key="cdev-pool-0-iscsi-vips_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="20" operation="monitor" operation_key="vip-165_monitor_30000" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-165" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.5.4.165" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="vip-165_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="19" operation="start" operation_key="vip-165_start_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-165" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="30000" cidr_netmask="32"  ip="10.5.4.165" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="vip-164_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="start" operation_key="cdev-pool-0-iscsi-vips_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="18" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="vip-165" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cidr_netmask="32"  ip="10.5.4.165" nic="vlan1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="stop" operation_key="cdev-pool-0-iscsi-vips_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <pseudo_event id="34" operation="stopped" operation_key="cdev-pool-0-iscsi-export_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="25" operation="stop" operation_key="cdev-pool-0-iscsi-target_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="cdev-pool-0-iscsi-export_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="33" operation="stop" operation_key="cdev-pool-0-iscsi-export_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="24" operation="stopped" operation_key="cdev-pool-0-iscsi-vips_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="71" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="32" operation="running" operation_key="cdev-pool-0-iscsi-export_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="cdev-pool-0-iscsi-target_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="cdev-pool-0-iscsi-lun-1_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="start" operation_key="cdev-pool-0-iscsi-export_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="31" operation="start" operation_key="cdev-pool-0-iscsi-export_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="34" operation="stopped" operation_key="cdev-pool-0-iscsi-export_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="101" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="27" operation="monitor" operation_key="cdev-pool-0-iscsi-target_monitor_10000" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-iscsi-target" class="ocf" provider="vds-ok" type="iSCSITarget"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="10000" additional_parameters="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" allowed_initiators="10.5.4.0/24" cluster_managed="yes"  implementation="iet" incoming_password="123456" incoming_username="cdev-vds-ok-pool-0" iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" portals="10.5.4.164 10.5.4.165" tid="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="cdev-pool-0-iscsi-target_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="26" operation="start" operation_key="cdev-pool-0-iscsi-target_start_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-iscsi-target" class="ocf" provider="vds-ok" type="iSCSITarget"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="30000" additional_parameters="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" allowed_initiators="10.5.4.0/24" cluster_managed="yes"  implementation="iet" incoming_password="123456" incoming_username="cdev-vds-ok-pool-0" iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" portals="10.5.4.164 10.5.4.165" tid="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="25" operation="stop" operation_key="cdev-pool-0-iscsi-target_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="start" operation_key="cdev-pool-0-iscsi-export_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="25" operation="stop" operation_key="cdev-pool-0-iscsi-target_stop_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-iscsi-target" class="ocf" provider="vds-ok" type="iSCSITarget"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" additional_parameters="InitialR2T=No ImmediateData=Yes MaxRecvDataSegmentLength=65536 MaxXmitDataSegmentLength=65536 MaxBurstLength=262144 FirstBurstLength=131072 MaxOutstandingR2T=2 Wthreads=128 QueuedCommands=32" allowed_initiators="10.5.4.0/24" cluster_managed="yes"  implementation="iet" incoming_password="123456" incoming_username="cdev-vds-ok-pool-0" iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0" portals="10.5.4.164 10.5.4.165" tid="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="cdev-pool-0-iscsi-export_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="30" operation="monitor" operation_key="cdev-pool-0-iscsi-lun-1_monitor_10000" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-iscsi-lun-1" class="ocf" provider="vds-ok" type="iSCSILogicalUnit"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="10000" cluster_managed="yes"  implementation="iet" lun="1" path="/dev/drbd/by-res/cdev-pool-0/0" scsi_id="kjhdSDFDSfklnjlf" scsi_sn="kjhdSDFDSfklnjlf" target_iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="cdev-pool-0-iscsi-lun-1_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="29" operation="start" operation_key="cdev-pool-0-iscsi-lun-1_start_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-iscsi-lun-1" class="ocf" provider="vds-ok" type="iSCSILogicalUnit"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="30000" cluster_managed="yes"  implementation="iet" lun="1" path="/dev/drbd/by-res/cdev-pool-0/0" scsi_id="kjhdSDFDSfklnjlf" scsi_sn="kjhdSDFDSfklnjlf" target_iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="cdev-pool-0-iscsi-target_start_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="start" operation_key="cdev-pool-0-iscsi-export_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="28" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-iscsi-lun-1" class="ocf" provider="vds-ok" type="iSCSILogicalUnit"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" cluster_managed="yes"  implementation="iet" lun="1" path="/dev/drbd/by-res/cdev-pool-0/0" scsi_id="kjhdSDFDSfklnjlf" scsi_sn="kjhdSDFDSfklnjlf" target_iqn="iqn.2010-01.com.vds-ok:storage.sdev.vds-ok.s01.0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="33" operation="stop" operation_key="cdev-pool-0-iscsi-export_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="48" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:0_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="68" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <pseudo_event id="47" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <pseudo_event id="46" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="70" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="vip-164-fw_monitor_10000" internal_operation_key="vip-164-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="vip-164-fw" long-id="vip-164-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="36" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="vip-164-fw" long-id="vip-164-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="vip-165-fw_monitor_10000" internal_operation_key="vip-165-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="vip-165-fw" long-id="vip-165-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_start_delay="10000" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.165"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="63" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="55" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="62" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="68" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="52" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-164-fw" long-id="vip-164-fw:1" class="ocf" provider="vds-ok" type="VIPfirewall"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="55" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="vip-165-fw" long-id="vip-165-fw:1" class="ocf" provider="vds-ok" type="VIPfirewall"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.165"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30" priority="1000000">
+    <action_set>
+      <pseudo_event id="71" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="47" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <pseudo_event id="70" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32" priority="1000000">
+    <action_set>
+      <pseudo_event id="69" operation="promoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <pseudo_event id="68" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="22" operation="running" operation_key="cdev-pool-0-iscsi-vips_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="running" operation_key="cdev-pool-0-iscsi-export_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="71" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34" priority="1000000">
+    <action_set>
+      <rsc_op id="141" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:0_post_notify_demote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="106" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="140" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:0_pre_notify_demote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="104" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36" priority="1000000">
+    <action_set>
+      <rsc_op id="137" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:0_post_notify_promote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="100" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="136" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:0_pre_notify_promote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="98" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="79" operation="monitor" operation_key="cdev-pool-0-drbd_monitor_20000" internal_operation_key="cdev-pool-0-drbd:0_monitor_20000" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="77" operation="demote" operation_key="cdev-pool-0-drbd_demote_0" internal_operation_key="cdev-pool-0-drbd:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="101" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="107" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="77" operation="demote" operation_key="cdev-pool-0-drbd_demote_0" internal_operation_key="cdev-pool-0-drbd:0_demote_0" on_node="sd01-1" on_node_uuid="2">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:0" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="102" operation="demote" operation_key="ms-cdev-pool-0-drbd_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40" priority="1000000">
+    <action_set>
+      <rsc_op id="143" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:1_post_notify_demote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="106" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="142" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:1_pre_notify_demote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="104" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42" priority="1000000">
+    <action_set>
+      <rsc_op id="139" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:1_post_notify_promote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="100" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <rsc_op id="138" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:1_pre_notify_promote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="90000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="98" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="83" operation="monitor" operation_key="cdev-pool-0-drbd_monitor_10000" internal_operation_key="cdev-pool-0-drbd:1_monitor_10000" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="20000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="82" operation="promote" operation_key="cdev-pool-0-drbd_promote_0" internal_operation_key="cdev-pool-0-drbd:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="101" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="107" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="82" operation="promote" operation_key="cdev-pool-0-drbd_promote_0" internal_operation_key="cdev-pool-0-drbd:1_promote_0" on_node="sd01-0" on_node_uuid="1">
+        <primitive id="cdev-pool-0-drbd" long-id="cdev-pool-0-drbd:1" class="ocf" provider="linbit" type="drbd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_demote_uname="sd01-1 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="cdev-pool-0-drbd:0 " CRM_meta_notify_master_uname="sd01-1 " CRM_meta_notify_promote_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_promote_uname="sd01-0 " CRM_meta_notify_slave_resource="cdev-pool-0-drbd:1 " CRM_meta_notify_slave_uname="sd01-0 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="95000"  drbd_resource="cdev-pool-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="96" operation="promote" operation_key="ms-cdev-pool-0-drbd_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46" priority="1000000">
+    <action_set>
+      <pseudo_event id="107" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="106" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_demoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="141" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:0_post_notify_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="143" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:1_post_notify_demote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47" priority="1000000">
+    <action_set>
+      <pseudo_event id="106" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="103" operation="demoted" operation_key="ms-cdev-pool-0-drbd_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <pseudo_event id="105" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="104" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_demote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="140" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:0_pre_notify_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="142" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_demote_0" internal_operation_key="cdev-pool-0-drbd:1_pre_notify_demote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <pseudo_event id="104" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="50" priority="1000000">
+    <action_set>
+      <pseudo_event id="103" operation="demoted" operation_key="ms-cdev-pool-0-drbd_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="77" operation="demote" operation_key="cdev-pool-0-drbd_demote_0" internal_operation_key="cdev-pool-0-drbd:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="102" operation="demote" operation_key="ms-cdev-pool-0-drbd_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <pseudo_event id="102" operation="demote" operation_key="ms-cdev-pool-0-drbd_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="34" operation="stopped" operation_key="cdev-pool-0-iscsi-export_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52" priority="1000000">
+    <action_set>
+      <pseudo_event id="101" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="100" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="137" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:0_post_notify_promote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="139" operation="notify" operation_key="cdev-pool-0-drbd_post_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:1_post_notify_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="53" priority="1000000">
+    <action_set>
+      <pseudo_event id="100" operation="notify" operation_key="ms-cdev-pool-0-drbd_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="97" operation="promoted" operation_key="ms-cdev-pool-0-drbd_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="99" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <pseudo_event id="99" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="98" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="136" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:0_pre_notify_promote_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="138" operation="notify" operation_key="cdev-pool-0-drbd_pre_notify_promote_0" internal_operation_key="cdev-pool-0-drbd:1_pre_notify_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <pseudo_event id="98" operation="notify" operation_key="ms-cdev-pool-0-drbd_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="107" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56" priority="1000000">
+    <action_set>
+      <pseudo_event id="97" operation="promoted" operation_key="ms-cdev-pool-0-drbd_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="82" operation="promote" operation_key="cdev-pool-0-drbd_promote_0" internal_operation_key="cdev-pool-0-drbd:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <pseudo_event id="96" operation="promote" operation_key="ms-cdev-pool-0-drbd_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="99" operation="notified" operation_key="ms-cdev-pool-0-drbd_confirmed-pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="103" operation="demoted" operation_key="ms-cdev-pool-0-drbd_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="stop" operation_key="vip-164_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="vip-165_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="stop" operation_key="cdev-pool-0-iscsi-target_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="stop" operation_key="cdev-pool-0-iscsi-lun-1_stop_0" on_node="sd01-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
