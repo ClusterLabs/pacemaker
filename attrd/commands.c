@@ -139,7 +139,7 @@ static attribute_t *
 create_attribute(xmlNode *xml)
 {
     int dampen = 0;
-    const char *value = crm_element_value_copy(xml, F_ATTRD_DAMPEN);
+    const char *value = crm_element_value(xml, F_ATTRD_DAMPEN);
     attribute_t *a = calloc(1, sizeof(attribute_t));
 
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
