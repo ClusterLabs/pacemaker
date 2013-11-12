@@ -505,6 +505,7 @@ throttle_timer_cb(gpointer data)
     static bool send_updates = FALSE;
     static enum throttle_state_e last = throttle_none;
     enum throttle_state_e now = throttle_mode();
+    static bool first = TRUE;
 
     if(send_updates == FALSE) {
         /* Optimize for the true case */
@@ -515,10 +516,11 @@ throttle_timer_cb(gpointer data)
         }
     }
 
-    if(send_updates && now != last) {
+    if(send_updates && (first || now != last)) {
         crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
         throttle_send_command(now);
         last = now;
+        first = FALSE;
     }
     return TRUE;
 }
