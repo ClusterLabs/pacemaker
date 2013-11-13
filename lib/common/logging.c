@@ -334,18 +334,17 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const c
     }
 }
 
-void
-crm_enable_blackbox(int nsig)
+static void
+crm_control_blackbox(int nsig, bool enable)
 {
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
         blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%d", CRM_BLACKBOX_DIR, crm_system_name,
-                 pid);
+        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%d", CRM_BLACKBOX_DIR, crm_system_name, pid);
     }
 
-    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+    if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
 
@@ -365,7 +364,22 @@ crm_enable_blackbox(int nsig)
                   qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
 
         crm_update_callsites();
+
+    } else if (!enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
+}
+
+void
+crm_enable_blackbox(int nsig)
+{
+    crm_control_blackbox(nsig, TRUE);
+}
+
+void
+crm_disable_blackbox(int nsig)
+{
+    crm_control_blackbox(nsig, FALSE);
 }
 
 void
@@ -776,10 +790,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
          * Signal       Value     Action   Comment
          * SIGTRAP        5        Core    Trace/breakpoint trap
          * SIGUSR1     30,10,16    Term    User-defined signal 1
+         * SIGUSR2     31,12,17    Term    User-defined signal 2
          *
          * Our usage is as similar as possible
          */
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
+        mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
         mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
     }
 

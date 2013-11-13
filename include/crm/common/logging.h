@@ -50,7 +50,7 @@ enum xml_log_options
 };
 
 void crm_enable_blackbox(int nsig);
-void crm_enable_blackbox_tracing(int nsig);
+void crm_disable_blackbox(int nsig);
 void crm_write_blackbox(int nsig, struct qb_log_callsite *callsite);
 
 void crm_update_callsites(void);

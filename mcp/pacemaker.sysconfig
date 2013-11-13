@@ -47,7 +47,8 @@
 # The blackbox contains a rolling buffer of all logs (including info+debug+trace)
 # and is written after a crash, assertion failure and/or when SIGTRAP is received
 #
-# The blackbox recorder can also be enabled for Pacemaker daemons at runtime by sending SIGUSR1
+# The blackbox recorder can also be enabled for Pacemaker daemons at runtime by 
+# sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2
 #
 # Multiple subsystems may me listed separated by commas
 # eg. PCMK_blackbox=crmd,pengine
