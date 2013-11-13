@@ -2329,10 +2329,6 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
-    crm_warn("Processing failed op %s for %s on %s: %s (%d)",
-             task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
-             rc);
-
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2340,10 +2336,18 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     }
 
     if (rc != PCMK_OCF_NOT_INSTALLED || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+        crm_warn("Processing failed op %s for %s on %s: %s (%d)",
+                 task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
+                 rc);
+
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             add_node_copy(data_set->failed, xml_op);
         }
+    } else {
+        crm_trace("Processing failed op %s for %s on %s: %s (%d)",
+                 task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
+                 rc);
     }
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
