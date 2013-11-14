@@ -1,0 +1,97 @@
+<cib admin_epoch="0" epoch="2" num_updates="1" dc-uuid="0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.1" cib-last-written="Fri Jul 13 13:51:05 2012">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="pcmk-1"/>
+      <node id="2" uname="pcmk-2"/>
+      <node id="3" uname="pcmk-3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <clone id="clone-1">
+        <primitive id="child-1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="child-1-meta">
+          <nvpair id="child-interleave-1" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clone-2">
+        <primitive id="child-2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="child-2-meta">
+          <nvpair id="child-interleave-2" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clone-3">
+        <primitive id="child-3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="child-3-meta">
+          <nvpair id="child-interleave-3" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order id="order1" first="clone-1" then="clone-2"/>
+      <rsc_order id="order2" first="clone-2" then="clone-3"/>
+      <rsc_order id="order3" first="clone-3" then="dummy"/>
+      <rsc_location id="cli-ban-clone-2-on-pcmk-1" rsc="clone-2" role="Started" node="pcmk-1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324792" last-rc-change="1384324792" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-1:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-1_last_0" operation_key="child-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324792" last-rc-change="1384324792" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-2:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-2_last_0" operation_key="child-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324792" last-rc-change="1384324792" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-3:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-3_last_0" operation_key="child-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324792" last-rc-change="1384324792" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324793" last-rc-change="1384324793" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-1:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-1_last_0" operation_key="child-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324793" last-rc-change="1384324793" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-2:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-2_last_0" operation_key="child-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324793" last-rc-change="1384324793" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-3:0" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-3_last_0" operation_key="child-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324793" last-rc-change="1384324793" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="pcmk-3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324795" last-rc-change="1384324795" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-1:1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-1_last_0" operation_key="child-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324795" last-rc-change="1384324795" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-2:1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-2_last_0" operation_key="child-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324795" last-rc-change="1384324795" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="child-3:1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="child-3_last_0" operation_key="child-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.8" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1384324795" last-rc-change="1384324795" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
