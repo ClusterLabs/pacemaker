@@ -313,6 +313,7 @@ crm_get_peer(unsigned int id, const char *uname)
     crm_node_t *node = NULL;
     crm_node_t *by_id = NULL;
     crm_node_t *by_name = NULL;
+    char *uname_lookup = NULL;
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
@@ -400,6 +401,12 @@ crm_get_peer(unsigned int id, const char *uname)
         g_hash_table_replace(crm_peer_cache, uniqueid, node);
     }
 
+    if(id && uname == NULL && node->uname == NULL) {
+        uname_lookup = get_node_name(id);
+        uname = uname_lookup;
+        crm_trace("Inferred a name of '%s' for node %u", uname, id);
+    }
+
     if(id > 0 && uname && (node->id == 0 || node->uname == NULL)) {
         crm_info("Node %u is now known as %s", id, uname);
     }
@@ -436,6 +443,7 @@ crm_get_peer(unsigned int id, const char *uname)
         }
     }
 
+    free(uname_lookup);
     return node;
 }
 
