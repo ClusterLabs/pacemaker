@@ -776,23 +776,38 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
 static st_query_result_t *
 stonith_choose_peer(remote_fencing_op_t * op)
 {
-    st_query_result_t *peer = NULL;
     const char *device = NULL;
+    st_query_result_t *peer = NULL;
+    uint32_t active = fencing_active_peers();
 
     do {
         if (op->devices) {
             device = op->devices->data;
-            crm_trace("Checking for someone to fence %s with %s", op->target,
-                      (char *)op->devices->data);
+            crm_trace("Checking for someone to fence %s with %s", op->target, device);
         } else {
             crm_trace("Checking for someone to fence %s", op->target);
         }
 
-        if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET | FIND_PEER_VERIFIED_ONLY))) {
+        peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET|FIND_PEER_VERIFIED_ONLY);
+        if (peer) {
+            crm_trace("Found verified peer %s for %s", peer->host, device?device:"<any>");
             return peer;
-        } else if ((peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET))) {
+        }
+
+        if(op->query_timer != 0 && op->replies < QB_MIN(op->replies_expected, active)) {
+            crm_trace("Waiting before looking for unverified devices to fence %s", op->target);
+            return NULL;
+        }
+
+        peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET);
+        if (peer) {
+            crm_trace("Found best unverified peer %s", peer->host);
             return peer;
-        } else if ((peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY))) {
+        }
+
+        peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY);
+        if(peer) {
+            crm_trace("%s will fence itself", peer->host);
             return peer;
         }
 
@@ -800,13 +815,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
     } while (is_set(op->call_options, st_opt_topology)
              && stonith_topology_next(op) == pcmk_ok);
 
-    if (op->devices) {
-        crm_notice("Couldn't find anyone to fence %s with %s", op->target,
-                   (char *)op->devices->data);
-    } else {
-        crm_debug("Couldn't find anyone to fence %s", op->target);
-    }
-
+    crm_notice("Couldn't find anyone to fence %s with %s", op->target, device?device:"<any>");
     return NULL;
 }
 
