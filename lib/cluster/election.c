@@ -39,14 +39,11 @@ struct election_s
         char *uname;
         GSourceFunc cb;
         GHashTable *voted;
-        mainloop_timer_t *trigger; /* When to start */
         mainloop_timer_t *timeout; /* When to stop if not everyone casts a vote */
 };
 
-static gboolean election_timer_cb(gpointer user_data)
+static void election_complete(election_t *e)
 {
-    election_t *e = user_data;
-
     crm_info("Election %s complete", e->name);
     e->state = election_won;
 
@@ -55,6 +52,14 @@ static gboolean election_timer_cb(gpointer user_data)
     }
 
     election_reset(e);
+}
+
+static gboolean election_timer_cb(gpointer user_data)
+{
+    election_t *e = user_data;
+
+    crm_info("Election %s %p timed out", e->name, e);
+    election_complete(e);
     return FALSE;
 }
 
@@ -68,7 +73,7 @@ election_state(election_t *e)
 }
 
 election_t *
-election_init(const char *name, const char *uname, guint period, GSourceFunc cb)
+election_init(const char *name, const char *uname, guint period_ms, GSourceFunc cb)
 {
     static guint count = 0;
     election_t *e = calloc(1, sizeof(election_t));
@@ -82,8 +87,8 @@ election_init(const char *name, const char *uname, guint period, GSourceFunc cb)
 
         e->cb = cb;
         e->uname = strdup(uname);
-        e->timeout = mainloop_timer_add(e->name, period, FALSE, cb, &e);
-        crm_trace("Created %s", e->name);
+        e->timeout = mainloop_timer_add(e->name, period_ms, FALSE, election_timer_cb, e);
+        crm_trace("Created %s %p", e->name, e);
     }
     return e;
 }
@@ -99,6 +104,7 @@ election_remove(election_t *e, const char *uname)
 void
 election_reset(election_t *e)
 {
+    crm_trace("Resetting election %s", e->name);
     if(e) {
         mainloop_timer_stop(e->timeout);
     }
@@ -289,7 +295,7 @@ election_check(election_t *e)
 
         }
 
-        election_timer_cb(e);
+        election_complete(e);
         return TRUE;
 
     } else {

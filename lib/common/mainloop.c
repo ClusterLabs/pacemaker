@@ -1087,7 +1087,7 @@ mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc c
         t->repeat = repeat;
         t->cb = cb;
         t->userdata = userdata;
-        crm_trace("Created timer %s", t->name);
+        crm_trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
     }
     return t;
 }

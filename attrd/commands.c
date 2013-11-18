@@ -510,6 +510,8 @@ write_or_elect_attribute(attribute_t *a)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
+    crm_trace("Election complete");
+
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
 

@@ -322,7 +322,7 @@ main(int argc, char **argv)
     }
     crm_info("Cluster connection active");
 
-    writer = election_init(T_ATTRD, attrd_cluster->uname, 120, attrd_election_cb);
+    writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
     attrd_ipc_server_init(&ipcs, &ipc_callbacks);
     crm_info("Accepting attribute updates");
 
