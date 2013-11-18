@@ -60,6 +60,12 @@ crm_ipc_init(void)
     }
 }
 
+int
+crm_ipc_default_buffer_size(void)
+{
+    return pick_ipc_buffer(0);
+}
+
 static char *
 generateReference(const char *custom1, const char *custom2)
 {
@@ -668,21 +674,13 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 {
     struct iovec *iov = NULL;
     ssize_t rc = 0;
-    int32_t max_msg_size = 0;
 
     if(c == NULL) {
         return -EDESTADDRREQ;
     }
     crm_ipc_init();
 
-    /* when sending from server to client, we need to use the client's
-     * max buffer size if possible */
-    max_msg_size = ipc_buffer_max;
-#ifdef HAVE_IPCS_GET_BUFFER_SIZE
-    max_msg_size = qb_ipcs_connection_get_buffer_size(c->ipcs);
-#endif
-
-    rc = crm_ipc_prepare(request, message, &iov, max_msg_size);
+    rc = crm_ipc_prepare(request, message, &iov, ipc_buffer_max);
     if (rc > 0) {
         rc = crm_ipcs_sendv(c, iov, flags | crm_ipc_server_free);
 
@@ -789,6 +787,15 @@ crm_ipc_connect(crm_ipc_t * client)
     }
 
     qb_ipcc_context_set(client->ipc, client);
+
+#ifdef HAVE_IPCS_GET_BUFFER_SIZE
+    client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
+    if (client->max_buf_size < client->buf_size) {
+        free(client->buffer);
+        client->buffer = calloc(1, client->max_buf_size);
+        client->buf_size = client->max_buf_size;
+    }
+#endif
 
     return TRUE;
 }

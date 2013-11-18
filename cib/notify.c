@@ -116,28 +116,6 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (do_send) {
         switch (client->kind) {
             case CRM_CLIENT_IPC:
-#ifdef HAVE_IPCS_GET_BUFFER_SIZE
-            {
-                int max_send_size = qb_ipcs_connection_get_buffer_size(client->ipcs);
-                if (max_send_size < update->iov_size) {
-                    struct iovec *iov;
-                    int new_size = crm_ipc_prepare(0, update->msg, &iov, max_send_size);
-
-                    if (new_size > 0) {
-                        free(update->iov[0].iov_base);
-                        free(update->iov[1].iov_base);
-                        free(update->iov);
-
-                        update->iov = iov;
-                        update->iov_size = new_size;
-                    } else {
-                        crm_warn("Preparing notification for client %s/%s failed", client->name, client->id);
-                        return FALSE;
-                    }
-                }
-            }
-#endif
-
                 if (crm_ipcs_sendv(client, update->iov, crm_ipc_server_event) < 0) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
