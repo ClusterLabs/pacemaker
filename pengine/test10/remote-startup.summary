@@ -16,6 +16,10 @@ Executing cluster transition:
  * Resource action: fake            monitor on 18node2
  * Resource action: fake            monitor on 18node1
  * Resource action: fake            monitor on 18builder
+ * Resource action: remote1         monitor on 18node2
+ * Resource action: remote1         monitor on 18node1
+ * Resource action: remote1         monitor on 18builder
+ * Pseudo action:   probe_nodes_complete
  * Resource action: remote1         start on 18builder
  * Resource action: fake            monitor on remote1
  * Resource action: remote1         monitor=60000 on 18builder

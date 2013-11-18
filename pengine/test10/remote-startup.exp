@@ -1,33 +1,33 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="15" operation="monitor" operation_key="shooter_monitor_60000" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="18" operation="monitor" operation_key="shooter_monitor_60000" on_node="18node1" on_node_uuid="1">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="start" operation_key="shooter_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="17" operation="start" operation_key="shooter_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="14" operation="start" operation_key="shooter_start_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="17" operation="start" operation_key="shooter_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="16" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="13" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="16" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5">
         <primitive id="shooter" class="stonith" type="fence_xvm"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -40,7 +40,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="16" operation="start" operation_key="fake_start_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="19" operation="start" operation_key="fake_start_0" on_node="18node2" on_node_uuid="2">
         <primitive id="fake" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -53,20 +53,20 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="fake_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
+      <rsc_op id="15" operation="monitor" operation_key="fake_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
         <primitive id="fake" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="17" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="20" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="fake_monitor_0" on_node="18node2" on_node_uuid="2">
+      <rsc_op id="12" operation="monitor" operation_key="fake_monitor_0" on_node="18node2" on_node_uuid="2">
         <primitive id="fake" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -75,7 +75,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="8" operation="monitor" operation_key="fake_monitor_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="9" operation="monitor" operation_key="fake_monitor_0" on_node="18node1" on_node_uuid="1">
         <primitive id="fake" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -93,63 +93,100 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="18" operation="monitor" operation_key="remote1_monitor_60000" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="21" operation="monitor" operation_key="remote1_monitor_60000" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="17" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="20" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="17" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="20" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="remote1_monitor_0" on_node="18node2" on_node_uuid="2">
+        <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
     <inputs/>
   </synapse>
-  <synapse id="10" priority="1000000">
+  <synapse id="11">
     <action_set>
-      <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
-        <attributes CRM_meta_op_no_wait="true" />
+      <rsc_op id="10" operation="monitor" operation_key="remote1_monitor_0" on_node="18node1" on_node_uuid="1">
+        <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="fake_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
-  <synapse id="11" priority="1000000">
+  <synapse id="12">
     <action_set>
-      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="18node2" on_node_uuid="2">
-        <attributes CRM_meta_op_no_wait="true" />
+      <rsc_op id="7" operation="monitor" operation_key="remote1_monitor_0" on_node="18builder" on_node_uuid="5">
+        <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="fake_monitor_0" on_node="18node2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12" priority="1000000">
-    <action_set>
-      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="18node1" on_node_uuid="1">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="fake_monitor_0" on_node="18node1" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="13" priority="1000000">
+    <action_set>
+      <rsc_op id="14" operation="probe_complete" operation_key="probe_complete" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="fake_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="18node2" on_node_uuid="2">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="fake_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="remote1_monitor_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="18node1" on_node_uuid="1">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="fake_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="remote1_monitor_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="18builder" on_node_uuid="5">
         <attributes CRM_meta_op_no_wait="true" />
@@ -159,9 +196,30 @@
       <trigger>
         <rsc_op id="6" operation="monitor" operation_key="fake_monitor_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="remote1_monitor_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
     <action_set>
       <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete">
         <attributes />
@@ -169,11 +227,11 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
+        <rsc_op id="14" operation="probe_complete" operation_key="probe_complete" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="19">
     <action_set>
       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -181,7 +239,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="16" operation="stop" operation_key="shooter_stop_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
