@@ -387,22 +387,36 @@ static bool throttle_io_load(float *load, unsigned int *blocked)
 }
 
 static enum throttle_state_e
-throttle_handle_load(float load, const char *desc)
+throttle_handle_load(float load, const char *desc, int cores)
 {
-    if(load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
+    float adjusted_load = load;
+
+    if(cores <= 0) {
+        /* No fudging of the supplied load value */
+
+    } else if(cores == 1) {
+        /* On a single core machine, a load of 1.0 is already too high */
+        adjusted_load = load * THROTTLE_FACTOR_MEDIUM;
+
+    } else {
+        /* Normalize the load to be per-core */
+        adjusted_load = load / cores;
+    }
+
+    if(adjusted_load > THROTTLE_FACTOR_HIGH * throttle_load_target) {
         crm_notice("High %s detected: %f", desc, load);
         return throttle_high;
 
-    } else if(load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
+    } else if(adjusted_load > THROTTLE_FACTOR_MEDIUM * throttle_load_target) {
         crm_info("Moderate %s detected: %f", desc, load);
         return throttle_med;
 
-    } else if(load > THROTTLE_FACTOR_LOW * throttle_load_target) {
+    } else if(adjusted_load > THROTTLE_FACTOR_LOW * throttle_load_target) {
         crm_debug("Noticable %s detected: %f", desc, load);
         return throttle_low;
     }
 
-    crm_trace("Negligable %s detected: %f", desc, load);
+    crm_trace("Negligable %s detected: %f", desc, adjusted_load);
     return throttle_none;
 }
 
@@ -464,22 +478,12 @@ throttle_mode(void)
     }
 
     if(throttle_load_avg(&load)) {
-        float simple = load / cores;
-        mode |= throttle_handle_load(simple, "CPU load");
+        mode |= throttle_handle_load(load, "CPU load", cores);
     }
 
     if(throttle_io_load(&load, &blocked)) {
-        float blocked_ratio = 0.0;
-
-        mode |= throttle_handle_load(load, "IO load");
-
-        if(cores) {
-            blocked_ratio = blocked / cores;
-        } else {
-            blocked_ratio = blocked;
-        }
-
-        mode |= throttle_handle_load(blocked_ratio, "blocked IO ratio");
+        mode |= throttle_handle_load(load, "IO load", 0);
+        mode |= throttle_handle_load(blocked, "blocked IO ratio", cores);
     }
 
     if(mode & throttle_extreme) {
@@ -611,14 +615,14 @@ throttle_get_total_job_limit(int l)
         switch(r->mode) {
 
             case throttle_extreme:
-                if(limit == 0 || limit > peers/2) {
-                    limit = peers/2;
+                if(limit == 0 || limit > peers/4) {
+                    limit = QB_MAX(1, peers/4);
                 }
                 break;
 
             case throttle_high:
-                if(limit == 0 || limit > peers) {
-                    limit = peers;
+                if(limit == 0 || limit > peers/2) {
+                    limit = QB_MAX(1, peers/2);
                 }
                 break;
             default:
