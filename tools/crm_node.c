@@ -167,7 +167,11 @@ int tools_remove_node_cache(const char *node, const char *target)
                          NULL, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
 
     if (n) {
-        crm_xml_add_int(cmd, XML_ATTR_ID, n);
+        char buffer[64];
+
+        if(snprintf(buffer, 63, "%u", n) > 0) {
+            crm_xml_add(cmd, XML_ATTR_ID, buffer);
+        }
     }
     crm_xml_add(cmd, XML_ATTR_UNAME, name);
 
