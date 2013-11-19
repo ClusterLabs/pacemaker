@@ -1,6 +1,4 @@
 digraph "g" {
-"A_monitor_0 lxc2" -> "probe_complete lxc2" [ style = bold]
-"A_monitor_0 lxc2" [ style=bold color="green" fontcolor="black"]
 "A_monitor_10000 lxc1" [ style=bold color="green" fontcolor="black"]
 "A_start_0 lxc1" -> "A_monitor_10000 lxc1" [ style = bold]
 "A_start_0 lxc1" [ style=bold color="green" fontcolor="black"]
@@ -43,12 +41,4 @@ digraph "g" {
 "lxc1_stop_0 18node1" -> "container1_stop_0 18node1" [ style = bold]
 "lxc1_stop_0 18node1" -> "lxc1_start_0 18node2" [ style = bold]
 "lxc1_stop_0 18node1" [ style=bold color="green" fontcolor="black"]
-"probe_complete lxc1" -> "probe_complete" [ style = bold]
-"probe_complete lxc1" [ style=bold color="green" fontcolor="black"]
-"probe_complete lxc2" -> "probe_complete" [ style = bold]
-"probe_complete lxc2" [ style=bold color="green" fontcolor="black"]
-"probe_complete" -> "A_start_0 lxc1" [ style = bold]
-"probe_complete" -> "A_stop_0 lxc1" [ style = bold]
-"probe_complete" -> "M_stop_0 lxc1" [ style = bold]
-"probe_complete" [ style=bold color="green" fontcolor="orange"]
 }

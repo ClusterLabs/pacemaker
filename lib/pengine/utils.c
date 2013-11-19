@@ -1805,11 +1805,11 @@ is_remote_node(node_t *node)
     return FALSE;
 }
 
-gboolean
+resource_t *
 rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc)
 {
     if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
-        return FALSE;
+        return NULL;
     }
 
     if (rsc->fillers) {
@@ -1818,11 +1818,11 @@ rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc)
             resource_t *filler = (resource_t *) gIter->data;
 
             if (filler->is_remote_node) {
-                return TRUE;
+                return filler;
             }
         }
     }
-    return FALSE;
+    return NULL;
 }
 
 gboolean

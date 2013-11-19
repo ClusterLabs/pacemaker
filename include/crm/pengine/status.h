@@ -72,7 +72,6 @@ enum pe_find {
 #  define pe_flag_startup_probes	0x00010000ULL
 #  define pe_flag_have_status		0x00020000ULL
 #  define pe_flag_have_remote_nodes	0x00040000ULL
-#  define pe_flag_container_probes	0x00080000ULL
 
 #  define pe_flag_quick_location  	0x00100000ULL
 
@@ -186,6 +185,7 @@ struct node_s {
 #  define pe_rsc_migrating	0x00400000ULL
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
+#  define pe_rsc_unexpectedly_running 0x02000000ULL
 
 #  define pe_rsc_needs_quorum	 0x10000000ULL
 #  define pe_rsc_needs_fencing	 0x20000000ULL

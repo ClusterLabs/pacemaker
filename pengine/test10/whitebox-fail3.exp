@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="9" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
+      <rsc_op id="5" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="vm" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/18builder.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
@@ -10,248 +10,166 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="11" operation="start" operation_key="FAKE_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
+      <rsc_op id="7" operation="start" operation_key="FAKE_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="6" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="10" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
+      <rsc_op id="6" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="FAKE_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
-        <primitive id="FAKE" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      <rsc_op id="13" operation="monitor" operation_key="W:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
+        <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="12" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="17" operation="monitor" operation_key="W:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
-        <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="16" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <rsc_op id="16" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
+      <rsc_op id="12" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <pseudo_event id="14" operation="start" operation_key="W-master_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="18" operation="start" operation_key="W-master_start_0"/>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5" priority="1000000">
+    <action_set>
+      <pseudo_event id="15" operation="running" operation_key="W-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
       </trigger>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <pseudo_event id="14" operation="start" operation_key="W-master_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="W:1_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
-        <primitive id="W" long-id="W:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="7" priority="1000000">
-    <action_set>
-      <pseudo_event id="19" operation="running" operation_key="W-master_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="16" operation="start" operation_key="W:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="18" operation="start" operation_key="W-master_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <pseudo_event id="18" operation="start" operation_key="W-master_start_0">
+      <pseudo_event id="14" operation="start" operation_key="W-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="9">
+  <synapse id="7">
     <action_set>
-      <rsc_op id="31" operation="monitor" operation_key="X:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
+      <rsc_op id="27" operation="monitor" operation_key="X:1_monitor_10000" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="X" long-id="X:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="30" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
+        <rsc_op id="26" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
       </trigger>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="10">
+  <synapse id="8">
     <action_set>
-      <rsc_op id="30" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
+      <rsc_op id="26" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
         <primitive id="X" long-id="X:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <pseudo_event id="28" operation="start" operation_key="X-master_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="start" operation_key="X-master_start_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="9" priority="1000000">
     <action_set>
-      <rsc_op id="7" operation="monitor" operation_key="X:1_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
-        <primitive id="X" long-id="X:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12" priority="1000000">
-    <action_set>
-      <pseudo_event id="33" operation="running" operation_key="X-master_running_0">
+      <pseudo_event id="29" operation="running" operation_key="X-master_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="30" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
+        <rsc_op id="26" operation="start" operation_key="X:1_start_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="start" operation_key="X-master_start_0"/>
+        <pseudo_event id="28" operation="start" operation_key="X-master_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="13">
+  <synapse id="10">
     <action_set>
-      <pseudo_event id="32" operation="start" operation_key="X-master_start_0">
+      <pseudo_event id="28" operation="start" operation_key="X-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="14">
+  <synapse id="11">
     <action_set>
-      <rsc_op id="41" operation="monitor" operation_key="18builder_monitor_30000" on_node="dvossel-laptop2" on_node_uuid="24815808">
+      <rsc_op id="37" operation="monitor" operation_key="18builder_monitor_30000" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="18builder" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="vm" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="12">
     <action_set>
-      <rsc_op id="40" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
+      <rsc_op id="36" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="18builder" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="vm" CRM_meta_name="start" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="5" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16" priority="1000000">
-    <action_set>
-      <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="FAKE_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="W:1_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="X:1_monitor_0" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="17">
-    <action_set>
-      <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="18builder" on_node_uuid="18builder" router_node="dvossel-laptop2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="18">
+  <synapse id="13">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -259,7 +177,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+        <rsc_op id="6" operation="stop" operation_key="FAKE_stop_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
       </trigger>
     </inputs>
   </synapse>
