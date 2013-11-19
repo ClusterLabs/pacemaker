@@ -72,7 +72,6 @@ enum pe_find {
 #  define pe_flag_startup_probes	0x00010000ULL
 #  define pe_flag_have_status		0x00020000ULL
 #  define pe_flag_have_remote_nodes	0x00040000ULL
-#  define pe_flag_container_probes	0x00080000ULL
 
 #  define pe_flag_quick_location  	0x00100000ULL
 

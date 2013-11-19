@@ -16,13 +16,8 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: 18node2         start on 18builder
- * Resource action: webserver       monitor on 18node2
- * Resource action: nfs_mount       monitor on 18node2
- * Resource action: vg_tags         monitor on 18node2
- * Resource action: vg_tags_dup     monitor on 18node2
- * Resource action: 18node2         monitor=30000 on 18builder
- * Pseudo action:   probe_complete
  * Resource action: nfs_mount       start on 18node2
+ * Resource action: 18node2         monitor=30000 on 18builder
  * Resource action: nfs_mount       monitor=10000 on 18node2
 
 Revised cluster status:

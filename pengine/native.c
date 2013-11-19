@@ -2414,7 +2414,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if (force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
-    } else if (force == FALSE && is_container_remote_node(node) && is_not_set(data_set->flags, pe_flag_container_probes)) {
+    } else if (force == FALSE && is_container_remote_node(node)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s on container %s",
                      rsc->id, node->details->id);
         return FALSE;

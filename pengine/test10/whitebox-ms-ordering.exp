@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="21" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="19" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
       </rsc_op>
@@ -41,7 +41,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="22" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="20" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
       </rsc_op>
@@ -81,29 +81,29 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="26" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
+      <rsc_op id="24" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="21" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="25" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="23" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="34" operation="promote" operation_key="lxc-ms-master_promote_0"/>
+        <pseudo_event id="32" operation="promote" operation_key="lxc-ms-master_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="36" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="25" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
+      <rsc_op id="23" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -113,19 +113,19 @@
         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="lxc-ms-master_start_0"/>
+        <pseudo_event id="28" operation="start" operation_key="lxc-ms-master_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="36" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <pseudo_event id="24" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0">
+      <pseudo_event id="22" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -134,26 +134,26 @@
         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <rsc_op id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="21" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="lxc-ms-master_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
-      <rsc_op id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
+      <rsc_op id="21" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="36" operation="demote" operation_key="lxc-ms-master_demote_0"/>
+        <pseudo_event id="34" operation="demote" operation_key="lxc-ms-master_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="36" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -186,23 +186,23 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <rsc_op id="29" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:1_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
+      <rsc_op id="27" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:1_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" long-id="lxc-ms:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1"/>
+        <rsc_op id="26" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="38" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="16">
     <action_set>
-      <rsc_op id="28" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
+      <rsc_op id="26" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
         <primitive id="lxc-ms" long-id="lxc-ms:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -212,19 +212,19 @@
         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <pseudo_event id="27" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="25" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="lxc-ms-master_start_0"/>
+        <pseudo_event id="28" operation="start" operation_key="lxc-ms-master_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="38" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="27" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0">
+      <pseudo_event id="25" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0">
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -233,28 +233,28 @@
         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="lxc-ms-master_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="37" operation="demoted" operation_key="lxc-ms-master_demoted_0">
+      <pseudo_event id="35" operation="demoted" operation_key="lxc-ms-master_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="21" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="demote" operation_key="lxc-ms-master_demote_0"/>
+        <pseudo_event id="34" operation="demote" operation_key="lxc-ms-master_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="36" operation="demote" operation_key="lxc-ms-master_demote_0">
+      <pseudo_event id="34" operation="demote" operation_key="lxc-ms-master_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -262,166 +262,150 @@
   </synapse>
   <synapse id="20" priority="1000000">
     <action_set>
-      <pseudo_event id="35" operation="promoted" operation_key="lxc-ms-master_promoted_0">
+      <pseudo_event id="33" operation="promoted" operation_key="lxc-ms-master_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="24" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <pseudo_event id="34" operation="promote" operation_key="lxc-ms-master_promote_0">
+      <pseudo_event id="32" operation="promote" operation_key="lxc-ms-master_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="running" operation_key="lxc-ms-master_running_0"/>
+        <pseudo_event id="29" operation="running" operation_key="lxc-ms-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="33" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
+        <pseudo_event id="31" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="37" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+        <pseudo_event id="35" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22" priority="1000000">
     <action_set>
-      <pseudo_event id="33" operation="stopped" operation_key="lxc-ms-master_stopped_0">
+      <pseudo_event id="31" operation="stopped" operation_key="lxc-ms-master_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="27" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="25" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="lxc-ms-master_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="lxc-ms-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23">
     <action_set>
-      <pseudo_event id="32" operation="stop" operation_key="lxc-ms-master_stop_0">
+      <pseudo_event id="30" operation="stop" operation_key="lxc-ms-master_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="37" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+        <pseudo_event id="35" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24" priority="1000000">
     <action_set>
-      <pseudo_event id="31" operation="running" operation_key="lxc-ms-master_running_0">
+      <pseudo_event id="29" operation="running" operation_key="lxc-ms-master_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="25" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
+        <rsc_op id="23" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1"/>
+        <rsc_op id="26" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:1_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="lxc-ms-master_start_0"/>
+        <pseudo_event id="28" operation="start" operation_key="lxc-ms-master_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
-      <pseudo_event id="30" operation="start" operation_key="lxc-ms-master_start_0">
+      <pseudo_event id="28" operation="start" operation_key="lxc-ms-master_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
+        <pseudo_event id="31" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="37" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+        <pseudo_event id="35" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
-      <rsc_op id="39" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="37" operation="monitor" operation_key="lxc1_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="36" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <rsc_op id="38" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="36" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container1" CRM_meta_name="start" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="21" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="19" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
-      <rsc_op id="41" operation="monitor" operation_key="lxc2_monitor_30000" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="39" operation="monitor" operation_key="lxc2_monitor_30000" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="40" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="38" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
-      <rsc_op id="40" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="38" operation="start" operation_key="lxc2_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="22" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="20" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="30" priority="1000000">
-    <action_set>
-      <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="31" priority="1000000">
-    <action_set>
-      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1">
-        <attributes CRM_meta_op_no_wait="true" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="32" priority="1000000">
     <action_set>
       <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="18node3" on_node_uuid="3">
         <attributes CRM_meta_op_no_wait="true" />
@@ -439,7 +423,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="33" priority="1000000">
+  <synapse id="31" priority="1000000">
     <action_set>
       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="18node2" on_node_uuid="2">
         <attributes CRM_meta_op_no_wait="true" />
@@ -457,7 +441,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="34" priority="1000000">
+  <synapse id="32" priority="1000000">
     <action_set>
       <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="18node1" on_node_uuid="1">
         <attributes CRM_meta_op_no_wait="true" />
@@ -475,7 +459,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="35">
+  <synapse id="33">
     <action_set>
       <pseudo_event id="4" operation="probe_nodes_complete" operation_key="probe_nodes_complete">
         <attributes />
@@ -493,22 +477,15 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="36">
+  <synapse id="34">
     <action_set>
       <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete">
         <attributes />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="lxc1" on_node_uuid="lxc1" router_node="18node1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="lxc2" on_node_uuid="lxc2" router_node="18node1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
-  <synapse id="37">
+  <synapse id="35">
     <action_set>
       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -516,10 +493,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="27" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
+        <pseudo_event id="25" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
