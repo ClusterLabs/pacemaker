@@ -60,6 +60,12 @@ crm_ipc_init(void)
     }
 }
 
+int
+crm_ipc_default_buffer_size(void)
+{
+    return pick_ipc_buffer(0);
+}
+
 static char *
 generateReference(const char *custom1, const char *custom2)
 {
@@ -789,6 +795,15 @@ crm_ipc_connect(crm_ipc_t * client)
     }
 
     qb_ipcc_context_set(client->ipc, client);
+
+#ifdef HAVE_IPCS_GET_BUFFER_SIZE
+    client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
+    if (client->max_buf_size < client->buf_size) {
+        free(client->buffer);
+        client->buffer = calloc(1, client->max_buf_size);
+        client->buf_size = client->max_buf_size;
+    }
+#endif
 
     return TRUE;
 }
