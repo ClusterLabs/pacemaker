@@ -714,6 +714,7 @@ do_test whitebox-ms-ordering "Verify promote/demote can not occur before connect
 do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
 do_test whitebox-orphaned    "Properly shutdown orphaned whitebox container"
 do_test whitebox-orphan-ms   "Properly tear down orphan ms resources on remote-nodes"
+do_test whitebox-unexpectedly-running "Recover container nodes the cluster did not start."
 
 echo ""
 do_test remote-startup-probes  "Baremetal remote-node startup probes"
