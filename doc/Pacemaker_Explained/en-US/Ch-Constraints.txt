@@ -553,7 +553,7 @@ To make things easier, we allow an alternate form of colocation
 constraints using +resource_sets+.  Just like the expanded version, a
 resource that can't be active also prevents any resource that must be
 collocated with it from being active.  For example, if +B was+ not
-able to run, then both +C (+and by inference +D)+ must also remain
+able to run, then both +C+ (and by inference +D+) must also remain
 stopped.
 
 .The equivalent colocation chain expressed using +resource_sets+   
