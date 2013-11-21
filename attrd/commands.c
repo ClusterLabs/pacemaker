@@ -698,18 +698,18 @@ write_attribute(attribute_t *a)
         return;
 
     } else if (the_cib == NULL) {
-        crm_info("Write out of %s delayed: cib not connected", a->id);
+        crm_info("Write out of '%s' delayed: cib not connected", a->id);
         return;
 
     } else if(a->update && a->update < last_cib_op_done) {
-        crm_info("Write out of %s continuing: update %d considered lost", a->id, a->update);
+        crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
 
     } else if(a->update) {
-        crm_info("Write out of %s delayed: update %d in progress", a->id, a->update);
+        crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
         return;
 
     } else if(mainloop_timer_running(a->timer)) {
-        crm_info("Write out of %s delayed: timer is running", a->id);
+        crm_info("Write out of '%s' delayed: timer is running", a->id);
         return;
     }
 
