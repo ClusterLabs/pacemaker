@@ -1,0 +1,13 @@
+ digraph "g" {
+"FAKE_monitor_60000 18builder" [ style=bold color="green" fontcolor="black"]
+"FAKE_start_0 18builder" -> "FAKE_monitor_60000 18builder" [ style = bold]
+"FAKE_start_0 18builder" -> "remote1_start_0 18builder" [ style = bold]
+"FAKE_start_0 18builder" [ style=bold color="green" fontcolor="black"]
+"FAKE_stop_0 18builder" -> "FAKE_start_0 18builder" [ style = bold]
+"FAKE_stop_0 18builder" -> "all_stopped" [ style = bold]
+"FAKE_stop_0 18builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"remote1_monitor_30000 18builder" [ style=bold color="green" fontcolor="black"]
+"remote1_start_0 18builder" -> "remote1_monitor_30000 18builder" [ style = bold]
+"remote1_start_0 18builder" [ style=bold color="green" fontcolor="black"]
+}

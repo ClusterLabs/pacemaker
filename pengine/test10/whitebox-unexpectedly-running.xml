@@ -1,0 +1,44 @@
+<cib epoch="13" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Fri Nov  1 16:32:31 2013" update-origin="18builder" update-client="crmd" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="5">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-1d8b74b"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1383341551"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="5" uname="18builder"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="FAKE" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="FAKE-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="FAKE-meta_attributes">
+          <nvpair id="FAKE-meta_attributes-remote-node" name="remote-node" value="remote1"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="5" uname="18builder" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="FAKE" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="FAKE_last_failure_0" operation_key="FAKE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" transition-magic="0:0;6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1383341551" last-rc-change="1383341551" exec-time="16" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+

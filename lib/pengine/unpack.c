@@ -88,11 +88,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_info("Startup probes: disabled (dangerous)");
     }
 
-    set_config_flag(data_set, "enable-container-probes", pe_flag_container_probes);
-    if(is_not_set(data_set->flags, pe_flag_container_probes)) {
-        crm_info("Container probes: disabled");
-    }
-
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = crm_get_msec(value);
     crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
@@ -2062,6 +2057,9 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
 {
     xmlNode *rsc_entry = NULL;
     gboolean found_orphaned_container_filler = FALSE;
+    GListPtr unexpected_containers = NULL;
+    GListPtr gIter = NULL;
+    resource_t *remote = NULL;
 
     CRM_CHECK(node != NULL, return FALSE);
 
@@ -2073,9 +2071,29 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
         if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
             resource_t *rsc;
             rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
-            if (rsc && is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+            if (!rsc) {
+                continue;
+            }
+            if (is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
                 found_orphaned_container_filler = TRUE;
             }
+            if (is_set(rsc->flags, pe_rsc_unexpectedly_running)) {
+                remote = rsc_contains_remote_node(data_set, rsc);
+                if (remote) {
+                    unexpected_containers = g_list_append(unexpected_containers, remote);
+                }
+            }
+        }
+    }
+
+    /* If a container resource is unexpectedly up... and the remote-node
+     * connection resource for that container is not up, the entire container
+     * must be recovered. */
+    for (gIter = unexpected_containers; gIter != NULL; gIter = gIter->next) {
+        remote = (resource_t *) gIter->data;
+        if (remote->role != RSC_ROLE_STARTED) {
+            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.");
+            set_bit(remote->container->flags, pe_rsc_failed);
         }
     }
 
@@ -2085,7 +2103,7 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
     if (found_orphaned_container_filler) {
         handle_orphaned_container_fillers(lrm_rsc_list, data_set);
     }
-
+    g_list_free(unexpected_containers);
     return TRUE;
 }
 
@@ -2469,6 +2487,7 @@ determine_op_status(
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
+                set_bit(rsc->flags, pe_rsc_unexpectedly_running);
 
                 /* legacy code for pre-0.6.5 operations */
             } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {

@@ -23,13 +23,9 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   M-clone_stop_0
- * Resource action: A               monitor on lxc2
  * Resource action: B               stop on lxc1
- * Resource action: B               monitor on lxc2
- * Resource action: D               monitor on lxc2
  * Cluster action:  clear_failcount for container1 on 18node2
  * Cluster action:  clear_failcount for lxc1 on 18node2
- * Pseudo action:   probe_complete
  * Resource action: M               stop on lxc1
  * Pseudo action:   M-clone_stopped_0
  * Resource action: B               start on lxc2

@@ -23,7 +23,6 @@
         <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
         <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
         <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
-        <nvpair name="enable-container-probes" value="true" id="cib-bootstrap-options-enable-container-probes"/>
         <nvpair name="migration-limit" value="4" id="cib-bootstrap-options-migration-limit"/>
         <nvpair name="node-health-green" value="0" id="cib-bootstrap-options-node-health-green"/>
         <nvpair name="node-health-red" value="-INFINITY" id="cib-bootstrap-options-node-health-red"/>
