@@ -235,8 +235,13 @@ main(int argc, char **argv)
         if (dest_uname == NULL) {
             dest_uname = get_node_name(0);
         }
-        if (pcmk_ok != query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node)) {
+
+        rc = query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node);
+        if (pcmk_ok != rc) {
             fprintf(stderr, "Could not map name=%s to a UUID\n", dest_uname);
+            the_cib->cmds->signoff(the_cib);
+            cib_delete(the_cib);
+            return crm_exit(rc);
         }
     }
 
