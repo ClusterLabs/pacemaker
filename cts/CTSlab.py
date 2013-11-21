@@ -561,7 +561,7 @@ if __name__ == '__main__':
             Environment["syslogd"] = rsh(discover, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", stdout=1).strip()
         else:
             # SYS-V
-            Environment["syslogd"] = rsh(discover, "chkconfig | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1).strip()
+            Environment["syslogd"] = rsh(discover, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", stdout=1).strip()
 
         if not Environment.has_key("syslogd") or not Environment["syslogd"]:
             # default
@@ -578,7 +578,7 @@ if __name__ == '__main__':
             atboot = atboot or not rsh(discover, "systemctl is-enabled pacemaker.service")
         else:
             # SYS-V
-            atboot = atboot or not rsh(discover, "chkconfig | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
+            atboot = atboot or not rsh(discover, "chkconfig --list | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
 
         Environment["at-boot"] = atboot
 
