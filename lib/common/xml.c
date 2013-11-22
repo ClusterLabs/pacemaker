@@ -88,6 +88,22 @@ typedef struct {
     const char *string;
 } filter_t;
 
+enum xml_private_flags {
+     xpf_none      = 0x000,
+     xpf_dirty     = 0x001,
+     xpf_deleted   = 0x002,
+     xpf_created   = 0x004,
+
+     xpf_tracking  = 0x010,
+};
+
+typedef struct xml_private_s 
+{
+        long check;
+        uint32_t flags;
+        GListPtr deleted_paths;
+} xml_private_t;
+
 /* *INDENT-OFF* */
 
 struct schema_s known_schemas[] = {
@@ -114,6 +130,7 @@ static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none' */
 
 #define CHUNK_SIZE 1024
+#define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
         int rc = (max);                                                 \
@@ -162,6 +179,35 @@ get_schema_path(const char *file)
     return crm_concat(base, file, '/');
 }
 
+static void
+crm_node_dirty(xmlNode *n) 
+{
+    for(; n; n = n->parent) {
+        xml_private_t *p = n->_private;
+
+        p->flags |= xpf_dirty;
+    }
+}
+
+static void
+crm_attr_dirty(xmlAttr *a) 
+{
+    xmlNode *parent = a->parent;
+    xml_private_t *p = NULL;
+
+    p = a->_private;
+    p->flags |= xpf_dirty;
+    p->flags = (p->flags & ~xpf_deleted);
+
+    p = parent->_private;
+    if(strcmp((const char *)a->name, XML_ATTR_ID) == 0) {
+        /* Imply node creation when ID is set */
+        p->flags |= (xpf_dirty|xpf_created);
+    }
+
+    crm_node_dirty(parent);
+}
+
 int get_tag_name(const char *input, size_t offset, size_t max);
 int get_attr_name(const char *input, size_t offset, size_t max);
 int get_attr_value(const char *input, size_t offset, size_t max);
@@ -188,6 +234,123 @@ crm_first_attr(xmlNode * xml)
         return NULL;
     }
     return xml->properties;
+}
+
+static void
+pcmkRegisterNode(xmlNodePtr node)
+{
+    xml_private_t *p = NULL;
+
+    /* TODO: Comment nodes? */
+    switch(node->type) {
+        case XML_ELEMENT_NODE:
+        case XML_DOCUMENT_NODE:
+        case XML_ATTRIBUTE_NODE:
+            p = calloc(1, sizeof(xml_private_t));
+            p->check = (long) 0x81726354;
+            node->_private = p;
+            break;
+        default:
+            /* Ignore */
+            break;
+    }
+
+    if(p && TRACKING_CHANGES(node)) {
+        /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
+         * not hooked up at the point we are called
+         */
+        xml_private_t *doc = node->doc->_private;
+
+        p->flags |= (xpf_dirty|xpf_created);
+        doc->flags |= xpf_dirty;
+
+        crm_node_dirty(node->parent);
+
+        if(node->type == XML_ELEMENT_NODE) {
+            p->flags |= xpf_created;
+        }
+    }
+}
+
+static void
+pcmkDeregisterNode(xmlNodePtr node)
+{
+    xml_private_t *p = node->_private;
+
+    switch(node->type) {
+        case XML_ELEMENT_NODE:
+        case XML_DOCUMENT_NODE:
+        case XML_ATTRIBUTE_NODE:
+            CRM_ASSERT(node->_private != NULL);
+            CRM_ASSERT(p->check == (long) 0x81726354);
+            free(node->_private);
+            break;
+        default:
+            break;
+    }
+}
+
+void
+xml_track_changes(xmlNode * xml) 
+{
+    ((xml_private_t *)xml->doc->_private)->flags |= xpf_tracking;
+}
+
+static void
+__xml_accept_changes(xmlNode * xml)
+{
+    xmlNode *cIter = NULL;
+    xmlAttr *pIter = NULL;
+    xml_private_t *p = xml->_private;
+
+    p->flags = xpf_none;
+
+    for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+        p = pIter->_private;
+        if(p) {
+            if(p->flags & xpf_deleted) {
+                xml_remove_prop(xml, (const char *)pIter->name);
+            } else {
+                p->flags = xpf_none;
+            }
+        }
+    }
+
+    for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
+        __xml_accept_changes(cIter);
+    }
+}
+
+void
+xml_accept_changes(xmlNode * xml)
+{
+    xmlNode *top = NULL;
+    GListPtr gIter = NULL;
+    xml_private_t *doc = NULL;
+
+    if(xml == NULL) {
+        return;
+    }
+
+    doc = xml->doc->_private;
+    top = xmlDocGetRootElement(xml->doc);
+
+    doc->flags = (doc->flags & ~xpf_tracking);
+
+    crm_debug("Logging changes %lx", doc->flags);
+
+    for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
+        crm_debug("-- %s", gIter->data);
+    }
+
+    log_data_element(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, "- ", xml, 0,
+                     xml_log_option_formatted|xml_log_option_dirty_del);
+
+    log_data_element(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, "+ ", xml, 0,
+                         xml_log_option_formatted|xml_log_option_dirty_add);
+
+    g_list_free_full(doc->deleted_paths, free);
+    __xml_accept_changes(top);
 }
 
 xmlNode *
@@ -383,6 +546,7 @@ add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
 const char *
 crm_xml_add(xmlNode * node, const char *name, const char *value)
 {
+    bool dirty = FALSE;
     xmlAttr *attr = NULL;
 
     CRM_CHECK(node != NULL, return NULL);
@@ -403,7 +567,19 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
     }
 #endif
 
+    if(TRACKING_CHANGES(node)) {
+        const char *old = crm_element_value(node, name);
+
+        if(old == NULL || value == NULL || strcmp(old, value) != 0) {
+            dirty = TRUE;
+        }
+    }
+
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
+    if(dirty) {
+        crm_attr_dirty(attr);
+    }
+
     CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
     return (char *)attr->children->content;
 }
@@ -411,6 +587,7 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
 const char *
 crm_xml_replace(xmlNode * node, const char *name, const char *value)
 {
+    bool dirty = FALSE;
     xmlAttr *attr = NULL;
     const char *old_value = NULL;
 
@@ -430,7 +607,16 @@ crm_xml_replace(xmlNode * node, const char *name, const char *value)
         return NULL;
     }
 
+    if(TRACKING_CHANGES(node)) {
+        if(old_value == NULL || value == NULL || strcmp(old_value, value) != 0) {
+            dirty = TRUE;
+        }
+    }
+
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
+    if(dirty) {
+        crm_attr_dirty(attr);
+    }
     CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
     return (char *)attr->children->content;
 }
@@ -468,6 +654,109 @@ create_xml_node(xmlNode * parent, const char *name)
     return node;
 }
 
+static inline int
+__get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
+{
+    const char *id = ID(xml);
+
+    if(offset == 0 && prefix == NULL && xml->parent) {
+        offset = __get_prefix(NULL, xml->parent, buffer, offset);
+    }
+
+    if(id) {
+        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[%s]", (const char *)xml->name, id);
+    } else if(xml->name) {
+        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s", (const char *)xml->name);
+    }
+
+    return offset;
+}
+
+static xmlNode *
+__first_xml_child_match(xmlNode *parent, const char *name, const char *id)
+{
+    xmlNode *cIter = NULL;
+
+    for (cIter = __xml_first_child(parent); cIter != NULL; cIter = __xml_next(cIter)) {
+        if(strcmp((const char *)cIter->name, name) != 0) {
+            continue;
+        } else if(id) {
+            const char *cid = ID(cIter);
+            if(cid == NULL || strcmp(cid, id) != 0) {
+                continue;
+            }
+        }
+        return cIter;
+    }
+    return NULL;
+}
+
+void
+__xml_free_path(xmlNode *top, const char *key);
+
+void
+__xml_free_path(xmlNode *top, const char *key)
+{
+    xmlNode *target = top;
+    char *id = malloc(XML_BUFFER_SIZE);
+    char *tag = malloc(XML_BUFFER_SIZE);
+    char *section = malloc(XML_BUFFER_SIZE);
+    char *current = strdup(key);
+    char *remainder = malloc(XML_BUFFER_SIZE);
+    int rc = 0;
+
+    while(current) {
+        rc = sscanf (current, "/%[^/]%s", section, remainder);
+        if(rc <= 0) {
+            crm_trace("Done");
+            break;
+
+        } else if(rc > 2) {
+            crm_trace("Aborting on %s", current);
+            target = NULL;
+            break;
+
+        } else {
+            int f = sscanf (section, "%[^[][%s]", tag, id);
+
+            switch(f) {
+                case 1:
+                    target = __first_xml_child_match(target, tag, NULL);
+                    break;
+                case 2:
+                    target = __first_xml_child_match(target, tag, id);
+                    break;
+                default:
+                    crm_trace("Aborting on %s", section);
+                    target = NULL;
+                    break;
+            }
+
+            if(rc == 1 || target == NULL) {
+                crm_trace("Done");
+                break;
+
+            } else {
+                char *tmp = current;
+                current = remainder;
+                remainder = tmp;
+            }
+        }
+    }
+
+    if(target) {
+        char *path = (char *)xmlGetNodePath(target);
+
+        crm_trace("Destroying %s for %s", path, key);
+        free_xml(target);
+        free(path);
+    }
+
+    free(remainder);
+    free(current);
+    free(tag);
+}
+
 void
 free_xml(xmlNode * child)
 {
@@ -484,6 +773,18 @@ free_xml(xmlNode * child)
             xmlFreeDoc(doc);
 
         } else {
+            if(TRACKING_CHANGES(child)) {
+                int offset = 0;
+                char buffer[XML_BUFFER_SIZE];
+                xml_private_t *p = doc->_private;
+
+                if(__get_prefix(NULL, child, buffer, offset) > 0) {
+                    crm_notice("Deleting %s %p", buffer, child);
+                    p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
+                    p->flags |= xpf_dirty;
+                }
+            }
+
             /* Free this particular subtree
              * Make sure to unlink it from the parent first
              */
@@ -1074,6 +1375,91 @@ log_data_element(int log_level, const char *file, const char *function, int line
 
     name = crm_element_name(data);
 
+    if(is_set(options, xml_log_option_dirty_add)) {
+        xml_private_t *p = data->_private;
+
+        if(is_set(p->flags, xpf_dirty) && is_set(p->flags, xpf_created)) {
+            /* Continue and log full subtree */
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '+';
+            prefix = prefix_m;
+            goto dolog;
+
+        } else if(is_set(p->flags, xpf_dirty)) {
+            char *spaces = calloc(80, 1);
+            int s_count = 0, s_max = 80;
+
+            insert_prefix(options, &spaces, &s_count, &s_max, depth);
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '+';
+
+            for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+
+                p = pIter->_private;
+                if(is_set(p->flags, xpf_dirty)) {
+                    const char *aname = (const char*)pIter->name;
+                    const char *value = crm_element_value(data, aname);
+
+                    if(is_set(p->flags, xpf_created)) {
+                        do_crm_log_alias(log_level, file, function, line,
+                                         "%s %s@%s=%s", prefix_m, spaces, aname, value);
+                    } else {
+                        do_crm_log_alias(log_level, file, function, line,
+                                         "%s %s@%s=%s", prefix, spaces, aname, value);
+                    }
+                }
+            }
+            free(spaces);
+            free(prefix_m);
+            prefix_m = NULL;
+            goto dolog;
+
+        } else {
+            for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+                log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
+            }
+            return;
+        }
+
+    } else if(is_set(options, xml_log_option_dirty_del)) {
+        xml_private_t *p = data->_private;
+
+        if(is_set(p->flags, xpf_dirty)) {
+            char *spaces = calloc(80, 1);
+            int s_count = 0, s_max = 80;
+
+            insert_prefix(options, &spaces, &s_count, &s_max, depth);
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '-';
+
+            for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+
+                p = pIter->_private;
+                if(is_set(p->flags, xpf_deleted)) {
+                    char *path = (char *)xmlGetNodePath(data);
+                    const char *aname = (const char*)pIter->name;
+                    const char *value = crm_element_value(data, aname);
+
+                    do_crm_log_alias(log_level, file, function, line,
+                                     "%s %s@%s=%s", prefix_m, spaces, aname, value);
+                    free(path);
+                }
+            }
+            for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+                log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
+            }
+            free(prefix_m);
+            free(spaces);
+            return;
+
+        } else {
+            for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+                log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
+            }
+            return;
+        }
+    }
+
     if (is_set(options, xml_log_option_formatted)) {
         if (is_set(options, xml_log_option_diff_plus)
             && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
@@ -1100,6 +1486,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
         return;
     }
 
+  dolog:
     insert_prefix(options, &buffer, &offset, &max, depth);
     if(data->type == XML_COMMENT_NODE) {
         buffer_print(buffer, max, offset, "<!--");
@@ -1467,7 +1854,15 @@ crm_element_value_copy(xmlNode * data, const char *name)
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
-    xmlUnsetProp(obj, (const xmlChar *)name);
+    if(TRACKING_CHANGES(obj)) {
+        /* Leave in place (marked for removal) until after the diff is calculated */
+        xml_private_t *p = obj->_private;
+
+        p->flags |= xpf_dirty;
+
+    } else {
+        xmlUnsetProp(obj, (const xmlChar *)name);
+    }
 }
 
 void
@@ -2707,6 +3102,10 @@ crm_xml_init(void)
          * less than 1 second.
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
+
+        /* Populate and free the _private field when nodes are created and destroyed */
+        xmlDeregisterNodeDefault(pcmkDeregisterNode);
+        xmlRegisterNodeDefault(pcmkRegisterNode);
     }
 }
 
@@ -3347,3 +3746,4 @@ crm_element_value(xmlNode * data, const char *name)
     }
     return (const char *)attr->children->content;
 }
+

@@ -251,4 +251,8 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     return xpathObj->nodesetval->nodeNr;
 }
 
+void xml_track_changes(xmlNode * xml);
+void xml_accept_changes(xmlNode * xml);
+
+
 #endif

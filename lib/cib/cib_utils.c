@@ -440,7 +440,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     scratch = copy_xml(current_cib);
+    xml_track_changes(scratch);
     rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
+    xml_accept_changes(scratch);
 
     CRM_CHECK(current_cib != scratch, return -EINVAL);
 

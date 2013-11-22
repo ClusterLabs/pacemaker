@@ -41,12 +41,14 @@ extern unsigned int crm_trace_nonlog;
 
 enum xml_log_options
 {
-    xml_log_option_filtered   = 0x001,
-    xml_log_option_formatted  = 0x002,
-    xml_log_option_diff_plus  = 0x010,
-    xml_log_option_diff_minus = 0x020,
-    xml_log_option_diff_short = 0x040,
-    xml_log_option_diff_all   = 0x100,
+    xml_log_option_filtered   = 0x0001,
+    xml_log_option_formatted  = 0x0002,
+    xml_log_option_diff_plus  = 0x0010,
+    xml_log_option_diff_minus = 0x0020,
+    xml_log_option_diff_short = 0x0040,
+    xml_log_option_diff_all   = 0x0100,
+    xml_log_option_dirty_add  = 0x1000,
+    xml_log_option_dirty_del  = 0x2000,
 };
 
 void crm_enable_blackbox(int nsig);
