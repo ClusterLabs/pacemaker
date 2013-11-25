@@ -442,7 +442,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     scratch = copy_xml(current_cib);
     xml_track_changes(scratch);
     rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
-    xml_accept_changes(scratch);
+
+    if(is_document_dirty(scratch)) {
+        xmlNode * p = xml_create_patchset(current_cib, scratch);
+        crm_log_xml_debug(p, "Patchset");
+        free_xml(p);
+    } else {
+        xml_accept_changes(scratch, NULL);
+    }
 
     CRM_CHECK(current_cib != scratch, return -EINVAL);
 

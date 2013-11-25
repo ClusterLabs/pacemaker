@@ -57,6 +57,8 @@
 void
 xml_log(int priority, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
+static inline int
+__get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset);
 
 void
 xml_log(int priority, const char *fmt, ...)
@@ -296,33 +298,173 @@ xml_track_changes(xmlNode * xml)
     ((xml_private_t *)xml->doc->_private)->flags |= xpf_tracking;
 }
 
+bool is_document_dirty(xmlNode *xml) 
+{
+    if(xml != NULL && xml->doc && xml->doc->_private) {
+        xml_private_t *doc = xml->doc->_private;
+
+        return is_set(doc->flags, xpf_dirty);
+    }
+    return FALSE;
+}
+
+
+
+
+/*
+<diff format="2.0">
+  <version>
+    <source admin_epoch="1" epoch="2" num_updates="3"/>
+    <target admin_epoch="1" epoch="3" num_updates="0"/>
+  </version>
+  <change operation="add" xpath="/cib/configuration/nodes">
+    <node id="node2" uname="node2" description="foo"/>
+  </change>
+  <change operation="add" xpath="/cib/configuration/nodes/node[node2]">
+    <instance_attributes id="nodes-node"><!-- NOTE: can be a full tree -->
+      <nvpair id="nodes-node2-ram" name="ram" value="1024M"/>
+    </instance_attributes>
+  </change>
+  <change operation="update" xpath="/cib/configuration/nodes[@id='node2']">
+    <change-list>
+      <change-attr operation="set" name="type" value="member"/>
+      <change-attr operation="unset" name="description"/>
+    </change-list>
+    <change-result>
+      <node id="node2" uname="node2" type="member"/><!-- NOTE: not recursive -->
+    </change-result>
+  </change>
+  <change operation="delete" xpath="/cib/configuration/nodes/node[@id='node3'] /">
+  <change operation="update" xpath="/cib/configuration/resources/group[@id='g1']">
+    <change-list>
+      <change-attr operation="set" name="description" value="some grabage here"/>
+    </change-list>
+    <change-result>
+      <group id="g1" description="some grabage here"/><!-- NOTE: not recursive -->
+    </change-result>
+  </change>
+  <change operation="update" xpath="/cib/status/node_state[@id='node2]/lrm[@id='node2']/lrm_resources/lrm_resource[@id='Fence']">
+    <change-list>
+      <change-attr operation="set" name="oper" value="member"/>
+      <change-attr operation="set" name="operation_key" value="Fence_start_0"/>
+      <change-attr operation="set" name="operation" value="start"/>
+      <change-attr operation="set" name="transition-key" value="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+      <change-attr operation="set" name="transition-magic" value="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+      <change-attr operation="set" name="call-id" value="2"/>
+      <change-attr operation="set" name="rc-code" value="0"/>
+    </change-list>
+    <change-result>
+      <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+    </change-result>
+  </change>
+</diff>
+ */
+
 static void
-__xml_accept_changes(xmlNode * xml)
+__xml_accept_changes(xmlNode * xml, xmlNode *patchset)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
+    xmlNode *change = NULL;
     xml_private_t *p = xml->_private;
 
     p->flags = xpf_none;
 
+    if(patchset && is_set(p->flags, xpf_created)) {
+        int offset = 0;
+        char buffer[XML_BUFFER_SIZE];
+
+        if(__get_prefix(NULL, xml, buffer, offset) > 0) {
+            change = create_xml_node(patchset, XML_DIFF_CHANGE);
+
+            crm_xml_add(change, XML_DIFF_OP, "add");
+            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            add_node_copy(change, xml);
+        }
+
+        return;
+    }
+
     for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+        xmlNode *attr = NULL;
+
         p = pIter->_private;
-        if(p) {
-            if(p->flags & xpf_deleted) {
-                xml_remove_prop(xml, (const char *)pIter->name);
-            } else {
-                p->flags = xpf_none;
+        if(is_not_set(p->flags, xpf_deleted) && is_not_set(p->flags, xpf_dirty)) {
+            continue;
+        }
+
+        if(change == NULL) {
+            int offset = 0;
+            char buffer[XML_BUFFER_SIZE];
+
+            if(__get_prefix(NULL, xml, buffer, offset) > 0) {
+                change = create_xml_node(patchset, XML_DIFF_CHANGE);
+
+                crm_xml_add(change, XML_DIFF_OP, "modify");
+                crm_xml_add(change, XML_DIFF_PATH, buffer);
+
+                change = create_xml_node(change, XML_DIFF_LIST);
             }
+        }
+
+        attr = create_xml_node(change, XML_DIFF_ATTR);
+
+        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, (const char *)pIter->name);
+        if(p->flags & xpf_deleted) {
+            crm_xml_add(attr, XML_DIFF_OP, "unset");
+            xml_remove_prop(xml, (const char *)pIter->name);
+
+        } else {
+            const char *value = crm_element_value(xml, (const char *)pIter->name);
+
+            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
+            crm_xml_add(attr, XML_DIFF_OP, "set");
+            p->flags = xpf_none;
         }
     }
 
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
-        __xml_accept_changes(cIter);
+        __xml_accept_changes(cIter, patchset);
     }
 }
 
+xmlNode *
+xml_create_patchset(xmlNode *source, xmlNode *target)
+{
+    int lpc = 0;
+    xmlNode *v = NULL;
+    xmlNode *version = NULL;
+    xmlNode *patchset = NULL;
+    const char *vfields[] = {
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+        XML_ATTR_GENERATION_ADMIN,
+    };
+
+    patchset = create_xml_node(NULL, XML_TAG_DIFF);
+    crm_xml_add(patchset, "format", "2.0");
+
+    version = create_xml_node(patchset, XML_DIFF_VERSION);
+
+    v = create_xml_node(version, XML_DIFF_VSOURCE);
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++){
+        const char *value = crm_element_value(source, vfields[lpc]);
+        crm_xml_add(v, vfields[lpc], value);
+    }
+
+    v = create_xml_node(version, XML_DIFF_VTARGET);
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++){
+        const char *value = crm_element_value(target, vfields[lpc]);
+        crm_xml_add(v, vfields[lpc], value);
+    }
+
+    xml_accept_changes(target, patchset);
+
+    return patchset;
+}
+
 void
-xml_accept_changes(xmlNode * xml)
+xml_accept_changes(xmlNode * xml, xmlNode *patchset)
 {
     xmlNode *top = NULL;
     GListPtr gIter = NULL;
@@ -337,10 +479,19 @@ xml_accept_changes(xmlNode * xml)
 
     doc->flags = (doc->flags & ~xpf_tracking);
 
-    crm_debug("Logging changes %lx", doc->flags);
+    if(is_not_set(doc->flags, xpf_dirty)) {
+        return;
+    }
 
+    crm_debug("Logging changes %lx", doc->flags);
     for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
         crm_debug("-- %s", gIter->data);
+        if(patchset) {
+            xmlNode *change = create_xml_node(patchset, XML_DIFF_CHANGE);
+
+            crm_xml_add(change, XML_DIFF_OP, "delete");
+            crm_xml_add(change, XML_DIFF_PATH, gIter->data);
+        }
     }
 
     log_data_element(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, "- ", xml, 0,
@@ -349,8 +500,8 @@ xml_accept_changes(xmlNode * xml)
     log_data_element(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, "+ ", xml, 0,
                          xml_log_option_formatted|xml_log_option_dirty_add);
 
+    __xml_accept_changes(top, patchset);
     g_list_free_full(doc->deleted_paths, free);
-    __xml_accept_changes(top);
 }
 
 xmlNode *
@@ -664,7 +815,7 @@ __get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
     }
 
     if(id) {
-        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[%s]", (const char *)xml->name, id);
+        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[@id=%s]", (const char *)xml->name, id);
     } else if(xml->name) {
         offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s", (const char *)xml->name);
     }

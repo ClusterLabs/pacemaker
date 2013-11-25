@@ -252,7 +252,8 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
 }
 
 void xml_track_changes(xmlNode * xml);
-void xml_accept_changes(xmlNode * xml);
-
+void xml_accept_changes(xmlNode * xml, xmlNode *patchset);
+xmlNode *xml_create_patchset(xmlNode *source, xmlNode *target);
+bool is_document_dirty(xmlNode *xml);
 
 #endif
