@@ -237,6 +237,7 @@ static bool throttle_cib_load(float *load)
                     &pid, comm, &state,
                     &ppid, &pgrp, &session, &tty_nr, &tpgid,
                     &flags, &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime);
+        free(comm);
 
         if(rc != 15) {
             crm_err("Only %d of 15 fields found in %s", rc, loadfile);
