@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
@@ -130,6 +131,10 @@ static filter_t filter[] = {
 
 static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none' */
+static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
+static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
+static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
+static void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 
 #define CHUNK_SIZE 1024
 #define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
@@ -308,9 +313,6 @@ bool is_document_dirty(xmlNode *xml)
     return FALSE;
 }
 
-
-
-
 /*
 <diff format="2.0">
   <version>
@@ -377,7 +379,7 @@ __xml_accept_changes(xmlNode * xml, xmlNode *patchset)
         if(__get_prefix(NULL, xml, buffer, offset) > 0) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
-            crm_xml_add(change, XML_DIFF_OP, "add");
+            crm_xml_add(change, XML_DIFF_OP, "create");
             crm_xml_add(change, XML_DIFF_PATH, buffer);
             add_node_copy(change, xml);
         }
@@ -417,9 +419,9 @@ __xml_accept_changes(xmlNode * xml, xmlNode *patchset)
         } else {
             const char *value = crm_element_value(xml, (const char *)pIter->name);
 
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
-            crm_xml_add(attr, XML_DIFF_OP, "set");
             p->flags = xpf_none;
+            crm_xml_add(attr, XML_DIFF_OP, "set");
+            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
         }
     }
 
@@ -428,8 +430,121 @@ __xml_accept_changes(xmlNode * xml, xmlNode *patchset)
     }
 }
 
-xmlNode *
-xml_create_patchset(xmlNode *source, xmlNode *target)
+static bool
+is_config_change(xmlNode *xml)
+{
+    GListPtr gIter = NULL;
+    xml_private_t *p = NULL;
+    xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
+
+    if(config) {
+        p = config->_private;
+    }
+    if(p && is_set(p->flags, xpf_dirty)) {
+        return TRUE;
+    }
+
+    if(xml->doc && xml->doc->_private) {
+        p = xml->doc->_private;
+        for(gIter = p->deleted_paths; gIter; gIter = gIter->next) {
+            char *path = gIter->data;
+
+            if(strstr(path, "/"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION) != NULL) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+static void
+xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
+{
+    xmlNode *cib = NULL;
+    xmlNode *diff_child = NULL;
+
+    const char *tag = NULL;
+    const char *value = NULL;
+
+    if (local_diff == NULL) {
+        crm_trace("Nothing to do");
+        return;
+    }
+
+    tag = "diff-removed";
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    tag = XML_ATTR_GENERATION_ADMIN;
+    value = crm_element_value(last, tag);
+    crm_xml_add(diff_child, tag, value);
+    if (changed) {
+        crm_xml_add(cib, tag, value);
+    }
+
+    tag = XML_ATTR_GENERATION;
+    value = crm_element_value(last, tag);
+    crm_xml_add(diff_child, tag, value);
+    if (changed) {
+        crm_xml_add(cib, tag, value);
+    }
+
+    tag = XML_ATTR_NUMUPDATES;
+    value = crm_element_value(last, tag);
+    crm_xml_add(cib, tag, value);
+    crm_xml_add(diff_child, tag, value);
+
+    tag = "diff-added";
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    if (next) {
+        xmlAttrPtr xIter = NULL;
+
+        for (xIter = next->properties; xIter; xIter = xIter->next) {
+            const char *p_name = (const char *)xIter->name;
+            const char *p_value = crm_element_value(next, p_name);
+
+            xmlSetProp(cib, (const xmlChar *)p_name, (const xmlChar *)p_value);
+        }
+    }
+
+    crm_log_xml_explicit(local_diff, "Repaired-diff");
+}
+
+static xmlNode *
+xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config)
+{
+    const char *version = crm_element_value(target, XML_ATTR_CRM_VERSION);
+    const char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+    xmlNode *patchset = diff_xml_object(source, target, TRUE);
+
+    xml_repair_v1_diff(source, target, patchset, config);
+    crm_xml_add(patchset, XML_ATTR_DIGEST, digest);
+    crm_xml_add_int(patchset, "format", 1);
+
+    return patchset;
+}
+
+static xmlNode *
+xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     xmlNode *v = NULL;
@@ -442,25 +557,66 @@ xml_create_patchset(xmlNode *source, xmlNode *target)
     };
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
-    crm_xml_add(patchset, "format", "2.0");
+    crm_xml_add_int(patchset, "format", 2);
 
     version = create_xml_node(patchset, XML_DIFF_VERSION);
 
     v = create_xml_node(version, XML_DIFF_VSOURCE);
     for(lpc = 0; lpc < DIMOF(vfields); lpc++){
         const char *value = crm_element_value(source, vfields[lpc]);
+
+        if(value == NULL) {
+            value = "1";
+        }
         crm_xml_add(v, vfields[lpc], value);
     }
 
     v = create_xml_node(version, XML_DIFF_VTARGET);
     for(lpc = 0; lpc < DIMOF(vfields); lpc++){
         const char *value = crm_element_value(target, vfields[lpc]);
+
+        if(value == NULL) {
+            value = "1";
+        }
         crm_xml_add(v, vfields[lpc], value);
     }
 
     xml_accept_changes(target, patchset);
 
     return patchset;
+}
+
+xmlNode *
+xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
+{
+    int counter = 0;
+    bool config = FALSE;
+
+    config = is_config_change(target);
+    if(config_changed) {
+        *config_changed = config;
+    }
+
+    if(manage_version && config) {
+        crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
+
+        crm_element_value_int(target, XML_ATTR_GENERATION, &counter);
+        crm_xml_add_int(target, XML_ATTR_GENERATION, counter+1);
+
+    } else if(manage_version) {
+        crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
+        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, counter+1);
+    }
+
+    switch(format) {
+        case 1:
+            return xml_create_patchset_v1(source, target, config);
+        case 2:
+            return xml_create_patchset_v2(source, target);
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return NULL;
+    }
 }
 
 void
@@ -502,6 +658,275 @@ xml_accept_changes(xmlNode * xml, xmlNode *patchset)
 
     __xml_accept_changes(top, patchset);
     g_list_free_full(doc->deleted_paths, free);
+}
+
+/* Simplified version for applying v1-style XML patches */
+static void
+__subtract_xml_object(xmlNode * target, xmlNode * patch)
+{
+    xmlNode *patch_child = NULL;
+    xmlNode *target_child = NULL;
+    xmlAttrPtr xIter = NULL;
+
+    const char *id = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
+
+    if (target == NULL || patch == NULL) {
+        return;
+    }
+
+    if (target->type == XML_COMMENT_NODE) {
+        gboolean dummy;
+
+        subtract_xml_comment(target->parent, target, patch, &dummy);
+    }
+
+    id = ID(target);
+    name = crm_element_name(target);
+    CRM_CHECK(name != NULL, return);
+    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
+    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
+
+    /* check for XML_DIFF_MARKER in a child */
+    value = crm_element_value(patch, XML_DIFF_MARKER);
+    if (value != NULL && strcmp(value, "removed:top") == 0) {
+        crm_trace("We are the root of the deletion: %s.id=%s", name, id);
+        free_xml(target);
+        return;
+    }
+
+    for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
+        const char *p_name = (const char *)xIter->name;
+
+        xml_remove_prop(target, p_name);
+    }
+    /* Restore the id field, it is never allowed to change */
+    crm_xml_add(target, XML_ATTR_ID, id);
+
+    /* changes to child objects */
+    for (target_child = __xml_first_child(target); target_child != NULL;
+         target_child = __xml_next(target_child)) {
+
+        if (target_child->type == XML_COMMENT_NODE) {
+            patch_child = find_xml_comment(patch, target_child);
+
+        } else {
+            patch_child = find_entity(patch, crm_element_name(target_child), ID(target_child));
+        }
+
+        __subtract_xml_object(target_child, patch_child);
+    }
+}
+
+static void
+__add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
+{
+    xmlNode *patch_child = NULL;
+    xmlNode *target_child = NULL;
+    xmlAttrPtr xIter = NULL;
+
+    const char *id = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
+
+    if (patch == NULL) {
+        return;
+    } else if (parent == NULL && target == NULL) {
+        return;
+    }
+
+    if (target->type == XML_COMMENT_NODE) {
+        add_xml_comment(parent, target, patch);
+    }
+
+    id = ID(target);
+    name = crm_element_name(target);
+    CRM_CHECK(name != NULL, return);
+    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
+    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
+
+    /* check for XML_DIFF_MARKER in a child */
+    value = crm_element_value(patch, XML_DIFF_MARKER);
+    if (target == NULL
+        && value != NULL
+        && strcmp(value, "removed:top") == 0) {
+        id = ID(patch);
+        name = crm_element_name(patch);
+        crm_trace("We are the root of the addition: %s.id=%s", name, id);
+        add_node_copy(parent, patch);
+        return;
+
+    } else if(target == NULL) {
+        id = ID(patch);
+        name = crm_element_name(patch);
+        crm_err("Could not locate: %s.id=%s", name, id);
+        return;
+    }
+
+    for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
+        const char *p_name = (const char *)xIter->name;
+        const char *p_value = crm_element_value(patch, p_name);
+
+        crm_xml_add(target, p_name, p_value);
+    }
+
+    /* changes to child objects */
+    for (patch_child = __xml_first_child(patch); patch_child != NULL;
+         patch_child = __xml_next(patch_child)) {
+
+        if (patch_child->type == XML_COMMENT_NODE) {
+            target_child = find_xml_comment(target, patch_child);
+
+        } else {
+            target_child = find_entity(target, crm_element_name(patch_child), ID(patch_child));
+        }
+
+        __add_xml_object(target, target_child, patch_child);
+    }
+}
+
+static int
+xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset) 
+{
+    gboolean rc = TRUE;
+    int root_nodes_seen = 0;
+    static struct qb_log_callsite *digest_cs = NULL;
+    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    const char *version = crm_element_value(patchset, XML_ATTR_CRM_VERSION);
+
+    xmlNode *child_diff = NULL;
+    xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
+    xmlNode *removed = find_xml_node(patchset, "diff-removed", FALSE);
+    xmlNode *old = copy_xml(xml);
+
+    if (digest_cs == NULL) {
+        digest_cs =
+            qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__,
+                                crm_trace_nonlog);
+    }
+
+    crm_trace("Substraction Phase");
+    for (child_diff = __xml_first_child(removed); child_diff != NULL;
+         child_diff = __xml_next(child_diff)) {
+        CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
+        if (root_nodes_seen == 0) {
+            __subtract_xml_object(xml, child_diff);
+        }
+        root_nodes_seen++;
+    }
+
+    if (root_nodes_seen > 1) {
+        crm_err("(-) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
+        rc = FALSE;
+    }
+
+    root_nodes_seen = 0;
+    crm_trace("Addition Phase");
+    if (rc) {
+        xmlNode *child_diff = NULL;
+
+        for (child_diff = __xml_first_child(added); child_diff != NULL;
+             child_diff = __xml_next(child_diff)) {
+            CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
+            if (root_nodes_seen == 0) {
+                __add_xml_object(NULL, xml, child_diff);
+            }
+            root_nodes_seen++;
+        }
+    }
+
+    if (root_nodes_seen > 1) {
+        crm_err("(+) Diffs cannot contain more than one change set..." " saw %d", root_nodes_seen);
+        rc = FALSE;
+
+    } else if (rc && digest) {
+        char *new_digest = NULL;
+
+        purge_diff_markers(xml);       /* Purge now so the diff is ok */
+        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
+        if (safe_str_neq(new_digest, digest)) {
+            crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
+            rc = FALSE;
+
+            crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
+            if (digest_cs && digest_cs->targets) {
+                save_xml_to_file(old, "diff:original", NULL);
+                save_xml_to_file(patchset, "diff:input", NULL);
+                save_xml_to_file(xml, "diff:new", NULL);
+            }
+
+        } else {
+            crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
+        }
+        free(new_digest);
+
+    } else if (rc) {
+        purge_diff_markers(xml);       /* Purge now so the diff is ok */
+    }
+
+    free_xml(old);
+
+    return rc;
+}
+
+static int
+xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset) 
+{
+    xmlNode *change = NULL;
+    for (change = __xml_first_child(xml); change != NULL; change = __xml_next(change)) {
+        xmlNode *match = NULL;
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        crm_trace("Performing %s on %s", op, xpath);
+        match = get_xpath_object(xpath, xml, LOG_ERR);
+
+        if(match == NULL) {
+            continue;
+
+        } else if(strcmp(op, "create") == 0) {
+            add_node_copy(match, change->children);
+
+        } else if(strcmp(op, "delete") == 0) {
+            free_xml(match);
+
+        } else if(strcmp(op, "modify") == 0) {
+            xmlNode *attr = NULL;
+            for (attr = __xml_first_child(xml); attr != NULL; attr = __xml_next(attr)) {
+                const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+
+                op = crm_element_value(attr, XML_DIFF_OP);
+                if(strcmp(op, "set") == 0) {
+                    const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+                    crm_xml_add(match, name, value);
+                } else if(strcmp(op, "unset") == 0) {
+                    xml_remove_prop(match, name);
+                }
+            }
+
+        } else {
+            crm_err("Unknown operation: %s", op);
+        }
+    }
+    return pcmk_ok;
+}
+
+int
+xml_apply_patchset(xmlNode *xml, xmlNode *patchset) 
+{
+    int format = 1;
+
+    crm_element_value_int(patchset, "format", &format);
+    switch(format) {
+        case 1:
+            return xml_apply_patchset_v1(xml, patchset);
+        case 2:
+            return xml_apply_patchset_v2(xml, patchset);
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return -EINVAL;
+    }
 }
 
 xmlNode *
@@ -815,7 +1240,7 @@ __get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
     }
 
     if(id) {
-        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[@id=%s]", (const char *)xml->name, id);
+        offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s[@id='%s']", (const char *)xml->name, id);
     } else if(xml->name) {
         offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "/%s", (const char *)xml->name);
     }
@@ -2179,6 +2604,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
 xmlNode *
 diff_xml_object(xmlNode * old, xmlNode * new, gboolean suppress)
 {
+    /* beekhof */
     xmlNode *tmp1 = NULL;
     xmlNode *diff = create_xml_node(NULL, "diff");
     xmlNode *removed = create_xml_node(diff, "diff-removed");
@@ -2383,7 +2809,6 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     if (value != NULL && strcmp(value, "removed:top") == 0) {
         crm_trace("We are the root of the deletion: %s.id=%s", name, id);
         *changed = TRUE;
-        free_xml(diff);
         return NULL;
     }
 

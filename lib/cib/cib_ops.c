@@ -866,17 +866,6 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     return config_changes;
 }
 
-xmlNode *
-diff_cib_object(xmlNode * old_cib, xmlNode * new_cib, gboolean suppress)
-{
-    xmlNode *diff = NULL;
-    gboolean changed = cib_config_changed(old_cib, new_cib, &diff);
-
-    fix_cib_diff(old_cib, new_cib, diff, changed);
-
-    return diff;
-}
-
 int
 cib_process_xpath(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)

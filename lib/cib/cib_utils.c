@@ -331,94 +331,18 @@ createEmptyCib(void)
     return cib_root;
 }
 
-void
-fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
-{
-    xmlNode *cib = NULL;
-    xmlNode *diff_child = NULL;
-
-    const char *tag = NULL;
-    const char *value = NULL;
-
-    if (local_diff == NULL) {
-        crm_trace("Nothing to do");
-        return;
-    }
-
-    tag = "diff-removed";
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    tag = XML_ATTR_GENERATION_ADMIN;
-    value = crm_element_value(last, tag);
-    crm_xml_add(diff_child, tag, value);
-    if (changed) {
-        crm_xml_add(cib, tag, value);
-    }
-
-    tag = XML_ATTR_GENERATION;
-    value = crm_element_value(last, tag);
-    crm_xml_add(diff_child, tag, value);
-    if (changed) {
-        crm_xml_add(cib, tag, value);
-    }
-
-    tag = XML_ATTR_NUMUPDATES;
-    value = crm_element_value(last, tag);
-    crm_xml_add(cib, tag, value);
-    crm_xml_add(diff_child, tag, value);
-
-    tag = "diff-added";
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    if (next) {
-        xmlAttrPtr xIter = NULL;
-
-        for (xIter = next->properties; xIter; xIter = xIter->next) {
-            const char *p_name = (const char *)xIter->name;
-            const char *p_value = crm_element_value(next, p_name);
-
-            xmlSetProp(cib, (const xmlChar *)p_name, (const xmlChar *)p_value);
-        }
-    }
-
-    crm_log_xml_explicit(local_diff, "Repaired-diff");
-}
-
 int
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
                gboolean manage_counters, gboolean * config_changed,
                xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output)
 {
-
     int rc = pcmk_ok;
     gboolean check_dtd = TRUE;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
 
-    char *new_digest = NULL;
     const char *new_version = NULL;
-
-    static char *last_digest = NULL;
-    static unsigned int dtd_throttle = 0;
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -442,14 +366,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     scratch = copy_xml(current_cib);
     xml_track_changes(scratch);
     rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
-
-    if(is_document_dirty(scratch)) {
-        xmlNode * p = xml_create_patchset(current_cib, scratch);
-        crm_log_xml_debug(p, "Patchset");
-        free_xml(p);
-    } else {
-        xml_accept_changes(scratch, NULL);
-    }
 
     CRM_CHECK(current_cib != scratch, return -EINVAL);
 
@@ -503,43 +419,23 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
-    /* The diff calculation in cib_config_changed() accounts for 25% of the
-     * CIB's total CPU usage on the DC
-     *
-     * RNG validation on the otherhand, accounts for only 9%...
-     */
-    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
+    if(is_document_dirty(scratch)) {
+        xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        crm_log_xml_debug(p, "Patchset");
+        free_xml(p);
 
-    crm_trace("Updating version tuple: %s", manage_counters ? "true" : "false");
-    if (manage_counters == FALSE) {
-        if (dtd_throttle++ % 20) {
-            /* Throttle the amount of costly validation we perform due to slave updates.
-             * The master already validated it...
-             */
-            check_dtd = FALSE;
-        }
-
-    } else if (is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-        /* Fast-track changes connections which wont be broadcasting anywhere */
-        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-        goto done;
-
-    } else if (*config_changed) {
-        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-        cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
-
-    } else if (local_diff) {
-        cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-        if (dtd_throttle++ % 20) {
-            /* Throttle the amount of costly validation we perform due to status updates
-             * a) we don't really care whats in the status section
-             * b) we don't validate any of it's contents at the moment anyway
-             */
-            check_dtd = FALSE;
-        }
+    } else {
+        xml_accept_changes(scratch, NULL);
     }
 
-    new_digest = calculate_xml_versioned_digest(scratch, FALSE, TRUE, new_version);
+    local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
+    if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+        /* Throttle the amount of costly validation we perform due to status updates
+         * a) we don't really care whats in the status section
+         * b) we don't validate any of it's contents at the moment anyway
+         */
+        check_dtd = FALSE;
+    }
 
     /* === scratch must not be modified after this point ===
      * Exceptions, anything in:
@@ -552,59 +448,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      { 0, XML_ATTR_UPDATE_USER },
      };
      */
-
-    if (local_diff == NULL) {
-        /* 50-60% of updates will not result in a change
-         *
-         * We used to bump the version and pretend a change occurred,
-         * this saved 15% CPU on the DC but turned out to be a bad
-         * idea for the slaves which had to process hundreds of
-         * "empty" updates.
-         *
-         * Now we only do it if the digests don't match (ie. after an
-         * ordering change) and we at least cache the previous digest
-         *
-         */
-
-        check_dtd = FALSE;      /* Nothing to check */
-
-        if (last_digest == NULL) {
-            crm_trace("No reference point for ordering test");
-
-        } else if (crm_str_eq(new_digest, last_digest, TRUE) == FALSE) {
-
-            crm_notice("Configuration ordering change detected");
-            cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-
-            crm_trace("Old: %s, New: %s", last_digest, new_digest);
-            /*
-               crm_log_xml_trace(current_cib, "Old");
-               crm_log_xml_trace(scratch, "New");
-               crm_log_xml_trace(req, "Re-order");
-               crm_write_blackbox(0, NULL);
-             */
-
-            crm_trace("Recalculating the digest now that we modified %s and %s",
-                      XML_ATTR_GENERATION, XML_ATTR_NUMUPDATES);
-            free(new_digest);
-            new_digest = calculate_xml_versioned_digest(scratch, FALSE, TRUE, new_version);
-
-            /* Create a fake diff so that notifications, which include a _digest_,
-             * will be sent to our peers
-             */
-            local_diff = create_xml_node(NULL, "diff");
-            crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-            create_xml_node(local_diff, "diff-removed");
-            create_xml_node(local_diff, "diff-added");
-
-        } else {
-            /* Usually these are attrd re-updates */
-            crm_log_xml_explicit(req, "Non-change");
-        }
-    }
-
-    free(last_digest);
-    last_digest = new_digest;
 
     if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
         char *now_str = NULL;
@@ -638,19 +481,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    if (diff != NULL && local_diff != NULL) {
-        /* Only fix the diff if we'll return it... */
-        crm_trace("Ensuring the diff is accurate");
-        fix_cib_diff(current_cib, scratch, local_diff, *config_changed);
-
-        crm_trace("Adding digest %s to target %p", new_digest, scratch);
-        crm_xml_add(local_diff, XML_ATTR_DIGEST, new_digest);
-
-        *diff = local_diff;
-        local_diff = NULL;
-    }
-
-  done:
     crm_trace("Perform validation: %s", check_dtd ? "true" : "false");
     if (rc == pcmk_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
         const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
@@ -659,8 +489,13 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         rc = -pcmk_err_dtd_validation;
     }
 
+  done:
     *result_cib = scratch;
-    free_xml(local_diff);
+    if(diff) {
+        *diff = local_diff;
+    } else {
+        free_xml(local_diff);
+    }
     crm_trace("Done");
     return rc;
 }
