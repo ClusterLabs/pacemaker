@@ -192,7 +192,10 @@ crm_node_dirty(xmlNode *n)
     for(; n; n = n->parent) {
         xml_private_t *p = n->_private;
 
-        p->flags |= xpf_dirty;
+        if(p) {
+            /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
+            p->flags |= xpf_dirty;
+        }
     }
 }
 
@@ -259,6 +262,7 @@ pcmkRegisterNode(xmlNodePtr node)
             break;
         default:
             /* Ignore */
+            crm_trace("Ignoring %p %d", node, node->type);
             break;
     }
 
@@ -1108,6 +1112,7 @@ add_node_copy(xmlNode * parent, xmlNode * src_node)
 
     child = xmlDocCopyNode(src_node, doc, 1);
     xmlAddChild(parent, child);
+    crm_node_dirty(child);
     return child;
 }
 
