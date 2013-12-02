@@ -419,6 +419,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
+#if 0
     if(is_document_dirty(scratch)) {
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
         crm_log_xml_debug(p, "Patchset");
@@ -427,6 +428,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     } else {
         xml_accept_changes(scratch, NULL);
     }
+#endif
 
     local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {

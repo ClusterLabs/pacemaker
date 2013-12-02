@@ -260,6 +260,8 @@ pcmkRegisterNode(xmlNodePtr node)
             p->check = (long) 0x81726354;
             node->_private = p;
             break;
+        case XML_TEXT_NODE:
+            break;
         default:
             /* Ignore */
             crm_trace("Ignoring %p %d", node, node->type);
@@ -662,6 +664,7 @@ xml_accept_changes(xmlNode * xml, xmlNode *patchset)
 
     __xml_accept_changes(top, patchset);
     g_list_free_full(doc->deleted_paths, free);
+    doc->deleted_paths = NULL;
 }
 
 /* Simplified version for applying v1-style XML patches */
