@@ -419,18 +419,29 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
-#if 0
     if(is_document_dirty(scratch)) {
+        char *d1 = NULL;
+        char *d2 = NULL;
+
+        xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
         crm_log_xml_debug(p, "Patchset");
-        free_xml(p);
+        xml_apply_patchset(c, p);
 
-    } else {
-        xml_accept_changes(scratch, NULL);
+        d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
+        d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
+        crm_trace("%s vs. %s", d1, d2);
+        CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
+
+        free_xml(p);
+        free_xml(c);
+        free(d1);
+        free(d2);
     }
-#endif
 
     local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
+    xml_accept_changes(scratch, NULL);
+
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section

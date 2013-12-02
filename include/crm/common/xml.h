@@ -257,5 +257,6 @@ bool is_document_dirty(xmlNode *xml);
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
 int xml_apply_patchset(xmlNode *xml, xmlNode *patchset);
+void xml_log_changes(int level, xmlNode *xml);
 
 #endif
