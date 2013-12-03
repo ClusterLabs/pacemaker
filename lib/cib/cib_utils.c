@@ -367,6 +367,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xml_track_changes(scratch);
     rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
+    if(xml_tracking_changes(scratch) == FALSE) {
+        crm_trace("Inferring changes after %s op", op);
+        xml_calculate_changes(current_cib, scratch);
+    }
     CRM_CHECK(current_cib != scratch, return -EINVAL);
 
     if (rc == pcmk_ok && scratch == NULL) {
@@ -419,7 +423,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if(is_document_dirty(scratch)) {
+    if(xml_document_dirty(scratch)) {
         xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
         crm_log_xml_debug(p, "Patchset");
@@ -432,14 +436,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             free(d1);
             free(d2);
         } else {
+            xmlNode *d = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
+            crm_log_xml_debug(d, "Diff");
             crm_log_xml_debug(current_cib, "Diff:Input");
+            free_xml(d);
         }
         free_xml(p);
         free_xml(c);
     }
 
     local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
-    xml_accept_changes(scratch, NULL);
+    xml_accept_changes(scratch);
 
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
         /* Throttle the amount of costly validation we perform due to status updates

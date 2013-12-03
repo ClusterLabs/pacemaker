@@ -98,6 +98,7 @@ enum xml_private_flags {
      xpf_created   = 0x004,
 
      xpf_tracking  = 0x010,
+     xpf_processed = 0x020,
 };
 
 typedef struct xml_private_s 
@@ -200,8 +201,12 @@ crm_node_dirty(xmlNode *n)
     for(; n; n = n->parent) {
 
         p = n->_private;
-        if(p) {
+        if(p == NULL) {
             /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
+        } else if(p->flags & xpf_dirty) {
+            /* All parents can be assumed to be dirty */
+            break;
+        } else {
             p->flags |= xpf_dirty;
         }
     }
@@ -321,11 +326,20 @@ pcmkDeregisterNode(xmlNodePtr node)
 void
 xml_track_changes(xmlNode * xml) 
 {
-    xml_accept_changes(xml, NULL);
+    xml_accept_changes(xml);
+    crm_trace("Tracking changes to %p", xml);
     ((xml_private_t *)xml->doc->_private)->flags |= xpf_tracking;
 }
 
-bool is_document_dirty(xmlNode *xml) 
+bool xml_tracking_changes(xmlNode * xml)
+{
+    if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+bool xml_document_dirty(xmlNode *xml) 
 {
     if(xml != NULL && xml->doc && xml->doc->_private) {
         xml_private_t *doc = xml->doc->_private;
@@ -579,9 +593,10 @@ xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config)
     xmlNode *patchset = diff_xml_object(source, target, TRUE);
 
     if(patchset) {
+        CRM_LOG_ASSERT(xml_document_dirty(target));
         xml_repair_v1_diff(source, target, patchset, config);
         crm_xml_add(patchset, XML_ATTR_DIGEST, digest);
-        crm_xml_add_int(patchset, "format", 1);
+        crm_xml_add(patchset, "format", "1");
     }
     return patchset;
 }
@@ -701,7 +716,7 @@ xml_log_changes(int level, xmlNode *xml)
 }
 
 void
-xml_accept_changes(xmlNode * xml, xmlNode *patchset)
+xml_accept_changes(xmlNode * xml)
 {
     xmlNode *top = NULL;
     xml_private_t *doc = NULL;
@@ -710,6 +725,7 @@ xml_accept_changes(xmlNode * xml, xmlNode *patchset)
         return;
     }
 
+    crm_trace("Accepting changes to %p", xml);
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
 
@@ -955,7 +971,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL) {
-            crm_err("No %s match for %s", op, xpath);
+            crm_err("No %s match for %s in %p", op, xpath, xml->doc);
             rc = -pcmk_err_diff_failed;
             continue;
 
@@ -1431,7 +1447,7 @@ free_xml(xmlNode * child)
                 xml_private_t *p = doc->_private;
 
                 if(__get_prefix(NULL, child, buffer, offset) > 0) {
-                    crm_notice("Deleting %s %p", buffer, child);
+                    crm_notice("Deleting %s %p from %p", buffer, child, doc);
                     p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
                     p->flags |= xpf_dirty;
                 }
@@ -2677,10 +2693,97 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     return result;
 }
 
+static void
+__xml_diff_object(xmlNode * old, xmlNode * new)
+{
+    xmlNode *cIter = NULL;
+    xmlAttr *pIter = NULL;
+
+    if(old == NULL) {
+        crm_node_created(new);
+        return;
+
+    } else if(new == NULL) {
+        int offset = 0;
+        char buffer[XML_BUFFER_SIZE];
+        xml_private_t *p = new->doc->_private;
+
+        if(__get_prefix(NULL, old, buffer, offset) > 0) {
+            p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
+            p->flags |= xpf_dirty;
+        }
+
+        return;
+    } else {
+        xml_private_t *p = new->_private;
+
+        if(p->flags & xpf_processed) {
+            /* Avoid re-comparing nodes */
+            return;
+        }
+        p->flags |= xpf_processed;
+    }
+
+    for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
+        xml_private_t *p = pIter->_private;
+
+        p->flags |= xpf_created;
+    }
+
+    for (pIter = crm_first_attr(old); pIter != NULL; pIter = pIter->next) {
+        const char *name = (const char *)pIter->name;
+        const char *value = crm_element_value(old, name);
+        xmlAttr *exists = xmlHasProp(new, pIter->name);
+
+        crm_xml_add(new, name, value);
+        if(exists == NULL) {
+            xml_remove_prop(new, name);
+
+        } else {
+            xml_private_t *p = exists->_private;
+
+            clear_bit(p->flags, xpf_created);
+        }
+    }
+
+    for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
+        xml_private_t *p = pIter->_private;
+
+        if(is_set(p->flags, xpf_dirty)) {
+            break;
+
+        } else if(is_set(p->flags, xpf_created)) {
+            crm_node_dirty(new);
+            break;
+        }
+    }
+
+    for (cIter = __xml_first_child(new); cIter != NULL; cIter = __xml_next(cIter)) {
+        xmlNode *old_child = find_entity(old, crm_element_name(cIter), ID(cIter));
+
+        __xml_diff_object(old_child, cIter);
+    }
+
+    for (cIter = __xml_first_child(old); cIter != NULL; cIter = __xml_next(cIter)) {
+        xmlNode *new_child = find_entity(new, crm_element_name(cIter), ID(cIter));
+
+        __xml_diff_object(cIter, new_child);
+    }
+}
+
+void
+xml_calculate_changes(xmlNode * old, xmlNode * new)
+{
+    CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
+    CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
+
+    xml_track_changes(new);
+    __xml_diff_object(old, new);
+}
+
 xmlNode *
 diff_xml_object(xmlNode * old, xmlNode * new, gboolean suppress)
 {
-    /* beekhof */
     xmlNode *tmp1 = NULL;
     xmlNode *diff = create_xml_node(NULL, "diff");
     xmlNode *removed = create_xml_node(diff, "diff-removed");
