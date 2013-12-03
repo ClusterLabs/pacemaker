@@ -396,7 +396,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         int offset = 0;
         char buffer[XML_BUFFER_SIZE];
 
-        if(__get_prefix(NULL, xml, buffer, offset) > 0) {
+        if(__get_prefix(NULL, xml->parent, buffer, offset) > 0) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "create");
@@ -954,6 +954,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL) {
+            crm_err("No match for %s", xpath);
             continue;
 
         } else if(strcmp(op, "create") == 0) {
