@@ -420,23 +420,22 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     fix_plus_plus_recursive(scratch);
 
     if(is_document_dirty(scratch)) {
-        char *d1 = NULL;
-        char *d2 = NULL;
-
         xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
         crm_log_xml_debug(p, "Patchset");
-        xml_apply_patchset(c, p);
+        if(xml_apply_patchset(c, p) == pcmk_ok) {
+            char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
+            char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
 
-        d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
-        d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
-        crm_trace("%s vs. %s", d1, d2);
-        CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
-
+            crm_trace("%s vs. %s", d1, d2);
+            CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
+            free(d1);
+            free(d2);
+        } else {
+            crm_log_xml_debug(current_cib, "Diff:Input");
+        }
         free_xml(p);
         free_xml(c);
-        free(d1);
-        free(d2);
     }
 
     local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);

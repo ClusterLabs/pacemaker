@@ -939,6 +939,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 static int
 xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset) 
 {
+    int rc = pcmk_ok;
     xmlNode *change = NULL;
     for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
         xmlNode *match = NULL;
@@ -950,11 +951,12 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             continue;
         }
 
-        match = get_xpath_object(xpath, xml, LOG_ERR);
+        match = get_xpath_object(xpath, xml, LOG_TRACE);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL) {
-            crm_err("No match for %s", xpath);
+            crm_err("No %s match for %s", op, xpath);
+            rc = -pcmk_err_diff_failed;
             continue;
 
         } else if(strcmp(op, "create") == 0) {
@@ -981,7 +983,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             crm_err("Unknown operation: %s", op);
         }
     }
-    return pcmk_ok;
+    return rc;
 }
 
 int
