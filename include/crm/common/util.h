@@ -67,6 +67,8 @@ gboolean decode_transition_key(const char *key, char **uuid, int *action, int *t
 gboolean decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
                                  int *op_status, int *op_rc, int *target_rc);
 
+char * crm_strip_trailing_newline(char *str);
+
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
