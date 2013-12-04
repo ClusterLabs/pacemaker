@@ -1570,6 +1570,22 @@ crm_is_writable(const char *dir, const char *file,
     return pass;
 }
 
+char *
+crm_strip_trailing_newline(char *str)
+{
+    int len;
+
+    if (str == NULL) {
+        return str;
+    }
+
+    for (len = strlen(str) - 1; len >= 0 && str[len] == '\n'; len--) {
+        str[len] = '\0';
+    }
+
+    return str;
+}
+
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {

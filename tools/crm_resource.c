@@ -1112,8 +1112,8 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
         if (last) {
             time_t run_at = crm_parse_int(last, "0");
 
-            fprintf(stdout, ", last-rc-change=%s, exec=%sms\n",
-                    ctime(&run_at), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+            fprintf(stdout, ", last-rc-change=%s, exec=%sms",
+                    crm_strip_trailing_newline(ctime(&run_at)), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
