@@ -872,7 +872,104 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
 }
 
 static int
-xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset) 
+xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format) 
+{
+    int lpc = 0;
+    bool changed = FALSE;
+
+    int this[] = { 0, 0, 0 };
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
+
+    const char *vfields[] = {
+        XML_ATTR_GENERATION_ADMIN,
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+    };
+
+    xmlNode *tmp = NULL;
+
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
+        if (this[lpc] < 0) {
+            this[lpc] = 0;
+        }
+    }
+
+    switch(format) {
+        case 1:
+            tmp = find_xml_node(patchset, "diff-removed", FALSE);
+            tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+            break;
+        case 2:
+            tmp = find_xml_node(patchset, "version", FALSE);
+            tmp = find_xml_node(tmp, "source", FALSE);
+            break;
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            return -EINVAL;
+    }
+
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
+    }
+
+    switch(format) {
+        case 1:
+            tmp = find_xml_node(patchset, "diff-added", FALSE);
+            tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+            break;
+        case 2:
+            tmp = find_xml_node(patchset, "version", FALSE);
+            tmp = find_xml_node(tmp, "target", FALSE);
+            break;
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            return -EINVAL;
+    }
+
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
+    }
+
+    if(add[0] == -1 && add[1] == -1 && add[2] == -1) {
+        add[0] = this[0];
+        add[1] = this[1];
+        add[2] = this[2] + 1;
+        for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+            del[lpc] = this[lpc];
+        }
+    }
+
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        if(this[lpc] < del[lpc]) {
+            crm_info("Current %s is too low (%d < %d)", vfields[lpc], this[lpc], del[lpc]);
+            return -pcmk_err_diff_resync;
+
+        } else if(this[lpc] > del[lpc]) {
+            crm_notice("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
+            return -pcmk_err_diff_failed;
+        }
+    }
+
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        if(add[lpc] > del[lpc]) {
+            changed = TRUE;
+        }
+    }
+
+    if(changed == FALSE) {
+        crm_notice("Versions did not change in patch %d.%d.%d", add[0], add[1], add[2]);
+        return -pcmk_err_diff_failed;
+    }
+
+    crm_info("Applying patch %d.%d.%d to %d.%d.%d",
+             this[0], this[1], this[2], add[0], add[1], add[2]);
+    return pcmk_ok;
+}
+
+static int
+xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version) 
 {
     gboolean rc = TRUE;
     int root_nodes_seen = 0;
@@ -956,7 +1053,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 }
 
 static int
-xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset) 
+xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version) 
 {
     int rc = pcmk_ok;
     xmlNode *change = NULL;
@@ -973,7 +1070,11 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         match = get_xpath_object(xpath, xml, LOG_TRACE);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
-        if(match == NULL) {
+        if(match == NULL && strcmp(op, "delete") == 0) {
+            crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
+            continue;
+
+        } else if(match == NULL) {
             crm_err("No %s match for %s in %p", op, xpath, xml->doc);
             rc = -pcmk_err_diff_failed;
             continue;
@@ -1006,20 +1107,29 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 }
 
 int
-xml_apply_patchset(xmlNode *xml, xmlNode *patchset) 
+xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version) 
 {
     int format = 1;
+    int rc = pcmk_ok;
 
     crm_element_value_int(patchset, "format", &format);
-    switch(format) {
-        case 1:
-            return xml_apply_patchset_v1(xml, patchset);
-        case 2:
-            return xml_apply_patchset_v2(xml, patchset);
-        default:
-            crm_err("Unknown patch format: %d", format);
-            return -EINVAL;
+
+    if(check_version) {
+        rc = xml_patch_version_check(xml, patchset, format);
     }
+
+    if(rc == pcmk_ok) {
+        switch(format) {
+            case 1:
+                return xml_apply_patchset_v1(xml, patchset, check_version);
+            case 2:
+                return xml_apply_patchset_v2(xml, patchset, check_version);
+            default:
+                crm_err("Unknown patch format: %d", format);
+                return -EINVAL;
+        }
+    }
+    return rc;
 }
 
 xmlNode *

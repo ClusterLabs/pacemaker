@@ -424,10 +424,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     fix_plus_plus_recursive(scratch);
 
     if(xml_document_dirty(scratch)) {
+        int test_rc;
         xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
         crm_log_xml_debug(p, "Patchset");
-        if(xml_apply_patchset(c, p) == pcmk_ok) {
+        test_rc = xml_apply_patchset(c, p, TRUE);
+        if(test_rc == pcmk_ok) {
             char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
             char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
 
@@ -438,6 +440,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         } else {
             xmlNode *d = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
             crm_log_xml_debug(d, "Diff");
+            crm_err("v2 patch failed to apply: %s (%d)", pcmk_strerror(test_rc), test_rc);
             crm_log_xml_debug(current_cib, "Diff:Input");
             free_xml(d);
         }

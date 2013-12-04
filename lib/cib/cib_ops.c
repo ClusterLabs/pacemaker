@@ -579,224 +579,33 @@ int
 cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    unsigned int log_level = LOG_DEBUG;
-    const char *reason = NULL;
-    gboolean apply_diff = TRUE;
-    int result = pcmk_ok;
-
-    int this_updates = 0;
-    int this_epoch = 0;
-    int this_admin_epoch = 0;
-
-    int diff_add_updates = 0;
-    int diff_add_epoch = 0;
-    int diff_add_admin_epoch = 0;
-
-    int diff_del_updates = 0;
-    int diff_del_epoch = 0;
-    int diff_del_admin_epoch = 0;
-
     const char *originator = NULL;
 
     if (req != NULL) {
         originator = crm_element_value(req, F_ORIG);
     }
-    crm_trace("Processing \"%s\" event", op);
 
-    cib_diff_version_details(input,
-                             &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                             &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
+    crm_trace("Processing \"%s\" event from %s %s",
+              op, originator, is_set(options, cib_force_diff)?"(global update)":"");
 
-    crm_element_value_int(existing_cib, XML_ATTR_GENERATION, &this_epoch);
-    crm_element_value_int(existing_cib, XML_ATTR_NUMUPDATES, &this_updates);
-    crm_element_value_int(existing_cib, XML_ATTR_GENERATION_ADMIN, &this_admin_epoch);
-
-    if (this_epoch < 0) {
-        this_epoch = 0;
-    }
-    if (this_updates < 0) {
-        this_updates = 0;
-    }
-    if (this_admin_epoch < 0) {
-        this_admin_epoch = 0;
-    }
-
-    if (diff_del_admin_epoch == diff_add_admin_epoch
-        && diff_del_epoch == diff_add_epoch && diff_del_updates == diff_add_updates) {
-        if (options & cib_force_diff) {
-            apply_diff = FALSE;
-            log_level = LOG_ERR;
-            reason = "+ and - versions in the diff did not change in global update";
-            crm_log_xml_warn(req, "Bad global update");
-
-        } else if (diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
-            diff_add_epoch = this_epoch;
-            diff_add_updates = this_updates + 1;
-            diff_add_admin_epoch = this_admin_epoch;
-            diff_del_epoch = this_epoch;
-            diff_del_updates = this_updates;
-            diff_del_admin_epoch = this_admin_epoch;
-
-        } else {
-            apply_diff = FALSE;
-            log_level = LOG_INFO;
-            /* Can happen if the cib is replaced with the same version during a global sync */
-            reason = "+ and - versions in the diff did not change";
-            crm_log_xml_debug(req, "Bad update");
-            log_cib_diff(LOG_NOTICE, input, __FUNCTION__);
-        }
-    }
-
-    if (apply_diff && diff_del_admin_epoch > this_admin_epoch) {
-        result = -pcmk_err_diff_resync;
-        apply_diff = FALSE;
-        log_level = LOG_INFO;
-        reason = "current \"" XML_ATTR_GENERATION_ADMIN "\" is less than required";
-
-    } else if (apply_diff && diff_del_admin_epoch < this_admin_epoch) {
-        apply_diff = FALSE;
-        log_level = LOG_NOTICE;
-        reason = "current \"" XML_ATTR_GENERATION_ADMIN "\" is greater than required";
-
-    } else if (apply_diff && diff_del_epoch > this_epoch) {
-        result = -pcmk_err_diff_resync;
-        apply_diff = FALSE;
-        log_level = LOG_INFO;
-        reason = "current \"" XML_ATTR_GENERATION "\" is less than required";
-
-    } else if (apply_diff && diff_del_epoch < this_epoch) {
-        apply_diff = FALSE;
-        log_level = LOG_INFO;
-        reason = "current \"" XML_ATTR_GENERATION "\" is greater than required";
-
-    } else if (apply_diff && diff_del_updates > this_updates) {
-        result = -pcmk_err_diff_resync;
-        apply_diff = FALSE;
-        log_level = LOG_INFO;
-        reason = "current \"" XML_ATTR_NUMUPDATES "\" is less than required";
-
-    } else if (apply_diff && diff_del_updates < this_updates) {
-        apply_diff = FALSE;
-        log_level = LOG_INFO;
-        reason = "current \"" XML_ATTR_NUMUPDATES "\" is greater than required";
-    }
-
-    if (apply_diff) {
-        free_xml(*result_cib);
-        *result_cib = NULL;
-        if (apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
-            log_level = LOG_WARNING;
-            reason = "Failed application of an update diff";
-
-            if (options & cib_force_diff) {
-                result = -pcmk_err_diff_resync;
-            }
-        }
-    }
-
-    if (reason != NULL) {
-        do_crm_log(log_level,
-                   "Diff %d.%d.%d -> %d.%d.%d from %s not applied to %d.%d.%d: %s",
-                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                   originator ? originator : "local", this_admin_epoch, this_epoch, this_updates,
-                   reason);
-
-        crm_log_xml_trace(input, "Discarded diff");
-        if (result == pcmk_ok) {
-            result = -pcmk_err_diff_failed;
-        }
-
-    } else if (apply_diff) {
-        crm_trace("Diff %d.%d.%d -> %d.%d.%d from %s was applied to %d.%d.%d",
-                  diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                  diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                  originator ? originator : "local", this_admin_epoch, this_epoch, this_updates);
-
-    }
-    return result;
+    free_xml(*result_cib);
+    *result_cib = copy_xml(existing_cib);
+    return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
 gboolean
 apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
 {
-    gboolean result = TRUE;
-    const char *value = NULL;
-
-    int this_updates = 0;
-    int this_epoch = 0;
-    int this_admin_epoch = 0;
-
-    int diff_add_updates = 0;
-    int diff_add_epoch = 0;
-    int diff_add_admin_epoch = 0;
-
-    int diff_del_updates = 0;
-    int diff_del_epoch = 0;
-    int diff_del_admin_epoch = 0;
-
     CRM_CHECK(diff != NULL, return FALSE);
     CRM_CHECK(old != NULL, return FALSE);
 
-    value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
-    this_admin_epoch = crm_parse_int(value, "0");
-    crm_trace("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN, this_admin_epoch, value);
+    *new = copy_xml(old);
 
-    value = crm_element_value(old, XML_ATTR_GENERATION);
-    this_epoch = crm_parse_int(value, "0");
-    crm_trace("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
-
-    value = crm_element_value(old, XML_ATTR_NUMUPDATES);
-    this_updates = crm_parse_int(value, "0");
-    crm_trace("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
-
-    cib_diff_version_details(diff,
-                             &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                             &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-
-    value = NULL;
-    if (result && diff_del_admin_epoch != this_admin_epoch) {
-        value = XML_ATTR_GENERATION_ADMIN;
-        result = FALSE;
-        crm_trace("%s=%d", value, diff_del_admin_epoch);
-
-    } else if (result && diff_del_epoch != this_epoch) {
-        value = XML_ATTR_GENERATION;
-        result = FALSE;
-        crm_trace("%s=%d", value, diff_del_epoch);
-
-    } else if (result && diff_del_updates != this_updates) {
-        value = XML_ATTR_NUMUPDATES;
-        result = FALSE;
-        crm_trace("%s=%d", value, diff_del_updates);
+    if(xml_apply_patchset(*new, diff, TRUE) == pcmk_ok) {
+        return TRUE;
     }
 
-    if (result) {
-        xmlNode *tmp = NULL;
-        xmlNode *diff_copy = copy_xml(diff);
-
-        tmp = find_xml_node(diff_copy, "diff-removed", TRUE);
-        if (tmp != NULL) {
-            xml_remove_prop(tmp, XML_ATTR_GENERATION_ADMIN);
-            xml_remove_prop(tmp, XML_ATTR_GENERATION);
-            xml_remove_prop(tmp, XML_ATTR_NUMUPDATES);
-        }
-
-        tmp = find_xml_node(diff_copy, "diff-added", TRUE);
-        if (tmp != NULL) {
-            xml_remove_prop(tmp, XML_ATTR_GENERATION_ADMIN);
-            xml_remove_prop(tmp, XML_ATTR_GENERATION);
-            xml_remove_prop(tmp, XML_ATTR_NUMUPDATES);
-        }
-
-        result = apply_xml_diff(old, diff_copy, new);
-        free_xml(diff_copy);
-
-    } else {
-        crm_err("target and diff %s values didnt match", value);
-    }
-
-    return result;
+    return FALSE;
 }
 
 gboolean
