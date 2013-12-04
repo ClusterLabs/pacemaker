@@ -333,7 +333,10 @@ xml_track_changes(xmlNode * xml)
 
 bool xml_tracking_changes(xmlNode * xml)
 {
-    if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+    if(xml == NULL) {
+        return FALSE;
+
+    } else if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
         return TRUE;
     }
     return FALSE;
@@ -1431,6 +1434,7 @@ free_xml(xmlNode * child)
     if (child != NULL) {
         xmlNode *top = NULL;
         xmlDoc *doc = child->doc;
+        xml_private_t *p = child->_private;
 
         if (doc != NULL) {
             top = xmlDocGetRootElement(doc);
@@ -1441,10 +1445,10 @@ free_xml(xmlNode * child)
             xmlFreeDoc(doc);
 
         } else {
-            if(TRACKING_CHANGES(child)) {
+            if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
-                xml_private_t *p = doc->_private;
+                p = doc->_private;
 
                 if(__get_prefix(NULL, child, buffer, offset) > 0) {
                     crm_notice("Deleting %s %p from %p", buffer, child, doc);
