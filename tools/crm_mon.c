@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  *
@@ -2094,7 +2093,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     auth_context_t authctx;
     struct sigaction sa;
 
-    int len = 20;
+    int len = 25; /* Note: Check extra padding on the Subject line below */
     int noauth = 1;
     int smtp_debug = LOG_DEBUG;
     char crm_mail_body[BODY_MAX];
@@ -2134,6 +2133,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     len++;
 
     crm_mail_subject = calloc(1, len);
+    /* If you edit this line, ensure you allocate enough memory for it by altering 'len' above */
     snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s\r\n", crm_mail_prefix, task,
              rsc, node, desc);
 
