@@ -767,4 +767,5 @@ write_attribute(attribute_t *a)
         the_cib->cmds->register_callback(
             the_cib, a->update, 120, FALSE, strdup(a->id), "attrd_cib_callback", attrd_cib_callback);
     }
+    free_xml(xml_top);
 }
