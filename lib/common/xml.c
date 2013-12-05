@@ -853,6 +853,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
         const char *p_name = (const char *)xIter->name;
         const char *p_value = crm_element_value(patch, p_name);
 
+        xml_remove_prop(target, p_name); /* Preserve the patch order */
         crm_xml_add(target, p_name, p_value);
     }
 
@@ -975,7 +976,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     int root_nodes_seen = 0;
     static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
-    const char *version = crm_element_value(patchset, XML_ATTR_CRM_VERSION);
+    const char *version = crm_element_value(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
@@ -1018,8 +1019,9 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
     }
 
+    CRM_LOG_ASSERT(digest);
     if (root_nodes_seen > 1) {
-        crm_err("(+) Diffs cannot contain more than one change set..." " saw %d", root_nodes_seen);
+        crm_err("(+) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
         rc = FALSE;
 
     } else if (rc && digest) {
@@ -3691,7 +3693,7 @@ calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
               return NULL);
 
     digest = crm_md5sum(buffer);
-    crm_log_xml_trace(copy, "digest:source");
+    crm_log_xml_trace(input, "digest:source");
 
     free(buffer);
     free_xml(copy);
