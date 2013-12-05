@@ -972,7 +972,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 static int
 xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version) 
 {
-    gboolean rc = TRUE;
+    int rc = pcmk_ok;
     int root_nodes_seen = 0;
     static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
@@ -1001,12 +1001,12 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
 
     if (root_nodes_seen > 1) {
         crm_err("(-) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
-        rc = FALSE;
+        rc = -ENOTUNIQ;
     }
 
     root_nodes_seen = 0;
     crm_trace("Addition Phase");
-    if (rc) {
+    if (rc == pcmk_ok) {
         xmlNode *child_diff = NULL;
 
         for (child_diff = __xml_first_child(added); child_diff != NULL;
@@ -1022,16 +1022,16 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     CRM_LOG_ASSERT(digest);
     if (root_nodes_seen > 1) {
         crm_err("(+) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
-        rc = FALSE;
+        rc = -ENOTUNIQ;
 
-    } else if (rc && digest) {
+    } else if (rc == pcmk_ok && digest) {
         char *new_digest = NULL;
 
         purge_diff_markers(xml);       /* Purge now so the diff is ok */
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (safe_str_neq(new_digest, digest)) {
             crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
-            rc = FALSE;
+            rc = -pcmk_err_diff_failed;
 
             crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             if (digest_cs && digest_cs->targets) {
@@ -1045,7 +1045,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
         free(new_digest);
 
-    } else if (rc) {
+    } else if (rc == pcmk_ok) {
         purge_diff_markers(xml);       /* Purge now so the diff is ok */
     }
 
