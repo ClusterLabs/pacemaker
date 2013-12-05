@@ -520,11 +520,17 @@ is_config_change(xmlNode *xml)
 static void
 xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed)
 {
+    int lpc = 0;
     xmlNode *cib = NULL;
     xmlNode *diff_child = NULL;
 
     const char *tag = NULL;
-    const char *value = NULL;
+
+    const char *vfields[] = {
+        XML_ATTR_GENERATION_ADMIN,
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+    };
 
     if (local_diff == NULL) {
         crm_trace("Nothing to do");
@@ -543,24 +549,12 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
         cib = create_xml_node(diff_child, tag);
     }
 
-    tag = XML_ATTR_GENERATION_ADMIN;
-    value = crm_element_value(last, tag);
-    crm_xml_add(diff_child, tag, value);
-    if (changed) {
-        crm_xml_add(cib, tag, value);
-    }
+    for(lpc = 0; lpc < DIMOF(vfields); lpc++){
+        const char *value = crm_element_value(last, vfields[lpc]);
 
-    tag = XML_ATTR_GENERATION;
-    value = crm_element_value(last, tag);
-    crm_xml_add(diff_child, tag, value);
-    if (changed) {
-        crm_xml_add(cib, tag, value);
+        crm_xml_add(diff_child, vfields[lpc], value);
+        crm_xml_add(cib, vfields[lpc], value);
     }
-
-    tag = XML_ATTR_NUMUPDATES;
-    value = crm_element_value(last, tag);
-    crm_xml_add(cib, tag, value);
-    crm_xml_add(diff_child, tag, value);
 
     tag = "diff-added";
     diff_child = find_xml_node(local_diff, tag, FALSE);
@@ -576,6 +570,12 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
 
     if (next) {
         xmlAttrPtr xIter = NULL;
+
+        for(lpc = 0; lpc < DIMOF(vfields); lpc++){
+            const char *value = crm_element_value(next, vfields[lpc]);
+
+            crm_xml_add(diff_child, vfields[lpc], value);
+        }
 
         for (xIter = next->properties; xIter; xIter = xIter->next) {
             const char *p_name = (const char *)xIter->name;
@@ -892,6 +892,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
+        crm_trace("Got %d for this[%s]", this[lpc], vfields[lpc]);
         if (this[lpc] < 0) {
             this[lpc] = 0;
         }
@@ -913,6 +914,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
+        crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
     }
 
     switch(format) {
@@ -931,6 +933,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
+        crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
     }
 
     if(add[0] == -1 && add[1] == -1 && add[2] == -1) {
