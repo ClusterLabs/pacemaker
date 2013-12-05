@@ -188,28 +188,40 @@ get_schema_path(const char *file)
 }
 
 static void
-crm_node_dirty(xmlNode *n) 
+set_parent_flag(xmlNode *n, long flag) 
 {
-    xml_private_t *p = NULL;
+
+    for(; n; n = n->parent) {
+        xml_private_t *p = n->_private;
+
+        if(p == NULL) {
+            /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
+        } else if(p->flags & flag) {
+            /* All parents can be assumed to have the flag */
+            break;
+        } else {
+            p->flags |= flag;
+        }
+    }
+}
+
+static void
+set_doc_flag(xmlNode *n, long flag) 
+{
 
     if(n && n->doc && n->doc->_private){
         /* During calls to xmlDocCopyNode(), n->doc may be unset */
-        p = n->doc->_private;
-        p->flags |= xpf_dirty;
-    }
+        xml_private_t *p = n->doc->_private;
 
-    for(; n; n = n->parent) {
-
-        p = n->_private;
-        if(p == NULL) {
-            /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
-        } else if(p->flags & xpf_dirty) {
-            /* All parents can be assumed to be dirty */
-            break;
-        } else {
-            p->flags |= xpf_dirty;
-        }
+        p->flags |= flag;
     }
+}
+
+static void
+crm_node_dirty(xmlNode *n) 
+{
+    set_doc_flag(n, xpf_dirty);
+    set_parent_flag(n, xpf_dirty);
 }
 
 static void
@@ -219,7 +231,6 @@ crm_node_created(xmlNode *n)
 
     if(p && TRACKING_CHANGES(n)) {
         crm_node_dirty(n);
-        p->flags |= xpf_created;
     }
 }
 
@@ -232,12 +243,6 @@ crm_attr_dirty(xmlAttr *a)
     p = a->_private;
     p->flags |= xpf_dirty;
     p->flags = (p->flags & ~xpf_deleted);
-
-    p = parent->_private;
-    if(strcmp((const char *)a->name, XML_ATTR_ID) == 0) {
-        /* Imply node creation when ID is set */
-        p->flags |= (xpf_dirty|xpf_created);
-    }
 
     crm_node_dirty(parent);
 }
@@ -282,6 +287,8 @@ pcmkRegisterNode(xmlNodePtr node)
         case XML_ATTRIBUTE_NODE:
             p = calloc(1, sizeof(xml_private_t));
             p->check = (long) 0x81726354;
+            /* Flags will be reset if necessary when tracking is enabled */
+            p->flags |= (xpf_dirty|xpf_created);
             node->_private = p;
             break;
         case XML_TEXT_NODE:
@@ -296,12 +303,8 @@ pcmkRegisterNode(xmlNodePtr node)
         /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
          * not hooked up at the point we are called
          */
-        xml_private_t *doc = node->doc->_private;
-
-        p->flags |= (xpf_dirty|xpf_created);
-        doc->flags |= xpf_dirty;
-
-        crm_node_dirty(node->parent);
+        set_doc_flag(node, xpf_dirty);
+        crm_node_dirty(node);
     }
 }
 
@@ -328,7 +331,7 @@ xml_track_changes(xmlNode * xml)
 {
     xml_accept_changes(xml);
     crm_trace("Tracking changes to %p", xml);
-    ((xml_private_t *)xml->doc->_private)->flags |= xpf_tracking;
+    set_doc_flag(xml, xpf_tracking);
 }
 
 bool xml_tracking_changes(xmlNode * xml)
@@ -738,8 +741,6 @@ xml_accept_changes(xmlNode * xml)
         return;
     }
 
-    xml_log_changes(LOG_DEBUG, xml);
-
     __xml_accept_changes(top);
     g_list_free_full(doc->deleted_paths, free);
     doc->deleted_paths = NULL;
@@ -968,7 +969,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
     }
 
     crm_info("Applying patch %d.%d.%d to %d.%d.%d",
-             this[0], this[1], this[2], add[0], add[1], add[2]);
+             add[0], add[1], add[2], this[0], this[1], this[2]);
     return pcmk_ok;
 }
 
@@ -1563,12 +1564,12 @@ free_xml(xmlNode * child)
             if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
-                p = doc->_private;
 
                 if(__get_prefix(NULL, child, buffer, offset) > 0) {
                     crm_notice("Deleting %s %p from %p", buffer, child, doc);
+                    p = doc->_private;
                     p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
-                    p->flags |= xpf_dirty;
+                    set_doc_flag(child, xpf_dirty);
                 }
             }
 
