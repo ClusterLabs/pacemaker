@@ -77,18 +77,15 @@ function sendsmtp {
 	[ -z "${CRM_notify_desc}" ] && CRM_notify_desc="-"
 	desc=${CRM_notify_desc}
 
-	# Task will always be something.
-	task=${CRM_notify_task}
-
 	crm_mail_prefix="Cluster notification"
 
-	subject="${crm_mail_prefix} - ${task} event for ${rsc} on ${node}"
+	subject="${crm_mail_prefix} - ${CRM_notify_task} event for ${rsc} on ${node}"
 	body="\n${crm_mail_pref}\n====\n\n"
 	if [ ${CRM_notify_target_rc} -eq ${CRM_notify_rc} ]
 	then
-		body="${body}Completed operation ${CRM_notify_task} for resource ${CRM_notify_rsc} on ${CRM_notify_node}\n"
+		body="${body}Completed operation ${CRM_notify_task} for resource ${rsc} on ${node}\n"
 	else
-		body="${body}Operation ${CRM_notify_task} for resource ${CRM_notify_rsc} on ${CRM_notify_node} failed: ${CRM_notify_desc}\n"
+		body="${body}Operation ${CRM_notify_task} for resource ${rsc} on ${node} failed: ${desc}\n"
 	fi
 	statusstr=$(ocf_status ${CRM_notify_status})
 	body="${body}\nDetails:\n\toperation status: (${CRM_notify_status}) ${statusstr}\n"
@@ -143,10 +140,10 @@ function ocf_exitcode {
 
 function sendsnmp() {
   [ -f /usr/bin/snmptrap ] && /usr/bin/snmptrap -v 2c -c "$SNMPCOMMUNITY" "$SNMPDEST" "" PACEMAKER-MIB::pacemakerNotification \
-        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_notify_node}" \
-        PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_notify_rsc}" \
+        PACEMAKER-MIB::pacemakerNotificationNode s "${node}" \
+        PACEMAKER-MIB::pacemakerNotificationResource s "${rsc}" \
         PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_notify_task}" \
-        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_notify_desc}" \
+        PACEMAKER-MIB::pacemakerNotificationDescription s "${desc}" \
         PACEMAKER-MIB::pacemakerNotificationStatus i "${CRM_notify_status}" \
         PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_notify_rc} \
         PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_notify_target_rc}
