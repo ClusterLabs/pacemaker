@@ -1058,6 +1058,92 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
+static xmlNode *
+__first_xml_child_match(xmlNode *parent, const char *name, const char *id)
+{
+    xmlNode *cIter = NULL;
+
+    for (cIter = __xml_first_child(parent); cIter != NULL; cIter = __xml_next(cIter)) {
+        if(strcmp((const char *)cIter->name, name) != 0) {
+            continue;
+        } else if(id) {
+            const char *cid = ID(cIter);
+            if(cid == NULL || strcmp(cid, id) != 0) {
+                continue;
+            }
+        }
+        return cIter;
+    }
+    return NULL;
+}
+
+static xmlNode *
+__xml_find_path(xmlNode *top, const char *key)
+{
+    xmlNode *target = (xmlNode*)top->doc;
+    char *id = malloc(XML_BUFFER_SIZE);
+    char *tag = malloc(XML_BUFFER_SIZE);
+    char *section = malloc(XML_BUFFER_SIZE);
+    char *current = strdup(key);
+    char *remainder = malloc(XML_BUFFER_SIZE);
+    int rc = 0;
+
+    while(current) {
+        rc = sscanf (current, "/%[^/]%s", section, remainder);
+        if(rc <= 0) {
+            crm_trace("Done");
+            break;
+
+        } else if(rc > 2) {
+            crm_trace("Aborting on %s", current);
+            target = NULL;
+            break;
+
+        } else {
+            int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
+
+            switch(f) {
+                case 1:
+                    crm_trace("%s -> %s", section, tag);
+                    target = __first_xml_child_match(target, tag, NULL);
+                    break;
+                case 2:
+                    crm_trace("%s -> %s %s", section, tag, id);
+                    target = __first_xml_child_match(target, tag, id);
+                    break;
+                default:
+                    crm_trace("Aborting on %s", section);
+                    target = NULL;
+                    break;
+            }
+
+            if(rc == 1 || target == NULL) {
+                crm_trace("Done");
+                break;
+
+            } else {
+                char *tmp = current;
+                current = remainder;
+                remainder = tmp;
+            }
+        }
+    }
+
+    if(target) {
+        char *path = (char *)xmlGetNodePath(target);
+
+        crm_notice("Found %s for %s", path, key);
+        free(path);
+    } else {
+        crm_notice("No match for %s", key);
+    }
+
+    free(remainder);
+    free(current);
+    free(tag);
+    return target;
+}
+
 static int
 xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version) 
 {
@@ -1073,7 +1159,11 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             continue;
         }
 
+#if 0
         match = get_xpath_object(xpath, xml, LOG_TRACE);
+#else
+        match = __xml_find_path(xml, xpath);
+#endif
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL && strcmp(op, "delete") == 0) {
@@ -1457,91 +1547,6 @@ __get_prefix(const char *prefix, xmlNode *xml, char *buffer, int offset)
     }
 
     return offset;
-}
-
-static xmlNode *
-__first_xml_child_match(xmlNode *parent, const char *name, const char *id)
-{
-    xmlNode *cIter = NULL;
-
-    for (cIter = __xml_first_child(parent); cIter != NULL; cIter = __xml_next(cIter)) {
-        if(strcmp((const char *)cIter->name, name) != 0) {
-            continue;
-        } else if(id) {
-            const char *cid = ID(cIter);
-            if(cid == NULL || strcmp(cid, id) != 0) {
-                continue;
-            }
-        }
-        return cIter;
-    }
-    return NULL;
-}
-
-void
-__xml_free_path(xmlNode *top, const char *key);
-
-void
-__xml_free_path(xmlNode *top, const char *key)
-{
-    xmlNode *target = top;
-    char *id = malloc(XML_BUFFER_SIZE);
-    char *tag = malloc(XML_BUFFER_SIZE);
-    char *section = malloc(XML_BUFFER_SIZE);
-    char *current = strdup(key);
-    char *remainder = malloc(XML_BUFFER_SIZE);
-    int rc = 0;
-
-    while(current) {
-        rc = sscanf (current, "/%[^/]%s", section, remainder);
-        if(rc <= 0) {
-            crm_trace("Done");
-            break;
-
-        } else if(rc > 2) {
-            crm_trace("Aborting on %s", current);
-            target = NULL;
-            break;
-
-        } else {
-            int f = sscanf (section, "%[^[][%s]", tag, id);
-
-            switch(f) {
-                case 1:
-                    target = __first_xml_child_match(target, tag, NULL);
-                    break;
-                case 2:
-                    target = __first_xml_child_match(target, tag, id);
-                    break;
-                default:
-                    crm_trace("Aborting on %s", section);
-                    target = NULL;
-                    break;
-            }
-
-            if(rc == 1 || target == NULL) {
-                crm_trace("Done");
-                break;
-
-            } else {
-                char *tmp = current;
-                current = remainder;
-                remainder = tmp;
-            }
-        }
-    }
-
-    if(target) {
-        char *path = (char *)xmlGetNodePath(target);
-
-        crm_trace("Destroying %s for %s", path, key);
-        free_xml(target);
-        free(path);
-    }
-
-    free(remainder);
-    free(current);
-    free(tag);
 }
 
 void
