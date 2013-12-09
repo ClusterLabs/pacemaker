@@ -20,14 +20,21 @@
     <element name="rsc_location">
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
-	<attribute name="rsc"><data type="IDREF"/></attribute>
-	<attribute name="rsc-pattern"><text/></attribute>
+	<group>
+	  <choice>
+	    <attribute name="rsc"><data type="IDREF"/></attribute>
+	    <attribute name="rsc-pattern"><text/></attribute>
+	  </choice>
+	  <optional>
+	    <attribute name="role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	</group>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
       </choice>
-      <optional>
-	<attribute name="role">
-	  <ref name="attribute-roles"/>
-	</attribute>
-      </optional>
       <choice>
 	<group>
 	  <choice>
