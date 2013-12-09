@@ -371,7 +371,7 @@ shrink() {
     target=$1.tar
     tar_options="cf"
 
-    variant=`pickfirst bzip2 gzip false`
+    variant=`pickfirst bzip2 gzip xz false`
     case $variant in
 	bz*)
 	    tar_options="jcf"
@@ -380,6 +380,10 @@ shrink() {
 	gz*)
 	    tar_options="zcf"
 	    target="$target.gz"
+	    ;;
+	xz*)
+	    tar_options="Jcf"
+	    target="$target.xz"
 	    ;;
 	*)
 	    warning "Could not find a compression program, the resulting tarball may be huge"
@@ -456,6 +460,8 @@ find_decompressor() {
 		echo "bzip2 -dc"
 	elif echo $1 | grep -qs 'gz$'; then
 		echo "gzip -dc"
+	elif echo $1 | grep -qs 'xz$'; then
+		echo "xz -dc"
 	else
 		echo "cat"
 	fi
