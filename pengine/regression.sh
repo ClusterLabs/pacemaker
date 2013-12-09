@@ -692,6 +692,8 @@ do_test template-rsc-sets-4  "Template - Resource Sets 4"
 do_test template-clone-primitive "Cloned primitive from template"
 do_test template-clone-group     "Cloned group from template"
 
+do_test location-sets-templates "Resource sets and templates - Location"
+
 echo ""
 do_test container-1 "Container - initial"
 do_test container-2 "Container - monitor failed"
