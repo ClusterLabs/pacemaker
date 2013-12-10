@@ -84,6 +84,21 @@ int cib_process_command(xmlNode * request, xmlNode ** reply,
 gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
                              gboolean privileged);
 
+static gboolean cib_legacy_mode(void)
+{
+    static gboolean init = TRUE;
+    static gboolean legacy = FALSE;
+
+    if(init) {
+        init = FALSE;
+        legacy = daemon_option_enabled("legacy", "cib");
+        if(legacy) {
+            crm_notice("Enabled legacy mode");
+        }
+    }
+    return legacy;
+}
+
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -386,7 +401,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 }
 
 static void
-parse_local_options(crm_client_t * cib_client, int call_type, int call_options, const char *host,
+parse_local_options_v1(crm_client_t * cib_client, int call_type, int call_options, const char *host,
                     const char *op, gboolean * local_notify, gboolean * needs_reply,
                     gboolean * process, gboolean * needs_forward)
 {
@@ -423,8 +438,58 @@ parse_local_options(crm_client_t * cib_client, int call_type, int call_options, 
     }
 }
 
+static void
+parse_local_options_v2(crm_client_t * cib_client, int call_type, int call_options, const char *host,
+                    const char *op, gboolean * local_notify, gboolean * needs_reply,
+                    gboolean * process, gboolean * needs_forward)
+{
+    if (cib_op_modifies(call_type)) {
+        /* we need to send an update anyway */
+        *needs_reply = TRUE;
+        *needs_forward = TRUE;
+        *process = FALSE;
+        crm_trace("%s op from %s needs to be forwarded to %s",
+                  op, cib_client->name, host ? host : "the master instance");
+        return;
+    }
+
+    *process = TRUE;
+    *needs_reply = FALSE;
+    *local_notify = TRUE;
+    *needs_forward = FALSE;
+
+    if (stand_alone) {
+        crm_trace("Processing %s op from %s (stand-alone)", op, cib_client->name);
+
+    } else if (host == NULL) {
+        crm_trace("Processing unaddressed %s op from %s", op, cib_client->name);
+
+    } else if (safe_str_eq(host, cib_our_uname)) {
+        crm_trace("Processing locally addressed %s op from %s", op, cib_client->name);
+
+    } else {
+        crm_trace("%s op from %s needs to be forwarded to %s", op, cib_client->name, host);
+        *needs_forward = TRUE;
+        *process = FALSE;
+    }
+}
+
+static void
+parse_local_options(crm_client_t * cib_client, int call_type, int call_options, const char *host,
+                    const char *op, gboolean * local_notify, gboolean * needs_reply,
+                    gboolean * process, gboolean * needs_forward)
+{
+    if(cib_legacy_mode()) {
+        parse_local_options_v1(cib_client, call_type, call_options, host,
+                               op, local_notify, needs_reply, process, needs_forward);
+    } else {
+        parse_local_options_v2(cib_client, call_type, call_options, host,
+                               op, local_notify, needs_reply, process, needs_forward);
+    }
+}
+
 static gboolean
-parse_peer_options(int call_type, xmlNode * request,
+parse_peer_options_v1(int call_type, xmlNode * request,
                    gboolean * local_notify, gboolean * needs_reply, gboolean * process,
                    gboolean * needs_forward)
 {
@@ -449,6 +514,7 @@ parse_peer_options(int call_type, xmlNode * request,
         return TRUE;
     }
 
+    crm_trace("Processing %s request sent by %s", op, originator);
     op = crm_element_value(request, F_CIB_OPERATION);
     if (safe_str_eq(op, "cib_shutdown_req")) {
         /* Always process these */
@@ -508,6 +574,89 @@ parse_peer_options(int call_type, xmlNode * request,
     }
 
     return FALSE;
+}
+
+static gboolean
+parse_peer_options_v2(int call_type, xmlNode * request,
+                   gboolean * local_notify, gboolean * needs_reply, gboolean * process,
+                   gboolean * needs_forward)
+{
+    const char *host = NULL;
+    const char *delegated = NULL;
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *originator = crm_element_value(request, F_ORIG);
+    const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
+    const char *update = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
+
+    gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
+
+    if (crm_is_true(update)) {
+        crm_trace("Ingoring legacy %s global update from %s", op, originator);
+        return FALSE;
+
+    } else if (is_reply && cib_op_modifies(call_type)) {
+        crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
+        return FALSE;
+
+    } else if(is_reply) {
+        crm_trace("Handling %s reply sent from %s to local clients", op, originator);
+        *process = FALSE;
+        *needs_reply = FALSE;
+        *local_notify = TRUE;
+        return TRUE;
+
+    } else if (safe_str_eq(op, "cib_shutdown_req")) {
+        /* Legacy handling */
+        crm_debug("Legacy handling of %s message from %s", op, originator);
+        *local_notify = FALSE;
+        if (reply_to == NULL) {
+            *process = TRUE;
+        }
+        return *process;
+    }
+
+    *process = TRUE;
+    *needs_reply = FALSE;
+
+    delegated = crm_element_value(request, F_CIB_DELEGATED);
+    if(safe_str_eq(delegated, cib_our_uname)) {
+        *local_notify = TRUE;
+    } else {
+        *local_notify = FALSE;
+    }
+
+    host = crm_element_value(request, F_CIB_HOST);
+    if (host != NULL && safe_str_eq(host, cib_our_uname)) {
+        crm_trace("Processing %s request sent to us from %s", op, originator);
+        *needs_reply = TRUE;
+        return TRUE;
+
+    } else if (host != NULL) {
+        /* this is for a specific instance and we're not it */
+        crm_trace("Ignoring %s operation for instance on %s", op, crm_str(host));
+        return FALSE;
+    }
+
+    crm_trace("Processing %s request sent to everyone by %s", op, originator);
+    return TRUE;
+}
+
+static gboolean
+parse_peer_options(int call_type, xmlNode * request,
+                   gboolean * local_notify, gboolean * needs_reply, gboolean * process,
+                   gboolean * needs_forward)
+{
+    /* TODO: What happens when an update comes in after node A
+     * requests the CIB from node B, but before it gets the reply (and
+     * sends out the replace operation)
+     */
+    if(cib_legacy_mode()) {
+        return parse_peer_options_v1(
+            call_type, request, local_notify, needs_reply, process, needs_forward);
+    } else {
+        return parse_peer_options_v2(
+            call_type, request, local_notify, needs_reply, process, needs_forward);
+    }
 }
 
 static void
@@ -738,16 +887,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         } else if (rc != pcmk_ok && is_update) {
             cib_num_fail++;
             level = LOG_WARNING;
-/*
-        } else if (safe_str_eq(op, CIB_OP_QUERY)) {
-            level = LOG_TRACE;
-
-        } else if (safe_str_eq(op, CIB_OP_SLAVE)) {
-            level = LOG_TRACE;
-
-        } else if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-            level = LOG_TRACE;
-*/
         }
 
         do_crm_log(level,
@@ -773,7 +912,14 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
             local_notify = FALSE;
         }
     }
+
     /* from now on we are the server */
+    if(cib_legacy_mode() == FALSE) {
+        /* Skip to notification */
+        call_options |= cib_inhibit_bcast;
+        from_peer = !local_notify;
+    }
+
     if (needs_reply == FALSE || stand_alone) {
         /* nothing more to do...
          * this was a non-originating slave update
@@ -1021,9 +1167,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
         crm_trace("Sending notifications");
-#ifdef SUPPORT_POSTNOTIFY
-        cib_post_notify(call_options, op, input, rc, the_cib);
-#endif
         cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
     }
 
@@ -1127,7 +1270,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, F_ORIG);
 
-    if (originator == NULL || crm_str_eq(originator, cib_our_uname, TRUE)) {
+    if (cib_legacy_mode() && (originator == NULL || crm_str_eq(originator, cib_our_uname, TRUE))) {
         /* message is from ourselves */
         int bcast_id = 0;
 
