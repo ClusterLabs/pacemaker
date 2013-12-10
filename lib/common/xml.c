@@ -826,7 +826,7 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if (target == NULL
         && value != NULL
-        && strcmp(value, "removed:top") == 0) {
+        && strcmp(value, "added:top") == 0) {
         id = ID(patch);
         name = crm_element_name(patch);
         crm_trace("We are the root of the addition: %s.id=%s", name, id);
