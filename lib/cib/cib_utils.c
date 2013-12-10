@@ -427,6 +427,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         int test_rc;
         xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        xml_log_changes(LOG_INFO, scratch);
         crm_log_xml_debug(p, "Patchset");
         test_rc = xml_apply_patchset(c, p, TRUE);
         if(test_rc == pcmk_ok) {
