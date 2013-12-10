@@ -822,16 +822,6 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
         return;
     }
 
-    if (target->type == XML_COMMENT_NODE) {
-        add_xml_comment(parent, target, patch);
-    }
-
-    id = ID(target);
-    name = crm_element_name(target);
-    CRM_CHECK(name != NULL, return);
-    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
-    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
-
     /* check for XML_DIFF_MARKER in a child */
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if (target == NULL
@@ -849,6 +839,16 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
         crm_err("Could not locate: %s.id=%s", name, id);
         return;
     }
+
+    if (target->type == XML_COMMENT_NODE) {
+        add_xml_comment(parent, target, patch);
+    }
+
+    id = ID(target);
+    name = crm_element_name(target);
+    CRM_CHECK(name != NULL, return);
+    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
+    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
 
     for (xIter = crm_first_attr(patch); xIter != NULL; xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
