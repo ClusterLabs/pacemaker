@@ -2916,7 +2916,7 @@ xml_calculate_changes(xmlNode * old, xmlNode * new)
 
     xml_track_changes(new);
     __xml_diff_object(old, new);
-    xml_log_changes(LOG_INFO, new);
+    xml_log_changes(LOG_TRACE, new);
 }
 
 xmlNode *

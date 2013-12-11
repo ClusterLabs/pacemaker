@@ -423,6 +423,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
 
+#if 1
     if(xml_document_dirty(scratch)) {
         int test_rc;
         xmlNode * c = copy_xml(current_cib);
@@ -435,6 +436,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
 
             crm_trace("%s vs. %s", d1, d2);
+            if(strcmp(d1, d2) != 0) {
+                crm_log_xml_trace(c, "current");
+                crm_log_xml_trace(scratch, "scratch");
+            }
             CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
             free(d1);
             free(d2);
@@ -448,6 +453,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         free_xml(p);
         free_xml(c);
     }
+#endif
 
     local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
     xml_accept_changes(scratch);
