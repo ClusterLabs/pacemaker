@@ -227,6 +227,7 @@ crm_node_created(xmlNode *n)
     xml_private_t *p = n->_private;
 
     if(p && TRACKING_CHANGES(n)) {
+        p->flags |= xpf_created;
         crm_node_dirty(n);
     }
 }
@@ -2203,7 +2204,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
 
                     if(is_set(p->flags, xpf_created)) {
                         do_crm_log_alias(log_level, file, function, line,
-                                         "%s %s@%s=%s", prefix_m, spaces, aname, value);
+                                         "+%s %s@%s=%s", prefix, spaces, aname, value);
                     } else {
                         do_crm_log_alias(log_level, file, function, line,
                                          "%s %s@%s=%s", prefix, spaces, aname, value);
@@ -2860,25 +2861,35 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
     for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
 
+        /* Assume everything was just created and take it from there */
         p->flags |= xpf_created;
     }
 
     for (pIter = crm_first_attr(old); pIter != NULL; pIter = pIter->next) {
+        xml_private_t *p = NULL;
         const char *name = (const char *)pIter->name;
         const char *old_value = crm_element_value(old, name);
         xmlAttr *exists = xmlHasProp(new, pIter->name);
 
         if(exists == NULL) {
-            crm_xml_add(new, name, old_value);
+            crm_trace("Lost %s@%s=%s", old->name, name, old_value);
+            exists = xmlSetProp(new, (const xmlChar *)name, (const xmlChar *)old_value);
+            p = exists->_private;
+            p->flags = (p->flags & ~xpf_created);
             xml_remove_prop(new, name);
 
         } else {
-            xml_private_t *p = exists->_private;
             const char *value = crm_element_value(new, name);
 
-            clear_bit(p->flags, xpf_created);
+            p = exists->_private;
+            p->flags = (p->flags & ~xpf_created);
+
             if(strcmp(value, old_value) != 0) {
+                crm_trace("Modified %s@%s=%s", old->name, name, old_value);
                 crm_attr_dirty(exists);
+
+            } else {
+                crm_trace("Unchanged %s@%s=%s", old->name, name, old_value);
             }
         }
     }
@@ -2886,12 +2897,11 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
     for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
 
-        if(is_set(p->flags, xpf_dirty)) {
-            break;
-
-        } else if(is_set(p->flags, xpf_created)) {
-            crm_node_dirty(new);
-            break;
+        if(is_set(p->flags, xpf_created)) {
+            const char *name = (const char *)pIter->name;
+            const char *value = crm_element_value(new, name);
+            crm_trace("Created %s@%s=%s", new->name, name, value);
+            crm_attr_dirty(pIter);
         }
     }
 
