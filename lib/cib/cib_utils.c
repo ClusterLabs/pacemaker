@@ -427,18 +427,18 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if(xml_document_dirty(scratch)) {
         int test_rc;
         xmlNode * c = copy_xml(current_cib);
-        xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, FALSE);
         xml_log_changes(LOG_INFO, scratch);
         crm_log_xml_debug(p, "Patchset");
-        test_rc = xml_apply_patchset(c, p, TRUE);
+        test_rc = xml_apply_patchset(c, p, FALSE);
         if(test_rc == pcmk_ok) {
             char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
             char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
 
             crm_trace("%s vs. %s", d1, d2);
             if(strcmp(d1, d2) != 0) {
-                crm_log_xml_trace(c, "current");
-                crm_log_xml_trace(scratch, "scratch");
+                crm_log_xml_trace(c, "calculated");
+                crm_log_xml_trace(scratch, "actual");
             }
             CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
             free(d1);
