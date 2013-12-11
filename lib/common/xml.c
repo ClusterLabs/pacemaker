@@ -2856,20 +2856,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
 
+    CRM_CHECK(new != NULL, return);
     if(old == NULL) {
         crm_node_created(new);
-        return;
-
-    } else if(new == NULL) {
-        int offset = 0;
-        char buffer[XML_BUFFER_SIZE];
-        xml_private_t *p = new->doc->_private;
-
-        if(__get_prefix(NULL, old, buffer, offset) > 0) {
-            p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
-            p->flags |= xpf_dirty;
-        }
-
         return;
 
     } else {
@@ -2935,7 +2924,19 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
     for (cIter = __xml_first_child(old); cIter != NULL; cIter = __xml_next(cIter)) {
         xmlNode *new_child = find_entity(new, crm_element_name(cIter), ID(cIter));
 
-        __xml_diff_object(cIter, new_child);
+        if(new_child) {
+            __xml_diff_object(cIter, new_child);
+
+        } else {
+            int offset = 0;
+            char buffer[XML_BUFFER_SIZE];
+            xml_private_t *p = new->doc->_private;
+
+            if(__get_prefix(NULL, cIter, buffer, offset) > 0) {
+                p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
+                p->flags |= xpf_dirty;
+            }
+        }
     }
 }
 
