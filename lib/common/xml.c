@@ -1195,17 +1195,26 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             free_xml(match);
 
         } else if(strcmp(op, "modify") == 0) {
-            xmlAttr *pIter = NULL;
-            xmlNode *attrs = first_named_child(change, XML_DIFF_RESULT);
+            xmlAttr *pIter = crm_first_attr(match);
+            xmlNode *attrs = __xml_first_child(first_named_child(change, XML_DIFF_RESULT));
 
-            for (pIter = crm_first_attr(match); pIter != NULL; pIter = pIter->next) {
-                xml_remove_prop(match, (const char *)pIter->name);
+            if(attrs == NULL) {
+                rc = -ENOMSG;
+                continue;
+            }
+            while(pIter != NULL) {
+                const char *name = (const char *)pIter->name;
+                crm_trace("Removing %s@%s", match->name, name);
+
+                pIter = pIter->next;
+                xml_remove_prop(match, name);
             }
 
             for (pIter = crm_first_attr(attrs); pIter != NULL; pIter = pIter->next) {
                 const char *name = (const char *)pIter->name;
                 const char *value = crm_element_value(attrs, name);
 
+                crm_trace("Adding %s@%s=%s", match->name, name, value);
                 crm_xml_add(match, name, value);
             }
 
