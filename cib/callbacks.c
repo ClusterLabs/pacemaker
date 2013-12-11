@@ -393,7 +393,9 @@ parse_local_options_v2(crm_client_t * cib_client, int call_type, int call_option
                     const char *op, gboolean * local_notify, gboolean * needs_reply,
                     gboolean * process, gboolean * needs_forward)
 {
-    if (cib_op_modifies(call_type)) {
+    if (cib_op_modifies(call_type)
+        && safe_str_neq(op, CIB_OP_MASTER)
+        && safe_str_neq(op, CIB_OP_SLAVE)) {
         /* we need to send an update anyway */
         *needs_reply = TRUE;
         *needs_forward = TRUE;
@@ -540,7 +542,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
 
-    if (crm_is_true(update)) {
+    if (crm_is_true(update) && safe_str_neq(op, CIB_OP_REPLACE)) {
         crm_trace("Ingoring legacy %s global update from %s", op, originator);
         return FALSE;
 
