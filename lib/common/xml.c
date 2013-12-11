@@ -1610,9 +1610,15 @@ crm_xml_err(void *ctx, const char *msg, ...)
     char *buf = NULL;
     static int buffer_len = 0;
     static char *buffer = NULL;
+    static struct qb_log_callsite *xml_error_cs = NULL;
 
     va_start(args, msg);
     len = vasprintf(&buf, msg, args);
+
+    if(xml_error_cs == NULL) {
+        xml_error_cs = qb_log_callsite_get(
+            __func__, __FILE__, "xml library error", LOG_TRACE, __LINE__, crm_trace_nonlog);
+    }
 
     if (strchr(buf, '\n')) {
         buf[len - 1] = 0;
@@ -1621,6 +1627,9 @@ crm_xml_err(void *ctx, const char *msg, ...)
             free(buffer);
         } else {
             crm_err("XML Error: %s", buf);
+        }
+        if (xml_error_cs && xml_error_cs->targets) {
+            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error", TRUE, TRUE);
         }
         buffer = NULL;
         buffer_len = 0;
