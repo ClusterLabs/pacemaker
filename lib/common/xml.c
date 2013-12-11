@@ -2865,17 +2865,21 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
     for (pIter = crm_first_attr(old); pIter != NULL; pIter = pIter->next) {
         const char *name = (const char *)pIter->name;
-        const char *value = crm_element_value(old, name);
+        const char *old_value = crm_element_value(old, name);
         xmlAttr *exists = xmlHasProp(new, pIter->name);
 
-        crm_xml_add(new, name, value);
         if(exists == NULL) {
+            crm_xml_add(new, name, old_value);
             xml_remove_prop(new, name);
 
         } else {
             xml_private_t *p = exists->_private;
+            const char *value = crm_element_value(new, name);
 
             clear_bit(p->flags, xpf_created);
+            if(strcmp(value, old_value) != 0) {
+                crm_attr_dirty(exists);
+            }
         }
     }
 
@@ -2912,6 +2916,7 @@ xml_calculate_changes(xmlNode * old, xmlNode * new)
 
     xml_track_changes(new);
     __xml_diff_object(old, new);
+    xml_log_changes(LOG_INFO, new);
 }
 
 xmlNode *
