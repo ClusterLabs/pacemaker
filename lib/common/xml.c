@@ -461,6 +461,19 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         }
     }
 
+    if(change) {
+        xmlNode *result = NULL;
+
+        change = create_xml_node(change->parent, XML_DIFF_RESULT);
+        result = create_xml_node(change, (const char *)xml->name);
+
+        for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+            const char *value = crm_element_value(xml, (const char *)pIter->name);
+
+            crm_xml_add(result, (const char *)pIter->name, value);
+        }
+    }
+
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
         __xml_build_changes(cIter, patchset);
     }
@@ -1182,17 +1195,18 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             free_xml(match);
 
         } else if(strcmp(op, "modify") == 0) {
-            xmlNode *attr = NULL;
-            for (attr = __xml_first_child(change->children); attr != NULL; attr = __xml_next(attr)) {
-                const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+            xmlAttr *pIter = NULL;
+            xmlNode *attrs = first_named_child(change, XML_DIFF_RESULT);
 
-                op = crm_element_value(attr, XML_DIFF_OP);
-                if(strcmp(op, "set") == 0) {
-                    const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-                    crm_xml_add(match, name, value);
-                } else if(strcmp(op, "unset") == 0) {
-                    xml_remove_prop(match, name);
-                }
+            for (pIter = crm_first_attr(match); pIter != NULL; pIter = pIter->next) {
+                xml_remove_prop(match, (const char *)pIter->name);
+            }
+
+            for (pIter = crm_first_attr(attrs); pIter != NULL; pIter = pIter->next) {
+                const char *name = (const char *)pIter->name;
+                const char *value = crm_element_value(attrs, name);
+
+                crm_xml_add(match, name, value);
             }
 
         } else {
@@ -2204,7 +2218,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
 
                     if(is_set(p->flags, xpf_created)) {
                         do_crm_log_alias(log_level, file, function, line,
-                                         "+%s %s@%s=%s", prefix, spaces, aname, value);
+                                         "%s %s@%s=%s", prefix_m, spaces, aname, value);
                     } else {
                         do_crm_log_alias(log_level, file, function, line,
                                          "%s %s@%s=%s", prefix, spaces, aname, value);
@@ -2848,6 +2862,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
 
         return;
+
     } else {
         xml_private_t *p = new->_private;
 
@@ -2887,9 +2902,6 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             if(strcmp(value, old_value) != 0) {
                 crm_trace("Modified %s@%s=%s", old->name, name, old_value);
                 crm_attr_dirty(exists);
-
-            } else {
-                crm_trace("Unchanged %s@%s=%s", old->name, name, old_value);
             }
         }
     }
