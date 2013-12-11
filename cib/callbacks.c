@@ -45,8 +45,6 @@ extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
 extern const char *cib_root;
 
-static unsigned long cib_local_bcast_num = 0;
-
 typedef struct cib_local_notify_s {
     xmlNode *notify_src;
     char *client_id;
@@ -350,54 +348,6 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                  sync_reply ? "" : "A-",
                  client_obj ? client_obj->name : "<unknown>", pcmk_strerror(local_rc));
     }
-}
-
-static void
-local_notify_destroy_callback(gpointer data)
-{
-    cib_local_notify_t *notify = data;
-
-    free_xml(notify->notify_src);
-    free(notify->client_id);
-    free(notify);
-}
-
-static void
-check_local_notify(int bcast_id)
-{
-    cib_local_notify_t *notify = NULL;
-
-    if (!local_notify_queue) {
-        return;
-    }
-
-    notify = g_hash_table_lookup(local_notify_queue, GINT_TO_POINTER(bcast_id));
-
-    if (notify) {
-        do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply,
-                        notify->from_peer);
-        g_hash_table_remove(local_notify_queue, GINT_TO_POINTER(bcast_id));
-    }
-}
-
-static void
-queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
-                   gboolean from_peer)
-{
-    cib_local_notify_t *notify = calloc(1, sizeof(cib_local_notify_t));
-
-    notify->notify_src = notify_src;
-    notify->client_id = strdup(client_id);
-    notify->sync_reply = sync_reply;
-    notify->from_peer = from_peer;
-
-    if (!local_notify_queue) {
-        local_notify_queue = g_hash_table_new_full(g_direct_hash,
-                                                   g_direct_equal, NULL,
-                                                   local_notify_destroy_callback);
-    }
-
-    g_hash_table_insert(local_notify_queue, GINT_TO_POINTER(cib_local_bcast_num), notify);
 }
 
 static void
@@ -914,37 +864,15 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     /* from now on we are the server */
-    if(cib_legacy_mode() == FALSE) {
-        /* Skip to notification */
-        call_options |= cib_inhibit_bcast;
-        from_peer = !local_notify;
-    }
+    if(is_update && cib_legacy_mode() == FALSE) {
+        crm_trace("Completed pre-sync update from %s%s",
+                  client_id, local_notify?" with local notification":"");
 
-    if (needs_reply == FALSE || stand_alone) {
+    } else if (needs_reply == FALSE || stand_alone) {
         /* nothing more to do...
          * this was a non-originating slave update
          */
         crm_trace("Completed slave update");
-
-    } else if (rc == pcmk_ok && result_diff != NULL && !(call_options & cib_inhibit_bcast)) {
-        gboolean broadcast = FALSE;
-
-        cib_local_bcast_num++;
-        crm_xml_add_int(request, F_CIB_LOCAL_NOTIFY_ID, cib_local_bcast_num);
-        broadcast = send_peer_reply(request, result_diff, originator, TRUE);
-
-        if (broadcast && client_id && local_notify && op_reply) {
-
-            /* If we have been asked to sync the reply,
-             * and a bcast msg has gone out, we queue the local notify
-             * until we know the bcast message has been received */
-            local_notify = FALSE;
-            crm_trace("Queuing local %ssync notification for %s",
-                      (call_options & cib_sync_call) ? "" : "a-", client_id);
-
-            queue_local_notify(op_reply, client_id, (call_options & cib_sync_call), from_peer);
-            op_reply = NULL;    /* the reply is queued, so don't free here */
-        }
 
     } else if (call_options & cib_discard_reply) {
         crm_trace("Caller isn't interested in reply");
@@ -958,6 +886,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
 
         } else if (rc != pcmk_ok) {
             crm_trace("Request not broadcast: call failed: %s", pcmk_strerror(rc));
+
         } else {
             crm_trace("Directing reply to %s", originator);
         }
@@ -1272,11 +1201,6 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
     if (cib_legacy_mode() && (originator == NULL || crm_str_eq(originator, cib_our_uname, TRUE))) {
         /* message is from ourselves */
-        int bcast_id = 0;
-
-        if (!(crm_element_value_int(msg, F_CIB_LOCAL_NOTIFY_ID, &bcast_id))) {
-            check_local_notify(bcast_id);
-        }
         return;
 
     } else if (crm_peer_cache == NULL) {
