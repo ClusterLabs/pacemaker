@@ -637,7 +637,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         return FALSE;
     }
 
-    crm_trace("Processing %s request sent to everyone by %s", op, originator);
+    crm_trace("Processing %s request sent to everyone by %s %s", op, originator, (*local_notify)?"(notify)":"");
     return TRUE;
 }
 
