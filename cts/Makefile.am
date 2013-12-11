@@ -34,7 +34,8 @@ ctslib_PYTHON	=	__init__.py		\
 			CTSaudits.py		\
 			CTStests.py		\
 			CTSscenarios.py		\
-			CIB.py
+			CIB.py			\
+			cib_xml.py
 
 cts_DATA	=	README cts.supp
 
