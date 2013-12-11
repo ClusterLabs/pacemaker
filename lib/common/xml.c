@@ -196,9 +196,6 @@ set_parent_flag(xmlNode *n, long flag)
 
         if(p == NULL) {
             /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
-        } else if(p->flags & flag) {
-            /* All parents can be assumed to have the flag */
-            break;
         } else {
             p->flags |= flag;
         }
