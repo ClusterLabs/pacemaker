@@ -553,7 +553,9 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
         const char *value = crm_element_value(last, vfields[lpc]);
 
         crm_xml_add(diff_child, vfields[lpc], value);
-        crm_xml_add(cib, vfields[lpc], value);
+        if(changed || lpc == 2) {
+            crm_xml_add(cib, vfields[lpc], value);
+        }
     }
 
     tag = "diff-added";
@@ -901,7 +903,6 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
     switch(format) {
         case 1:
             tmp = find_xml_node(patchset, "diff-removed", FALSE);
-            tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
             break;
         case 2:
             tmp = find_xml_node(patchset, "version", FALSE);
@@ -920,7 +921,6 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
     switch(format) {
         case 1:
             tmp = find_xml_node(patchset, "diff-added", FALSE);
-            tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
             break;
         case 2:
             tmp = find_xml_node(patchset, "version", FALSE);
