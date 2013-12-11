@@ -549,7 +549,7 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
         cib = create_xml_node(diff_child, tag);
     }
 
-    for(lpc = 0; lpc < DIMOF(vfields); lpc++){
+    for(lpc = 0; last && lpc < DIMOF(vfields); lpc++){
         const char *value = crm_element_value(last, vfields[lpc]);
 
         crm_xml_add(diff_child, vfields[lpc], value);
@@ -570,14 +570,14 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
         cib = create_xml_node(diff_child, tag);
     }
 
+    for(lpc = 0; next && lpc < DIMOF(vfields); lpc++){
+        const char *value = crm_element_value(next, vfields[lpc]);
+
+        crm_xml_add(diff_child, vfields[lpc], value);
+    }
+
     if (next) {
         xmlAttrPtr xIter = NULL;
-
-        for(lpc = 0; lpc < DIMOF(vfields); lpc++){
-            const char *value = crm_element_value(next, vfields[lpc]);
-
-            crm_xml_add(diff_child, vfields[lpc], value);
-        }
 
         for (xIter = next->properties; xIter; xIter = xIter->next) {
             const char *p_name = (const char *)xIter->name;
@@ -1131,7 +1131,7 @@ __xml_find_path(xmlNode *top, const char *key)
     if(target) {
         char *path = (char *)xmlGetNodePath(target);
 
-        crm_notice("Found %s for %s", path, key);
+        crm_trace("Found %s for %s", path, key);
         free(path);
     } else {
         crm_notice("No match for %s", key);
