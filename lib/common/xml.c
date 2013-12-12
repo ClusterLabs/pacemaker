@@ -415,10 +415,17 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         char buffer[XML_BUFFER_SIZE];
 
         if(__get_prefix(NULL, xml->parent, buffer, offset) > 0) {
+            int position = 0;
+
+            for(cIter = xml; cIter->prev; cIter = cIter->prev) {
+                position++;
+            }
+
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "create");
             crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add_int(change, XML_DIFF_POSITION, position);
             add_node_copy(change, xml);
         }
 
@@ -1189,7 +1196,31 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             continue;
 
         } else if(strcmp(op, "create") == 0) {
-            add_node_copy(match, change->children);
+            int lpc = 0;
+            int position = 0;
+            xmlNode *child = NULL;
+            xmlNode *match_child = NULL;
+
+            match_child = match->children;
+            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            for(lpc = 0; match_child && lpc < position; lpc++) {
+                match_child = match_child->next;
+            }
+
+            child = xmlDocCopyNode(change->children, match->doc, 1);
+            if(match_child) {
+                crm_trace("Adding %s at position %d", child->name, position);
+                xmlAddPrevSibling(match_child, child);
+
+            } else if(match->last) { /* Add to the end */
+                crm_trace("Adding %s at position %d (end)", child->name, position);
+                xmlAddNextSibling(match->last, child);
+
+            } else {
+                crm_trace("Adding %s at position %d (first)", child->name, position);
+                xmlAddChild(match, child);
+            }
+            crm_node_created(child);
 
         } else if(strcmp(op, "delete") == 0) {
             free_xml(match);

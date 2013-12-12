@@ -366,6 +366,7 @@
 #  define XML_DIFF_RESULT               "change-result"
 #  define XML_DIFF_OP                   "operation"
 #  define XML_DIFF_PATH                 "path"
+#  define XML_DIFF_POSITION             "position"
 
 #  include <crm/common/xml.h>
 
