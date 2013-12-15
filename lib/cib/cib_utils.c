@@ -422,6 +422,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     crm_trace("Massaging CIB contents");
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
+    local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
 
 #if 1
     if(xml_document_dirty(scratch)) {
@@ -430,7 +431,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, FALSE);
         xml_log_changes(LOG_INFO, scratch);
         crm_log_xml_debug(p, "Patchset");
-        test_rc = xml_apply_patchset(c, p, FALSE);
+        crm_log_xml_debug(local_diff, "Diff");
+        test_rc = xml_apply_patchset(c, p, manage_counters);
         if(test_rc == pcmk_ok) {
             char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
             char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
@@ -455,7 +457,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 #endif
 
-    local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
     xml_accept_changes(scratch);
 
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
