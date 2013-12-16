@@ -656,9 +656,13 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     };
 
     CRM_ASSERT(target);
-    CRM_ASSERT(target->doc);
+    if(xml_document_dirty(target) == FALSE) {
+        return NULL;
+    }
 
+    CRM_ASSERT(target->doc);
     doc = target->doc->_private;
+
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
     crm_xml_add_int(patchset, "format", 2);
 
@@ -1274,8 +1278,11 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     int format = 1;
     int rc = pcmk_ok;
 
-    crm_element_value_int(patchset, "format", &format);
+    if(patchset == NULL) {
+        return rc;
+    }
 
+    crm_element_value_int(patchset, "format", &format);
     if(check_version) {
         rc = xml_patch_version_check(xml, patchset, format);
     }
