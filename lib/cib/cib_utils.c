@@ -422,16 +422,16 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     crm_trace("Massaging CIB contents");
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
-    local_diff = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
+    local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
 
 #if 1
+    /* Test diff handling */
     if(xml_document_dirty(scratch)) {
         int test_rc;
         xmlNode * c = copy_xml(current_cib);
         xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, FALSE);
         xml_log_changes(LOG_INFO, scratch);
         crm_log_xml_debug(p, "Patchset");
-        crm_log_xml_debug(local_diff, "Diff");
         test_rc = xml_apply_patchset(c, p, manage_counters);
         if(test_rc == pcmk_ok) {
             char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
@@ -441,16 +441,16 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             if(strcmp(d1, d2) != 0) {
                 crm_log_xml_trace(c, "calculated");
                 crm_log_xml_trace(scratch, "actual");
+                crm_log_xml_debug(local_diff, "Diff");
             }
             CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
             free(d1);
             free(d2);
+
         } else {
-            xmlNode *d = xml_create_patchset(1, current_cib, scratch, (bool*)config_changed, manage_counters);
-            crm_log_xml_debug(d, "Diff");
+            crm_log_xml_debug(local_diff, "Diff");
             crm_err("v2 patch failed to apply: %s (%d)", pcmk_strerror(test_rc), test_rc);
             crm_log_xml_debug(current_cib, "Diff:Input");
-            free_xml(d);
         }
         free_xml(p);
         free_xml(c);

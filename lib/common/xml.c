@@ -737,6 +737,15 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
         crm_xml_add_int(target, XML_ATTR_NUMUPDATES, counter+1);
     }
 
+    if(format == 0) {
+        const char *version = crm_element_value(source, CRM_FEATURE_SET);
+        if(compare_version("3.0.8", version) < 0) {
+            format = 2;
+        } else {
+            format = 1;
+        }
+    }
+
     switch(format) {
         case 1:
             return xml_create_patchset_v1(source, target, config);
@@ -1156,11 +1165,9 @@ __xml_find_path(xmlNode *top, const char *key)
 
             switch(f) {
                 case 1:
-                    crm_trace("%s -> %s", section, tag);
                     target = __first_xml_child_match(target, tag, NULL);
                     break;
                 case 2:
-                    crm_trace("%s -> %s %s", section, tag, id);
                     target = __first_xml_child_match(target, tag, id);
                     break;
                 default:
@@ -1270,20 +1277,25 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
                     match_child = match_child->next;
                 }
 
+                crm_info("Moving %s to position %d (was %d, prev %p, %s %p)",
+                         match->name, position, __xml_offset(match), match->prev,
+                         match_child?"next":"last", match_child?match_child:match->parent->last);
+
                 if(match_child) {
-                    crm_info("Moving %s to position %d (was %d %p)", match->name, position, __xml_offset(match), match->prev);
                     xmlAddPrevSibling(match_child, match);
 
                 } else {
                     CRM_ASSERT(match->parent->last != NULL);
-                    crm_info("Moving %s to position %d (was %d %p) (end)",
-                             match->name, position, __xml_offset(match), match->prev);
                     xmlAddNextSibling(match->parent->last, match);
                 }
+
+            } else {
+                crm_trace("%s is already in position %d", match->name, position);
             }
 
             if(position != __xml_offset(match)) {
-                crm_err("Moved %s to position %d instead of %d (%p)", match->name, position, __xml_offset(match), match->prev);
+                crm_err("Moved %s.%d to position %d instead of %d (%p)",
+                        match->name, ID(match), __xml_offset(match), position, match->prev);
                 rc = -pcmk_err_diff_failed;
             }
 
@@ -1300,7 +1312,6 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             }
             while(pIter != NULL) {
                 const char *name = (const char *)pIter->name;
-                crm_trace("Removing %s@%s", match->name, name);
 
                 pIter = pIter->next;
                 xml_remove_prop(match, name);
@@ -1310,7 +1321,6 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
                 const char *name = (const char *)pIter->name;
                 const char *value = crm_element_value(attrs, name);
 
-                crm_trace("Adding %s@%s=%s", match->name, name, value);
                 crm_xml_add(match, name, value);
             }
 
