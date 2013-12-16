@@ -100,6 +100,7 @@ enum xml_private_flags {
      xpf_tracking  = 0x010,
      xpf_processed = 0x020,
      xpf_skip      = 0x040,
+     xpf_moved     = 0x080,
 };
 
 typedef struct xml_private_s 
@@ -495,6 +496,21 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
 
     for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
         __xml_build_changes(cIter, patchset);
+    }
+
+    p = xml->_private;
+    if(patchset && is_set(p->flags, xpf_moved)) {
+        int offset = 0;
+        char buffer[XML_BUFFER_SIZE];
+
+        crm_trace("%s.%s moved to position %d", xml->name, ID(xml), __xml_offset(xml));
+        if(__get_prefix(NULL, xml, buffer, offset) > 0) {
+            change = create_xml_node(patchset, XML_DIFF_CHANGE);
+
+            crm_xml_add(change, XML_DIFF_OP, "move");
+            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add_int(change, XML_DIFF_POSITION, __xml_offset(xml));
+        }
     }
 }
 
@@ -1234,9 +1250,42 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
 
             } else {
                 crm_trace("Adding %s at position %d (first)", child->name, position);
+                CRM_LOG_ASSERT(position == 0);
                 xmlAddChild(match, child);
             }
             crm_node_created(child);
+
+        } else if(strcmp(op, "move") == 0) {
+            int position = 0;
+
+            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            if(position != __xml_offset(match)) {
+                int lpc = 0;
+                xmlNode *match_child = NULL;
+
+                CRM_ASSERT(match->parent != NULL);
+                match_child = match->parent->children;
+
+                for(lpc = 0; match_child && lpc < position; lpc++) {
+                    match_child = match_child->next;
+                }
+
+                if(match_child) {
+                    crm_info("Moving %s to position %d (was %d %p)", match->name, position, __xml_offset(match), match->prev);
+                    xmlAddPrevSibling(match_child, match);
+
+                } else {
+                    CRM_ASSERT(match->parent->last != NULL);
+                    crm_info("Moving %s to position %d (was %d %p) (end)",
+                             match->name, position, __xml_offset(match), match->prev);
+                    xmlAddNextSibling(match->parent->last, match);
+                }
+            }
+
+            if(position != __xml_offset(match)) {
+                crm_err("Moved %s to position %d instead of %d (%p)", match->name, position, __xml_offset(match), match->prev);
+                rc = -pcmk_err_diff_failed;
+            }
 
         } else if(strcmp(op, "delete") == 0) {
             free_xml(match);
@@ -2998,10 +3047,12 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             /* Check for movement, we already checked for differences */
             int p_new = __xml_offset(cIter);
             int p_old = __xml_offset(old_child);
+            xml_private_t *p = cIter->_private;
 
             if(p_old != p_new - insertions) {
                 crm_info("%s.%s moved from %d to %d - %d",
                          cIter->name, ID(cIter), p_old, p_new, insertions);
+                p->flags |= xpf_moved;
             }
         }
     }
