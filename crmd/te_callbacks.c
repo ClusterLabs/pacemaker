@@ -381,15 +381,19 @@ te_update_diff(const char *event, xmlNode * msg)
         } else if(strstr(xpath, "/cib/configuration/")) {
             abort_transition(INFINITY, tg_restart, "Non-status change", change);
 
-        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS"/")) {
+        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS"[") || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
 
-        } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"/")) {
+        } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
             abort_transition(INFINITY, tg_restart, "Transient attribute change", change);
 
-        } else if(strstr(xpath, "/"XML_CIB_TAG_LRM"/") && safe_str_eq(op, "delete")) {
-            crm_debug("No match for deleted actions in %s", xpath);
+        } else if(strstr(xpath, "/"XML_CIB_TAG_LRM"[") && safe_str_eq(op, "delete")) {
+            crm_debug("No match for %s deletion", xpath);
             abort_transition(INFINITY, tg_restart, "Resource op removal", change);
+
+        } else if(strstr(xpath, "/"XML_CIB_TAG_STATE"[") && safe_str_eq(op, "delete")) {
+            crm_debug("No match for %s deletion", xpath);
+            abort_transition(INFINITY, tg_restart, "Resource section removal", change);
 
         } else if(name == NULL) {
             crm_debug("No result for %s operation to %s", op, xpath);
