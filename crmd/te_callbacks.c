@@ -61,6 +61,7 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
 
     CRM_CHECK(diff != NULL, return);
 
+    log_xml_diff(LOG_TRACE, diff, __FUNCTION__);
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, tg_restart, "Non-status change", diff);
         goto bail;              /* configuration changed */
@@ -296,13 +297,8 @@ te_update_diff(const char *event, xmlNode * msg)
 
     xmlNode *diff = NULL;
 
-    int diff_add_updates = 0;
-    int diff_add_epoch = 0;
-    int diff_add_admin_epoch = 0;
-
-    int diff_del_updates = 0;
-    int diff_del_epoch = 0;
-    int diff_del_admin_epoch = 0;
+    int p_add[3];
+    int p_del[3];
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -326,10 +322,10 @@ te_update_diff(const char *event, xmlNode * msg)
     op = crm_element_value(msg, F_CIB_OPERATION);
     diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
+    xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
-              diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-              diff_add_admin_epoch, diff_add_epoch, diff_add_updates, fsa_state2string(fsa_state));
-    log_cib_diff(LOG_DEBUG_2, diff, __FUNCTION__);
+              p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
+              fsa_state2string(fsa_state));
 
     crm_element_value_int(diff, "format", &format);
     switch(format) {
@@ -338,21 +334,12 @@ te_update_diff(const char *event, xmlNode * msg)
             return;
         case 2:
             /* Cool, we know what to do here */
+            crm_log_xml_trace(diff, "Patch:Raw");
             break;
         default:
             crm_warn("Unknown patch format: %d", format);
             return;
     }
-
-    cib_diff_version_details(diff,
-                             &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                             &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-
-    crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d (%s)", op,
-              diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-              diff_add_admin_epoch, diff_add_epoch, diff_add_updates, fsa_state2string(fsa_state));
-    log_cib_diff(LOG_DEBUG_2, diff, __FUNCTION__);
-
 
     for (change = __xml_first_child(diff); change != NULL; change = __xml_next(change)) {
         const char *name = NULL;
