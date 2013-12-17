@@ -746,11 +746,13 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
 
     if(format == 0) {
         const char *version = crm_element_value(source, CRM_FEATURE_SET);
+
         if(compare_version("3.0.8", version) < 0) {
             format = 2;
         } else {
             format = 1;
         }
+        crm_info("Using patch format %d for version: %s", format, version);
     }
 
     switch(format) {
