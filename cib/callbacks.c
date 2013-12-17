@@ -1015,6 +1015,13 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             manage_counters = FALSE;
         }
 
+        if (is_not_set(call_options, cib_dryrun) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+            /* Copying large CIBs accounts for a huge percentage of our CIB usage */
+            call_options |= cib_zero_copy;
+        } else {
+            clear_bit(call_options, cib_zero_copy);
+        }
+
         /* result_cib must not be modified after cib_perform_op() returns */
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,
@@ -1040,8 +1047,11 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    if (rc == pcmk_ok && (call_options & cib_dryrun) == 0) {
-        rc = activateCibXml(result_cib, config_changed, op);
+    if (rc == pcmk_ok && is_not_set(call_options, cib_dryrun)) {
+        if(is_not_set(call_options, cib_zero_copy)) {
+            rc = activateCibXml(result_cib, config_changed, op);
+        }
+
         if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
@@ -1065,6 +1075,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
     } else if (rc == -pcmk_err_dtd_validation) {
+        CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
+
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");
             free_xml(output);
@@ -1091,6 +1103,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #endif
 
     } else {
+        CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
         free_xml(result_cib);
     }
 

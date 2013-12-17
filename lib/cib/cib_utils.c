@@ -333,6 +333,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 {
     int rc = pcmk_ok;
     gboolean check_dtd = TRUE;
+    xmlNode *top = NULL;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
 
@@ -357,15 +358,32 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         return rc;
     }
 
-    scratch = copy_xml(current_cib);
-    xml_track_changes(scratch);
-    rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
-    if(xml_tracking_changes(scratch) == FALSE) {
-        crm_trace("Inferring changes after %s op", op);
-        xml_calculate_changes(current_cib, scratch);
+    if (is_set(call_options, cib_zero_copy)) {
+        /* Conditional on v2 patch style */
+
+        scratch = current_cib;
+
+        /* Create a shallow copy of current_cib for the version details */
+        current_cib = create_xml_node(NULL, (const char *)scratch->name);
+        copy_in_properties(current_cib, scratch);
+        top = current_cib;
+
+        xml_track_changes(scratch);
+        rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
+
+    } else {
+        scratch = copy_xml(current_cib);
+
+        xml_track_changes(scratch);
+        rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
+
+        if(xml_tracking_changes(scratch) == FALSE) {
+            crm_trace("Inferring changes after %s op", op);
+            xml_calculate_changes(current_cib, scratch);
+        }
+        CRM_CHECK(current_cib != scratch, return -EINVAL);
     }
-    CRM_CHECK(current_cib != scratch, return -EINVAL);
 
     if (rc == pcmk_ok && scratch == NULL) {
         rc = -EINVAL;
@@ -416,10 +434,15 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     crm_trace("Massaging CIB contents");
     strip_text_nodes(scratch);
     fix_plus_plus_recursive(scratch);
-    local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
+
+    if (is_set(call_options, cib_zero_copy)) {
+        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+    } else {
+        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
+    }
 
 #if 1
-    /* Test diff handling */
+    /* Test v2 diff handling */
     if(xml_document_dirty(scratch)) {
         int test_rc;
         xmlNode * c = copy_xml(current_cib);
@@ -520,6 +543,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     } else {
         free_xml(local_diff);
     }
+
+    free_xml(top);
     crm_trace("Done");
     return rc;
 }
@@ -741,15 +766,13 @@ gboolean
 cib_internal_config_changed(xmlNode * diff)
 {
     gboolean changed = FALSE;
-    const char *config_xpath =
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG;
     xmlXPathObject *xpathObj = NULL;
 
     if (diff == NULL) {
         return FALSE;
     }
 
-    xpathObj = xpath_search(diff, config_xpath);
+    xpathObj = xpath_search(diff, "//" XML_CIB_TAG_CRMCONFIG);
     if (numXpathResults(xpathObj) > 0) {
         changed = TRUE;
     }

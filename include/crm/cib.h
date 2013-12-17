@@ -68,6 +68,7 @@ enum cib_call_options {
 	cib_dryrun    	    = 0x00000200,
 	cib_sync_call       = 0x00001000,
 	cib_no_mtime        = 0x00002000,
+	cib_zero_copy       = 0x00004000,
 	cib_inhibit_notify  = 0x00010000,
  	cib_quorum_override = 0x00100000,
 	cib_inhibit_bcast   = 0x01000000,
