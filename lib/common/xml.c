@@ -722,6 +722,21 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
+static gboolean patch_legacy_mode(void)
+{
+    static gboolean init = TRUE;
+    static gboolean legacy = FALSE;
+
+    if(init) {
+        init = FALSE;
+        legacy = daemon_option_enabled("legacy", "cib");
+        if(legacy) {
+            crm_notice("Enabled legacy mode");
+        }
+    }
+    return legacy;
+}
+
 xmlNode *
 xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
 {
@@ -745,14 +760,18 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(format == 0) {
-        const char *version = crm_element_value(source, CRM_FEATURE_SET);
+        const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
 
-        if(compare_version("3.0.8", version) < 0) {
+        if(patch_legacy_mode()) {
+            format = 1;
+
+        } else if(compare_version("3.0.8", version) < 0) {
             format = 2;
+
         } else {
             format = 1;
         }
-        crm_info("Using patch format %d for version: %s", format, version);
+        crm_trace("Using patch format %d for version: %s", format, version);
     }
 
     switch(format) {
