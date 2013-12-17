@@ -199,25 +199,19 @@ gboolean
 cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                          int *_admin_epoch, int *_epoch, int *_updates)
 {
-    xmlNode *tmp = NULL;
+    int add[3];
+    int del[3];
 
-    tmp = find_xml_node(diff, "diff-added", FALSE);
-    tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-    cib_version_details(tmp, admin_epoch, epoch, updates);
+    xml_patch_versions(diff, add, del);
 
-    tmp = find_xml_node(diff, "diff-removed", FALSE);
-    tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-    cib_version_details(tmp, _admin_epoch, _epoch, _updates);
+    *admin_epoch = add[0];
+    *epoch = add[1];
+    *updates = add[2];
 
-    if (*_admin_epoch < 0) {
-        *_admin_epoch = *admin_epoch;
-    }
-    if (*_epoch < 0) {
-        *_epoch = *epoch;
-    }
-    if (*_updates < 0) {
-        *_updates = *updates;
-    }
+    *_admin_epoch = del[0];
+    *_epoch = del[1];
+    *_updates = del[2];
+
     return TRUE;
 }
 
