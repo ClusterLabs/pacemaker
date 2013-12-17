@@ -234,7 +234,10 @@ static void process_resource_updates(
     xmlNode *rsc_op = NULL;
     int num_resources = 0;
 
-    if(strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
+    if(xml == NULL) {
+        return;
+
+    } else if(strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
     }
 
@@ -265,19 +268,22 @@ static void process_resource_updates(
     }
 }
 
+#define NODE_PATT "/lrm[@id="
 static char *get_node_from_xpath(const char *xpath) 
 {
-    char *match;
-    char *tmp = strdup(xpath);
+    char *nodeid = NULL;
+    char *tmp = strstr(xpath, NODE_PATT);
 
-    match = strstr(tmp, "/lrm[@id");
-    match += 10;
+    if(tmp) {
+        tmp += strlen(NODE_PATT);
+        tmp += 1;
 
-    tmp = strstr(match, "\'");
-    CRM_ASSERT(tmp);
-    tmp[0] = 0;
-
-    return match;
+        nodeid = strdup(tmp);
+        tmp = strstr(nodeid, "\'");
+        CRM_ASSERT(tmp);
+        tmp[0] = 0;
+    }
+    return nodeid;
 }
 
 void
@@ -360,6 +366,9 @@ te_update_diff(const char *event, xmlNode * msg)
 
         } else if(op && strcmp(op, "modify") == 0) {
             match = first_named_child(change, XML_DIFF_RESULT);
+            if(match) {
+                match = match->children;
+            }
         }
 
         if(match) {
@@ -388,16 +397,17 @@ te_update_diff(const char *event, xmlNode * msg)
 
         } else if(strcmp(name, XML_TAG_CIB) == 0) {
             xmlNode *state = NULL;
+            xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
+            xmlNode *config = first_named_child(match, XML_CIB_TAG_CONFIGURATION);
 
-            match = first_named_child(match, XML_CIB_TAG_STATUS);
-            for (state = __xml_first_child(match); state != NULL; state = __xml_next(state)) {
+            for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
                 xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
 
                 node = ID(state);
                 process_resource_updates(node, lrm, change, op, xpath);
             }
 
-            if(first_named_child(match->parent, XML_CIB_TAG_CONFIGURATION)) {
+            if(config) {
                 abort_transition(INFINITY, tg_restart, "Non-status change", change);
             }
 
