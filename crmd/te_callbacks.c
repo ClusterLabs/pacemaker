@@ -352,8 +352,15 @@ te_update_diff(const char *event, xmlNode * msg)
         const char *name = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-        xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+        xmlNode *match = NULL;
         const char *node = NULL;
+
+        if(strcmp(op, "create") == 0) {
+            match = change->children;
+
+        } else if(strcmp(op, "modify") == 0) {
+            match = first_named_child(change, XML_DIFF_RESULT);
+        }
 
         if(match) {
             name = (const char *)match->name;
