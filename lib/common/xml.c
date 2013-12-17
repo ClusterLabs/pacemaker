@@ -137,7 +137,6 @@ static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none'
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
-static void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 
 #define CHUNK_SIZE 1024
 #define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
@@ -2937,7 +2936,7 @@ purge_diff_markers(xmlNode * a_node)
     }
 }
 
-static void
+void
 save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
 {
     char *f = NULL;

@@ -451,6 +451,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
+    xml_log_changes(LOG_INFO, scratch);
     if (is_not_set(call_options, cib_zero_copy)
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
@@ -458,8 +459,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         /* Validate the calculated patch set */
         int test_rc, format = 1;
         xmlNode * c = copy_xml(current_cib);
-
-        xml_log_changes(LOG_INFO, scratch);
 
         crm_element_value_int(local_diff, "format", &format);
         test_rc = xml_apply_patchset(c, local_diff, manage_counters);
@@ -470,9 +469,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
             crm_trace("%s vs. %s", d1, d2);
             if(strcmp(d1, d2) != 0) {
-                crm_log_xml_trace(c,       "Patch:calculated");
-                crm_log_xml_trace(scratch, "Patch:actual    ");
-                crm_log_xml_debug(local_diff, "Patch");
+                save_xml_to_file(c,       "Patch:calculated", NULL);
+                save_xml_to_file(scratch, "Patch:actual", NULL);
+                save_xml_to_file(local_diff, "Patch", NULL);
 
                 crm_err("v%d patchset error, digest not preserved: got %s, expected %s", format, d1, d2);
             }
@@ -482,9 +481,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             free(d2);
 
         } else {
-            crm_log_xml_trace(current_cib, "Patch:Input ");
-            crm_log_xml_trace(scratch,     "Patch:Result");
-            crm_log_xml_debug(local_diff,  "Patch");
+            save_xml_to_file(current_cib, "Patch:input", NULL);
+            save_xml_to_file(scratch,     "Patch:actual", NULL);
+            save_xml_to_file(local_diff,  "Patch", NULL);
             crm_err("v%d patchset error, patch failed to apply: %s (%d)", format, pcmk_strerror(test_rc), test_rc);
         }
         free_xml(c);

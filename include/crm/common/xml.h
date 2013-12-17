@@ -261,5 +261,6 @@ xmlNode *xml_create_patchset(
 int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 void xml_log_changes(int level, xmlNode *xml);
 bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 
 #endif
