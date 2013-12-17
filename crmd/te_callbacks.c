@@ -355,10 +355,10 @@ te_update_diff(const char *event, xmlNode * msg)
         xmlNode *match = NULL;
         const char *node = NULL;
 
-        if(strcmp(op, "create") == 0) {
+        if(op && strcmp(op, "create") == 0) {
             match = change->children;
 
-        } else if(strcmp(op, "modify") == 0) {
+        } else if(op && strcmp(op, "modify") == 0) {
             match = first_named_child(change, XML_DIFF_RESULT);
         }
 
@@ -386,6 +386,21 @@ te_update_diff(const char *event, xmlNode * msg)
             crm_debug("No result for %s operation to %s", op, xpath);
             CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
 
+        } else if(strcmp(name, XML_TAG_CIB) == 0) {
+            xmlNode *state = NULL;
+
+            match = first_named_child(match, XML_CIB_TAG_STATUS);
+            for (state = __xml_first_child(match); state != NULL; state = __xml_next(state)) {
+                xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
+
+                node = ID(state);
+                process_resource_updates(node, lrm, change, op, xpath);
+            }
+
+            if(first_named_child(match->parent, XML_CIB_TAG_CONFIGURATION)) {
+                abort_transition(INFINITY, tg_restart, "Non-status change", change);
+            }
+
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
             xmlNode *state = NULL;
 
@@ -396,7 +411,7 @@ te_update_diff(const char *event, xmlNode * msg)
                 process_resource_updates(node, lrm, change, op, xpath);
             }
 
-        } else if(match && strcmp(name, XML_CIB_TAG_STATE) == 0) {
+        } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
             xmlNode *lrm = first_named_child(match, XML_CIB_TAG_LRM);
 
             node = ID(match);
@@ -409,7 +424,7 @@ te_update_diff(const char *event, xmlNode * msg)
         } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
             char *local_node = get_node_from_xpath(xpath);
 
-            process_resource_updates(node, match, change, op, xpath);
+            process_resource_updates(local_node, match, change, op, xpath);
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
@@ -418,18 +433,18 @@ te_update_diff(const char *event, xmlNode * msg)
             char *local_node = get_node_from_xpath(xpath);
 
             for (rsc_op = __xml_first_child(match); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
-                process_graph_event(rsc_op, node);
+                process_graph_event(rsc_op, local_node);
             }
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
             char *local_node = get_node_from_xpath(xpath);
 
-            process_graph_event(match, node);
+            process_graph_event(match, local_node);
             free(local_node);
 
         } else {
-            crm_err("Ingoring %s operation for %s", op, xpath);
+            crm_err("Ingoring %s operation for %s %p, %s", op, xpath, match, name);
         }
     }
 }
