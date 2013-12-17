@@ -437,6 +437,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     fix_plus_plus_recursive(scratch);
 
     if (is_set(call_options, cib_zero_copy)) {
+        /* At this point, current_cib is just the 'cib' tag and its properties,
+         *
+         * The v1 format would barf on this, but we know the v2 patch
+         * format only needs it for the top-level version fields
+         */
         local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
     } else {
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
