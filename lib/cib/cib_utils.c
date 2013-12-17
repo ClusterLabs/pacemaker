@@ -338,6 +338,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xmlNode *local_diff = NULL;
 
     const char *new_version = NULL;
+    static struct qb_log_callsite *diff_cs = NULL;
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -441,38 +442,48 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-#if 1
-    /* Test v2 diff handling */
-    if(xml_document_dirty(scratch)) {
-        int test_rc;
+    if (diff_cs == NULL) {
+        diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
+    }
+
+    if (is_not_set(call_options, cib_zero_copy)
+        && local_diff
+        && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
+
+        /* Validate the calculated patch set */
+        int test_rc, format = 1;
         xmlNode * c = copy_xml(current_cib);
-        xmlNode * p = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, FALSE);
+
         xml_log_changes(LOG_INFO, scratch);
-        crm_log_xml_debug(p, "Patchset");
-        test_rc = xml_apply_patchset(c, p, manage_counters);
+
+        crm_element_value_int(local_diff, "format", &format);
+        test_rc = xml_apply_patchset(c, local_diff, manage_counters);
+
         if(test_rc == pcmk_ok) {
             char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
             char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
 
             crm_trace("%s vs. %s", d1, d2);
             if(strcmp(d1, d2) != 0) {
-                crm_log_xml_trace(c, "calculated");
-                crm_log_xml_trace(scratch, "actual");
-                crm_log_xml_debug(local_diff, "Diff");
+                crm_log_xml_trace(c,       "Patch:calculated");
+                crm_log_xml_trace(scratch, "Patch:actual    ");
+                crm_log_xml_debug(local_diff, "Patch");
+
+                crm_err("v%d patchset error, digest not preserved: got %s, expected %s", format, d1, d2);
             }
+
             CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
             free(d1);
             free(d2);
 
         } else {
-            crm_log_xml_debug(local_diff, "Diff");
-            crm_err("v2 patch failed to apply: %s (%d)", pcmk_strerror(test_rc), test_rc);
-            crm_log_xml_debug(current_cib, "Diff:Input");
+            crm_log_xml_trace(current_cib, "Patch:Input ");
+            crm_log_xml_trace(scratch,     "Patch:Result");
+            crm_log_xml_debug(local_diff,  "Patch");
+            crm_err("v%d patchset error, patch failed to apply: %s (%d)", format, pcmk_strerror(test_rc), test_rc);
         }
-        free_xml(p);
         free_xml(c);
     }
-#endif
 
     xml_accept_changes(scratch);
 
