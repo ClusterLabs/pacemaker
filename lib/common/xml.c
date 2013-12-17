@@ -190,11 +190,11 @@ get_schema_path(const char *file)
 }
 
 static void
-set_parent_flag(xmlNode *n, long flag) 
+set_parent_flag(xmlNode *xml, long flag) 
 {
 
-    for(; n; n = n->parent) {
-        xml_private_t *p = n->_private;
+    for(; xml; xml = xml->parent) {
+        xml_private_t *p = xml->_private;
 
         if(p == NULL) {
             /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
@@ -205,32 +205,34 @@ set_parent_flag(xmlNode *n, long flag)
 }
 
 static void
-set_doc_flag(xmlNode *n, long flag) 
+set_doc_flag(xmlNode *xml, long flag) 
 {
 
-    if(n && n->doc && n->doc->_private){
-        /* During calls to xmlDocCopyNode(), n->doc may be unset */
-        xml_private_t *p = n->doc->_private;
+    if(xml && xml->doc && xml->doc->_private){
+        /* During calls to xmlDocCopyNode(), xml->doc may be unset */
+        xml_private_t *p = xml->doc->_private;
 
         p->flags |= flag;
     }
 }
 
 static void
-crm_node_dirty(xmlNode *n) 
+crm_node_dirty(xmlNode *xml) 
 {
-    set_doc_flag(n, xpf_dirty);
-    set_parent_flag(n, xpf_dirty);
+    set_doc_flag(xml, xpf_dirty);
+    set_parent_flag(xml, xpf_dirty);
 }
 
 static void
-crm_node_created(xmlNode *n) 
+crm_node_created(xmlNode *xml) 
 {
-    xml_private_t *p = n->_private;
+    xml_private_t *p = xml->_private;
 
-    if(p && TRACKING_CHANGES(n)) {
-        p->flags |= xpf_created;
-        crm_node_dirty(n);
+    if(p && TRACKING_CHANGES(xml)) {
+        if(is_not_set(p->flags, xpf_created)) {
+            p->flags |= xpf_created;
+            crm_node_dirty(xml);
+        }
     }
 }
 
@@ -3002,6 +3004,8 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             xml_remove_prop(new, name);
 
         } else {
+            int p_new = __xml_offset((xmlNode*)exists);
+            int p_old = __xml_offset((xmlNode*)pIter);
             const char *value = crm_element_value(new, name);
 
             p = exists->_private;
@@ -3009,6 +3013,10 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
             if(strcmp(value, old_value) != 0) {
                 crm_trace("Modified %s@%s=%s", old->name, name, old_value);
+                crm_attr_dirty(exists);
+
+            } else if(p_old != p_new) {
+                crm_info("Moved %s@%s (%d -> %d)", old->name, name, p_old, p_new);
                 crm_attr_dirty(exists);
             }
         }
