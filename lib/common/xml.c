@@ -3196,7 +3196,7 @@ diff_xml_object(xmlNode * old, xmlNode * new, gboolean suppress)
 gboolean
 can_prune_leaf(xmlNode * xml_node)
 {
-    xmlNode *child = NULL;
+    xmlNode *cIter = NULL;
     xmlAttrPtr pIter = NULL;
     gboolean can_prune = TRUE;
 
@@ -3209,7 +3209,11 @@ can_prune_leaf(xmlNode * xml_node)
         can_prune = FALSE;
     }
 
-    for (child = __xml_first_child(xml_node); child != NULL; child = __xml_next(child)) {
+    cIter = __xml_first_child(xml_node);
+    while (cIter) {
+        xmlNode *child = cIter;
+
+        cIter = __xml_next(cIter);
         if (can_prune_leaf(child)) {
             free_xml(child);
         } else {
