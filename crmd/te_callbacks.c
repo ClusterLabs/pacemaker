@@ -240,6 +240,7 @@ static void process_resource_updates(
 
     } else if(strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
+        crm_trace("Got %p in %s", xml, XML_CIB_TAG_LRM);
     }
 
     CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
@@ -265,6 +266,7 @@ static void process_resource_updates(
     }
 
     for (rsc_op = __xml_first_child(xml); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
+        crm_trace("Processing %s", ID(rsc_op));
         process_graph_event(rsc_op, node);
     }
 }
@@ -362,6 +364,7 @@ te_update_diff(const char *event, xmlNode * msg)
             name = (const char *)match->name;
         }
 
+        crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
         if(xpath == NULL) {
             /* Version field, ignore */
 
