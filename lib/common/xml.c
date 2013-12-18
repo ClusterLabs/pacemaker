@@ -1121,7 +1121,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     int root_nodes_seen = 0;
     static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
-    const char *version = crm_element_value(xml, XML_ATTR_CRM_VERSION);
+    char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
@@ -1195,7 +1195,7 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     }
 
     free_xml(old);
-
+    free(version);
     return rc;
 }
 
