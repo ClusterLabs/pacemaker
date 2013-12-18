@@ -232,6 +232,7 @@ static void process_resource_updates(
     const char *node, xmlNode *xml, xmlNode *change, const char *op, const char *xpath) 
 {
     xmlNode *cIter = NULL;
+    xmlNode *rsc = NULL;
     xmlNode *rsc_op = NULL;
     int num_resources = 0;
 
@@ -265,9 +266,12 @@ static void process_resource_updates(
         return;
     }
 
-    for (rsc_op = __xml_first_child(xml); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
-        crm_trace("Processing %s", ID(rsc_op));
-        process_graph_event(rsc_op, node);
+    for (rsc = __xml_first_child(xml); rsc != NULL; rsc = __xml_next(rsc)) {
+        crm_trace("Processing %s", ID(rsc));
+        for (rsc_op = __xml_first_child(rsc); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
+            crm_trace("Processing %s", ID(rsc_op));
+            process_graph_event(rsc_op, node);
+        }
     }
 }
 
