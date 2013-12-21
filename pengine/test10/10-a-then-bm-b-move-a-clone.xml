@@ -1,0 +1,75 @@
+<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Sat Dec 21 11:47:45 2013" update-origin="f20node1" update-client="cibadmin" crm_feature_set="3.0.8" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-1.fc20-ce5d77c"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="f20node1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="f20node2"/>
+    </nodes>
+    <resources>
+      <clone id="myclone-clone">
+        <primitive class="ocf" id="myclone" provider="heartbeat" type="Dummy">
+          <instance_attributes id="myclone-instance_attributes"/>
+        </primitive>
+        <meta_attributes id="myclone-clone-meta">
+          <nvpair id="myclone-clone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="vm" provider="heartbeat" type="Dummy">
+        <instance_attributes id="vm-instance_attributes"/>
+        <meta_attributes id="vm-meta_attributes">
+          <nvpair id="vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order first="myclone-clone" first-action="start" id="order-myclone-clone-vm-mandatory" then="vm" then-action="start"/>
+      <rsc_colocation id="colocation-vm-myclone-clone-INFINITY" rsc="vm" score="INFINITY" with-rsc="myclone-clone"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="2" uname="f20node2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="vm" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_last_0" operation_key="vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:7;6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1387647853" last-rc-change="1387647853" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="myclone" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="myclone_last_0" operation_key="myclone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="6:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;6:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1387647836" last-rc-change="1387647836" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="f20node1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="vm" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vm_last_0" operation_key="vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1387647852" last-rc-change="1387647852" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="myclone" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="myclone_last_0" operation_key="myclone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1387647836" last-rc-change="1387647836" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

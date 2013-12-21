@@ -275,6 +275,18 @@ do_test migrate-5 "Primitive migration with a clone"
 do_test migrate-fencing "Migration after Fencing"
 do_test migrate-both-vms "Migrate two VMs that have no colocation"
 
+do_test 1-a-then-bm-move-b "Advanced migrate logic. A then B. migrate B."
+do_test 2-am-then-b-move-a "Advanced migrate logic, A then B, migrate A without stopping B"
+do_test 3-am-then-bm-both-migrate "Advanced migrate logic. A then B. migrate both"
+do_test 4-am-then-bm-b-not-migratable "Advanced migrate logic, A then B, B not migratable"
+do_test 5-am-then-bm-a-not-migratable "Advanced migrate logic. A then B. move both, a not migratable"
+do_test 6-migrate-group "Advanced migrate logic, migrate a group"
+do_test 7-migrate-group-one-unmigratable "Advanced migrate logic, migrate group mixed with allow-migrate true/false"
+do_test 8-am-then-bm-a-migrating-b-stopping "Advanced migrate logic, A then B, A migrating, B stopping"
+do_test 9-am-then-bm-b-migrating-a-stopping "Advanced migrate logic, A then B, B migrate, A stopping"
+do_test 10-a-then-bm-b-move-a-clone "Advanced migrate logic, A clone then B, migrate B while stopping A"
+do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone then B, B moving while A is start/stopping"
+
 #echo ""
 #do_test complex1 "Complex	"
 
