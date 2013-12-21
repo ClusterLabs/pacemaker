@@ -1,5 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
+"license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" -> "license.anbriz.vds-ok.com-vm_start_0 v03-a" [ style = bold]
 "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" -> "license.anbriz.vds-ok.com-vm_stop_0 v03-b" [ style = bold]
 "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" [ style=bold color="green" fontcolor="black"]
 "license.anbriz.vds-ok.com-vm_migrate_to_0 v03-b" -> "license.anbriz.vds-ok.com-vm_migrate_from_0 v03-a" [ style = bold]
@@ -29,6 +30,7 @@ digraph "g" {
 "stonith-v03-b_stop_0 v03-a" -> "all_stopped" [ style = bold]
 "stonith-v03-b_stop_0 v03-a" -> "stonith-v03-b_start_0 v03-a" [ style = bold]
 "stonith-v03-b_stop_0 v03-a" [ style=bold color="green" fontcolor="black"]
+"terminal0.anbriz.vds-ok.com-vm_migrate_from_0 v03-b" -> "terminal0.anbriz.vds-ok.com-vm_start_0 v03-b" [ style = bold]
 "terminal0.anbriz.vds-ok.com-vm_migrate_from_0 v03-b" -> "terminal0.anbriz.vds-ok.com-vm_stop_0 v03-a" [ style = bold]
 "terminal0.anbriz.vds-ok.com-vm_migrate_from_0 v03-b" [ style=bold color="green" fontcolor="black"]
 "terminal0.anbriz.vds-ok.com-vm_migrate_to_0 v03-a" -> "terminal0.anbriz.vds-ok.com-vm_migrate_from_0 v03-b" [ style = bold]

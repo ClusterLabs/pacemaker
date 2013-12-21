@@ -6,6 +6,7 @@ digraph "g" {
 "load_stopped_node2 node2" [ style=bold color="green" fontcolor="orange" ]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
+"rsc1_migrate_from_0 node2" -> "rsc1_start_0 node2" [ style = bold]
 "rsc1_migrate_from_0 node2" -> "rsc1_stop_0 node1" [ style = bold]
 "rsc1_migrate_from_0 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1_migrate_to_0 node1" -> "rsc1_migrate_from_0 node2" [ style = bold]

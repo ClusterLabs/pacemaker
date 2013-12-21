@@ -1,5 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
+"clone-dom0-iscsi1_running_0" -> "domU-test01_migrate_to_0 dom0-02" [ style = bold]
 "clone-dom0-iscsi1_running_0" -> "domU-test01_start_0 dom0-01" [ style = bold]
 "clone-dom0-iscsi1_running_0" [ style=bold color="green" fontcolor="orange" ]
 "clone-dom0-iscsi1_start_0" -> "clone-dom0-iscsi1_running_0" [ style = bold]
@@ -27,9 +28,14 @@ digraph "g" {
 "dom0-iscsi1:0_stopped_0" -> "clone-dom0-iscsi1_stopped_0" [ style = bold]
 "dom0-iscsi1:0_stopped_0" -> "dom0-iscsi1:0_start_0" [ style = bold]
 "dom0-iscsi1:0_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"domU-test01_start_0 dom0-01" [ style=bold color="green" fontcolor="black" ]
+"domU-test01_migrate_from_0 dom0-01" -> "domU-test01_start_0 dom0-01" [ style = bold]
+"domU-test01_migrate_from_0 dom0-01" -> "domU-test01_stop_0 dom0-02" [ style = bold]
+"domU-test01_migrate_from_0 dom0-01" [ style=bold color="green" fontcolor="black"]
+"domU-test01_migrate_to_0 dom0-02" -> "domU-test01_migrate_from_0 dom0-01" [ style = bold]
+"domU-test01_migrate_to_0 dom0-02" [ style=bold color="green" fontcolor="black"]
+"domU-test01_start_0 dom0-01" [ style=bold color="green" fontcolor="orange"]
 "domU-test01_stop_0 dom0-02" -> "all_stopped" [ style = bold]
-"domU-test01_stop_0 dom0-02" -> "clone-dom0-iscsi1_stop_0" [ style = bold]
+"domU-test01_stop_0 dom0-02" -> "clone-dom0-iscsi1_stop_0" [ style = dashed]
 "domU-test01_stop_0 dom0-02" -> "domU-test01_start_0 dom0-01" [ style = bold]
 "domU-test01_stop_0 dom0-02" [ style=bold color="green" fontcolor="black" ]
 }

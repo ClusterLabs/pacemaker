@@ -48,6 +48,7 @@ digraph "g" {
 "master-1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "master-1_stopped_0" -> "master-1_promote_0" [ style = bold]
 "master-1_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"migrator_migrate_from_0 pcmk-3" -> "migrator_start_0 pcmk-3" [ style = bold]
 "migrator_migrate_from_0 pcmk-3" -> "migrator_stop_0 pcmk-1" [ style = bold]
 "migrator_migrate_from_0 pcmk-3" [ style=bold color="green" fontcolor="black" ]
 "migrator_migrate_to_0 pcmk-1" -> "migrator_migrate_from_0 pcmk-3" [ style = bold]

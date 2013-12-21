@@ -9,23 +9,27 @@ Online: [ star world ]
 
 Transition Summary:
  * Start   p1	(world)
- * Move    test1	(Started star -> world)
- * Move    test2	(Started star -> world)
+ * Migrate test1	(Started star -> world)
+ * Migrate test2	(Started star -> world)
 
 Executing cluster transition:
  * Resource action: p1              monitor on world
  * Resource action: p1              monitor on star
  * Pseudo action:   gr1_stop_0
- * Resource action: test2           stop on star
+ * Resource action: test1           migrate_to on star
  * Pseudo action:   probe_complete
  * Resource action: p1              start on world
+ * Resource action: test1           migrate_from on world
+ * Resource action: test2           migrate_to on star
+ * Resource action: test2           migrate_from on world
+ * Resource action: test2           stop on star
  * Resource action: test1           stop on star
  * Cluster action:  do_shutdown on star
  * Pseudo action:   all_stopped
  * Pseudo action:   gr1_stopped_0
  * Pseudo action:   gr1_start_0
- * Resource action: test1           start on world
- * Resource action: test2           start on world
+ * Pseudo action:   test1_start_0
+ * Pseudo action:   test2_start_0
  * Pseudo action:   gr1_running_0
  * Resource action: test1           monitor=10000 on world
  * Resource action: test2           monitor=10000 on world

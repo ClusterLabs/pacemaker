@@ -1,5 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
+"mgmt-vm_migrate_from_0 s01-1" -> "mgmt-vm_start_0 s01-1" [ style = bold]
 "mgmt-vm_migrate_from_0 s01-1" -> "mgmt-vm_stop_0 s01-0" [ style = bold]
 "mgmt-vm_migrate_from_0 s01-1" [ style=bold color="green" fontcolor="black" ]
 "mgmt-vm_migrate_to_0 s01-0" -> "mgmt-vm_migrate_from_0 s01-1" [ style = bold]

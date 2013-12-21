@@ -12,22 +12,22 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="1" priority="1000000">
+  <synapse id="1">
     <action_set>
-      <rsc_op id="12" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2">
+      <rsc_op id="11" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="11" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="10" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="11" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1">
+      <rsc_op id="10" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -47,6 +47,9 @@
       <trigger>
         <rsc_op id="8" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
+      <trigger>
+        <rsc_op id="11" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
@@ -58,7 +61,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
+        <rsc_op id="11" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>
   </synapse>

@@ -1,20 +1,20 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
-  <synapse id="0" priority="1000000">
+  <synapse id="0" priority="4">
     <action_set>
-      <rsc_op id="57" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001">
+      <rsc_op id="21" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_from" CRM_meta_record_pending="false" CRM_meta_timeout="1800000"  xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="56" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="20" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1" priority="4">
     <action_set>
-      <rsc_op id="56" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="20" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_record_pending="false" CRM_meta_timeout="1800000"  xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
@@ -47,6 +47,9 @@
       <trigger>
         <rsc_op id="17" operation="stop" operation_key="degllx62-vm_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
+      <trigger>
+        <rsc_op id="21" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="4" priority="4">
@@ -58,13 +61,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="57" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+        <rsc_op id="21" operation="migrate_from" operation_key="degllx62-vm_migrate_from_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5" priority="2">
     <action_set>
-      <rsc_op id="20" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001">
+      <rsc_op id="22" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001">
         <primitive id="degllx61-vm" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_name="stop" CRM_meta_record_pending="false" CRM_meta_timeout="120000"  xmfile="/etc/xen/vm/degllx61"/>
       </rsc_op>
@@ -73,100 +76,100 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <pseudo_event id="39" operation="stopped" operation_key="grp-nfs:1_stopped_0">
+      <pseudo_event id="41" operation="stopped" operation_key="grp-nfs:1_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="33" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="35" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="36" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="37" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0"/>
+        <pseudo_event id="40" operation="stop" operation_key="grp-nfs:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0">
+      <pseudo_event id="40" operation="stop" operation_key="grp-nfs:1_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="42" operation="stop" operation_key="clone-nfs_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="clone-nfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="33" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="35" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_config" long-id="nfs-xen_config:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000"  device="deglnap098nfs:/vol/xen_config" directory="/etc/xen/vm" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="36" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0"/>
+        <pseudo_event id="40" operation="stop" operation_key="grp-nfs:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="36" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_swapfiles" long-id="nfs-xen_swapfiles:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000"  device="deglnap098nfs:/vol/xen_swapfiles" directory="/var/lib/xen/deglnap098_swapfiles" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="37" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0"/>
+        <pseudo_event id="40" operation="stop" operation_key="grp-nfs:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="37" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="nfs-xen_images" long-id="nfs-xen_images:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000"  device="deglnap099nfs:/vol/xen_images" directory="/var/lib/xen/deglnap099_images" fstype="nfs" options="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="38" operation="stop" operation_key="grp-nfs:1_stop_0"/>
+        <pseudo_event id="40" operation="stop" operation_key="grp-nfs:1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11" priority="1000000">
     <action_set>
-      <pseudo_event id="43" operation="stopped" operation_key="clone-nfs_stopped_0">
+      <pseudo_event id="45" operation="stopped" operation_key="clone-nfs_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="39" operation="stopped" operation_key="grp-nfs:1_stopped_0"/>
+        <pseudo_event id="41" operation="stopped" operation_key="grp-nfs:1_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="42" operation="stop" operation_key="clone-nfs_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="clone-nfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
     <action_set>
-      <pseudo_event id="42" operation="stop" operation_key="clone-nfs_stop_0">
+      <pseudo_event id="44" operation="stop" operation_key="clone-nfs_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -175,50 +178,50 @@
         <rsc_op id="17" operation="stop" operation_key="degllx62-vm_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="20" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+        <rsc_op id="22" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
+      <rsc_op id="48" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="prim-ping" long-id="prim-ping:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="60000"  host_list="77.77.77.138 77.77.77.139" multiplier="2000" name="ping-hosts"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="39" operation="stopped" operation_key="grp-nfs:1_stopped_0"/>
+        <pseudo_event id="41" operation="stopped" operation_key="grp-nfs:1_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="clone-ping_stop_0"/>
+        <pseudo_event id="51" operation="stop" operation_key="clone-ping_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14" priority="1000000">
     <action_set>
-      <pseudo_event id="50" operation="stopped" operation_key="clone-ping_stopped_0">
+      <pseudo_event id="52" operation="stopped" operation_key="clone-ping_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="48" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="clone-ping_stop_0"/>
+        <pseudo_event id="51" operation="stop" operation_key="clone-ping_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
     <action_set>
-      <pseudo_event id="49" operation="stop" operation_key="clone-ping_stop_0">
+      <pseudo_event id="51" operation="stop" operation_key="clone-ping_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="stopped" operation_key="clone-nfs_stopped_0"/>
+        <pseudo_event id="45" operation="stopped" operation_key="clone-nfs_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -230,7 +233,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="20" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+        <rsc_op id="22" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
       </trigger>
     </inputs>
   </synapse>
@@ -257,19 +260,19 @@
         <rsc_op id="17" operation="stop" operation_key="degllx62-vm_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="20" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
+        <rsc_op id="22" operation="stop" operation_key="degllx61-vm_stop_0" on_node="deglxen001" on_node_uuid="deglxen001"/>
       </trigger>
       <trigger>
-        <rsc_op id="33" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="35" operation="stop" operation_key="nfs-xen_config:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="36" operation="stop" operation_key="nfs-xen_swapfiles:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="35" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="37" operation="stop" operation_key="nfs-xen_images:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
       <trigger>
-        <rsc_op id="46" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
+        <rsc_op id="48" operation="stop" operation_key="prim-ping:0_stop_0" internal_operation_key="prim-ping:1_stop_0" on_node="deglxen002" on_node_uuid="deglxen002"/>
       </trigger>
     </inputs>
   </synapse>
