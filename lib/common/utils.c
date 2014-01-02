@@ -2453,12 +2453,16 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
 
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
-#endif
 
     crm_info("Compressed %d bytes into %d (ratio %d:1) in %dms",
              length, *result_len, length / (*result_len),
              (after_t.tv_sec - before_t.tv_sec) * 1000 + (after_t.tv_nsec -
                                                           before_t.tv_nsec) / 1000000);
+#else
+    crm_info("Compressed %d bytes into %d (ratio %d:1)",
+             length, *result_len, length / (*result_len));
+#endif
+
     *result = compressed;
     return TRUE;
 }
