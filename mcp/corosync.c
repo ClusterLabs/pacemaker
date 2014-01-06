@@ -466,6 +466,9 @@ mcp_read_config(void)
     } else if (crm_is_true(logging_to_syslog) == FALSE) {
         crm_err("Please enable some sort of logging, either 'to_logfile: on' or 'to_syslog: on'.");
         crm_err("If you use file logging, be sure to also define a value for 'logfile'");
+
+    } else {
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(logging_syslog_facility));
     }
 
     set_daemon_option("logfacility", logging_syslog_facility);
