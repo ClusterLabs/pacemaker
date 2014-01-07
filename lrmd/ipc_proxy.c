@@ -291,7 +291,13 @@ static int32_t
 ipc_proxy_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
-    crm_client_t *ipc_proxy = crm_client_get_by_id(client->userdata);
+    crm_client_t *ipc_proxy;
+
+    if (client == NULL) {
+        return 0;
+    }
+
+    ipc_proxy = crm_client_get_by_id(client->userdata);
 
     crm_trace("Connection %p", c);
 
@@ -315,6 +321,7 @@ static void
 ipc_proxy_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
+    ipc_proxy_closed(c);
 }
 
 static struct qb_ipcs_service_handlers crmd_proxy_callbacks = {

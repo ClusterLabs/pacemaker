@@ -149,6 +149,10 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
 
+    if (client == NULL) {
+        return 0;
+    }
+
     crm_trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
 #ifdef ENABLE_PCMK_REMOTE
@@ -161,6 +165,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 static void
 lrmd_ipc_destroy(qb_ipcs_connection_t * c)
 {
+    lrmd_ipc_closed(c);
     crm_trace("Connection %p", c);
 }
 

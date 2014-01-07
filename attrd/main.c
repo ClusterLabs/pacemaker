@@ -232,6 +232,9 @@ static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
+    if (client == NULL) {
+        return 0;
+    }
 
     crm_trace("Connection %p", c);
     crm_client_destroy(client);
@@ -242,6 +245,7 @@ static void
 attrd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
+    attrd_ipc_closed(c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {

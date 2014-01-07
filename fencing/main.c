@@ -143,6 +143,10 @@ st_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
 
+    if (client == NULL) {
+        return 0;
+    }
+
     crm_trace("Connection %p closed", c);
     crm_client_destroy(client);
 
@@ -154,6 +158,7 @@ static void
 st_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p destroyed", c);
+    st_ipc_closed(c);
 }
 
 static void
