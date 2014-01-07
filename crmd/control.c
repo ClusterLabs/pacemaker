@@ -696,6 +696,10 @@ crmd_ipc_closed(qb_ipcs_connection_t * c)
     crm_client_t *client = crm_client_get(c);
     struct crm_subsystem_s *the_subsystem = NULL;
 
+    if (client == NULL) {
+        return 0;
+    }
+
     crm_trace("Connection %p", c);
 
     if (client->userdata == NULL) {
@@ -733,6 +737,7 @@ static void
 crmd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
+    crmd_ipc_closed(c);
 }
 
 /*	 A_STOP	*/
