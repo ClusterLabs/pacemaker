@@ -861,7 +861,7 @@ pe_cluster_option crmd_opts[] = {
 	  "The maximum amount of system resources that should be used by nodes in the cluster",
 	  "The cluster will slow down its recovery process when the amount of system resources used"
           " (currently CPU) approaches this limit", },
-	{ "node-action-limit", "migration-limit", "integer", NULL, "0", &check_number,
+	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
