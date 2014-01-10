@@ -1555,7 +1555,6 @@ false
 =#=#=#= End test: Query ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
-Deleted ticketA state attribute:  name=granted
 <cib epoch="20" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
@@ -1773,7 +1772,6 @@ true
 =#=#=#= End test: Activate a ticket - OK (0) =#=#=#=
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
-Deleted ticketA state attribute:  name=standby
 <cib epoch="20" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
