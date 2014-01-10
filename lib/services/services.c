@@ -349,10 +349,6 @@ services_action_free(svc_action_t * op)
 gboolean
 cancel_recurring_action(svc_action_t * op)
 {
-    if (op->pid) {
-        return FALSE;
-    }
-
     crm_info("Cancelling operation %s", op->id);
 
     if (recurring_actions) {
@@ -378,7 +374,8 @@ services_action_cancel(const char *name, const char *action, int interval)
         return FALSE;
     }
 
-    if (cancel_recurring_action(op)) {
+    if (op->pid == 0) {
+        cancel_recurring_action(op);
         op->status = PCMK_LRM_OP_CANCELLED;
         if (op->opaque->callback) {
             op->opaque->callback(op);
