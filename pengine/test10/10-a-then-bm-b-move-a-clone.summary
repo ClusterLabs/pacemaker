@@ -1,0 +1,32 @@
+
+Current cluster status:
+Node f20node1 (1): standby
+Online: [ f20node2 ]
+
+ Clone Set: myclone-clone [myclone]
+     Started: [ f20node1 f20node2 ]
+ vm	(ocf::heartbeat:Dummy):	Started f20node1 
+
+Transition Summary:
+ * Stop    myclone:1	(f20node1)
+ * Migrate vm	(Started f20node1 -> f20node2)
+
+Executing cluster transition:
+ * Resource action: vm              migrate_to on f20node1
+ * Resource action: vm              migrate_from on f20node2
+ * Resource action: vm              stop on f20node1
+ * Pseudo action:   myclone-clone_stop_0
+ * Pseudo action:   vm_start_0
+ * Resource action: myclone         stop on f20node1
+ * Pseudo action:   myclone-clone_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Node f20node1 (1): standby
+Online: [ f20node2 ]
+
+ Clone Set: myclone-clone [myclone]
+     Started: [ f20node2 ]
+     Stopped: [ f20node1 ]
+ vm	(ocf::heartbeat:Dummy):	Started f20node2 
+

@@ -242,7 +242,7 @@
         <rsc_op id="95" operation="stop" operation_key="vm-compute-test_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
-        <rsc_op id="98" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
@@ -311,22 +311,22 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20" priority="1000000">
+  <synapse id="20">
     <action_set>
-      <rsc_op id="113" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01">
+      <rsc_op id="99" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="112" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="98" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <rsc_op id="112" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="98" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
@@ -359,6 +359,9 @@
       <trigger>
         <rsc_op id="95" operation="stop" operation_key="vm-compute-test_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
+      <trigger>
+        <rsc_op id="99" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="24">
@@ -370,52 +373,55 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="113" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
+        <rsc_op id="99" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="25" priority="1000000">
+  <synapse id="25">
     <action_set>
-      <rsc_op id="115" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02">
+      <rsc_op id="104" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="114" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="103" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
-      <rsc_op id="114" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="103" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="96" operation="start" operation_key="vm-compute-test_start_0"/>
+        <rsc_op id="99" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <rsc_op id="100" operation="monitor" operation_key="vm-swbuildsl6_monitor_45000" on_node="cvmh02" on_node_uuid="cvmh02">
+      <rsc_op id="102" operation="monitor" operation_key="vm-swbuildsl6_monitor_45000" on_node="cvmh02" on_node_uuid="cvmh02">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_interval="45000" CRM_meta_name="monitor" CRM_meta_timeout="30000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="99" operation="start" operation_key="vm-swbuildsl6_start_0"/>
+        <pseudo_event id="101" operation="start" operation_key="vm-swbuildsl6_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
-      <pseudo_event id="99" operation="start" operation_key="vm-swbuildsl6_start_0">
+      <pseudo_event id="101" operation="start" operation_key="vm-swbuildsl6_start_0">
         <attributes CRM_meta_name="start" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </pseudo_event>
     </action_set>
@@ -427,20 +433,23 @@
         <pseudo_event id="96" operation="start" operation_key="vm-compute-test_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="98" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="104" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
-      <rsc_op id="98" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="90000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="115" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02"/>
+        <rsc_op id="104" operation="migrate_from" operation_key="vm-swbuildsl6_migrate_from_0" on_node="cvmh02" on_node_uuid="cvmh02"/>
       </trigger>
     </inputs>
   </synapse>
@@ -460,7 +469,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="98" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
@@ -525,7 +534,7 @@
         <rsc_op id="95" operation="stop" operation_key="vm-compute-test_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
-        <rsc_op id="98" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="100" operation="stop" operation_key="vm-swbuildsl6_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>

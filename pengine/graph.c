@@ -290,6 +290,34 @@ graph_update_action(action_t * first, action_t * then, node_t * node, enum pe_ac
         }
     }
 
+    if (type & pe_order_implies_first_migratable) {
+        processed = TRUE;
+        if (then->rsc) {
+            changed |=
+                then->rsc->cmds->update_actions(first, then, node, flags,
+                                                pe_action_optional, pe_order_implies_first_migratable);
+        }
+        if (changed) {
+            pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("optional: %s then %s", first->uuid, then->uuid);
+        }
+    }
+
+    if (type & pe_order_pseudo_left) {
+        processed = TRUE;
+        if (then->rsc) {
+            changed |=
+                then->rsc->cmds->update_actions(first, then, node, flags,
+                                                pe_action_optional, pe_order_pseudo_left);
+        }
+        if (changed) {
+            pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("optional: %s then %s", first->uuid, then->uuid);
+        }
+    }
+
     if (type & pe_order_optional) {
         processed = TRUE;
         if (then->rsc) {
@@ -962,6 +990,20 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                   wrapper->action->id, wrapper->action->uuid, action->uuid);
         return FALSE;
 
+    } else if ((wrapper->type & pe_order_implies_first_migratable) && (is_set(wrapper->action->flags, pe_action_runnable) == FALSE)) {
+        return FALSE;
+
+    } else if ((wrapper->type & pe_order_apply_first_non_migratable)
+                && (is_set(wrapper->action->flags, pe_action_migrate_runnable))) {
+        return FALSE;
+
+    } else if ((wrapper->type == pe_order_optional)
+               && strstr(wrapper->action->uuid, "_stop_0")
+               && is_set(wrapper->action->flags, pe_action_migrate_runnable)) {
+
+        /* for optional only ordering, ordering is not preserved for
+         * a stop action that is actually involved with a migration. */
+        return FALSE;
     } else if (wrapper->type == pe_order_load) {
         crm_trace("check load filter %s.%s -> %s.%s",
                   wrapper->action->uuid,

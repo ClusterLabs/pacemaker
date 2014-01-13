@@ -42,19 +42,19 @@ Executing cluster transition:
  * Pseudo action:   load_stopped_cvmh02
  * Resource action: p-watch-ib0     stop on cvmh03
  * Resource action: vm-compute-test migrate_from on cvmh01
- * Resource action: vm-compute-test stop on cvmh03
- * Pseudo action:   load_stopped_cvmh03
+ * Resource action: vm-swbuildsl6   migrate_to on cvmh04
  * Resource action: p-watch-ib0     stop on cvmh04
  * Pseudo action:   c-watch-ib0_stopped_0
- * Pseudo action:   vm-compute-test_start_0
- * Resource action: vm-swbuildsl6   migrate_to on cvmh04
- * Resource action: vm-compute-test monitor=45000 on cvmh01
  * Resource action: vm-swbuildsl6   migrate_from on cvmh02
  * Resource action: vm-swbuildsl6   stop on cvmh04
  * Pseudo action:   load_stopped_cvmh04
+ * Resource action: vm-compute-test stop on cvmh03
+ * Pseudo action:   load_stopped_cvmh03
  * Pseudo action:   c-p-libvirtd_stop_0
+ * Pseudo action:   vm-compute-test_start_0
  * Pseudo action:   vm-swbuildsl6_start_0
  * Resource action: p-libvirtd      stop on cvmh03
+ * Resource action: vm-compute-test monitor=45000 on cvmh01
  * Resource action: vm-swbuildsl6   monitor=45000 on cvmh02
  * Resource action: p-libvirtd      stop on cvmh04
  * Pseudo action:   c-p-libvirtd_stopped_0

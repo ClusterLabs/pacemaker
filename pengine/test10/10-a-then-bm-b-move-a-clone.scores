@@ -1,0 +1,13 @@
+Allocation scores:
+clone_color: myclone-clone allocation score on f20node1: 0
+clone_color: myclone-clone allocation score on f20node2: 0
+clone_color: myclone:0 allocation score on f20node1: 0
+clone_color: myclone:0 allocation score on f20node2: 1
+clone_color: myclone:1 allocation score on f20node1: 1
+clone_color: myclone:1 allocation score on f20node2: 0
+native_color: myclone:0 allocation score on f20node1: -INFINITY
+native_color: myclone:0 allocation score on f20node2: 1
+native_color: myclone:1 allocation score on f20node1: -INFINITY
+native_color: myclone:1 allocation score on f20node2: -INFINITY
+native_color: vm allocation score on f20node1: -INFINITY
+native_color: vm allocation score on f20node2: 0

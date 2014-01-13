@@ -10,7 +10,7 @@
         <pseudo_event id="33" operation="stop" operation_key="Fencing_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -37,7 +37,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -73,7 +73,7 @@
         <pseudo_event id="57" operation="stop" operation_key="lsb-dummy_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -109,7 +109,7 @@
         <pseudo_event id="47" operation="stopped" operation_key="group-1_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="91" operation="promoted" operation_key="master-1_promoted_0"/>
+        <pseudo_event id="93" operation="promoted" operation_key="master-1_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -141,7 +141,7 @@
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -159,7 +159,7 @@
         <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -194,7 +194,7 @@
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -212,7 +212,7 @@
         <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -247,7 +247,7 @@
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -262,7 +262,7 @@
         <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -291,7 +291,7 @@
         <pseudo_event id="54" operation="stop" operation_key="rsc_pcmk-4_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -303,7 +303,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -335,7 +335,7 @@
         <pseudo_event id="57" operation="stop" operation_key="lsb-dummy_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -347,33 +347,33 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22" priority="1000000">
+  <synapse id="22">
     <action_set>
-      <rsc_op id="103" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="64" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="102" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="63" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23">
     <action_set>
-      <rsc_op id="102" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="63" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -401,7 +401,10 @@
         <rsc_op id="60" operation="stop" operation_key="migrator_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="64" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -414,117 +417,117 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="103" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
+        <rsc_op id="64" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <pseudo_event id="63" operation="stop" operation_key="ping-1:0_stop_0">
+      <pseudo_event id="65" operation="stop" operation_key="ping-1:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000"  debug="true" host_list="192.168.9.161" name="connected"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="72" operation="stop" operation_key="Connectivity_stop_0"/>
+        <pseudo_event id="74" operation="stop" operation_key="Connectivity_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28" priority="1000000">
     <action_set>
-      <pseudo_event id="73" operation="stopped" operation_key="Connectivity_stopped_0">
+      <pseudo_event id="75" operation="stopped" operation_key="Connectivity_stopped_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="stop" operation_key="ping-1:0_stop_0"/>
+        <pseudo_event id="65" operation="stop" operation_key="ping-1:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="72" operation="stop" operation_key="Connectivity_stop_0"/>
+        <pseudo_event id="74" operation="stop" operation_key="Connectivity_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
-      <pseudo_event id="72" operation="stop" operation_key="Connectivity_stop_0">
+      <pseudo_event id="74" operation="stop" operation_key="Connectivity_stop_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="30">
     <action_set>
-      <pseudo_event id="75" operation="stop" operation_key="stateful-1:0_stop_0">
+      <pseudo_event id="77" operation="stop" operation_key="stateful-1:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="74" operation="demote" operation_key="stateful-1:0_demote_0"/>
+        <pseudo_event id="76" operation="demote" operation_key="stateful-1:0_demote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="88" operation="stop" operation_key="master-1_stop_0"/>
+        <pseudo_event id="90" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
     <action_set>
-      <pseudo_event id="74" operation="demote" operation_key="stateful-1:0_demote_0">
+      <pseudo_event id="76" operation="demote" operation_key="stateful-1:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="92" operation="demote" operation_key="master-1_demote_0"/>
+        <pseudo_event id="94" operation="demote" operation_key="master-1_demote_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="32">
     <action_set>
-      <rsc_op id="79" operation="monitor" operation_key="stateful-1:1_monitor_16000" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="81" operation="monitor" operation_key="stateful-1:1_monitor_16000" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="78" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="80" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <rsc_op id="78" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <rsc_op id="80" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="90" operation="promote" operation_key="master-1_promote_0"/>
+        <pseudo_event id="92" operation="promote" operation_key="master-1_promote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="34">
     <action_set>
-      <rsc_op id="82" operation="monitor" operation_key="stateful-1:3_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+      <rsc_op id="84" operation="monitor" operation_key="stateful-1:3_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="stateful-1" long-id="stateful-1:3" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -533,7 +536,7 @@
   </synapse>
   <synapse id="35">
     <action_set>
-      <rsc_op id="85" operation="monitor" operation_key="stateful-1:2_monitor_15000" internal_operation_key="stateful-1:3_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="87" operation="monitor" operation_key="stateful-1:2_monitor_15000" internal_operation_key="stateful-1:3_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1" long-id="stateful-1:2" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -542,22 +545,22 @@
   </synapse>
   <synapse id="36" priority="1000000">
     <action_set>
-      <pseudo_event id="93" operation="demoted" operation_key="master-1_demoted_0">
+      <pseudo_event id="95" operation="demoted" operation_key="master-1_demoted_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="74" operation="demote" operation_key="stateful-1:0_demote_0"/>
+        <pseudo_event id="76" operation="demote" operation_key="stateful-1:0_demote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="92" operation="demote" operation_key="master-1_demote_0"/>
+        <pseudo_event id="94" operation="demote" operation_key="master-1_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="37">
     <action_set>
-      <pseudo_event id="92" operation="demote" operation_key="master-1_demote_0">
+      <pseudo_event id="94" operation="demote" operation_key="master-1_demote_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
@@ -569,64 +572,64 @@
   </synapse>
   <synapse id="38" priority="1000000">
     <action_set>
-      <pseudo_event id="91" operation="promoted" operation_key="master-1_promoted_0">
+      <pseudo_event id="93" operation="promoted" operation_key="master-1_promoted_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="78" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+        <rsc_op id="80" operation="promote" operation_key="stateful-1:1_promote_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="39">
     <action_set>
-      <pseudo_event id="90" operation="promote" operation_key="master-1_promote_0">
+      <pseudo_event id="92" operation="promote" operation_key="master-1_promote_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="89" operation="stopped" operation_key="master-1_stopped_0"/>
+        <pseudo_event id="91" operation="stopped" operation_key="master-1_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="demoted" operation_key="master-1_demoted_0"/>
+        <pseudo_event id="95" operation="demoted" operation_key="master-1_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="40" priority="1000000">
     <action_set>
-      <pseudo_event id="89" operation="stopped" operation_key="master-1_stopped_0">
+      <pseudo_event id="91" operation="stopped" operation_key="master-1_stopped_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="75" operation="stop" operation_key="stateful-1:0_stop_0"/>
+        <pseudo_event id="77" operation="stop" operation_key="stateful-1:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="88" operation="stop" operation_key="master-1_stop_0"/>
+        <pseudo_event id="90" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="41">
     <action_set>
-      <pseudo_event id="88" operation="stop" operation_key="master-1_stop_0">
+      <pseudo_event id="90" operation="stop" operation_key="master-1_stop_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="93" operation="demoted" operation_key="master-1_demoted_0"/>
+        <pseudo_event id="95" operation="demoted" operation_key="master-1_demoted_0"/>
       </trigger>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="42">
     <action_set>
-      <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4">
+      <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <attributes CRM_meta_connected="1" CRM_meta_on_node="pcmk-4" CRM_meta_on_node_uuid="pcmk-4" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" CRM_meta_terminate="1" />
       </crm_event>
     </action_set>
@@ -634,13 +637,13 @@
   </synapse>
   <synapse id="43">
     <action_set>
-      <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="95" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-pcmk-4" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -673,13 +676,13 @@
         <rsc_op id="60" operation="stop" operation_key="migrator_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="63" operation="stop" operation_key="ping-1:0_stop_0"/>
+        <pseudo_event id="65" operation="stop" operation_key="ping-1:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="75" operation="stop" operation_key="stateful-1:0_stop_0"/>
+        <pseudo_event id="77" operation="stop" operation_key="stateful-1:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="94" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

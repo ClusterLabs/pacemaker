@@ -17,22 +17,22 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="2" priority="1000000">
+  <synapse id="2">
     <action_set>
-      <rsc_op id="352" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left">
+      <rsc_op id="16" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
         <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_timeout="20000"  name="lustre"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="351" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left"/>
+        <rsc_op id="15" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="351" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
+      <rsc_op id="15" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
         <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_timeout="20000"  name="lustre"/>
       </rsc_op>
@@ -49,6 +49,9 @@
       <trigger>
         <rsc_op id="13" operation="stop" operation_key="lustre_stop_0" on_node="lustre03-left" on_node_uuid="lustre03-left"/>
       </trigger>
+      <trigger>
+        <rsc_op id="16" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
@@ -60,74 +63,45 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="352" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left"/>
+        <rsc_op id="16" operation="migrate_from" operation_key="lustre_migrate_from_0" on_node="lustre04-left" on_node_uuid="lustre04-left"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6" priority="1000000">
+  <synapse id="6">
     <action_set>
-      <rsc_op id="354" operation="migrate_from" operation_key="testfs_migrate_from_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
+      <rsc_op id="19" operation="start" operation_key="testfs_start_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre02-left" CRM_meta_migrate_target="lustre03-left" CRM_meta_timeout="20000"  name="testfs-operational"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="353" operation="migrate_to" operation_key="testfs_migrate_to_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
+        <rsc_op id="17" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="353" operation="migrate_to" operation_key="testfs_migrate_to_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
-        <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre02-left" CRM_meta_migrate_target="lustre03-left" CRM_meta_timeout="20000"  name="testfs-operational"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="15" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <pseudo_event id="17" operation="start" operation_key="testfs_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="30000"  name="testfs-operational"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="15" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="16" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="9">
-    <action_set>
-      <rsc_op id="16" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
-        <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="354" operation="migrate_from" operation_key="testfs_migrate_from_0" on_node="lustre03-left" on_node_uuid="lustre03-left"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="10">
-    <action_set>
-      <rsc_op id="15" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
+      <rsc_op id="18" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="11" priority="1000000">
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="17" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
+        <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="30000"  name="testfs-operational"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9" priority="1000000">
     <action_set>
       <rsc_op id="355" operation="notify" operation_key="drbd-mgs:0_post_notify_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
@@ -136,40 +110,40 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="34" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
+        <pseudo_event id="38" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="12">
+  <synapse id="10">
     <action_set>
-      <rsc_op id="27" operation="monitor" operation_key="drbd-mgs:0_monitor_30000" on_node="lustre01-left" on_node_uuid="lustre01-left">
+      <rsc_op id="31" operation="monitor" operation_key="drbd-mgs:0_monitor_30000" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
+        <rsc_op id="30" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
       </trigger>
       <trigger>
-        <pseudo_event id="35" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0"/>
+        <pseudo_event id="39" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="13">
+  <synapse id="11">
     <action_set>
-      <rsc_op id="26" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
+      <rsc_op id="30" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1 " CRM_meta_notify_start_uname="lustre01-left lustre02-left " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="ms-drbd-mgs_start_0"/>
+        <pseudo_event id="34" operation="start" operation_key="ms-drbd-mgs_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14" priority="1000000">
+  <synapse id="12" priority="1000000">
     <action_set>
       <rsc_op id="356" operation="notify" operation_key="drbd-mgs:1_post_notify_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
@@ -178,48 +152,48 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="34" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
+        <pseudo_event id="38" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="13">
     <action_set>
-      <rsc_op id="29" operation="monitor" operation_key="drbd-mgs:1_monitor_30000" on_node="lustre02-left" on_node_uuid="lustre02-left">
+      <rsc_op id="33" operation="monitor" operation_key="drbd-mgs:1_monitor_30000" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_role="Slave" CRM_meta_timeout="20000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
+        <rsc_op id="32" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
       </trigger>
       <trigger>
-        <pseudo_event id="35" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0"/>
+        <pseudo_event id="39" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16">
+  <synapse id="14">
     <action_set>
-      <rsc_op id="28" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
+      <rsc_op id="32" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="drbd-mgs" long-id="drbd-mgs:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd-mgs:0 drbd-mgs:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd-mgs:0 drbd-mgs:1 " CRM_meta_notify_start_uname="lustre01-left lustre02-left " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="240000"  drbd_resource="mgs-left"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="ms-drbd-mgs_start_0"/>
+        <pseudo_event id="34" operation="start" operation_key="ms-drbd-mgs_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17" priority="1000000">
+  <synapse id="15" priority="1000000">
     <action_set>
-      <pseudo_event id="35" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0">
+      <pseudo_event id="39" operation="notified" operation_key="ms-drbd-mgs_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="34" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
+        <pseudo_event id="38" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="355" operation="notify" operation_key="drbd-mgs:0_post_notify_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
@@ -229,72 +203,72 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18" priority="1000000">
+  <synapse id="16" priority="1000000">
     <action_set>
-      <pseudo_event id="34" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0">
+      <pseudo_event id="38" operation="notify" operation_key="ms-drbd-mgs_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="running" operation_key="ms-drbd-mgs_running_0"/>
+        <pseudo_event id="35" operation="running" operation_key="ms-drbd-mgs_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="33" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="37" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="17">
     <action_set>
-      <pseudo_event id="33" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0">
+      <pseudo_event id="37" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="32" operation="notify" operation_key="ms-drbd-mgs_pre_notify_start_0"/>
+        <pseudo_event id="36" operation="notify" operation_key="ms-drbd-mgs_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="18">
     <action_set>
-      <pseudo_event id="32" operation="notify" operation_key="ms-drbd-mgs_pre_notify_start_0">
+      <pseudo_event id="36" operation="notify" operation_key="ms-drbd-mgs_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="21" priority="1000000">
+  <synapse id="19" priority="1000000">
     <action_set>
-      <pseudo_event id="31" operation="running" operation_key="ms-drbd-mgs_running_0">
+      <pseudo_event id="35" operation="running" operation_key="ms-drbd-mgs_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
+        <rsc_op id="30" operation="start" operation_key="drbd-mgs:0_start_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
       </trigger>
       <trigger>
-        <rsc_op id="28" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
+        <rsc_op id="32" operation="start" operation_key="drbd-mgs:1_start_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="start" operation_key="ms-drbd-mgs_start_0"/>
+        <pseudo_event id="34" operation="start" operation_key="ms-drbd-mgs_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22">
+  <synapse id="20">
     <action_set>
-      <pseudo_event id="30" operation="start" operation_key="ms-drbd-mgs_start_0">
+      <pseudo_event id="34" operation="start" operation_key="ms-drbd-mgs_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="37" operation="notified" operation_key="ms-drbd-mgs_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="23">
+  <synapse id="21">
     <action_set>
       <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -305,10 +279,10 @@
         <rsc_op id="13" operation="stop" operation_key="lustre_stop_0" on_node="lustre03-left" on_node_uuid="lustre03-left"/>
       </trigger>
       <trigger>
-        <rsc_op id="15" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
+        <rsc_op id="17" operation="stop" operation_key="testfs_stop_0" on_node="lustre01-left" on_node_uuid="lustre01-left"/>
       </trigger>
       <trigger>
-        <rsc_op id="16" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
+        <rsc_op id="18" operation="stop" operation_key="testfs_stop_0" on_node="lustre02-left" on_node_uuid="lustre02-left"/>
       </trigger>
     </inputs>
   </synapse>

@@ -12,21 +12,18 @@ Online: [ dom0-01 ]
      Stopped: [ dom0-01 ]
 
 Transition Summary:
- * Restart top	(Started dom0-01)
  * Migrate domU-test01	(Started dom0-02 -> dom0-01)
  * Stop    dom0-iscsi1-cnx1:1	(dom0-02)
  * Move    bottom:0	(Started dom0-02 -> dom0-01)
 
 Executing cluster transition:
- * Resource action: top             stop on dom0-01
  * Resource action: domU-test01     migrate_to on dom0-02
+ * Pseudo action:   clone-dom0-iscsi1_stop_0
  * Resource action: domU-test01     migrate_from on dom0-01
  * Resource action: domU-test01     stop on dom0-02
- * Pseudo action:   clone-dom0-iscsi1_stop_0
- * Pseudo action:   domU-test01_start_0
  * Pseudo action:   dom0-iscsi1:1_stop_0
  * Resource action: dom0-iscsi1-cnx1:0 stop on dom0-02
- * Resource action: top             start on dom0-01
+ * Pseudo action:   domU-test01_start_0
  * Pseudo action:   dom0-iscsi1:1_stopped_0
  * Pseudo action:   clone-dom0-iscsi1_stopped_0
  * Pseudo action:   clone-bottom_stop_0

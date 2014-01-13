@@ -157,7 +157,7 @@ extern gboolean expand_notification_data(notify_data_t * n_data);
 extern void create_notifications(resource_t * rsc, notify_data_t * n_data,
                                  pe_working_set_t * data_set);
 extern void free_notification_data(notify_data_t * n_data);
-extern void rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set);
+extern void rsc_reload(resource_t * rsc, pe_working_set_t * data_set);
 extern void rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op,
                                  pe_working_set_t * data_set);
 
