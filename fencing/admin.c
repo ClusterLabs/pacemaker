@@ -319,8 +319,8 @@ main(int argc, char **argv)
                     crm_info("Got: '%s'='%s'", name, value);
                     params = stonith_key_value_add(params, name, value);
                 }
-                free(value);
-                free(name);
+                free(value); value = NULL;
+                free(name); name = NULL;
                 break;
             case 'e':
                 {
