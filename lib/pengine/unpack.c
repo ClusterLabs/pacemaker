@@ -2515,8 +2515,8 @@ determine_op_status(
         case PCMK_OCF_RUNNING_MASTER:
             if (is_probe) {
                 result = PCMK_LRM_OP_DONE;
-                crm_notice("Operation %s found resource %s active in master mode on %s",
-                           task, rsc->id, node->details->uname);
+                pe_rsc_info(rsc, "Operation %s found resource %s active in master mode on %s",
+                            task, rsc->id, node->details->uname);
 
             } else if (target_rc == rc) {
                 /* nothing to do */
