@@ -35,7 +35,7 @@ before continuing with the installation process to specify a fixed IPv4 address 
 +System eth0+. Be sure to also enter the +Routes+ section and add an entry for your
 default gateway.
 
-image::images/Network.png["Custom network settings",align="center"]
+image::images/Network.png["Custom network settings",align="center",scaledwidth="65%"]
 
 If you miss this step, this can easily be configured after installation. You will have
 to navigate to +system settings+ and select +network+.  From there you can select
@@ -82,7 +82,7 @@ Go grab something to drink, this may take a while.
 Once the node reboots, you'll see a (possibly mangled) login prompt on
 the console.  Login using +root+ and the password you created earlier.
 
-image::images/Console.png["Initial Console",align="center"]
+image::images/Console.png["Initial Console",align="center",scaledwidth="65%"]
 
 [NOTE]
 ======
