@@ -83,12 +83,13 @@ int throttle_num_cores(void)
         }
     }
 
+    fclose(stream);
+
     if(cores == 0) {
         crm_warn("No processors found in %s, assuming 1", cpufile);
         return 1;
     }
 
-    fclose(stream);
     return cores;
 }
 
@@ -241,6 +242,7 @@ static bool throttle_cib_load(float *load)
 
         if(rc != 15) {
             crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            fclose(stream);
             return FALSE;
 
         } else if(last_call > 0

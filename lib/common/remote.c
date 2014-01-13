@@ -330,13 +330,14 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
     char *xml_text = dump_xml_unformatted(msg);
 
     struct iovec iov[2];
-    struct crm_remote_header_v0 *header = calloc(1, sizeof(struct crm_remote_header_v0));
+    struct crm_remote_header_v0 *header;
 
     if (xml_text == NULL) {
         crm_err("Invalid XML, can not send msg");
         return -1;
     }
 
+    header = calloc(1, sizeof(struct crm_remote_header_v0));
     iov[0].iov_base = header;
     iov[0].iov_len = sizeof(struct crm_remote_header_v0);
 
