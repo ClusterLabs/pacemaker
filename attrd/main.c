@@ -140,6 +140,10 @@ attrd_cib_connect(int max_retry)
     static int attempts = 0;
     cib_t *connection = cib_new();
 
+    if(connection == NULL) {
+        return NULL;
+    }
+
     do {
         if(attempts > 0) {
             sleep(attempts);
@@ -173,10 +177,8 @@ attrd_cib_connect(int max_retry)
     return connection;
 
   cleanup:
-    if(connection) {
-        connection->cmds->signoff(connection);
-        cib_delete(connection);
-    }
+    connection->cmds->signoff(connection);
+    cib_delete(connection);
     return NULL;
 }
 

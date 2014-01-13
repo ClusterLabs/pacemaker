@@ -219,13 +219,14 @@ election_vote(election_t *e)
 {
     struct timeval age;
     xmlNode *vote = NULL;
-    crm_node_t *our_node = crm_get_peer(0, e->uname);
+    crm_node_t *our_node;
 
     if(e == NULL) {
         crm_trace("Not voting in election: not initialized");
         return;
     }
 
+    our_node = crm_get_peer(0, e->uname);
     if (our_node == NULL || crm_is_peer_active(our_node) == FALSE) {
         crm_trace("Cannot vote yet: %p", our_node);
         return;
