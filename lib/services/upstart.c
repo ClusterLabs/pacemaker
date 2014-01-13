@@ -231,12 +231,21 @@ upstart_job_exists(const char *name)
 static char *
 upstart_job_property(const char *obj, const gchar * iface, const char *name)
 {
+    char *output = NULL;
+
+#if !GLIB_CHECK_VERSION(2,28,0)
+    static bool err = TRUE;
+
+    if(err) {
+        crm_err("This version of glib is too old to support upstart jobs");
+        err = FALSE;
+    }
+#else
     GError *error = NULL;
     GDBusProxy *proxy;
     GVariant *asv = NULL;
     GVariant *value = NULL;
     GVariant *_ret = NULL;
-    char *output = NULL;
 
     crm_info("Calling GetAll on %s", obj);
     proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
@@ -272,6 +281,7 @@ upstart_job_property(const char *obj, const gchar * iface, const char *name)
 
     g_object_unref(proxy);
     g_variant_unref(_ret);
+#endif
     return output;
 }
 
