@@ -807,7 +807,7 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
         const char *id = rsc->id;
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-        if(node->details->remote_rsc == NULL) {
+        if(node && node->details->remote_rsc == NULL) {
             crmd_replies_needed++;
         }
         if (rsc->clone_name) {
