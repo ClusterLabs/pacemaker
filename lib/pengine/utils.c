@@ -907,10 +907,6 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
             }
 
             number = crm_get_interval(interval);
-            if (number < 0) {
-                continue;
-            }
-
             match_key = generate_op_key(rsc->id, name, number);
             if (safe_str_eq(key, match_key)) {
                 op = operation;

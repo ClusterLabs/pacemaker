@@ -2354,6 +2354,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                break;
             case pcmk_ok:
                 updates++;
                 break;

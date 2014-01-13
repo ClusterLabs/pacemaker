@@ -119,7 +119,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             return;
         case crm_status_rstate:
             crm_info("Remote node %s is now %s (was %s)", node->uname, node->state, (const char *)data);
-
+            /* Keep going */
         case crm_status_nstate:
             crm_info("%s is now %s (was %s)", node->uname, node->state, (const char *)data);
             if (safe_str_eq(data, node->state)) {

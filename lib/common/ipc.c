@@ -47,7 +47,7 @@ struct crm_ipc_response_header {
 
 static int hdr_offset = 0;
 static int ipc_buffer_max = 0;
-static int pick_ipc_buffer(int max);
+static unsigned int pick_ipc_buffer(int max);
 
 static inline void
 crm_ipc_init(void)
@@ -322,6 +322,7 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 
     crm_client_init();
 
+    /* TODO: Do our own auth checking, return NULL if unauthorized */
     client = calloc(1, sizeof(crm_client_t));
 
     client->ipcs = c;
@@ -730,7 +731,7 @@ struct crm_ipc_s {
 
 };
 
-static int
+static unsigned int
 pick_ipc_buffer(int max)
 {
     static int global_max = 0;

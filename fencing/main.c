@@ -628,7 +628,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    if (rsc->parent && rsc->parent->variant == pe_group) {
+    if (rsc->parent && rsc->parent->variant == pe_group && stonith_our_uname) {
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, rsc->parent->allowed_nodes);

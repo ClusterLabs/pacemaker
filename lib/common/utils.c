@@ -675,20 +675,26 @@ crm_str_to_boolean(const char *s, int *ret)
 unsigned long long
 crm_get_interval(const char *input)
 {
-    crm_time_t *interval = NULL;
     unsigned long long msec = 0;
 
     if (input == NULL) {
-        return 0;
+        return msec;
 
     } else if (input[0] != 'P') {
-        return crm_get_msec(input);
+        long long tmp = crm_get_msec(input);
+
+        if(tmp > 0) {
+            msec = tmp;
+        }
+
+    } else {
+        crm_time_t *interval = crm_time_parse_duration(input);
+
+        msec = 1000 * crm_time_get_seconds(interval);
+        crm_time_free(interval);
     }
 
-    interval = crm_time_parse_duration(input);
-    msec = crm_time_get_seconds(interval);
-    crm_time_free(interval);
-    return msec * 1000;
+    return msec;
 }
 
 long long
