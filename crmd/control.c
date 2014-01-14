@@ -379,6 +379,7 @@ crmd_exit(int rc)
     free(max_generation_from); max_generation_from = NULL;
     free_xml(max_generation_xml); max_generation_xml = NULL;
 
+    mainloop_destroy_signal(SIGPIPE);
     mainloop_destroy_signal(SIGUSR1);
     mainloop_destroy_signal(SIGTERM);
     mainloop_destroy_signal(SIGTRAP);
@@ -476,6 +477,8 @@ do_exit(long long action,
     crmd_exit(exit_code);
 }
 
+static void sigpipe_ignore(int nsig) { return; }
+
 /*	 A_STARTUP	*/
 void
 do_startup(long long action,
@@ -487,6 +490,7 @@ do_startup(long long action,
 
     crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
+    mainloop_add_signal(SIGPIPE, sigpipe_ignore);
 
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
     config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
