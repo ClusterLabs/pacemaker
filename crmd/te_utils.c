@@ -173,7 +173,10 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         int confirm = 0;
         char *target_copy = strdup(st_event->target);
 
-        /* In case fenced hasn't noticed yet */
+        /* In case fenced hasn't noticed yet
+         *
+         * Any fencing that has been inititated will be completed by way of the fence_pcmk redirect
+         */
         local_rc = fenced_external(target_copy);
         if (local_rc != 0) {
             crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target,
@@ -194,7 +197,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
             if(ignore < 0 && errno == EBADF) {
                 crm_trace("CMAN not expecting %s to be fenced (yet)", st_event->target);
-                
+
             } else if (local_rc < len) {
                 crm_perror(LOG_ERR, "Confirmation of CMAN fencing event for '%s' failed: %d", st_event->target, local_rc);
 
@@ -204,6 +207,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
             }
             close(confirm);
         }
+        free(target_copy);
     }
 #endif
 
