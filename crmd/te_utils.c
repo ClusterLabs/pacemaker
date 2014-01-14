@@ -170,12 +170,10 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 #if SUPPORT_CMAN
     if (st_event->result == pcmk_ok && is_cman_cluster()) {
         int local_rc = 0;
+        int confirm = 0;
         char *target_copy = strdup(st_event->target);
 
-        /* In case fenced hasn't noticed yet
-         *
-         * Any fencing that has been inititated will be completed by way of the fence_pcmk redirect
-         */
+        /* In case fenced hasn't noticed yet */
         local_rc = fenced_external(target_copy);
         if (local_rc != 0) {
             crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target,
@@ -183,7 +181,29 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         } else {
             crm_notice("Notified CMAN that '%s' is now fenced", st_event->target);
         }
-        free(target_copy);
+
+        /* In case fenced is already trying to shoot it */
+        confirm = open("/var/run/cluster/fenced_override", O_NONBLOCK|O_WRONLY);
+        if (confirm) {
+            int ignore = 0;
+            int len = strlen(target_copy);
+
+            errno = 0;
+            local_rc = write(confirm, target_copy, len);
+            ignore = write(confirm, "\n", 1);
+
+            if(ignore < 0 && errno == EBADF) {
+                crm_trace("CMAN not expecting %s to be fenced (yet)", st_event->target);
+                
+            } else if (local_rc < len) {
+                crm_perror(LOG_ERR, "Confirmation of CMAN fencing event for '%s' failed: %d", st_event->target, local_rc);
+
+            } else {
+                fsync(confirm);
+                crm_notice("Confirmed CMAN fencing event for '%s'", st_event->target);
+            }
+            close(confirm);
+        }
     }
 #endif
 
