@@ -2230,8 +2230,6 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
             }
 
         } else {    /* Pending or complete but erased */
-            node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
-
             if (target && target->details->online) {
                 pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
                              target->details->online);
