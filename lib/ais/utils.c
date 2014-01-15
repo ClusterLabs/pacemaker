@@ -123,8 +123,7 @@ pcmk_setscheduler(crm_child_t * child)
             }
         }
 
-        errno = 0;
-        if (nice(priority) == -1 && errno != 0) {
+        if (setpriority(PRIO_PROCESS, 0, priority) == -1) {
             ais_perror("Could not reset process priority to %d for %s", priority, child->name);
         }
     }
