@@ -1349,6 +1349,13 @@ process_remote_stonith_exec(xmlNode * msg)
         op->state = st_done;
         remote_op_done(op, msg, rc, FALSE);
         return rc;
+    } else if (rc == -ETIME && op->devices == NULL) {
+        /* If the operation timed out don't bother retrying other peers. */
+        op->state = st_failed;
+        remote_op_done(op, msg, rc, FALSE);
+        return rc;
+    } else {
+        /* fall-through and attempt other fencing action using another peer */
     }
 
     /* Retry on failure or execute the rest of the topology */
