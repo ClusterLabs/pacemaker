@@ -30,6 +30,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #ifdef HAVE_SYS_SIGNALFD_H
 #include <sys/signalfd.h>
@@ -432,8 +434,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 }
             }
 #  endif
-            errno = 0;
-            if (nice(0) == -1 && errno !=0) {
+            if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
                 crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
             }
 #endif
