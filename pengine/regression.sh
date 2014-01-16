@@ -243,6 +243,7 @@ do_test migrate-partial-1 "Completed migration, missing stop on source"
 do_test migrate-partial-2 "Successful migrate_to only"
 do_test migrate-partial-3 "Successful migrate_to only, target down"
 do_test migrate-partial-4 "Migrate from the correct host after migrate_to+migrate_from"
+do_test bug-5186-partial-migrate "Handle partial migration when src node loses membership"
 
 do_test migrate-fail-2 "Failed migrate_from"
 do_test migrate-fail-3 "Failed migrate_from + stop on source"
