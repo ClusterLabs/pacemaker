@@ -1117,6 +1117,12 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
     if (migrate_to) {
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
+        /* migrate_to takes place on the source node, but can 
+         * have an effect on the target node depending on how
+         * the agent is written. Because of this, we have to maintain
+         * a record that the migrate_to occurred incase the source node 
+         * loses membership while the migrate_to action is still in-flight. */
+        add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
     }
 
     if (migrate_from) {
