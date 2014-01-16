@@ -180,7 +180,7 @@ reap_crm_member(uint32_t id, const char *name)
     }
 
     search.id = id;
-    search.uname = strdup(name);
+    search.uname = name ? strdup(name) : NULL;
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
         crm_notice("Purged %d peers with id=%u and/or uname=%s from the membership cache", matches, id, name);
