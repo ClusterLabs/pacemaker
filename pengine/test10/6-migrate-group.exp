@@ -78,7 +78,7 @@
     <action_set>
       <rsc_op id="12" operation="migrate_to" operation_key="A_migrate_to_0" on_node="18node1" on_node_uuid="1">
         <primitive id="A" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -150,7 +150,7 @@
     <action_set>
       <rsc_op id="17" operation="migrate_to" operation_key="B_migrate_to_0" on_node="18node1" on_node_uuid="1">
         <primitive id="B" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -229,7 +229,7 @@
     <action_set>
       <rsc_op id="22" operation="migrate_to" operation_key="C_migrate_to_0" on_node="18node1" on_node_uuid="1">
         <primitive id="C" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
