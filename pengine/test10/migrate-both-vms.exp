@@ -328,7 +328,7 @@
     <action_set>
       <rsc_op id="98" operation="migrate_to" operation_key="vm-compute-test_migrate_to_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="vm-compute-test" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
+        <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -397,7 +397,7 @@
     <action_set>
       <rsc_op id="103" operation="migrate_to" operation_key="vm-swbuildsl6_migrate_to_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="vm-swbuildsl6" class="ocf" provider="ccni" type="xcatVirtualDomain"/>
-        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
+        <attributes CRM_meta_migrate_source="cvmh04" CRM_meta_migrate_target="cvmh02" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="swbuildsl6"/>
       </rsc_op>
     </action_set>
     <inputs>

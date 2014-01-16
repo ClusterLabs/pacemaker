@@ -90,7 +90,7 @@
     <action_set>
       <rsc_op id="24" operation="migrate_to" operation_key="mysqld_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="mysqld" class="lsb" type="mysql"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -162,7 +162,7 @@
     <action_set>
       <rsc_op id="29" operation="migrate_to" operation_key="dahdi_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="dahdi" class="lsb" type="dahdi"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -446,7 +446,7 @@
     <action_set>
       <rsc_op id="48" operation="migrate_to" operation_key="ip_voip_route_test1_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_route_test1" class="ocf" provider="heartbeat" type="Route"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000"  destination="161.53.3.69/32" gateway="10.2.4.1"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  destination="161.53.3.69/32" gateway="10.2.4.1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -515,7 +515,7 @@
     <action_set>
       <rsc_op id="53" operation="migrate_to" operation_key="ip_voip_route_test2_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_route_test2" class="ocf" provider="heartbeat" type="Route"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000"  destination="161.53.3.70/32" gateway="10.2.4.1"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  destination="161.53.3.70/32" gateway="10.2.4.1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -683,7 +683,7 @@
     <action_set>
       <rsc_op id="62" operation="migrate_to" operation_key="ip_voip_vlan850_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan850" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="1" ip="10.2.4.13" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="1" ip="10.2.4.13" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -752,7 +752,7 @@
     <action_set>
       <rsc_op id="67" operation="migrate_to" operation_key="ip_voip_vlan998_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan998" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="1" ip="10.224.4.13" nic="vlan998"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="1" ip="10.224.4.13" nic="vlan998"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -821,7 +821,7 @@
     <action_set>
       <rsc_op id="72" operation="migrate_to" operation_key="ip_voip_vlan851_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan851" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="2" ip="10.2.4.44" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="2" ip="10.2.4.44" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -890,7 +890,7 @@
     <action_set>
       <rsc_op id="77" operation="migrate_to" operation_key="ip_voip_vlan852_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan852" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="3" ip="10.2.4.45" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="3" ip="10.2.4.45" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -959,7 +959,7 @@
     <action_set>
       <rsc_op id="82" operation="migrate_to" operation_key="ip_voip_vlan853_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan853" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="4" ip="10.2.4.46" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="4" ip="10.2.4.46" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1028,7 +1028,7 @@
     <action_set>
       <rsc_op id="87" operation="migrate_to" operation_key="ip_voip_vlan854_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan854" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="5" ip="10.2.4.47" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="5" ip="10.2.4.47" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1097,7 +1097,7 @@
     <action_set>
       <rsc_op id="92" operation="migrate_to" operation_key="ip_voip_vlan855_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan855" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="6" ip="10.2.4.54" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="6" ip="10.2.4.54" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1166,7 +1166,7 @@
     <action_set>
       <rsc_op id="97" operation="migrate_to" operation_key="ip_voip_vlan856_migrate_to_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="ip_voip_vlan856" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="7" ip="10.2.4.55" nic="vlan850"/>
+        <attributes CRM_meta_migrate_source="asttest1" CRM_meta_migrate_target="asttest2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" cidr_netmask="24"  iflabel="7" ip="10.2.4.55" nic="vlan850"/>
       </rsc_op>
     </action_set>
     <inputs/>

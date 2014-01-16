@@ -1,0 +1,425 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="17" operation="start" operation_key="prmDummy_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmDummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="16" operation="stop" operation_key="prmDummy_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="16" operation="stop" operation_key="prmDummy_stop_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="20" operation="monitor" operation_key="prmVM2_monitor_10000" on_node="bl460g1n8" on_node_uuid="3232261594">
+        <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="30000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="prmVM2_start_0" on_node="bl460g1n8" on_node_uuid="3232261594"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="19" operation="start" operation_key="prmVM2_start_0" on_node="bl460g1n8" on_node_uuid="3232261594">
+        <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="stop" operation_key="prmVM2_stop_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="18" operation="stop" operation_key="prmVM2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="18" operation="stop" operation_key="prmVM2_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="1" operation="stop" operation_key="prmVM2_stop_0" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmVM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_record_pending="true" CRM_meta_timeout="120000" config="/migrate_test/config/vm2.xml"  hypervisor="qemu:///system" migration_transport="ssh"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="46" operation="stopped" operation_key="grpStonith8_stopped_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="37" operation="stop" operation_key="prmStonith8-1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="prmStonith8-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="44" operation="running" operation_key="grpStonith8_running_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="prmStonith8-1_start_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="prmStonith8-2_start_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="stopped" operation_key="grpStonith8_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="39" operation="monitor" operation_key="prmStonith8-1_monitor_10000" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmStonith8-1" class="stonith" type="external/stonith-helper"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="prmStonith8-1_start_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="38" operation="start" operation_key="prmStonith8-1_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmStonith8-1" class="stonith" type="external/stonith-helper"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="37" operation="stop" operation_key="prmStonith8-1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="37" operation="stop" operation_key="prmStonith8-1_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  dead_check_target="192.168.133.218 192.168.101.218 192.168.102.218 192.168.201.218 192.168.133.238" hostlist="bl460g1n8" pcmk_reboot_retries="1" pcmk_reboot_timeout="40s" run_standby_wait="no"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="prmStonith8-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="42" operation="monitor" operation_key="prmStonith8-2_monitor_3600000" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmStonith8-2" class="stonith" type="external/ipmi"/>
+        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="prmStonith8-2_start_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="41" operation="start" operation_key="prmStonith8-2_start_0" on_node="bl460g1n6" on_node_uuid="3232261592">
+        <primitive id="prmStonith8-2" class="stonith" type="external/ipmi"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="prmStonith8-1_start_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="prmStonith8-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <pseudo_event id="40" operation="stop" operation_key="prmStonith8-2_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  hostname="bl460g1n8" interface="lanplus" ipaddr="192.168.133.238" passwd="PASSW0RD" pcmk_reboot_retries="1" pcmk_reboot_timeout="60s" userid="USERID"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <pseudo_event id="47" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  device="/dev/mapper/lun1" interval="10" name="diskcheck_status" options="-e"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="54" operation="stop" operation_key="clnDiskd1_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17" priority="1000000">
+    <action_set>
+      <pseudo_event id="55" operation="stopped" operation_key="clnDiskd1_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="47" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="54" operation="stop" operation_key="clnDiskd1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="54" operation="stop" operation_key="clnDiskd1_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <pseudo_event id="56" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  interval="10" name="diskcheck_status_internal" write_dir="/tmp/tmp2"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="stop" operation_key="clnDiskd2_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20" priority="1000000">
+    <action_set>
+      <pseudo_event id="64" operation="stopped" operation_key="clnDiskd2_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="63" operation="stop" operation_key="clnDiskd2_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <pseudo_event id="63" operation="stop" operation_key="clnDiskd2_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <pseudo_event id="65" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000" attempts="2"  host_list="192.168.201.254" multiplier="100" name="default_ping_set" timeout="2"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="72" operation="stop" operation_key="clnPing_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23" priority="1000000">
+    <action_set>
+      <pseudo_event id="73" operation="stopped" operation_key="clnPing_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="65" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="72" operation="stop" operation_key="clnPing_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="72" operation="stop" operation_key="clnPing_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593">
+        <attributes CRM_meta_default_ping_set="100" CRM_meta_diskcheck_status="normal" CRM_meta_diskcheck_status_internal="normal" CRM_meta_on_node="bl460g1n7" CRM_meta_on_node_uuid="3232261593" CRM_meta_probe_complete="true" CRM_meta_ringnumber_0="192.168.101.217 is UP" CRM_meta_ringnumber_1="192.168.102.217 is UP" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="12" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="stop" operation_key="prmVM2_stop_0" on_node="bl460g1n6" on_node_uuid="3232261592"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="16" operation="stop" operation_key="prmDummy_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="18" operation="stop" operation_key="prmVM2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="37" operation="stop" operation_key="prmStonith8-1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="prmStonith8-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="47" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="65" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

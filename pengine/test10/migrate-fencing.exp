@@ -368,7 +368,7 @@
     <action_set>
       <rsc_op id="63" operation="migrate_to" operation_key="migrator_migrate_to_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_migrate_source="pcmk-1" CRM_meta_migrate_target="pcmk-3" CRM_meta_record_pending="true" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

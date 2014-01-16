@@ -72,7 +72,7 @@
      <action_set>
       <rsc_op id="10" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
       </rsc_op>
      </action_set>
     <inputs/>
@@ -144,7 +144,7 @@
      <action_set>
       <rsc_op id="15" operation="migrate_to" operation_key="test2_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
       </rsc_op>
     </action_set>
     <inputs>

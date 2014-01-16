@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="8" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" allow_migrate="on" />
+        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" allow_migrate="on" />
        </rsc_op>
      </action_set>
      <inputs>

@@ -2848,12 +2848,16 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
             } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
                 rsc->role = RSC_ROLE_MASTER;
+
+            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE) && node->details->unclean) {
+                /* If a pending migrate_to action is out on a unclean node,
+                 * we have to force the stop action on the target. */
+                const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+                node_t *target = pe_find_node(data_set->nodes, migrate_target);
+                if (target) {
+                    stop_action(rsc, target, FALSE);
+                }
             }
-            /*
-             * Intentionally ignoring pending migrate ops here;
-             * haven't decided if we need to do anything special
-             * with them yet...
-             */
             break;
 
         case PCMK_LRM_OP_DONE:
