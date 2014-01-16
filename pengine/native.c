@@ -3049,6 +3049,12 @@ MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t
         to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node,
                            FALSE, TRUE, data_set);
 
+        /* migrate_to takes place on the source node, but can 
+         * have an effect on the target node depending on how
+         * the agent is written. Because of this, we have to maintain
+         * a record that the migrate_to occurred incase the source node 
+         * loses membership while the migrate_to action is still in-flight. */
+        add_hash_param(to->meta, XML_OP_ATTR_PENDING, "true");
         for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
             node_t *current = (node_t *) gIter->data;
             action_t *stop = stop_action(rsc, current, FALSE);
