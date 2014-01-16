@@ -747,6 +747,28 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     const char *reason = "none";
     gboolean needs_update = FALSE;
     xmlXPathObjectPtr xpath_obj = NULL;
+    xmlNode *stonith_enabled_xml = NULL;
+    const char *stonith_enabled_s = NULL;
+    static gboolean stonith_enabled_saved = TRUE;
+
+    stonith_enabled_xml = get_xpath_object("/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG
+                                           "/" XML_CIB_TAG_PROPSET "//nvpair[@name='stonith-enabled']",
+                                           local_cib, LOG_DEBUG);
+    if (stonith_enabled_xml) {
+        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+
+    if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
+        crm_debug("No need to update stonith device list since stonith is disabled");
+        stonith_enabled_saved = FALSE;
+        return;
+
+    } else if (stonith_enabled_saved == FALSE) {
+        crm_debug("Need to update stonith device list since stonith is being enabled");
+        stonith_enabled_saved = TRUE;
+        needs_update = TRUE;
+        reason = "stonith being enabled";
+    }
 
     /* process new constraints */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
