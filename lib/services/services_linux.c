@@ -508,7 +508,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         struct pollfd fds[3];
         int wait_rc = 0;
 
-        sfd = signalfd(-1, &mask, 0);
+        sfd = signalfd(-1, &mask, SFD_NONBLOCK);
         if (sfd < 0) {
             crm_perror(LOG_ERR, "signalfd() failed");
         }
