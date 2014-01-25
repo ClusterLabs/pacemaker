@@ -264,11 +264,11 @@ bind_and_listen(struct addrinfo *addr)
     char buffer[256] = { 0, };
 
     if (addr->ai_family == AF_INET6) {
-        struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr->ai_addr;
+        struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void *)addr->ai_addr;
         inet_ntop(addr->ai_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
 
     } else {
-        struct sockaddr_in *addr_in = (struct sockaddr_in *)addr->ai_addr;
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)(void *)addr->ai_addr;
         inet_ntop(addr->ai_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
     }
 
