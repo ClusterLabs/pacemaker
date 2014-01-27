@@ -1810,6 +1810,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             stop->flags |= pe_action_optional;
         }
 
+        g_list_free(possible_matches);
         free(key);
     }
 }
