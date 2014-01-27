@@ -2137,7 +2137,6 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             log_change("Migrate %s\t(%s %s -> %s)",
                        rsc->id, role2text(rsc->role), current->details->uname,
                        next->details->uname);
-            g_list_free(possible_matches);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
             log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
@@ -2162,6 +2161,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
         }
 
+        g_list_free(possible_matches);
         return;
     }
 
