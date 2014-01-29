@@ -1166,20 +1166,22 @@ AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
 
-HAVE_gio=1
+HAVE_dbus=1
 HAVE_upstart=0
 HAVE_systemd=0
-PKG_CHECK_MODULES(GIO, gio-2.0, ,HAVE_gio=0)
+PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
 
-AC_CHECK_TYPE([GDBusProxy],,,[[#include <gio/gio.h>]])
-
-if test x$ac_cv_type_GDBusProxy != xyes; then
-   HAVE_gio=0
-   AC_MSG_WARN(Unable to support systemd/upstart. You need to use glib >= 2.26)
+if test $HAVE_dbus = 1; then
+   CFLAGS="$CFLAGS `$PKGCONFIG --cflags dbus-1`"
 fi
 
-if test $HAVE_gio = 1 -a "x${enable_upstart}" != xno; then
-   HAVE_upstart=1
+DBUS_LIBS="$CFLAGS `$PKGCONFIG --libs dbus-1`"
+AC_SUBST(DBUS_LIBS)
+
+AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
+
+if test $HAVE_dbus = 1 -a "x${enable_upstart}" != xno; then
+   HAVE_upstart=0
    PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
@@ -1195,7 +1197,7 @@ else
     enable_systemd=no
 fi
 
-if test $HAVE_gio = 1 -a "x${enable_systemd}" != xno; then
+if test $HAVE_dbus = 1 -a "x${enable_systemd}" != xno; then
    if test -n "$systemdunitdir" -a "x$systemdunitdir" != xno; then
       HAVE_systemd=1
       PCMK_FEATURES="$PCMK_FEATURES systemd"

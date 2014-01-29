@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include <services_private.h>
 #include <systemd.h>
+#include <dbus/dbus.h>
+#include <pcmk-dbus.h>
 
 #define BUS_NAME "org.freedesktop.systemd1"
 #define BUS_PATH "/org/freedesktop/systemd1"
@@ -47,42 +49,26 @@ struct unit_info {
     const char *job_path;
 };
 
-static GDBusProxy *systemd_proxy = NULL;
-
-static GDBusProxy *
-get_proxy(const char *path, const char *interface)
+static DBusMessage *systemd_new_method(const char *iface, const char *method)
 {
-    GError *error = NULL;
-    GDBusProxy *proxy = NULL;
-
-#ifndef GLIB_DEPRECATED_IN_2_36
-    g_type_init();
-#endif
-
-    if (path == NULL) {
-        path = BUS_PATH;
-    }
-
-    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, NULL,     /* GDBusInterfaceInfo */
-                                          BUS_NAME, path, interface,
-                                          NULL, /* GCancellable */ &error);
-
-    if (error) {
-        crm_err("Can't connect obtain proxy to %s interface: %s", interface, error->message);
-        g_error_free(error);
-        proxy = NULL;
-    }
-    return proxy;
+    crm_trace("Calling: %s on %s", method, iface);
+    return dbus_message_new_method_call(BUS_NAME, // target for the method call
+                                        BUS_PATH, // object to call on
+                                        iface, // interface to call on
+                                        method); // method name
 }
 
+
+static DBusConnection* systemd_proxy = NULL;
 static gboolean
 systemd_init(void)
 {
     static int need_init = 1;
+    /* http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html */
 
     if (need_init) {
         need_init = 0;
-        systemd_proxy = get_proxy(NULL, BUS_NAME ".Manager");
+        systemd_proxy = pcmk_dbus_connect();
     }
     if (systemd_proxy == NULL) {
         return FALSE;
@@ -94,7 +80,7 @@ void
 systemd_cleanup(void)
 {
     if (systemd_proxy) {
-        g_object_unref(systemd_proxy);
+        pcmk_dbus_disconnect(systemd_proxy);
         systemd_proxy = NULL;
     }
 }
@@ -112,130 +98,87 @@ systemd_service_name(const char *name)
     return g_strdup_printf("%s.service", name);
 }
 
-static void
-systemd_daemon_reload(GDBusProxy * proxy, GError ** error)
+static bool
+systemd_daemon_reload(void)
 {
-    GVariant *_ret = g_dbus_proxy_call_sync(proxy, "Reload", g_variant_new("()"),
-                                            G_DBUS_CALL_FLAGS_NONE, -1, NULL, error);
+    const char *method = "Reload";
+    DBusMessage *reply = NULL;
+    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
 
-    if (_ret) {
-        g_variant_unref(_ret);
+    CRM_ASSERT(msg != NULL);
+    reply = pcmk_dbus_send_recv(msg, systemd_proxy, NULL);
+    dbus_message_unref(msg);
+    if(reply) {
+        dbus_message_unref(reply);
     }
+    return TRUE;
 }
 
 static gboolean
-systemd_unit_by_name(GDBusProxy * proxy,
-                     const gchar * arg_name,
-                     gchar ** out_unit, GCancellable * cancellable, GError ** error)
+systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
 {
-    GError *reload_error = NULL;
-    GVariant *_ret = NULL;
+    DBusMessage *msg;
+    DBusMessageIter args;
+    DBusMessage *reply = NULL;
+    const char *method = "GetUnit";
     char *name = NULL;
-    int retry = 0;
+    char *error = NULL;
 
 /*
-  "  <method name=\"GetUnit\">\n"                                 \
-  "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
-  "   <arg name=\"unit\" type=\"o\" direction=\"out\"/>\n"        \
-  "  </method>\n"                                                 \
-*/
+  <method name="GetUnit">
+   <arg name="name" type="s" direction="in"/>
+   <arg name="unit" type="o" direction="out"/>
+  </method>
 
-    name = systemd_service_name(arg_name);
-    crm_debug("Calling GetUnit");
-    _ret = g_dbus_proxy_call_sync(proxy, "GetUnit", g_variant_new("(s)", name),
-                                  G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
-
-    if (_ret) {
-        crm_debug("Checking output");
-        g_variant_get(_ret, "(o)", out_unit);
-        crm_debug("%s = %s", arg_name, *out_unit);
-        g_variant_unref(_ret);
-        goto done;
-    }
-
-    crm_debug("Reloading the systemd manager configuration");
-    systemd_daemon_reload(proxy, &reload_error);
-    retry++;
-
-    if (reload_error) {
-        crm_err("Cannot reload the systemd manager configuration: %s", reload_error->message);
-        g_error_free(reload_error);
-        goto done;
-    }
-
-    if (*error) {
-        crm_debug("Cannot find %s: %s", name, (*error)->message);
-        g_error_free(*error);
-        *error = NULL;
-    }
-
-/*
   <method name="LoadUnit">
    <arg name="name" type="s" direction="in"/>
    <arg name="unit" type="o" direction="out"/>
   </method>
  */
-    crm_debug("Calling LoadUnit");
-    _ret = g_dbus_proxy_call_sync(proxy, "LoadUnit", g_variant_new("(s)", name),
-                                  G_DBUS_CALL_FLAGS_NONE, -1, cancellable, error);
 
-    if (_ret) {
-        crm_debug("Checking output");
-        g_variant_get(_ret, "(o)", out_unit);
-        crm_debug("%s = %s", arg_name, *out_unit);
-        g_variant_unref(_ret);
+    name = systemd_service_name(arg_name);
+
+    while(*out_unit == NULL) {
+        msg = systemd_new_method(BUS_NAME".Manager", method);
+        CRM_ASSERT(msg != NULL);
+
+        pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
+
+        reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+        dbus_message_unref(msg);
+
+        if(error) {
+            crm_info("Call to %s failed: %s", method, error);
+            free(error);
+            error = NULL;
+
+        } else if (dbus_message_iter_init(reply, &args)) {
+
+            if(pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+                DBusBasicValue value;
+
+                dbus_message_iter_get_basic(&args, &value);
+                *out_unit = strdup(value.str);
+                dbus_message_unref(reply);
+                free(name);
+                return TRUE;
+            }
+        }
+
+        if(strcmp(method, "LoadUnit") != 0) {
+            method = "LoadUnit";
+            crm_debug("Cannot find %s, reloading the systemd manager configuration", name);
+            systemd_daemon_reload();
+            if(reply) {
+                dbus_message_unref(reply);
+            }
+
+        } else {
+            free(name);
+            return FALSE;
+        }
     }
-
-  done:
-    free(name);
-    return _ret != NULL;
-}
-
-static char *
-systemd_unit_property(const char *obj, const gchar * iface, const char *name)
-{
-    GError *error = NULL;
-    GDBusProxy *proxy;
-    GVariant *asv = NULL;
-    GVariant *value = NULL;
-    GVariant *_ret = NULL;
-    char *output = NULL;
-
-    crm_trace("Calling GetAll on %s", obj);
-    proxy = get_proxy(obj, BUS_PROPERTY_IFACE);
-
-    if (!proxy) {
-        return NULL;
-    }
-
-    _ret = g_dbus_proxy_call_sync(proxy, "GetAll", g_variant_new("(s)", iface),
-                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
-
-    if (error) {
-        crm_err("Cannot get properties for %s: %s", g_dbus_proxy_get_object_path(proxy),
-                error->message);
-        g_error_free(error);
-        g_object_unref(proxy);
-        return NULL;
-    }
-    crm_debug("Call to GetAll passed: type '%s' %d\n", g_variant_get_type_string(_ret),
-             g_variant_n_children(_ret));
-
-    asv = g_variant_get_child_value(_ret, 0);
-    crm_trace("asv type '%s' %d\n", g_variant_get_type_string(asv), g_variant_n_children(asv));
-
-    value = g_variant_lookup_value(asv, name, NULL);
-    if (value && g_variant_is_of_type(value, G_VARIANT_TYPE_STRING)) {
-        crm_info("Got value '%s' for %s[%s]", g_variant_get_string(value, NULL), obj, name);
-        output = g_variant_dup_string(value, NULL);
-
-    } else {
-        crm_info("No value for %s[%s]", obj, name);
-    }
-
-    g_object_unref(proxy);
-    g_variant_unref(_ret);
-    return output;
+    return FALSE;
 }
 
 GList *
@@ -243,11 +186,13 @@ systemd_unit_listall(void)
 {
     int lpc = 0;
     GList *units = NULL;
-    GError *error = NULL;
-    GVariant *out_units = NULL;
-    GVariantIter iter;
-    struct unit_info u;
-    GVariant *_ret = NULL;
+    DBusMessageIter args;
+    DBusMessageIter unit;
+    DBusMessageIter elem;
+    DBusMessage *msg = NULL;
+    DBusMessage *reply = NULL;
+    const char *method = "ListUnits";
+    char *error = NULL;
 
     if (systemd_init() == FALSE) {
         return NULL;
@@ -259,40 +204,60 @@ systemd_unit_listall(void)
         "  </method>\n"                                                 \
 */
 
-    _ret = g_dbus_proxy_call_sync(systemd_proxy, "ListUnits", g_variant_new("()"),
-                                  G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    msg = systemd_new_method(BUS_NAME".Manager", method);
+    CRM_ASSERT(msg != NULL);
 
-    if (error || _ret == NULL) {
-        crm_info("Call to ListUnits failed: %s", error ? error->message : "unknown");
-        if(error) {
-            g_error_free(error);
-        }
+    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+    dbus_message_unref(msg);
+
+    if(error) {
+        crm_err("Call to %s failed: %s", method, error);
+        free(error);
+        return NULL;
+
+    } else if (!dbus_message_iter_init(reply, &args)) {
+        crm_err("Call to %s failed: Message has no arguments", method);
+        dbus_message_unref(reply);
         return NULL;
     }
 
-    g_variant_get(_ret, "(@a(ssssssouso))", &out_units);
-
-    g_variant_iter_init(&iter, out_units);
-    while (g_variant_iter_loop(&iter, "(ssssssouso)",
-                               &u.id,
-                               &u.description,
-                               &u.load_state,
-                               &u.active_state,
-                               &u.sub_state,
-                               &u.following, &u.unit_path, &u.job_id, &u.job_type, &u.job_path)) {
-        char *match = strstr(u.id, ".service");
-
-        if (match) {
-            lpc++;
-            match[0] = 0;
-            crm_trace("Got %s[%s] = %s", u.id, u.active_state, u.description);
-            units = g_list_append(units, strdup(u.id));
-        }
+    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
+        crm_err("Call to %s failed: Message has invalid arguments", method);
+        dbus_message_unref(reply);
+        return NULL;
     }
 
-    crm_info("Call to ListUnits passed: type '%s' count %d", g_variant_get_type_string(out_units),
-             lpc);
-    g_variant_unref(_ret);
+    dbus_message_iter_recurse(&args, &unit);
+    while (dbus_message_iter_get_arg_type (&unit) != DBUS_TYPE_INVALID) {
+        DBusBasicValue value;
+
+        if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __FUNCTION__, __LINE__)) {
+            continue;
+        }
+
+        dbus_message_iter_recurse(&unit, &elem);
+        if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
+            continue;
+        }
+
+        dbus_message_iter_get_basic(&elem, &value);
+        crm_trace("Got: %s", value.str);
+        if(value.str) {
+            char *match = strstr(value.str, ".service");
+
+            if (match) {
+                lpc++;
+                match[0] = 0;
+
+                units = g_list_append(units, strdup(value.str));
+            }
+        }
+        dbus_message_iter_next (&unit);
+    }
+
+    dbus_message_unref(reply);
+
+    crm_trace("Found %d systemd services", lpc);
     return units;
 }
 
@@ -300,26 +265,18 @@ gboolean
 systemd_unit_exists(const char *name)
 {
     char *path = NULL;
-    GError *error = NULL;
     gboolean pass = FALSE;
 
     if (systemd_init() == FALSE) {
         return FALSE;
     }
 
-    pass = systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error);
-
-    if (error || pass == FALSE) {
-        pass = FALSE;
-        crm_err("Call to ListUnits failed: %s", error ? error->message : "unknown");
-        if(error) {
-            g_error_free(error);
-        }
-
-    } else {
+    if(systemd_unit_by_name(name, &path) && path) {
         crm_trace("Got %s", path);
+        pass = TRUE;
     }
-    /* free(path) */
+
+    free(path);
     return pass;
 }
 
@@ -329,11 +286,10 @@ systemd_unit_metadata(const char *name)
     char *path = NULL;
     char *meta = NULL;
     char *desc = NULL;
-    GError *error = NULL;
 
     CRM_ASSERT(systemd_init());
-    if (systemd_unit_by_name(systemd_proxy, name, &path, NULL, &error)) {
-        desc = systemd_unit_property(path, BUS_NAME ".Unit", "Description");
+    if (systemd_unit_by_name(name, &path)) {
+        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description");
     } else {
         desc = g_strdup_printf("systemd unit file for %s", name);
     }
@@ -362,6 +318,7 @@ systemd_unit_metadata(const char *name)
     return meta;
 }
 
+#if 0
 static void
 systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer user_data)
 {
@@ -411,19 +368,23 @@ systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer use
         g_variant_unref(_ret);
     }
 }
+#endif
 
 #define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
 
 gboolean
 systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 {
+    char *error = NULL;
     char *unit = NULL;
-    GError *error = NULL;
+    const char *replace_s = "replace";
     gboolean pass = FALSE;
-    GVariant *_ret = NULL;
-    const char *action = op->action;
+    const char *method = op->action;
     char *name = systemd_service_name(op->agent);
-
+    DBusMessage *msg = NULL;
+    DBusMessage *reply = NULL;
+    DBusMessageIter args;
+    
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
@@ -436,22 +397,20 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         goto cleanup;
     }
 
-    pass = systemd_unit_by_name(systemd_proxy, op->agent, &unit, NULL, &error);
-    if (error || pass == FALSE) {
-        crm_debug("Could not obtain unit named '%s': %s", op->agent,
-                  error ? error->message : "unknown");
+    pass = systemd_unit_by_name(op->agent, &unit);
+    if (pass == FALSE) {
+        crm_debug("Could not obtain unit named '%s'", op->agent);
+#if 0
         if (error && strstr(error->message, "systemd1.NoSuchUnit")) {
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_LRM_OP_NOT_INSTALLED;
         }
-        if(error) {
-            g_error_free(error);
-        }
+#endif
         goto cleanup;
     }
 
-    if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
-        char *state = systemd_unit_property(unit, BUS_NAME ".Unit", "ActiveState");
+    if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
+        char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState");
 
         if (g_strcmp0(state, "active") == 0) {
             op->rc = PCMK_OCF_OK;
@@ -462,12 +421,12 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         free(state);
         goto cleanup;
 
-    } else if (g_strcmp0(action, "start") == 0) {
+    } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
         char *override_dir = g_strdup_printf("%s/%s", SYSTEMD_OVERRIDE_ROOT, unit);
         char *override_file = g_strdup_printf("%s/50-pacemaker.conf", override_dir);
 
-        action = "StartUnit";
+        method = "StartUnit";
         crm_build_path(override_dir, 0755);
 
         file_strm = fopen(override_file, "w");
@@ -485,74 +444,85 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
             fflush(file_strm);
             fclose(file_strm);
         }
-        systemd_daemon_reload(systemd_proxy, &error);
-        if(error) {
-            g_error_free(error);
-        }
+        systemd_daemon_reload();
         free(override_file);
         free(override_dir);
 
-    } else if (g_strcmp0(action, "stop") == 0) {
+    } else if (g_strcmp0(method, "stop") == 0) {
         char *override_file = g_strdup_printf("%s/%s/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, unit);
 
-        action = "StopUnit";
+        method = "StopUnit";
         unlink(override_file);
         free(override_file);
-        systemd_daemon_reload(systemd_proxy, &error);
-        if(error) {
-            g_error_free(error);
-        }
+        systemd_daemon_reload();
 
-    } else if (g_strcmp0(action, "restart") == 0) {
-        action = "RestartUnit";
+    } else if (g_strcmp0(method, "restart") == 0) {
+        method = "RestartUnit";
     } else {
         op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
         goto cleanup;
     }
 
-    crm_debug("Calling %s for %s: %s", action, op->rsc, unit);
+    crm_debug("Calling %s for %s: %s", method, op->rsc, unit);
+
+#if 0
     if (synchronous == FALSE) {
-        g_dbus_proxy_call(systemd_proxy, action, g_variant_new("(ss)", name, "replace"),
+        g_dbus_proxy_call(systemd_proxy, method, g_variant_new("(ss)", name, "replace"),
                           G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, systemd_unit_exec_done, op);
         free(unit);
         free(name);
         return TRUE;
     }
+#endif
 
-    _ret = g_dbus_proxy_call_sync(systemd_proxy, action, g_variant_new("(ss)", name, "replace"),
-                                  G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, &error);
+    msg = systemd_new_method(BUS_NAME".Manager", method);
+    CRM_ASSERT(msg != NULL);
 
-    if (error) {
+    /* (ss) */
+    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
+    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &replace_s);
+
+    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+    dbus_message_unref(msg);
+
+    if(error) {
         /* ignore "already started" or "not running" errors */
         if (safe_str_eq(op->action, "stop")
-            && strstr(error->message, "systemd1.InvalidName")) {
+            && (strstr(error, "org.freedesktop.systemd1.InvalidName")
+                || strstr(error, "org.freedesktop.systemd1.NoSuchUnit"))) {
             crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
             op->rc = PCMK_OCF_OK;
         } else {
-            crm_err("Could not issue %s for %s: %s (%s)", action, op->rsc, error->message, unit);
+            crm_err("Could not issue %s for %s: %s (%s)", method, op->rsc, error, unit);
         }
-        g_error_free(error);
+        goto cleanup;
 
-    } else if(g_variant_is_of_type (_ret, G_VARIANT_TYPE("(o)"))) {
-        char *path = NULL;
+    } else if(!dbus_message_iter_init(reply, &args)) {
+        crm_err("Call to %s failed: no arguments", method);
+        goto cleanup;
+    }
 
-        g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
-                 path);
-        op->rc = PCMK_OCF_OK;
+    /* (o) */
+    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        crm_err("Call to %s failed: Message has invalid arguments", method);
 
     } else {
-        crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
+        DBusBasicValue value;
+
+        dbus_message_iter_get_basic(&args, &value);
+        crm_info("Call to %s passed: %s", op->action, value.str);
         op->rc = PCMK_OCF_OK;
     }
 
   cleanup:
+    free(error);
     free(unit);
     free(name);
 
-    if (_ret) {
-        g_variant_unref(_ret);
+    if(reply) {
+        dbus_message_unref(reply);
     }
+
     if (synchronous == FALSE) {
         operation_finalize(op);
         return TRUE;
