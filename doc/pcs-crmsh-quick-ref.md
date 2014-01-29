@@ -5,7 +5,7 @@
     
 ## Display the current status
 
-    crmsh # crm_mon -1
+    crmsh # crm status
     pcs   # pcs status
 
 ## Node standby
@@ -54,12 +54,12 @@ The monitor operation is automatically created based on the agent's metadata.
     pcs   # 
 
 ## Update a resource
-    crmsh # crm configure edit ClusterIP
+    crmsh # crm resource param ClusterIP set clusterip_hash=sourceip
     pcs   # pcs resource update ClusterIP clusterip_hash=sourceip
 
 ## Display a resource
 
-    crmsh # 
+    crmsh # crm configure show ClusterIP
     pcs   # pcs resource show WebFS
 
 ## Resource defaults
@@ -68,7 +68,7 @@ The monitor operation is automatically created based on the agent's metadata.
     pcs   # pcs resource rsc defaults resource-stickiness=100
     
 Listing the current defaults:
-    
+    crmsh # crm configure show type:rsc_defaults
     pcs   # pcs resource rsc defaults
     
 ## Operation defaults
@@ -77,6 +77,7 @@ Listing the current defaults:
     pcs   # pcs resource op defaults timeout=240s
 
 Listing the current defaults:
+    crmsh # crm configure show type:op_defaults
     pcs   #  pcs resource op defaults
 
 ## Colocation
