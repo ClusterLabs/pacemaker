@@ -239,6 +239,8 @@ lrmd_remote_listen(gpointer data)
                         &lrmd_remote_fd_cb);
     g_hash_table_insert(client_connections, new_client->id, new_client);
 
+    /* Alert other clients of the new connection */
+    notify_of_new_client(new_client);
     return TRUE;
 }
 

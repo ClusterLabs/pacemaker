@@ -562,6 +562,30 @@ get_uniform_rc(const char *standard, const char *action, int rc)
 }
 
 void
+notify_of_new_client(crm_client_t *new_client)
+{
+    crm_client_t *client = NULL;
+    GHashTableIter iter;
+    xmlNode *notify = NULL;
+    char *key = NULL;
+
+    notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+    crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
+
+    g_hash_table_iter_init(&iter, client_connections);
+    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & client)) {
+
+        if (safe_str_eq(client->id, new_client->id)) {
+            continue;
+        }
+
+        send_client_notify((gpointer) key, (gpointer) client, (gpointer) notify);
+    }
+    free_xml(notify);
+}
+
+void
 client_disconnect_cleanup(const char *client_id)
 {
     GHashTableIter iter;
