@@ -4,6 +4,9 @@
 #include <dbus/dbus.h>
 #include <pcmk-dbus.h>
 
+#define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
+
+
 static bool pcmk_dbus_error_check(DBusError *err, const char *prefix, const char *function, int line) 
 {
     if (err && dbus_error_is_set(err)) {
@@ -43,43 +46,24 @@ bool pcmk_dbus_append_arg(DBusMessage *msg, int dtype, const void *value)
     return TRUE;
 }
 
-DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, char **e)
+bool
+pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *reply, DBusError *ret)
 {
     DBusError error;
-    const char *method = NULL;
-    DBusMessage *reply = NULL;
-    DBusPendingCall* pending = NULL;
 
     dbus_error_init(&error);
 
-    CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
-    method = dbus_message_get_member (msg);
+    if(pending == NULL) {
+        error.name = "org.clusterlabs.pacemaker.NoRequest";
+        error.message = "No request sent";
 
-    // send message and get a handle for a reply
-    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
-        crm_err("Send with reply failed");
-        return NULL;
-    }
-    if (NULL == pending) {
-        crm_err("No pending call found");
-        return NULL;
-    }
-
-    dbus_connection_flush(connection);
-
-    /* block until we receive a reply */
-    dbus_pending_call_block(pending);
-
-    /* get the reply message */
-    reply = dbus_pending_call_steal_reply(pending);
-    if(reply == NULL) {
+    } else if(reply == NULL) {
         error.name = "org.clusterlabs.pacemaker.NoReply";
         error.message = "No reply";
 
     } else {
         DBusMessageIter args;
         int dtype = dbus_message_get_type(reply);
-
 
         switch(dtype) {
             case DBUS_MESSAGE_TYPE_METHOD_RETURN:
@@ -104,7 +88,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, c
 
             case DBUS_MESSAGE_TYPE_ERROR:
                 dbus_set_error_from_message (&error, reply);
-                crm_err("%s error '%s': %s", method, error.name, error.message);
+                crm_info("%s error '%s': %s", method, error.name, error.message);
                 break;
             default:
                 error.message = "Unknown reply type";
@@ -113,21 +97,84 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, c
         }
     }
 
-    if(error.name) {
-        if(e) {
-            *e = strdup(error.name);
+    if(ret && (error.name || error.message)) {
+        *ret = error;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, DBusError *error)
+{
+    const char *method = NULL;
+    DBusMessage *reply = NULL;
+    DBusPendingCall* pending = NULL;
+
+    CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
+    method = dbus_message_get_member (msg);
+
+    // send message and get a handle for a reply
+    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
+        if(error) {
+            error->message = "Call to dbus_connection_send_with_reply() failed";
+            error->name = "org.clusterlabs.pacemaker.SendFailed";
         }
+        crm_err("Error sending %s request", method);
+        return NULL;
+    }
+
+    dbus_connection_flush(connection);
+
+    if(pending) {
+        /* block until we receive a reply */
+        dbus_pending_call_block(pending);
+
+        /* get the reply message */
+        reply = dbus_pending_call_steal_reply(pending);
+    }
+
+    if(pcmk_dbus_find_error(method, pending, reply, error)) {
+        crm_trace("Was error: '%s' '%s'", error->name, error->message);
         if(reply) {
             dbus_message_unref(reply);
             reply = NULL;
         }
-    } else if(e) {
-        *e = NULL;
+    }
+    crm_trace("Was error: '%s' '%s'", error->name, error->message);
+
+    if(pending) {
+        /* free the pending message handle */
+        dbus_pending_call_unref(pending);
     }
 
-    /* free the pending message handle */
-    dbus_pending_call_unref(pending);
     return reply;
+}
+
+bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
+                    void(*done)(DBusPendingCall *pending, void *user_data), void *user_data)
+{
+    DBusError error;
+    const char *method = NULL;
+    DBusPendingCall* pending = NULL;
+
+    dbus_error_init(&error);
+
+    CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
+    method = dbus_message_get_member (msg);
+
+    // send message and get a handle for a reply
+    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
+        crm_err("Send with reply failed for %s", method);
+        return FALSE;
+
+    } else if (pending == NULL) {
+        crm_err("No pending call found for %s", method);
+        return FALSE;
+
+    }
+    CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
+    return TRUE;
 }
 
 bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected, const char *function, int line)
@@ -147,8 +194,6 @@ bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected
     return TRUE;
 }
 
-#define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
-
 char *
 pcmk_dbus_get_property(
     DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name)
@@ -160,10 +205,11 @@ pcmk_dbus_get_property(
     /* DBusBasicValue value; */
     const char *method = "GetAll";
     char *output = NULL;
-    char *error = NULL;
+    DBusError error;
 
         /* desc = systemd_unit_property(path, BUS_NAME ".Unit", "Description"); */
 
+    dbus_error_init(&error);
     crm_info("Calling: %s on %s", method, target);
     msg = dbus_message_new_method_call(target, // target for the method call
                                        obj, // object to call on
@@ -180,7 +226,7 @@ pcmk_dbus_get_property(
     reply = pcmk_dbus_send_recv(msg, connection, &error);
     dbus_message_unref(msg);
 
-    if(reply == NULL) {
+    if(error.name) {
         crm_err("Call to %s for %s failed: No reply", method, iface);
         return NULL;
 
@@ -242,20 +288,105 @@ pcmk_dbus_get_property(
     return output;
 }
 
+static void pcmk_dbus_connection_dispatch(DBusConnection *connection, DBusDispatchStatus new_status, void *data){
+    crm_trace("status %d for %p", new_status, data);
+    if (new_status == DBUS_DISPATCH_DATA_REMAINS){
+        dbus_connection_dispatch(connection);
+    }
+}
+
+static int
+pcmk_dbus_watch_dispatch(gpointer userdata)
+{
+    DBusWatch *watch = userdata;
+    int flags = dbus_watch_get_flags(watch);
+
+    crm_trace("Dispatching %p with flags %d", watch, flags);
+    if(flags & DBUS_WATCH_READABLE) {
+        dbus_watch_handle(watch, DBUS_WATCH_READABLE);
+    } else {
+        dbus_watch_handle(watch, DBUS_WATCH_ERROR);
+    }
+    return 0;
+}
+
+static void
+pcmk_dbus_watch_destroy(gpointer userdata)
+{
+    crm_trace("Destroyed %p", userdata);
+}
 
 
+struct mainloop_fd_callbacks pcmk_dbus_cb = {
+    .dispatch = pcmk_dbus_watch_dispatch,
+    .destroy = pcmk_dbus_watch_destroy,
+};
 
+static dbus_bool_t
+pcmk_dbus_watch_add(DBusWatch *watch, void *data){
+    int fd = dbus_watch_get_unix_fd(watch);
 
-int dbus_watch_get_unix_fd	(	DBusWatch * 	watch	);
+    mainloop_io_t *client = mainloop_add_fd(
+        "dbus", G_PRIORITY_DEFAULT, fd, watch, &pcmk_dbus_cb);
 
+    crm_trace("Added %p with fd=%d", watch, fd);
+    dbus_watch_set_data(watch, client, NULL);
+    return TRUE;
+}
 
-/* http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html#gaebf031eb444b4f847606aa27daa3d8e6 */
-    
-DBUS_EXPORT dbus_bool_t dbus_connection_set_watch_functions(
-    DBusConnection * 	connection,
-    DBusAddWatchFunction 	add_function,
-    DBusRemoveWatchFunction 	remove_function,
-    DBusWatchToggledFunction 	toggled_function,
-    void * 	data,
-    DBusFreeFunction 	free_data_function 
-    );
+static void
+pcmk_dbus_watch_remove(DBusWatch *watch, void *data){
+    mainloop_io_t *client = dbus_watch_get_data(watch);
+
+    crm_trace("Removed %p", watch);
+    mainloop_del_fd(client);
+}
+
+static gboolean
+pcmk_dbus_timeout_dispatch(gpointer data)
+{
+    crm_trace("Timeout for %p");
+    dbus_timeout_handle(data);
+    return FALSE;
+}
+
+static dbus_bool_t
+pcmk_dbus_timeout_add(DBusTimeout *timeout, void *data){
+    guint id = g_timeout_add(dbus_timeout_get_interval(timeout), pcmk_dbus_timeout_dispatch, timeout);
+
+    if(id) {
+        dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);
+    }
+    return TRUE;
+}
+
+static void
+pcmk_dbus_timeout_remove(DBusTimeout *timeout, void *data){
+    void *vid = dbus_timeout_get_data(timeout);
+    guint id = GPOINTER_TO_UINT(vid);
+
+    if(id) {
+        g_source_remove(id);
+        dbus_timeout_set_data(timeout, 0, NULL);
+    }
+}
+
+static void
+pcmk_dbus_timeout_toggle(DBusTimeout *timeout, void *data){
+    if(dbus_timeout_get_enabled(timeout)) {
+        pcmk_dbus_timeout_add(timeout, data);
+    } else {
+        pcmk_dbus_timeout_remove(timeout, data);
+    }
+}
+
+/* Inspired by http://www.kolej.mff.cuni.cz/~vesej3am/devel/dbus-select.c */
+
+void pcmk_dbus_connection_setup_with_select(DBusConnection *c){
+	dbus_connection_set_timeout_functions(
+            c, pcmk_dbus_timeout_add, pcmk_dbus_timeout_remove, pcmk_dbus_timeout_toggle, NULL, NULL);
+	dbus_connection_set_watch_functions(c, pcmk_dbus_watch_add, pcmk_dbus_watch_remove, NULL, NULL, NULL);
+	dbus_connection_set_dispatch_status_function(c, pcmk_dbus_connection_dispatch, NULL, NULL);
+
+	pcmk_dbus_connection_dispatch(c, dbus_connection_get_dispatch_status(c), NULL);
+}
