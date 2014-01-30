@@ -154,7 +154,9 @@ enum lrmd_call_options {
     /*! Only notify the client originating a exec() the results */
     lrmd_opt_notify_orig_only = 0x00000002,
     /*! Drop recurring operations initiated by a client when client disconnects.
-     * This call_option is only valid when registering a resource. */
+     * This call_option is only valid when registering a resource. When used
+     * remotely with the pacemaker_remote daemon, this option means that recurring
+     * operations will be dropped once all the remote connections disconnect. */
     lrmd_opt_drop_recurring = 0x00000003,
     /*! Only send out notifications for recurring operations whenthe result changes */
     lrmd_opt_notify_changes_only = 0x00000004,
