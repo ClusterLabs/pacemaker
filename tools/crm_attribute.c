@@ -254,6 +254,11 @@ main(int argc, char **argv)
         }
     }
 
+    if (attr_name == NULL && command == 'D') {
+        fprintf(stderr, "Error during deletion, no attribute name specified.\n");
+        return crm_exit(1);
+    }
+
     if ((command == 'v' || command == 'D')
         && safe_str_eq(type, XML_CIB_TAG_STATUS)
         && pcmk_ok == attrd_update_delegate(NULL, command, dest_uname, attr_name, attr_value, type, set_name,
