@@ -69,6 +69,7 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
+        pcmk_dbus_connection_setup_with_select(systemd_proxy);
     }
     if (systemd_proxy == NULL) {
         return FALSE;
@@ -122,7 +123,7 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
     DBusMessage *reply = NULL;
     const char *method = "GetUnit";
     char *name = NULL;
-    char *error = NULL;
+    DBusError error;
 
 /*
   <method name="GetUnit">
@@ -144,13 +145,12 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
 
         pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
 
+        dbus_error_init(&error);
         reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
         dbus_message_unref(msg);
 
-        if(error) {
-            crm_info("Call to %s failed: %s", method, error);
-            free(error);
-            error = NULL;
+        if(error.name) {
+            crm_info("Call to %s failed: %s", method, error.name);
 
         } else if (dbus_message_iter_init(reply, &args)) {
 
@@ -192,7 +192,7 @@ systemd_unit_listall(void)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
     const char *method = "ListUnits";
-    char *error = NULL;
+    DBusError error;
 
     if (systemd_init() == FALSE) {
         return NULL;
@@ -204,15 +204,15 @@ systemd_unit_listall(void)
         "  </method>\n"                                                 \
 */
 
+    dbus_error_init(&error);
     msg = systemd_new_method(BUS_NAME".Manager", method);
     CRM_ASSERT(msg != NULL);
 
     reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
     dbus_message_unref(msg);
 
-    if(error) {
-        crm_err("Call to %s failed: %s", method, error);
-        free(error);
+    if(error.name) {
+        crm_err("Call to %s failed: %s", method, error.name);
         return NULL;
 
     } else if (!dbus_message_iter_init(reply, &args)) {
@@ -318,64 +318,84 @@ systemd_unit_metadata(const char *name)
     return meta;
 }
 
-#if 0
-static void
-systemd_unit_exec_done(GObject * source_object, GAsyncResult * res, gpointer user_data)
+static bool
+systemd_mask_error(svc_action_t *op, const char *error)
 {
-    GError *error = NULL;
-    GVariant *_ret = NULL;
-    svc_action_t *op = user_data;
-    GDBusProxy *proxy = G_DBUS_PROXY(source_object);
+    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
+    if(strstr(error, "org.freedesktop.systemd1.InvalidName")
+       || strstr(error, "org.freedesktop.systemd1.LoadFailed")
+       || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
 
-    /* Obtain rc and stderr/out */
-    _ret = g_dbus_proxy_call_finish(proxy, res, &error);
-
-    if (error) {
-        /* ignore "already started" or "not running" errors */
-        crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
-        if (strstr(error->message, "systemd1.LoadFailed")
-            || strstr(error->message, "systemd1.InvalidName")) {
-
-            if (safe_str_eq(op->action, "stop")) {
-                crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-                op->rc = PCMK_OCF_OK;
-
-            } else {
-                op->rc = PCMK_OCF_NOT_INSTALLED;
-                op->status = PCMK_LRM_OP_NOT_INSTALLED;
-            }
+        if (safe_str_eq(op->action, "stop")) {
+            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
+            op->rc = PCMK_OCF_OK;
 
         } else {
-            crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error->message);
+            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
+            op->rc = PCMK_OCF_NOT_INSTALLED;
+            op->status = PCMK_LRM_OP_NOT_INSTALLED;
         }
-        g_error_free(error);
+        return TRUE;
+    }
 
-    } else if(g_variant_is_of_type (_ret, G_VARIANT_TYPE("(o)"))) {
-        char *path = NULL;
+    return FALSE;
+}
 
-        g_variant_get(_ret, "(o)", &path);
-        crm_info("Call to %s passed: type '%s' %s", op->action, g_variant_get_type_string(_ret),
-                 path);
-        op->rc = PCMK_OCF_OK;
+static void
+systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
+{
+    DBusError error;
+    DBusMessage *reply = NULL;
+    svc_action_t *op = user_data;
+
+    dbus_error_init(&error);
+    if(pending) {
+        reply = dbus_pending_call_steal_reply(pending);
+    }
+    if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
+
+        /* ignore "already started" or "not running" errors */
+        if (!systemd_mask_error(op, error.name)) {
+            crm_err("%s for %s: %s", op->action, op->rsc, error.message);
+        }
 
     } else {
-        crm_err("Call to %s passed but return type was '%s' not '(o)'", op->action, g_variant_get_type_string(_ret));
-        op->rc = PCMK_OCF_OK;
+        DBusMessageIter args;
+
+        if(!dbus_message_iter_init(reply, &args)) {
+            crm_err("Call to %s failed: no arguments", op->action);
+
+        } else if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+            crm_warn("Call to %s passed but return type was unexpected", op->action);
+            op->rc = PCMK_OCF_OK;
+
+        } else {
+            const char *path = NULL;
+
+            dbus_message_get_args (reply, NULL,
+                                   DBUS_TYPE_OBJECT_PATH, &path,
+                                   DBUS_TYPE_INVALID);
+            crm_info("Call to %s passed: %s", op->action, path);
+            op->rc = PCMK_OCF_OK;
+        }
     }
 
     operation_finalize(op);
-    if (_ret) {
-        g_variant_unref(_ret);
+
+    if(pending) {
+        dbus_pending_call_unref(pending);
+    }
+    if(reply) {
+        dbus_message_unref(reply);
     }
 }
-#endif
 
 #define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
 
 gboolean
 systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 {
-    char *error = NULL;
+    DBusError error;
     char *unit = NULL;
     const char *replace_s = "replace";
     gboolean pass = FALSE;
@@ -384,7 +404,8 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
     DBusMessageIter args;
-    
+
+    dbus_error_init(&error);
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
     CRM_ASSERT(systemd_init());
 
@@ -465,16 +486,6 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 
     crm_debug("Calling %s for %s: %s", method, op->rsc, unit);
 
-#if 0
-    if (synchronous == FALSE) {
-        g_dbus_proxy_call(systemd_proxy, method, g_variant_new("(ss)", name, "replace"),
-                          G_DBUS_CALL_FLAGS_NONE, op->timeout, NULL, systemd_unit_exec_done, op);
-        free(unit);
-        free(name);
-        return TRUE;
-    }
-#endif
-
     msg = systemd_new_method(BUS_NAME".Manager", method);
     CRM_ASSERT(msg != NULL);
 
@@ -482,42 +493,46 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
     pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &replace_s);
 
-    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
-    dbus_message_unref(msg);
+    if (synchronous == FALSE) {
+        free(unit);
+        free(name);
+        return pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
+    }
 
-    if(error) {
+    reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+
+    if(error.name) {
         /* ignore "already started" or "not running" errors */
-        if (safe_str_eq(op->action, "stop")
-            && (strstr(error, "org.freedesktop.systemd1.InvalidName")
-                || strstr(error, "org.freedesktop.systemd1.NoSuchUnit"))) {
-            crm_trace("Masking Stop failure for %s: unknown services are stopped", op->rsc);
-            op->rc = PCMK_OCF_OK;
-        } else {
-            crm_err("Could not issue %s for %s: %s (%s)", method, op->rsc, error, unit);
+        if(!systemd_mask_error(op, error.name)) {
+            crm_err("Could not issue %s for %s: %s (%s)", method, op->rsc, error.name, unit);
         }
         goto cleanup;
 
     } else if(!dbus_message_iter_init(reply, &args)) {
         crm_err("Call to %s failed: no arguments", method);
         goto cleanup;
-    }
 
-    /* (o) */
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
-        crm_err("Call to %s failed: Message has invalid arguments", method);
+    } else if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        crm_warn("Call to %s passed but return type was unexpected", op->action);
+        op->rc = PCMK_OCF_OK;
 
     } else {
-        DBusBasicValue value;
+        const char *path = NULL;
 
-        dbus_message_iter_get_basic(&args, &value);
-        crm_info("Call to %s passed: %s", op->action, value.str);
+        dbus_message_get_args (reply, NULL,
+                               DBUS_TYPE_OBJECT_PATH, &path,
+                               DBUS_TYPE_INVALID);
+        crm_info("Call to %s passed: %s", op->action, path);
         op->rc = PCMK_OCF_OK;
     }
 
   cleanup:
-    free(error);
     free(unit);
     free(name);
+
+    if(msg) {
+        dbus_message_unref(msg);
+    }
 
     if(reply) {
         dbus_message_unref(reply);
