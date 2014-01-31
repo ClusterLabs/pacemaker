@@ -140,7 +140,12 @@ lrmd_remote_client_destroy(gpointer user_data)
     }
 
     ipc_proxy_remove_provider(client);
-    client_disconnect_cleanup(client->id);
+
+    /* if this is the last remote connection, stop recurring
+     * operations */
+    if (crm_hash_table_size(client_connections) == 1) {
+        client_disconnect_cleanup(NULL);
+    }
 
     crm_notice("LRMD client disconnecting remote client - name: %s id: %s",
                client->name ? client->name : "<unknown>", client->id);
@@ -239,6 +244,8 @@ lrmd_remote_listen(gpointer data)
                         &lrmd_remote_fd_cb);
     g_hash_table_insert(client_connections, new_client->id, new_client);
 
+    /* Alert other clients of the new connection */
+    notify_of_new_client(new_client);
     return TRUE;
 }
 

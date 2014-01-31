@@ -86,6 +86,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_RSC_INFO          "lrmd_rsc_info"
 #define LRMD_OP_RSC_METADATA      "lrmd_rsc_metadata"
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
+#define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
 
 #define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
@@ -153,7 +154,9 @@ enum lrmd_call_options {
     /*! Only notify the client originating a exec() the results */
     lrmd_opt_notify_orig_only = 0x00000002,
     /*! Drop recurring operations initiated by a client when client disconnects.
-     * This call_option is only valid when registering a resource. */
+     * This call_option is only valid when registering a resource. When used
+     * remotely with the pacemaker_remote daemon, this option means that recurring
+     * operations will be dropped once all the remote connections disconnect. */
     lrmd_opt_drop_recurring = 0x00000003,
     /*! Only send out notifications for recurring operations whenthe result changes */
     lrmd_opt_notify_changes_only = 0x00000004,
@@ -166,6 +169,7 @@ enum lrmd_callback_event {
     lrmd_event_disconnect,
     lrmd_event_connect,
     lrmd_event_poke,
+    lrmd_event_new_client,
 };
 
 /* *INDENT-ON* */
@@ -450,6 +454,8 @@ lrmd_event_type2str(enum lrmd_callback_event type)
             return "connect";
         case lrmd_event_poke:
             return "poke";
+        case lrmd_event_new_client:
+            return "new_client";
     }
     return "unknown";
 }
