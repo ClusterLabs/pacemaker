@@ -5,24 +5,32 @@ language: c
 compiler:
   - gcc
 
+# sudo add-apt-repository ppa:hotot-team
 before_install:
- - lsb_release
- - sudo cat /etc/apt/sources.list
- - sudo bash -c 'echo "deb http://archive.ubuntu.com/ubuntu/ quantal universe" >> /etc/apt/sources.list'
+ - sudo bash -c 'echo "deb http://archive.ubuntu.com/ubuntu/ raring universe" >> /etc/apt/sources.list'
  - sudo apt-get update -qq
- - sudo apt-get install -qq automake autoconf chrpath libsnmp-dev libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-central python-dev libpam0g-dev libncurses5-dev libcorosync-dev heartbeat-dev libheartbeat2-dev cluster-glue-dev libxslt1-dev libesmtp-dev libqb-dev/quantal
+
+install:
+ - sudo apt-get install -qq automake autoconf chrpath libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-central python-dev libpam0g-dev libncurses5-dev libcorosync-dev libxslt1-dev libdbus-1-dev
+ - sudo apt-get install -qq cluster-glue-dev heartbeat-dev libheartbeat2-dev 
+ - sudo apt-get install -qq libqb-dev/raring
 
 before_script:
-  - ./autogen.sh
-  - ./configure
+ - ./autogen.sh
+ - ./configure
 
 script: make
 
-after_script:
-  - ./BasicSanity.sh -V
+#after_script:
+after_success:
+ - ./BasicSanity.sh -V
+
+after_failure:
+ - lsb_release -a
+ - sudo cat /etc/apt/sources.list
 
 notifications:
-  irc: "irc.freenode.org#pcmk"	
+  irc: "irc.freenode.org#pcmk"
   email:
     recipients:
       - andrew@beekhof.net
