@@ -119,7 +119,6 @@ static gboolean
 systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
 {
     DBusMessage *msg;
-    DBusMessageIter args;
     DBusMessage *reply = NULL;
     const char *method = "GetUnit";
     char *name = NULL;
@@ -137,6 +136,10 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
   </method>
  */
 
+    if (systemd_init() == FALSE) {
+        return FALSE;
+    }
+
     name = systemd_service_name(arg_name);
 
     while(*out_unit == NULL) {
@@ -152,17 +155,19 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
         if(error.name) {
             crm_info("Call to %s failed: %s", method, error.name);
 
-        } else if (dbus_message_iter_init(reply, &args)) {
+        } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+            if(out_unit) {
+                char *path = NULL;
 
-            if(pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
-                DBusBasicValue value;
+                dbus_message_get_args (reply, NULL,
+                                       DBUS_TYPE_OBJECT_PATH, &path,
+                                       DBUS_TYPE_INVALID);
 
-                dbus_message_iter_get_basic(&args, &value);
-                *out_unit = strdup(value.str);
-                dbus_message_unref(reply);
-                free(name);
-                return TRUE;
+                *out_unit = strdup(path);
             }
+            dbus_message_unref(reply);
+            free(name);
+            return TRUE;
         }
 
         if(strcmp(method, "LoadUnit") != 0) {
@@ -171,6 +176,7 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
             systemd_daemon_reload();
             if(reply) {
                 dbus_message_unref(reply);
+                reply = NULL;
             }
 
         } else {
@@ -264,20 +270,7 @@ systemd_unit_listall(void)
 gboolean
 systemd_unit_exists(const char *name)
 {
-    char *path = NULL;
-    gboolean pass = FALSE;
-
-    if (systemd_init() == FALSE) {
-        return FALSE;
-    }
-
-    if(systemd_unit_by_name(name, &path) && path) {
-        crm_trace("Got %s", path);
-        pass = TRUE;
-    }
-
-    free(path);
-    return pass;
+    return systemd_unit_by_name(name, NULL);
 }
 
 static char *
@@ -360,12 +353,7 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
         }
 
     } else {
-        DBusMessageIter args;
-
-        if(!dbus_message_iter_init(reply, &args)) {
-            crm_err("Call to %s failed: no arguments", op->action);
-
-        } else if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
             crm_warn("Call to %s passed but return type was unexpected", op->action);
             op->rc = PCMK_OCF_OK;
 
@@ -403,7 +391,6 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     char *name = systemd_service_name(op->agent);
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
-    DBusMessageIter args;
 
     dbus_error_init(&error);
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -499,6 +486,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         return pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
     }
 
+    dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
 
     if(error.name) {
@@ -508,11 +496,7 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
         }
         goto cleanup;
 
-    } else if(!dbus_message_iter_init(reply, &args)) {
-        crm_err("Call to %s failed: no arguments", method);
-        goto cleanup;
-
-    } else if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
         crm_warn("Call to %s passed but return type was unexpected", op->action);
         op->rc = PCMK_OCF_OK;
 
