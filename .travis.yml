@@ -3,20 +3,14 @@
 
 language: c
 compiler:
-  - gcc
+ - gcc
+ - clang
 
 env:
   global:
 
     # -- BEGIN Coverity Scan ENV
-    # Your normal Travis CI build command
-    # Normally this would be in the script: tag of .travis.yml, instead place it here
-    - STANDARD_BUILD_COMMAND="make"
-
-    # Pre-configuration steps that should not be analyzed
-    # i.e. "./configure"
-    - COVERITY_SCAN_BUILD_COMMAND_PREPEND=""
-
+    # Used by https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh
     # The build command with all of the arguments that you would apply to a manual `cov-build`
     - COVERITY_SCAN_BUILD_COMMAND="make"
 
@@ -27,13 +21,10 @@ env:
 
     # Regular expression selects on which branches to run analysis
     # Be aware of quotas. Do not run on every branch/commit
-    - COVERITY_SCAN_BRANCH_PATTERN="coverity_scan"
+    - COVERITY_SCAN_BRANCH_PATTERN="1.1"
 
     # COVERITY_SCAN_TOKEN via "travis encrypt" using the repo's public key
     - secure: "qnrF7L8RejLUY7URdNe7XP4Hu4R55C0tvAuMRg4EjVtelOpw+nIgA7BLiX19q/70VjFuKcGnMhW28TdYl0uwMMdWKKxmwTim04Sy3UfOE2BPeuQOBphr+8s9gd0U1MO8j2dZ84A40t5Mkk946wWZwT0okpjOr/PfBOZkU3o87FM="
-
-    - COVERITY_SCAN_BUILD_URL="https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh"
-    - COVERITY_SCAN_BUILD="curl -s $COVERITY_SCAN_BUILD_URL | bash"
 
     # -- END Coverity Scan ENV
 
@@ -44,6 +35,8 @@ env:
 
 # sudo add-apt-repository ppa:hotot-team
 before_install:
+ - whoami
+ - env | sort 
  - sudo bash -c 'echo "deb http://archive.ubuntu.com/ubuntu/ raring universe" >> /etc/apt/sources.list'
  - sudo apt-get update -qq
 
@@ -57,8 +50,8 @@ before_script:
  - ./configure
 
 script: 
-- if test ${COVERITY_SCAN} = 0; then "${STANDARD_BUILD_COMMAND}"; fi
-- if test ${COVERITY_SCAN} = 1; then eval "${COVERITY_SCAN_BUILD}"; fi
+- if test ${COVERITY_SCAN} = 0; then make; fi
+- if test ${COVERITY_SCAN} = 1; then bash travisci_build_coverity_scan.sh; fi
 
 #after_script:
 after_success:
