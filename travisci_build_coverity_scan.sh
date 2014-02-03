@@ -5,6 +5,10 @@ set -e
 export RED="\033[33;1m"
 export NONE="\033[0m"
 
+if [ -z "$PROJECT_NAME" ]; then
+    PROJECT_NAME=${TRAVIS_REPO_SLUG}
+fi
+
 # Environment check
 echo -e "${RED}Note: PROJECT_NAME and COVERITY_SCAN_TOKEN are available on Project Settings page on scan.coverity.com${NONE}"
 [ -z "$PROJECT_NAME" ] && echo "ERROR: PROJECT_NAME must be set" && exit 1

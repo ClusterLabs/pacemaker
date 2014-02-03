@@ -1,10 +1,11 @@
 # Control file for the Travis autobuilder
-# http://about.travis-ci.org/docs/user/build-configuration/
+# http://docs.travis-ci.com/user/build-configuration/
 
 language: c
 compiler:
  - gcc
  - clang
+ - cov-build
 
 env:
   global:
@@ -13,8 +14,6 @@ env:
     # Used by https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh
     # The build command with all of the arguments that you would apply to a manual `cov-build`
     - COVERITY_SCAN_BUILD_COMMAND="make"
-
-    - PROJECT_NAME="ClusterLabs/pacemaker"
 
     # Email address for notifications related to this build
     - OWNER_EMAIL="andrew@beekhof.net"
@@ -28,16 +27,9 @@ env:
 
     # -- END Coverity Scan ENV
 
-  # http://docs.travis-ci.com/user/build-configuration/#The-Build-Matrix
-  matrix:
-    - COVERITY_SCAN=0
-    - COVERITY_SCAN=1
-
 # sudo add-apt-repository ppa:hotot-team
 before_install:
- - whoami
- - env | sort 
- - sudo bash -c 'echo "deb http://archive.ubuntu.com/ubuntu/ raring universe" >> /etc/apt/sources.list'
+ - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ raring universe"
  - sudo apt-get update -qq
 
 install:
@@ -46,20 +38,25 @@ install:
  - sudo apt-get install -qq libqb-dev/raring
 
 before_script:
+# Save and restore CC so that ./configure can pass
+ - export CC_SAVED=$CC
+ - export CC=`echo ${CC} | sed s/cov-build/gcc/`
  - ./autogen.sh
  - ./configure
+ - export CC=$CC_SAVED
 
 script: 
-- if test ${COVERITY_SCAN} = 0; then make; fi
-- if test ${COVERITY_SCAN} = 1; then bash travisci_build_coverity_scan.sh; fi
+- if test ${CC} != cov-build; then make && ./BasicSanity.sh -V; fi
+- if test ${CC} = cov-build; then export CC=gcc; bash ./travisci_build_coverity_scan.sh; fi
 
 #after_script:
-after_success:
-- if test ${COVERITY_SCAN} = 0; then ./BasicSanity.sh -V; fi
+#after_success:
 
 after_failure:
  - lsb_release -a
  - sudo cat /etc/apt/sources.list
+ - whoami
+ - env | sort 
 
 notifications:
   irc: "irc.freenode.org#pcmk"
