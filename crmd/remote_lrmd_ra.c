@@ -437,11 +437,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         return;
     } else if (op->type == lrmd_event_new_client && safe_str_eq(cmd->action, "stop")) {
 
-        if (cmd->takeover_timeout_id) {
-            g_source_remove(cmd->takeover_timeout_id);
-            cmd->takeover_timeout_id = 0;
-        }
-
         handle_remote_ra_stop(lrm_state, cmd);
 
         if (ra_data->cmds) {
