@@ -43,14 +43,24 @@ for t in $tests; do
         # Fencing, lrmd need root access
         chmod a+x $test_home/$t/regression.py
         echo "Enter the root password..."
-        su root -c "$test_home/$t/regression.py $verbose"
+	# sudo doesn't work in builtbot, su doesn't work in travis
+	if [ x$TRAVIS = x ]; then
+            su root -c "$test_home/$t/regression.py $verbose"
+	else
+            sudo -- $test_home/$t/regression.py $verbose
+	fi
         rc=$?
 
     elif [ $t == "pacemaker_remote" ] && [ -e $test_home/lrmd/regression.py ]; then
         # pacemaker_remote
         chmod a+x $test_home/lrmd/regression.py
         echo "Enter the root password..."
-        su root -c "$test_home/lrmd/regression.py -R $verbose"
+	# sudo doesn't work in builtbot, su doesn't work in travis
+	if [ x$TRAVIS = x ]; then
+            su root -c "$test_home/$t/regression.py -R $verbose"
+	else
+            sudo -- $test_home/$t/regression.py -R $verbose
+	fi
         rc=$?
 
     elif [ -e $test_home/$t ]; then
