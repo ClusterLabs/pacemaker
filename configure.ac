@@ -1181,7 +1181,7 @@ AC_SUBST(DBUS_LIBS)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
 if test $HAVE_dbus = 1 -a "x${enable_upstart}" != xno; then
-   HAVE_upstart=0
+   HAVE_upstart=1
    PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
