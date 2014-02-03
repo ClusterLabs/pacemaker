@@ -141,7 +141,6 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
             reply = NULL;
         }
     }
-    crm_trace("Was error: '%s' '%s'", error->name, error->message);
 
     if(pending) {
         /* free the pending message handle */
