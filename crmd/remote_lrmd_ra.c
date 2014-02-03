@@ -78,10 +78,13 @@ typedef struct remote_ra_data_s {
     GList *recurring_cmds;
 
     enum remote_migration_status migrate_status;
+
+    gboolean active;
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
 static void handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd);
+static GList *fail_all_monitor_cmds(GList * list);
 
 static void
 free_cmd(gpointer user_data)
@@ -318,6 +321,7 @@ remote_init_cib_status(const char *node_name)
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
+    gboolean cmd_handled = FALSE;
     lrm_state_t *lrm_state = NULL;
     remote_ra_data_t *ra_data = NULL;
     remote_ra_cmd_t *cmd = NULL;
@@ -358,10 +362,21 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         return;
     }
 
+    if ((op->type == lrmd_event_disconnect) &&
+        (ra_data->cur_cmd == NULL) &&
+        (ra_data->active == TRUE)) {
+
+        crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        return;
+    }
+
     if (!ra_data->cur_cmd) {
         crm_debug("no event to match");
         return;
     }
+
     cmd = ra_data->cur_cmd;
 
     /* Start actions and migrate from actions complete after connection
@@ -393,16 +408,13 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             }
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
+            ra_data->active = TRUE;
         }
 
         crm_debug("remote lrmd connect event matched %s action. ", cmd->action);
         report_remote_ra_result(cmd);
-        if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
-        }
-        ra_data->cur_cmd = NULL;
-        free_cmd(cmd);
-        return;
+        cmd_handled = TRUE;
+
     } else if (op->type == lrmd_event_poke && safe_str_eq(cmd->action, "monitor")) {
 
         if (cmd->monitor_timeout_id) {
@@ -428,25 +440,34 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->interval_id = g_timeout_add(cmd->interval, recurring_helper, cmd);
             cmd = NULL;         /* prevent free */
         }
+        cmd_handled = TRUE;
 
-        if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
+    } else if (op->type == lrmd_event_disconnect && safe_str_eq(cmd->action, "monitor")) {
+
+        if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
+            cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+            cmd->op_status = PCMK_LRM_OP_ERROR;
+            report_remote_ra_result(cmd);
+            crm_err("remote-node %s unexpectedly disconneced during monitor operation", lrm_state->node_name);
         }
-        ra_data->cur_cmd = NULL;
-        free_cmd(cmd);
-        return;
+        cmd_handled = TRUE;
+
     } else if (op->type == lrmd_event_new_client && safe_str_eq(cmd->action, "stop")) {
 
         handle_remote_ra_stop(lrm_state, cmd);
+        cmd_handled = TRUE;
 
+    } else {
+        crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
+    }
+
+    if (cmd_handled) {
+        ra_data->cur_cmd = NULL;
         if (ra_data->cmds) {
             mainloop_set_trigger(ra_data->work);
         }
-        ra_data->cur_cmd = NULL;
         free_cmd(cmd);
     }
-
-    crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
 }
 
 static void
@@ -459,6 +480,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
         update_attrd_remote_node_removed(lrm_state->node_name, NULL);
     }
 
+    ra_data->active = FALSE;
     lrm_state_disconnect(lrm_state);
     cmd->rc = PCMK_OCF_OK;
     cmd->op_status = PCMK_LRM_OP_DONE;
@@ -671,6 +693,36 @@ is_remote_ra_supported_action(const char *action)
     }
 
     return TRUE;
+}
+
+static GList *
+fail_all_monitor_cmds(GList * list)
+{
+    GList *rm_list = NULL;
+    remote_ra_cmd_t *cmd = NULL;
+    GListPtr gIter = NULL;
+
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+        if (cmd->interval > 0 && safe_str_eq(cmd->action, "monitor")) {
+            rm_list = g_list_append(rm_list, cmd);
+        }
+    }
+
+    for (gIter = rm_list; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+
+        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+        cmd->op_status = PCMK_LRM_OP_ERROR;
+        report_remote_ra_result(cmd);
+
+        list = g_list_remove(list, cmd);
+        free_cmd(cmd);
+    }
+
+    /* frees only the list data, not the cmds */
+    g_list_free(rm_list);
+    return list;
 }
 
 static GList *
