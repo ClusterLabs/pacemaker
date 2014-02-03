@@ -179,7 +179,22 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
 
 bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected, const char *function, int line)
 {
-    int dtype = dbus_message_iter_get_arg_type(field);
+    int dtype = 0;
+    DBusMessageIter lfield;
+
+    if(field == NULL) {
+        if(dbus_message_iter_init(msg, &lfield)) {
+            field = &lfield;
+        }
+    }
+
+    if(field == NULL) {
+        do_crm_log_alias(LOG_ERR, __FILE__, function, line,
+                         "Empty parameter list in reply expecting '%c'", expected);
+        return FALSE;
+    }
+
+    dtype = dbus_message_iter_get_arg_type(field);
 
     if(dtype != expected) {
         DBusMessageIter args;
