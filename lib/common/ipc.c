@@ -894,7 +894,7 @@ crm_ipc_ready(crm_ipc_t * client)
 static int
 crm_ipc_decompress(crm_ipc_t * client)
 {
-    struct crm_ipc_response_header *header = (struct crm_ipc_response_header *)client->buffer;
+    struct crm_ipc_response_header *header = (struct crm_ipc_response_header *)(void*)client->buffer;
 
     if (header->size_compressed) {
         int rc = 0;
@@ -926,7 +926,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         CRM_ASSERT(size_u == header->size_uncompressed);
 
         memcpy(uncompressed, client->buffer, hdr_offset);       /* Preserve the header */
-        header = (struct crm_ipc_response_header *)uncompressed;
+        header = (struct crm_ipc_response_header *)(void*)uncompressed;
 
         free(client->buffer);
         client->buf_size = new_buf_size;
@@ -957,7 +957,7 @@ crm_ipc_read(crm_ipc_t * client)
             return rc;
         }
 
-        header = (struct crm_ipc_response_header *)client->buffer;
+        header = (struct crm_ipc_response_header *)(void*)client->buffer;
         if(header->version > PCMK_IPC_VERSION) {
             crm_err("Filtering incompatible v%d IPC message, we only support versions <= %d",
                     header->version, PCMK_IPC_VERSION);
@@ -1044,7 +1044,7 @@ internal_ipc_get_reply(crm_ipc_t * client, int request_id, int ms_timeout)
                 return rc;
             }
 
-            hdr = (struct crm_ipc_response_header *)client->buffer;
+            hdr = (struct crm_ipc_response_header *)(void*)client->buffer;
             if (hdr->qb.id == request_id) {
                 /* Got it */
                 break;
@@ -1173,7 +1173,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     if (rc > 0) {
-        struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)client->buffer;
+        struct crm_ipc_response_header *hdr = (struct crm_ipc_response_header *)(void*)client->buffer;
 
         crm_trace("Received response %d, size=%d, rc=%ld, text: %.200s", hdr->qb.id, hdr->qb.size,
                   rc, crm_ipc_buffer(client));

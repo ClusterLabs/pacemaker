@@ -122,7 +122,7 @@ send_plugin_text(int class, struct iovec *iov)
     int buf_len = sizeof(cs_ipc_header_response_t);
     char *buf = malloc(buf_len);
     AIS_Message *ais_msg = (AIS_Message*)iov[0].iov_base;
-    cs_ipc_header_response_t *header = (cs_ipc_header_response_t *) buf;
+    cs_ipc_header_response_t *header = (cs_ipc_header_response_t *)(void*)buf;
 
     CRM_ASSERT(buf != NULL);
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
