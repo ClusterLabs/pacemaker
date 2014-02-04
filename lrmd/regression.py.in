@@ -21,6 +21,25 @@ import subprocess
 import shlex
 import time
 
+# Where to find test binaries
+# Prefer the source tree if available
+build_dir="@abs_top_builddir@"
+test_dir=sys.path[0]
+
+new_path=os.environ['PATH']
+
+if os.path.exists("%s/regression.py.in" % test_dir):
+    print "Running tests from the source tree: %s (%s)" % (build_dir, test_dir)
+    new_path = "%s/lrmd:%s" % (build_dir, new_path)    # For lrmd, lrmd_test and pacemaker_remoted
+    new_path = "%s/tools:%s" % (build_dir, new_path)   # For crm_resource
+    new_path = "%s/fencing:%s" % (build_dir, new_path) # For stonithd
+else:
+    print "Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % test_dir
+    new_path = "@CRM_DAEMON_DIR@:%s" % (new_path) # For stonithd, lrmd, lrmd_test and pacemaker_remoted
+
+print new_path
+os.environ['PATH']=new_path
+
 def output_from_command(command, no_wait=0):
 	test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
 
@@ -38,11 +57,11 @@ class Test:
 		self.cmds = []
 
 		if tls:
-			self.daemon_location = "/usr/sbin/pacemaker_remoted"
+			self.daemon_location = "pacemaker_remoted"
 		else:
-			self.daemon_location = "@CRM_DAEMON_DIR@/lrmd"
+			self.daemon_location = "lrmd"
 
-		self.test_tool_location = "@CRM_DAEMON_DIR@/lrmd_test"
+		self.test_tool_location = "lrmd_test"
 		self.verbose = verbose
 		self.tls = tls
 
@@ -84,7 +103,7 @@ class Test:
 		additional_args = ""
 
 		if self.tls == 0:
-			self.stonith_process = subprocess.Popen(shlex.split("@CRM_DAEMON_DIR@/stonithd -s"))
+			self.stonith_process = subprocess.Popen(shlex.split("stonithd -s"))
 
 		if self.verbose:
 			additional_args = additional_args + " -V"
@@ -387,10 +406,20 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
-		os.system("cp /usr/share/pacemaker/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+		if os.path.exists("%s/cts/LSBDummy" % build_dir):
+                    print "Using %s/cts/LSBDummy" % build_dir
+                    os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % build_dir)
+                else:
+                    # Assume its installed
+                    print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
+                    os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+
+                os.system("chmod a+x /etc/init.d/LSBDummy")
+                os.system("ls -al /etc/init.d/LSBDummy")
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
-		os.system("systemctl daemon-reload")
+		if os.path.exists("/bin/systemctl"):
+                    os.system("systemctl daemon-reload")
 
 	def cleanup_test_environment(self):
 		if self.need_authkey:
@@ -401,7 +430,8 @@ if __name__ == "__main__":
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
 		os.system("rm -f /usr/sbin/fence_dummy_sleep")
-		os.system("systemctl daemon-reload")
+		if os.path.exists("/bin/systemctl"):
+                    os.system("systemctl daemon-reload")
 
 	### These are tests that should apply to all resource classes ###
 	def build_generic_tests(self):
