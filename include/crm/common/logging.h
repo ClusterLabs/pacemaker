@@ -88,7 +88,11 @@ unsigned int get_crm_log_level(void);
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#  define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
+#if defined(__clang__)
+#    define CRM_TRACE_INIT_DATA(name)
+#  else
+#    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
+#endif
 
 #  define do_crm_log(level, fmt, args...) qb_log_from_external_source( __func__, __FILE__, fmt, level, __LINE__, 0, ##args)
 
