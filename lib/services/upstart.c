@@ -95,7 +95,7 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit)
                                        method); // method name
 
     dbus_error_init(&error);
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &arg_name);
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &arg_name, DBUS_TYPE_INVALID));
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error);
     dbus_message_unref(msg);
 
@@ -266,7 +266,7 @@ get_first_instance(const gchar * job)
                                        method); // method name
     CRM_ASSERT(msg != NULL);
 
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_INVALID, NULL);
+    dbus_message_append_args(msg, DBUS_TYPE_INVALID);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error);
     dbus_message_unref(msg);
 
@@ -500,7 +500,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     CRM_LOG_ASSERT(dbus_message_iter_append_basic (&array_iter, DBUS_TYPE_STRING, &arg_env));
     CRM_LOG_ASSERT(dbus_message_iter_close_container (&iter, &array_iter));
 
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_BOOLEAN, &arg_wait);
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
 
     if (synchronous == FALSE) {
         free(job);

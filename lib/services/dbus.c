@@ -33,19 +33,6 @@ void pcmk_dbus_disconnect(DBusConnection *connection)
 {
 }
 
-bool pcmk_dbus_append_arg(DBusMessage *msg, int dtype, const void *value)
-{
-    DBusMessageIter args;
-
-    dbus_message_iter_init_append(msg, &args);
-    if (!dbus_message_iter_append_basic(&args, dtype, value)) {
-        crm_err("dbus_message_iter_append_basic(%c) failed", dtype);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 bool
 pcmk_dbus_find_error(const char *method, DBusPendingCall* pending, DBusMessage *reply, DBusError *ret)
 {
@@ -235,7 +222,7 @@ pcmk_dbus_get_property(
         return NULL;
     }
 
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &iface);
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface, DBUS_TYPE_INVALID));
 
     reply = pcmk_dbus_send_recv(msg, connection, &error);
     dbus_message_unref(msg);

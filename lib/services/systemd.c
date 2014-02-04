@@ -146,7 +146,7 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
         msg = systemd_new_method(BUS_NAME".Manager", method);
         CRM_ASSERT(msg != NULL);
 
-        pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
+        CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
 
         dbus_error_init(&error);
         reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
@@ -477,8 +477,8 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
     CRM_ASSERT(msg != NULL);
 
     /* (ss) */
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &name);
-    pcmk_dbus_append_arg(msg, DBUS_TYPE_STRING, &replace_s);
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
 
     if (synchronous == FALSE) {
         free(unit);
