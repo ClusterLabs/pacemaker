@@ -114,7 +114,7 @@ unsigned int get_crm_log_level(void);
             if(core_cs == NULL) {                                       \
                 core_cs = qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
             }                                                           \
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,   \
+            crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr,   \
                       core_cs?core_cs->targets:FALSE, TRUE);            \
         }                                                               \
     } while(0)
@@ -125,7 +125,7 @@ unsigned int get_crm_log_level(void);
             if(core_cs == NULL) {                                       \
                 core_cs = qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
             }                                                           \
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+	    crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr,	\
 		      core_cs?core_cs->targets:FALSE, TRUE);            \
 	    failure_action;						\
 	}								\
@@ -137,7 +137,7 @@ unsigned int get_crm_log_level(void);
             xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob", level, __LINE__, 0); \
         }                                                               \
         if (crm_is_callsite_active(xml_cs, level, 0)) {                  \
-            log_data_element(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 1, xml_log_option_formatted); \
+            log_data_element(level, __FILE__, __FUNCTION__, __LINE__, text, xml, 1, xml_log_option_formatted); \
         }                                                               \
     } while(0)
 
@@ -145,7 +145,7 @@ unsigned int get_crm_log_level(void);
 	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
     } while(0)
 
-#  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+#  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __FUNCTION__ , ##args)
 
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\

@@ -134,7 +134,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 #endif
 
     crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
-    crm_log_xml_trace(msg, __PRETTY_FUNCTION__);
+    crm_log_xml_trace(msg, __FUNCTION__);
 
     attrd_local_callback(msg);
 

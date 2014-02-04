@@ -608,7 +608,7 @@ pcmk_startup(struct corosync_api_v1 *init_with)
     ipc_client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     ais_info("CRM: Initialized");
-    log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);
+    log_printf(LOG_INFO, "Logging: Initialized %s\n", __FUNCTION__);
 
     rc = getrlimit(RLIMIT_CORE, &cores);
     if (rc < 0) {

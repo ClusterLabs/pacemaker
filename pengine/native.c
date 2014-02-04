@@ -520,7 +520,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
     }
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __PRETTY_FUNCTION__,
+    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__,
                      rsc->allowed_nodes);
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {

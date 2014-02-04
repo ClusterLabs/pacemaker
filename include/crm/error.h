@@ -34,7 +34,7 @@
 
 #  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
-	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	    crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
 	}								\
     } while(0)
 

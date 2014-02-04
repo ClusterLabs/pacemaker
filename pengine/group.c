@@ -63,7 +63,7 @@ group_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 
-    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __PRETTY_FUNCTION__,
+    dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__,
                      rsc->allowed_nodes);
 
     gIter = rsc->children;

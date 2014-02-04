@@ -577,7 +577,7 @@ string2xml(const char *input)
     }
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -586,7 +586,7 @@ string2xml(const char *input)
                  last_error->domain, last_error->level, last_error->code, last_error->message);
 
         if (last_error->code == XML_ERR_DOCUMENT_EMPTY) {
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "Cannot parse an empty string", TRUE,
+            crm_abort(__FILE__, __FUNCTION__, __LINE__, "Cannot parse an empty string", TRUE,
                       TRUE);
 
         } else if (last_error->code != XML_ERR_DOCUMENT_END) {
@@ -605,7 +605,7 @@ string2xml(const char *input)
                 lpc += 80;
             }
 
-            crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "String parsing error", TRUE, TRUE);
+            crm_abort(__FILE__, __FUNCTION__, __LINE__, "String parsing error", TRUE, TRUE);
         }
     }
 
@@ -777,7 +777,7 @@ filename2xml(const char *filename)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors

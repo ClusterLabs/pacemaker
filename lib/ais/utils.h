@@ -146,16 +146,16 @@ level2char(int level)
 	    continue;							\
 	} else if((level) > LOG_DEBUG) {				\
 	    log_printf(LOG_DEBUG, "debug%d: %s: " fmt,			\
-		       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
+		       level-LOG_INFO, __FUNCTION__ , ##args);	\
 	} else {							\
 	    log_printf(level, "%s: %s: " fmt, level2char(level),	\
-		       __PRETTY_FUNCTION__ , ##args);			\
+		       __FUNCTION__ , ##args);			\
 	}								\
     } while(0)
 
 #  define ais_perror(fmt, args...) log_printf(				\
 	LOG_ERR, "%s: " fmt ": (%d) %s",				\
-	__PRETTY_FUNCTION__ , ##args, errno, strerror(errno))
+	__FUNCTION__ , ##args, errno, strerror(errno))
 
 #  define ais_crit(fmt, args...)    do_ais_log(LOG_CRIT,    fmt , ##args)
 #  define ais_err(fmt, args...)     do_ais_log(LOG_ERR,     fmt , ##args)

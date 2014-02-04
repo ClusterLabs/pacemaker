@@ -197,8 +197,8 @@ crm_set_bit(const char *function, const char *target, long long word, long long 
     return rc;
 }
 
-#  define set_bit(word, bit) word = crm_set_bit(__PRETTY_FUNCTION__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__PRETTY_FUNCTION__, NULL, word, bit)
+#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, NULL, word, bit)
+#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, NULL, word, bit)
 
 void g_hash_destroy_str(gpointer data);
 

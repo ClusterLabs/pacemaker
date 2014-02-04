@@ -51,11 +51,11 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 #define mainloop_test_done(pass) \
     if (pass) { \
-        crm_info("SUCCESS - %s", __PRETTY_FUNCTION__); \
+        crm_info("SUCCESS - %s", __FUNCTION__); \
         mainloop_iter++;   \
         mainloop_set_trigger(trig);  \
     } else { \
-        crm_err("FAILURE = %s async_callback %d", __PRETTY_FUNCTION__, callback_rc); \
+        crm_err("FAILURE = %s async_callback %d", __FUNCTION__, callback_rc); \
         crm_exit(pcmk_err_generic); \
     } \
     callback_rc = 0; \
