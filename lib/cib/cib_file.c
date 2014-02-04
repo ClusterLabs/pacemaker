@@ -191,7 +191,7 @@ cib_file_signoff(cib_t * cib)
     free_xml(in_mem_cib);
 
     cib->state = cib_disconnected;
-    cib->type = cib_none;
+    cib->type = cib_no_connection;
 
     return rc;
 }

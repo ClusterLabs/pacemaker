@@ -297,7 +297,7 @@ cib_native_signoff(cib_t * cib)
     }
 
     cib->state = cib_disconnected;
-    cib->type = cib_none;
+    cib->type = cib_no_connection;
 
     return pcmk_ok;
 }

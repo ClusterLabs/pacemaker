@@ -448,7 +448,7 @@ cib_remote_signoff(cib_t * cib)
 #endif
 
     cib->state = cib_disconnected;
-    cib->type = cib_none;
+    cib->type = cib_no_connection;
 
     return rc;
 }
