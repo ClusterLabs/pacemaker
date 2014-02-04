@@ -799,7 +799,6 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     CRM_CHECK(key[offset] == '_', return FALSE);
 
     mutable_key = strdup(key);
-    mutable_key_ptr = mutable_key_ptr;
     mutable_key[offset] = 0;
     offset--;
 

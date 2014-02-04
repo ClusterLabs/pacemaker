@@ -118,7 +118,6 @@ pe_free_resources(GListPtr resources)
     GListPtr iterator = resources;
 
     while (iterator != NULL) {
-        iterator = iterator;
         rsc = (resource_t *) iterator->data;
         iterator = iterator->next;
         rsc->fns->free(rsc);
