@@ -25,7 +25,7 @@ function test_assert() {
     if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
 	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc"
-	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc" 1>&2
+	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc (`which $app`)" 1>&2
 	return
 	exit 1
     else

@@ -5,7 +5,7 @@ language: c
 compiler:
  - gcc
  - clang
- - cov-build
+# - cov-build
 
 env:
   global:
@@ -46,6 +46,7 @@ before_script:
  - export CC=$CC_SAVED
 
 script: 
+- if test ${CC} != cov-build; then sudo make install-exec-local || true; fi
 - if test ${CC} != cov-build; then make && ./BasicSanity.sh -V; fi
 - if test ${CC} = cov-build; then export CC=gcc; bash ./travisci_build_coverity_scan.sh; fi
 
