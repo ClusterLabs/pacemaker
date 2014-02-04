@@ -92,7 +92,7 @@ Requires:      libqb > 0.11.0
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man gnutls-devel
+BuildRequires: bison byacc flex help2man gnutls-devel dbus-devel
 
 %if %{defined _unitdir}
 BuildRequires: systemd-devel
