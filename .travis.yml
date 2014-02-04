@@ -58,6 +58,7 @@ after_failure:
  - sudo cat /etc/apt/sources.list
  - whoami
  - env | sort 
+ - cat include/config.h
 
 notifications:
   irc: "irc.freenode.org#pcmk"
