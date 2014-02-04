@@ -60,8 +60,10 @@ while test "$done" = "0"; do
 done
 
 if [ "x$VALGRIND_CMD" = "x" -a -x $test_home/crm_simulate ]; then
-    echo "Using local binaries from: $test_home"
-    PATH="$test_home:$PATH"
+    xml_home=`dirname ${test_home}`
+    echo "Using local binaries from: $test_home, schemas from $xml_home"
+    export PATH="$test_home:$PATH"
+    export PCMK_schema_directory=${xml_home}/xml
 fi
 
 function test_tools() {
