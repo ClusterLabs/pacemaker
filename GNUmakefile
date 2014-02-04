@@ -106,6 +106,7 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	sed -i s:bcond_without\ publican:bcond_with\ publican:g $@
 	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	sed -i s:libtool-ltdl-devel::g $@
+	sed -i s:dbus-devel:dbus-1-devel:g $@
 	sed -i s:publican::g $@
 	sed -i s:byacc::g $@
 	sed -i s:global\ cs_major.*:global\ cs_major\ 1:g $@
