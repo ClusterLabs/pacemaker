@@ -30,36 +30,60 @@ Online: [ asttest1 asttest2 ]
      Slaves: [ asttest2 ]
 
 Transition Summary:
- * Move    mysqld	(Started asttest1 -> asttest2)
- * Move    dahdi	(Started asttest1 -> asttest2)
+ * Migrate mysqld	(Started asttest1 -> asttest2)
+ * Migrate dahdi	(Started asttest1 -> asttest2)
  * Start   fonulator	(asttest2)
  * Start   asterisk	(asttest2)
  * Start   iax2_mon	(asttest2)
  * Start   httpd	(asttest2)
  * Start   tftp	(asttest2)
- * Move    ip_voip_route_test1	(Started asttest1 -> asttest2)
- * Move    ip_voip_route_test2	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan850	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan998	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan851	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan852	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan853	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan854	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan855	(Started asttest1 -> asttest2)
- * Move    ip_voip_vlan856	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_route_test1	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_route_test2	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan850	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan998	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan851	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan852	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan853	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan854	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan855	(Started asttest1 -> asttest2)
+ * Migrate ip_voip_vlan856	(Started asttest1 -> asttest2)
  * Move    fs_drbd	(Started asttest1 -> asttest2)
  * Demote  drbd:0	(Master -> Slave asttest1)
  * Promote drbd:1	(Slave -> Master asttest2)
 
 Executing cluster transition:
  * Pseudo action:   voip_stop_0
- * Resource action: dahdi           stop on asttest1
+ * Resource action: mysqld          migrate_to on asttest1
+ * Resource action: ip_voip_route_test1 migrate_to on asttest1
+ * Resource action: ip_voip_route_test2 migrate_to on asttest1
+ * Resource action: ip_voip_vlan850 migrate_to on asttest1
+ * Resource action: ip_voip_vlan998 migrate_to on asttest1
+ * Resource action: ip_voip_vlan851 migrate_to on asttest1
+ * Resource action: ip_voip_vlan852 migrate_to on asttest1
+ * Resource action: ip_voip_vlan853 migrate_to on asttest1
+ * Resource action: ip_voip_vlan854 migrate_to on asttest1
+ * Resource action: ip_voip_vlan855 migrate_to on asttest1
+ * Resource action: ip_voip_vlan856 migrate_to on asttest1
  * Resource action: drbd:1          cancel=31000 on asttest2
  * Pseudo action:   ms_drbd_pre_notify_demote_0
- * Resource action: mysqld          stop on asttest1
+ * Resource action: mysqld          migrate_from on asttest2
+ * Resource action: dahdi           migrate_to on asttest1
+ * Resource action: ip_voip_route_test1 migrate_from on asttest2
+ * Resource action: ip_voip_route_test2 migrate_from on asttest2
+ * Resource action: ip_voip_vlan850 migrate_from on asttest2
+ * Resource action: ip_voip_vlan998 migrate_from on asttest2
+ * Resource action: ip_voip_vlan851 migrate_from on asttest2
+ * Resource action: ip_voip_vlan852 migrate_from on asttest2
+ * Resource action: ip_voip_vlan853 migrate_from on asttest2
+ * Resource action: ip_voip_vlan854 migrate_from on asttest2
+ * Resource action: ip_voip_vlan855 migrate_from on asttest2
+ * Resource action: ip_voip_vlan856 migrate_from on asttest2
  * Resource action: drbd:0          notify on asttest1
  * Resource action: drbd:1          notify on asttest2
  * Pseudo action:   ms_drbd_confirmed-pre_notify_demote_0
+ * Resource action: dahdi           migrate_from on asttest2
+ * Resource action: dahdi           stop on asttest1
+ * Resource action: mysqld          stop on asttest1
  * Pseudo action:   voip_stopped_0
  * Pseudo action:   ip_voip_routes_stop_0
  * Resource action: ip_voip_route_test1 stop on asttest1
@@ -98,14 +122,14 @@ Executing cluster transition:
  * Resource action: fs_drbd         start on asttest2
  * Resource action: drbd:0          monitor=31000 on asttest1
  * Pseudo action:   ip_voip_addresses_p_start_0
- * Resource action: ip_voip_vlan850 start on asttest2
- * Resource action: ip_voip_vlan998 start on asttest2
- * Resource action: ip_voip_vlan851 start on asttest2
- * Resource action: ip_voip_vlan852 start on asttest2
- * Resource action: ip_voip_vlan853 start on asttest2
- * Resource action: ip_voip_vlan854 start on asttest2
- * Resource action: ip_voip_vlan855 start on asttest2
- * Resource action: ip_voip_vlan856 start on asttest2
+ * Pseudo action:   ip_voip_vlan850_start_0
+ * Pseudo action:   ip_voip_vlan998_start_0
+ * Pseudo action:   ip_voip_vlan851_start_0
+ * Pseudo action:   ip_voip_vlan852_start_0
+ * Pseudo action:   ip_voip_vlan853_start_0
+ * Pseudo action:   ip_voip_vlan854_start_0
+ * Pseudo action:   ip_voip_vlan855_start_0
+ * Pseudo action:   ip_voip_vlan856_start_0
  * Resource action: fs_drbd         monitor=1000 on asttest2
  * Pseudo action:   ip_voip_addresses_p_running_0
  * Resource action: ip_voip_vlan850 monitor=1000 on asttest2
@@ -117,14 +141,14 @@ Executing cluster transition:
  * Resource action: ip_voip_vlan855 monitor=1000 on asttest2
  * Resource action: ip_voip_vlan856 monitor=1000 on asttest2
  * Pseudo action:   ip_voip_routes_start_0
- * Resource action: ip_voip_route_test1 start on asttest2
- * Resource action: ip_voip_route_test2 start on asttest2
+ * Pseudo action:   ip_voip_route_test1_start_0
+ * Pseudo action:   ip_voip_route_test2_start_0
  * Pseudo action:   ip_voip_routes_running_0
  * Resource action: ip_voip_route_test1 monitor=1000 on asttest2
  * Resource action: ip_voip_route_test2 monitor=1000 on asttest2
  * Pseudo action:   voip_start_0
- * Resource action: mysqld          start on asttest2
- * Resource action: dahdi           start on asttest2
+ * Pseudo action:   mysqld_start_0
+ * Pseudo action:   dahdi_start_0
  * Resource action: fonulator       start on asttest2
  * Resource action: asterisk        start on asttest2
  * Resource action: iax2_mon        start on asttest2

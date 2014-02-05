@@ -180,9 +180,10 @@ struct node_s {
 #  define pe_rsc_runnable	0x00040000ULL
 #  define pe_rsc_start_pending	0x00080000ULL
 
-#  define pe_rsc_starting	0x00100000ULL
-#  define pe_rsc_stopping	0x00200000ULL
-#  define pe_rsc_migrating	0x00400000ULL
+#  define pe_rsc_starting       0x00100000ULL
+#  define pe_rsc_stopping       0x00200000ULL
+#  define pe_rsc_migrating      0x00400000ULL
+#  define pe_rsc_allow_migrate  0x00800000ULL
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
 #  define pe_rsc_unexpectedly_running 0x02000000ULL
@@ -208,6 +209,7 @@ enum pe_action_flags {
     pe_action_have_node_attrs = 0x00010,
     pe_action_failure_is_fatal = 0x00020,
     pe_action_implied_by_stonith = 0x00040,
+    pe_action_migrate_runnable =   0x00080,
 
     pe_action_dumped = 0x00100,
     pe_action_processed = 0x00200,
@@ -323,12 +325,18 @@ enum pe_link_state {
 enum pe_ordering {
     pe_order_none                  = 0x0,        /* deleted */
     pe_order_optional              = 0x1,    /* pure ordering, nothing implied */
+    pe_order_apply_first_non_migratable = 0x2, /* Only apply this constraint's ordering if first is not migratable. */
 
     pe_order_implies_first         = 0x10,      /* If 'first' is required, ensure 'then' is too */
     pe_order_implies_then          = 0x20,       /* If 'then' is required, ensure 'first' is too */
     pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
 
+    /* first requires then to be both runnable and migrate runnable. */
+    pe_order_implies_first_migratable  = 0x80,
+
     pe_order_runnable_left         = 0x100,     /* 'then' requires 'first' to be runnable */
+
+    pe_order_pseudo_left           = 0x200,     /* 'then' can only be pseudo if 'first' is runnable */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
     pe_order_stonith_stop          = 0x2000,     /* only applies if the action is non-pseudo */

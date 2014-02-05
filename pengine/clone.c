@@ -794,6 +794,7 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
     gboolean child_stopping = FALSE;
+    gboolean allow_dependent_migrations = TRUE;
 
     action_t *stop = NULL;
     action_t *stopped = NULL;
@@ -810,9 +811,17 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
+        gboolean starting = FALSE;
+        gboolean stopping = FALSE;
 
         child_rsc->cmds->create_actions(child_rsc, data_set);
-        clone_update_pseudo_status(child_rsc, &child_stopping, &child_starting, &child_active);
+        clone_update_pseudo_status(child_rsc, &stopping, &starting, &child_active);
+        if (stopping && starting) {
+            allow_dependent_migrations = FALSE;
+        }
+
+        child_stopping |= stopping;
+        child_starting |= starting;
     }
 
     /* start */
@@ -841,6 +850,9 @@ clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     stopped->priority = INFINITY;
     update_action_flags(stop, pe_action_pseudo | pe_action_runnable);
+    if (allow_dependent_migrations) {
+        update_action_flags(stop, pe_action_migrate_runnable);
+    }
     update_action_flags(stopped, pe_action_pseudo | pe_action_runnable);
     if (clone_data->stop_notify == NULL) {
         clone_data->stop_notify =

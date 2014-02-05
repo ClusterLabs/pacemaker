@@ -96,7 +96,14 @@ lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static void
 lrmd_ipc_created(qb_ipcs_connection_t * c)
 {
+    crm_client_t *new_client = crm_client_get(c);
+
     crm_trace("Connection %p", c);
+    CRM_ASSERT(new_client != NULL);
+    /* Now that the connection is offically established, alert
+     * the other clients a new connection exists. */
+
+    notify_of_new_client(new_client);
 }
 
 static int32_t

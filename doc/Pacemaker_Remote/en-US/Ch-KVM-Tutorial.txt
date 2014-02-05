@@ -6,9 +6,9 @@
 
 == Step 1: Setup the Host ==
 
-This tutorial was created using Fedora 18 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.10 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
+This tutorial was created using Fedora 20 on the host and guest nodes.  Anything that is capable of running libvirt and pacemaker v1.1.10 or greater will do though.  An installation guide for installing Fedora 20 can be found here, http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/.
 
-Fedora 18 (or similar distro) host preparation steps.
+Fedora 20 (or similar distro) host preparation steps.
 
 === SElinux and Firewall ===
 In order to simply this tutorial we will disable the selinux and the firewall on the host.
@@ -34,34 +34,18 @@ In order to simply this tutorial we will disable the selinux and the firewall on
 
 === Setup Corosync ===
 
-Running the command below will attempt to detect the network address corosync should bind to.
+Corosync handles pacemaker's cluster membership and messaging. The corosync config file is located in /etc/corosync/corosync.conf. That config file must be initialized with information about the cluster-nodes before pacemaker can start.
 
+To initialize the corosync config file, execute the following pcs command on both nodes filling in the information in <> with your nodes' information.
 [source,C]
 ----
-# export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
+# pcs cluster setup --local mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
 
-Display and verify that address is correct
-
+A recent syntax change in pcs may cause the above command to fail. If so try this alternative.
 [source,C]
 ----
-# echo $corosync_addr
-----
-
-In many cases the address will be 192.168.1.0 if you are behind a standard home router.
-
-Now copy over the example corosync.conf.  This code will inject your bindaddress and enable the vote quorum api which is required by pacemaker.
-
-[source,C]
-----
-# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
-# sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
-# cat << END >> /etc/corosync/corosync.conf
-quorum {
-           provider: corosync_votequorum
-           expected_votes: 2
-}
-END
+# pcs cluster setup --force --local --name mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
 
 === Verify Cluster Software ===

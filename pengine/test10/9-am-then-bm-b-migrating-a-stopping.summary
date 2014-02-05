@@ -1,0 +1,22 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ A	(ocf::heartbeat:Dummy):	Started 18node1 
+ B	(ocf::heartbeat:Dummy):	Started 18node2 
+
+Transition Summary:
+ * Stop    A	(18node1)
+ * Migrate B	(Started 18node2 -> 18node1)
+
+Executing cluster transition:
+ * Resource action: B               stop on 18node2
+ * Resource action: A               stop on 18node1
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ A	(ocf::heartbeat:Dummy):	Stopped 
+ B	(ocf::heartbeat:Dummy):	Stopped 
+

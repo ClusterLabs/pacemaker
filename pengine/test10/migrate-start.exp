@@ -1,27 +1,27 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
-  <synapse id="0" priority="1000000">
+  <synapse id="0">
     <action_set>
-      <rsc_op id="24" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01">
+      <rsc_op id="8" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="23" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
+        <rsc_op id="7" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="23" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02">
+      <rsc_op id="7" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_record_pending="true" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
+        <pseudo_event id="21" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -36,7 +36,10 @@
         <rsc_op id="5" operation="stop" operation_key="domU-test01_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
-        <pseudo_event id="19" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -49,68 +52,68 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="15" operation="running" operation_key="dom0-iscsi1:1_running_0">
+      <pseudo_event id="17" operation="running" operation_key="dom0-iscsi1:1_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
+        <rsc_op id="15" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
       </trigger>
       <trigger>
-        <pseudo_event id="14" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+        <pseudo_event id="16" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="14" operation="start" operation_key="dom0-iscsi1:1_start_0">
+      <pseudo_event id="16" operation="start" operation_key="dom0-iscsi1:1_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="18" operation="start" operation_key="clone-dom0-iscsi1_start_0"/>
+        <pseudo_event id="20" operation="start" operation_key="clone-dom0-iscsi1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="13" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
+      <rsc_op id="15" operation="start" operation_key="dom0-iscsi1-cnx1:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="dom0-iscsi1-cnx1" long-id="dom0-iscsi1-cnx1:1" class="ocf" provider="heartbeat" type="iscsi"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  portal="192.168.99.1" target="frontal-01:test01"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+        <pseudo_event id="16" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <pseudo_event id="19" operation="running" operation_key="clone-dom0-iscsi1_running_0">
+      <pseudo_event id="21" operation="running" operation_key="clone-dom0-iscsi1_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="running" operation_key="dom0-iscsi1:1_running_0"/>
+        <pseudo_event id="17" operation="running" operation_key="dom0-iscsi1:1_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="18" operation="start" operation_key="clone-dom0-iscsi1_start_0"/>
+        <pseudo_event id="20" operation="start" operation_key="clone-dom0-iscsi1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="18" operation="start" operation_key="clone-dom0-iscsi1_start_0">
+      <pseudo_event id="20" operation="start" operation_key="clone-dom0-iscsi1_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

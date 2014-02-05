@@ -30,6 +30,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #ifdef HAVE_SYS_SIGNALFD_H
 #include <sys/signalfd.h>
@@ -419,8 +421,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 return FALSE;
             }
         case 0:                /* Child */
-#ifndef SCHED_RESET_ON_FORK 
-#  if defined(HAVE_SCHED_SETSCHEDULER)
+#if defined(HAVE_SCHED_SETSCHEDULER)
             if (sched_getscheduler(0) != SCHED_OTHER) {
                 struct sched_param sp;
 
@@ -431,12 +432,11 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                     crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
                 }
             }
-#  endif
-            errno = 0;
-            if (nice(0) == -1 && errno !=0) {
+#endif
+            if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
                 crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
             }
-#endif
+
             /* Man: The call setpgrp() is equivalent to setpgid(0,0)
              * _and_ compiles on BSD variants too
              * need to investigate if it works the same too.
@@ -508,7 +508,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         struct pollfd fds[3];
         int wait_rc = 0;
 
-        sfd = signalfd(-1, &mask, 0);
+        sfd = signalfd(-1, &mask, SFD_NONBLOCK);
         if (sfd < 0) {
             crm_perror(LOG_ERR, "signalfd() failed");
         }

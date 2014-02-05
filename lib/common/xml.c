@@ -231,7 +231,7 @@ find_entity(xmlNode * parent, const char *node_name, const char *id)
     for (a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
         /* Uncertain if node_name == NULL check is strictly necessary here */
         if (node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
-            if (id == NULL || strcmp(id, ID(a_child)) == 0) {
+            if (id == NULL || safe_str_eq(id, ID(a_child))) {
                 return a_child;
             }
         }

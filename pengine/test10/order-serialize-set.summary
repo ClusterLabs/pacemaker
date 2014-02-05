@@ -31,27 +31,27 @@ Executing cluster transition:
  * Resource action: db              migrate_to on xen-a
  * Resource action: db              migrate_from on xen-b
  * Resource action: db              stop on xen-a
- * Pseudo action:   db_start_0
  * Resource action: core-101        migrate_to on xen-a
- * Resource action: db              monitor=10000 on xen-b
+ * Pseudo action:   db_start_0
  * Resource action: core-101        migrate_from on xen-b
  * Resource action: core-101        stop on xen-a
- * Pseudo action:   core-101_start_0
  * Resource action: core-200        migrate_to on xen-a
- * Resource action: core-101        monitor=10000 on xen-b
+ * Resource action: db              monitor=10000 on xen-b
+ * Pseudo action:   core-101_start_0
  * Resource action: core-200        migrate_from on xen-b
  * Resource action: core-200        stop on xen-a
- * Pseudo action:   core-200_start_0
  * Resource action: edge            migrate_to on xen-a
- * Resource action: core-200        monitor=10000 on xen-b
+ * Resource action: core-101        monitor=10000 on xen-b
+ * Pseudo action:   core-200_start_0
  * Resource action: edge            migrate_from on xen-b
  * Resource action: edge            stop on xen-a
- * Pseudo action:   edge_start_0
  * Resource action: base            migrate_to on xen-a
- * Resource action: edge            monitor=10000 on xen-b
+ * Resource action: core-200        monitor=10000 on xen-b
+ * Pseudo action:   edge_start_0
  * Resource action: base            migrate_from on xen-b
  * Resource action: base            stop on xen-a
  * Pseudo action:   all_stopped
+ * Resource action: edge            monitor=10000 on xen-b
  * Pseudo action:   base_start_0
  * Resource action: base            monitor=10000 on xen-b
 

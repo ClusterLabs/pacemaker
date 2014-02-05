@@ -603,29 +603,29 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="45" priority="1000000">
+  <synapse id="45">
      <action_set>
-      <rsc_op id="84" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+      <rsc_op id="83" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="node2" CRM_meta_migrate_target="node1" CRM_meta_timeout="20000"  xmfile="/etc/xen/vm/sles10"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="83" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+        <rsc_op id="82" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="46">
      <action_set>
-      <rsc_op id="83" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+      <rsc_op id="82" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="node2" CRM_meta_migrate_target="node1" CRM_meta_timeout="20000"  xmfile="/etc/xen/vm/sles10"/>
+        <attributes CRM_meta_migrate_source="node2" CRM_meta_migrate_target="node1" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  xmfile="/etc/xen/vm/sles10"/>
       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+        <rsc_op id="14" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
          <pseudo_event id="56" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_running_0"/>
@@ -667,6 +667,9 @@
       <trigger>
         <rsc_op id="79" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
       </trigger>
+      <trigger>
+        <rsc_op id="83" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="49">
@@ -681,7 +684,7 @@
         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <rsc_op id="84" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+        <rsc_op id="83" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
       </trigger>
     </inputs>
   </synapse>

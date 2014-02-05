@@ -1,0 +1,77 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="12" operation="migrate_from" operation_key="A_migrate_from_0" on_node="18node2" on_node_uuid="2">
+        <primitive id="A" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="migrate_to" operation_key="A_migrate_to_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="11" operation="migrate_to" operation_key="A_migrate_to_0" on_node="18node1" on_node_uuid="1">
+        <primitive id="A" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_migrate_source="18node1" CRM_meta_migrate_target="18node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="A_monitor_60000" on_node="18node2" on_node_uuid="2">
+        <primitive id="A" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="9" operation="start" operation_key="A_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="9" operation="start" operation_key="A_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="A_stop_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="migrate_from" operation_key="A_migrate_from_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="8" operation="stop" operation_key="A_stop_0" on_node="18node1" on_node_uuid="1">
+        <primitive id="A" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="migrate_from" operation_key="A_migrate_from_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="A_stop_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

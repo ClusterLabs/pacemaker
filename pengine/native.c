@@ -84,6 +84,8 @@ struct capacity_data {
     gboolean is_enough;
 };
 
+static action_t * get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid, node_t * current);
+
 static void
 check_capacity(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1059,6 +1061,76 @@ Recurring_Stopped(resource_t * rsc, action_t * start, node_t * node, pe_working_
     }
 }
 
+static void
+handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_working_set_t * data_set)
+{
+    action_t *migrate_to = NULL;
+    action_t *migrate_from = NULL;
+    action_t *start = NULL;
+    action_t *stop = NULL;
+    gboolean partial = rsc->partial_migration_target ? TRUE : FALSE;
+
+    pe_rsc_trace(rsc, "Processing migration actions %s moving from %s to %s . partial migration = %s",
+    rsc->id, current->details->id, chosen->details->id, partial ? "TRUE" : "FALSE");
+    start = start_action(rsc, chosen, TRUE);
+    stop = stop_action(rsc, current, TRUE);
+
+    if (partial == FALSE) {
+        migrate_to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, current, TRUE, TRUE, data_set);
+    }
+
+    migrate_from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, chosen, TRUE, TRUE, data_set);
+
+    if ((migrate_to && migrate_from) || (migrate_from && partial)) {
+
+        set_bit(start->flags, pe_action_migrate_runnable);
+        set_bit(stop->flags, pe_action_migrate_runnable);
+
+        update_action_flags(start, pe_action_pseudo);       /* easier than trying to delete it from the graph */
+
+        /* order probes before migrations */
+        if (partial) {
+            set_bit(migrate_from->flags, pe_action_migrate_runnable);
+            migrate_from->needs = start->needs;
+
+            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STATUS, 0), NULL,
+                                rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL, pe_order_optional, data_set);
+
+        } else {
+            set_bit(migrate_from->flags, pe_action_migrate_runnable);
+            set_bit(migrate_to->flags, pe_action_migrate_runnable);
+            migrate_to->needs = start->needs;
+
+            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STATUS, 0), NULL,
+                                rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL, pe_order_optional, data_set);
+            custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                                rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL, pe_order_optional | pe_order_implies_first_migratable, data_set);
+        }
+
+        custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL, pe_order_optional | pe_order_implies_first_migratable, data_set);
+        custom_action_order(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional | pe_order_implies_first_migratable | pe_order_pseudo_left, data_set);
+
+    }
+
+    if (migrate_to) {
+        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
+        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
+        /* migrate_to takes place on the source node, but can 
+         * have an effect on the target node depending on how
+         * the agent is written. Because of this, we have to maintain
+         * a record that the migrate_to occurred incase the source node 
+         * loses membership while the migrate_to action is still in-flight. */
+        add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
+    }
+
+    if (migrate_from) {
+        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
+        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
+    }
+}
+
 void
 native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1066,6 +1138,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     node_t *chosen = NULL;
     node_t *current = NULL;
     gboolean need_stop = FALSE;
+    gboolean is_moving = FALSE;
+    gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
 
     GListPtr gIter = NULL;
     int num_active_nodes = 0;
@@ -1090,8 +1164,11 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        /* node_t *n = (node_t *) gIter->data; */
-
+        node_t *n = (node_t *) gIter->data;
+        if (rsc->partial_migration_source &&
+            (n->details == rsc->partial_migration_source->details)) {
+            current = rsc->partial_migration_source;
+        }
         num_active_nodes++;
     }
 
@@ -1115,6 +1192,8 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         if (num_active_nodes == 2
             && chosen
             && rsc->partial_migration_target
+            && rsc->partial_migration_source
+            && (current->details == rsc->partial_migration_source->details)
             && (chosen->details == rsc->partial_migration_target->details)) {
             /* Here the chosen node is still the migration target from a partial
              * migration. Attempt to continue the migration instead of recovering
@@ -1140,6 +1219,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
              * but the migration target is not chosen still, clear all
              * partial migration data.  */
             rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+            allow_migrate = FALSE;
         }
     }
 
@@ -1150,6 +1230,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 
     if (current && chosen && current->details != chosen->details) {
         pe_rsc_trace(rsc, "Moving %s", rsc->id);
+        is_moving = TRUE;
         need_stop = TRUE;
 
     } else if (is_set(rsc->flags, pe_rsc_failed)) {
@@ -1218,6 +1299,26 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     } else {
         pe_rsc_trace(rsc, "Monitor ops for in-active resource");
         Recurring_Stopped(rsc, NULL, NULL, data_set);
+    }
+
+    /* if we are stuck in a partial migration, where the target
+     * of the partial migration no longer matches the chosen target.
+     * A full stop/start is required */
+    if (rsc->partial_migration_target && (rsc->partial_migration_target->details != chosen->details)) {
+        pe_rsc_trace(rsc, "Not allowing partial migration to continue. %s", rsc->id);
+        allow_migrate = FALSE;
+    } else if (is_moving == FALSE ||
+               is_not_set(rsc->flags, pe_rsc_managed) ||
+               is_set(rsc->flags, pe_rsc_failed) ||
+               is_set(rsc->flags, pe_rsc_start_pending) ||
+               (current->details->unclean == TRUE) ||
+               rsc->next_role < RSC_ROLE_STARTED) {
+
+        allow_migrate = FALSE;
+    }
+
+    if (allow_migrate) {
+        handle_migration_actions(rsc, current, chosen, data_set);
     }
 }
 
@@ -1710,7 +1811,17 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     if (type & pe_order_implies_first) {
         if ((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
             pe_rsc_trace(first->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
+
             pe_clear_action_bit(first, pe_action_optional);
+        }
+
+        if (is_set(flags, pe_action_migrate_runnable) &&
+            is_set(then->flags, pe_action_migrate_runnable) == FALSE &&
+            is_set(then->flags, pe_action_optional) == FALSE) {
+
+            pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
+                         first->uuid, then->uuid);
+            pe_clear_action_bit(first, pe_action_migrate_runnable);
         }
     }
 
@@ -1719,7 +1830,42 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             ((then->flags & pe_action_optional) == FALSE) &&
             then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
             clear_bit(first->flags, pe_action_optional);
+
+            if (is_set(first->flags, pe_action_migrate_runnable) &&
+                is_set(then->flags, pe_action_migrate_runnable) == FALSE) {
+
+                pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
+                pe_clear_action_bit(first, pe_action_migrate_runnable);
+            }
+            pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
         }
+    }
+
+    if ((type & pe_order_implies_first_migratable)
+        && is_set(filter, pe_action_optional)) {
+
+        if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
+            ((then->flags & pe_action_runnable) == FALSE)) {
+
+            pe_rsc_trace(then->rsc, "Unset runnable on %s because %s is neither runnable or migratable", first->uuid, then->uuid);
+            pe_clear_action_bit(first, pe_action_runnable);
+        }
+
+        if ((then->flags & pe_action_optional) == 0) {
+
+            pe_rsc_trace(then->rsc, "Unset optional on %s because %s is not optional", first->uuid, then->uuid);
+            pe_clear_action_bit(first, pe_action_optional);
+        }
+    }
+
+    if ((type & pe_order_pseudo_left)
+        && is_set(filter, pe_action_optional)) {
+
+        if ((first->flags & pe_action_runnable) == FALSE) {
+            pe_clear_action_bit(then, pe_action_pseudo);
+            pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
+        }
+
     }
 
     if (is_set(type, pe_order_runnable_left)
@@ -1728,14 +1874,19 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         && is_set(flags, pe_action_runnable) == FALSE) {
         pe_rsc_trace(then->rsc, "Unset runnable on %s because of %s", then->uuid, first->uuid);
         pe_clear_action_bit(then, pe_action_runnable);
+        pe_clear_action_bit(then, pe_action_migrate_runnable);
     }
 
     if (is_set(type, pe_order_implies_then)
         && is_set(filter, pe_action_optional)
         && is_set(then->flags, pe_action_optional)
         && is_set(flags, pe_action_optional) == FALSE) {
-        pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
-        pe_clear_action_bit(then, pe_action_optional);
+
+        /* in this case, treat migrate_runnable as if first is optional */
+        if (is_set(first->flags, pe_action_migrate_runnable) == FALSE) {
+           pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
+           pe_clear_action_bit(then, pe_action_optional);
+        }
     }
 
     if (is_set(type, pe_order_restart)) {
@@ -1765,6 +1916,15 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             pe_rsc_trace(then->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
             pe_clear_action_bit(then, pe_action_runnable);
         }
+
+        if (reason &&
+            is_not_set(first->flags, pe_action_optional) &&
+            is_set(first->flags, pe_action_migrate_runnable)  &&
+            is_not_set(then->flags, pe_action_migrate_runnable)) {
+
+            pe_clear_action_bit(first, pe_action_migrate_runnable);
+        }
+
     }
 
     if (then_flags != then->flags) {
@@ -1977,7 +2137,6 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             log_change("Migrate %s\t(%s %s -> %s)",
                        rsc->id, role2text(rsc->role), current->details->uname,
                        next->details->uname);
-            g_list_free(possible_matches);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
             log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
@@ -2002,6 +2161,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
         }
 
+        g_list_free(possible_matches);
         return;
     }
 
@@ -2737,206 +2897,6 @@ enum stack_activity {
     stack_middle = 4,
 };
 
-static enum stack_activity
-find_clone_activity_on(resource_t * rsc, resource_t * target, node_t * node, const char *type)
-{
-    int mode = stack_stable;
-    action_t *active = NULL;
-
-    if (target->children) {
-        GListPtr gIter = NULL;
-
-        for (gIter = target->children; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
-
-            mode |= find_clone_activity_on(rsc, child, node, type);
-        }
-        return mode;
-    }
-
-    active = find_first_action(target->actions, NULL, RSC_START, NULL);
-    if (active && is_set(active->flags, pe_action_optional) == FALSE
-        && is_set(active->flags, pe_action_pseudo) == FALSE) {
-        pe_rsc_debug(rsc, "%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
-        mode |= stack_starting;
-    }
-
-    active = find_first_action(target->actions, NULL, RSC_STOP, node);
-    if (active && is_set(active->flags, pe_action_optional) == FALSE
-        && is_set(active->flags, pe_action_pseudo) == FALSE) {
-        pe_rsc_debug(rsc, "%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
-        mode |= stack_stopping;
-    }
-
-    return mode;
-}
-
-static enum stack_activity
-check_stack_element(resource_t * rsc, resource_t * other_rsc, const char *type)
-{
-    resource_t *other_p = uber_parent(other_rsc);
-
-    if (other_rsc == NULL || other_rsc == rsc) {
-        return stack_stable;
-
-    } else if (other_p->variant == pe_native) {
-        crm_notice("Cannot migrate %s due to dependency on %s (%s)", rsc->id, other_rsc->id, type);
-        return stack_middle;
-
-    } else if (other_rsc == rsc->parent) {
-        int mode = 0;
-        GListPtr gIter = NULL;
-
-        for (gIter = other_rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-            rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
-
-            if (constraint->score > 0) {
-                mode |= check_stack_element(rsc, constraint->rsc_rh, type);
-            }
-        }
-        return mode;
-
-    } else if (other_p->variant == pe_group) {
-        crm_notice("Cannot migrate %s due to dependency on group %s (%s)",
-                   rsc->id, other_rsc->id, type);
-        return stack_middle;
-
-    }
-
-    /* else: >= clone */
-    /*
-
-       ## Assumption
-       A depends on clone(B)
-
-       ## Resource Activity During Move
-
-       N1          N2              N3
-       ---             ---         ---
-       t0  A.stop
-       t1  B.stop                          B.stop
-       t2                  B.start         B.start
-       t3                  A.start
-
-       ## Resource Activity During Migration
-
-       N1          N2              N3
-       ---             ---         ---
-       t0                  B.start         B.start
-       t1  A.stop (1)
-       t2                  A.start (2)
-       t3  B.stop                          B.stop
-
-       Node 1: Rewritten to be a migrate-to operation
-       Node 2: Rewritten to be a migrate-from operation
-
-       # Constraints
-
-       The following constraints already exist in the system.
-       The 'ok' and 'fail' column refers to whether they still hold for migration.
-
-       a) A.stop  -> A.start - ok
-       b) B.stop  -> B.start - fail
-
-       c) A.stop  -> B.stop  - ok
-       d) B.start -> A.start - ok
-
-       e) B.stop  -> A.start - fail
-       f) A.stop  -> B.start - fail
-
-       ## Scenarios
-       B unchanged             - ok
-       B stopping only         - fail - possible after fixing 'e'
-       B starting only         - fail - possible after fixing 'f'
-       B stoping and starting  - fail - constraint 'b' is unfixable
-       B restarting only on N2 - fail - as-per previous only rarer
-
-     */
-    /* Only allow migration when the clone is either stable, only starting or only stopping */
-    return find_clone_activity_on(rsc, other_rsc, NULL, type);
-}
-
-static gboolean
-at_stack_bottom(resource_t * rsc)
-{
-    char *key = NULL;
-    action_t *start = NULL;
-    action_t *other = NULL;
-    int mode = stack_stable;
-    GListPtr action_list = NULL;
-    GListPtr gIter = NULL;
-    GHashTable *coloc_list = NULL;
-
-    key = start_key(rsc);
-    action_list = find_actions(rsc->actions, key, NULL);
-    free(key);
-
-    pe_rsc_trace(rsc, "%s: processing", rsc->id);
-    CRM_CHECK(action_list != NULL, return FALSE);
-
-    start = action_list->data;
-    g_list_free(action_list);
-
-    coloc_list = g_hash_table_new(crm_str_hash, g_str_equal);
-    for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
-        resource_t *target = constraint->rsc_rh;
-
-        pe_rsc_trace(rsc, "Checking %s: %s == %s (%d)", constraint->id, rsc->id, target->id,
-                     constraint->score);
-        if (constraint->score > 0) {
-            mode |= check_stack_element(rsc, target, "coloc");
-            if (mode & stack_middle) {
-                goto bail;
-
-            } else if ((mode & stack_stopping) && (mode & stack_starting)) {
-                crm_notice("Cannot migrate %s due to colocation activity (last was %s)",
-                           rsc->id, target->id);
-                goto bail;
-            }
-            g_hash_table_insert(coloc_list, target->id, target);
-        }
-    }
-
-    for (gIter = start->actions_before; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
-
-        other = other_w->action;
-
-        if (other_w->type & pe_order_serialize_only) {
-            pe_rsc_trace(rsc, "%s: depends on %s (serialize ordering)", rsc->id, other->uuid);
-            continue;
-        }
-
-        pe_rsc_trace(rsc, "%s: Checking %s ordering", rsc->id, other->uuid);
-
-        if(other->rsc == NULL) {
-            /* No colocation involved */
-            crm_trace("%s: No colocation for %s", rsc->id, other->uuid);
-            continue;
-
-        } else if (is_set(other->flags, pe_action_optional) == FALSE) {
-            mode |= check_stack_element(rsc, other->rsc, "order");
-            if ((mode & stack_middle) && g_hash_table_lookup(coloc_list, other->rsc->id)) {
-                crm_trace("%s: Stack middle: %s", rsc->id, other->rsc->id);
-                goto bail;
-
-            } else if ((mode & stack_stopping) && (mode & stack_starting)) {
-                crm_notice("Cannot migrate %s due to ordering activity (last was %s)",
-                           rsc->id, other->rsc->id);
-                goto bail;
-            }
-        }
-    }
-
-    g_hash_table_destroy(coloc_list);
-    return TRUE;
-
-  bail:
-    g_hash_table_destroy(coloc_list);
-    return FALSE;
-}
-
 static action_t *
 get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid, node_t * current)
 {
@@ -2966,227 +2926,6 @@ get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid
 
     free(key);
     return a;
-}
-
-static void
-MigrateRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t * data_set,
-           gboolean partial)
-{
-    action_t *to = NULL;
-    action_t *from = NULL;
-    action_t *then = NULL;
-    action_t *other = NULL;
-    action_t *done = get_pseudo_op(STONITH_DONE, data_set);
-
-    GListPtr gIter = NULL;
-    const char *value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-
-    if(is_set(rsc->flags, pe_rsc_migrating)) {
-        /* Already taken care of or in progress */
-        return;
-    }
-
-    if (crm_is_true(value) == FALSE) {
-        return;
-    }
-
-    if (rsc->next_role > RSC_ROLE_SLAVE) {
-        pe_rsc_trace(rsc, "%s: resource role: role=%s", rsc->id, role2text(rsc->next_role));
-        return;
-    }
-
-    if (start == NULL || stop == NULL) {
-        pe_rsc_trace(rsc, "%s: not exists %p -> %p", rsc->id, stop, start);
-        return;
-
-    } else if (start->node == NULL || stop->node == NULL) {
-        pe_rsc_trace(rsc, "%s: no node %p -> %p", rsc->id, stop->node, start->node);
-        return;
-
-    } else if (is_set(stop->flags, pe_action_optional)) {
-        pe_rsc_trace(rsc, "%s: stop action", rsc->id);
-        return;
-
-    } else if (is_set(start->flags, pe_action_optional)) {
-        pe_rsc_trace(rsc, "%s: start action", rsc->id);
-        return;
-
-    } else if (stop->node->details == start->node->details) {
-        pe_rsc_trace(rsc, "%s: not moving %p -> %p", rsc->id, stop->node, start->node);
-        return;
-
-    } else if (at_stack_bottom(rsc) == FALSE) {
-        pe_rsc_trace(rsc, "%s: not at stack bottom", rsc->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "%s %s -> %s", rsc->id, stop->node->details->uname,
-                 start->node->details->uname);
-
-    if (partial) {
-        pe_rsc_info(rsc, "Completing partial migration of %s from %s to %s", rsc->id,
-                    stop->node ? stop->node->details->uname : "unknown",
-                    start->node ? start->node->details->uname : "unknown");
-    } else {
-        pe_rsc_info(rsc, "Migrating %s from %s to %s", rsc->id,
-                    stop->node ? stop->node->details->uname : "unknown",
-                    start->node ? start->node->details->uname : "unknown");
-    }
-
-    /* Preserve the stop to ensure the end state is sane on that node,
-     * Make the start a pseudo op
-     * Create migrate_to, have it depend on everything the stop did
-     * Create migrate_from
-     *  *-> migrate_to -> migrate_from -> stop -> start
-     */
-
-    set_bit(rsc->flags, pe_rsc_migrating);
-    update_action_flags(start, pe_action_pseudo);       /* easier than trying to delete it from the graph
-                                                         * but perhaps we should have it run anyway
-                                                         */
-
-    if (!partial) {
-        to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node,
-                           FALSE, TRUE, data_set);
-
-        for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
-            node_t *current = (node_t *) gIter->data;
-            action_t *stop = stop_action(rsc, current, FALSE);
-
-            order_actions(stop, to, pe_order_optional);
-            pe_rsc_trace(rsc, "Ordering migration after cleanup of %s on %s", rsc->id,
-                         current->details->uname);
-        }
-    }
-    from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, start->node,
-                         FALSE, TRUE, data_set);
-
-    /* This is slightly sub-optimal if 'to' fails, but always
-     * run both halves of the migration before terminating the
-     * transition.
-     *
-     * This can be removed if/when we update unpack_rsc_op() to
-     * 'correctly' handle partial migrations.
-     *
-     * Without this, we end up stopping both sides
-     */
-    from->priority = INFINITY;
-
-    if (!partial) {
-        order_actions(to, from, pe_order_optional);
-        add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
-        add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
-    }
-
-    then = to ? to : from;
-    order_actions(from, stop, pe_order_optional);
-    order_actions(done, then, pe_order_optional);
-    add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
-    add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
-
-    /* Create the correct ordering ajustments based on find_clone_activity_on(); */
-
-    for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
-        resource_t *target = constraint->rsc_rh;
-
-        pe_rsc_info(rsc, "Repairing %s: %s == %s (%d)", constraint->id, rsc->id, target->id,
-                    constraint->score);
-
-        if (constraint->score > 0) {
-            int mode = check_stack_element(rsc, target, "coloc");
-            action_t *clone_stop = find_first_action(target->actions, NULL, RSC_STOP, NULL);
-            action_t *clone_start = find_first_action(target->actions, NULL, RSC_STARTED, NULL);
-
-            CRM_ASSERT(clone_stop != NULL);
-            CRM_ASSERT(clone_start != NULL);
-            CRM_ASSERT((mode & stack_middle) == 0);
-            CRM_ASSERT(((mode & stack_stopping) && (mode & stack_starting)) == 0);
-
-            if (mode & stack_stopping) {
-#if 0
-                crm_debug("Creating %s.start -> %s.stop ordering", rsc->id, target->id);
-                order_actions(from, clone_stop, pe_order_optional);
-#endif
-                GListPtr lpc2 = NULL;
-
-                for (lpc2 = start->actions_before; lpc2 != NULL; lpc2 = lpc2->next) {
-                    action_wrapper_t *other_w = (action_wrapper_t *) lpc2->data;
-
-                    /* Needed if the clone's started pseudo-action ever gets printed in the graph */
-                    if (other_w->action == clone_start) {
-                        crm_debug("Breaking %s -> %s ordering", other_w->action->uuid, start->uuid);
-                        other_w->type = pe_order_none;
-                    }
-                }
-
-            } else if (mode & stack_starting) {
-#if 0
-                crm_debug("Creating %s.started -> %s.stop ordering", target->id, rsc->id);
-                order_actions(clone_start, to, pe_order_optional);
-#endif
-                GListPtr lpc2 = NULL;
-
-                for (lpc2 = clone_stop->actions_before; lpc2 != NULL; lpc2 = lpc2->next) {
-                    action_wrapper_t *other_w = (action_wrapper_t *) lpc2->data;
-
-                    /* Needed if the clone's stop pseudo-action ever gets printed in the graph */
-                    if (other_w->action == stop) {
-                        crm_debug("Breaking %s -> %s ordering", other_w->action->uuid,
-                                  clone_stop->uuid);
-                        other_w->type = pe_order_none;
-                    }
-                }
-            }
-        }
-    }
-
-    /* Anything that needed stop to complete, now also needs start to have completed
-     * However, this is implied now that start/stop are not morphed into migrate ops
-     */
-
-    /* The migrate_to action (aka 'then') also needs to depend on anything that the stop needed to have completed */
-    for (gIter = stop->actions_before; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
-
-        other = other_w->action;
-        if (other->rsc == NULL) {
-            /* nothing */
-
-        } else if (is_set(other->flags, pe_action_optional) || other->rsc == rsc
-                   || other->rsc == rsc->parent) {
-            continue;
-
-        } else {
-            /* First check if they need to migrate too */
-            crm_debug("Checking %s first", other->rsc->id);
-            rsc_migrate_reload(other->rsc, data_set);
-        }
-
-        if(other->rsc && is_set(other->rsc->flags, pe_rsc_migrating)) {
-            crm_debug("Breaking %s before %s (migrating)", other_w->action->uuid, stop->uuid);
-            other_w->type = pe_order_none;
-            continue;
-        }
-
-        crm_debug("Ordering %s before %s (stop)", other_w->action->uuid, then->uuid);
-        order_actions(other, then, other_w->type);
-    }
-
-    /* The migrate_to action (aka 'then') also needs to depend on anything that the start needed to have completed */
-    for (gIter = start->actions_before; gIter != NULL; gIter = gIter->next) {
-        action_wrapper_t *other_w = (action_wrapper_t *) gIter->data;
-
-        other = other_w->action;
-        if (other->rsc == NULL) {
-            /* nothing */
-        } else if (is_set(other->flags, pe_action_optional) || other->rsc == rsc
-                   || other->rsc == rsc->parent) {
-            continue;
-        }
-        crm_debug("Ordering %s before %s (start)", other_w->action->uuid, then->uuid);
-        order_actions(other, then, other_w->type);
-    }
 }
 
 static void
@@ -3235,12 +2974,11 @@ ReloadRsc(resource_t * rsc, action_t * stop, action_t * start, pe_working_set_t 
 }
 
 void
-rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
+rsc_reload(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
     action_t *stop = NULL;
     action_t *start = NULL;
-    gboolean partial = FALSE;
 
     if(is_set(rsc->flags, pe_rsc_munging)) {
         return;
@@ -3251,7 +2989,7 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             resource_t *child_rsc = (resource_t *) gIter->data;
 
-            rsc_migrate_reload(child_rsc, data_set);
+            rsc_reload(child_rsc, data_set);
         }
         return;
 
@@ -3261,36 +2999,21 @@ rsc_migrate_reload(resource_t * rsc, pe_working_set_t * data_set)
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
 
-    if (rsc->partial_migration_target) {
-        start = get_first_named_action(rsc, RSC_START, TRUE, rsc->partial_migration_target);
-        stop = get_first_named_action(rsc, RSC_STOP, TRUE, rsc->partial_migration_source);
-        if (start && stop) {
-            partial = TRUE;
-        }
-    }
-
-    pe_rsc_trace(rsc, "%s %s %p", rsc->id, partial ? "partial" : "full", stop);
-
-    if (!partial) {
-        stop =
-            get_first_named_action(rsc, RSC_STOP, TRUE,
-                                   rsc->running_on ? rsc->running_on->data : NULL);
-        start = get_first_named_action(rsc, RSC_START, TRUE, NULL);
-    }
+    stop =
+        get_first_named_action(rsc, RSC_STOP, TRUE,
+                               rsc->running_on ? rsc->running_on->data : NULL);
+    start = get_first_named_action(rsc, RSC_START, TRUE, NULL);
 
     if (is_not_set(rsc->flags, pe_rsc_managed)
         || is_set(rsc->flags, pe_rsc_failed)
         || is_set(rsc->flags, pe_rsc_start_pending)
-        || rsc->next_role < RSC_ROLE_STARTED || ((g_list_length(rsc->running_on) != 1) && !partial)) {
+        || rsc->next_role < RSC_ROLE_STARTED) {
         pe_rsc_trace(rsc, "%s: general resource state: flags=0x%.16llx", rsc->id, rsc->flags);
         return;
     }
 
     if (stop != NULL && is_set(stop->flags, pe_action_optional) && is_set(rsc->flags, pe_rsc_try_reload)) {
         ReloadRsc(rsc, stop, start, data_set);
-
-    } else if (stop == NULL || is_not_set(stop->flags, pe_action_optional)) {
-        MigrateRsc(rsc, stop, start, data_set, partial);
     }
 }
 

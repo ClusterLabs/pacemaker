@@ -1,0 +1,40 @@
+
+Current cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ Resource Group: thegroup
+     A	(ocf::heartbeat:Dummy):	Started 18node1 
+     B	(ocf::heartbeat:Dummy):	Started 18node1 
+     C	(ocf::heartbeat:Dummy):	Started 18node1 
+
+Transition Summary:
+ * Migrate A	(Started 18node1 -> 18node2)
+ * Move    B	(Started 18node1 -> 18node2)
+ * Migrate C	(Started 18node1 -> 18node2)
+
+Executing cluster transition:
+ * Pseudo action:   thegroup_stop_0
+ * Resource action: C               stop on 18node1
+ * Resource action: B               stop on 18node1
+ * Resource action: A               migrate_to on 18node1
+ * Resource action: A               migrate_from on 18node2
+ * Resource action: A               stop on 18node1
+ * Pseudo action:   all_stopped
+ * Pseudo action:   thegroup_stopped_0
+ * Pseudo action:   thegroup_start_0
+ * Pseudo action:   A_start_0
+ * Resource action: B               start on 18node2
+ * Resource action: C               start on 18node2
+ * Pseudo action:   thegroup_running_0
+ * Resource action: A               monitor=60000 on 18node2
+ * Resource action: B               monitor=60000 on 18node2
+ * Resource action: C               monitor=60000 on 18node2
+
+Revised cluster status:
+Online: [ 18node1 18node2 18node3 ]
+
+ Resource Group: thegroup
+     A	(ocf::heartbeat:Dummy):	Started 18node2 
+     B	(ocf::heartbeat:Dummy):	Started 18node2 
+     C	(ocf::heartbeat:Dummy):	Started 18node2 
+

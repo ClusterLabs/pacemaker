@@ -1810,6 +1810,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
             stop->flags |= pe_action_optional;
         }
 
+        g_list_free(possible_matches);
         free(key);
     }
 }
@@ -2230,8 +2231,6 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
             }
 
         } else {    /* Pending or complete but erased */
-            node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
-
             if (target && target->details->online) {
                 pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
                              target->details->online);
@@ -2249,6 +2248,7 @@ unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_
             } else {
                 /* Consider it failed here - forces a restart, prevents migration */
                 set_bit(rsc->flags, pe_rsc_failed);
+                clear_bit(rsc->flags, pe_rsc_allow_migrate);
             }
         }
     }
@@ -2849,12 +2849,16 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 
             } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
                 rsc->role = RSC_ROLE_MASTER;
+
+            } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE) && node->details->unclean) {
+                /* If a pending migrate_to action is out on a unclean node,
+                 * we have to force the stop action on the target. */
+                const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+                node_t *target = pe_find_node(data_set->nodes, migrate_target);
+                if (target) {
+                    stop_action(rsc, target, FALSE);
+                }
             }
-            /*
-             * Intentionally ignoring pending migrate ops here;
-             * haven't decided if we need to do anything special
-             * with them yet...
-             */
             break;
 
         case PCMK_LRM_OP_DONE:

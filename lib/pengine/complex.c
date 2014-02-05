@@ -440,6 +440,12 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         set_bit((*rsc)->flags, pe_rsc_notify);
     }
 
+
+    value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+    if (crm_is_true(value)) {
+        set_bit((*rsc)->flags, pe_rsc_allow_migrate);
+    }
+
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && safe_str_neq("default", value)) {
         gboolean bool_value = TRUE;
@@ -646,6 +652,23 @@ common_update_score(resource_t * rsc, const char *id, int score)
             common_update_score(child_rsc, id, score);
         }
     }
+}
+
+gboolean
+is_parent(resource_t *child, resource_t *rsc)
+{
+    resource_t *parent = child;
+
+    if (parent == NULL || rsc == NULL) {
+        return FALSE;
+    }
+    while (parent->parent != NULL) {
+        if (parent->parent == rsc) {
+            return TRUE;
+        }
+        parent = parent->parent;
+    }
+    return FALSE;
 }
 
 resource_t *

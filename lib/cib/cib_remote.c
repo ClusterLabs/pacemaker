@@ -226,7 +226,6 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         return -ENOTCONN;
     }
 
-    connection->tcp_socket = sock;
     if (private->encrypted) {
         /* initialize GnuTls lib */
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -251,6 +250,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
 #else
         return -EPROTONOSUPPORT;
 #endif
+    } else {
+        connection->tcp_socket = sock;
     }
 
     /* login to server */
@@ -301,7 +302,7 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
 
     crm_trace("remote client connection established");
     connection->source =
-        mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, connection->tcp_socket, cib,
+        mainloop_add_fd("cib-remote", G_PRIORITY_HIGH, sock, cib,
                         &cib_fd_callbacks);
     return rc;
 }

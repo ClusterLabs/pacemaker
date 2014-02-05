@@ -55,6 +55,7 @@ typedef struct remote_ra_cmd_s {
     int interval_id;
     int reported_success;
     int monitor_timeout_id;
+    int takeover_timeout_id;
     /*! action parameters */
     lrmd_key_value_t *params;
     /*! executed rc */
@@ -65,15 +66,25 @@ typedef struct remote_ra_cmd_s {
     gboolean cancel;
 } remote_ra_cmd_t;
 
+enum remote_migration_status {
+    expect_takeover = 1,
+    takeover_complete,
+};
+
 typedef struct remote_ra_data_s {
     crm_trigger_t *work;
     remote_ra_cmd_t *cur_cmd;
     GList *cmds;
     GList *recurring_cmds;
 
+    enum remote_migration_status migrate_status;
+
+    gboolean active;
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
+static void handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd);
+static GList *fail_all_monitor_cmds(GList * list);
 
 static void
 free_cmd(gpointer user_data)
@@ -91,6 +102,9 @@ free_cmd(gpointer user_data)
     }
     if (cmd->monitor_timeout_id) {
         g_source_remove(cmd->monitor_timeout_id);
+    }
+    if (cmd->takeover_timeout_id) {
+        g_source_remove(cmd->takeover_timeout_id);
     }
     free(cmd->owner);
     free(cmd->rsc_id);
@@ -227,6 +241,22 @@ retry_start_cmd_cb(gpointer data)
     return FALSE;
 }
 
+
+static gboolean
+connection_takeover_timeout_cb(gpointer data)
+{
+    lrm_state_t *lrm_state = NULL;
+    remote_ra_cmd_t *cmd = data;
+
+    crm_debug("takeover event timed out for node %s", cmd->rsc_id);
+    cmd->takeover_timeout_id = 0;
+
+    handle_remote_ra_stop(lrm_state, cmd);
+    free_cmd(cmd);
+
+    return FALSE;
+}
+
 static gboolean
 monitor_timeout_cb(gpointer data)
 {
@@ -291,6 +321,7 @@ remote_init_cib_status(const char *node_name)
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
+    gboolean cmd_handled = FALSE;
     lrm_state_t *lrm_state = NULL;
     remote_ra_data_t *ra_data = NULL;
     remote_ra_cmd_t *cmd = NULL;
@@ -301,23 +332,51 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
               op->op_type ? op->op_type : "none",
               services_ocf_exitcode_str(op->rc), services_lrm_status_str(op->op_status));
 
-    /* filter all EXEC events up */
-    if (op->type == lrmd_event_exec_complete) {
-        lrm_op_callback(op);
-        return;
-    }
-
     lrm_state = lrm_state_find(op->remote_nodename);
     if (!lrm_state || !lrm_state->remote_ra_data) {
         crm_debug("lrm_state info not found for remote lrmd connection event");
         return;
     }
-
     ra_data = lrm_state->remote_ra_data;
+
+    /* Another client has connected to the remote daemon,
+     * determine if this is expected. */
+    if (op->type == lrmd_event_new_client) {
+        /* great, we new this was coming */
+        if (ra_data->migrate_status == expect_takeover) {
+            ra_data->migrate_status = takeover_complete;
+        } else {
+            crm_err("Unexpected pacemaker_remote client takeover. Disconnecting");
+            lrm_state_disconnect(lrm_state);
+        }
+        return;
+    }
+
+    /* filter all EXEC events up */
+    if (op->type == lrmd_event_exec_complete) {
+        if (ra_data->migrate_status == takeover_complete) {
+            crm_debug("ignoring event, this connection is taken over by another node");
+        } else {
+            lrm_op_callback(op);
+        }
+        return;
+    }
+
+    if ((op->type == lrmd_event_disconnect) &&
+        (ra_data->cur_cmd == NULL) &&
+        (ra_data->active == TRUE)) {
+
+        crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+        return;
+    }
+
     if (!ra_data->cur_cmd) {
         crm_debug("no event to match");
         return;
     }
+
     cmd = ra_data->cur_cmd;
 
     /* Start actions and migrate from actions complete after connection
@@ -340,24 +399,22 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
-            /* make sure we have a clean status section to start with */
             lrm_state_reset_tables(lrm_state);
-            remote_init_cib_status(lrm_state->node_name);
-            erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
-            erase_status_tag(lrm_state->node_name, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-
+            /* make sure we have a clean status section to start with */
+            if (safe_str_eq(cmd->action, "start")) {
+                remote_init_cib_status(lrm_state->node_name);
+                erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+                erase_status_tag(lrm_state->node_name, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+            }
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
+            ra_data->active = TRUE;
         }
 
         crm_debug("remote lrmd connect event matched %s action. ", cmd->action);
         report_remote_ra_result(cmd);
-        if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
-        }
-        ra_data->cur_cmd = NULL;
-        free_cmd(cmd);
-        return;
+        cmd_handled = TRUE;
+
     } else if (op->type == lrmd_event_poke && safe_str_eq(cmd->action, "monitor")) {
 
         if (cmd->monitor_timeout_id) {
@@ -383,16 +440,62 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->interval_id = g_timeout_add(cmd->interval, recurring_helper, cmd);
             cmd = NULL;         /* prevent free */
         }
+        cmd_handled = TRUE;
 
+    } else if (op->type == lrmd_event_disconnect && safe_str_eq(cmd->action, "monitor")) {
+
+        if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
+            cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+            cmd->op_status = PCMK_LRM_OP_ERROR;
+            report_remote_ra_result(cmd);
+            crm_err("remote-node %s unexpectedly disconneced during monitor operation", lrm_state->node_name);
+        }
+        cmd_handled = TRUE;
+
+    } else if (op->type == lrmd_event_new_client && safe_str_eq(cmd->action, "stop")) {
+
+        handle_remote_ra_stop(lrm_state, cmd);
+        cmd_handled = TRUE;
+
+    } else {
+        crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
+    }
+
+    if (cmd_handled) {
+        ra_data->cur_cmd = NULL;
         if (ra_data->cmds) {
             mainloop_set_trigger(ra_data->work);
         }
-        ra_data->cur_cmd = NULL;
         free_cmd(cmd);
-        return;
+    }
+}
+
+static void
+handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
+{
+    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+
+    if (ra_data->migrate_status != takeover_complete) {
+        /* only clear the status if this stop is not apart of a successful migration */
+        update_attrd_remote_node_removed(lrm_state->node_name, NULL);
     }
 
-    crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
+    ra_data->active = FALSE;
+    lrm_state_disconnect(lrm_state);
+    cmd->rc = PCMK_OCF_OK;
+    cmd->op_status = PCMK_LRM_OP_DONE;
+
+    if (ra_data->cmds) {
+        g_list_free_full(ra_data->cmds, free_cmd);
+    }
+    if (ra_data->recurring_cmds) {
+        g_list_free_full(ra_data->recurring_cmds, free_cmd);
+    }
+    ra_data->cmds = NULL;
+    ra_data->recurring_cmds = NULL;
+    ra_data->cur_cmd = NULL;
+
+    report_remote_ra_result(cmd);
 }
 
 static int
@@ -447,7 +550,7 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
-
+            ra_data->migrate_status = 0;
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                 /* take care of this later when we get async connection result */
@@ -484,23 +587,23 @@ handle_remote_ra_exec(gpointer user_data)
             report_remote_ra_result(cmd);
 
         } else if (!strcmp(cmd->action, "stop")) {
-            lrm_state_disconnect(lrm_state);
-            update_attrd_remote_node_removed(lrm_state->node_name, NULL);
-            cmd->rc = PCMK_OCF_OK;
-            cmd->op_status = PCMK_LRM_OP_DONE;
 
-            if (ra_data->cmds) {
-                g_list_free_full(ra_data->cmds, free_cmd);
+            if (ra_data->migrate_status == expect_takeover) {
+                /* briefly wait on stop for the takeover event to occur. If the
+                 * takeover event does not occur during the wait period, that's fine.
+                 * It just means that the remote-node's lrm_status section is going to get
+                 * cleared which will require all the resources running in the remote-node
+                 * to be explicitly re-detected via probe actions.  If the takeover does occur
+                 * successfully, then we can leave the status section intact. */
+                cmd->monitor_timeout_id = g_timeout_add((cmd->timeout/2), connection_takeover_timeout_cb, cmd);
+                ra_data->cur_cmd = cmd;
+                return TRUE;
             }
-            if (ra_data->recurring_cmds) {
-                g_list_free_full(ra_data->recurring_cmds, free_cmd);
-            }
-            ra_data->cmds = NULL;
-            ra_data->recurring_cmds = NULL;
-            report_remote_ra_result(cmd);
+
+            handle_remote_ra_stop(lrm_state, cmd);
 
         } else if (!strcmp(cmd->action, "migrate_to")) {
-            /* no-op. */
+            ra_data->migrate_status = expect_takeover;
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
@@ -590,6 +693,36 @@ is_remote_ra_supported_action(const char *action)
     }
 
     return TRUE;
+}
+
+static GList *
+fail_all_monitor_cmds(GList * list)
+{
+    GList *rm_list = NULL;
+    remote_ra_cmd_t *cmd = NULL;
+    GListPtr gIter = NULL;
+
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+        if (cmd->interval > 0 && safe_str_eq(cmd->action, "monitor")) {
+            rm_list = g_list_append(rm_list, cmd);
+        }
+    }
+
+    for (gIter = rm_list; gIter != NULL; gIter = gIter->next) {
+        cmd = gIter->data;
+
+        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+        cmd->op_status = PCMK_LRM_OP_ERROR;
+        report_remote_ra_result(cmd);
+
+        list = g_list_remove(list, cmd);
+        free_cmd(cmd);
+    }
+
+    /* frees only the list data, not the cmds */
+    g_list_free(rm_list);
+    return list;
 }
 
 static GList *

@@ -57,6 +57,8 @@ void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
                         pe_working_set_t * data_set);
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
+
+gboolean is_parent(resource_t *child, resource_t *rsc);
 resource_t *uber_parent(resource_t * rsc);
 
 #endif

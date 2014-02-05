@@ -1,0 +1,18 @@
+ digraph "g" {
+"A_migrate_from_0 18node2" -> "A_start_0 18node2" [ style = bold]
+"A_migrate_from_0 18node2" -> "A_stop_0 18node1" [ style = bold]
+"A_migrate_from_0 18node2" [ style=bold color="green" fontcolor="black"]
+"A_migrate_to_0 18node1" -> "A_migrate_from_0 18node2" [ style = bold]
+"A_migrate_to_0 18node1" [ style=bold color="green" fontcolor="black"]
+"A_monitor_60000 18node2" [ style=bold color="green" fontcolor="black"]
+"A_start_0 18node2" -> "A_monitor_60000 18node2" [ style = bold]
+"A_start_0 18node2" [ style=bold color="green" fontcolor="orange"]
+"A_stop_0 18node1" -> "A_start_0 18node2" [ style = bold]
+"A_stop_0 18node1" -> "all_stopped" [ style = bold]
+"A_stop_0 18node1" [ style=bold color="green" fontcolor="black"]
+"B_stop_0 18node2" -> "A_migrate_to_0 18node1" [ style = bold]
+"B_stop_0 18node2" -> "A_stop_0 18node1" [ style = bold]
+"B_stop_0 18node2" -> "all_stopped" [ style = bold]
+"B_stop_0 18node2" [ style=bold color="green" fontcolor="black"]
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+}

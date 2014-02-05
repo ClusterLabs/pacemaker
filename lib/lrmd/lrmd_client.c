@@ -281,6 +281,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
+    } else if (crm_str_eq(type, LRMD_OP_NEW_CLIENT, TRUE)) {
+        event.type = lrmd_event_new_client;
     } else if (crm_str_eq(type, LRMD_OP_POKE, TRUE)) {
         event.type = lrmd_event_poke;
     } else {

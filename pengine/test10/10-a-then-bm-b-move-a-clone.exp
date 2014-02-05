@@ -1,0 +1,107 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="7" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:1_stop_0" on_node="f20node1" on_node_uuid="1">
+        <primitive id="myclone" long-id="myclone:1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="10" operation="stop" operation_key="myclone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1" priority="1000000">
+    <action_set>
+      <pseudo_event id="11" operation="stopped" operation_key="myclone-clone_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:1_stop_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="10" operation="stop" operation_key="myclone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="10" operation="stop" operation_key="myclone-clone_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="vm_stop_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="15" operation="migrate_from" operation_key="vm_migrate_from_0" on_node="f20node2" on_node_uuid="2">
+        <primitive id="vm" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_migrate_source="f20node1" CRM_meta_migrate_target="f20node2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="migrate_to" operation_key="vm_migrate_to_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="14" operation="migrate_to" operation_key="vm_migrate_to_0" on_node="f20node1" on_node_uuid="1">
+        <primitive id="vm" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_migrate_source="f20node1" CRM_meta_migrate_target="f20node2" CRM_meta_record_pending="true" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="13" operation="start" operation_key="vm_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="vm_stop_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="15" operation="migrate_from" operation_key="vm_migrate_from_0" on_node="f20node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="12" operation="stop" operation_key="vm_stop_0" on_node="f20node1" on_node_uuid="1">
+        <primitive id="vm" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="migrate_from" operation_key="vm_migrate_from_0" on_node="f20node2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="stop" operation_key="myclone_stop_0" internal_operation_key="myclone:1_stop_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="stop" operation_key="vm_stop_0" on_node="f20node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

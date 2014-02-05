@@ -1,7 +1,7 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
-      <pseudo_event id="16" operation="stopped" operation_key="gr1_stopped_0">
+      <pseudo_event id="20" operation="stopped" operation_key="gr1_stopped_0">
         <attributes CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
@@ -10,16 +10,16 @@
         <rsc_op id="7" operation="stop" operation_key="test1_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
+        <pseudo_event id="19" operation="stop" operation_key="gr1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-      <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0">
+      <pseudo_event id="19" operation="stop" operation_key="gr1_stop_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -27,7 +27,7 @@
   </synapse>
   <synapse id="2">
     <action_set>
-       <pseudo_event id="14" operation="running" operation_key="gr1_running_0">
+      <pseudo_event id="18" operation="running" operation_key="gr1_running_0">
         <attributes CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
@@ -36,50 +36,46 @@
         <pseudo_event id="8" operation="start" operation_key="test1_start_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <pseudo_event id="13" operation="start" operation_key="test2_start_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+        <pseudo_event id="17" operation="start" operation_key="gr1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-      <pseudo_event id="13" operation="start" operation_key="gr1_start_0">
+      <pseudo_event id="17" operation="start" operation_key="gr1_start_0">
         <attributes CRM_meta_timeout="20000" />
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="16" operation="stopped" operation_key="gr1_stopped_0"/>
+        <pseudo_event id="20" operation="stopped" operation_key="gr1_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="4" priority="1000000">
+  <synapse id="4">
      <action_set>
-      <rsc_op id="20" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+      <rsc_op id="11" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="19" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="10" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-      <rsc_op id="19" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <rsc_op id="10" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <primitive id="test1" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test1"/>
       </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="6">
      <action_set>
@@ -105,7 +101,10 @@
         <rsc_op id="7" operation="stop" operation_key="test1_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+        <rsc_op id="11" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="17" operation="start" operation_key="gr1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -118,64 +117,95 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="11" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
+        <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
-        <rsc_op id="20" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <pseudo_event id="19" operation="stop" operation_key="gr1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="test2_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+      <rsc_op id="16" operation="migrate_from" operation_key="test2_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+        <rsc_op id="15" operation="migrate_to" operation_key="test2_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+       </trigger>
+     </inputs>
+   </synapse>
+  <synapse id="10">
+     <action_set>
+      <rsc_op id="15" operation="migrate_to" operation_key="test2_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="migrate_to" CRM_meta_record_pending="true" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="14" operation="monitor" operation_key="test2_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
         <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-  <synapse id="10">
-     <action_set>
-      <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
-        <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
+        <pseudo_event id="13" operation="start" operation_key="test2_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="13" operation="start" operation_key="test2_start_0">
         <attributes CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
         <pseudo_event id="8" operation="start" operation_key="test1_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+        <rsc_op id="16" operation="migrate_from" operation_key="test2_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="17" operation="start" operation_key="gr1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="11">
+  <synapse id="13">
      <action_set>
-      <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <primitive id="test2" class="ocf" provider="heartbeat" type="Xen"/>
         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true"  xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
+        <rsc_op id="16" operation="migrate_from" operation_key="test2_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="19" operation="stop" operation_key="gr1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="12">
+  <synapse id="14">
      <action_set>
-      <crm_event id="18" operation="do_shutdown" operation_key="do_shutdown" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <crm_event id="22" operation="do_shutdown" operation_key="do_shutdown" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
      </action_set>
@@ -184,11 +214,11 @@
         <rsc_op id="7" operation="stop" operation_key="test1_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="13">
+  <synapse id="15">
      <action_set>
       <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -199,7 +229,7 @@
         <rsc_op id="7" operation="stop" operation_key="test1_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="12" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
      </inputs>
    </synapse>

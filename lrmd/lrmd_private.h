@@ -71,6 +71,8 @@ int lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply);
 
 int lrmd_server_send_notify(crm_client_t * client, xmlNode * msg);
 
+void notify_of_new_client(crm_client_t *new_client);
+
 void process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request);
 
 void free_rsc(gpointer data);
