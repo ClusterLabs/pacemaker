@@ -409,6 +409,10 @@ if __name__ == "__main__":
 		if os.path.exists("%s/cts/LSBDummy" % build_dir):
                     print "Using %s/cts/LSBDummy" % build_dir
                     os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % build_dir)
+
+                    # Install helper OCF agents
+                    for ra in [ "Dummy", "Stateful" ]:
+                        os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
                 else:
                     # Assume its installed
                     print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
@@ -810,8 +814,8 @@ if __name__ == "__main__":
 
 		### get metadata ###
 		if "upstart" in self.rsc_classes:
-			test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
-			test.add_cmd_check_stdout("-c metadata -C \"systemd\" -T \"lrmd_dummy_daemon\""
+			test = self.new_test("get_upstart_metadata", "Retrieve metadata for a resource")
+			test.add_cmd_check_stdout("-c metadata -C \"upstart\" -T \"lrmd_dummy_daemon\""
 				,"resource-agent name=\"lrmd_dummy_daemon\"")
 
 		### get ocf providers  ###
