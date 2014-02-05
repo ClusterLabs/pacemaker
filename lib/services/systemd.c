@@ -69,7 +69,6 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
-        pcmk_dbus_connection_setup_with_select(systemd_proxy);
     }
     if (systemd_proxy == NULL) {
         return FALSE;
@@ -280,7 +279,6 @@ systemd_unit_metadata(const char *name)
     char *meta = NULL;
     char *desc = NULL;
 
-    CRM_ASSERT(systemd_init());
     if (systemd_unit_by_name(name, &path)) {
         desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description");
     } else {

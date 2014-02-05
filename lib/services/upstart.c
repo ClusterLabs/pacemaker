@@ -60,7 +60,6 @@ upstart_init(void)
     if (need_init) {
         need_init = 0;
         upstart_proxy = pcmk_dbus_connect();
-        pcmk_dbus_connection_setup_with_select(upstart_proxy);
     }
     if (upstart_proxy == NULL) {
         return FALSE;
