@@ -112,38 +112,19 @@ On the two cluster-nodes install the following packages.
 
 == Setup Corosync on cluster-nodes ==
 
-On one of the cluster nodes, execute the following.
+Corosync handles pacemaker's cluster membership and messaging. The corosync config file is located in /etc/corosync/corosync.conf. That config file must be initialized with information about the two cluster-nodes before pacemaker can start.
 
+To initialize the corosync config file, execute the following pcs command on both nodes filling in the information in <> with your nodes' information.
 [source,C]
 ----
-# export corosync_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/g`
+# pcs cluster setup --local mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
 
-Display and verify that address is correct
-
+A recent syntax change in pcs may cause the above command to fail. If so try this alternative.
 [source,C]
 ----
-# echo $corosync_addr
+# pcs cluster setup --force --local --name mycluster <node1 ip or hostname> <node2 ip or hostname>
 ----
-
-In many cases the address will be 192.168.1.0 if you are behind a standard home router.
-
-Now copy over the example corosync.conf.  This code will inject your bindaddress and enable the vote quorum api which is required by pacemaker.
-
-[source,C]
-----
-# cp /etc/corosync/corosync.conf.example /etc/corosync/corosync.conf
-# sed -i.bak "s/.*\tbindnetaddr:.*/bindnetaddr:\ $corosync_addr/g" /etc/corosync/corosync.conf
-# cat << END >> /etc/corosync/corosync.conf
-quorum {
-           provider: corosync_votequorum
-           expected_votes: 2
-           two_node: 1
-}
-END
-----
-
-Make sure to copy the newly created /etc/corosync/corosync.conf file to the second cluster-node before continuing.
 
 == Start Pacemaker on cluster-nodes ==
 
