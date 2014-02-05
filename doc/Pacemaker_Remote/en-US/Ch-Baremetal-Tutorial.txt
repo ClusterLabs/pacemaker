@@ -4,13 +4,11 @@
 
 +What this tutorial is not:+ This tutorial is not a realistic deployment scenario.  The steps shown here are meant to get users familiar with the concept of remote-nodes as quickly as possible.
 
-== Overview ==
-
 This tutorial requires three machines. Two machines to act as cluster-nodes and a third to act as the baremetal remote-node.
 
-This tutorial was tested using Fedora 18 on both the cluster-nodes and baremetal remote-node.  Anything that is capable of running pacemaker v1.1.11 or greater will do though.  An installation guide for installing Fedora 18 can be found here, http://docs.fedoraproject.org/en-US/Fedora/18/html/Installation_Guide/.
+This tutorial was tested using Fedora 20 on both the cluster-nodes and baremetal remote-node.  Anything that is capable of running pacemaker v1.1.11 or greater will do though.  An installation guide for installing Fedora 20 can be found here, http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/.
 
-Fedora 18 (or similar distro) host preparation steps.
+Fedora 20 (or similar distro) host preparation steps.
 
 == SElinux and Firewall Considerations ==
 In order to simply this tutorial we will disable selinux and the firewall on all the nodes.
