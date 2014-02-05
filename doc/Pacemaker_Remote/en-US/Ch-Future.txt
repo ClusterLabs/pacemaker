@@ -12,5 +12,6 @@ Once the libvirt-sandbox project is integrated with pacemaker_remote, we will ga
 The pacemaker_remote daemon already has the ability to run on bare-metal hardware nodes, but the policy engine logic for integrating bare-metal nodes is not complete.  There are some complications involved with understanding a bare-metal node's state that virtual nodes don't have.  Once this logic is complete, pacemaker will be able to integrate bare-metal nodes in the same way virtual remote-nodes currently are. Some special considerations for fencing will need to be addressed.
 
 == KVM Migration Support ==
++"This feature has already been introduced into Pacemaker's master github branch and is scheduled for Pacemaker v1.1.12"+
 
 Pacemaker's policy engine is limited in its ability to perform live migrations of KVM resources when resource dependencies are involved.  This limitation affects how resources living within a KVM remote-node are handled when a live migration takes place.  Currently when a live migration is performed on a KVM remote-node, all the resources within that remote-node have to be stopped before the migration takes place and started once again after migration has finished.  This policy engine limitation is fully explained in this bug report, http://bugs.clusterlabs.org/show_bug.cgi?id=5055#c3
