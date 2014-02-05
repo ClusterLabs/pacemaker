@@ -353,7 +353,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
     header->size_total = iov[0].iov_len + iov[1].iov_len;
 
     crm_trace("Sending len[0]=%d, start=%x\n",
-              (int)iov[0].iov_len, *(int*)xml_text);
+              (int)iov[0].iov_len, *(int*)(void *)xml_text);
     rc = crm_remote_sendv(remote, iov, 2);
     if (rc < 0) {
         crm_err("Failed to send remote msg, rc = %d", rc);
@@ -861,13 +861,13 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
 
         memset(buffer, 0, DIMOF(buffer));
         if (addr->sa_family == AF_INET6) {
-            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)addr;
+            struct sockaddr_in6 *addr_in = (struct sockaddr_in6 *)(void *)addr;
 
             addr_in->sin6_port = htons(port);
             inet_ntop(addr->sa_family, &addr_in->sin6_addr, buffer, DIMOF(buffer));
 
         } else {
-            struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+            struct sockaddr_in *addr_in = (struct sockaddr_in *)(void *)addr;
 
             addr_in->sin_port = htons(port);
             inet_ntop(addr->sa_family, &addr_in->sin_addr, buffer, DIMOF(buffer));
