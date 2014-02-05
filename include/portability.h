@@ -177,7 +177,7 @@ g_list_free_full(GList * list, GDestroyNotify free_func)
 }
 #  endif
 
-#  ifndef HAVE_DBUSBASICVALUE
+#  if defined(BUILD_DBUS) && !defined(HAVE_DBUSBASICVALUE)
 #    include <stdint.h>
 #    include <dbus/dbus.h>
 /**

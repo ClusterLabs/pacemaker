@@ -23,10 +23,14 @@ INCLUDES         = -I$(top_builddir)/include
 lib_LTLIBRARIES = libcrmservice.la
 noinst_HEADERS  = upstart.h systemd.h services_private.h
 
-libcrmservice_la_SOURCES = services.c services_linux.c dbus.c
+libcrmservice_la_SOURCES = services.c services_linux.c
 libcrmservice_la_LDFLAGS = -version-info 1:0:0
 libcrmservice_la_CFLAGS  = $(GIO_CFLAGS) -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\"
 libcrmservice_la_LIBADD  = $(GIO_LIBS) $(top_builddir)/lib/common/libcrmcommon.la $(DBUS_LIBS)
+
+if BUILD_DBUS
+libcrmservice_la_SOURCES += dbus.c
+endif
 
 if BUILD_UPSTART
 libcrmservice_la_SOURCES += upstart.c
