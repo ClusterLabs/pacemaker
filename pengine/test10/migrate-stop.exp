@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="24" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
+        <attributes CRM_meta_migrate_source="dom0-02" CRM_meta_migrate_target="dom0-01" CRM_meta_record_pending="true" CRM_meta_timeout="20000" allow_migrate="true"  xmfile="/etc/xen/test01.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>

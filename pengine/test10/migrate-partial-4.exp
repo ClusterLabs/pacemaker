@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="351" operation="migrate_to" operation_key="lustre_migrate_to_0" on_node="lustre03-left" on_node_uuid="lustre03-left">
         <primitive id="lustre" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_timeout="20000"  name="lustre"/>
+        <attributes CRM_meta_migrate_source="lustre03-left" CRM_meta_migrate_target="lustre04-left" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  name="lustre"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -81,7 +81,7 @@
     <action_set>
       <rsc_op id="353" operation="migrate_to" operation_key="testfs_migrate_to_0" on_node="lustre02-left" on_node_uuid="lustre02-left">
         <primitive id="testfs" class="ocf" provider="vds-ok" type="Ticketer"/>
-        <attributes CRM_meta_migrate_source="lustre02-left" CRM_meta_migrate_target="lustre03-left" CRM_meta_timeout="20000"  name="testfs-operational"/>
+        <attributes CRM_meta_migrate_source="lustre02-left" CRM_meta_migrate_target="lustre03-left" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  name="testfs-operational"/>
       </rsc_op>
     </action_set>
     <inputs>

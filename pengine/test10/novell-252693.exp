@@ -509,7 +509,7 @@
      <action_set>
       <rsc_op id="83" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_name="migrate" CRM_meta_timeout="120000"  xmfile="/etc/xen/vm/sles10"/>
+        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_name="migrate" CRM_meta_record_pending="true" CRM_meta_timeout="120000"  xmfile="/etc/xen/vm/sles10"/>
       </rsc_op>
      </action_set>
     <inputs/>
