@@ -414,7 +414,7 @@ if __name__ == "__main__":
 				os.system("mkdir -p @OCF_RA_DIR@/pacemaker/")
 
 			# Install helper OCF agents
-			for ra in [ "Dummy", "Stateful" ]:
+			for ra in [ "Dummy", "Stateful", "ping" ]:
 				os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
 				os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (ra))
 			else:
