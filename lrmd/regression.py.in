@@ -407,23 +407,27 @@ if __name__ == "__main__":
 		os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
 		if os.path.exists("%s/cts/LSBDummy" % build_dir):
-                    print "Using %s/cts/LSBDummy" % build_dir
-                    os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % build_dir)
+			print "Using %s/cts/LSBDummy" % build_dir
+			os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % build_dir)
 
-                    # Install helper OCF agents
-                    for ra in [ "Dummy", "Stateful" ]:
-                        os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
-                else:
-                    # Assume its installed
-                    print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
-                    os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+			if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
+				os.system("mkdir -p @OCF_RA_DIR@/pacemaker/")
 
-                os.system("chmod a+x /etc/init.d/LSBDummy")
-                os.system("ls -al /etc/init.d/LSBDummy")
+			# Install helper OCF agents
+			for ra in [ "Dummy", "Stateful" ]:
+				os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
+				os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (ra))
+			else:
+				# Assume it's installed
+				print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
+				os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+
+				os.system("chmod a+x /etc/init.d/LSBDummy")
+				os.system("ls -al /etc/init.d/LSBDummy")
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
 		if os.path.exists("/bin/systemctl"):
-                    os.system("systemctl daemon-reload")
+			os.system("systemctl daemon-reload")
 
 	def cleanup_test_environment(self):
 		if self.need_authkey:
