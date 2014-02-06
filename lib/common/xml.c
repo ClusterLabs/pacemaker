@@ -1347,13 +1347,17 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
 
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
             if(position != __xml_offset(match)) {
-                int lpc = 0;
                 xmlNode *match_child = NULL;
+                int p = position;
+
+                if(p > __xml_offset(match)) {
+                    p++; /* Skip ourselves */
+                }
 
                 CRM_ASSERT(match->parent != NULL);
                 match_child = match->parent->children;
 
-                for(lpc = 0; match_child && lpc < position; lpc++) {
+                while(match_child && p != __xml_offset(match_child)) {
                     match_child = match_child->next;
                 }
 
