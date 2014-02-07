@@ -443,6 +443,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          * format only needs it for the top-level version fields
          */
         local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
+
     } else {
         static time_t expires = 0;
         time_t tm_now = time(NULL);
@@ -461,7 +462,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     xml_log_changes(LOG_INFO, scratch);
-    if (is_not_set(call_options, cib_zero_copy)
+    if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
 
@@ -472,27 +473,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         crm_element_value_int(local_diff, "format", &format);
         test_rc = xml_apply_patchset(c, local_diff, manage_counters);
 
-        if(test_rc == pcmk_ok) {
-            char *d1 = calculate_xml_versioned_digest(c, FALSE, TRUE, CRM_FEATURE_SET);
-            char *d2 = calculate_xml_versioned_digest(scratch, FALSE, TRUE, CRM_FEATURE_SET);
-
-            crm_trace("%s vs. %s", d1, d2);
-            if(strcmp(d1, d2) != 0) {
-                save_xml_to_file(c,       "Patch:calculated", NULL);
-                save_xml_to_file(scratch, "Patch:actual", NULL);
-                save_xml_to_file(local_diff, "Patch", NULL);
-
-                crm_err("v%d patchset error, digest not preserved: got %s, expected %s", format, d1, d2);
-            }
-
-            CRM_LOG_ASSERT(strcmp(d1, d2) == 0);
-            free(d1);
-            free(d2);
-
-        } else {
-            save_xml_to_file(current_cib, "Patch:input", NULL);
-            save_xml_to_file(scratch,     "Patch:actual", NULL);
-            save_xml_to_file(local_diff,  "Patch", NULL);
+        if(test_rc != pcmk_ok) {
+            save_xml_to_file(c,           "PatchApply:calculated", NULL);
+            save_xml_to_file(current_cib, "PatchApply:input", NULL);
+            save_xml_to_file(scratch,     "PatchApply:actual", NULL);
+            save_xml_to_file(local_diff,  "PatchApply:diff", NULL);
             crm_err("v%d patchset error, patch failed to apply: %s (%d)", format, pcmk_strerror(test_rc), test_rc);
         }
         free_xml(c);

@@ -1398,7 +1398,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 {
     int format = 1;
     int rc = pcmk_ok;
-    xmlNode *old = copy_xml(xml);
+    xmlNode *old = NULL;
     const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
     if(patchset == NULL) {
@@ -1411,6 +1411,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     }
 
     if(digest) {
+        /* Make it available for logging if the result doesn't have the expected digest */
         old = copy_xml(xml);
     }
 
@@ -1424,8 +1425,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
                 break;
             default:
                 crm_err("Unknown patch format: %d", format);
-                free_xml(old);
-                return -EINVAL;
+                rc = -EINVAL;
         }
     }
 
@@ -1447,9 +1447,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             rc = -pcmk_err_diff_failed;
 
             if (digest_cs && digest_cs->targets) {
-                save_xml_to_file(old, "diff:original", NULL);
-                save_xml_to_file(patchset, "diff:input", NULL);
-                save_xml_to_file(xml, "diff:new", NULL);
+                save_xml_to_file(old,     "PatchDigest:input", NULL);
+                save_xml_to_file(xml,     "PatchDigest:result", NULL);
+                save_xml_to_file(patchset,"PatchDigest:diff", NULL);
+
             } else {
                 crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             }
