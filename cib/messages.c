@@ -176,6 +176,23 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 #endif
 }
 
+int sync_in_progress = 0;
+static void
+send_sync_request(const char *host)
+{
+    xmlNode *sync_me = create_xml_node(NULL, "sync-me");
+
+    crm_info("Requesting re-sync from peer");
+    sync_in_progress++;
+
+    crm_xml_add(sync_me, F_TYPE, "cib");
+    crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
+    crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
+
+    send_cluster_message(crm_get_peer(0, host), crm_msg_cib, sync_me, FALSE);
+    free_xml(sync_me);
+}
+
 int
 cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -183,15 +200,30 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 #ifdef CIBPIPE
     return -EINVAL;
 #else
-    int result = pcmk_ok;
+    const char *host = crm_element_value(req, F_ORIG);
+    const char *seq = crm_element_value(req, F_CIB_PING_ID);
+    char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
-    crm_trace("Processing \"%s\" event", op);
+    static struct qb_log_callsite *cs = NULL;
+
+    crm_trace("Processing \"%s\" event %s from %s with%s digest", op, seq, host, digest?"":"out");
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
-    crm_xml_add(*answer, XML_PING_ATTR_STATUS, "ok");
-    crm_xml_add(*answer, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CIB);
+    crm_xml_add(*answer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
+    crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
-    return result;
+    if (cs == NULL) {
+        cs = qb_log_callsite_get(__func__, __FILE__, __FUNCTION__, LOG_TRACE, __LINE__, crm_trace_nonlog);
+    }
+    if (cs && cs->targets) {
+        /* Append additional detail so the reciever can log the differences */
+        add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+    }
+
+    crm_info("Reporting our current digest to %s: %s (%d)", host, digest, cs && cs->targets);
+
+    return pcmk_ok;
 #endif
 }
 
@@ -217,8 +249,6 @@ cib_process_sync_one(const char *op, int options, const char *section, xmlNode *
     return sync_our_cib(req, FALSE);
 #endif
 }
-
-int sync_in_progress = 0;
 
 int
 cib_server_process_diff(const char *op, int options, const char *section, xmlNode * req,
@@ -262,21 +292,9 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
 
     if (rc == -pcmk_err_diff_resync && cib_is_master == FALSE) {
-        xmlNode *sync_me = create_xml_node(NULL, "sync-me");
-
         free_xml(*result_cib);
         *result_cib = NULL;
-        crm_info("Requesting re-sync from peer");
-        sync_in_progress++;
-
-        crm_xml_add(sync_me, F_TYPE, "cib");
-        crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
-        crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
-
-        if (send_cluster_message(NULL, crm_msg_cib, sync_me, FALSE) == FALSE) {
-            rc = -ENOTCONN;
-        }
-        free_xml(sync_me);
+        send_sync_request(NULL);
 
     } else if (rc == -pcmk_err_diff_resync) {
         rc = -pcmk_err_diff_failed;

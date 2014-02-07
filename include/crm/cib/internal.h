@@ -64,6 +64,7 @@
 #  define F_CIB_UPDATE_DIFF	"cib_update_diff"
 #  define F_CIB_USER		"cib_user"
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
+#  define F_CIB_PING_ID         "cib_ping_id"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"
