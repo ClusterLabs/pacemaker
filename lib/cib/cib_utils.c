@@ -442,9 +442,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
          */
-        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
     } else {
-        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
     }
 
     if (diff_cs == NULL) {

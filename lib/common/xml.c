@@ -648,14 +648,11 @@ xml_repair_v1_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolea
 static xmlNode *
 xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config)
 {
-    const char *version = crm_element_value(target, XML_ATTR_CRM_VERSION);
-    const char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
     xmlNode *patchset = diff_xml_object(source, target, TRUE);
 
     if(patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
         xml_repair_v1_diff(source, target, patchset, config);
-        crm_xml_add(patchset, XML_ATTR_DIGEST, digest);
         crm_xml_add(patchset, "format", "1");
     }
     return patchset;
@@ -737,10 +734,12 @@ static gboolean patch_legacy_mode(void)
 }
 
 xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
+xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version, bool with_digest)
 {
     int counter = 0;
     bool config = FALSE;
+    xmlNode *patch = NULL;
+    const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
 
     config = is_config_change(target);
     if(config_changed) {
@@ -759,8 +758,6 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(format == 0) {
-        const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-
         if(patch_legacy_mode()) {
             format = 1;
 
@@ -775,13 +772,23 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
 
     switch(format) {
         case 1:
-            return xml_create_patchset_v1(source, target, config);
+            patch = xml_create_patchset_v1(source, target, config);
+            with_digest = TRUE;
+            break;
         case 2:
-            return xml_create_patchset_v2(source, target);
+            patch = xml_create_patchset_v2(source, target);
+            break;
         default:
             crm_err("Unknown patch format: %d", format);
             return NULL;
     }
+
+    if(patch && with_digest) {
+        const char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+
+        crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+    }
+    return patch;
 }
 
 void
@@ -1119,7 +1126,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
 {
     int rc = pcmk_ok;
     int root_nodes_seen = 0;
-    static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
     char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
@@ -1127,12 +1133,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
     xmlNode *removed = find_xml_node(patchset, "diff-removed", FALSE);
     xmlNode *old = copy_xml(xml);
-
-    if (digest_cs == NULL) {
-        digest_cs =
-            qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__,
-                                crm_trace_nonlog);
-    }
 
     crm_trace("Substraction Phase");
     for (child_diff = __xml_first_child(removed); child_diff != NULL;
@@ -1168,31 +1168,9 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     if (root_nodes_seen > 1) {
         crm_err("(+) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
         rc = -ENOTUNIQ;
-
-    } else if (rc == pcmk_ok && digest) {
-        char *new_digest = NULL;
-
-        purge_diff_markers(xml);       /* Purge now so the diff is ok */
-        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
-        if (safe_str_neq(new_digest, digest)) {
-            crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
-            rc = -pcmk_err_diff_failed;
-
-            crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
-            if (digest_cs && digest_cs->targets) {
-                save_xml_to_file(old, "diff:original", NULL);
-                save_xml_to_file(patchset, "diff:input", NULL);
-                save_xml_to_file(xml, "diff:new", NULL);
-            }
-
-        } else {
-            crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
-        }
-        free(new_digest);
-
-    } else if (rc == pcmk_ok) {
-        purge_diff_markers(xml);       /* Purge now so the diff is ok */
     }
+
+    purge_diff_markers(xml);       /* Purge prior to checking the digest */
 
     free_xml(old);
     free(version);
@@ -1420,6 +1398,8 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 {
     int format = 1;
     int rc = pcmk_ok;
+    xmlNode *old = copy_xml(xml);
+    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
     if(patchset == NULL) {
         return rc;
@@ -1430,17 +1410,56 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         rc = xml_patch_version_check(xml, patchset, format);
     }
 
+    if(digest) {
+        old = copy_xml(xml);
+    }
+
     if(rc == pcmk_ok) {
         switch(format) {
             case 1:
-                return xml_apply_patchset_v1(xml, patchset, check_version);
+                rc = xml_apply_patchset_v1(xml, patchset, check_version);
+                break;
             case 2:
-                return xml_apply_patchset_v2(xml, patchset, check_version);
+                rc = xml_apply_patchset_v2(xml, patchset, check_version);
+                break;
             default:
                 crm_err("Unknown patch format: %d", format);
+                free_xml(old);
                 return -EINVAL;
         }
     }
+
+    if(rc == pcmk_ok && digest) {
+        static struct qb_log_callsite *digest_cs = NULL;
+
+        char *new_digest = NULL;
+        char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+
+        if (digest_cs == NULL) {
+            digest_cs =
+                qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__,
+                                    crm_trace_nonlog);
+        }
+
+        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
+        if (safe_str_neq(new_digest, digest)) {
+            crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
+            rc = -pcmk_err_diff_failed;
+
+            if (digest_cs && digest_cs->targets) {
+                save_xml_to_file(old, "diff:original", NULL);
+                save_xml_to_file(patchset, "diff:input", NULL);
+                save_xml_to_file(xml, "diff:new", NULL);
+            } else {
+                crm_trace("%p %0.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
+            }
+
+        } else {
+            crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
+        }
+        free(new_digest);
+    }
+    free_xml(old);
     return rc;
 }
 
