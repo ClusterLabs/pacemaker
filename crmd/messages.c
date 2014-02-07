@@ -460,6 +460,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         send_msg_via_ipc(msg, sys_to);
 
     } else {
+        crm_node_t *node_to = NULL;
+
 #if SUPPORT_COROSYNC
         if (is_openais_cluster()) {
             dest = text2msg_type(sys_to);
@@ -469,8 +471,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             }
         }
 #endif
+
+        if (host_to) {
+            node_to = crm_find_peer(0, host_to);
+            if (node_to == NULL) {
+               crm_err("Cannot route message to unknown node %s", host_to);
+               return TRUE;
+            }
+        }
+
         ROUTER_RESULT("Message result: External relay");
-        send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
+        send_cluster_message(host_to ? node_to : NULL, dest, msg, TRUE);
     }
 
     return processing_complete;
