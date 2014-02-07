@@ -11,6 +11,7 @@ restore_all=0
 generate=0
 key_gen=0
 cib=0
+anywhere=0
 add_master=0
 verify=0
 working_dir="@CRM_CONFIG_CTS@/lxc"
@@ -28,6 +29,7 @@ function helptext() {
 	echo "-p, --restore-cib      Remove cib entries this script generated."
 	echo "-R, --restore-all      Restore both libvirt and cib plus clean working directory. This will leave libvirt xml files though so rsc can be stopped properly."
 	echo ""
+	echo "-A, --allow-anywhere   Allow the containers to live anywhere in the cluster"
 	echo "-a, --add-cib          Add remote-node entries for each lxc instance into the cib"
 	echo "-m, --add-master       Add master resource shared between remote-nodes"
 	echo "-d, --download-agent   Download and install the latest VirtualDomain agent."
@@ -56,6 +58,7 @@ while true ; do
 	-g|--generate) generate=1; shift;;
 	-k|--key-gen) key_gen=1; shift;;
 	-a|--add-cib) cib=1; shift;;
+	-A|--allow-anywhere) anywhere=1; shift;;
 	-m|--add-master) add_master=1; shift;;
 	-v|--verify) verify=1; shift;;
 	"") break;;
@@ -271,8 +274,10 @@ apply_cib_entries()
 	for tmp in $(ls container*.cib); do
 		cibadmin -o resources -Mc -x $tmp
 
-		tmp=$(echo $tmp | sed -e 's/\.cib//g')
-		crm_resource -M -r $tmp -H $node
+		if [ $anywhere -eq 0 ]; then
+			tmp=$(echo $tmp | sed -e 's/\.cib//g')
+			crm_resource -M -r $tmp -H $node
+		fi
 	done
 
 	# Make sure the version changes even if the contents doesn't
