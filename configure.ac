@@ -1171,6 +1171,9 @@ HAVE_upstart=0
 HAVE_systemd=0
 PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
 
+AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
+AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
+
 if test $HAVE_dbus = 1; then
    CFLAGS="$CFLAGS `$PKGCONFIG --cflags dbus-1`"
 fi

@@ -177,9 +177,10 @@ g_list_free_full(GList * list, GDestroyNotify free_func)
 }
 #  endif
 
-#  ifndef HAVE_DBUSBASICVALUE
-#    include <stdint.h>
-#    include <dbus/dbus.h>
+#  if SUPPORT_DBUS
+#    ifndef HAVE_DBUSBASICVALUE
+#      include <stdint.h>
+#      include <dbus/dbus.h>
 /**
  * An 8-byte struct you could use to access int64 without having
  * int64 support
@@ -208,16 +209,17 @@ typedef union
   int32_t  i32;   /**< as int32 */
   uint32_t u32;   /**< as int32 */
   uint32_t bool_val; /**< as boolean */
-#    ifdef DBUS_HAVE_INT64
+#      ifdef DBUS_HAVE_INT64
   int64_t  i64;   /**< as int64 */
   uint64_t u64;   /**< as int64 */
-#    endif
+#      endif
   DBus8ByteStruct eight; /**< as 8-byte struct */
   double dbl;          /**< as double */
   unsigned char byt;   /**< as byte */
   char *str;           /**< as char* (string, object path or signature) */
   int fd;              /**< as Unix file descriptor */
 } DBusBasicValue;
+#    endif
 #  endif
 
 /* Replacement error codes for non-linux */
