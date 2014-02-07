@@ -163,7 +163,11 @@ crm_uptime(struct timeval *output)
     time_t tm_now = time(NULL);
 
     if (expires < tm_now) {
-        int rc = getrusage(RUSAGE_SELF, &info);
+        int rc = 0;
+
+        info.ru_utime.tv_sec = 0;
+        info.ru_utime.tv_usec = 0;
+        rc = getrusage(RUSAGE_SELF, &info);
 
         output->tv_sec = 0;
         output->tv_usec = 0;
@@ -181,6 +185,7 @@ crm_uptime(struct timeval *output)
     expires = tm_now + STORM_INTERVAL;  /* N seconds after the last _access_ */
     output->tv_sec = info.ru_utime.tv_sec;
     output->tv_usec = info.ru_utime.tv_usec;
+
     return 1;
 }
 
@@ -189,11 +194,7 @@ crm_compare_age(struct timeval your_age)
 {
     struct timeval our_age;
 
-    if (crm_uptime(&our_age) < 0) {
-        return -1;
-    }
-
-    /* We want these times to be "significantly" different */
+    crm_uptime(&our_age); /* If an error occurred, our_age will be compared as {0,0} */
 
     if (our_age.tv_sec > your_age.tv_sec) {
         crm_debug("Win: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
@@ -410,11 +411,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         your_age.tv_usec = tv_usec;
 
         age = crm_compare_age(your_age);
-        if(your_age.tv_sec == 0 && your_age.tv_usec == 0) {
-            crm_log_xml_trace(vote, "bad vote");
-            crm_write_blackbox(0, NULL);
-        }
-
         if (crm_str_eq(from, e->uname, TRUE)) {
             char *op_copy = strdup(op);
             char *uname_copy = strdup(from);
