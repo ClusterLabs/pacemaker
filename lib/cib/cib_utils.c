@@ -444,7 +444,16 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          */
         local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
     } else {
-        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters, FALSE);
+        static time_t expires = 0;
+        time_t tm_now = time(NULL);
+        bool with_digest = FALSE;
+
+        if (expires < tm_now) {
+            expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
+            with_digest = TRUE;
+        }
+
+        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters, with_digest);
     }
 
     if (diff_cs == NULL) {
