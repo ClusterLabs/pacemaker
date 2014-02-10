@@ -808,7 +808,6 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
     int add[3];
     int del[3];
 
-
     const char *digest = NULL;
     int options = xml_log_option_formatted;
 
@@ -818,7 +817,11 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         patchset_cs = qb_log_callsite_get(function, __FILE__, "xml-patchset", log_level, __LINE__, 0);
     }
 
-    if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
+    if (patchset == NULL) {
+        crm_trace("Empty patch");
+        return;
+
+    } else if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
         return;
     }
 
