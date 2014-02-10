@@ -222,7 +222,7 @@ cibmon_diff(const char *event, xmlNode * msg)
     }
 
     if (log_diffs) {
-        log_cib_diff(log_level, diff, op);
+        xml_log_patchset(log_level, op, diff);
     }
 
     if (log_updates && update != NULL) {

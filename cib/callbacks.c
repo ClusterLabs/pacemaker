@@ -365,7 +365,7 @@ process_ping_reply(xmlNode *reply)
             if(remote_cib) {
                 /* Additional debug */
                 xml_calculate_changes(the_cib, remote_cib);
-                xml_log_changes(LOG_INFO, remote_cib);
+                xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);
                 free_xml(remote_cib);
             }
             crm_trace("End of differences");
@@ -1257,7 +1257,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         log_level = LOG_TRACE;
     }
 
-    log_cib_diff(log_level, *cib_diff, "cib:diff");
+    xml_log_patchset(log_level, "cib:diff", *cib_diff);
 
   done:
     if ((call_options & cib_discard_reply) == 0) {

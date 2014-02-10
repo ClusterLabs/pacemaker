@@ -797,7 +797,82 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
 }
 
 void
-xml_log_changes(int level, xmlNode *xml) 
+xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
+{
+    int format = 1;
+    xmlNode *child = NULL;
+    xmlNode *added = NULL;
+    xmlNode *removed = NULL;
+    gboolean is_first = TRUE;
+
+    int add[3];
+    int del[3];
+
+
+    const char *digest = NULL;
+    int options = xml_log_option_formatted;
+
+    static struct qb_log_callsite *patchset_cs = NULL;
+
+    if (patchset_cs == NULL) {
+        patchset_cs = qb_log_callsite_get(function, __FILE__, "xml-patchset", log_level, __LINE__, 0);
+    }
+
+    if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
+        return;
+    }
+
+    xml_patch_versions(patchset, add, del);
+    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+
+    if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
+                         "Diff: --- %d.%d.%d", del[0], del[1], del[2]);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
+                         "Diff: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+
+    } else if (patchset != NULL && (add[0] || add[1] || add[2])) {
+        do_crm_log(log_level,
+                   "%s: Local-only Change: %d.%d.%d", function ? function : "",
+                   add[0], add[1], add[2]);
+    }
+
+    crm_element_value_int(patchset, "format", &format);
+    if(format == 2) {
+        xml_log_changes(log_level, function, patchset);
+        return;
+    }
+
+    if (log_level < LOG_DEBUG || function == NULL) {
+        options |= xml_log_option_diff_short;
+    }
+
+    removed = find_xml_node(patchset, "diff-removed", FALSE);
+    for (child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
+        log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0,
+                         options | xml_log_option_diff_minus);
+        if (is_first) {
+            is_first = FALSE;
+        } else {
+            do_crm_log(log_level, " --- ");
+        }
+    }
+
+    is_first = TRUE;
+    added = find_xml_node(patchset, "diff-added", FALSE);
+    for (child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
+        log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child, 0,
+                         options | xml_log_option_diff_plus);
+        if (is_first) {
+            is_first = FALSE;
+        } else {
+            do_crm_log(log_level, " +++ ");
+        }
+    }
+}
+
+void
+xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
 {
     GListPtr gIter = NULL;
     xml_private_t *doc = NULL;
@@ -811,13 +886,13 @@ xml_log_changes(int level, xmlNode *xml)
     }
 
     for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
-        do_crm_log(level, "-- %s", gIter->data);
+        do_crm_log(log_level, "-- %s", gIter->data);
     }
 
-    log_data_element(level, __FILE__, __FUNCTION__, __LINE__, "- ", xml, 0,
+    log_data_element(log_level, __FILE__, function, __LINE__, "- ", xml, 0,
                      xml_log_option_formatted|xml_log_option_dirty_del);
 
-    log_data_element(level, __FILE__, __FUNCTION__, __LINE__, "+ ", xml, 0,
+    log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,
                      xml_log_option_formatted|xml_log_option_dirty_add);
 }
 
@@ -2909,50 +2984,6 @@ xml_remove_prop(xmlNode * obj, const char *name)
 }
 
 void
-log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function)
-{
-    xmlNode *child = NULL;
-    xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
-    xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
-    gboolean is_first = TRUE;
-    int options = xml_log_option_formatted;
-
-    static struct qb_log_callsite *diff_cs = NULL;
-
-    if (diff_cs == NULL) {
-        diff_cs = qb_log_callsite_get(function, __FILE__, "xml-diff", log_level, __LINE__, 0);
-    }
-
-    if (crm_is_callsite_active(diff_cs, log_level, 0) == FALSE) {
-        return;
-    }
-
-    if (log_level < LOG_DEBUG || function == NULL) {
-        options |= xml_log_option_diff_short;
-    }
-    for (child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-        log_data_element(log_level, __FILE__, function, __LINE__, "- ", child, 0,
-                         options | xml_log_option_diff_minus);
-        if (is_first) {
-            is_first = FALSE;
-        } else {
-            do_crm_log(log_level, " --- ");
-        }
-    }
-
-    is_first = TRUE;
-    for (child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-        log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child, 0,
-                         options | xml_log_option_diff_plus);
-        if (is_first) {
-            is_first = FALSE;
-        } else {
-            do_crm_log(log_level, " +++ ");
-        }
-    }
-}
-
-void
 purge_diff_markers(xmlNode * a_node)
 {
     xmlNode *child = NULL;
@@ -3191,7 +3222,7 @@ xml_calculate_changes(xmlNode * old, xmlNode * new)
 
     xml_track_changes(new);
     __xml_diff_object(old, new);
-    xml_log_changes(LOG_TRACE, new);
+    xml_log_changes(LOG_TRACE, __FUNCTION__, new);
 }
 
 xmlNode *

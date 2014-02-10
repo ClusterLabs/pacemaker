@@ -594,21 +594,6 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 }
 
 gboolean
-apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
-{
-    CRM_CHECK(diff != NULL, return FALSE);
-    CRM_CHECK(old != NULL, return FALSE);
-
-    *new = copy_xml(old);
-
-    if(xml_apply_patchset(*new, diff, TRUE) == pcmk_ok) {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-gboolean
 cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
 {
     int lpc = 0, max = 0;

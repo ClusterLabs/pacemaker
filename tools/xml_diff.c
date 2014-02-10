@@ -190,15 +190,12 @@ main(int argc, char **argv)
     }
 
     if (apply) {
-        if (as_cib == FALSE) {
-            apply_xml_diff(object_1, object_2, &output);
-        } else {
-            apply_cib_diff(object_1, object_2, &output);
-        }
+        output = copy_xml(object_1);
+        xml_apply_patchset(output, object_2, as_cib);
 
     } else {
         output = diff_xml_object(object_1, object_2, filter);
-        log_xml_diff(LOG_NOTICE, output, NULL);
+        xml_log_patchset(LOG_NOTICE, NULL, output);
     }
 
     if (output != NULL) {

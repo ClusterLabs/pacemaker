@@ -141,42 +141,6 @@ cib_get_generation(cib_t * cib)
     return generation;
 }
 
-void
-log_cib_diff(int log_level, xmlNode * diff, const char *function)
-{
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
-
-    const char *digest = NULL;
-
-    if (diff == NULL) {
-        return;
-    }
-
-    digest = crm_element_value(diff, XML_ATTR_DIGEST);
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
-
-    if (add_updates != del_updates) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: --- %d.%d.%d", del_admin_epoch, del_epoch, del_updates);
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: +++ %d.%d.%d %s", add_admin_epoch, add_epoch, add_updates, digest);
-
-    } else if (diff != NULL) {
-        do_crm_log(log_level,
-                   "%s: Local-only Change: %d.%d.%d", function ? function : "",
-                   add_admin_epoch, add_epoch, add_updates);
-    }
-
-    log_xml_diff(log_level, diff, function);
-}
-
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 {
@@ -461,7 +425,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
-    xml_log_changes(LOG_INFO, scratch);
+    xml_log_changes(LOG_INFO, __FUNCTION__, scratch);
     if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
@@ -755,7 +719,7 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
     }
 
     if (level > LOG_CRIT) {
-        log_cib_diff(level, diff, "Config update");
+        xml_log_patchset(level, "Config update", diff);
     }
 
     if (input != NULL) {
