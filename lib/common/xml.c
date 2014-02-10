@@ -740,6 +740,11 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     bool config = FALSE;
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    xml_private_t *p = target->_private;
+
+    if(p && is_not_set(p->flags, xpf_dirty)) {
+        return NULL; /* No change */
+    }
 
     config = is_config_change(target);
     if(config_changed) {
@@ -1807,7 +1812,7 @@ free_xml(xmlNode * child)
                 char buffer[XML_BUFFER_SIZE];
 
                 if(__get_prefix(NULL, child, buffer, offset) > 0) {
-                    crm_notice("Deleting %s %p from %p", buffer, child, doc);
+                    crm_trace("Deleting %s %p from %p", buffer, child, doc);
                     p = doc->_private;
                     p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
                     set_doc_flag(child, xpf_dirty);
