@@ -1373,14 +1373,14 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
             continue;
 
         } else if(strcmp(op, "create") == 0) {
-            int lpc = 0;
             int position = 0;
             xmlNode *child = NULL;
             xmlNode *match_child = NULL;
 
             match_child = match->children;
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
-            for(lpc = 0; match_child && lpc < position; lpc++) {
+
+            while(match_child && position != __xml_offset(match_child)) {
                 match_child = match_child->next;
             }
 
