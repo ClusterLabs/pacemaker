@@ -740,8 +740,12 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     bool config = FALSE;
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-    xml_private_t *p = target->_private;
+    xml_private_t *p = NULL;
 
+    CRM_CHECK(target != NULL, return NULL);
+    CRM_CHECK(target->doc != NULL, return NULL);
+
+    p = target->doc->_private;
     if(p && is_not_set(p->flags, xpf_dirty)) {
         return NULL; /* No change */
     }
@@ -808,6 +812,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
     int add[3];
     int del[3];
 
+    const char *fmt = NULL;
     const char *digest = NULL;
     int options = xml_log_option_formatted;
 
@@ -826,11 +831,12 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
     }
 
     xml_patch_versions(patchset, add, del);
+    fmt = crm_element_value(patchset, "format");
     digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
         do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: --- %d.%d.%d", del[0], del[1], del[2]);
+                         "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         do_crm_log_alias(log_level, __FILE__, function, __LINE__,
                          "Diff: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
 
@@ -1487,6 +1493,8 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     if(patchset == NULL) {
         return rc;
     }
+
+    xml_log_patchset(LOG_TRACE, __FUNCTION__, patchset);
 
     crm_element_value_int(patchset, "format", &format);
     if(check_version) {
