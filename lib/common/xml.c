@@ -199,6 +199,7 @@ set_parent_flag(xmlNode *xml, long flag)
             /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
         } else {
             p->flags |= flag;
+            /* crm_trace("Setting flag %x due to %s[@id=%s]", flag, xml->name, ID(xml)); */
         }
     }
 }
@@ -212,6 +213,7 @@ set_doc_flag(xmlNode *xml, long flag)
         xml_private_t *p = xml->doc->_private;
 
         p->flags |= flag;
+        /* crm_trace("Setting flag %x due to %s[@id=%s]", flag, xml->name, ID(xml)); */
     }
 }
 
@@ -249,6 +251,8 @@ crm_attr_dirty(xmlAttr *a)
     p = a->_private;
     p->flags |= xpf_dirty;
     p->flags = (p->flags & ~xpf_deleted);
+    /* crm_trace("Setting flag %x due to %s[@id=%s, @%s=%s]", */
+    /*           xpf_dirty, parent?parent->name:NULL, ID(parent), a->name, a->children->content); */
 
     crm_node_dirty(parent);
 }
@@ -740,13 +744,9 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     bool config = FALSE;
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-    xml_private_t *p = NULL;
 
-    CRM_CHECK(target != NULL, return NULL);
-    CRM_CHECK(target->doc != NULL, return NULL);
-
-    p = target->doc->_private;
-    if(p && is_not_set(p->flags, xpf_dirty)) {
+    if(xml_document_dirty(target) == FALSE) {
+        crm_trace("No change %d", format);
         return NULL; /* No change */
     }
 
@@ -756,12 +756,14 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(manage_version && config) {
+        crm_trace("Config changed %d", format);
         crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
 
         crm_element_value_int(target, XML_ATTR_GENERATION, &counter);
         crm_xml_add_int(target, XML_ATTR_GENERATION, counter+1);
 
     } else if(manage_version) {
+        crm_trace("Status changed %d", format);
         crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
         crm_xml_add_int(target, XML_ATTR_NUMUPDATES, counter+1);
     }
@@ -926,6 +928,8 @@ xml_accept_changes(xmlNode * xml)
     }
 
     __xml_accept_changes(top);
+    doc->flags = (doc->flags & ~xpf_dirty);
+
     g_list_free_full(doc->deleted_paths, free);
     doc->deleted_paths = NULL;
 }
@@ -2988,6 +2992,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
         xml_private_t *p = obj->_private;
 
         p->flags |= xpf_dirty;
+        /* crm_trace("Setting flag %x due to %s[@id=%s].%s", xpf_dirty, obj->name, ID(obj), name); */
 
     } else {
         xmlUnsetProp(obj, (const xmlChar *)name);
@@ -3195,6 +3200,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
             if(__get_prefix(NULL, cIter, buffer, offset) > 0) {
                 p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
+                /* crm_trace("Setting flag %x due to %s", xpf_dirty, buffer); */
                 p->flags |= xpf_dirty;
             }
 
