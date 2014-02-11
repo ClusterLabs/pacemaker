@@ -639,24 +639,19 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
 
-    if (crm_is_true(update) && safe_str_neq(op, CIB_OP_REPLACE)) {
-        crm_trace("Ingoring legacy %s global update from %s", op, originator);
-        return FALSE;
+    if(safe_str_eq(op, CIB_OP_REPLACE) || safe_str_eq(op, CIB_OP_SYNC)) {
 
     } else if (is_reply && safe_str_eq(op, CRM_OP_PING)) {
         process_ping_reply(request);
         return FALSE;
 
+    } else if (crm_is_true(update)) {
+        crm_trace("Ingoring legacy %s global update from %s", op, originator);
+        return FALSE;
+
     } else if (is_reply && cib_op_modifies(call_type)) {
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
-
-    } else if(is_reply) {
-        crm_trace("Handling %s reply sent from %s to local clients", op, originator);
-        *process = FALSE;
-        *needs_reply = FALSE;
-        *local_notify = TRUE;
-        return TRUE;
 
     } else if (safe_str_eq(op, "cib_shutdown_req")) {
         /* Legacy handling */
@@ -666,6 +661,14 @@ parse_peer_options_v2(int call_type, xmlNode * request,
             *process = TRUE;
         }
         return *process;
+    }
+
+    if(is_reply) {
+        crm_trace("Handling %s reply sent from %s to local clients", op, originator);
+        *process = FALSE;
+        *needs_reply = FALSE;
+        *local_notify = TRUE;
+        return TRUE;
     }
 
     *process = TRUE;
@@ -817,6 +820,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *target = NULL;
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+    const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
     if (cib_client) {
         from_peer = FALSE;
@@ -850,8 +854,8 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     if (from_peer) {
-        crm_trace("Processing peer %s operation from %s on %s intended for %s",
-                  op, client_id, originator, target);
+        crm_trace("Processing peer %s operation from %s on %s intended for %s (reply=%s)",
+                  op, client_id, originator, target, reply_to);
     } else {
         crm_xml_add(request, F_ORIG, cib_our_uname);
         crm_trace("Processing local %s operation from %s intended for %s", op, client_id, target);
@@ -1114,6 +1118,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (global_update) {
         manage_counters = FALSE;
         call_options |= cib_force_diff;
+        crm_trace("Global update detected");
 
         CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
                   crm_log_xml_err(request, "bad op"));
