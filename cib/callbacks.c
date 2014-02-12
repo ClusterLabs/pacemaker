@@ -631,7 +631,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
                    gboolean * needs_forward)
 {
     const char *host = NULL;
-    const char *delegated = NULL;
+    const char *delegated = crm_element_value(request, F_CIB_DELEGATED);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *originator = crm_element_value(request, F_ORIG);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
@@ -639,7 +639,12 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
 
-    if(safe_str_eq(op, CIB_OP_REPLACE) || safe_str_eq(op, CIB_OP_SYNC)) {
+    if(safe_str_eq(op, CIB_OP_REPLACE)) {
+        /* sync_our_cib() sets F_CIB_ISREPLY */
+        delegated = reply_to;
+        goto skip_is_reply;
+
+    } else if(safe_str_eq(op, CIB_OP_SYNC)) {
 
     } else if (is_reply && safe_str_eq(op, CRM_OP_PING)) {
         process_ping_reply(request);
@@ -671,10 +676,10 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         return TRUE;
     }
 
+  skip_is_reply:
     *process = TRUE;
     *needs_reply = FALSE;
 
-    delegated = crm_element_value(request, F_CIB_DELEGATED);
     if(safe_str_eq(delegated, cib_our_uname)) {
         *local_notify = TRUE;
     } else {
