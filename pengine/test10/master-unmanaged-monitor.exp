@@ -1,6 +1,69 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="r192.168.122.112_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="r192.168.122.112" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="6" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.112"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="3" operation="cancel" operation_key="r192.168.122.113_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="r192.168.122.113" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="7" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.113"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="4" operation="cancel" operation_key="r192.168.122.114_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="r192.168.122.114" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="8" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.114"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="7" operation="cancel" operation_key="rsc_pcmk-1_monitor_5000" on_node="pcmk-1" on_node_uuid="pcmk-1">
+        <primitive id="rsc_pcmk-1" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="8" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.115"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="1" operation="cancel" operation_key="rsc_pcmk-2_monitor_5000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+        <primitive id="rsc_pcmk-2" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="8" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.116"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="5" operation="cancel" operation_key="rsc_pcmk-3_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
+        <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="12" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.117"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="6" operation="cancel" operation_key="rsc_pcmk-4_monitor_5000" on_node="pcmk-4" on_node_uuid="pcmk-4">
+        <primitive id="rsc_pcmk-4" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="11" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="60000" cidr_netmask="32"  ip="192.168.122.118"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
       <rsc_op id="46" operation="monitor" operation_key="lsb-dummy_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="lsb-dummy" class="lsb" type="/usr/share/pacemaker/tests/cts/LSBDummy"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="60000" />
@@ -8,7 +71,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="1">
+  <synapse id="8">
     <action_set>
       <rsc_op id="49" operation="monitor" operation_key="migrator_monitor_10000" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
@@ -17,7 +80,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="2">
+  <synapse id="9">
     <action_set>
       <rsc_op id="52" operation="monitor" operation_key="ping-1:0_monitor_60000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="ping-1" long-id="ping-1:0" class="ocf" provider="pacemaker" type="ping"/>
@@ -26,7 +89,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="3">
+  <synapse id="10">
     <action_set>
       <rsc_op id="55" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:1_monitor_60000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="ping-1" long-id="ping-1:0" class="ocf" provider="pacemaker" type="ping"/>
@@ -35,7 +98,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="4">
+  <synapse id="11">
     <action_set>
       <rsc_op id="58" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:2_monitor_60000" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <primitive id="ping-1" long-id="ping-1:0" class="ocf" provider="pacemaker" type="ping"/>
@@ -44,7 +107,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="5">
+  <synapse id="12">
     <action_set>
       <rsc_op id="61" operation="monitor" operation_key="ping-1:0_monitor_60000" internal_operation_key="ping-1:3_monitor_60000" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="ping-1" long-id="ping-1:0" class="ocf" provider="pacemaker" type="ping"/>
@@ -53,7 +116,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="6">
+  <synapse id="13">
     <action_set>
       <rsc_op id="68" operation="monitor" operation_key="stateful-1:0_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -62,7 +125,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="7">
+  <synapse id="14">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="stateful-1:0_monitor_0" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -71,7 +134,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="8">
+  <synapse id="15">
     <action_set>
       <rsc_op id="73" operation="monitor" operation_key="stateful-1:0_monitor_16000" internal_operation_key="stateful-1:1_monitor_16000" on_node="pcmk-3" on_node_uuid="pcmk-3">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -80,7 +143,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="9">
+  <synapse id="16">
     <action_set>
       <rsc_op id="76" operation="monitor" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:2_monitor_15000" on_node="pcmk-4" on_node_uuid="pcmk-4">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -89,7 +152,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="10" priority="1000000">
+  <synapse id="17" priority="1000000">
     <action_set>
       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <attributes CRM_meta_op_no_wait="true" />
@@ -101,7 +164,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="18">
     <action_set>
       <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete">
         <attributes />

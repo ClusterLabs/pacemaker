@@ -255,6 +255,15 @@
   </synapse>
   <synapse id="16">
     <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="d_bird6_cancel_10000" internal_operation_key="d_bird6:0_monitor_10000" on_node="DEM-1" on_node_uuid="DEM-1">
+        <primitive id="d_bird6" long-id="d_bird6:0" class="lsb" type="bird6"/>
+        <attributes CRM_meta_call_id="48" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_operation="monitor" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="17">
+    <action_set>
       <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>

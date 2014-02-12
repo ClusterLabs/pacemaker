@@ -10,6 +10,7 @@ Online: [ pcmk-1 pcmk-2 ]
 Transition Summary:
 
 Executing cluster transition:
+ * Resource action: r192.168.122.114 cancel=5000 on pcmk-1
 
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 ]

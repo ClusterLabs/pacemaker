@@ -60,18 +60,21 @@ Executing cluster transition:
  * Resource action: rsc_c001n02     monitor on c001n07
  * Resource action: rsc_c001n02     monitor on c001n05
  * Resource action: rsc_c001n02     monitor on c001n04
+ * Resource action: rsc_c001n02     cancel=5000 on c001n02
  * Resource action: rsc_c001n03     monitor on c001n09
  * Resource action: rsc_c001n03     monitor on c001n08
  * Resource action: rsc_c001n03     monitor on c001n07
  * Resource action: rsc_c001n03     monitor on c001n05
  * Resource action: rsc_c001n03     monitor on c001n04
  * Resource action: rsc_c001n03     monitor on c001n02
+ * Resource action: rsc_c001n03     cancel=5000 on c001n03
  * Resource action: rsc_c001n04     monitor on c001n09
  * Resource action: rsc_c001n04     monitor on c001n08
  * Resource action: rsc_c001n04     monitor on c001n07
  * Resource action: rsc_c001n04     monitor on c001n05
  * Resource action: rsc_c001n04     monitor on c001n03
  * Resource action: rsc_c001n04     monitor on c001n02
+ * Resource action: rsc_c001n04     cancel=5000 on c001n04
  * Resource action: rsc_c001n05     monitor on c001n09
  * Resource action: rsc_c001n05     monitor on c001n08
  * Resource action: rsc_c001n05     monitor on c001n07
@@ -79,20 +82,24 @@ Executing cluster transition:
  * Resource action: rsc_c001n05     monitor on c001n04
  * Resource action: rsc_c001n05     monitor on c001n03
  * Resource action: rsc_c001n05     monitor on c001n02
+ * Resource action: rsc_c001n05     cancel=5000 on c001n05
  * Resource action: rsc_c001n06     monitor on c001n09
  * Resource action: rsc_c001n06     monitor on c001n08
  * Resource action: rsc_c001n06     monitor on c001n07
  * Resource action: rsc_c001n06     monitor on c001n05
  * Resource action: rsc_c001n06     monitor on c001n04
  * Resource action: rsc_c001n06     monitor on c001n03
+ * Resource action: rsc_c001n06     cancel=5000 on c001n06
  * Resource action: rsc_c001n07     monitor on c001n09
  * Resource action: rsc_c001n07     monitor on c001n08
  * Resource action: rsc_c001n07     monitor on c001n06
  * Resource action: rsc_c001n07     monitor on c001n05
  * Resource action: rsc_c001n07     monitor on c001n04
+ * Resource action: rsc_c001n07     cancel=5000 on c001n07
  * Resource action: rsc_c001n08     monitor on c001n09
  * Resource action: rsc_c001n08     monitor on c001n07
  * Resource action: rsc_c001n08     monitor on c001n05
+ * Resource action: rsc_c001n08     cancel=5000 on c001n08
  * Resource action: child_DoFencing:0 monitor on c001n09
  * Resource action: child_DoFencing:0 monitor on c001n08
  * Resource action: child_DoFencing:0 monitor on c001n07

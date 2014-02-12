@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="1" operation="cancel" operation_key="rsc1_monitor_20000" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Stopped" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_call_id="2" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Stopped" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

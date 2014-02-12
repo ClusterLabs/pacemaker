@@ -1,4 +1,12 @@
  digraph "g" {
+"Cancel child_DoFencing:0_monitor_5000 c001n02" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:1_monitor_5000 c001n03" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:2_monitor_5000 c001n04" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:3_monitor_5000 c001n05" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:4_monitor_5000 c001n06" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:5_monitor_5000 c001n07" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:6_monitor_5000 c001n08" [ style=bold color="green" fontcolor="black"]
+"Cancel child_DoFencing:7_monitor_5000 c001n09" [ style=bold color="green" fontcolor="black"]
 "DcIPaddr_monitor_0 c001n02" -> "probe_complete c001n02" [ style = bold]
 "DcIPaddr_monitor_0 c001n02" [ style=bold color="green" fontcolor="black" ]
 "DcIPaddr_monitor_0 c001n03" -> "probe_complete c001n03" [ style = bold]

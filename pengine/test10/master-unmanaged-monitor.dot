@@ -1,4 +1,11 @@
 digraph "g" {
+"Cancel r192.168.122.112_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
+"Cancel r192.168.122.113_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
+"Cancel r192.168.122.114_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
+"Cancel rsc_pcmk-1_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"Cancel rsc_pcmk-2_monitor_5000 pcmk-2" [ style=bold color="green" fontcolor="black"]
+"Cancel rsc_pcmk-3_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
+"Cancel rsc_pcmk-4_monitor_5000 pcmk-4" [ style=bold color="green" fontcolor="black"]
 "lsb-dummy_monitor_5000 pcmk-3" [ style=bold color="green" fontcolor="black"]
 "migrator_monitor_10000 pcmk-4" [ style=bold color="green" fontcolor="black"]
 "ping-1:0_monitor_60000 pcmk-1" [ style=bold color="green" fontcolor="black"]
