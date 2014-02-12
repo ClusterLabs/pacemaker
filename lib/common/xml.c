@@ -2529,7 +2529,7 @@ log_data_element(int log_level, const char *file, const char *function, int line
             for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
 
                 p = pIter->_private;
-                if(is_set(p->flags, xpf_dirty)) {
+                if(is_not_set(p->flags, xpf_deleted) && is_set(p->flags, xpf_dirty)) {
                     const char *aname = (const char*)pIter->name;
                     const char *value = crm_element_value(data, aname);
 
@@ -2989,9 +2989,11 @@ xml_remove_prop(xmlNode * obj, const char *name)
 {
     if(TRACKING_CHANGES(obj)) {
         /* Leave in place (marked for removal) until after the diff is calculated */
-        xml_private_t *p = obj->_private;
+        xml_private_t *p = NULL;
+        xmlAttr *attr = xmlHasProp(obj, (const xmlChar *)name);
 
-        p->flags |= xpf_dirty;
+        p = attr->_private;
+        p->flags |= xpf_dirty|xpf_deleted;
         /* crm_trace("Setting flag %x due to %s[@id=%s].%s", xpf_dirty, obj->name, ID(obj), name); */
 
     } else {
@@ -3151,11 +3153,11 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         xmlAttr *exists = xmlHasProp(new, pIter->name);
 
         if(exists == NULL) {
-            crm_trace("Lost %s@%s=%s", old->name, name, old_value);
             exists = xmlSetProp(new, (const xmlChar *)name, (const xmlChar *)old_value);
             p = exists->_private;
             p->flags = (p->flags & ~xpf_created);
             xml_remove_prop(new, name);
+            crm_trace("Lost %s@%s=%s %x %p", old->name, name, old_value, p->flags, p);
 
         } else {
             int p_new = __xml_offset((xmlNode*)exists);
