@@ -444,7 +444,7 @@ update_action(action_t * then)
         first_flags = get_action_flags(first, then_node);
         then_flags = get_action_flags(then, first_node);
 
-        crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) 0x%.6x",
+        crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) filter=0x%.6x type=0x%.6x",
                   then->uuid,
                   is_set(then_flags, pe_action_optional) ? "optional" : "required",
                   is_set(then_flags, pe_action_runnable) ? "runnable" : "unrunnable",
@@ -455,7 +455,7 @@ update_action(action_t * then)
                   is_set(first_flags, pe_action_runnable) ? "runnable" : "unrunnable",
                   is_set(first_flags,
                          pe_action_pseudo) ? "pseudo" : first->node ? first->node->details->
-                  uname : "", other->type);
+                  uname : "", first_flags, other->type);
 
         if (first == other->action) {
             clear_bit(first_flags, pe_action_pseudo);
@@ -554,7 +554,7 @@ shutdown_constraints(node_t * node, action_t * shutdown_op, pe_working_set_t * d
 
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
                      node->details->uname);
-        clear_bit(action->flags, pe_action_optional);
+        pe_clear_action_bit(action, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional | pe_order_runnable_left, data_set);

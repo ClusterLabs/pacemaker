@@ -124,6 +124,7 @@ typedef struct pe_working_set_s {
 struct node_shared_s {
     const char *id;
     const char *uname;
+/* Make all these flags into a bitfield one day */
     gboolean online;
     gboolean standby;
     gboolean standby_onfail;

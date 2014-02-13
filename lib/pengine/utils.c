@@ -380,9 +380,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
     if (action == NULL) {
         if (save_action) {
-            pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s",
+            pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s %d",
                          optional ? "" : " manditory", data_set->action_id, key,
-                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>");
+                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>", optional);
         }
 
         action = calloc(1, sizeof(action_t));
@@ -402,9 +402,11 @@ custom_action(resource_t * rsc, char *key, const char *task,
         pe_set_action_bit(action, pe_action_failure_is_fatal);
         pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
+            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
             pe_set_action_bit(action, pe_action_optional);
         } else {
             pe_clear_action_bit(action, pe_action_optional);
+            pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
         }
 
 /*
@@ -442,7 +444,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
     }
 
     if (optional == FALSE) {
-        pe_rsc_trace(rsc, "Action %d (%s) marked manditory", action->id, action->uuid);
+        pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
         pe_clear_action_bit(action, pe_action_optional);
     }
 
@@ -466,11 +468,13 @@ custom_action(resource_t * rsc, char *key, const char *task,
             /* leave untouched */
 
         } else if (action->node == NULL) {
+            pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
             pe_clear_action_bit(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
+            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
             pe_set_action_bit(action, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
