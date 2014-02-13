@@ -70,6 +70,7 @@ class LabEnvironment(CtsLab):
         CtsLab.__init__(self)
 
         #  Get a random seed for the random number generator.
+        self["IPagent"] = "IPaddr2"
         self["DoStandby"] = 1
         self["DoFencing"] = 1
         self["XmitLoss"] = "0.0"
@@ -367,12 +368,16 @@ if __name__ == '__main__':
                Environment["stonith-params"] = "delay=0"
                Environment["IPBase"] = " fe80::1234:56:7890:1000"
 
-           elif args[i+1] == "east16":
+           elif args[i+1] == "east16" or args[i+1] == "nsew":
                Environment["Stack"] = "corosync"
                Environment["DoStonith"]=1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
                Environment["IPBase"] = " fe80::1234:56:7890:2000"
+
+               if args[i+1] == "east16":
+                   # Requires newer python than available via nsew
+                   Environment["IPagent"] = "Dummy"
 
            elif args[i+1] == "corosync8":
                Environment["Stack"] = "corosync"

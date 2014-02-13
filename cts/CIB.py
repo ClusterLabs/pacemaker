@@ -70,6 +70,7 @@ class ConfigBase:
 class CIB11(ConfigBase):
     feature_set = "3.0"
     version = "pacemaker-1.1"
+    counter = 1
 
     def _show(self, command=""):
         output = ""
@@ -80,21 +81,28 @@ class CIB11(ConfigBase):
         return output
 
     def NewIP(self, name=None, standard="ocf"):
-        ip = self.NextIP()
-        if not name:
-            if ":" in ip:
-                (prefix, sep, suffix) = ip.rpartition(":")
-                name = "r"+suffix
-            else:
-                name = "r"+ip
+        if self.CM.Env["IPagent"] == "IPaddr2":
+            ip = self.NextIP()
+            if not name:
+                if ":" in ip:
+                    (prefix, sep, suffix) = ip.rpartition(":")
+                    name = "r"+suffix
+                else:
+                    name = "r"+ip
 
-        r = Resource(self.Factory, name, "IPaddr2", standard)
-        r["ip"] = ip
+            r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
+            r["ip"] = ip
         
-        if ":" in ip:
-            r["cidr_netmask"] = "64"
+            if ":" in ip:
+                r["cidr_netmask"] = "64"
+            else:
+                r["cidr_netmask"] = "32"
+
         else:
-            r["cidr_netmask"] = "32"
+            if not name:
+                name = "r%s%d" % (self.CM.Env["IPagent"], counter)
+                self.counter = self.counter + 1
+
 
         r.add_op("monitor", "5s")
         return r
