@@ -1,0 +1,88 @@
+
+Current cluster status:
+Online: [ rhos4-node3 rhos4-node4 ]
+
+ virt-fencing	(stonith:fence_xvm):	Started rhos4-node3 
+ Resource Group: mysql-group
+     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3 
+     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3 
+     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3 
+ Clone Set: qpidd-clone [qpidd]
+     Started: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: keystone-clone [keystone]
+     Started: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: glance-clone [glance]
+     Started: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: cinder-clone [cinder]
+     Started: [ rhos4-node3 rhos4-node4 ]
+
+Transition Summary:
+ * Stop    qpidd:0	(rhos4-node4)
+ * Stop    qpidd:1	(rhos4-node3)
+ * Stop    keystone:0	(Started rhos4-node4)
+ * Stop    keystone:1	(Started rhos4-node3)
+ * Stop    glance-fs:0	(Started rhos4-node4)
+ * Stop    glance-registry:0	(Started rhos4-node4)
+ * Stop    glance-api:0	(Started rhos4-node4)
+ * Stop    glance-fs:1	(Started rhos4-node3)
+ * Stop    glance-registry:1	(Started rhos4-node3)
+ * Stop    glance-api:1	(Started rhos4-node3)
+ * Stop    cinder-api:0	(Started rhos4-node4)
+ * Stop    cinder-scheduler:0	(Started rhos4-node4)
+ * Stop    cinder-volume:0	(Started rhos4-node4)
+ * Stop    cinder-api:1	(Started rhos4-node3)
+ * Stop    cinder-scheduler:1	(Started rhos4-node3)
+ * Stop    cinder-volume:1	(Started rhos4-node3)
+
+Executing cluster transition:
+ * Pseudo action:   cinder-clone_stop_0
+ * Pseudo action:   cinder:0_stop_0
+ * Resource action: cinder-volume   stop on rhos4-node4
+ * Pseudo action:   cinder:1_stop_0
+ * Resource action: cinder-volume   stop on rhos4-node3
+ * Resource action: cinder-scheduler stop on rhos4-node4
+ * Resource action: cinder-scheduler stop on rhos4-node3
+ * Resource action: cinder-api      stop on rhos4-node4
+ * Resource action: cinder-api      stop on rhos4-node3
+ * Pseudo action:   cinder:0_stopped_0
+ * Pseudo action:   cinder:1_stopped_0
+ * Pseudo action:   cinder-clone_stopped_0
+ * Pseudo action:   glance-clone_stop_0
+ * Pseudo action:   glance:0_stop_0
+ * Resource action: glance-api      stop on rhos4-node4
+ * Pseudo action:   glance:1_stop_0
+ * Resource action: glance-api      stop on rhos4-node3
+ * Resource action: glance-registry stop on rhos4-node4
+ * Resource action: glance-registry stop on rhos4-node3
+ * Resource action: glance-fs       stop on rhos4-node4
+ * Resource action: glance-fs       stop on rhos4-node3
+ * Pseudo action:   glance:0_stopped_0
+ * Pseudo action:   glance:1_stopped_0
+ * Pseudo action:   glance-clone_stopped_0
+ * Pseudo action:   keystone-clone_stop_0
+ * Resource action: keystone        stop on rhos4-node4
+ * Resource action: keystone        stop on rhos4-node3
+ * Pseudo action:   keystone-clone_stopped_0
+ * Pseudo action:   qpidd-clone_stop_0
+ * Resource action: qpidd           stop on rhos4-node4
+ * Resource action: qpidd           stop on rhos4-node3
+ * Pseudo action:   qpidd-clone_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ rhos4-node3 rhos4-node4 ]
+
+ virt-fencing	(stonith:fence_xvm):	Started rhos4-node3 
+ Resource Group: mysql-group
+     mysql-vip	(ocf::heartbeat:IPaddr2):	Started rhos4-node3 
+     mysql-fs	(ocf::heartbeat:Filesystem):	Started rhos4-node3 
+     mysql-db	(ocf::heartbeat:mysql):	Started rhos4-node3 
+ Clone Set: qpidd-clone [qpidd]
+     Stopped: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: keystone-clone [keystone]
+     Stopped: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: glance-clone [glance]
+     Stopped: [ rhos4-node3 rhos4-node4 ]
+ Clone Set: cinder-clone [cinder]
+     Stopped: [ rhos4-node3 rhos4-node4 ]
+

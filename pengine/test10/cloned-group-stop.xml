@@ -1,0 +1,262 @@
+<cib epoch="84" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Mon Dec  2 06:37:23 2013" update-origin="rhos4-node3" update-client="crmd" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="rhos4-node4">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-14.el6-368c726"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1385962643"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="rhos4-node4" uname="rhos4-node4"/>
+      <node id="rhos4-node3" uname="rhos4-node3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="virt-fencing" type="fence_xvm">
+        <instance_attributes id="virt-fencing-instance_attributes"/>
+        <operations>
+          <op id="virt-fencing-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <group id="mysql-group">
+        <primitive class="ocf" id="mysql-vip" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="mysql-vip-instance_attributes">
+            <nvpair id="mysql-vip-instance_attributes-ip" name="ip" value="192.168.2.190"/>
+          </instance_attributes>
+          <operations>
+            <op id="mysql-vip-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="mysql-fs" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="mysql-fs-instance_attributes">
+            <nvpair id="mysql-fs-instance_attributes-device" name="device" value="192.168.0.2:/srv/vms/clusters/nfs-storage/db"/>
+            <nvpair id="mysql-fs-instance_attributes-directory" name="directory" value="/var/lib/mysql"/>
+            <nvpair id="mysql-fs-instance_attributes-fstype" name="fstype" value="nfs"/>
+            <nvpair id="mysql-fs-instance_attributes-options" name="options" value="v3"/>
+          </instance_attributes>
+          <operations>
+            <op id="mysql-fs-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="mysql-db" provider="heartbeat" type="mysql">
+          <instance_attributes id="mysql-db-instance_attributes">
+            <nvpair id="mysql-db-instance_attributes-config" name="config" value="/var/lib/mysql/my.cnf"/>
+            <nvpair id="mysql-db-instance_attributes-enable_creation" name="enable_creation" value="1"/>
+          </instance_attributes>
+          <operations>
+            <op id="mysql-db-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+          <meta_attributes id="mysql-db-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="mysql-group-meta_attributes"/>
+      </group>
+      <clone id="qpidd-clone">
+        <primitive class="lsb" id="qpidd" type="qpidd">
+          <instance_attributes id="qpidd-instance_attributes"/>
+          <operations>
+            <op id="qpidd-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+          <meta_attributes id="qpidd-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="beekhof-meta_attributes">
+	  <nvpair id="beekhof" name="target-role" value="Stopped"/>
+	</meta_attributes>
+      </clone>
+      <clone id="keystone-clone">
+        <primitive class="lsb" id="keystone" type="openstack-keystone">
+          <instance_attributes id="keystone-instance_attributes"/>
+          <operations>
+            <op id="keystone-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="keystone-clone-meta"/>
+        <meta_attributes id="keystone-clone-meta_attributes"/>
+      </clone>
+      <clone id="glance-clone">
+        <group id="glance">
+          <primitive class="ocf" id="glance-fs" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="glance-fs-instance_attributes">
+              <nvpair id="glance-fs-instance_attributes-device" name="device" value="192.168.0.2:/srv/vms/clusters/nfs-storage/glance"/>
+              <nvpair id="glance-fs-instance_attributes-directory" name="directory" value="/var/lib/glance/"/>
+              <nvpair id="glance-fs-instance_attributes-fstype" name="fstype" value="nfs"/>
+              <nvpair id="glance-fs-instance_attributes-options" name="options" value="v3"/>
+            </instance_attributes>
+            <operations>
+              <op id="glance-fs-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive class="lsb" id="glance-registry" type="openstack-glance-registry">
+            <instance_attributes id="glance-registry-instance_attributes"/>
+            <operations>
+              <op id="glance-registry-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive class="lsb" id="glance-api" type="openstack-glance-api">
+            <instance_attributes id="glance-api-instance_attributes"/>
+            <operations>
+              <op id="glance-api-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+        </group>
+        <meta_attributes id="glance-clone-meta"/>
+      </clone>
+      <clone id="cinder-clone">
+        <group id="cinder">
+          <primitive class="lsb" id="cinder-api" type="openstack-cinder-api">
+            <instance_attributes id="cinder-api-instance_attributes"/>
+            <operations>
+              <op id="cinder-api-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive class="lsb" id="cinder-scheduler" type="openstack-cinder-scheduler">
+            <instance_attributes id="cinder-scheduler-instance_attributes"/>
+            <operations>
+              <op id="cinder-scheduler-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive class="lsb" id="cinder-volume" type="openstack-cinder-volume">
+            <instance_attributes id="cinder-volume-instance_attributes"/>
+            <operations>
+              <op id="cinder-volume-monitor-interval-60s" interval="60s" name="monitor"/>
+            </operations>
+          </primitive>
+          <meta_attributes id="cinder-meta_attributes"/>
+        </group>
+        <meta_attributes id="cinder-clone-meta"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="mysql-group" first-action="start" id="order-mysql-group-qpidd-mandatory" then="qpidd-clone" then-action="start" kind="Mandatory"/>
+      <rsc_order first="qpidd-clone" first-action="start" id="order-qpidd-keystone-mandatory" then="keystone-clone" then-action="start" kind="Mandatory"/>
+      <rsc_order first="keystone-clone" first-action="start" id="order-keystone-glance-mandatory" then="glance-clone" then-action="start" kind="Mandatory"/>
+      <rsc_order first="glance-clone" first-action="start" id="order-glance-cinder-mandatory" then="cinder-clone" then-action="start" kind="Mandatory"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="rhos4-node4" uname="rhos4-node4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="rhos4-node4">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:0:7:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:7;17:0:7:1dc37633-912f-4e30-acd3-f2c748486137" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1385962284" last-rc-change="1385962284" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-vip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-vip_last_0" operation_key="mysql-vip_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="27:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;27:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="148" rc-code="0" op-status="0" interval="0" last-run="1385962321" last-rc-change="1385962321" exec-time="184" queue-time="0" op-digest="f456ad0484db3074c7ec70f3f6326bdd"/>
+            <lrm_rsc_op id="mysql-vip_monitor_60000" operation_key="mysql-vip_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="32:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;32:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="103" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962287" exec-time="281" queue-time="0" op-digest="e3c4387faf0b0f7c20411bb85f0d8945"/>
+          </lrm_resource>
+          <lrm_resource id="glance-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="glance-fs_last_0" operation_key="glance-fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="67:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;67:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1385962286" last-rc-change="1385962286" exec-time="418" queue-time="0" op-digest="268be68d4cd15c8d98a248e6f868b30d"/>
+            <lrm_rsc_op id="glance-fs_monitor_60000" operation_key="glance-fs_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="68:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;68:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="98" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962287" exec-time="267" queue-time="0" op-digest="dbdd6227256aa9fb321fc67e89376c9d"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-fs_last_0" operation_key="mysql-fs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="30:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;30:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="143" rc-code="0" op-status="0" interval="0" last-run="1385962320" last-rc-change="1385962320" exec-time="375" queue-time="0" op-digest="cf3faba57e8bd6dac27b8541f36946f9"/>
+            <lrm_rsc_op id="mysql-fs_monitor_60000" operation_key="mysql-fs_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="34:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;34:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="120" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="200" queue-time="0" op-digest="7e1234e1b73682291a933c033f9198d3"/>
+          </lrm_resource>
+          <lrm_resource id="qpidd" type="qpidd" class="lsb">
+            <lrm_rsc_op id="qpidd_last_0" operation_key="qpidd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="40:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;40:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="152" rc-code="0" op-status="0" interval="0" last-run="1385962336" last-rc-change="1385962336" exec-time="251" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="qpidd_monitor_60000" operation_key="qpidd_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="4:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;4:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="155" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962336" exec-time="36" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-scheduler" type="openstack-cinder-scheduler" class="lsb">
+            <lrm_rsc_op id="cinder-scheduler_last_0" operation_key="cinder-scheduler_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="93:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;93:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1385962286" last-rc-change="1385962286" exec-time="74" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-scheduler_monitor_60000" operation_key="cinder-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="94:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;94:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="88" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962287" exec-time="49" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-volume" type="openstack-cinder-volume" class="lsb">
+            <lrm_rsc_op id="cinder-volume_last_0" operation_key="cinder-volume_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="95:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;95:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="90" rc-code="0" op-status="0" interval="0" last-run="1385962287" last-rc-change="1385962287" exec-time="116" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-volume_monitor_60000" operation_key="cinder-volume_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="96:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;96:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="94" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962287" exec-time="29" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="glance-api" type="openstack-glance-api" class="lsb">
+            <lrm_rsc_op id="glance-api_last_0" operation_key="glance-api_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="71:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;71:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="112" rc-code="0" op-status="0" interval="0" last-run="1385962288" last-rc-change="1385962288" exec-time="65" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="glance-api_monitor_60000" operation_key="glance-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="72:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;72:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="116" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962288" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-api" type="openstack-cinder-api" class="lsb">
+            <lrm_rsc_op id="cinder-api_last_0" operation_key="cinder-api_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="91:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;91:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="79" rc-code="0" op-status="0" interval="0" last-run="1385962286" last-rc-change="1385962286" exec-time="107" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-api_monitor_60000" operation_key="cinder-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="92:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;92:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="82" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962286" exec-time="33" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="glance-registry" type="openstack-glance-registry" class="lsb">
+            <lrm_rsc_op id="glance-registry_last_0" operation_key="glance-registry_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="69:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;69:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="100" rc-code="0" op-status="0" interval="0" last-run="1385962287" last-rc-change="1385962287" exec-time="1598" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="glance-registry_monitor_60000" operation_key="glance-registry_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="70:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;70:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="110" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962288" exec-time="35" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-db" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-db_last_0" operation_key="mysql-db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:5:7:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:7;23:5:7:1dc37633-912f-4e30-acd3-f2c748486137" call-id="162" rc-code="7" op-status="0" interval="0" last-run="1385962581" last-rc-change="1385962581" exec-time="156" queue-time="1" op-digest="3bd36397f4c16ad801127ecf986aab62"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="openstack-keystone" class="lsb">
+            <lrm_rsc_op id="keystone_last_0" operation_key="keystone_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="46:13:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;46:13:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="181" rc-code="0" op-status="0" interval="0" last-run="1385962645" last-rc-change="1385962645" exec-time="3882" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="keystone_monitor_60000" operation_key="keystone_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="47:13:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;47:13:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="184" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962648" exec-time="18" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rhos4-node4">
+        <instance_attributes id="status-rhos4-node4">
+          <nvpair id="status-rhos4-node4-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-rhos4-node4-last-failure-keystone" name="last-failure-keystone" value="1385962310"/>
+          <nvpair id="status-rhos4-node4-fail-count-mysql-db" name="fail-count-mysql-db" value="INFINITY"/>
+          <nvpair id="status-rhos4-node4-last-failure-mysql-db" name="last-failure-mysql-db" value="1385962310"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="rhos4-node3" uname="rhos4-node3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="rhos4-node3">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="29:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;29:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1385962286" last-rc-change="1385962286" exec-time="2341" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="virt-fencing_monitor_60000" operation_key="virt-fencing_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="30:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;30:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="88" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="56" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-vip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-vip_last_0" operation_key="mysql-vip_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="28:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;28:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="130" rc-code="0" op-status="0" interval="0" last-run="1385962329" last-rc-change="1385962329" exec-time="222" queue-time="0" op-digest="f456ad0484db3074c7ec70f3f6326bdd"/>
+            <lrm_rsc_op id="mysql-vip_monitor_60000" operation_key="mysql-vip_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="29:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;29:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="133" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962329" exec-time="187" queue-time="1" op-digest="e3c4387faf0b0f7c20411bb85f0d8945"/>
+          </lrm_resource>
+          <lrm_resource id="glance-api" type="openstack-glance-api" class="lsb">
+            <lrm_rsc_op id="glance-api_last_0" operation_key="glance-api_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="61:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;61:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="99" rc-code="0" op-status="0" interval="0" last-run="1385962289" last-rc-change="1385962289" exec-time="86" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="glance-api_monitor_60000" operation_key="glance-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="62:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;62:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="109" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="20" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-api" type="openstack-cinder-api" class="lsb">
+            <lrm_rsc_op id="cinder-api_last_0" operation_key="cinder-api_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="81:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;81:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="79" rc-code="0" op-status="0" interval="0" last-run="1385962288" last-rc-change="1385962288" exec-time="1128" queue-time="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-api_monitor_60000" operation_key="cinder-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="82:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;82:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="90" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="78" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="glance-registry" type="openstack-glance-registry" class="lsb">
+            <lrm_rsc_op id="glance-registry_last_0" operation_key="glance-registry_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="59:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;59:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1385962289" last-rc-change="1385962289" exec-time="161" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="glance-registry_monitor_60000" operation_key="glance-registry_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="60:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;60:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="97" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="41" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="qpidd" type="qpidd" class="lsb">
+            <lrm_rsc_op id="qpidd_last_0" operation_key="qpidd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="42:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;42:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="147" rc-code="0" op-status="0" interval="0" last-run="1385962336" last-rc-change="1385962336" exec-time="260" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="qpidd_monitor_60000" operation_key="qpidd_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;17:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="151" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962336" exec-time="65" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-fs_last_0" operation_key="mysql-fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="31:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;31:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="135" rc-code="0" op-status="0" interval="0" last-run="1385962329" last-rc-change="1385962329" exec-time="250" queue-time="0" op-digest="cf3faba57e8bd6dac27b8541f36946f9"/>
+            <lrm_rsc_op id="mysql-fs_monitor_60000" operation_key="mysql-fs_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="32:3:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;32:3:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="139" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962330" exec-time="157" queue-time="0" op-digest="7e1234e1b73682291a933c033f9198d3"/>
+          </lrm_resource>
+          <lrm_resource id="glance-fs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="glance-fs_last_0" operation_key="glance-fs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="57:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;57:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1385962288" last-rc-change="1385962288" exec-time="238" queue-time="0" op-digest="268be68d4cd15c8d98a248e6f868b30d"/>
+            <lrm_rsc_op id="glance-fs_monitor_60000" operation_key="glance-fs_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="58:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;58:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="82" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="313" queue-time="0" op-digest="dbdd6227256aa9fb321fc67e89376c9d"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-volume" type="openstack-cinder-volume" class="lsb">
+            <lrm_rsc_op id="cinder-volume_last_0" operation_key="cinder-volume_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="85:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;85:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="104" rc-code="0" op-status="0" interval="0" last-run="1385962289" last-rc-change="1385962289" exec-time="115" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-volume_monitor_60000" operation_key="cinder-volume_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="86:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;86:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="114" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="cinder-scheduler" type="openstack-cinder-scheduler" class="lsb">
+            <lrm_rsc_op id="cinder-scheduler_last_0" operation_key="cinder-scheduler_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="83:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;83:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="92" rc-code="0" op-status="0" interval="0" last-run="1385962289" last-rc-change="1385962289" exec-time="121" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cinder-scheduler_monitor_60000" operation_key="cinder-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="84:0:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;84:0:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="102" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962289" exec-time="36" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-db" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-db_last_failure_0" operation_key="mysql-db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="21:5:7:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;21:5:7:1dc37633-912f-4e30-acd3-f2c748486137" call-id="159" rc-code="0" op-status="0" interval="0" last-run="1385962581" last-rc-change="1385962581" exec-time="146" queue-time="0" op-digest="3bd36397f4c16ad801127ecf986aab62"/>
+            <lrm_rsc_op id="mysql-db_monitor_60000" operation_key="mysql-db_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="30:6:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;30:6:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="162" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962582" exec-time="125" queue-time="0" op-digest="e052ef2b1ff31d9b47909b164cd99008"/>
+          </lrm_resource>
+          <lrm_resource id="keystone" type="openstack-keystone" class="lsb">
+            <lrm_rsc_op id="keystone_last_failure_0" operation_key="keystone_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="22:12:7:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;22:12:7:1dc37633-912f-4e30-acd3-f2c748486137" call-id="184" rc-code="0" op-status="0" interval="0" last-run="1385962644" last-rc-change="1385962644" exec-time="21" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="keystone_monitor_60000" operation_key="keystone_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="45:13:0:1dc37633-912f-4e30-acd3-f2c748486137" transition-magic="0:0;45:13:0:1dc37633-912f-4e30-acd3-f2c748486137" call-id="187" rc-code="0" op-status="0" interval="60000" last-rc-change="1385962645" exec-time="18" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rhos4-node3">
+        <instance_attributes id="status-rhos4-node3">
+          <nvpair id="status-rhos4-node3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-rhos4-node3-last-failure-keystone" name="last-failure-keystone" value="1385962310"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

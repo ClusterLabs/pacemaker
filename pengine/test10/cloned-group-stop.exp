@@ -1,0 +1,539 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="37" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="qpidd" long-id="qpidd:0" class="lsb" type="qpidd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="41" operation="stop" operation_key="qpidd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="38" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="qpidd" long-id="qpidd:1" class="lsb" type="qpidd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="41" operation="stop" operation_key="qpidd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2" priority="1000000">
+    <action_set>
+      <pseudo_event id="42" operation="stopped" operation_key="qpidd-clone_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="37" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="41" operation="stop" operation_key="qpidd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="41" operation="stop" operation_key="qpidd-clone_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="50" operation="stopped" operation_key="keystone-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="43" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="keystone" long-id="keystone:0" class="lsb" type="openstack-keystone"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="49" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="45" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="keystone" long-id="keystone:1" class="lsb" type="openstack-keystone"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="49" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <pseudo_event id="50" operation="stopped" operation_key="keystone-clone_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="45" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="stop" operation_key="keystone-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="49" operation="stop" operation_key="keystone-clone_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="74" operation="stopped" operation_key="glance-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="60" operation="stopped" operation_key="glance:0_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="51" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="glance:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="59" operation="stop" operation_key="glance:0_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="73" operation="stop" operation_key="glance-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="51" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="glance-fs" long-id="glance-fs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="glance:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="53" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="glance-registry" long-id="glance-registry:0" class="lsb" type="openstack-glance-registry"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="glance:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="55" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="glance-api" long-id="glance-api:0" class="lsb" type="openstack-glance-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="glance:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="70" operation="stopped" operation_key="glance:1_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="61" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="63" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="65" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="stop" operation_key="glance:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="69" operation="stop" operation_key="glance:1_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="73" operation="stop" operation_key="glance-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="61" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="glance-fs" long-id="glance-fs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000"  device="192.168.0.2:/srv/vms/clusters/nfs-storage/glance" directory="/var/lib/glance/" fstype="nfs" options="v3"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="63" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="stop" operation_key="glance:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="63" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="glance-registry" long-id="glance-registry:1" class="lsb" type="openstack-glance-registry"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="65" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="stop" operation_key="glance:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="65" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="glance-api" long-id="glance-api:1" class="lsb" type="openstack-glance-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="69" operation="stop" operation_key="glance:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18" priority="1000000">
+    <action_set>
+      <pseudo_event id="74" operation="stopped" operation_key="glance-clone_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="stopped" operation_key="glance:0_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stopped" operation_key="glance:1_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="73" operation="stop" operation_key="glance-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <pseudo_event id="73" operation="stop" operation_key="glance-clone_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="98" operation="stopped" operation_key="cinder-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="84" operation="stopped" operation_key="cinder:0_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="75" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="77" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="83" operation="stop" operation_key="cinder:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <pseudo_event id="83" operation="stop" operation_key="cinder:0_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="cinder-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="75" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="cinder-api" long-id="cinder-api:0" class="lsb" type="openstack-cinder-api"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="77" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="83" operation="stop" operation_key="cinder:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="77" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="cinder-scheduler" long-id="cinder-scheduler:0" class="lsb" type="openstack-cinder-scheduler"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="83" operation="stop" operation_key="cinder:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="79" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4">
+        <primitive id="cinder-volume" long-id="cinder-volume:0" class="lsb" type="openstack-cinder-volume"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="83" operation="stop" operation_key="cinder:0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <pseudo_event id="94" operation="stopped" operation_key="cinder:1_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="89" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="cinder:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="93" operation="stop" operation_key="cinder:1_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="cinder-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="85" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="cinder-api" long-id="cinder-api:1" class="lsb" type="openstack-cinder-api"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="87" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="cinder:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="87" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="cinder-scheduler" long-id="cinder-scheduler:1" class="lsb" type="openstack-cinder-scheduler"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="89" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="cinder:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="89" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3">
+        <primitive id="cinder-volume" long-id="cinder-volume:1" class="lsb" type="openstack-cinder-volume"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="cinder:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30" priority="1000000">
+    <action_set>
+      <pseudo_event id="98" operation="stopped" operation_key="cinder-clone_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="84" operation="stopped" operation_key="cinder:0_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="94" operation="stopped" operation_key="cinder:1_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="cinder-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <pseudo_event id="97" operation="stop" operation_key="cinder-clone_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="21" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="37" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="stop" operation_key="qpidd_stop_0" internal_operation_key="qpidd:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="43" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="45" operation="stop" operation_key="keystone_stop_0" internal_operation_key="keystone:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="51" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="61" operation="stop" operation_key="glance-fs_stop_0" internal_operation_key="glance-fs:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="63" operation="stop" operation_key="glance-registry_stop_0" internal_operation_key="glance-registry:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="65" operation="stop" operation_key="glance-api_stop_0" internal_operation_key="glance-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="75" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="77" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:0_stop_0" on_node="rhos4-node4" on_node_uuid="rhos4-node4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="cinder-api_stop_0" internal_operation_key="cinder-api:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="stop" operation_key="cinder-scheduler_stop_0" internal_operation_key="cinder-scheduler:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="89" operation="stop" operation_key="cinder-volume_stop_0" internal_operation_key="cinder-volume:1_stop_0" on_node="rhos4-node3" on_node_uuid="rhos4-node3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
