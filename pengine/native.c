@@ -1938,6 +1938,11 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
                      "Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
                      then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
                      then_flags, first->uuid, first->flags);
+
+        if(then->rsc && then->rsc->parent) {
+            /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
+            update_action(then);
+        }
     }
 
     if (first_flags != first->flags) {
