@@ -229,6 +229,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
+    crm_xml_init(); /* Sets buffer allocation strategy */
     crm_system_name = strdup("cibadmin");
     crm_set_options(NULL, "command [options] [data]", long_options,
                     "Provides direct access to the cluster configuration."

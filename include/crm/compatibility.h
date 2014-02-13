@@ -318,6 +318,28 @@ delete_attr(cib_t * the_cib, int options,
     return delete_attr_delegate(the_cib, options, section, node_uuid, set_type, set_name,
                                 attr_id, attr_name, attr_value, to_console, NULL);
 }
+
+static inline void
+log_cib_diff(int log_level, xmlNode * diff, const char *function)
+{
+    xml_log_patchset(log_level, function, diff);
+}
+
+static inline gboolean
+apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
+{
+    *new = copy_xml(old);
+    return (xml_apply_patchset(*new, diff, TRUE) == pcmk_ok);
+}
+
+#  endif
+
+#  ifdef CRM_COMMON_XML__H
+void
+log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function)
+{
+    xml_log_patchset(log_level, function, diff);
+}
 #  endif
 
 #endif

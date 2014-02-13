@@ -332,6 +332,7 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     op->user_data = generate_transition_key(transition_graph->id, action->id, target_rc, te_uuid);
 
     xml_op = create_operation_update(rsc, op, CRM_FEATURE_SET, target_rc, __FUNCTION__, LOG_INFO);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, target); /* For context during triage */
     lrmd_free_event(op);
 
     crm_trace("Updating CIB with \"%s\" (%s): %s %s on %s",

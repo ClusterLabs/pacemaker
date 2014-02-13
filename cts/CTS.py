@@ -1418,6 +1418,7 @@ class ClusterManager(UserDict):
             self.debug("Removing cache file on: "+node)
             self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
+        self.install_config(node)
         if not(self.Env["valgrind-tests"]):
             startCmd = self["StartCmd"]
         else:

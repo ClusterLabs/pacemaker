@@ -97,32 +97,6 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     return FALSE;
 }
 
-static const char *
-get_uname_from_event(xmlNode * event)
-{
-    xmlNode *node = event;
-
-    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
-        node = node->parent;
-    }
-
-    CRM_CHECK(node != NULL, return NULL);
-    return crm_element_value(node, XML_ATTR_UNAME);
-}
-
-static gboolean
-get_is_remote_from_event(xmlNode * event)
-{
-    xmlNode *node = event;
-
-    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
-        node = node->parent;
-    }
-
-    CRM_CHECK(node != NULL, return FALSE);
-    return crm_element_value(node, XML_NODE_IS_REMOTE) ? TRUE : FALSE;
-}
-
 static gboolean
 update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int target_rc, gboolean do_update)
 {
@@ -134,7 +108,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
 
     const char *value = NULL;
     const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
-    const char *on_uname = get_uname_from_event(event);
+    const char *on_uname = crm_peer_uname(event_node_uuid);
     const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
 
     if (rc == 99) {
@@ -151,10 +125,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
         return FALSE;
     }
 
-    CRM_LOG_ASSERT(on_uname != NULL);
-    if (on_uname == NULL) {
-        return TRUE;
-    }
+    CRM_CHECK(on_uname != NULL, return TRUE);
 
     if (failed_stop_offset == NULL) {
         failed_stop_offset = strdup(INFINITY_S);
@@ -197,7 +168,11 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
 
     if (do_update) {
         char *now = crm_itoa(time(NULL));
-        gboolean is_remote_node = get_is_remote_from_event(event);
+        gboolean is_remote_node = FALSE;
+
+        if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
+            is_remote_node = TRUE;
+        }
 
         crm_warn("Updating failcount for %s on %s after failed %s:"
                  " rc=%d (update=%s, time=%s)", rsc_id, on_uname, task, rc, value, now);

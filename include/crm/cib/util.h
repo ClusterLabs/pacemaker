@@ -29,10 +29,6 @@ gboolean verifyCibXml(xmlNode * cib);
 
 #  define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
-xmlNode *diff_cib_object(xmlNode * old, xmlNode * new, gboolean suppress);
-gboolean apply_cib_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
-void log_cib_diff(int log_level, xmlNode * diff, const char *function);
-
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
 
 int update_attr_delegate(cib_t * the_cib, int call_options,

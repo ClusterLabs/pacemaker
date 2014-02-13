@@ -672,6 +672,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     target_rc = rsc_op_expected_rc(op);
     xml_op = create_operation_update(parent, op, caller_version, target_rc, src, LOG_DEBUG);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, fsa_our_uname); /* For context during triage */
 
     if (xml_op) {
         append_restart_list(rsc, op, xml_op, caller_version);

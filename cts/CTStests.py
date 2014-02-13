@@ -42,6 +42,7 @@ import time, os, re, types, string, tempfile, sys
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
+from cts.CTSvars   import *
 
 AllTestClasses = [ ]
 
@@ -1470,9 +1471,9 @@ class ComponentFail(CTSTest):
         is_stable = self.CM.cluster_stable(self.CM["StartTime"])
 
         if not matched:
-            return self.failure("Didn't find all expected patterns")
+            return self.failure("Didn't find all expected %s patterns" % chosen.name)
         elif not is_stable:
-            return self.failure("Cluster did not become stable")
+            return self.failure("Cluster did not become stable after killing %s" % chosen.name)
 
         return self.success()
 
@@ -1827,6 +1828,9 @@ class SpecialTest1(CTSTest):
         if not ret:
             return self.failure("Could not stop all nodes")
 
+        # Test config recovery when the other nodes come up
+        self.CM.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
+
         #        Start the selected node
         ret = self.restart1(node)
         if not ret:
@@ -1838,6 +1842,16 @@ class SpecialTest1(CTSTest):
             return self.failure("Could not start the remaining nodes")
 
         return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        # Errors that occur as a result of the CIB being wiped
+        return [
+            """error: cib_perform_op: v1 patchset error, patch failed to apply: Application of an update diff failed""",
+            """error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined""",
+            """error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option""",
+            """error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity""",
+        ]
 
 AllTestClasses.append(SpecialTest1)
 

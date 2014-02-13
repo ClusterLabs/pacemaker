@@ -356,6 +356,18 @@
 #  define XML_ATTR_STONITH_TARGET       "target"
 #  define XML_ATTR_STONITH_DEVICES      "devices"
 
+#  define XML_TAG_DIFF                  "diff"
+#  define XML_DIFF_VERSION              "version"
+#  define XML_DIFF_VSOURCE              "source"
+#  define XML_DIFF_VTARGET              "target"
+#  define XML_DIFF_CHANGE               "change"
+#  define XML_DIFF_LIST                 "change-list"
+#  define XML_DIFF_ATTR                 "change-attr"
+#  define XML_DIFF_RESULT               "change-result"
+#  define XML_DIFF_OP                   "operation"
+#  define XML_DIFF_PATH                 "path"
+#  define XML_DIFF_POSITION             "position"
+
 #  include <crm/common/xml.h>
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)

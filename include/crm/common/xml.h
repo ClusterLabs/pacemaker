@@ -154,7 +154,6 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 gboolean can_prune_leaf(xmlNode * xml_node);
 
 void print_xml_diff(FILE * where, xmlNode * diff);
-void log_xml_diff(uint8_t log_level, xmlNode * diff, const char *function);
 
 gboolean apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
 
@@ -250,5 +249,18 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     }
     return xpathObj->nodesetval->nodeNr;
 }
+
+void xml_track_changes(xmlNode * xml);
+void xml_calculate_changes(xmlNode * old, xmlNode * new);
+void xml_accept_changes(xmlNode * xml);
+bool xml_tracking_changes(xmlNode * xml);
+bool xml_document_dirty(xmlNode *xml);
+xmlNode *xml_create_patchset(
+    int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version, bool with_digest);
+int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
+void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
+void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
+bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 
 #endif
