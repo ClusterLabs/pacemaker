@@ -31,6 +31,7 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
+gboolean update_action(action_t * then);
 void native_rsc_colocation_rh_must(resource_t * rsc_lh, gboolean update_lh,
                                    resource_t * rsc_rh, gboolean update_rh);
 
@@ -1785,6 +1786,10 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
+    crm_trace(   "Testing %s on %s (0x%.6x) with %s 0x%.6x %x %x",
+                 first->uuid, first->node ? first->node->details->uname : "[none]",
+                 first->flags, then->uuid, then->flags);
+
     if (type & pe_order_asymmetrical) {
         resource_t *then_rsc = then->rsc;
         enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
@@ -1829,7 +1834,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
-            clear_bit(first->flags, pe_action_optional);
+            pe_clear_action_bit(first, pe_action_optional);
 
             if (is_set(first->flags, pe_action_migrate_runnable) &&
                 is_set(then->flags, pe_action_migrate_runnable) == FALSE) {
@@ -2027,7 +2032,6 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-void
 #define log_change(fmt, args...)  do {          \
         if(terminal) {                          \
             printf(" * "fmt"\n", ##args);       \
@@ -2035,6 +2039,20 @@ void
             crm_notice(fmt, ##args);            \
         }                                       \
     } while(0)
+
+#define STOP_SANITY_ASSERT(lineno) do {                                 \
+        if(current && current->details->unclean) {                      \
+            /* It will be a pseduo op */                                \
+        } else if(stop == NULL) {                                       \
+            crm_err("%s:%d: No stop action exists for %s", __FUNCTION__, lineno, rsc->id); \
+            CRM_ASSERT(stop != NULL);                                   \
+        } else if(is_set(stop->flags, pe_action_optional)) { \
+            crm_err("%s:%d: Action %s is still optional", __FUNCTION__, lineno, stop->uuid); \
+            CRM_ASSERT(is_not_set(stop->flags, pe_action_optional));    \
+        }                                                               \
+    } while(0)
+
+void
 LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 {
     node_t *next = NULL;
@@ -2103,7 +2121,11 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 
     key = stop_key(rsc);
-    possible_matches = find_actions(rsc->actions, key, next);
+    if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
+        possible_matches = find_actions(rsc->actions, key, NULL);
+    } else {
+        possible_matches = find_actions(rsc->actions, key, next);
+    }
     free(key);
     if (possible_matches) {
         stop = possible_matches->data;
@@ -2147,6 +2169,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
             log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
             log_change("%s %s\t(%s %s -> %s)",
@@ -2156,9 +2179,11 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
             log_change("Recover %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            STOP_SANITY_ASSERT(__LINE__);
 
         } else {
             log_change("Restart %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            /* STOP_SANITY_ASSERT(__LINE__); False positive for migrate-fail-7 */
         }
 
         g_list_free(possible_matches);
@@ -2185,6 +2210,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 if (is_set(rsc->flags, pe_rsc_failed)) {
                     log_change("Recover %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);
+                    STOP_SANITY_ASSERT(__LINE__);
 
                 } else if (is_set(rsc->flags, pe_rsc_reload)) {
                     log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
@@ -2193,6 +2219,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 } else {
                     log_change("Restart %s\t(%s %s)",
                                rsc->id, role2text(rsc->next_role), next->details->uname);
+                    STOP_SANITY_ASSERT(__LINE__);
                 }
             }
         }
@@ -2215,6 +2242,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             }
 
             if (stop_op && (stop_op->flags & pe_action_runnable)) {
+                STOP_SANITY_ASSERT(__LINE__);
                 allowed = TRUE;
             }
 
@@ -2229,6 +2257,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         log_change("Move    %s\t(%s %s -> %s)",
                    rsc->id, role2text(rsc->next_role), current->details->uname,
                    next->details->uname);
+        STOP_SANITY_ASSERT(__LINE__);
     }
 
     if (rsc->role == RSC_ROLE_STOPPED) {
@@ -2257,14 +2286,17 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
             if (is_set(rsc->flags, pe_rsc_failed)) {
                 log_change("Recover %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next->details->uname);
+                STOP_SANITY_ASSERT(__LINE__);
 
             } else if (is_set(rsc->flags, pe_rsc_reload)) {
                 log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
                            next->details->uname);
+                STOP_SANITY_ASSERT(__LINE__);
 
             } else {
                 log_change("Restart %s\t(%s %s)",
                            rsc->id, role2text(rsc->role), next->details->uname);
+                STOP_SANITY_ASSERT(__LINE__);
             }
         }
 
