@@ -1,6 +1,12 @@
 #!/bin/bash
 
-cts_root=`dirname $0`
+if [ -e $PWD/cts/CTSlab.py ]; then
+    cts_root=$PWD/cts
+elif [ -e $PWD/CTSlab.py ]; then
+    cts_root=$PWD
+else
+    cts_root=`dirname $0`
+fi
 
 logfile=0
 summary=0
@@ -40,7 +46,7 @@ while true; do
 	-e) patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
 	-l) logfile=1; shift;;
 	-w) watch=1; shift;;
-	-f) summary=1; custom_log=$2; shift; shift;;
+	-f|-sf) summary=1; custom_log=$2; shift; shift;;
 	-t) tests="$tests $2"; shift; shift;;
 	[0-9]*) tests="$tests $1"; shift;;
 	--build|build) build=1; shift;;
@@ -172,7 +178,7 @@ if [ $build = 1 ]; then
     if [ $? != 0 ]; then
 	echo "You'll need to write/obtain build-pcmk in order to build pacemaker from here.  Skipping"
     else
-	build-pcmk -18
+	build-pcmk r7
 	rc=$?
 	if [ $rc != 0 ]; then
 	    echo "Build failed: $rc"
