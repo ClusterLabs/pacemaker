@@ -137,15 +137,15 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             /* crmd_proc_update(node, proc_flags); */
             status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
-            crm_info("Client %s/%s now has status [%s] (DC=%s)",
+            crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
                      node->uname, peer2text(proc_flags), status,
-                     AM_I_DC ? "true" : crm_str(fsa_our_dc));
+                     AM_I_DC ? "true" : crm_str(fsa_our_dc), changed);
 
             if ((changed & proc_flags) == 0) {
                 /* Peer process did not change */
                 crm_trace("No change %6x %6x %6x", old, node->processes, proc_flags);
                 return;
-            } else if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+            } else if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
                 crm_trace("Not connected");
                 return;
             } else if (fsa_state == S_STOPPING) {
@@ -163,6 +163,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* Did the DC leave us? */
                 crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+
+            } else if(AM_I_DC && appeared == FALSE) {
+                crm_info("Peer %s left us", node->uname);
+                /* crm_update_peer_join(__FUNCTION__, node, crm_join_none); */
             }
             break;
     }
