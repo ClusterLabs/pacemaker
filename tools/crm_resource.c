@@ -1337,7 +1337,7 @@ static struct crm_option long_options[] = {
     {"node",		1, 0, 'N', "\tHost uname"},
     {"recursive",       0, 0,  0,  "\tFollow colocation chains when using --set-parameter"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
-    {"parameter-value", 1, 0, 'v', "Value to use with -p, -g or -d"},
+    {"parameter-value", 1, 0, 'v', "Value to use with -p or -S"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
