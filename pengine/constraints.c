@@ -2046,7 +2046,7 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     const char *sequential_1 = crm_element_value(set1, "sequential");
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
-    if (crm_is_true(sequential_1)) {
+    if (sequential_1 == NULL || crm_is_true(sequential_1)) {
         /* get the first one */
         for (xml_rsc = __xml_first_child(set1); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
@@ -2056,7 +2056,7 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
         }
     }
 
-    if (crm_is_true(sequential_2)) {
+    if (sequential_2 == NULL || crm_is_true(sequential_2)) {
         /* get the last one */
         const char *rid = NULL;
 
