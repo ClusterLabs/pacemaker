@@ -287,6 +287,25 @@ static gboolean crm_hash_find_by_data(gpointer key, gpointer value, gpointer use
 }
 
 crm_node_t *
+crm_find_peer_full(unsigned int id, const char *uname, int flags)
+{
+    crm_node_t *node = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    crm_peer_init();
+
+    if (flags & CRM_GET_PEER_REMOTE) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+    }
+
+    if (node == NULL && (flags & CRM_GET_PEER_CLUSTER)) {
+        node = crm_find_peer(id, uname);
+    }
+    return node;
+}
+
+crm_node_t *
 crm_get_peer_full(unsigned int id, const char *uname, int flags)
 {
     crm_node_t *node = NULL;
@@ -305,15 +324,13 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
     return node;
 }
 
-/* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
+crm_find_peer(unsigned int id, const char *uname)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
     crm_node_t *by_id = NULL;
     crm_node_t *by_name = NULL;
-    char *uname_lookup = NULL;
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
@@ -389,6 +406,22 @@ crm_get_peer(unsigned int id, const char *uname)
         crm_info("Merging %p into %p", by_name, by_id);
         g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
     }
+
+    return node;
+}
+
+/* coverity[-alloc] Memory is referenced in one or both hashtables */
+crm_node_t *
+crm_get_peer(unsigned int id, const char *uname)
+{
+    crm_node_t *node = NULL;
+    char *uname_lookup = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    crm_peer_init();
+
+    node = crm_find_peer(id, uname);
 
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
