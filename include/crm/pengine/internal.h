@@ -265,4 +265,7 @@ gboolean is_baremetal_remote_node(node_t *node);
 gboolean is_container_remote_node(node_t *node);
 gboolean is_remote_node(node_t *node);
 resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
+
+void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
+                      void * print_data, gboolean print_all);
 #endif

@@ -607,3 +607,160 @@ native_location(resource_t * rsc, GListPtr * list, gboolean current)
     g_list_free(result);
     return one;
 }
+
+static void
+get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_table)
+{
+    GListPtr gIter = rsc_list;
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc = (resource_t *) gIter->data;
+
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+
+        int offset = 0;
+        char buffer[LINE_MAX];
+
+        int *rsc_counter = NULL;
+        int *active_counter = NULL;
+
+        if (rsc->variant != pe_native) {
+            continue;
+        }
+
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
+        if (safe_str_eq(class, "ocf")) {
+            const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+        }
+        offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
+
+        if (rsc_table) {
+            rsc_counter = g_hash_table_lookup(rsc_table, buffer);
+            if (rsc_counter == NULL) {
+                rsc_counter = calloc(1, sizeof(int));
+                *rsc_counter = 0;
+                g_hash_table_insert(rsc_table, strdup(buffer), rsc_counter);
+            }
+            (*rsc_counter)++;
+        }
+
+        if (active_table) {
+            GListPtr gIter2 = rsc->running_on;
+
+            for (; gIter2 != NULL; gIter2 = gIter2->next) {
+                node_t *node = (node_t *) gIter2->data;
+                GHashTable *node_table = NULL;
+
+                if (node->details->unclean == FALSE && node->details->online == FALSE) {
+                    continue;
+                }
+
+                node_table = g_hash_table_lookup(active_table, node->details->uname);
+                if (node_table == NULL) {
+                    node_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+                    g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
+                }
+
+                active_counter = g_hash_table_lookup(node_table, buffer);
+                if (active_counter == NULL) {
+                    active_counter = calloc(1, sizeof(int));
+                    *active_counter = 0;
+                    g_hash_table_insert(node_table, strdup(buffer), active_counter);
+                }
+                (*active_counter)++;
+            }
+        }
+    }
+}
+
+static void
+destroy_node_table(gpointer data)
+{
+    GHashTable *node_table = data;
+
+    if (node_table) {
+        g_hash_table_destroy(node_table);
+    }
+}
+
+void
+print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
+                 void *print_data, gboolean print_all)
+{
+    GHashTable *rsc_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                     free, destroy_node_table);
+    GHashTableIter hash_iter;
+    char *type = NULL;
+    int *rsc_counter = NULL;
+
+    get_rscs_brief(rsc_list, rsc_table, active_table);
+
+    g_hash_table_iter_init(&hash_iter, rsc_table);
+    while (g_hash_table_iter_next(&hash_iter, (gpointer *)&type, (gpointer *)&rsc_counter)) {
+        GHashTableIter hash_iter2;
+        char *node_name = NULL;
+        GHashTable *node_table = NULL;
+        int active_counter_all = 0;
+
+        g_hash_table_iter_init(&hash_iter2, active_table);
+        while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
+            int *active_counter = g_hash_table_lookup(node_table, type);
+
+            if (active_counter == NULL || *active_counter == 0) {
+                continue;
+
+            } else {
+                active_counter_all += *active_counter;
+            }
+
+            if (options & pe_print_rsconly) {
+                node_name = NULL;
+            }
+
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+
+            if (print_all) {
+                status_print("%s%d/%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
+                             active_counter ? *active_counter : 0,
+                             rsc_counter ? *rsc_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            } else {
+                status_print("%s%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
+                             active_counter ? *active_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            }
+
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
+        }
+
+        if (print_all && active_counter_all == 0) {
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+
+            status_print("%s%d/%d\t(%s):\tActive\n", pre_text ? pre_text : "",
+                         active_counter_all,
+                         rsc_counter ? *rsc_counter : 0, type);
+
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
+        }
+    }
+
+    if (rsc_table) {
+        g_hash_table_destroy(rsc_table);
+        rsc_table = NULL;
+    }
+    if (active_table) {
+        g_hash_table_destroy(active_table);
+        active_table = NULL;
+    }
+}
