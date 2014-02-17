@@ -199,8 +199,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 stop_te_timer(down->timer);
 
                 flags |= node_update_join | node_update_expected;
-                crm_update_peer_join(__FUNCTION__, node, crm_join_none);
-                crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+                crmd_peer_down(node, FALSE);
                 check_join_state(fsa_state, __FUNCTION__);
 
                 update_graph(transition_graph, down);

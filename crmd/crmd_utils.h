@@ -100,6 +100,7 @@ void crmd_join_phase_log(int level);
 const char *get_timer_desc(fsa_timer_t * timer);
 gboolean too_many_st_failures(void);
 void st_fail_count_reset(const char * target);
+void crmd_peer_down(crm_node_t *peer, bool full);
 
 #  define fsa_register_cib_callback(id, flag, data, fn) do {              \
         fsa_cib_conn->cmds->register_callback(                          \

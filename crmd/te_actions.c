@@ -80,11 +80,8 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
         crm_info("Recording uuid '%s' for node '%s'", uuid, target);
         peer->uuid = strdup(uuid);
     }
-    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
-    crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
-    crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
-    crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
 
+    crmd_peer_down(peer, TRUE);
     node_state =
         do_update_node_cib(peer,
                            node_update_cluster | node_update_peer | node_update_join |

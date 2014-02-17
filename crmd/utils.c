@@ -1077,3 +1077,13 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
     crm_trace("telling attrd to clear attributes for remote host %s", host);
     update_attrd_helper(host, NULL, NULL, user_name, TRUE, 'C');
 }
+
+void crmd_peer_down(crm_node_t *peer, bool full) 
+{
+    if(full && peer->state == NULL) {
+        crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_LOST, 0);
+        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_none, NULL);
+    }
+    crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
+    crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
+}
