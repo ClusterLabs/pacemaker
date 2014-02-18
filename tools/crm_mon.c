@@ -566,6 +566,7 @@ main(int argc, char **argv)
                 break;
             case 'h':
                 as_html_file = strdup(optarg);
+                umask(S_IWGRP | S_IWOTH);
                 break;
             case 'X':
                 as_xml = TRUE;
