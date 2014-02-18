@@ -18,6 +18,7 @@ KillMode=process
 NotifyAccess=main
 SysVStartPriority=99
 EnvironmentFile=-@sysconfdir@/sysconfig/pacemaker
+SuccessExitStatus=100
 
 ExecStart=@sbindir@/pacemakerd -f
 
