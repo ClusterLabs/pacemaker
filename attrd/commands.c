@@ -247,6 +247,10 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         free(key);
         free(set);
         free(host);
+
+    } else if(safe_str_eq(op, "refresh")) {
+        crm_notice("Updating all attributes");
+        write_attributes(TRUE, FALSE);
     }
 
     if(broadcast) {

@@ -291,12 +291,63 @@ native_print_attr(gpointer key, gpointer value, gpointer user_data)
     status_print("Option: %s = %s\n", (char *)key, (char *)value);
 }
 
+static const char *
+native_pending_state(resource_t * rsc)
+{
+    const char *pending_state = NULL;
+
+    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_START)) {
+        pending_state = "Starting";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STOP)) {
+        pending_state = "Stopping";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATE)) {
+        pending_state = "Migrating";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED)) {
+       /* Work might be done in here. */
+        pending_state = "Migrating";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_PROMOTE)) {
+        pending_state = "Promoting";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_DEMOTE)) {
+        pending_state = "Demoting";
+    }
+
+    return pending_state;
+}
+
+static const char *
+native_pending_task(resource_t * rsc)
+{
+    const char *pending_task = NULL;
+
+    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_NOTIFY)) {
+        /* "Notifying" is not very useful to be shown. */
+        pending_task = NULL;
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
+        pending_task = "Monitoring";
+
+    /* Comment this out until someone requests it */
+    /*
+    } else if (safe_str_eq(rsc->pending_task, "probe")) {
+        pending_task = "Checking";
+    */
+    }
+
+    return pending_task;
+}
+
 static void
 native_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     enum rsc_role_e role = rsc->role;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *rsc_state = NULL;
 
     if(role == RSC_ROLE_STARTED && uber_parent(rsc)->variant == pe_master) {
         role = RSC_ROLE_SLAVE;
@@ -308,7 +359,14 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     status_print("resource_agent=\"%s%s%s:%s\" ",
                  class,
                  prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
-    status_print("role=\"%s\" ", role2text(role));
+
+    if (options & pe_print_pending) {
+        rsc_state = native_pending_state(rsc);
+    }
+    if (rsc_state == NULL) {
+        rsc_state = role2text(role);
+    }
+    status_print("role=\"%s\" ", rsc_state);
     status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
     status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
@@ -316,6 +374,14 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     status_print("failure_ignored=\"%s\" ",
                  is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
+
+    if (options & pe_print_pending) {
+        const char *pending_task = native_pending_task(rsc);
+
+        if (pending_task) {
+            status_print("pending=\"%s\" ", pending_task);
+        }
+    }
 
     if (options & pe_print_dev) {
         status_print("provisional=\"%s\" ",
@@ -423,12 +489,29 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
     } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", role2text(rsc->role));
+        const char *rsc_state = NULL;
+
+        if (options & pe_print_pending) {
+            rsc_state = native_pending_state(rsc);
+        }
+        if (rsc_state == NULL) {
+            rsc_state = role2text(rsc->role);
+        }
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", rsc_state);
     }
 
     if(node) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
     }
+
+    if (options & pe_print_pending) {
+        const char *pending_task = native_pending_task(rsc);
+
+        if (pending_task) {
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "(%s) ", pending_task);
+        }
+    }
+
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "(unmanaged) ");
     }
@@ -606,4 +689,161 @@ native_location(resource_t * rsc, GListPtr * list, gboolean current)
 
     g_list_free(result);
     return one;
+}
+
+static void
+get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_table)
+{
+    GListPtr gIter = rsc_list;
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *rsc = (resource_t *) gIter->data;
+
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+
+        int offset = 0;
+        char buffer[LINE_MAX];
+
+        int *rsc_counter = NULL;
+        int *active_counter = NULL;
+
+        if (rsc->variant != pe_native) {
+            continue;
+        }
+
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
+        if (safe_str_eq(class, "ocf")) {
+            const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+        }
+        offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
+
+        if (rsc_table) {
+            rsc_counter = g_hash_table_lookup(rsc_table, buffer);
+            if (rsc_counter == NULL) {
+                rsc_counter = calloc(1, sizeof(int));
+                *rsc_counter = 0;
+                g_hash_table_insert(rsc_table, strdup(buffer), rsc_counter);
+            }
+            (*rsc_counter)++;
+        }
+
+        if (active_table) {
+            GListPtr gIter2 = rsc->running_on;
+
+            for (; gIter2 != NULL; gIter2 = gIter2->next) {
+                node_t *node = (node_t *) gIter2->data;
+                GHashTable *node_table = NULL;
+
+                if (node->details->unclean == FALSE && node->details->online == FALSE) {
+                    continue;
+                }
+
+                node_table = g_hash_table_lookup(active_table, node->details->uname);
+                if (node_table == NULL) {
+                    node_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+                    g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
+                }
+
+                active_counter = g_hash_table_lookup(node_table, buffer);
+                if (active_counter == NULL) {
+                    active_counter = calloc(1, sizeof(int));
+                    *active_counter = 0;
+                    g_hash_table_insert(node_table, strdup(buffer), active_counter);
+                }
+                (*active_counter)++;
+            }
+        }
+    }
+}
+
+static void
+destroy_node_table(gpointer data)
+{
+    GHashTable *node_table = data;
+
+    if (node_table) {
+        g_hash_table_destroy(node_table);
+    }
+}
+
+void
+print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
+                 void *print_data, gboolean print_all)
+{
+    GHashTable *rsc_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                     free, destroy_node_table);
+    GHashTableIter hash_iter;
+    char *type = NULL;
+    int *rsc_counter = NULL;
+
+    get_rscs_brief(rsc_list, rsc_table, active_table);
+
+    g_hash_table_iter_init(&hash_iter, rsc_table);
+    while (g_hash_table_iter_next(&hash_iter, (gpointer *)&type, (gpointer *)&rsc_counter)) {
+        GHashTableIter hash_iter2;
+        char *node_name = NULL;
+        GHashTable *node_table = NULL;
+        int active_counter_all = 0;
+
+        g_hash_table_iter_init(&hash_iter2, active_table);
+        while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
+            int *active_counter = g_hash_table_lookup(node_table, type);
+
+            if (active_counter == NULL || *active_counter == 0) {
+                continue;
+
+            } else {
+                active_counter_all += *active_counter;
+            }
+
+            if (options & pe_print_rsconly) {
+                node_name = NULL;
+            }
+
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+
+            if (print_all) {
+                status_print("%s%d/%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
+                             active_counter ? *active_counter : 0,
+                             rsc_counter ? *rsc_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            } else {
+                status_print("%s%d\t(%s):\tActive %s\n", pre_text ? pre_text : "",
+                             active_counter ? *active_counter : 0, type,
+                             active_counter && (*active_counter > 0) && node_name ? node_name : "");
+            }
+
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
+        }
+
+        if (print_all && active_counter_all == 0) {
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+
+            status_print("%s%d/%d\t(%s):\tActive\n", pre_text ? pre_text : "",
+                         active_counter_all,
+                         rsc_counter ? *rsc_counter : 0, type);
+
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
+        }
+    }
+
+    if (rsc_table) {
+        g_hash_table_destroy(rsc_table);
+        rsc_table = NULL;
+    }
+    if (active_table) {
+        g_hash_table_destroy(active_table);
+        active_table = NULL;
+    }
 }

@@ -276,6 +276,8 @@ struct resource_s {
 
     resource_t *container;
     GListPtr fillers;
+
+    char *pending_task;
 };
 
 struct pe_action_s {

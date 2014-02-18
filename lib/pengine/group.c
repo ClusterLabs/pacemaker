@@ -168,15 +168,20 @@ group_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         status_print("\n");
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
+    if (options & pe_print_brief) {
+        print_rscs_brief(rsc->children, child_text, options, print_data, TRUE);
 
-        if (options & pe_print_html) {
-            status_print("<li>\n");
-        }
-        child_rsc->fns->print(child_rsc, child_text, options, print_data);
-        if (options & pe_print_html) {
-            status_print("</li>\n");
+    } else {
+        for (; gIter != NULL; gIter = gIter->next) {
+            resource_t *child_rsc = (resource_t *) gIter->data;
+
+            if (options & pe_print_html) {
+                status_print("<li>\n");
+            }
+            child_rsc->fns->print(child_rsc, child_text, options, print_data);
+            if (options & pe_print_html) {
+                status_print("</li>\n");
+            }
         }
     }
 

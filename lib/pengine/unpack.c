@@ -2758,6 +2758,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     int rc = 0;
     int status = PCMK_LRM_OP_PENDING-1;
     int target_rc = get_target_rc(xml_op);
+    int interval = 0;
 
     gboolean expired = FALSE;
     resource_t *parent = rsc;
@@ -2775,6 +2776,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
 
     CRM_CHECK(task != NULL, return FALSE);
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
@@ -2808,7 +2810,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
     }
 
     if (expired && target_rc != rc) {
-        int interval = 0;
         const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
         pe_rsc_debug(rsc, "Expired operation '%s' on %s returned '%s' (%d) instead of the expected value: '%s' (%d)",
@@ -2816,7 +2817,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                      services_ocf_exitcode_str(rc), rc,
                      services_ocf_exitcode_str(target_rc), target_rc);
 
-        crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
         if(interval == 0) {
             crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
                        task_key, rc, magic, node->details->uname);
@@ -2857,6 +2857,17 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 node_t *target = pe_find_node(data_set->nodes, migrate_target);
                 if (target) {
                     stop_action(rsc, target, FALSE);
+                }
+            }
+
+            if (rsc->pending_task == NULL) {
+                if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
+                    /* Comment this out until someone requests it */
+                    /* Comment this out until cl#5184 is fixed */
+                    /*rsc->pending_task = strdup("probe");*/
+
+                } else {
+                    rsc->pending_task = strdup(task);
                 }
             }
             break;
