@@ -2860,13 +2860,15 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                 }
             }
 
-            if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
-                /* Comment this out until someone requests it */
-                /* Comment this out until cl#5184 is fixed */
-                /*rsc->pending_task = strdup("probe");*/
+            if (rsc->pending_task == NULL) {
+                if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
+                    /* Comment this out until someone requests it */
+                    /* Comment this out until cl#5184 is fixed */
+                    /*rsc->pending_task = strdup("probe");*/
 
-            } else {
-                rsc->pending_task = strdup(task);
+                } else {
+                    rsc->pending_task = strdup(task);
+                }
             }
             break;
 
