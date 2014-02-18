@@ -291,12 +291,63 @@ native_print_attr(gpointer key, gpointer value, gpointer user_data)
     status_print("Option: %s = %s\n", (char *)key, (char *)value);
 }
 
+static const char *
+native_pending_state(resource_t * rsc)
+{
+    const char *pending_state = NULL;
+
+    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_START)) {
+        pending_state = "Starting";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STOP)) {
+        pending_state = "Stopping";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATE)) {
+        pending_state = "Migrating";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED)) {
+       /* Work might be done in here. */
+        pending_state = "Migrating";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_PROMOTE)) {
+        pending_state = "Promoting";
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_DEMOTE)) {
+        pending_state = "Demoting";
+    }
+
+    return pending_state;
+}
+
+static const char *
+native_pending_task(resource_t * rsc)
+{
+    const char *pending_task = NULL;
+
+    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_NOTIFY)) {
+        /* "Notifying" is not very useful to be shown. */
+        pending_task = NULL;
+
+    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
+        pending_task = "Monitoring";
+
+    /* Comment this out until someone requests it */
+    /*
+    } else if (safe_str_eq(rsc->pending_task, "probe")) {
+        pending_task = "Checking";
+    */
+    }
+
+    return pending_task;
+}
+
 static void
 native_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     enum rsc_role_e role = rsc->role;
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *rsc_state = NULL;
 
     if(role == RSC_ROLE_STARTED && uber_parent(rsc)->variant == pe_master) {
         role = RSC_ROLE_SLAVE;
@@ -308,7 +359,14 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     status_print("resource_agent=\"%s%s%s:%s\" ",
                  class,
                  prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
-    status_print("role=\"%s\" ", role2text(role));
+
+    if (options & pe_print_pending) {
+        rsc_state = native_pending_state(rsc);
+    }
+    if (rsc_state == NULL) {
+        rsc_state = role2text(role);
+    }
+    status_print("role=\"%s\" ", rsc_state);
     status_print("active=\"%s\" ", rsc->fns->active(rsc, TRUE) ? "true" : "false");
     status_print("orphaned=\"%s\" ", is_set(rsc->flags, pe_rsc_orphan) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
@@ -316,6 +374,14 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     status_print("failure_ignored=\"%s\" ",
                  is_set(rsc->flags, pe_rsc_failure_ignored) ? "true" : "false");
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
+
+    if (options & pe_print_pending) {
+        const char *pending_task = native_pending_task(rsc);
+
+        if (pending_task) {
+            status_print("pending=\"%s\" ", pending_task);
+        }
+    }
 
     if (options & pe_print_dev) {
         status_print("provisional=\"%s\" ",
@@ -423,12 +489,29 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     } else if(is_set(rsc->flags, pe_rsc_failed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "FAILED ");
     } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", role2text(rsc->role));
+        const char *rsc_state = NULL;
+
+        if (options & pe_print_pending) {
+            rsc_state = native_pending_state(rsc);
+        }
+        if (rsc_state == NULL) {
+            rsc_state = role2text(rsc->role);
+        }
+        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", rsc_state);
     }
 
     if(node) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s ", node->details->uname);
     }
+
+    if (options & pe_print_pending) {
+        const char *pending_task = native_pending_task(rsc);
+
+        if (pending_task) {
+            offset += snprintf(buffer + offset, LINE_MAX - offset, "(%s) ", pending_task);
+        }
+    }
+
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
         offset += snprintf(buffer + offset, LINE_MAX - offset, "(unmanaged) ");
     }

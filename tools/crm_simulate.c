@@ -39,6 +39,7 @@ cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
 gboolean bringing_nodes_online = FALSE;
+gboolean print_pending = FALSE;
 
 #define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
@@ -528,7 +529,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
 }
 
 static void
-print_cluster_status(pe_working_set_t * data_set)
+print_cluster_status(pe_working_set_t * data_set, long options)
 {
     char *online_nodes = NULL;
     char *online_remote_nodes = NULL;
@@ -649,7 +650,7 @@ print_cluster_status(pe_working_set_t * data_set)
             && rsc->role == RSC_ROLE_STOPPED) {
             continue;
         }
-        rsc->fns->print(rsc, NULL, pe_print_printf, stdout);
+        rsc->fns->print(rsc, NULL, pe_print_printf | options, stdout);
     }
     fprintf(stdout, "\n");
 }
@@ -701,7 +702,7 @@ run_simulation(pe_working_set_t * data_set)
         data_set->now = get_date();
 
         cluster_status(data_set);
-        print_cluster_status(data_set);
+        print_cluster_status(data_set, 0);
     }
 
     if (graph_rc != transition_complete) {
@@ -1201,6 +1202,7 @@ static struct crm_option long_options[] = {
     {"show-scores",   0, 0, 's', "Show allocation scores"},
     {"show-utilization",   0, 0, 'U', "Show utilization information"},
     {"profile",       1, 0, 'P', "Run all tests in the named directory to create profiling data"},
+    {"pending",       0, 0, 'j', "\tDisplay pending state if 'record-pending' is enabled"},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
@@ -1447,6 +1449,9 @@ main(int argc, char **argv)
                 process = TRUE;
                 show_utilization = TRUE;
                 break;
+            case 'j':
+                print_pending = TRUE;
+                break;
             case 'S':
                 process = TRUE;
                 simulate = TRUE;
@@ -1515,8 +1520,10 @@ main(int argc, char **argv)
     cluster_status(&data_set);
 
     if (quiet == FALSE) {
+        int options = print_pending ? pe_print_pending : 0;
+
         quiet_log("\nCurrent cluster status:\n");
-        print_cluster_status(&data_set);
+        print_cluster_status(&data_set, options);
     }
 
     if (modified) {

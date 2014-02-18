@@ -64,6 +64,7 @@ char *xml_file = NULL;
 int cib_options = cib_sync_call;
 int crmd_replies_needed = 1; /* The welcome message */
 GMainLoop *mainloop = NULL;
+gboolean print_pending = FALSE;
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
@@ -284,6 +285,11 @@ do_find_resource_list(pe_working_set_t * data_set, gboolean raw)
     int found = 0;
 
     GListPtr lpc = NULL;
+    int opts = pe_print_printf | pe_print_rsconly;
+
+    if (print_pending) {
+        opts |= pe_print_pending;
+    }
 
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         resource_t *rsc = (resource_t *) lpc->data;
@@ -292,7 +298,7 @@ do_find_resource_list(pe_working_set_t * data_set, gboolean raw)
             && rsc->fns->active(rsc, TRUE) == FALSE) {
             continue;
         }
-        rsc->fns->print(rsc, NULL, pe_print_printf | pe_print_rsconly, stdout);
+        rsc->fns->print(rsc, NULL, opts, stdout);
         found++;
     }
 
@@ -323,11 +329,16 @@ dump_resource(const char *rsc, pe_working_set_t * data_set, gboolean expanded)
 {
     char *rsc_xml = NULL;
     resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
+    int opts = pe_print_printf;
 
     if (the_rsc == NULL) {
         return -ENXIO;
     }
-    the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
+
+    if (print_pending) {
+        opts |= pe_print_pending;
+    }
+    the_rsc->fns->print(the_rsc, NULL, opts, stdout);
 
     if (expanded) {
         rsc_xml = dump_xml_formatted(the_rsc->xml);
@@ -1088,6 +1099,10 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
     GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
     GListPtr lpc = NULL;
 
+    if (print_pending) {
+        opts |= pe_print_pending;
+    }
+
     for (lpc = ops; lpc != NULL; lpc = lpc->next) {
         xmlNode *xml_op = (xmlNode *) lpc->data;
 
@@ -1275,7 +1290,8 @@ static struct crm_option long_options[] = {
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
-    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},
+    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
+    {"pending",    0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled\n"},
 
     {"list-standards",        0, 0, 0, "\tList supported standards"},
     {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},
@@ -1597,6 +1613,9 @@ main(int argc, char **argv)
             case 'A':
             case 'a':
                 rsc_cmd = flag;
+                break;
+            case 'j':
+                print_pending = TRUE;
                 break;
             case 'p':
             case 'g':
