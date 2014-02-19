@@ -75,6 +75,10 @@ function test_tools() {
     cmd="cibadmin -Q"
     test_assert 0
 
+    desc="Configure something before erasing"
+    cmd="crm_attribute -n cluster-delay -v 60s"
+    test_assert 0
+
     desc="Require --force for CIB erasure"
     cmd="cibadmin -E"
     test_assert 22

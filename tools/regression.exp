@@ -258,11 +258,31 @@ A new shadow instance was created.  To begin using it paste the following into y
 </cib>
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin       - Validate CIB
+=#=#=#= Begin test: Configure something before erasing =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Configure something before erasing - OK (0) =#=#=#=
+* Passed: crm_attribute  - Configure something before erasing
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="1" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
-    <crm_config/>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+    </crm_config>
     <nodes/>
     <resources/>
     <constraints/>
@@ -272,7 +292,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Require --force for CIB erasure - Invalid argument (22) =#=#=#=
 * Passed: cibadmin       - Require --force for CIB erasure
 =#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="2" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -284,7 +304,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Allow CIB erasure with --force - OK (0) =#=#=#=
 * Passed: cibadmin       - Allow CIB erasure with --force
 =#=#=#= Begin test: Query CIB =#=#=#=
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="2" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -296,7 +316,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Query CIB - OK (0) =#=#=#=
 * Passed: cibadmin       - Query CIB
 =#=#=#= Begin test: Set cluster option =#=#=#=
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -313,7 +333,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: crm_attribute  - Set cluster option
 =#=#=#= Begin test: Query new cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -329,7 +349,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Query new cluster option - OK (0) =#=#=#=
 * Passed: cibadmin       - Query new cluster option
 =#=#=#= Begin test: Query cluster options =#=#=#=
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -345,7 +365,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Query cluster options - OK (0) =#=#=#=
 * Passed: cibadmin       - Query cluster options
 =#=#=#= Begin test: Set no-quorum policy =#=#=#=
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -362,7 +382,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Set no-quorum policy - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set no-quorum policy
 =#=#=#= Begin test: Delete nvpair =#=#=#=
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="5" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -386,7 +406,7 @@ Call failed: Name not unique on network
     </cluster_property_set>
   </failed_update>
 </failed>
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="5" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -402,7 +422,7 @@ Call failed: Name not unique on network
 =#=#=#= End test: Create operaton should fail - Name not unique on network (76) =#=#=#=
 * Passed: cibadmin       - Create operaton should fail
 =#=#=#= Begin test: Modify cluster options section =#=#=#=
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -420,7 +440,7 @@ Call failed: Name not unique on network
 * Passed: cibadmin       - Modify cluster options section
 =#=#=#= Begin test: Query updated cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -437,7 +457,7 @@ Call failed: Name not unique on network
 =#=#=#= End test: Query updated cluster option - OK (0) =#=#=#=
 * Passed: cibadmin       - Query updated cluster option
 =#=#=#= Begin test: Set duplicate cluster option =#=#=#=
-<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -461,7 +481,7 @@ Error performing operation: Name not unique on network
 Multiple attributes match name=cluster-delay
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
-<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -481,7 +501,7 @@ Multiple attributes match name=cluster-delay
 =#=#=#= End test: Setting multiply defined cluster option should fail - Name not unique on network (76) =#=#=#=
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail
 =#=#=#= Begin test: Set cluster option with -s =#=#=#=
-<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="8" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -503,7 +523,7 @@ Multiple attributes match name=cluster-delay
 =#=#=#= Begin test: Delete cluster option with -i =#=#=#=
 Deleted crm_config option: id=(null) name=cluster-delay
 
-<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="9" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -537,7 +557,7 @@ Revised cluster status:
 Online: [ node1 ]
 
 
-<cib epoch="10" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="10" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -560,7 +580,7 @@ Online: [ node1 ]
 =#=#=#= End test: Create node1 and bring it online - OK (0) =#=#=#=
 * Passed: crm_simulate   - Create node1 and bring it online
 =#=#=#= Begin test: Create node attribute =#=#=#=
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -588,7 +608,7 @@ Online: [ node1 ]
 * Passed: crm_attribute  - Create node attribute
 =#=#=#= Begin test: Query new node attribute =#=#=#=
       <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -615,7 +635,7 @@ Online: [ node1 ]
 =#=#=#= End test: Query new node attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Query new node attribute
 =#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: <cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+Digest: <cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -643,7 +663,7 @@ Digest: <cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker
 * Passed: cibadmin       - Digest calculation
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -672,7 +692,7 @@ Call failed: Update was older than existing configuration
 =#=#=#= Begin test: Default standby value =#=#=#=
 Error performing operation: No such device or address
 scope=status  name=standby value=off
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -699,7 +719,7 @@ scope=status  name=standby value=off
 =#=#=#= End test: Default standby value - OK (0) =#=#=#=
 * Passed: crm_standby    - Default standby value
 =#=#=#= Begin test: Set standby status =#=#=#=
-<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="12" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -728,7 +748,7 @@ scope=status  name=standby value=off
 * Passed: crm_standby    - Set standby status
 =#=#=#= Begin test: Query standby value =#=#=#=
 scope=nodes  name=standby value=true
-<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="12" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -763,7 +783,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
-<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="13" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -790,7 +810,7 @@ Could not establish attrd connection: Connection refused (111)
 =#=#=#= End test: Delete standby value - OK (0) =#=#=#=
 * Passed: crm_standby    - Delete standby value
 =#=#=#= Begin test: Create a resource =#=#=#=
-<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="14" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -819,7 +839,7 @@ Could not establish attrd connection: Connection refused (111)
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a resource
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="15" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -853,7 +873,7 @@ Could not establish attrd connection: Connection refused (111)
 * Passed: crm_resource   - Create a resource meta attribute
 =#=#=#= Begin test: Query a resource meta attribute =#=#=#=
 false
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="15" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -887,7 +907,7 @@ false
 * Passed: crm_resource   - Query a resource meta attribute
 =#=#=#= Begin test: Remove a resource meta attribute =#=#=#=
 Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="16" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -918,7 +938,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove a resource meta attribute
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -953,7 +973,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 * Passed: crm_resource   - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
  dummy	(ocf::pacemaker:Dummy):	Stopped 
-<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -992,7 +1012,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
-<cib epoch="17" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1035,7 +1055,7 @@ Could not establish attrd connection: Connection refused (111)
 Resource 'dummy' not moved: active in 0 locations.
 You can prevent 'dummy' from running on a specific location with: --ban --host <name>
 Error performing operation: Invalid argument
-<cib epoch="17" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1077,7 +1097,7 @@ Error performing operation: Invalid argument
 =#=#=#= Begin test: Don't support migration to non-existant locations =#=#=#=
 Error performing operation: node 'i.dont.exist' is unknown
 Error performing operation: No such device or address
-<cib epoch="17" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1117,7 +1137,7 @@ Error performing operation: No such device or address
 =#=#=#= End test: Don't support migration to non-existant locations - No such device or address (6) =#=#=#=
 * Passed: crm_resource   - Don't support migration to non-existant locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
-<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1182,7 +1202,7 @@ Online: [ node1 ]
  dummy	(ocf::pacemaker:Dummy):	Started node1 
  Fence	(stonith:fence_true):	Started node1 
 
-<cib epoch="18" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1235,7 +1255,7 @@ Online: [ node1 ]
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 Error performing operation: dummy is already active on node1
 Error performing operation: Invalid argument
-<cib epoch="18" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1290,7 +1310,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
 	This will be the case even if node1 is the last node in the cluster
 	This message can be disabled with --quiet
-<cib epoch="19" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="19" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1343,7 +1363,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= End test: Move a resource from its existing location - OK (0) =#=#=#=
 * Passed: crm_resource   - Move a resource from its existing location
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
-<cib epoch="20" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1395,7 +1415,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 * Passed: crm_resource   - Clear out constraints generated by --move
 =#=#=#= Begin test: Default ticket granted state =#=#=#=
 false
-<cib epoch="20" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1446,7 +1466,7 @@ false
 =#=#=#= End test: Default ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
-<cib epoch="20" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1501,7 +1521,7 @@ false
 * Passed: crm_ticket     - Set ticket granted state
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
-<cib epoch="20" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1555,7 +1575,7 @@ false
 =#=#=#= End test: Query ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
-<cib epoch="20" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1609,7 +1629,7 @@ false
 =#=#=#= End test: Delete ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
-<cib epoch="20" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="3" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1664,7 +1684,7 @@ false
 * Passed: crm_ticket     - Make a ticket standby
 =#=#=#= Begin test: Query ticket standby state =#=#=#=
 true
-<cib epoch="20" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="3" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1718,7 +1738,7 @@ true
 =#=#=#= End test: Query ticket standby state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
-<cib epoch="20" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1772,7 +1792,7 @@ true
 =#=#=#= End test: Activate a ticket - OK (0) =#=#=#=
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
-<cib epoch="20" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="5" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1828,7 +1848,7 @@ true
 =#=#=#= Begin test: Ban a resource on unknown node =#=#=#=
 Error performing operation: node 'host1' is unknown
 Error performing operation: No such device or address
-<cib epoch="20" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="5" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1912,7 +1932,7 @@ Online: [ node1 node2 node3 ]
  dummy	(ocf::pacemaker:Dummy):	Started node1 
  Fence	(stonith:fence_true):	Started node2 
 
-<cib epoch="22" num_updates="9" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="22" num_updates="8" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1996,7 +2016,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
 	This will be the case even if node1 is the last node in the cluster
 	This message can be disabled with --quiet
-<cib epoch="23" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="23" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2082,7 +2102,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 	This will prevent dummy from running on node2 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
 	This will be the case even if node2 is the last node in the cluster
 	This message can be disabled with --quiet
-<cib epoch="24" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="24" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2186,7 +2206,7 @@ Online: [ node1 node2 node3 ]
  dummy	(ocf::pacemaker:Dummy):	Started node3 
  Fence	(stonith:fence_true):	Started node2 
 
-<cib epoch="24" num_updates="3" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="24" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2269,7 +2289,7 @@ Online: [ node1 node2 node3 ]
 =#=#=#= End test: Relocate resources due to ban - OK (0) =#=#=#=
 * Passed: crm_simulate   - Relocate resources due to ban
 =#=#=#= Begin test: Move dummy to node1 =#=#=#=
-<cib epoch="26" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="26" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2352,7 +2372,7 @@ Online: [ node1 node2 node3 ]
 =#=#=#= End test: Move dummy to node1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Move dummy to node1
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="27" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="27" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
