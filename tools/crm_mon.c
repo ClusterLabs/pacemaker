@@ -1150,6 +1150,20 @@ static void print_neg_locations(pe_working_set_t *data_set)
     }
 }
 
+static void
+crm_mon_get_parameters(resource_t *rsc, pe_working_set_t * data_set)
+{
+    get_rsc_attributes(rsc->parameters, rsc, NULL, data_set);
+    crm_trace("Beekhof: unpacked params for %s (%d)", rsc->id, g_hash_table_size(rsc->parameters));
+    if(rsc->children) {
+        GListPtr gIter = NULL;
+
+        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            crm_mon_get_parameters(gIter->data, data_set);
+        }
+    }
+}
+
 static int
 print_status(pe_working_set_t * data_set)
 {
@@ -1416,6 +1430,11 @@ print_status(pe_working_set_t * data_set)
 
     if (print_nodes_attr) {
         print_as("\nNode Attributes:\n");
+
+        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+            crm_mon_get_parameters(gIter->data, data_set);
+        }
+
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
 
