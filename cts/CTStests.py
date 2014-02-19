@@ -1847,6 +1847,7 @@ class SpecialTest1(CTSTest):
         '''Return list of errors which should be ignored'''
         # Errors that occur as a result of the CIB being wiped
         return [
+            """warning: retrieveCib: Cluster configuration not found:""",
             """error: cib_perform_op: v1 patchset error, patch failed to apply: Application of an update diff failed""",
             """error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined""",
             """error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option""",
