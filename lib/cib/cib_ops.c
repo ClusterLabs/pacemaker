@@ -91,7 +91,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     *result_cib = createEmptyCib();
 
     copy_in_properties(*result_cib, existing_cib);
-    cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
+    cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
 
     return result;
 }
