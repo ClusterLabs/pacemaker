@@ -344,8 +344,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     xmlNode *ops = NULL;
     resource_t *top = NULL;
     const char *value = NULL;
+    const char *class = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *class = crm_element_value(xml_obj, XML_AGENT_ATTR_CLASS);
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
@@ -375,14 +375,16 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         (*rsc)->orig_xml = NULL;
     }
 
+    /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
+    class = crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS);
     (*rsc)->parent = parent;
 
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
-    (*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
+    (*rsc)->variant = get_resource_type(crm_element_name((*rsc)->xml));
     if ((*rsc)->variant == pe_unknown) {
-        pe_err("Unknown resource type: %s", crm_element_name(xml_obj));
+        pe_err("Unknown resource type: %s", crm_element_name((*rsc)->xml));
         free(*rsc);
         return FALSE;
     }
@@ -398,7 +400,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     (*rsc)->known_on = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
 
-    value = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
+    value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
     if (value) {
         (*rsc)->id = crm_concat(id, value, ':');
         add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
@@ -602,7 +604,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
-    } else if (xml_contains_remote_node(xml_obj) && g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+    } else if (xml_contains_remote_node((*rsc)->xml) && g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
         /* remote resources tied to a container resource must always be allowed
          * to opt-in to the cluster. Whether the connection resource is actually
          * allowed to be placed on a node is dependent on the container resource */
