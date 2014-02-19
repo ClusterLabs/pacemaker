@@ -290,11 +290,11 @@ pcmkRegisterNode(xmlNodePtr node)
 {
     xml_private_t *p = NULL;
 
-    /* TODO: Comment nodes? */
     switch(node->type) {
         case XML_ELEMENT_NODE:
         case XML_DOCUMENT_NODE:
         case XML_ATTRIBUTE_NODE:
+        case XML_COMMENT_NODE:
             p = calloc(1, sizeof(xml_private_t));
             p->check = (long) 0x81726354;
             /* Flags will be reset if necessary when tracking is enabled */
@@ -532,11 +532,16 @@ __xml_accept_changes(xmlNode * xml)
     xml_private_t *p = xml->_private;
 
     p->flags = xpf_none;
+    pIter = crm_first_attr(xml);
 
-    for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
+    while (pIter != NULL) {
+        const xmlChar *name = pIter->name;
+
         p = pIter->_private;
+        pIter = pIter->next;
+
         if(p->flags & xpf_deleted) {
-            xml_remove_prop(xml, (const char *)pIter->name);
+            xml_remove_prop(xml, (const char *)name);
 
         } else {
             p->flags = xpf_none;
