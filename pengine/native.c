@@ -819,7 +819,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 void
 Recurring(resource_t * rsc, action_t * start, node_t * node, pe_working_set_t * data_set)
 {
-    if (is_not_set(data_set->flags, pe_flag_maintenance_mode) &&
+    if (is_not_set(rsc->flags, pe_rsc_maintenance) &&
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
@@ -1049,7 +1049,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 void
 Recurring_Stopped(resource_t * rsc, action_t * start, node_t * node, pe_working_set_t * data_set)
 {
-    if (is_not_set(data_set->flags, pe_flag_maintenance_mode) && 
+    if (is_not_set(rsc->flags, pe_rsc_maintenance) && 
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 

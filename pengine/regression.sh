@@ -531,6 +531,8 @@ do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive reso
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
 
+do_test rsc-maintenance "Per-resource maintenance"
+
 echo ""
 do_test not-installed-agent "The resource agent is missing"
 do_test not-installed-tools "Something the resource agent needs is missing"

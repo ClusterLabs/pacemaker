@@ -458,8 +458,19 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         }
     }
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
+    if (value != NULL && safe_str_neq("default", value)) {
+        gboolean bool_value = FALSE;
+
+        crm_str_to_boolean(value, &bool_value);
+        if (bool_value == TRUE) {
+            clear_bit((*rsc)->flags, pe_rsc_managed);
+            set_bit((*rsc)->flags, pe_rsc_maintenance);
+        }
+
+    } else if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         clear_bit((*rsc)->flags, pe_rsc_managed);
+        set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
