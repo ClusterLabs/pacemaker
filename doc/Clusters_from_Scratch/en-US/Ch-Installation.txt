@@ -997,7 +997,7 @@ Password:
 pcmk-1: Authorized
 pcmk-2: Authorized
 
-# pcs cluster setup mycluster pcmk-1 pcmk-2
+# pcs cluster setup --name mycluster pcmk-1 pcmk-2
 pcmk-1: Succeeded
 pcmk-2: Succeeded
 ----

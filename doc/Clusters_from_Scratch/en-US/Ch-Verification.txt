@@ -99,7 +99,7 @@ runtime.totem.pg.mrp.srp.members.2.status (str) = joined
 Membership information
  --------------------------
     Nodeid      Votes Name
-         1          1 pcmk-1
+         1          1 pcmk-1 (local)
          2          1 pcmk-2
 ----
 

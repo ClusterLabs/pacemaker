@@ -19,7 +19,7 @@ ifdef::pcs[]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: WebSite-clone [WebSite]
      Started: [ pcmk-1 pcmk-2 ]
-# pcs resource rsc defaults
+# pcs resource defaults
 resource-stickiness: 100
 # pcs resource op defaults
 timeout: 240s
@@ -303,7 +303,7 @@ ifdef::pcs[]
 * resource-stickiness - Specify the aversion to moving resources to other machines
 [source,C]
 ----
-# pcs resource rsc defaults
+# pcs resource defaults
 resource-stickiness: 100
 ----
 endif::[]

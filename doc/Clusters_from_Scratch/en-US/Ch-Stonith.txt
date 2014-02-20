@@ -81,7 +81,7 @@ ifdef::crmsh[]
 endif::[]
 
 ifdef::pcs[]
-. Commit the new configuration. +pcs cluster push cib stonith_cfg+
+. Commit the new configuration. +pcs cluster cib-push stonith_cfg+
 endif::[]
 
 . Once the stonith resource is running, you can test it by executing:
@@ -261,7 +261,7 @@ Now push the configuration into the cluster.
 ifdef::pcs[]
 [source,C]
 ----
-# pcs cluster push cib stonith_cfg
+# pcs cluster cib-push stonith_cfg
 ----
 endif::[]
 

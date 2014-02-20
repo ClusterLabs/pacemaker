@@ -601,7 +601,7 @@ WebSite will be forced to move to pcmk-1.
 [source,C]
 -----
 # pcs constraint location WebSite prefers pcmk-1=INFINITY
-# pcs constraint all
+# pcs constraint --full
 Location Constraints:
   Resource: WebSite
     Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)
@@ -708,7 +708,7 @@ Ordering Constraints:
   start ClusterIP then start WebSite (Mandatory) (id:order-ClusterIP-WebSite-mandatory)
 Colocation Constraints:
   WebSite with ClusterIP (INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)
-# pcs constraint rm location-WebSite-pcmk-1-INFINITY
+# pcs constraint remove location-WebSite-pcmk-1-INFINITY
 # pcs constraint
 Location Constraints:
 Ordering Constraints:

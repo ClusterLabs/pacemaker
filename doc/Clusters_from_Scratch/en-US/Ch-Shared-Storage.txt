@@ -334,7 +334,7 @@ cib.
 
 [source,C]
 ----
-# pcs cluster push cib drbd_cfg 
+# pcs cluster cib-push drbd_cfg 
 CIB updated
 
 # pcs status
@@ -594,7 +594,7 @@ cluster put it into effect.
 ifdef::pcs[]
 [source,C]
 ----
-# pcs cluster push cib fs_cfg
+# pcs cluster cib-push fs_cfg
 CIB updated
 # pcs status
  Last updated: Fri Aug 10 12:47:01 2012

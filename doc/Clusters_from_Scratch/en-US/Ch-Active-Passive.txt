@@ -656,8 +656,8 @@ resource, but it is often sufficient to change the default.
 ifdef::pcs[]
 [source,C]
 ----
-# pcs resource rsc defaults resource-stickiness=100
-# pcs resource rsc defaults
+# pcs resource defaults resource-stickiness=100
+# pcs resource defaults
 resource-stickiness: 100
 ----
 endif::[]

@@ -80,7 +80,7 @@ are not only stopped, but stopped in the correct order.
 ifdef::pcs[]
 [source,C]
 ----
-# pcs resource stop WebFS
+# pcs resource disable WebFS
 # pcs resource
  ClusterIP	(ocf::heartbeat:IPaddr2) Started 
  WebSite	(ocf::heartbeat:apache) Stopped 
@@ -94,7 +94,7 @@ endif::[]
 ifdef::crmsh[]
 [source,C]
 -----
-# crm resource stop WebFS
+# crm resource disable WebFS
 # crm_mon -1
 ============
 Last updated: Tue Apr  3 14:07:36 2012
@@ -222,7 +222,7 @@ ifdef::pcs[]
  WebFS	(ocf::heartbeat:Filesystem) Stopped 
  Clone Set: dlm-clone [dlm]
      Stopped: [ dlm:0 dlm:1 ]
-# pcs cluster push cib dlm_cfg
+# pcs cluster cib-push dlm_cfg
 CIB updated
 # pcs status
 
@@ -695,8 +695,8 @@ shell and watching the cluster's response
 ifdef::pcs[]
 [source,C]
 -----
-# pcs cluster push cib active_cfg
-# pcs resource start WebFS
+# pcs cluster cib-push active_cfg
+# pcs resource enable WebFS
 -----
 
 After all the processes are started the status should look

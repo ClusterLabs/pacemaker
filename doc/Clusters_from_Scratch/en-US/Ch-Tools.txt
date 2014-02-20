@@ -46,16 +46,19 @@ use, (corosync 2.0 with votequorum + Pacemaker version >= 1.1.8).
 Control and configure pacemaker and corosync.
 
 Options:
-    -h          Display usage and exit
+    -h, --help  Display usage and exit
     -f file     Perform actions on file instead of active CIB
+    --debug     Print all network traffic and external commands run
+    --version   Print pcs version information
 
 Commands:
-    resource    Manage cluster resources
     cluster     Configure cluster options and nodes
+    resource    Manage cluster resources
     stonith     Configure fence devices
-    property    Set pacemaker properties
     constraint  Set resource constraints
+    property    Set pacemaker properties
     status      View cluster status
+    config      Print full cluster configuration
 .....
 
 As you can see, the different aspects of cluster management are broken
@@ -71,33 +74,33 @@ is an example of all the options available under the status category.
 Usage: pcs status [commands]...
 View current cluster and resource status
 Commands:
-    status
+    [status]
         View all information about the cluster and resources
 
-    status resources
+    resources
         View current status of cluster resources
 
-    status groups
+    groups
         View currently configured groups and their resources
 
-    status cluster
+    cluster
         View current cluster status
 
-    status corosync
-        View current corosync status
+    corosync
+        View current membership information as seen by corosync
 
-    status nodes [corosync]
-        View current status of nodes from pacemaker, or if corosync is
-        specified, print nodes currently configured in corosync
+    nodes [corosync|both|config]
+        View current status of nodes from pacemaker. If 'corosync' is
+        specified, print nodes currently configured in corosync, if 'both'
+        is specified, print nodes from both corosync & pacemaker.  If 'config'
+        is specified, print nodes from corosync & pacemaker configuration.
 
-    status actions
-        View failed actions
-
-    status pcsd <node> ...
+    pcsd <node> ...
         Show the current status of pcsd on the specified nodes
 
-    status xml
+    xml
         View xml version of status (output from crm_mon -r -1 -X)
+
 .....
 
 Additionally, if you are interested in the Pacemaker version and
