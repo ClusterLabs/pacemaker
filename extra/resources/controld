@@ -34,6 +34,12 @@
 
 #######################################################################
 
+if [ -e "$OCF_ROOT/resource.d/heartbeat/controld" ]; then
+    ocf_log info "Using heartbeat controld agent"
+    $OCF_ROOT/resource.d/heartbeat/controld $1
+    exit $?
+fi
+
 meta_data() {
 	cat <<END
 <?xml version="1.0"?>
@@ -103,12 +109,29 @@ END
 
 #######################################################################
 
+DLM_SYSFS_DIR="/sys/kernel/dlm"
+
 controld_usage() {
 	cat <<END
 usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
+}
+
+check_uncontrolled_locks()
+{
+    local tmp
+    tmp=$(ls $DLM_SYSFS_DIR 2>&1)
+    if [ $? -eq 0 ]; then
+        if [ -n "$tmp" ]; then
+
+            ocf_log err "Uncontrolled lockspace exists, system must reboot. Executing suicide fencing"
+            stonith_admin --reboot=$(crm_node -n) --tag controld
+
+            exit $OCF_ERR_GENERIC
+        fi
+    fi
 }
 
 controld_start() {
@@ -156,8 +179,8 @@ controld_start() {
         controld_monitor; rc=$?
         case $rc in
           $OCF_SUCCESS)
-            check_dir=/sys/kernel/config/dlm/cluster/comms
-            if grep 1 $check_dir/*/local >/dev/null 2>&1; then
+            local addr_list=$(cat /sys/kernel/config/dlm/cluster/comms/*/addr_list 2>/dev/null)
+            if [ $? -eq 0 ] && [ -n "$addr_list" ]; then
                 return $OCF_SUCCESS
             fi
             ;;
@@ -200,13 +223,22 @@ controld_stop() {
 }
 
 controld_monitor() {
+    local rc
     killall -0 ${OCF_RESKEY_daemon} >/dev/null 2>&1 ; rc=$?
 
     case $rc in
-      0) return $OCF_SUCCESS;;
-      1) return $OCF_NOT_RUNNING;;
-      *) return $OCF_ERR_GENERIC;;
+      0) rc=$OCF_SUCCESS;;
+      1) rc=$OCF_NOT_RUNNING;;
+      *) rc=$OCF_ERR_GENERIC;;
     esac
+
+    # if the dlm is not successfully running, but
+    # dlm lockspace bits are left over, we self must fence.
+    if [ $rc -ne $OCF_SUCCESS ]; then
+        check_uncontrolled_locks
+    fi
+
+    return $rc
 }
 
 controld_validate() {
@@ -239,11 +271,11 @@ case "$OCF_RESOURCE_INSTANCE" in
 	: ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
 	;;
     *[dD][lL][mM]*)
-	: ${OCF_RESKEY_args=-q 0}
+	: ${OCF_RESKEY_args=-q 0 -s 0}
 	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 	;;
     *)
-	: ${OCF_RESKEY_args=-q 0}
+	: ${OCF_RESKEY_args=-q 0 -s 0}
 	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 esac
 
