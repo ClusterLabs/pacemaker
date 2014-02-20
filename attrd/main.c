@@ -278,7 +278,7 @@ main(int argc, char **argv)
     qb_ipcs_service_t *ipcs = NULL;
 
     mloop = g_main_new(FALSE);
-    crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating and atomically storing node attribute updates into the CIB");
 
