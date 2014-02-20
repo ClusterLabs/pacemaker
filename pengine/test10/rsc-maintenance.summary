@@ -1,0 +1,27 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Resource Group: group1
+     rsc1	(ocf::pacemaker:Dummy):	Started node1 (unmanaged) 
+     rsc2	(ocf::pacemaker:Dummy):	Started node1 (unmanaged) 
+ Resource Group: group2
+     rsc3	(ocf::pacemaker:Dummy):	Started node2 
+     rsc4	(ocf::pacemaker:Dummy):	Started node2 
+
+Transition Summary:
+
+Executing cluster transition:
+ * Resource action: rsc1            cancel=10000 on node1
+ * Resource action: rsc2            cancel=10000 on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Resource Group: group1
+     rsc1	(ocf::pacemaker:Dummy):	Started node1 (unmanaged) 
+     rsc2	(ocf::pacemaker:Dummy):	Started node1 (unmanaged) 
+ Resource Group: group2
+     rsc3	(ocf::pacemaker:Dummy):	Started node2 
+     rsc4	(ocf::pacemaker:Dummy):	Started node2 
+
