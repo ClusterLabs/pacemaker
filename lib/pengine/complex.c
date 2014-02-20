@@ -200,6 +200,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
     const char *template_ref = NULL;
+    const char *clone = NULL;
     const char *id = NULL;
 
     if (xml_obj == NULL) {
@@ -238,6 +239,12 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_replace(new_xml, XML_ATTR_ID, id);
+
+    clone = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
+    if(clone) {
+        crm_xml_add(new_xml, XML_RSC_ATTR_INCARNATION, clone);
+    }
+
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
     for (child_xml = __xml_first_child(xml_obj); child_xml != NULL;
