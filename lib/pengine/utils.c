@@ -1410,7 +1410,7 @@ get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 
     const char *match = strstr(key, search->key);
 
-    if (match) {
+    if (safe_str_eq((key+13), match)) {
         if (strstr(key, "last-failure-") == key && (key + 13) == match) {
             search->last = crm_int_helper(value, NULL);
 
