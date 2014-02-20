@@ -16,6 +16,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: rsc_pcmk-1      monitor=5000 on pcmk-1
  * Cluster action:  clear_failcount for rsc_pcmk-1 on pcmk-1
+ * Resource action: rsc_pcmk-2      cancel=5000 on pcmk-1
  * Resource action: rsc_pcmk-3      start on pcmk-1
  * Cluster action:  clear_failcount for rsc_pcmk-3 on pcmk-1
  * Resource action: rsc_pcmk-4      start on pcmk-1

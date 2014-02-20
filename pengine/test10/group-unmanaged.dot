@@ -1,4 +1,5 @@
 digraph "g" {
+"Cancel r192.168.122.114_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
 "probe_complete pcmk-1" [ style=bold color="green" fontcolor="black"]
 "probe_complete pcmk-2" [ style=bold color="green" fontcolor="black"]
 }

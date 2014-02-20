@@ -1,4 +1,5 @@
 digraph "g" {
+"Cancel rsc1_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 }

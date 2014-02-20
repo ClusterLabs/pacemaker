@@ -78,33 +78,41 @@ Executing cluster transition:
  * Resource action: child_DoFencing:0 monitor on c001n09
  * Resource action: child_DoFencing:0 monitor on c001n08
  * Resource action: child_DoFencing:0 monitor on c001n07
+ * Resource action: child_DoFencing:0 cancel=5000 on c001n02
  * Resource action: child_DoFencing:1 monitor on c001n08
  * Resource action: child_DoFencing:1 monitor on c001n07
  * Resource action: child_DoFencing:1 monitor on c001n02
+ * Resource action: child_DoFencing:1 cancel=5000 on c001n03
  * Resource action: child_DoFencing:2 monitor on c001n09
  * Resource action: child_DoFencing:2 monitor on c001n08
  * Resource action: child_DoFencing:2 monitor on c001n07
  * Resource action: child_DoFencing:2 monitor on c001n03
+ * Resource action: child_DoFencing:2 cancel=5000 on c001n04
  * Resource action: child_DoFencing:3 monitor on c001n08
  * Resource action: child_DoFencing:3 monitor on c001n04
  * Resource action: child_DoFencing:3 monitor on c001n02
+ * Resource action: child_DoFencing:3 cancel=5000 on c001n05
  * Resource action: child_DoFencing:4 monitor on c001n09
  * Resource action: child_DoFencing:4 monitor on c001n05
  * Resource action: child_DoFencing:4 monitor on c001n03
+ * Resource action: child_DoFencing:4 cancel=5000 on c001n06
  * Resource action: child_DoFencing:5 monitor on c001n08
  * Resource action: child_DoFencing:5 monitor on c001n05
  * Resource action: child_DoFencing:5 monitor on c001n04
  * Resource action: child_DoFencing:5 monitor on c001n02
+ * Resource action: child_DoFencing:5 cancel=5000 on c001n07
  * Resource action: child_DoFencing:6 monitor on c001n09
  * Resource action: child_DoFencing:6 monitor on c001n07
  * Resource action: child_DoFencing:6 monitor on c001n05
  * Resource action: child_DoFencing:6 monitor on c001n04
+ * Resource action: child_DoFencing:6 cancel=5000 on c001n08
  * Resource action: child_DoFencing:7 monitor on c001n08
  * Resource action: child_DoFencing:7 monitor on c001n07
  * Resource action: child_DoFencing:7 monitor on c001n05
  * Resource action: child_DoFencing:7 monitor on c001n04
  * Resource action: child_DoFencing:7 monitor on c001n03
  * Resource action: child_DoFencing:7 monitor on c001n02
+ * Resource action: child_DoFencing:7 cancel=5000 on c001n09
  * Pseudo action:   probe_complete
 
 Revised cluster status:

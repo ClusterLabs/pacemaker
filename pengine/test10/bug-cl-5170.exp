@@ -56,6 +56,15 @@
   </synapse>
   <synapse id="4">
     <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="d_tomcat_nms_cancel_15000" internal_operation_key="d_tomcat_nms:0_monitor_15000" on_node="TCS-2" on_node_uuid="TCS-2">
+        <primitive id="d_tomcat_nms" long-id="d_tomcat_nms:0" class="ocf" provider="ntc" type="tomcat"/>
+        <attributes CRM_meta_call_id="3583" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_operation="monitor" CRM_meta_timeout="510000"  instance_name="NMS" monitor_timeout="120" monitor_urls="/tcs/health" monitor_use_ssl="no"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
       <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>

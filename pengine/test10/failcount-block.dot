@@ -1,4 +1,5 @@
 digraph "g" {
+"Cancel rsc_pcmk-2_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-1_clear_failcount pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-1_monitor_5000 pcmk-1" [ style=bold color="green" fontcolor="black"]
 "rsc_pcmk-3_clear_failcount pcmk-1" [ style=bold color="green" fontcolor="black"]

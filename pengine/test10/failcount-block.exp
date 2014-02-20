@@ -19,6 +19,15 @@
   </synapse>
   <synapse id="2">
     <action_set>
+      <rsc_op id="3" operation="cancel" operation_key="rsc_pcmk-2_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="rsc_pcmk-2" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_call_id="38" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_fail="block" CRM_meta_operation="monitor" CRM_meta_timeout="90000" cidr_netmask="22"  ip="192.168.122.107"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
       <rsc_op id="14" operation="monitor" operation_key="rsc_pcmk-3_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="90000" cidr_netmask="32"  ip="192.168.122.107"/>
@@ -30,7 +39,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="3">
+  <synapse id="4">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="rsc_pcmk-3_start_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -39,7 +48,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="4">
+  <synapse id="5">
     <action_set>
       <crm_event id="4" operation="clear_failcount" operation_key="rsc_pcmk-3_clear_failcount" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-3" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -48,7 +57,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="5">
+  <synapse id="6">
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="rsc_pcmk-4_monitor_5000" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-4" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -61,7 +70,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
+  <synapse id="7">
     <action_set>
       <rsc_op id="15" operation="start" operation_key="rsc_pcmk-4_start_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-4" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -70,7 +79,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="7">
+  <synapse id="8">
     <action_set>
       <crm_event id="5" operation="clear_failcount" operation_key="rsc_pcmk-5_clear_failcount" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="rsc_pcmk-5" class="ocf" provider="heartbeat" type="IPaddr2"/>

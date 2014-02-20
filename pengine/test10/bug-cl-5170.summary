@@ -17,6 +17,7 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   svc_stop_0
  * Resource action: ip_mgmt         stop on TCS-2
+ * Resource action: d_tomcat_nms    cancel=15000 on TCS-2
  * Resource action: ip_trf          stop on TCS-2
  * Pseudo action:   all_stopped
  * Pseudo action:   svc_stopped_0

@@ -28,6 +28,13 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
 Transition Summary:
 
 Executing cluster transition:
+ * Resource action: r192.168.122.112 cancel=5000 on pcmk-3
+ * Resource action: r192.168.122.113 cancel=5000 on pcmk-3
+ * Resource action: r192.168.122.114 cancel=5000 on pcmk-3
+ * Resource action: rsc_pcmk-1      cancel=5000 on pcmk-1
+ * Resource action: rsc_pcmk-2      cancel=5000 on pcmk-2
+ * Resource action: rsc_pcmk-3      cancel=5000 on pcmk-3
+ * Resource action: rsc_pcmk-4      cancel=5000 on pcmk-4
  * Resource action: lsb-dummy       monitor=5000 on pcmk-3
  * Resource action: migrator        monitor=10000 on pcmk-4
  * Resource action: ping-1:0        monitor=60000 on pcmk-2

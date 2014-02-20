@@ -172,6 +172,15 @@
    </synapse>
    <synapse id="19">
      <action_set>
+      <rsc_op id="3" operation="cancel" operation_key="rsc_c001n02_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+        <primitive id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="60" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.12"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="20">
+    <action_set>
       <rsc_op id="155" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  ip="127.0.0.13"/>
@@ -179,7 +188,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="20">
+  <synapse id="21">
      <action_set>
       <rsc_op id="133" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -188,7 +197,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="21">
+  <synapse id="22">
      <action_set>
       <rsc_op id="111" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -197,7 +206,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="22">
+  <synapse id="23">
      <action_set>
       <rsc_op id="78" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -206,7 +215,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="23">
+  <synapse id="24">
      <action_set>
       <rsc_op id="58" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -215,7 +224,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="24">
+  <synapse id="25">
      <action_set>
       <rsc_op id="22" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -224,7 +233,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="25">
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="5" operation="cancel" operation_key="rsc_c001n03_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+        <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.13"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="27">
      <action_set>
       <rsc_op id="156" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -233,7 +251,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="26">
+  <synapse id="28">
      <action_set>
       <rsc_op id="134" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -242,7 +260,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="27">
+  <synapse id="29">
      <action_set>
       <rsc_op id="112" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -251,7 +269,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="28">
+  <synapse id="30">
      <action_set>
       <rsc_op id="79" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -260,7 +278,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="29">
+  <synapse id="31">
      <action_set>
       <rsc_op id="40" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -269,7 +287,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="30">
+  <synapse id="32">
      <action_set>
       <rsc_op id="23" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -278,7 +296,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="31">
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="7" operation="cancel" operation_key="rsc_c001n04_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+        <primitive id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.14"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="34">
      <action_set>
       <rsc_op id="157" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -287,7 +314,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="32">
+  <synapse id="35">
      <action_set>
       <rsc_op id="135" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -296,7 +323,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="33">
+  <synapse id="36">
      <action_set>
       <rsc_op id="113" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -305,7 +332,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="34">
+  <synapse id="37">
      <action_set>
       <rsc_op id="97" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -314,7 +341,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="35">
+  <synapse id="38">
      <action_set>
       <rsc_op id="59" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -323,7 +350,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="36">
+  <synapse id="39">
      <action_set>
       <rsc_op id="41" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -332,7 +359,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="37">
+  <synapse id="40">
      <action_set>
       <rsc_op id="24" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -341,7 +368,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="38">
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="9" operation="cancel" operation_key="rsc_c001n05_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+        <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.15"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="42">
      <action_set>
       <rsc_op id="158" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -350,7 +386,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="39">
+  <synapse id="43">
      <action_set>
       <rsc_op id="136" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -359,7 +395,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="40">
+  <synapse id="44">
      <action_set>
       <rsc_op id="114" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -368,7 +404,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="41">
+  <synapse id="45">
      <action_set>
       <rsc_op id="80" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -377,7 +413,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="42">
+  <synapse id="46">
      <action_set>
       <rsc_op id="60" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -386,7 +422,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="43">
+  <synapse id="47">
      <action_set>
       <rsc_op id="42" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -395,7 +431,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="44">
+  <synapse id="48">
+    <action_set>
+      <rsc_op id="11" operation="cancel" operation_key="rsc_c001n06_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+        <primitive id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="209" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.16"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="49">
      <action_set>
       <rsc_op id="159" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -404,7 +449,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="45">
+  <synapse id="50">
      <action_set>
       <rsc_op id="137" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -413,7 +458,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="46">
+  <synapse id="51">
      <action_set>
       <rsc_op id="98" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -422,7 +467,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="47">
+  <synapse id="52">
      <action_set>
       <rsc_op id="81" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -431,7 +476,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="48">
+  <synapse id="53">
      <action_set>
       <rsc_op id="61" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -440,7 +485,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="49">
+  <synapse id="54">
+    <action_set>
+      <rsc_op id="13" operation="cancel" operation_key="rsc_c001n07_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+        <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.17"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="55">
      <action_set>
       <rsc_op id="160" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -449,7 +503,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="50">
+  <synapse id="56">
      <action_set>
       <rsc_op id="115" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -458,7 +512,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="51">
+  <synapse id="57">
      <action_set>
       <rsc_op id="82" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -467,7 +521,16 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="52">
+  <synapse id="58">
+    <action_set>
+      <rsc_op id="16" operation="cancel" operation_key="rsc_c001n08_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+        <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_call_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_timeout="20000"  ip="127.0.0.18"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="59">
      <action_set>
       <rsc_op id="161" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
@@ -476,7 +539,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="53">
+  <synapse id="60">
      <action_set>
       <rsc_op id="138" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
@@ -485,7 +548,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="54">
+  <synapse id="61">
      <action_set>
       <rsc_op id="116" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
@@ -494,7 +557,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="55">
+  <synapse id="62">
      <action_set>
       <rsc_op id="139" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
@@ -503,7 +566,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="56">
+  <synapse id="63">
      <action_set>
       <rsc_op id="117" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
@@ -512,7 +575,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="57">
+  <synapse id="64">
      <action_set>
       <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
@@ -521,7 +584,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="58">
+  <synapse id="65">
      <action_set>
       <rsc_op id="162" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
@@ -530,7 +593,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="59">
+  <synapse id="66">
      <action_set>
       <rsc_op id="140" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
@@ -539,7 +602,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="60">
+  <synapse id="67">
      <action_set>
       <rsc_op id="118" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
@@ -548,7 +611,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="61">
+  <synapse id="68">
      <action_set>
       <rsc_op id="43" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
@@ -557,7 +620,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="62">
+  <synapse id="69">
      <action_set>
       <rsc_op id="141" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
@@ -566,7 +629,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="63">
+  <synapse id="70">
      <action_set>
       <rsc_op id="62" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
@@ -575,7 +638,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="64">
+  <synapse id="71">
      <action_set>
       <rsc_op id="26" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_DoFencing:3" class="stonith" type="ssh"/>
@@ -584,7 +647,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="65">
+  <synapse id="72">
      <action_set>
       <rsc_op id="163" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_DoFencing:4" class="stonith" type="ssh"/>
@@ -593,7 +656,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="66">
+  <synapse id="73">
      <action_set>
       <rsc_op id="83" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_DoFencing:4" class="stonith" type="ssh"/>
@@ -602,7 +665,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="67">
+  <synapse id="74">
      <action_set>
       <rsc_op id="44" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_DoFencing:4" class="stonith" type="ssh"/>
@@ -611,7 +674,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="68">
+  <synapse id="75">
      <action_set>
       <rsc_op id="142" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:5" class="stonith" type="ssh"/>
@@ -620,7 +683,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="69">
+  <synapse id="76">
      <action_set>
       <rsc_op id="84" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_DoFencing:5" class="stonith" type="ssh"/>
@@ -629,7 +692,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="70">
+  <synapse id="77">
      <action_set>
       <rsc_op id="63" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_DoFencing:5" class="stonith" type="ssh"/>
@@ -638,7 +701,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="71">
+  <synapse id="78">
      <action_set>
       <rsc_op id="27" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_DoFencing:5" class="stonith" type="ssh"/>
@@ -647,7 +710,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="72">
+  <synapse id="79">
      <action_set>
       <rsc_op id="164" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_DoFencing:6" class="stonith" type="ssh"/>
@@ -656,7 +719,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="73">
+  <synapse id="80">
      <action_set>
       <rsc_op id="119" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_DoFencing:6" class="stonith" type="ssh"/>
@@ -665,7 +728,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="74">
+  <synapse id="81">
      <action_set>
       <rsc_op id="85" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_DoFencing:6" class="stonith" type="ssh"/>
@@ -674,7 +737,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="75">
+  <synapse id="82">
      <action_set>
       <rsc_op id="64" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_DoFencing:6" class="stonith" type="ssh"/>
@@ -683,7 +746,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="76">
+  <synapse id="83">
      <action_set>
       <rsc_op id="143" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -692,7 +755,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="77">
+  <synapse id="84">
      <action_set>
       <rsc_op id="120" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -701,7 +764,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="78">
+  <synapse id="85">
      <action_set>
       <rsc_op id="86" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -710,7 +773,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="79">
+  <synapse id="86">
      <action_set>
       <rsc_op id="65" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -719,7 +782,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="80">
+  <synapse id="87">
      <action_set>
       <rsc_op id="45" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -728,7 +791,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="81">
+  <synapse id="88">
      <action_set>
       <rsc_op id="28" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_DoFencing:7" class="stonith" type="ssh"/>
@@ -737,7 +800,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="82">
+  <synapse id="89">
      <action_set>
       <rsc_op id="212" operation="monitor" operation_key="child_CloneSet:0_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -750,7 +813,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="83">
+  <synapse id="90">
      <action_set>
       <rsc_op id="211" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -766,7 +829,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="84">
+  <synapse id="91">
      <action_set>
       <rsc_op id="165" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -775,7 +838,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="85">
+  <synapse id="92">
      <action_set>
       <rsc_op id="144" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -784,7 +847,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="86">
+  <synapse id="93">
      <action_set>
       <rsc_op id="121" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -793,7 +856,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="87">
+  <synapse id="94">
      <action_set>
       <rsc_op id="99" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -802,7 +865,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="88">
+  <synapse id="95">
      <action_set>
       <rsc_op id="87" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -811,7 +874,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="89">
+  <synapse id="96">
      <action_set>
       <rsc_op id="66" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -820,7 +883,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="90">
+  <synapse id="97">
      <action_set>
       <rsc_op id="46" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -829,7 +892,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="91">
+  <synapse id="98">
      <action_set>
       <rsc_op id="29" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:0" class="stonith" type="ssh"/>
@@ -838,7 +901,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="92">
+  <synapse id="99">
      <action_set>
       <rsc_op id="214" operation="monitor" operation_key="child_CloneSet:1_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -851,7 +914,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="93">
+  <synapse id="100">
      <action_set>
       <rsc_op id="213" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -867,7 +930,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="94">
+  <synapse id="101">
      <action_set>
       <rsc_op id="166" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -876,7 +939,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="95">
+  <synapse id="102">
      <action_set>
       <rsc_op id="145" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -885,7 +948,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="96">
+  <synapse id="103">
      <action_set>
       <rsc_op id="122" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -894,7 +957,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="97">
+  <synapse id="104">
      <action_set>
       <rsc_op id="100" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -903,7 +966,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="98">
+  <synapse id="105">
      <action_set>
       <rsc_op id="88" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -912,7 +975,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="99">
+  <synapse id="106">
      <action_set>
       <rsc_op id="67" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -921,7 +984,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="100">
+  <synapse id="107">
      <action_set>
       <rsc_op id="47" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -930,7 +993,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="101">
+  <synapse id="108">
      <action_set>
       <rsc_op id="30" operation="monitor" operation_key="child_CloneSet:1_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:1" class="stonith" type="ssh"/>
@@ -939,7 +1002,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="102">
+  <synapse id="109">
      <action_set>
       <rsc_op id="216" operation="monitor" operation_key="child_CloneSet:2_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -952,7 +1015,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="103">
+  <synapse id="110">
      <action_set>
       <rsc_op id="215" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -968,7 +1031,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="104">
+  <synapse id="111">
      <action_set>
       <rsc_op id="167" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -977,7 +1040,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="105">
+  <synapse id="112">
      <action_set>
       <rsc_op id="146" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -986,7 +1049,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="106">
+  <synapse id="113">
      <action_set>
       <rsc_op id="123" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -995,7 +1058,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="107">
+  <synapse id="114">
      <action_set>
       <rsc_op id="101" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -1004,7 +1067,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="108">
+  <synapse id="115">
      <action_set>
       <rsc_op id="89" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -1013,7 +1076,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="109">
+  <synapse id="116">
      <action_set>
       <rsc_op id="68" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -1022,7 +1085,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="110">
+  <synapse id="117">
      <action_set>
       <rsc_op id="48" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -1031,7 +1094,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="111">
+  <synapse id="118">
      <action_set>
       <rsc_op id="31" operation="monitor" operation_key="child_CloneSet:2_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:2" class="stonith" type="ssh"/>
@@ -1040,7 +1103,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="112">
+  <synapse id="119">
      <action_set>
       <rsc_op id="218" operation="monitor" operation_key="child_CloneSet:3_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1053,7 +1116,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="113">
+  <synapse id="120">
      <action_set>
       <rsc_op id="217" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1069,7 +1132,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="114">
+  <synapse id="121">
      <action_set>
       <rsc_op id="168" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1078,7 +1141,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="115">
+  <synapse id="122">
      <action_set>
       <rsc_op id="147" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1087,7 +1150,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="116">
+  <synapse id="123">
      <action_set>
       <rsc_op id="124" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1096,7 +1159,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="117">
+  <synapse id="124">
      <action_set>
       <rsc_op id="102" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1105,7 +1168,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="118">
+  <synapse id="125">
      <action_set>
       <rsc_op id="90" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1114,7 +1177,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="119">
+  <synapse id="126">
      <action_set>
       <rsc_op id="69" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1123,7 +1186,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="120">
+  <synapse id="127">
      <action_set>
       <rsc_op id="49" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1132,7 +1195,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="121">
+  <synapse id="128">
      <action_set>
       <rsc_op id="32" operation="monitor" operation_key="child_CloneSet:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:3" class="stonith" type="ssh"/>
@@ -1141,7 +1204,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="122">
+  <synapse id="129">
      <action_set>
       <rsc_op id="220" operation="monitor" operation_key="child_CloneSet:4_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1154,7 +1217,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="123">
+  <synapse id="130">
      <action_set>
       <rsc_op id="219" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1170,7 +1233,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="124">
+  <synapse id="131">
      <action_set>
       <rsc_op id="169" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1179,7 +1242,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="125">
+  <synapse id="132">
      <action_set>
       <rsc_op id="148" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1188,7 +1251,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="126">
+  <synapse id="133">
      <action_set>
       <rsc_op id="125" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1197,7 +1260,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="127">
+  <synapse id="134">
      <action_set>
       <rsc_op id="103" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1206,7 +1269,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="128">
+  <synapse id="135">
      <action_set>
       <rsc_op id="91" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1215,7 +1278,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="129">
+  <synapse id="136">
      <action_set>
       <rsc_op id="70" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1224,7 +1287,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="130">
+  <synapse id="137">
      <action_set>
       <rsc_op id="50" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1233,7 +1296,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="131">
+  <synapse id="138">
      <action_set>
       <rsc_op id="33" operation="monitor" operation_key="child_CloneSet:4_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:4" class="stonith" type="ssh"/>
@@ -1242,7 +1305,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="132">
+  <synapse id="139">
      <action_set>
       <rsc_op id="222" operation="monitor" operation_key="child_CloneSet:5_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1255,7 +1318,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="133">
+  <synapse id="140">
      <action_set>
       <rsc_op id="221" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1271,7 +1334,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="134">
+  <synapse id="141">
      <action_set>
       <rsc_op id="170" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1280,7 +1343,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="135">
+  <synapse id="142">
      <action_set>
       <rsc_op id="149" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1289,7 +1352,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="136">
+  <synapse id="143">
      <action_set>
       <rsc_op id="126" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1298,7 +1361,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="137">
+  <synapse id="144">
      <action_set>
       <rsc_op id="104" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1307,7 +1370,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="138">
+  <synapse id="145">
      <action_set>
       <rsc_op id="92" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1316,7 +1379,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="139">
+  <synapse id="146">
      <action_set>
       <rsc_op id="71" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1325,7 +1388,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="140">
+  <synapse id="147">
      <action_set>
       <rsc_op id="51" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1334,7 +1397,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="141">
+  <synapse id="148">
      <action_set>
       <rsc_op id="34" operation="monitor" operation_key="child_CloneSet:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:5" class="stonith" type="ssh"/>
@@ -1343,7 +1406,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="142">
+  <synapse id="149">
      <action_set>
       <rsc_op id="224" operation="monitor" operation_key="child_CloneSet:6_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1356,7 +1419,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="143">
+  <synapse id="150">
      <action_set>
       <rsc_op id="223" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1372,7 +1435,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="144">
+  <synapse id="151">
     <action_set>
       <rsc_op id="171" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1381,7 +1444,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="145">
+  <synapse id="152">
      <action_set>
       <rsc_op id="150" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1390,7 +1453,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="146">
+  <synapse id="153">
      <action_set>
       <rsc_op id="127" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1399,7 +1462,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="147">
+  <synapse id="154">
      <action_set>
       <rsc_op id="105" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1408,7 +1471,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="148">
+  <synapse id="155">
      <action_set>
       <rsc_op id="93" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1417,7 +1480,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="149">
+  <synapse id="156">
      <action_set>
       <rsc_op id="72" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1426,7 +1489,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="150">
+  <synapse id="157">
      <action_set>
       <rsc_op id="52" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1435,7 +1498,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="151">
+  <synapse id="158">
      <action_set>
       <rsc_op id="35" operation="monitor" operation_key="child_CloneSet:6_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:6" class="stonith" type="ssh"/>
@@ -1444,7 +1507,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="152">
+  <synapse id="159">
      <action_set>
       <rsc_op id="226" operation="monitor" operation_key="child_CloneSet:7_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1457,7 +1520,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="153">
+  <synapse id="160">
      <action_set>
       <rsc_op id="225" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1473,7 +1536,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="154">
+  <synapse id="161">
      <action_set>
       <rsc_op id="172" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1482,7 +1545,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="155">
+  <synapse id="162">
      <action_set>
       <rsc_op id="151" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1491,7 +1554,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="156">
+  <synapse id="163">
      <action_set>
       <rsc_op id="128" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1500,7 +1563,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="157">
+  <synapse id="164">
      <action_set>
       <rsc_op id="106" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1509,7 +1572,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="158">
+  <synapse id="165">
      <action_set>
       <rsc_op id="94" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1518,7 +1581,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="159">
+  <synapse id="166">
      <action_set>
       <rsc_op id="73" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1527,7 +1590,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="160">
+  <synapse id="167">
      <action_set>
       <rsc_op id="53" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1536,7 +1599,7 @@
      </action_set>
     <inputs/>
    </synapse>
-   <synapse id="161">
+  <synapse id="168">
      <action_set>
       <rsc_op id="36" operation="monitor" operation_key="child_CloneSet:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="child_CloneSet:7" class="stonith" type="ssh"/>
@@ -1545,7 +1608,7 @@
      </action_set>
     <inputs/>
    </synapse>
-  <synapse id="162" priority="1000000">
+  <synapse id="169" priority="1000000">
      <action_set>
        <pseudo_event id="228" operation="running" operation_key="CloneSet_running_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -1581,7 +1644,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="163">
+  <synapse id="170">
      <action_set>
       <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0">
         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -1589,7 +1652,7 @@
      </action_set>
     <inputs/>
   </synapse>
-  <synapse id="164" priority="1000000">
+  <synapse id="171" priority="1000000">
     <action_set>
       <rsc_op id="152" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1658,7 +1721,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="165" priority="1000000">
+  <synapse id="172" priority="1000000">
      <action_set>
       <rsc_op id="129" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1733,7 +1796,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="166" priority="1000000">
+  <synapse id="173" priority="1000000">
      <action_set>
       <rsc_op id="107" operation="probe_complete" operation_key="probe_complete" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1805,7 +1868,7 @@
        </trigger>
     </inputs>
   </synapse>
-  <synapse id="167" priority="1000000">
+  <synapse id="174" priority="1000000">
     <action_set>
       <rsc_op id="95" operation="probe_complete" operation_key="probe_complete" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1847,7 +1910,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="168" priority="1000000">
+  <synapse id="175" priority="1000000">
      <action_set>
       <rsc_op id="74" operation="probe_complete" operation_key="probe_complete" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1916,7 +1979,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="169" priority="1000000">
+  <synapse id="176" priority="1000000">
      <action_set>
       <rsc_op id="54" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
         <attributes CRM_meta_op_no_wait="true" />
@@ -1982,7 +2045,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="170" priority="1000000">
+  <synapse id="177" priority="1000000">
      <action_set>
       <rsc_op id="37" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <attributes CRM_meta_op_no_wait="true" />
@@ -2039,7 +2102,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="171" priority="1000000">
+  <synapse id="178" priority="1000000">
      <action_set>
       <rsc_op id="19" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_op_no_wait="true" />
@@ -2099,7 +2162,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="172">
+  <synapse id="179">
      <action_set>
       <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete">
         <attributes />

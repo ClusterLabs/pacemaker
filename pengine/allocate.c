@@ -389,6 +389,9 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             (is_set(data_set->flags, pe_flag_maintenance_mode) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
+        } else if (interval > 0 && is_set(rsc->flags, pe_rsc_managed) == FALSE) {
+            CancelXmlOp(rsc, rsc_op, node, "unmanaged", data_set);
+
         } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0
                    || safe_str_eq(task, RSC_MIGRATED)) {
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
