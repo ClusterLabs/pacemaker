@@ -357,6 +357,9 @@ te_update_diff(const char *event, xmlNode * msg)
         if(op && strcmp(op, "create") == 0) {
             match = change->children;
 
+        } else if(op && strcmp(op, "move") == 0) {
+            continue;
+
         } else if(op && strcmp(op, "modify") == 0) {
             match = first_named_child(change, XML_DIFF_RESULT);
             if(match) {
@@ -383,11 +386,11 @@ te_update_diff(const char *event, xmlNode * msg)
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_LRM"[") && safe_str_eq(op, "delete")) {
             crm_debug("No match for %s deletion", xpath);
-            abort_transition(INFINITY, tg_restart, "Resource op removal", change);
+            abort_transition(INFINITY, tg_restart, "Resource state removal", change);
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_STATE"[") && safe_str_eq(op, "delete")) {
             crm_debug("No match for %s deletion", xpath);
-            abort_transition(INFINITY, tg_restart, "Resource section removal", change);
+            abort_transition(INFINITY, tg_restart, "Node state removal", change);
 
         } else if(name == NULL) {
             crm_debug("No result for %s operation to %s", op, xpath);
