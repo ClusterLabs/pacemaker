@@ -139,7 +139,7 @@ void destroy_graph(crm_graph_t * graph);
 const char *transition_status(enum transition_status state);
 void print_graph(unsigned int log_level, crm_graph_t * graph);
 void print_action(int log_level, const char *prefix, crm_action_t * action);
-void update_abort_priority(crm_graph_t * graph, int priority,
+bool update_abort_priority(crm_graph_t * graph, int priority,
                            enum transition_action action, const char *abort_reason);
 const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,

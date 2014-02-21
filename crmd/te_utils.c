@@ -397,66 +397,13 @@ void
 abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
 {
-    const char *magic = NULL;
+    int add[3];
+    int del[3];
+    int level = LOG_INFO;
+    xmlNode *diff = NULL;
+    xmlNode *change = NULL;
 
     CRM_CHECK(transition_graph != NULL, return);
-
-    if (reason) {
-        int diff_add_updates = 0;
-        int diff_add_epoch = 0;
-        int diff_add_admin_epoch = 0;
-
-        int diff_del_updates = 0;
-        int diff_del_epoch = 0;
-        int diff_del_admin_epoch = 0;
-
-        const char *uname = "";
-        xmlNode *search = reason;
-        xmlNode *diff = get_xpath_object("//" F_CIB_UPDATE_RESULT "//diff", reason, LOG_DEBUG_2);
-
-        magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
-
-        while(search) {
-            const char *kind = TYPE(search);
-
-            if (safe_str_eq(XML_CIB_TAG_STATE, kind)
-               || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
-
-                uname = crm_peer_uname(ID(search));
-                break;
-            }
-            search = search->parent;
-        }
-
-        if (diff) {
-            cib_diff_version_details(diff,
-                                     &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                                     &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-            if (crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR, TRUE)) {
-                crm_info
-                    ("%s:%d - Triggered transition abort (complete=%d, node=%s, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
-                     fn, line, transition_graph->complete, uname, TYPE(reason), ID(reason), NAME(reason),
-                     VALUE(reason), magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch,
-                     diff_add_updates, abort_text);
-            } else {
-                crm_info
-                    ("%s:%d - Triggered transition abort (complete=%d, node=%s, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
-                     fn, line, transition_graph->complete, uname, TYPE(reason), ID(reason),
-                     magic ? magic : "NA", diff_add_admin_epoch, diff_add_epoch, diff_add_updates,
-                     abort_text);
-            }
-
-        } else {
-            crm_info
-                ("%s:%d - Triggered transition abort (complete=%d, node=%s, tag=%s, id=%s, magic=%s) : %s",
-                 fn, line, transition_graph->complete, uname, TYPE(reason), ID(reason),
-                 magic ? magic : "NA", abort_text);
-        }
-
-    } else {
-        crm_info("%s:%d - Triggered transition abort (complete=%d) : %s",
-                 fn, line, transition_graph->complete, abort_text);
-    }
 
     switch (fsa_state) {
         case S_STARTING:
@@ -466,20 +413,106 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         case S_ILLEGAL:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort suppressed: state=%s (complete=%d)",
-                     fsa_state2string(fsa_state), transition_graph->complete);
+            crm_info("Abort %s suppressed: state=%s (complete=%d)",
+                     abort_text, fsa_state2string(fsa_state), transition_graph->complete);
             return;
         default:
             break;
     }
 
-    if (magic == NULL && reason != NULL) {
-        crm_log_xml_debug(reason, "Cause");
-    }
-
     /* Make sure any queued calculations are discarded ASAP */
     free(fsa_pe_ref);
     fsa_pe_ref = NULL;
+
+    if (transition_graph->complete == FALSE) {
+        if(update_abort_priority(transition_graph, abort_priority, abort_action, abort_text)) {
+            level = LOG_NOTICE;
+        }
+    }
+
+    if(reason) {
+        xmlNode *search = NULL;
+
+        for(search = reason; search; search = search->parent) {
+            if (safe_str_eq(XML_TAG_DIFF, TYPE(search))) {
+                diff = search;
+                break;
+            }
+        }
+
+        if(diff) {
+            xml_patch_versions(diff, add, del);
+            for(search = reason; search; search = search->parent) {
+                if (safe_str_eq(XML_DIFF_CHANGE, TYPE(search))) {
+                    change = search;
+                    break;
+                }
+            }
+        }
+    }
+
+    if(reason == NULL) {
+        do_crm_log(level, "Transition aborted: %s (source=%s:%d, %d)",
+                   abort_text, fn, line, transition_graph->complete);
+
+    } else if(change == NULL) {
+        char *local_path = xml_get_path(reason);
+
+        do_crm_log(level, "Transition aborted by %s.%s: %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+                   TYPE(reason), ID(reason), abort_text, add[0], add[1], add[2], fn, line, local_path, transition_graph->complete);
+        free(local_path);
+
+    } else {
+        const char *kind = NULL;
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *path = crm_element_value(change, XML_DIFF_PATH);
+
+        if(change == reason) {
+            if(strcmp(op, "create") == 0) {
+                reason = reason->children;
+
+            } else if(strcmp(op, "modify") == 0) {
+                reason = first_named_child(reason, XML_DIFF_RESULT);
+                if(reason) {
+                    reason = reason->children;
+                }
+            }
+        }
+
+        kind = TYPE(reason);
+        if(strcmp(op, "delete") == 0) {
+            const char *shortpath = strrchr(path, '/');
+
+            do_crm_log(level, "Transition aborted by deletion of %s: %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+                       shortpath?shortpath:path, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+
+        } else if (safe_str_eq(XML_CIB_TAG_NVPAIR, kind)) {
+            do_crm_log(level, "Transition aborted by %s=%s '%s': %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+                       crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
+                       crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
+                       op, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+
+        } else if (safe_str_eq(XML_LRM_TAG_RSC_OP, kind)) {
+            const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
+
+            do_crm_log(level, "Transition aborted by %s '%s' on %s: %s (magic=%s, cib=%d.%d.%d, source=%s:%d, %d)",
+                       crm_element_value(reason, XML_LRM_ATTR_TASK_KEY), op,
+                       crm_element_value(reason, XML_LRM_ATTR_TARGET), abort_text,
+                       magic, add[0], add[1], add[2], fn, line, transition_graph->complete);
+
+        } else if (safe_str_eq(XML_CIB_TAG_STATE, kind)
+                   || safe_str_eq(XML_CIB_TAG_NODE, kind)) {
+            const char *uname = crm_peer_uname(ID(reason));
+
+            do_crm_log(level, "Transition aborted by %s '%s' on %s: %s (cib=%d.%d.%d, source=%s:%d, %d)",
+                       kind, op, uname, abort_text,
+                       add[0], add[1], add[2], fn, line, transition_graph->complete);
+
+        } else {
+            do_crm_log(level, "Transition aborted by %s.%s '%s': %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+                       TYPE(reason), ID(reason), op?op:"change", abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+        }
+    }
 
     if (transition_graph->complete) {
         if (transition_timer->period_ms > 0) {
@@ -490,8 +523,6 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         }
         return;
     }
-
-    update_abort_priority(transition_graph, abort_priority, abort_action, abort_text);
 
     mainloop_set_trigger(transition_trigger);
 }

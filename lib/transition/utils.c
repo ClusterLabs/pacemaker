@@ -259,26 +259,32 @@ abort2text(enum transition_action abort_action)
     return "unknown";
 }
 
-void
+bool
 update_abort_priority(crm_graph_t * graph, int priority,
                       enum transition_action action, const char *abort_reason)
 {
+    bool change = FALSE;
+
     if (graph == NULL) {
-        return;
+        return change;
     }
 
     if (graph->abort_priority < priority) {
         crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
         graph->abort_priority = priority;
         if (graph->abort_reason != NULL) {
-            crm_debug("'%s' abort superceeded", graph->abort_reason);
+            crm_debug("'%s' abort superceeded by %s", graph->abort_reason, abort_reason);
         }
         graph->abort_reason = abort_reason;
+        change = TRUE;
     }
 
     if (graph->completion_action < action) {
-        crm_debug("Abort action %s superceeded by %s",
-                  abort2text(graph->completion_action), abort2text(action));
+        crm_debug("Abort action %s superceeded by %s: %s",
+                  abort2text(graph->completion_action), abort2text(action), abort_reason);
         graph->completion_action = action;
+        change = TRUE;
     }
+
+    return change;
 }
