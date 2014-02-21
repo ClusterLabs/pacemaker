@@ -246,7 +246,7 @@ static void process_resource_updates(
 
     CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
 
-    for(cIter = xml; cIter->prev; cIter = cIter->prev) {
+    for(cIter = xml->children; cIter; cIter = cIter->next) {
         num_resources++;
     }
 
