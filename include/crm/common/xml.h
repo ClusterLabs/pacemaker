@@ -262,5 +262,6 @@ void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
 bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
+char *xml_get_path(xmlNode *xml);
 
 #endif
