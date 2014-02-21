@@ -1033,6 +1033,27 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
             return FALSE;
         }
 
+    } else if (wrapper->type == pe_order_anti_colocation) {
+        crm_trace("check anti-colocation filter %s.%s -> %s.%s",
+                  wrapper->action->uuid,
+                  wrapper->action->node ? wrapper->action->node->details->uname : "",
+                  action->uuid,
+                  action->node ? action->node->details->uname : "");
+
+        if (wrapper->action->node && action->node
+            && wrapper->action->node->details != action->node->details) {
+            /* Check if the actions are for the same node, ignore otherwise */
+            crm_trace("anti-colocation filter - node");
+            wrapper->type = pe_order_none;
+            return FALSE;
+
+        } else if (is_set(wrapper->action->flags, pe_action_optional)) {
+            /* Check if the pre-req is optional, ignore if so */
+            crm_trace("anti-colocation filter - optional");
+            wrapper->type = pe_order_none;
+            return FALSE;
+        }
+
     } else if (wrapper->action->rsc
                && wrapper->action->rsc != action->rsc
                && is_set(wrapper->action->rsc->flags, pe_rsc_failed)

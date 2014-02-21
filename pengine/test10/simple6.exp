@@ -10,6 +10,9 @@
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+      <trigger>
+        <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="1" priority="2">

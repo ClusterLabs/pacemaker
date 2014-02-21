@@ -1102,6 +1102,13 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints, new_con);
 
+    if (score <= -INFINITY) {
+        new_rsc_order(rsc_lh, CRMD_ACTION_STOP, rsc_rh, CRMD_ACTION_START,
+                      pe_order_anti_colocation, data_set);
+        new_rsc_order(rsc_rh, CRMD_ACTION_STOP, rsc_lh, CRMD_ACTION_START,
+                      pe_order_anti_colocation, data_set);
+    }
+
     return TRUE;
 }
 
