@@ -484,13 +484,14 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
             const char *shortpath = strrchr(path, '/');
 
             do_crm_log(level, "Transition aborted by deletion of %s: %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
-                       shortpath?shortpath:path, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+                       shortpath?shortpath+1:path, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
 
-        } else if (safe_str_eq(XML_CIB_TAG_NVPAIR, kind)) {
-            do_crm_log(level, "Transition aborted by %s=%s '%s': %s (cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+        } else if (safe_str_eq(XML_CIB_TAG_NVPAIR, kind)) { 
+            do_crm_log(level, "Transition aborted by %s, %s=%s: %s (%s cib=%d.%d.%d, source=%s:%d, path=%s, %d)",
+                       crm_element_value(reason, XML_ATTR_ID),
                        crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
                        crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
-                       op, abort_text, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
+                       abort_text, op, add[0], add[1], add[2], fn, line, path, transition_graph->complete);
 
         } else if (safe_str_eq(XML_LRM_TAG_RSC_OP, kind)) {
             const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
