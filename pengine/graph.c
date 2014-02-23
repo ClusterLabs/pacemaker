@@ -702,6 +702,8 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
                       crm_err("No notify operation value found for %s", action->uuid));
             clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
 
+        } else if(action->cancel_task) {
+            clone_key = generate_op_key(action->rsc->clone_name, action->cancel_task, interval);
         } else {
             clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
         }

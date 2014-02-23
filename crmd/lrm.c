@@ -1062,27 +1062,23 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     }
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
-
     rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type, pending->interval);
-
     if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
-
-    } else {
-        crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
-        /* The caller needs to make sure the entry is
-         * removed from the pending_ops list
-         *
-         * Usually by returning TRUE inside the worker function
-         * supplied to g_hash_table_foreach_remove()
-         *
-         * Not removing the entry from pending_ops will block
-         * the node from shutting down
-         */
-        return FALSE;
+        return TRUE;
     }
 
-    return TRUE;
+    crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
+    /* The caller needs to make sure the entry is
+     * removed from the pending_ops list
+     *
+     * Usually by returning TRUE inside the worker function
+     * supplied to g_hash_table_foreach_remove()
+     *
+     * Not removing the entry from pending_ops will block
+     * the node from shutting down
+     */
+    return FALSE;
 }
 
 struct cancel_data {
@@ -1433,7 +1429,6 @@ do_lrm_invoke(long long action,
             lrmd_free_event(op);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
-            lrmd_event_data_t *op = NULL;
             char *op_key = NULL;
             char *meta_key = NULL;
             int call = 0;
@@ -1462,8 +1457,6 @@ do_lrm_invoke(long long action,
             CRM_CHECK(op_interval != NULL, crm_log_xml_warn(input->xml, "Bad command");
                       return);
 
-            op = construct_op(lrm_state, input->xml, rsc->id, op_task);
-            CRM_ASSERT(op != NULL);
             op_key = generate_op_key(rsc->id, op_task, crm_parse_int(op_interval, "0"));
 
             crm_debug("PE requested op %s (call=%s) be cancelled",
@@ -1479,8 +1472,17 @@ do_lrm_invoke(long long action,
             }
 
             if (in_progress == FALSE) {
-                crm_debug("Nothing known about operation %d for %s", call, op_key);
+                lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc->id, op_task);
+
+                crm_info("Nothing known about operation %d for %s", call, op_key);
                 delete_op_entry(lrm_state, NULL, rsc->id, op_key, call);
+
+                CRM_ASSERT(op != NULL);
+
+                op->rc = PCMK_OCF_OK;
+                op->op_status = PCMK_LRM_OP_DONE;
+                send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
+                lrmd_free_event(op);
 
                 /* needed?? surely not otherwise the cancel_op_(_key) wouldn't
                  * have failed in the first place
@@ -1488,12 +1490,7 @@ do_lrm_invoke(long long action,
                 g_hash_table_remove(lrm_state->pending_ops, op_key);
             }
 
-            op->rc = PCMK_OCF_OK;
-            op->op_status = PCMK_LRM_OP_DONE;
-            send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
-
             free(op_key);
-            lrmd_free_event(op);
 
         } else if (rsc != NULL && safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 

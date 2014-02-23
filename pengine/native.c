@@ -730,6 +730,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
             free(mon->task);
             mon->task = strdup(RSC_CANCEL);
+            mon->cancel_task = strdup(name);
             add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 
@@ -906,6 +907,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
             free(cancel_op->task);
             cancel_op->task = strdup(RSC_CANCEL);
+            cancel_op->cancel_task = strdup(name);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, name);
 

@@ -290,6 +290,7 @@ struct pe_action_s {
 
     char *task;
     char *uuid;
+    char *cancel_task;
 
     enum pe_action_flags flags;
     enum rsc_start_requirement needs;

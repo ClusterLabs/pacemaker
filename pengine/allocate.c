@@ -173,6 +173,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 
     free(cancel->task);
     cancel->task = strdup(RSC_CANCEL);
+    cancel->cancel_task = strdup(task);
 
     add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);

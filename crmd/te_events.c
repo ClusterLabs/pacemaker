@@ -384,9 +384,6 @@ get_action(int id, gboolean confirmed)
 crm_action_t *
 get_cancel_action(const char *id, const char *node)
 {
-    const char *task = NULL;
-    const char *target = NULL;
-
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
 
@@ -396,6 +393,8 @@ get_cancel_action(const char *id, const char *node)
 
         gIter2 = synapse->actions;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
+            const char *task = NULL;
+            const char *target = NULL;
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -405,14 +404,17 @@ get_cancel_action(const char *id, const char *node)
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
             if (safe_str_neq(task, id)) {
+                crm_trace("Wrong key %s for %s on %s", task, id, node);
                 continue;
             }
 
             target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-            if (safe_str_neq(target, node)) {
+            if (node && safe_str_neq(target, node)) {
+                crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
             }
 
+            crm_trace("Found %s on %s", id, node);
             return action;
         }
     }

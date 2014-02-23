@@ -1032,6 +1032,7 @@ pe_free_action(action_t * action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
+    free(action->cancel_task);
     free(action->task);
     free(action->uuid);
     free(action->node);
