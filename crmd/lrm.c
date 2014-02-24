@@ -2012,7 +2012,6 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
     char *op_key = NULL;
 
     int update_id = 0;
-    int log_level = LOG_ERR;
     gboolean removed = FALSE;
     lrmd_rsc_info_t *rsc = NULL;
 
@@ -2026,33 +2025,10 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
     rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
 
-    switch (op->op_status) {
-        case PCMK_LRM_OP_ERROR:
-        case PCMK_LRM_OP_PENDING:
-        case PCMK_LRM_OP_NOTSUPPORTED:
-        case PCMK_LRM_OP_NOT_INSTALLED:
-            break;
-        case PCMK_LRM_OP_CANCELLED:
-            log_level = LOG_INFO;
-            break;
-        case PCMK_LRM_OP_DONE:
-            log_level = LOG_NOTICE;
-            break;
-        case PCMK_LRM_OP_TIMEOUT:
-            log_level = LOG_DEBUG_3;
-            crm_err("LRM operation %s (%d) %s (timeout=%dms)",
-                    op_key, op->call_id, services_lrm_status_str(op->op_status), op->timeout);
-            break;
-        default:
-            crm_err("Mapping unknown status (%d) to ERROR", op->op_status);
-            op->op_status = PCMK_LRM_OP_ERROR;
-    }
-
     if (op->op_status == PCMK_LRM_OP_ERROR
         && (op->rc == PCMK_OCF_RUNNING_MASTER || op->rc == PCMK_OCF_NOT_RUNNING)) {
         /* Leave it up to the TE/PE to decide if this is an error */
         op->op_status = PCMK_LRM_OP_DONE;
-        log_level = LOG_INFO;
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {
@@ -2095,16 +2071,28 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         g_hash_table_remove(lrm_state->pending_ops, op_id);
     }
 
-    if (op->op_status == PCMK_LRM_OP_DONE) {
-        do_crm_log(log_level,
-                   "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s",
-                   op_key, op->call_id, op->rc, update_id, removed ? "true" : "false",
-                   services_ocf_exitcode_str(op->rc));
-    } else {
-        do_crm_log(log_level,
-                   "LRM operation %s (call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                   op_key, op->call_id, op->op_status, update_id, removed ? "true" : "false",
-                   services_lrm_status_str(op->op_status));
+    switch (op->op_status) {
+        case PCMK_LRM_OP_CANCELLED:
+            crm_info("Operation %s: %s (call=%d, confirmed=%s)",
+                     op_key, services_lrm_status_str(op->op_status),
+                     op->call_id, removed ? "true" : "false");
+            break;
+
+        case PCMK_LRM_OP_DONE:
+            crm_notice("Operation %s: %s (call=%d, rc=%d, cib-update=%d, confirmed=%s)",
+                       op_key, services_ocf_exitcode_str(op->rc),
+                       op->call_id, op->rc, update_id, removed ? "true" : "false");
+            break;
+
+        case PCMK_LRM_OP_TIMEOUT:
+            crm_err("Operation %s: %s (call=%d, timeout=%dms)",
+                    op_key, services_lrm_status_str(op->op_status), op->call_id, op->timeout);
+            break;
+
+        default:
+            crm_err("Operation %s (call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
+                    op_key, op->call_id, op->op_status, update_id, removed ? "true" : "false",
+                    services_lrm_status_str(op->op_status));
     }
 
     if (op->output) {
