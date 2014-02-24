@@ -20,12 +20,12 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lp:c:dSACHu:D:MVs	\
-    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features	\
+    -o hv?xl:f:t:n:T:Lp:c:dSACHu:D:MVse:	\
+    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
-
+rsh="ssh -T"
 times=""
 tests=""
 nodes=""
@@ -72,6 +72,7 @@ Options:
   -H, --heartbeat	force the cluster type to be Heartbeat
   -u, --user user	ssh username for cluster nodes (default: root)
   -D, --depth           search depth to use when attempting to locate files
+  -e, --rsh		specify the remote shell to use (default: ssh -T)
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
 
@@ -115,6 +116,7 @@ while true; do
 	-C|--corosync)  cluster="corosync";  shift;;
 	-H|--heartbeat) cluster="heartbeat"; shift;;
 	-c|--cluster)   cluster="$2"; shift; shift;;
+	-e|--rsh)       rsh="$2";     shift; shift;;
 	-u|--user)      ssh_user="$2"; shift; shift;;
         -D|--max-depth)     maxdepth="$2"; shift; shift;;
 	-M) search_logs=0; shift;;
@@ -184,7 +186,7 @@ EOF
 	    bash $l_base/collector
 	else
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector \
-		| ssh -l $ssh_user -T $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar mxf -)
+		| $rsh -l $ssh_user $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar mxf -)
 	fi
     done
 
