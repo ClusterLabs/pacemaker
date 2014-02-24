@@ -39,14 +39,20 @@
 The standard and provider (`ocf:heartbeat`) are determined automatically since `IPaddr2` is unique.
 The monitor operation is automatically created based on the agent's metadata.
 
+## Display a resource
+
+    crmsh # crm configure show ClusterIP
+    pcs   # pcs resource show ClusterIP
+
 ## Start a resource
+
     crmsh # crm resource start ClusterIP
-    pcs   # pcs resource start ClusterIP
+    pcs   # pcs resource enable ClusterIP
 
 ## Stop a resource
 
     crmsh # crm resource stop ClusterIP
-    pcs   # pcs resource stop ClusterIP
+    pcs   # pcs resource disable ClusterIP
 
 ## Remove a resource
 
@@ -54,13 +60,9 @@ The monitor operation is automatically created based on the agent's metadata.
     pcs   # pcs resource delete ClusterIP
 
 ## Update a resource
+
     crmsh # crm resource param ClusterIP set clusterip_hash=sourceip
     pcs   # pcs resource update ClusterIP clusterip_hash=sourceip
-
-## Display a resource
-
-    crmsh # crm configure show ClusterIP
-    pcs   # pcs resource show WebFS
 
 ## Resource defaults
 
@@ -68,15 +70,17 @@ The monitor operation is automatically created based on the agent's metadata.
     pcs   # pcs resource rsc defaults resource-stickiness=100
     
 Listing the current defaults:
+
     crmsh # crm configure show type:rsc_defaults
     pcs   # pcs resource rsc defaults
-    
+
 ## Operation defaults
 
     crmsh # crm configure op_defaults timeout=240s
     pcs   # pcs resource op defaults timeout=240s
 
 Listing the current defaults:
+
     crmsh # crm configure show type:op_defaults
     pcs   # pcs resource op defaults
 
@@ -133,12 +137,9 @@ With roles:
             notify=true
 
 ## ...
-    crmsh #
-    pcs   # 
 
     crmsh #
     pcs   # 
-
 
 ## Batch changes
 
