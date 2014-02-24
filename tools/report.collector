@@ -491,15 +491,18 @@ sys_stats() {
 
 dlm_dump() {
     if which dlm_tool >/dev/null 2>&1 ; then
-	echo NOTICE - Lockspace overview:
-	dlm_tool ls
+	echo "--- Lockspace overview:"
+	dlm_tool ls -n
+
+	echo "---Lockspace history:"
+	dlm_tool dump
+
 	dlm_tool ls | grep name |
 	while read X N ; do
-	    echo NOTICE - Lockspace $N:
-	    dlm_tool lockdump $N
+	    echo "--- Lockspace $N:"
+	    dlm_tool lockdump "$N"
+	    dlm_tool lockdebug -svw "$N"
 	done
-	echo NOTICE - Lockspace history:
-	dlm_tool dump
     fi
 }
 
