@@ -218,7 +218,7 @@ class crm_ais(crm_lha):
             "update_failcount: Updating failcount for Fencing",
             "error: te_connect_stonith: Sign-in failed: triggered a retry",
             "stonith_connection_failed: STONITH connection failed, finalizing .* pending operations.",
-            "process_lrm_event: LRM operation Fencing.* Error"
+            "process_lrm_event: Operation Fencing.* Error"
             ]
 
         stonith_ignore.extend(self.common_ignore)

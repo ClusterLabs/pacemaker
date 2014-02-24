@@ -1098,8 +1098,8 @@ class MaintenanceMode(CTSTest):
         if action == "On":
             pats.append("Updating failcount for %s on .* after .* %s" % (self.rid, self.action))
         else:
-            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
-            pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % self.rid)
+            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
+            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "start_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1120,7 +1120,7 @@ class MaintenanceMode(CTSTest):
 
     def insertMaintenanceDummy(self, node):
         pats = []
-        pats.append(".*%s.*process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % (node, self.rid))
+        pats.append(("%s.*" % node) + (self.CM["Pat:RscOpOK"] % (self.rid, "start_0")))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1138,7 +1138,7 @@ class MaintenanceMode(CTSTest):
 
     def removeMaintenanceDummy(self, node):
         pats = []
-        pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
+        pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1247,7 +1247,7 @@ class MaintenanceMode(CTSTest):
                  """LogActions: Recover %s""" % self.rid,
                  """Unknown operation: fail""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 """(ERROR|error): process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
+                 self.CM["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
                  """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                 ]
 
@@ -1309,12 +1309,12 @@ class ResourceRecover(CTSTest):
                     % (self.rid, self.action))
 
         if rsc.managed():
-            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % self.rid)
+            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
             if rsc.unique():
-                pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % self.rid)
+                pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "start_0"))
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append("process_lrm_event: LRM operation .*_start_0.*confirmed.*ok")
+                pats.append(self.CM["Pat:RscOpOK"] % (".*", "start_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1349,7 +1349,7 @@ class ResourceRecover(CTSTest):
                  """LogActions: Recover %s""" % self.rid_alt,
                  """Unknown operation: fail""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 """(ERROR|error): process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
+                 self.CM["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
                  """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                  ]
 
@@ -1732,11 +1732,11 @@ class Reattach(CTSTest):
             return self.failure("Resource management not disabled")
 
         pats = []
-        pats.append("process_lrm_event: .*_stop")
-        pats.append("process_lrm_event: .*_start")
-        pats.append("process_lrm_event: .*_promote")
-        pats.append("process_lrm_event: .*_demote")
-        pats.append("process_lrm_event: .*_migrate")
+        pats.append(self.CM["Pat:RscOpOK"] % (".*", "start"))
+        pats.append(self.CM["Pat:RscOpOK"] % (".*", "stop"))
+        pats.append(self.CM["Pat:RscOpOK"] % (".*", "promote"))
+        pats.append(self.CM["Pat:RscOpOK"] % (".*", "demote"))
+        pats.append(self.CM["Pat:RscOpOK"] % (".*", "migrate"))
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.setwatch()
@@ -1785,7 +1785,7 @@ class Reattach(CTSTest):
                 if r.rclass == "stonith":
 
                     self.CM.debug("Ignoring start actions for %s" % r.id)
-                    ignore.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % r.id)
+                    ignore.append(self.CM["Pat:RscOpOK"] % (r.id, "start_0"))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
@@ -2527,10 +2527,10 @@ class RemoteLXC(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation lxc1_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc2_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-ms_start_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation lxc-ms_promote_0.*confirmed.*ok")
+        pats.append(self.CM["Pat:RscOpOK"] % ("lxc1", "start_0"))
+        pats.append(self.CM["Pat:RscOpOK"] % ("lxc2", "start_0"))
+        pats.append(self.CM["Pat:RscOpOK"] % ("lxc-ms", "start_0"))
+        pats.append(self.CM["Pat:RscOpOK"] % ("lxc-ms", "promote_0"))
 
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
@@ -2559,8 +2559,8 @@ class RemoteLXC(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.setwatch()
 
-        pats.append("process_lrm_event: LRM operation container1_stop_0.*confirmed.*ok")
-        pats.append("process_lrm_event: LRM operation container2_stop_0.*confirmed.*ok")
+        pats.append(self.CM["Pat:RscOpOK"] % ("container1", "stop_0"))
+        pats.append(self.CM["Pat:RscOpOK"] % ("container2", "stop_0"))
 
         self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p &>/dev/null")
         self.set_timer("remoteSimpleCleanup")
@@ -2709,7 +2709,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation remote1_start_0.*confirmed.*ok")
+        pats.append(self.CM["Pat:RscOpOK"] % ("remote1", "start_0"))
 
         self.add_connection_rsc(node)
 
@@ -2729,7 +2729,7 @@ class RemoteBaremetal(CTSTest):
 
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation remote1_stop_0.*confirmed.*ok")
+        pats.append(self.CM["Pat:RscOpOK"] % ("remote1", "stop_0"))
 
         self.del_connection_rsc(node)
         self.set_timer("remoteMetalCleanup")
