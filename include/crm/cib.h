@@ -71,7 +71,7 @@ enum cib_call_options {
 	cib_zero_copy       = 0x00004000,
 	cib_inhibit_notify  = 0x00010000,
  	cib_quorum_override = 0x00100000,
-	cib_inhibit_bcast   = 0x01000000,
+	cib_inhibit_bcast   = 0x01000000, /* TODO: Remove */
 	cib_force_diff	    = 0x10000000
 };
 

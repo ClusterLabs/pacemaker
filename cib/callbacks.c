@@ -1049,7 +1049,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     int call_type = 0;
     int call_options = 0;
-    int log_level = LOG_TRACE;
 
     const char *op = NULL;
     const char *section = NULL;
@@ -1125,6 +1124,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     /* Handle a valid write action */
     global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
     if (global_update) {
+        /* legacy code */
         manage_counters = FALSE;
         call_options |= cib_force_diff;
         crm_trace("Global update detected");
@@ -1166,7 +1166,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #endif
 
         if (manage_counters == FALSE) {
-            /* If the diff is NULL at this point, its because nothing changed */
+            /* Legacy code
+             * If the diff is NULL at this point, its because nothing changed
+             */
             config_changed = cib_config_changed(NULL, NULL, cib_diff);
         }
 
@@ -1255,23 +1257,11 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if (rc != pcmk_ok) {
-        log_level = LOG_TRACE;
-        if (rc == -pcmk_err_dtd_validation && global_update) {
-            log_level = LOG_WARNING;
-            crm_log_xml_info(input, "cib:global_update");
-        }
+        xml_log_patchset(LOG_DEBUG, "cib:diff", *cib_diff);
 
-    } else if (config_changed) {
-        log_level = LOG_TRACE;
-        if (cib_is_master) {
-            log_level = LOG_NOTICE;
-        }
-
-    } else if (cib_is_master) {
-        log_level = LOG_TRACE;
+    } else {
+        xml_log_patchset(LOG_INFO, "cib:diff", *cib_diff);
     }
-
-    xml_log_patchset(log_level, "cib:diff", *cib_diff);
 
   done:
     if ((call_options & cib_discard_reply) == 0) {
