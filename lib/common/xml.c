@@ -101,14 +101,17 @@ enum xml_private_flags {
      xpf_processed = 0x020,
      xpf_skip      = 0x040,
      xpf_moved     = 0x080,
+
+     xpf_acls      = 0x100,
 };
 
 typedef struct xml_private_s 
 {
         long check;
         uint32_t flags;
-        GListPtr deleted_paths;
+        char *user;
         GListPtr acls;
+        GListPtr deleted_paths;
 } xml_private_t;
 
 /* *INDENT-OFF* */
@@ -330,6 +333,7 @@ pcmkDeregisterNode(xmlNodePtr node)
         case XML_ATTRIBUTE_NODE:
             CRM_ASSERT(node->_private != NULL);
             CRM_ASSERT(p->check == (long) 0x81726354);
+            free(p->user);
             free(node->_private);
             break;
         default:
@@ -346,14 +350,22 @@ xml_track_changes(xmlNode * xml, const char *user)
     set_doc_flag(xml, xpf_tracking);
 
 #if ENABLE_ACL
-    if(user) {
+    if(user && strlen(user) == 0) {
+        crm_trace("no user set");
+    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
+        crm_trace("no acls needed for %s", user);
+    } else if (strcmp(user, "root") == 0) {
+        crm_trace("no acls needed for %s", user);
+    } else {
+        xml_private_t *p = xml->doc->_private;
         xmlNode *acls = get_xpath_object("//"XML_CIB_TAG_ACLS, xml, LOG_TRACE);
 
-        if(acls) {
-            xml_private_t *p = xml->doc->_private;
+        p->flags |= xpf_acls;
+        p->user = strdup(user);
 
+        if(acls) {
             /* TODO: An update that modifies/removes the ACLs would cause problems */
-            unpack_user_acl(acls, user, &p->acls);
+            unpack_user_acl(acls, p->user, &p->acls);
         }
     }
 #endif
@@ -943,6 +955,8 @@ xml_accept_changes(xmlNode * xml)
     if(doc->acls) {
         g_list_free_full(doc->acls, free);
     }
+
+    free(doc->user); doc->user = NULL;
     doc->flags = (doc->flags & ~xpf_tracking);
 
     if(is_not_set(doc->flags, xpf_dirty)) {
@@ -1775,18 +1789,16 @@ add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
 static bool
 __xml_acl_check(xmlNode *xml, const char *name, const char *mode)
 {
-#if ENABLE_ACL
-    xml_private_t *docp = NULL;
-#endif
-
     CRM_ASSERT(xml);
     CRM_ASSERT(xml->doc);
     CRM_ASSERT(xml->doc->_private);
 
 #if ENABLE_ACL
-    docp = xml->doc->_private;
-    if(TRACKING_CHANGES(xml) && docp->acls) {
-        return cib_acl_check(docp->acls, xml, name, mode);
+    {
+        xml_private_t *docp = xml->doc->_private;
+        if(TRACKING_CHANGES(xml) && is_set(docp->flags, xpf_acls)) {
+            return cib_acl_check(docp->acls, xml, name, mode);
+        }
     }
 #endif
 

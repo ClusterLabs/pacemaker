@@ -825,6 +825,11 @@ cib_acl_check(GListPtr acls, xmlNode *xml, const char *name, const char *mode)
         path_full = g_strdup_printf("%s[@%s]", path, name);
     }
 
+    if(acls == NULL) {
+        crm_warn("Ordinary users cannot access the CIB without any defined ACLs");
+        return FALSE;
+    }
+
     for(aIter = acls; aIter != NULL; aIter = aIter->next) {
         const char *value = NULL;
         acl_obj_t *acl_obj = aIter->data;
