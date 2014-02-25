@@ -1214,7 +1214,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         return -pcmk_err_diff_failed;
     }
 
-    crm_info("Applying patch %d.%d.%d to %d.%d.%d",
+    crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
              add[0], add[1], add[2], this[0], this[1], this[2]);
     return pcmk_ok;
 }
@@ -1350,7 +1350,7 @@ __xml_find_path(xmlNode *top, const char *key)
         crm_trace("Found %s for %s", path, key);
         free(path);
     } else {
-        crm_notice("No match for %s", key);
+        crm_debug("No match for %s", key);
     }
 
     free(remainder);
@@ -1404,7 +1404,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
 
             child = xmlDocCopyNode(change->children, match->doc, 1);
             if(match_child) {
-                crm_info("Adding %s at position %d", child->name, position);
+                crm_trace("Adding %s at position %d", child->name, position);
                 xmlAddPrevSibling(match_child, child);
 
             } else if(match->last) { /* Add to the end */
@@ -1437,7 +1437,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version)
                     match_child = match_child->next;
                 }
 
-                crm_info("Moving %s to position %d (was %d, prev %p, %s %p)",
+                crm_trace("Moving %s to position %d (was %d, prev %p, %s %p)",
                          match->name, position, __xml_offset(match), match->prev,
                          match_child?"next":"last", match_child?match_child:match->parent->last);
 
