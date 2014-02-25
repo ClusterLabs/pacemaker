@@ -475,6 +475,31 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 }
 
 static void
+handle_topology_change(xmlNode *match, bool remove) 
+{
+    CRM_LOG_ASSERT(match != NULL);
+    if(match) {
+        int index = 0;
+        const char *target;
+        const char *dev_list;
+        stonith_key_value_t *devices = NULL;
+
+        crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+        target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
+        dev_list = crm_element_value(match, XML_ATTR_STONITH_DEVICES);
+        devices = parse_device_list(dev_list);
+
+        crm_trace("Updating %s[%d] (%s) to %s", target, index, ID(match), dev_list);
+
+        if(remove) {
+            topology_remove_helper(target, index);
+        }
+        topology_register_helper(target, index, devices);
+        stonith_key_value_freeall(devices, 1, 1);
+    }
+}
+
+static void
 remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
     int max = numXpathResults(xpathObj), lpc = 0;
@@ -510,38 +535,11 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
     int max = numXpathResults(xpathObj), lpc = 0;
 
     for (lpc = 0; lpc < max; lpc++) {
-        int index = 0;
-        const char *target;
-        const char *dev_list;
-        stonith_key_value_t *devices = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         CRM_CHECK(match != NULL, continue);
 
-        crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-        target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
-        dev_list = crm_element_value(match, XML_ATTR_STONITH_DEVICES);
-        devices = parse_device_list(dev_list);
-
-        crm_trace("Updating %s[%d] (%s) to %s", target, index, ID(match), dev_list);
-
-        if (target == NULL) {
-            crm_err("Invalid fencing target in element %s", ID(match));
-
-        } else if (index <= 0) {
-            crm_err("Invalid level for %s in element %s", target, ID(match));
-
-        } else if (force == FALSE && crm_element_value(match, XML_DIFF_MARKER)) {
-            /* Addition */
-            topology_register_helper(target, index, devices);
-
-        } else {                /* Modification */
-            /* Remove then re-add */
-            topology_remove_helper(target, index);
-            topology_register_helper(target, index, devices);
-        }
-
-        stonith_key_value_freeall(devices, 1, 1);
+        handle_topology_change(match, TRUE);
     }
 }
 
@@ -570,11 +568,15 @@ fencing_topology_init(xmlNode * msg)
     xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;
 
-    crm_trace("Pushing in stonith topology");
+    crm_trace("Full topology refresh");
+
+    if(topology) {
+        g_hash_table_destroy(topology);
+        topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
+    }
 
     /* Grab everything */
-    xpathObj = xpath_search(msg, xpath);
-
+    xpathObj = xpath_search(local_cib, xpath);
     register_fencing_topology(xpathObj, TRUE);
 
     freeXpathObject(xpathObj);
@@ -590,6 +592,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     const char *rclass = NULL;
     node_t *parent = NULL;
 
+    /* TODO: Mark each installed device and remove if untouched when this process finishes */
     if(rsc->children) {
         GListPtr gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -742,33 +745,60 @@ cib_devices_update(void)
 }
 
 static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
+update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
+{
+    xmlNode *change = NULL;
+    const char *reason = NULL;
+    bool needs_update = FALSE;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+    for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *shortpath = NULL;
+
+        if(op == NULL || strcmp(op, "move") == 0) {
+            continue;
+
+        } else if(safe_str_eq(op, "delete") && strstr(xpath, XML_CIB_TAG_RESOURCE)) {
+            const char *rsc_id = NULL;
+            char *search = NULL;
+            char *mutable = strdup(xpath);
+
+            rsc_id = strstr(mutable, "primitive[@id=\'") + strlen("primitive[@id=\'");
+            search = strchr(rsc_id, '\'');
+            search[0] = 0;
+
+            stonith_device_remove(rsc_id, TRUE);
+            free(mutable);
+
+        } else if(strstr(xpath, XML_CIB_TAG_RESOURCE)) {
+            shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
+            reason = g_strdup_printf("%s %s", op, shortpath+1);
+            needs_update = TRUE;
+            break;
+
+        } else if(strstr(xpath, XML_CONS_TAG_RSC_LOCATION)) {
+            shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
+            reason = g_strdup_printf("%s %s", op, shortpath+1);
+            needs_update = TRUE;
+            break;
+        }
+    }
+
+    if(needs_update) {
+        crm_info("Updating device list from the cib: %s", reason);
+        cib_devices_update();
+    }
+}
+
+
+static void
+update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
 {
     const char *reason = "none";
     gboolean needs_update = FALSE;
     xmlXPathObjectPtr xpath_obj = NULL;
-    xmlNode *stonith_enabled_xml = NULL;
-    const char *stonith_enabled_s = NULL;
-    static gboolean stonith_enabled_saved = TRUE;
-
-    stonith_enabled_xml = get_xpath_object("/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG
-                                           "/" XML_CIB_TAG_PROPSET "//nvpair[@name='stonith-enabled']",
-                                           local_cib, LOG_DEBUG);
-    if (stonith_enabled_xml) {
-        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
-    }
-
-    if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
-        crm_debug("No need to update stonith device list since stonith is disabled");
-        stonith_enabled_saved = FALSE;
-        return;
-
-    } else if (stonith_enabled_saved == FALSE) {
-        crm_debug("Need to update stonith device list since stonith is being enabled");
-        stonith_enabled_saved = TRUE;
-        needs_update = TRUE;
-        reason = "stonith being enabled";
-    }
 
     /* process new constraints */
     xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
@@ -825,24 +855,94 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
 }
 
 static void
+update_cib_stonith_devices(const char *event, xmlNode * msg)
+{
+    int format = 1;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+    CRM_ASSERT(patchset);
+    crm_element_value_int(patchset, "format", &format);
+    switch(format) {
+        case 1:
+            update_cib_stonith_devices_v1(event, msg);
+            break;
+        case 2:
+            update_cib_stonith_devices_v2(event, msg);
+            break;
+        default:
+            crm_warn("Unknown patch format: %d", format);
+    }
+}
+
+static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
+    int format = 1;
     const char *xpath;
     xmlXPathObjectPtr xpathObj = NULL;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    /* Process deletions (only) */
-    xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_FENCING_LEVEL;
-    xpathObj = xpath_search(msg, xpath);
+    CRM_ASSERT(patchset);
+    crm_element_value_int(patchset, "format", &format);
 
-    remove_fencing_topology(xpathObj);
-    freeXpathObject(xpathObj);
+    if(format == 1) {
+        /* Process deletions (only) */
+        xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_FENCING_LEVEL;
+        xpathObj = xpath_search(msg, xpath);
 
-    /* Process additions and changes */
-    xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
-    xpathObj = xpath_search(msg, xpath);
+        remove_fencing_topology(xpathObj);
+        freeXpathObject(xpathObj);
 
-    register_fencing_topology(xpathObj, FALSE);
-    freeXpathObject(xpathObj);
+        /* Process additions and changes */
+        xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
+        xpathObj = xpath_search(msg, xpath);
+
+        register_fencing_topology(xpathObj, FALSE);
+        freeXpathObject(xpathObj);
+
+    } else if(format == 2) {
+        xmlNode *change = NULL;
+
+        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+            const char *op = crm_element_value(change, XML_DIFF_OP);
+            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+            if(op == NULL || strstr(xpath, "/fencing-topology/") == NULL) {
+                continue;
+
+            } else if(strstr(xpath, "/fencing-level/") == NULL) {
+                if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
+                    crm_info("Re-initializing fencing topology after top-level %s operation", op);
+                    fencing_topology_init(NULL);
+                }
+                return;
+            }
+
+            crm_trace("Handling %s operation for %s", op, xpath);
+            if(strcmp(op, "move") == 0) {
+                continue;
+
+            } else if(strcmp(op, "create") == 0) {
+                handle_topology_change(change->children, FALSE);
+
+            } else if(strcmp(op, "modify") == 0) {
+                xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+
+                if(match) {
+                    handle_topology_change(match->children, TRUE);
+                }
+
+            } else if(strcmp(op, "delete") == 0) {
+                /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
+                crm_info("Re-initializing fencing topology after %s operation", op);
+                fencing_topology_init(NULL);
+                return;
+            }
+        }
+
+    } else {
+        crm_warn("Unknown patch format: %d", format);
+    }
 }
 static bool have_cib_devices = FALSE;
 
@@ -850,7 +950,9 @@ static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
-    static int (*cib_apply_patch_event)(xmlNode *, xmlNode *, xmlNode **, int) = NULL;
+    xmlNode *stonith_enabled_xml = NULL;
+    const char *stonith_enabled_s = NULL;
+    static gboolean stonith_enabled_saved = TRUE;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -861,42 +963,66 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         return;
     }
 
-    if (cib_apply_patch_event == NULL) {
-        cib_apply_patch_event = find_library_function(&cib_library, CIB_LIBRARY, "cib_apply_patch_event", TRUE);
-    }
-
-    CRM_ASSERT(cib_apply_patch_event);
-
     /* Maintain a local copy of the CIB so that we have full access to the device definitions and location constraints */
     if (local_cib != NULL) {
-        xmlNode *cib_last = local_cib;
+        int rc = pcmk_ok;
+        xmlNode *patchset = NULL;
 
-        local_cib = NULL;
-        rc = (*cib_apply_patch_event)(msg, cib_last, &local_cib, LOG_DEBUG);
-        free_xml(cib_last);
+        crm_element_value_int(msg, F_CIB_RC, &rc);
+        if (rc != pcmk_ok) {
+            return;
+        }
 
+        patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+        xml_log_patchset(LOG_TRACE, "Config update", patchset);
+        rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
+            case pcmk_ok:
+                break;
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-            case pcmk_ok:
+                free_xml(local_cib);
+                local_cib = NULL;
                 break;
             default:
                 crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                free_xml(local_cib);
+                local_cib = NULL;
         }
     }
 
     if (local_cib == NULL) {
-        crm_trace("Re-requesting the full cib after diff failure");
+        crm_trace("Re-requesting the full cib");
         rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
         if(rc != pcmk_ok) {
             crm_err("Couldnt retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
+            return;
         }
         CRM_ASSERT(local_cib != NULL);
+        stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
     }
 
-    update_fencing_topology(event, msg);
-    update_cib_stonith_devices(event, msg);
+    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']", local_cib, LOG_TRACE);
+    if (stonith_enabled_xml) {
+        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+
+    if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
+        crm_trace("Ignoring cib updates while stonith is disabled");
+        stonith_enabled_saved = FALSE;
+        return;
+
+    } else if (stonith_enabled_saved == FALSE) {
+        crm_info("Updating stonith device and topology lists now that stonith is enabled");
+        stonith_enabled_saved = TRUE;
+        fencing_topology_init(NULL);
+        cib_devices_update();
+
+    } else {
+        update_fencing_topology(event, msg);
+        update_cib_stonith_devices(event, msg);
+    }
 }
 
 static void
