@@ -76,7 +76,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="cancel" operation_key="drbd_r0:0_cancel_30000" internal_operation_key="drbd_r0:1_monitor_30000" on_node="ibm1.isg.si" on_node_uuid="4b2047c8-f3a0-4935-84a2-967b548598c9"/>
+        <rsc_op id="3" operation="cancel" operation_key="drbd_r0:0_monitor_30000" internal_operation_key="drbd_r0:1_monitor_30000" on_node="ibm1.isg.si" on_node_uuid="4b2047c8-f3a0-4935-84a2-967b548598c9"/>
       </trigger>
       <trigger>
         <pseudo_event id="30" operation="promote" operation_key="ms_drbd_r0_promote_0"/>
@@ -85,7 +85,7 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="3" operation="cancel" operation_key="drbd_r0:0_cancel_30000" internal_operation_key="drbd_r0:1_monitor_30000" on_node="ibm1.isg.si" on_node_uuid="4b2047c8-f3a0-4935-84a2-967b548598c9">
+      <rsc_op id="3" operation="cancel" operation_key="drbd_r0:0_monitor_30000" internal_operation_key="drbd_r0:1_monitor_30000" on_node="ibm1.isg.si" on_node_uuid="4b2047c8-f3a0-4935-84a2-967b548598c9">
         <primitive id="drbd_r0" long-id="drbd_r0:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_operation="monitor" CRM_meta_role="Slave" CRM_meta_timeout="30000"  drbd_resource="r0"/>
       </rsc_op>

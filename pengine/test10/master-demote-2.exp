@@ -206,7 +206,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_cancel_15000" internal_operation_key="stateful-1:1_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:1_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
       <trigger>
         <pseudo_event id="71" operation="promote" operation_key="master-1_promote_0"/>
@@ -215,7 +215,7 @@
   </synapse>
   <synapse id="15">
     <action_set>
-      <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_cancel_15000" internal_operation_key="stateful-1:1_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <rsc_op id="5" operation="cancel" operation_key="stateful-1:0_monitor_15000" internal_operation_key="stateful-1:1_monitor_15000" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_operation="monitor" CRM_meta_timeout="60000" />
       </rsc_op>
