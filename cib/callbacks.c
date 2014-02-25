@@ -1128,12 +1128,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                   crm_log_xml_err(request, "bad op"));
     }
 
-#ifdef SUPPORT_PRENOTIFY
-    if ((call_options & cib_inhibit_notify) == 0) {
-        cib_pre_notify(call_options, op, the_cib, input);
-    }
-#endif
-
     if (rc == pcmk_ok) {
         ping_modified_since = TRUE;
         if (call_options & cib_inhibit_bcast) {
