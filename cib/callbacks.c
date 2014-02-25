@@ -1093,29 +1093,24 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         goto done;
 
     } else if (cib_op_modifies(call_type) == FALSE) {
+        xmlNode *cib_ro = current_cib;
+
 #if ENABLE_ACL
-        if (acl_enabled(config_hash) == FALSE
-            || acl_filter_cib(request, current_cib, current_cib, &filtered_current_cib) == FALSE) {
-            rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
-                                section, request, input, FALSE, &config_changed,
-                                current_cib, &result_cib, NULL, &output);
-
-        } else if (filtered_current_cib == NULL) {
-            crm_debug("Pre-filtered the entire cib");
-            rc = -EACCES;
-
-        } else {
-            crm_debug("Pre-filtered the queried cib according to the ACLs");
-            rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
-                                section, request, input, FALSE, &config_changed,
-                                filtered_current_cib, &result_cib, NULL, &output);
+        if (acl_enabled(config_hash)) {
+            if(acl_filter_cib(request, current_cib, current_cib, &filtered_current_cib)) {
+                if (filtered_current_cib == NULL) {
+                    crm_debug("Pre-filtered the entire cib");
+                    rc = -EACCES;
+                    goto done;
+                }
+                cib_ro = filtered_current_cib;
+            }
         }
-#else
+#endif
+
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
                             section, request, input, FALSE, &config_changed,
-                            current_cib, &result_cib, NULL, &output);
-
-#endif
+                            cib_ro, &result_cib, NULL, &output);
 
         CRM_CHECK(result_cib == NULL, free_xml(result_cib));
         goto done;
@@ -1132,6 +1127,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
                   crm_log_xml_err(request, "bad op"));
     }
+
 #ifdef SUPPORT_PRENOTIFY
     if ((call_options & cib_inhibit_notify) == 0) {
         cib_pre_notify(call_options, op, the_cib, input);
@@ -1210,16 +1206,16 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             crm_log_xml_info(output, "cib:output");
             free_xml(output);
         }
+
+        output = result_cib;
 #if ENABLE_ACL
         {
             xmlNode *filtered_result_cib = NULL;
 
-            if (acl_enabled(config_hash) == FALSE
-                || acl_filter_cib(request, current_cib, result_cib,
-                                  &filtered_result_cib) == FALSE) {
-                output = result_cib;
+            if (acl_enabled(config_hash)
+                && acl_filter_cib(request, current_cib, result_cib,
+                                  &filtered_result_cib)) {
 
-            } else {
                 crm_debug("Filtered the result cib for output according to the ACLs");
                 output = filtered_result_cib;
                 if (result_cib != NULL) {
@@ -1227,8 +1223,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                 }
             }
         }
-#else
-        output = result_cib;
 #endif
 
     } else {
