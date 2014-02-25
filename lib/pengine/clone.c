@@ -427,6 +427,9 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
         gboolean print_full = FALSE;
         resource_t *child_rsc = (resource_t *) gIter->data;
 
+        if (options & pe_print_clone_details)
+            print_full = TRUE;
+
         if (child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
             /* Inactive clone */
             if (is_set(child_rsc->flags, pe_rsc_orphan)) {
