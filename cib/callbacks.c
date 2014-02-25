@@ -368,7 +368,7 @@ process_ping_reply(xmlNode *reply)
                        digest, remote_cib);
             if(remote_cib) {
                 /* Additional debug */
-                xml_calculate_changes(the_cib, remote_cib);
+                xml_calculate_changes(the_cib, remote_cib, NULL);
                 xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);
                 free_xml(remote_cib);
             }
@@ -1157,13 +1157,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,
                             current_cib, &result_cib, cib_diff, &output);
-
-#if ENABLE_ACL
-        if (acl_enabled(config_hash) == TRUE
-            && acl_check_diff(request, current_cib, result_cib, *cib_diff) == FALSE) {
-            rc = -EACCES;
-        }
-#endif
 
         if (manage_counters == FALSE) {
             /* Legacy code

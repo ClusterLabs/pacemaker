@@ -108,6 +108,7 @@ typedef struct xml_private_s
         long check;
         uint32_t flags;
         GListPtr deleted_paths;
+        GListPtr acls;
 } xml_private_t;
 
 /* *INDENT-OFF* */
@@ -337,11 +338,25 @@ pcmkDeregisterNode(xmlNodePtr node)
 }
 
 void
-xml_track_changes(xmlNode * xml) 
+xml_track_changes(xmlNode * xml, const char *user) 
 {
+
     xml_accept_changes(xml);
     crm_trace("Tracking changes to %p", xml);
     set_doc_flag(xml, xpf_tracking);
+
+#if ENABLE_ACL
+    if(user) {
+        xmlNode *acls = get_xpath_object("//"XML_CIB_TAG_ACLS, xml, LOG_TRACE);
+
+        if(acls) {
+            xml_private_t *p = xml->doc->_private;
+
+            /* TODO: An update that modifies/removes the ACLs would cause problems */
+            unpack_user_acl(acls, user, &p->acls);
+        }
+    }
+#endif
 }
 
 bool xml_tracking_changes(xmlNode * xml)
@@ -925,7 +940,9 @@ xml_accept_changes(xmlNode * xml)
     crm_trace("Accepting changes to %p", xml);
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
-
+    if(doc->acls) {
+        g_list_free_full(doc->acls, free);
+    }
     doc->flags = (doc->flags & ~xpf_tracking);
 
     if(is_not_set(doc->flags, xpf_dirty)) {
@@ -1755,6 +1772,27 @@ add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
     return 1;
 }
 
+static bool
+__xml_acl_check(xmlNode *xml, const char *name, const char *mode)
+{
+#if ENABLE_ACL
+    xml_private_t *docp = NULL;
+#endif
+
+    CRM_ASSERT(xml);
+    CRM_ASSERT(xml->doc);
+    CRM_ASSERT(xml->doc->_private);
+
+#if ENABLE_ACL
+    docp = xml->doc->_private;
+    if(TRACKING_CHANGES(xml) && docp->acls) {
+        return cib_acl_check(docp->acls, xml, name, mode);
+    }
+#endif
+
+    return TRUE;
+}
+
 const char *
 crm_xml_add(xmlNode * node, const char *name, const char *value)
 {
@@ -1778,6 +1816,9 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
                   return value);
     }
 #endif
+    if(__xml_acl_check(node, name, XML_ACL_TAG_WRITE) == FALSE) {
+        return NULL;
+    }
 
     if(TRACKING_CHANGES(node)) {
         const char *old = crm_element_value(node, name);
@@ -1811,7 +1852,11 @@ crm_xml_replace(xmlNode * node, const char *name, const char *value)
     /* Could be re-setting the same value */
     CRM_CHECK(old_value != value, return value);
 
-    if (old_value != NULL && value == NULL) {
+    if(__xml_acl_check(node, name, XML_ACL_TAG_WRITE) == FALSE) {
+        /* Create a fake object linked to doc->_private instead? */
+        return NULL;
+
+    } else if (old_value != NULL && value == NULL) {
         xml_remove_prop(node, name);
         return NULL;
 
@@ -1857,6 +1902,10 @@ create_xml_node(xmlNode * parent, const char *name)
         doc = xmlNewDoc((const xmlChar *)"1.0");
         node = xmlNewDocRawNode(doc, NULL, (const xmlChar *)name, NULL);
         xmlDocSetRootElement(doc, node);
+
+    } else if(__xml_acl_check(parent, NULL, XML_ACL_TAG_WRITE) == FALSE) {
+        /* Create a fake object linked to doc->_private instead? */
+        return NULL;
 
     } else {
         doc = getDocPtr(parent);
@@ -1913,7 +1962,11 @@ free_xml(xmlNode * child)
             /* Free everything */
             xmlFreeDoc(doc);
 
+        } else if(__xml_acl_check(child, NULL, XML_ACL_TAG_WRITE) == FALSE) {
+            return;
+
         } else {
+
             if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
@@ -3251,12 +3304,12 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 }
 
 void
-xml_calculate_changes(xmlNode * old, xmlNode * new)
+xml_calculate_changes(xmlNode * old, xmlNode * new, const char *user)
 {
     CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
     CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
 
-    xml_track_changes(new);
+    xml_track_changes(new, user);
     __xml_diff_object(old, new);
     xml_log_changes(LOG_TRACE, __FUNCTION__, new);
 }

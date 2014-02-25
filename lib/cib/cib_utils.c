@@ -301,6 +301,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
 
+    const char *user = crm_element_value(req, F_CIB_USER);
     const char *new_version = NULL;
     static struct qb_log_callsite *diff_cs = NULL;
 
@@ -334,18 +335,18 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         copy_in_properties(current_cib, scratch);
         top = current_cib;
 
-        xml_track_changes(scratch);
+        xml_track_changes(scratch, user);
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
     } else {
         scratch = copy_xml(current_cib);
 
-        xml_track_changes(scratch);
+        xml_track_changes(scratch, user);
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
         if(xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
-            xml_calculate_changes(current_cib, scratch);
+            xml_calculate_changes(current_cib, scratch, user);
         }
         CRM_CHECK(current_cib != scratch, return -EINVAL);
     }

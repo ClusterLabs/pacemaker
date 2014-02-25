@@ -810,3 +810,68 @@ acl_check_diff_xml(xmlNode * xml, GHashTable * xml_perms)
 
     return TRUE;
 }
+
+bool
+cib_acl_check(GListPtr acls, xmlNode *xml, const char *name, const char *mode)
+{
+    bool allowed = TRUE;
+    GListPtr aIter = NULL;
+
+    char *path = NULL;
+    char *path_full = NULL;
+
+    path = xml_get_path(xml);
+    if(name) {
+        path_full = g_strdup_printf("%s[@%s]", path, name);
+    }
+
+    for(aIter = acls; aIter != NULL; aIter = aIter->next) {
+        const char *value = NULL;
+        acl_obj_t *acl_obj = aIter->data;
+
+        crm_trace("Checking ACL object: mode=%s, tag=%s, ref=%s, xpath=%s, attribute=%s against %s",
+                  acl_obj->mode, acl_obj->tag, acl_obj->ref,
+                  acl_obj->xpath, acl_obj->attribute, path_full);
+
+        value = crm_element_name(xml);
+        if(value && acl_obj->tag && safe_str_eq(acl_obj->tag, value)) {
+            if(acl_obj->mode == NULL || strcmp(acl_obj->mode, mode) != 0) {
+                crm_trace("%s access denied to %s: tag", mode, path_full);
+                allowed = FALSE;
+            }
+        }
+
+        value = crm_element_value(xml, XML_ATTR_IDREF);
+        if(value && acl_obj->ref && strcmp(acl_obj->tag, value)) {
+            if(acl_obj->mode == NULL || strcmp(acl_obj->mode, mode) != 0) {
+                crm_trace("%s access denied to %s: id-ref", mode, path_full);
+                allowed = FALSE;
+            }
+        }
+
+        if (acl_obj->xpath && strstr(path, acl_obj->xpath) == NULL) {
+            if(acl_obj->mode == NULL || strcmp(acl_obj->mode, mode) != 0) {
+                crm_trace("%s access denied to %s: xpath", mode, path_full);
+                allowed = FALSE;
+            }
+        }
+
+        if (acl_obj->xpath && strstr(path_full, acl_obj->xpath) == NULL) {
+            if(acl_obj->mode == NULL || strcmp(acl_obj->mode, mode) != 0) {
+                crm_trace("%s access denied to %s: full xpath", mode, path_full);
+                allowed = FALSE;
+            }
+        }
+
+        if(name && acl_obj->attribute && strcmp(acl_obj->attribute, name) == 0) {
+            if(acl_obj->mode == NULL || strcmp(acl_obj->mode, mode) != 0) {
+                crm_trace("%s access denied to %s[@%s]: attribute", mode, path_full, name);
+                allowed = FALSE;
+            }
+        }
+    }
+
+    free(path);
+    free(path_full);
+    return allowed;
+}

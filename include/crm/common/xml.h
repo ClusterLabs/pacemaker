@@ -250,8 +250,8 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     return xpathObj->nodesetval->nodeNr;
 }
 
-void xml_track_changes(xmlNode * xml);
-void xml_calculate_changes(xmlNode * old, xmlNode * new);
+void xml_track_changes(xmlNode * xml, const char *user);
+void xml_calculate_changes(xmlNode * old, xmlNode * new, const char *user);
 void xml_accept_changes(xmlNode * xml);
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
