@@ -555,12 +555,55 @@ __xml_acl_unpack(xmlNode *xml, const char *user)
 }
 
 
+static inline bool
+__xml_acl_mode_test(enum xml_private_flags allowed, enum xml_private_flags requested)
+{
+    if(allowed == xpf_acl_deny) {
+        return FALSE;
+
+    } else if((allowed && requested) == requested) {
+        return TRUE;
+
+    } else if(requested == xpf_acl_read && is_set(allowed, xpf_acl_write)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /* rc = TRUE if orig_cib has been filtered
  * That means '*result' rather than 'xml' should be exploited afterwards
  */
+static bool
+__xml_purge_attributes(xmlNode *xml)
+{
+    xmlNode *child = NULL;
+    xmlAttr *xIter = NULL;
+    bool readable_children = FALSE;
+    xml_private_t *p = xml->_private;
+
+    if(__xml_acl_mode_test(p->flags, xpf_acl_read)) {
+        return TRUE;
+    }
+
+    for (xIter = crm_first_attr(xml); xIter != NULL; xIter = xIter->next) {
+        const char *prop_name = (const char *)xIter->name;
+
+        if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+            continue;
+        }
+    }
+
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        readable_children |= __xml_purge_attributes(child);
+    }
+
+    return readable_children;
+}
+
 bool
 xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
 {
+    bool filtered = FALSE;
     GListPtr aIter = NULL;
     xmlNode *target = NULL;
     xml_private_t *doc = NULL;
@@ -574,7 +617,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
     __xml_acl_unpack(target, user);
 
     doc = target->doc->_private;
-    for(aIter = doc->acls; aIter != NULL; aIter = aIter->next) {
+    for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
         int max = 0;
         xml_acl_t *acl = aIter->data;
 
@@ -589,7 +632,14 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
             for(lpc = 0; lpc < max; lpc++) {
                 xmlNode *match = getXpathResult(xpathObj, lpc);
 
-                free_xml(match);
+                filtered = TRUE;
+                if(__xml_purge_attributes(match) == FALSE) {
+                    free_xml(match); /* Nothing readable under here, purge completely */
+                    if(match == target) {
+                        crm_trace("No access to the entire document");
+                        return TRUE;
+                    }
+                }
             }
             crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);
         }
@@ -599,7 +649,12 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
         g_list_free_full(doc->acls, __xml_acl_free);
         doc->acls = NULL;
     }
-    return TRUE;
+
+    if(target) {
+        *result = target;
+    }
+
+    return filtered;
 }
 
 
@@ -2049,21 +2104,6 @@ add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
     return 1;
 }
 
-static inline bool
-__xml_acl_mode_test(enum xml_private_flags allowed, enum xml_private_flags requested)
-{
-    if(allowed == xpf_acl_deny) {
-        return FALSE;
-
-    } else if(requested == allowed) {
-        return TRUE;
-
-    } else if(requested == xpf_acl_read && allowed == xpf_acl_write) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
 static bool
 __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
 {
@@ -2295,6 +2335,9 @@ free_xml(xmlNode * child)
 
         if (doc != NULL && top == child) {
             /* Free everything */
+            if(p->acls) {
+                g_list_free_full(p->acls, __xml_acl_free);
+            }
             xmlFreeDoc(doc);
 
         } else if(__xml_acl_check(child, NULL, xpf_acl_write) == FALSE) {
