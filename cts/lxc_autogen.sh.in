@@ -175,7 +175,7 @@ generate()
   <devices>
     <console type='pty'/>
     <filesystem type='ram'>
-        <source usage='154140672'/>
+        <source usage='150528'/>
         <target dir='/dev/shm'/>
     </filesystem>
     <filesystem type='mount'>
