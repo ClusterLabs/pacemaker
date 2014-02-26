@@ -1143,6 +1143,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             clear_bit(call_options, cib_zero_copy);
         }
 
+        if(acl_enabled(config_hash)) {
+            xml_acl_enable(current_cib);
+        }
         /* result_cib must not be modified after cib_perform_op() returns */
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,

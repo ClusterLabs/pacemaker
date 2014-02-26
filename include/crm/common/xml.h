@@ -250,6 +250,8 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     return xpathObj->nodesetval->nodeNr;
 }
 
+bool xml_acl_enabled(xmlNode *xml);
+void xml_acl_enable(xmlNode *xml); /* Call prior to xml_track_changes() */
 void xml_track_changes(xmlNode * xml, const char *user);
 void xml_calculate_changes(xmlNode * old, xmlNode * new, const char *user);
 void xml_accept_changes(xmlNode * xml);
