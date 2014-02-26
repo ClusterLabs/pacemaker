@@ -816,8 +816,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
     xmlNode *removed = NULL;
     gboolean is_first = TRUE;
 
-    int add[3];
-    int del[3];
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
 
     const char *fmt = NULL;
     const char *digest = NULL;
@@ -1085,6 +1085,11 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
     switch(format) {
         case 1:
             tmp = find_xml_node(patchset, "diff-removed", FALSE);
+            tmp = find_xml_node(tmp, "cib", FALSE);
+            if(tmp == NULL) {
+                /* Revert to the diff-removed line */
+                tmp = find_xml_node(patchset, "diff-removed", FALSE);
+            }
             break;
         case 2:
             tmp = find_xml_node(patchset, "version", FALSE);
@@ -1103,6 +1108,11 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
     switch(format) {
         case 1:
             tmp = find_xml_node(patchset, "diff-added", FALSE);
+            tmp = find_xml_node(tmp, "cib", FALSE);
+            if(tmp == NULL) {
+                /* Revert to the diff-added line */
+                tmp = find_xml_node(patchset, "diff-added", FALSE);
+            }
             break;
         case 2:
             tmp = find_xml_node(patchset, "version", FALSE);
@@ -1137,8 +1147,6 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         XML_ATTR_NUMUPDATES,
     };
 
-    xmlNode *tmp = NULL;
-
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
         crm_trace("Got %d for this[%s]", this[lpc], vfields[lpc]);
@@ -1147,50 +1155,15 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         }
     }
 
-    switch(format) {
-        case 1:
-            tmp = find_xml_node(patchset, "diff-removed", FALSE);
-            break;
-        case 2:
-            tmp = find_xml_node(patchset, "version", FALSE);
-            tmp = find_xml_node(tmp, "source", FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            return -EINVAL;
-    }
-
+    /* Set some defaults in case nothing is present */
+    add[0] = this[0];
+    add[1] = this[1];
+    add[2] = this[2] + 1;
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
-        crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-        crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+        del[lpc] = this[lpc];
     }
 
-    switch(format) {
-        case 1:
-            tmp = find_xml_node(patchset, "diff-added", FALSE);
-            break;
-        case 2:
-            tmp = find_xml_node(patchset, "version", FALSE);
-            tmp = find_xml_node(tmp, "target", FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            return -EINVAL;
-    }
-
-    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
-        crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-        crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
-    }
-
-    if(add[0] == -1 && add[1] == -1 && add[2] == -1) {
-        add[0] = this[0];
-        add[1] = this[1];
-        add[2] = this[2] + 1;
-        for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
-            del[lpc] = this[lpc];
-        }
-    }
+    xml_patch_versions(patchset, add, del);
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         if(this[lpc] < del[lpc]) {
@@ -1224,7 +1197,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
 {
     int rc = pcmk_ok;
     int root_nodes_seen = 0;
-    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
     char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
@@ -1262,7 +1234,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
     }
 
-    CRM_LOG_ASSERT(digest);
     if (root_nodes_seen > 1) {
         crm_err("(+) Diffs cannot contain more than one change set... saw %d", root_nodes_seen);
         rc = -ENOTUNIQ;
@@ -1508,6 +1479,9 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     crm_element_value_int(patchset, "format", &format);
     if(check_version) {
         rc = xml_patch_version_check(xml, patchset, format);
+        if(rc != pcmk_ok) {
+            return rc;
+        }
     }
 
     if(digest) {

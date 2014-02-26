@@ -163,8 +163,8 @@ gboolean
 cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                          int *_admin_epoch, int *_epoch, int *_updates)
 {
-    int add[3];
-    int del[3];
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
 
     xml_patch_versions(diff, add, del);
 

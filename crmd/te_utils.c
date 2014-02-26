@@ -397,8 +397,8 @@ void
 abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
 {
-    int add[3];
-    int del[3];
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
     int level = LOG_INFO;
     xmlNode *diff = NULL;
     xmlNode *change = NULL;

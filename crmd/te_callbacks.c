@@ -303,8 +303,8 @@ te_update_diff(const char *event, xmlNode * msg)
 
     xmlNode *diff = NULL;
 
-    int p_add[3];
-    int p_del[3];
+    int p_add[] = { 0, 0, 0 };
+    int p_del[] = { 0, 0, 0 };
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);

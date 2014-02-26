@@ -181,18 +181,23 @@ main(int argc, char **argv)
     }
 
     if (object_1 == NULL) {
-        fprintf(stderr, "Could not parse the first XML fragment");
+        fprintf(stderr, "Could not parse the first XML fragment\n");
         return 1;
     }
     if (object_2 == NULL) {
-        fprintf(stderr, "Could not parse the second XML fragment");
+        fprintf(stderr, "Could not parse the second XML fragment\n");
         return 1;
     }
 
     if (apply) {
-        output = copy_xml(object_1);
-        xml_apply_patchset(output, object_2, as_cib);
+        int rc;
 
+        output = copy_xml(object_1);
+        rc = xml_apply_patchset(output, object_2, as_cib);
+        if(rc != pcmk_ok) {
+            fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
+            return rc;
+        }
     } else {
         output = diff_xml_object(object_1, object_2, filter);
         xml_log_patchset(LOG_NOTICE, NULL, output);
