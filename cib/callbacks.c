@@ -1097,6 +1097,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
 #if ENABLE_ACL
         if (acl_enabled(config_hash)) {
+            const char *user = crm_element_value(request, F_CIB_USER);
+
             if(xml_acl_filtered_copy(user, current_cib, &filtered_current_cib)) {
                 if (filtered_current_cib == NULL) {
                     crm_debug("Pre-filtered the entire cib");

@@ -106,6 +106,8 @@ enum xml_private_flags {
      xpf_acl_read    = 0x0200,
      xpf_acl_write   = 0x0400,
      xpf_acl_deny    = 0x0800,
+
+     xpf_acl_create  = 0x1000,
 };
 
 typedef struct xml_private_s 
@@ -149,6 +151,7 @@ static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none'
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
+static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 
 #define CHUNK_SIZE 1024
 #define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
@@ -383,9 +386,6 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     p = target->doc->_private;
     acl = calloc(1, sizeof(xml_acl_t));
     if (acl) {
-        int max = 0;
-        int lpc = 0;
-        xmlXPathObjectPtr xpathObj = NULL;
         const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
 
         acl->mode = mode;
@@ -428,19 +428,6 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
         }
 
         p->acls = g_list_append(p->acls, acl);
-
-        xpathObj = xpath_search(target, xpath);
-        max = numXpathResults(xpathObj);
-
-        for(lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
-
-            p = match->_private;
-            p->flags |= mode;
-        }
-
-        crm_trace("Now enforcing ACL: %s xpath=%s (%d matches)",
-                  crm_element_name(xml), acl->xpath, max);
     }
     return acl;
 }
@@ -520,6 +507,32 @@ __xml_acl_required(const char *user)
     </acls>
 */
 
+
+static void
+__xml_acl_apply(xmlNode *xml) 
+{
+    GListPtr aIter = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    xml_private_t *p = xml->doc->_private;
+
+    for(aIter = p->acls; aIter != NULL; aIter = aIter->next) {
+        int max = 0, lpc = 0;
+        xml_acl_t *acl = aIter->data;
+
+        xpathObj = xpath_search(xml, acl->xpath);
+        max = numXpathResults(xpathObj);
+
+        for(lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = getXpathResult(xpathObj, lpc);
+
+            p = match->_private;
+            p->flags |= acl->mode;
+        }
+        crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
+        freeXpathObject(xpathObj);
+    }
+}
+
 static void
 __xml_acl_unpack(xmlNode *xml, const char *user)
 {
@@ -554,17 +567,22 @@ __xml_acl_unpack(xmlNode *xml, const char *user)
 #endif
 }
 
-
 static inline bool
 __xml_acl_mode_test(enum xml_private_flags allowed, enum xml_private_flags requested)
 {
-    if(allowed == xpf_acl_deny) {
+    if(is_set(allowed, xpf_acl_deny)) {
         return FALSE;
 
-    } else if((allowed && requested) == requested) {
+    } else if(is_set(allowed, requested)) {
         return TRUE;
 
-    } else if(requested == xpf_acl_read && is_set(allowed, xpf_acl_write)) {
+    } else if(is_set(requested, xpf_acl_read) && is_set(allowed, xpf_acl_write)) {
+        return TRUE;
+
+    } else if(is_set(requested, xpf_acl_create) && is_set(allowed, xpf_acl_write)) {
+        return TRUE;
+
+    } else if(is_set(requested, xpf_acl_create) && is_set(allowed, xpf_created)) {
         return TRUE;
     }
     return FALSE;
@@ -642,6 +660,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
                 }
             }
             crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);
+            freeXpathObject(xpathObj);
         }
     }
 
@@ -657,6 +676,25 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
     return filtered;
 }
 
+static void
+__xml_acl_post_process(xmlNode * xml)
+{
+    xmlNode *cIter = __xml_first_child(xml);
+    xml_private_t *p = xml->_private;
+
+    if(is_set(p->flags, xpf_created) && __xml_acl_check(xml, NULL, xpf_acl_write) == FALSE) {
+        char *path = xml_get_path(xml);
+        crm_trace("Cannot add new node %s at %s", crm_element_name(xml), path);
+        free_xml(xml);
+        return;
+    }
+
+    while (cIter != NULL) {
+        xmlNode *child = cIter;
+        cIter = __xml_next(cIter); /* In case it is free'd */
+        __xml_acl_post_process(child);
+    }
+}
 
 void
 xml_acl_enable(xmlNode *xml)
@@ -1093,6 +1131,11 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     bool config = FALSE;
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+
+    if(xml_acl_enabled(target)) {
+        __xml_acl_apply(target);
+        __xml_acl_post_process(target);
+    }
 
     if(xml_document_dirty(target) == FALSE) {
         crm_trace("No change %d", format);
@@ -1560,7 +1603,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     if(changed == FALSE) {
         crm_notice("Versions did not change in patch %d.%d.%d", add[0], add[1], add[2]);
-        return -pcmk_err_diff_failed;
+        return -pcmk_err_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
@@ -2137,20 +2180,14 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
             if(name) {
                 xmlAttr *attr = xmlHasProp(xml, (const xmlChar *)name);
 
-                if(attr && attr->_private) {
-                    xml_private_t *p = attr->_private;
-                    if(is_set(p->flags, mode)) {
-                        return TRUE;
-                    } else if(is_set(p->flags, xpf_acl_deny)) {
-                        crm_trace("%x access denied to %s: xpath attribute", mode, buffer);
-                        return FALSE;
-                    }
+                if(attr && mode == xpf_acl_create) {
+                    mode = xpf_acl_write;
                 }
             }
 
             while(parent && parent->_private) {
                 xml_private_t *p = parent->_private;
-                if(is_set(p->flags, mode)) {
+                if(__xml_acl_mode_test(p->flags, mode)) {
                     return TRUE;
                 } else if(is_set(p->flags, xpf_acl_deny)) {
                     crm_trace("%x access denied to %s: parent", mode, buffer);
@@ -2158,6 +2195,8 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 }
                 parent = parent->parent;
             }
+
+            return FALSE;
         }
     }
 #endif
@@ -2188,7 +2227,7 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
                   return value);
     }
 #endif
-    if(__xml_acl_check(node, name, xpf_acl_write) == FALSE) {
+    if(__xml_acl_check(node, name, xpf_acl_create) == FALSE) {
         crm_trace("Cannot add %s=%s to %s", name, value, node->name);
         return NULL;
     }
@@ -2276,11 +2315,6 @@ create_xml_node(xmlNode * parent, const char *name)
         doc = xmlNewDoc((const xmlChar *)"1.0");
         node = xmlNewDocRawNode(doc, NULL, (const xmlChar *)name, NULL);
         xmlDocSetRootElement(doc, node);
-
-    } else if(__xml_acl_check(parent, NULL, xpf_acl_write) == FALSE) {
-        crm_trace("Cannot add %s to %s", name, parent?(const char*)parent->name:"<root>");
-        /* Create a fake object linked to doc->_private instead? */
-        return NULL;
 
     } else {
         doc = getDocPtr(parent);
