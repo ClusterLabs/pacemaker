@@ -645,7 +645,9 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     if(safe_str_eq(op, CIB_OP_REPLACE)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
-        delegated = reply_to;
+        if (reply_to) {
+            delegated = reply_to;
+        }
         goto skip_is_reply;
 
     } else if(safe_str_eq(op, CIB_OP_SYNC)) {
