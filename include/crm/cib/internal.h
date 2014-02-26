@@ -136,14 +136,6 @@ gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gbo
                                       void *user_data, const char *callback_name,
                                       void (*callback) (xmlNode *, int, int, xmlNode *, void *));
 
-gboolean acl_enabled(GHashTable * config_hash);
-gboolean acl_filter_cib(xmlNode * request, xmlNode * current_cib, xmlNode * orig_cib,
-                        xmlNode ** filtered_cib);
-gboolean acl_check_diff(xmlNode * request, xmlNode * current_cib, xmlNode * result_cib,
-                        xmlNode * diff);
-
-bool cib_acl_check(GListPtr acls, xmlNode *xml, const char *name, const char *mode);
-
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer);
