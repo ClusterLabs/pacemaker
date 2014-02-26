@@ -119,10 +119,7 @@ typedef struct xml_private_s
 
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
-        char *tag;
-        char *ref;
         char *xpath;
-        char *attribute;
 } xml_acl_t;
 
 /* *INDENT-OFF* */
@@ -358,10 +355,7 @@ __xml_acl_free(void *data)
     if(data) {
         xml_acl_t *acl = data;
 
-        free(acl->ref);
-        free(acl->tag);
         free(acl->xpath);
-        free(acl->attribute);
         free(acl);
     }
 }
@@ -372,9 +366,9 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     xml_acl_t *acl = NULL;
 
     xml_private_t *p = target->doc->_private;
-    char *tag = crm_element_value_copy(xml, XML_ACL_ATTR_TAG);
-    char *ref = crm_element_value_copy(xml, XML_ACL_ATTR_REF);
-    char *xpath = crm_element_value_copy(xml, XML_ACL_ATTR_XPATH);
+    const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
+    const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
+    const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
 
     if(target == NULL || target->doc == NULL || target->doc->_private == NULL){
         CRM_ASSERT(target);
@@ -390,29 +384,63 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     acl = calloc(1, sizeof(xml_acl_t));
     if (acl) {
         int max = 0;
+        int lpc = 0;
+        xmlXPathObjectPtr xpathObj = NULL;
+        const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
 
         acl->mode = mode;
-        acl->tag = tag;
-        acl->ref = ref;
-        acl->xpath = xpath;
-        acl->attribute = crm_element_value_copy(xml, XML_ACL_ATTR_ATTRIBUTE);
-        p->acls = g_list_append(p->acls, acl);
-
         if(xpath) {
-            int lpc = 0, max = 0;
-            xmlXPathObjectPtr xpathObj = xpath_search(target, xpath);
+            acl->xpath = strdup(xpath);
 
-            max = numXpathResults(xpathObj);
-            for(lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = getXpathResult(xpathObj, lpc);
+        } else {
+            int offset = 0;
+            char buffer[XML_BUFFER_SIZE];
 
-                p = match->_private;
-                p->flags |= mode;
+            if(tag) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//%s", tag);
+            } else {
+                /* Is this even legal xpath syntax? */
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "*");
             }
+
+            if(ref || attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[");
+            }
+
+            if(ref) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@id='%s'", ref);
+            }
+
+            if(ref && attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, " and ");
+            }
+
+            if(attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@%s", attr);
+            }
+
+            if(ref || attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "]");
+            }
+
+            acl->xpath = strdup(buffer);
+            crm_trace("Built xpath: %s", acl->xpath);
         }
 
-        crm_trace("Now enforcing ACL: mode=%s, tag=%s, ref=%s, attribute=%s, xpath=%s (%d matches)",
-                  crm_element_name(xml), acl->tag, acl->ref, acl->attribute, acl->xpath, max);
+        p->acls = g_list_append(p->acls, acl);
+
+        xpathObj = xpath_search(target, xpath);
+        max = numXpathResults(xpathObj);
+
+        for(lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = getXpathResult(xpathObj, lpc);
+
+            p = match->_private;
+            p->flags |= mode;
+        }
+
+        crm_trace("Now enforcing ACL: %s xpath=%s (%d matches)",
+                  crm_element_name(xml), acl->xpath, max);
     }
     return acl;
 }
@@ -464,6 +492,22 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
     return TRUE;
 }
 
+static bool
+__xml_acl_required(const char *user) 
+{
+    if(user == NULL || strlen(user) == 0) {
+        crm_trace("no user set");
+        return FALSE;
+
+    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
+        return FALSE;
+
+    } else if (strcmp(user, "root") == 0) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
 /*
     <acls>
       <acl_user id="lmb">
@@ -480,14 +524,8 @@ static void
 __xml_acl_unpack(xmlNode *xml, const char *user)
 {
 #if ENABLE_ACL
-    if(user == NULL || strlen(user) == 0) {
-        crm_trace("no user set");
-
-    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
-        crm_trace("no acls needed for %s", user);
-
-    } else if (strcmp(user, "root") == 0) {
-        crm_trace("no acls needed for %s", user);
+    if(__xml_acl_required(user)) {
+        crm_trace("no acls needed for '%s'", user);
 
     } else {
         xml_private_t *p = xml->doc->_private;
@@ -515,6 +553,55 @@ __xml_acl_unpack(xmlNode *xml, const char *user)
     }
 #endif
 }
+
+
+/* rc = TRUE if orig_cib has been filtered
+ * That means '*result' rather than 'xml' should be exploited afterwards
+ */
+bool
+xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
+{
+    GListPtr aIter = NULL;
+    xmlNode *target = NULL;
+    xml_private_t *doc = NULL;
+
+    *result = NULL;
+    if(__xml_acl_required(user)) {
+        crm_trace("no acls needed for '%s'", user);
+    }
+
+    target = copy_xml(xml);
+    __xml_acl_unpack(target, user);
+
+    doc = target->doc->_private;
+    for(aIter = doc->acls; aIter != NULL; aIter = aIter->next) {
+        int max = 0;
+        xml_acl_t *acl = aIter->data;
+
+        if(acl->mode != xpf_acl_deny) {
+            /* Nothing to do */
+
+        } else if(acl->xpath) {
+            int lpc = 0;
+            xmlXPathObjectPtr xpathObj = xpath_search(target, acl->xpath);
+
+            max = numXpathResults(xpathObj);
+            for(lpc = 0; lpc < max; lpc++) {
+                xmlNode *match = getXpathResult(xpathObj, lpc);
+
+                free_xml(match);
+            }
+            crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);
+        }
+    }
+
+    if(doc->acls) {
+        g_list_free_full(doc->acls, __xml_acl_free);
+        doc->acls = NULL;
+    }
+    return TRUE;
+}
+
 
 void
 xml_acl_enable(xmlNode *xml)
@@ -1128,7 +1215,8 @@ xml_accept_changes(xmlNode * xml)
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
     if(doc->acls) {
-        g_list_free_full(doc->acls, free);
+        g_list_free_full(doc->acls, __xml_acl_free);
+        doc->acls = NULL;
     }
 
     free(doc->user); doc->user = NULL;
@@ -1141,7 +1229,7 @@ xml_accept_changes(xmlNode * xml)
     doc->flags = xpf_none;
     __xml_accept_changes(top);
 
-    g_list_free_full(doc->deleted_paths, __xml_acl_free);
+    g_list_free_full(doc->deleted_paths, free);
     doc->deleted_paths = NULL;
 }
 
@@ -1987,7 +2075,6 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
     {
         if(TRACKING_CHANGES(xml) && xml_acl_enabled(xml)) {
             int offset = 0;
-            GListPtr aIter = NULL;
             xmlNode *parent = xml;
             char buffer[XML_BUFFER_SIZE];
             xml_private_t *docp = xml->doc->_private;
@@ -2030,40 +2117,6 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
                     return FALSE;
                 }
                 parent = parent->parent;
-            }
-
-            /* No xpath rules apply, try tag/id/attribute rules */
-            for(aIter = docp->acls; aIter != NULL; aIter = aIter->next) {
-                const char *value = NULL;
-                const char *condition = NULL;
-                xml_acl_t *acl = aIter->data;
-
-                condition = acl->tag;
-                if(condition) {
-                    value = crm_element_name(xml);
-                    if(value && strcmp(condition, value) == 0 && __xml_acl_mode_test(acl->mode, mode) == FALSE) {
-                        crm_trace("%x access denied to %s: tag", mode, buffer);
-                        return FALSE;
-                    }
-                }
-
-                condition = acl->ref;
-                if(condition) {
-                    value = crm_element_value(xml, XML_ATTR_ID);
-                    if(value && strcmp(condition, value) == 0 && __xml_acl_mode_test(acl->mode, mode) == FALSE) {
-                        crm_trace("%x access denied to %s: id-ref", mode, buffer);
-                        return FALSE;
-                    }
-                }
-
-                condition = acl->attribute;
-                if(condition) {
-                    value = name;
-                    if(value && strcmp(condition, value) == 0 && __xml_acl_mode_test(acl->mode, mode) == FALSE) {
-                        crm_trace("%x access denied to %s: attribute", mode, buffer);
-                        return FALSE;
-                    }
-                }
             }
         }
     }
