@@ -491,6 +491,9 @@ sys_stats() {
 
 dlm_dump() {
     if which dlm_tool >/dev/null 2>&1 ; then
+      if
+	ps -ef | egrep -qs '[d]lm_controld'
+      then
 	echo "--- Lockspace overview:"
 	dlm_tool ls -n
 
@@ -503,6 +506,7 @@ dlm_dump() {
 	    dlm_tool lockdump "$N"
 	    dlm_tool lockdebug -svw "$N"
 	done
+      fi
     fi
 }
 
