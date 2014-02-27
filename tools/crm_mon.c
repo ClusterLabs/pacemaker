@@ -432,7 +432,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
                 break;
             case 'R':
                 print_clone_detail = ! print_clone_detail;
-		break;
+                break;
             case 't':
                 print_timing = ! print_timing;
                 if (print_timing)
