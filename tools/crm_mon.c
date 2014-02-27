@@ -98,6 +98,7 @@ gboolean watch_fencing = FALSE;
 gboolean hide_headers = FALSE;
 gboolean print_brief = FALSE;
 gboolean print_pending = FALSE;
+gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix;
@@ -342,6 +343,7 @@ static struct crm_option long_options[] = {
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
+    {"show-detail",    0, 0, 'R', "\tShow more details of cloned resources" },
     {"brief",          0, 0, 'b', "\t\tBrief output" },
     {"pending",        0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled" },
 
@@ -428,6 +430,9 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
             case 'r':
                 inactive_resources = ! inactive_resources;
                 break;
+            case 'R':
+                print_clone_detail = ! print_clone_detail;
+                break;
             case 't':
                 print_timing = ! print_timing;
                 if (print_timing)
@@ -482,6 +487,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer unused)
         print_as("%c A: \t%s\n", print_nodes_attr ? '*': ' ', get_option_desc('A'));
         print_as("%c L: \t%s\n", print_neg_location_prefix ? '*': ' ', get_option_desc('L'));
         print_as("%c D: \t%s\n", hide_headers ? '*': ' ', get_option_desc('D'));
+        print_as("%c R: \t%s\n", print_clone_detail ? '*': ' ', get_option_desc('R'));
         print_as("%c b: \t%s\n", print_brief ? '*': ' ', get_option_desc('b'));
         print_as("%c j: \t%s\n", print_pending ? '*': ' ', get_option_desc('j'));
         print_as("\n");
@@ -570,6 +576,9 @@ main(int argc, char **argv)
                 break;
             case 'j':
                 print_pending = TRUE;
+                break;
+            case 'R':
+                print_clone_detail = TRUE;
                 break;
             case 'c':
                 print_tickets = TRUE;
@@ -1194,6 +1203,10 @@ print_status(pe_working_set_t * data_set)
 
     if (print_pending) {
         print_opts |= pe_print_pending;
+    }
+
+    if (print_clone_detail) {
+        print_opts |= pe_print_clone_details;
     }
 
     updates++;

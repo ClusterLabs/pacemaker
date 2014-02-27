@@ -162,6 +162,7 @@ do_test coloc-clone-stays-active "Ensure clones don't get stopped/demoted becaus
 do_test coloc_fp_logic "Verify floating point calculations in colocation are working"
 do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when colocating master to native rsc."
 do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
+do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
@@ -530,6 +531,8 @@ echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
+
+do_test rsc-maintenance "Per-resource maintenance"
 
 echo ""
 do_test not-installed-agent "The resource agent is missing"

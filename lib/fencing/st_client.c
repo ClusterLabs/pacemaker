@@ -2459,7 +2459,9 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 
             } else if (hp->state == st_done) {
                 completed++;
-                when = hp->completed;
+                if (hp->completed > when) {
+                    when = hp->completed;
+                }
             }
         }
 

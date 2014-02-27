@@ -10,6 +10,9 @@
       <trigger>
         <rsc_op id="11" operation="stop" operation_key="dummy2_stop_0" on_node="c20.chepkov.lan" on_node_uuid="c20.chepkov.lan"/>
       </trigger>
+      <trigger>
+        <rsc_op id="13" operation="stop" operation_key="dummy3_stop_0" on_node="c21.chepkov.lan" on_node_uuid="c21.chepkov.lan"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">

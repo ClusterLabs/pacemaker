@@ -5,6 +5,7 @@ digraph "g" {
 "dummy2_stop_0 c20.chepkov.lan" -> "dummy2_start_0 c21.chepkov.lan" [ style = bold]
 "dummy2_stop_0 c20.chepkov.lan" [ style=bold color="green" fontcolor="black" ]
 "dummy3_stop_0 c21.chepkov.lan" -> "all_stopped" [ style = bold]
+"dummy3_stop_0 c21.chepkov.lan" -> "dummy2_start_0 c21.chepkov.lan" [ style = bold]
 "dummy3_stop_0 c21.chepkov.lan" [ style=bold color="green" fontcolor="black" ]
 "dummy4_monitor_0 c19.chepkov.lan" -> "probe_complete c19.chepkov.lan" [ style = bold]
 "dummy4_monitor_0 c19.chepkov.lan" [ style=bold color="green" fontcolor="black" ]

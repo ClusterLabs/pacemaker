@@ -188,6 +188,7 @@ struct node_s {
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
 #  define pe_rsc_unexpectedly_running 0x02000000ULL
+#  define pe_rsc_maintenance	0x04000000ULL
 
 #  define pe_rsc_needs_quorum	 0x10000000ULL
 #  define pe_rsc_needs_fencing	 0x20000000ULL
@@ -352,6 +353,7 @@ enum pe_ordering {
     pe_order_asymmetrical          = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,    /* Only relevant if... */
     pe_order_one_or_more           = 0x400000,    /* 'then' is only runnable if one or more of it's dependancies are too */
+    pe_order_anti_colocation       = 0x800000,
 
     pe_order_trace                 = 0x4000000  /* test marker */
 };

@@ -39,28 +39,30 @@
 The standard and provider (`ocf:heartbeat`) are determined automatically since `IPaddr2` is unique.
 The monitor operation is automatically created based on the agent's metadata.
 
+## Display a resource
+
+    crmsh # crm configure show ClusterIP
+    pcs   # pcs resource show ClusterIP
+
 ## Start a resource
+
     crmsh # crm resource start ClusterIP
-    pcs   # pcs resource start ClusterIP
+    pcs   # pcs resource enable ClusterIP
 
 ## Stop a resource
 
     crmsh # crm resource stop ClusterIP
-    pcs   # pcs resource stop ClusterIP
+    pcs   # pcs resource disable ClusterIP
 
 ## Remove a resource
 
     crmsh # crm configure delete ClusterIP
-    pcs   # 
+    pcs   # pcs resource delete ClusterIP
 
 ## Update a resource
+
     crmsh # crm resource param ClusterIP set clusterip_hash=sourceip
     pcs   # pcs resource update ClusterIP clusterip_hash=sourceip
-
-## Display a resource
-
-    crmsh # crm configure show ClusterIP
-    pcs   # pcs resource show WebFS
 
 ## Resource defaults
 
@@ -68,27 +70,29 @@ The monitor operation is automatically created based on the agent's metadata.
     pcs   # pcs resource rsc defaults resource-stickiness=100
     
 Listing the current defaults:
+
     crmsh # crm configure show type:rsc_defaults
     pcs   # pcs resource rsc defaults
-    
+
 ## Operation defaults
 
     crmsh # crm configure op_defaults timeout=240s
     pcs   # pcs resource op defaults timeout=240s
 
 Listing the current defaults:
+
     crmsh # crm configure show type:op_defaults
-    pcs   #  pcs resource op defaults
+    pcs   # pcs resource op defaults
 
 ## Colocation
 
     crmsh # crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
-    pcs   # pcs constraint colocation add WebSite ClusterIP INFINITY
+    pcs   # pcs constraint colocation add ClusterIP with WebSite INFINITY
 
 With roles
 
     crmsh #
-    pcs   # 
+    pcs   # pcs constraint colocation add Started AnotherIP with Master WebSite INFINITY
 
 ## Start/stop ordering
 
@@ -98,7 +102,7 @@ With roles
 With roles:
 
     crmsh #
-    pcs   # 
+    pcs   # pcs constraint order promote WebSite then start AnotherIP
 
 ## Preferred locations
 
@@ -108,7 +112,7 @@ With roles:
 With roles:
 
     crmsh #
-    pcs   # 
+    pcs   # pcs constraint location WebSite rule role=master 50 \#uname eq pcmk-1
 
 ## Moving resources
 
@@ -120,7 +124,7 @@ With roles:
     
 ## Creating a clone
 
-    crmsh # configure clone WebIP ClusterIP meta globally-unique="true" clone-max="2" clone-node-max="2"
+    crmsh # crm configure clone WebIP ClusterIP meta globally-unique="true" clone-max="2" clone-node-max="2"
     pcs   # pcs resource clone ClusterIP globally-unique=true clone-max=2 clone-node-max=2
 
 ## Creating a master/slave clone
@@ -133,12 +137,9 @@ With roles:
             notify=true
 
 ## ...
-    crmsh #
-    pcs   # 
 
     crmsh #
     pcs   # 
-
 
 ## Batch changes
 
@@ -150,7 +151,7 @@ With roles:
             clone-max=2 clone-node-max=1 notify=true
     crmsh # cib commit drbd_cfg
     crmsh # quit
-
+.
 
     pcs   # pcs cluster cib drbd_cfg
     pcs   # pcs -f drbd_cfg resource create WebData ocf:linbit:drbd drbd_resource=wwwdata \

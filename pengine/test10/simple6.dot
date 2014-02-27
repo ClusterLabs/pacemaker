@@ -6,6 +6,7 @@
 "probe_complete" -> "rsc2_start_0 node1" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_stop_0 node1" -> "all_stopped" [ style = bold]
+"rsc1_stop_0 node1" -> "rsc2_start_0 node1" [ style = bold]
 "rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc2_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rsc2_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]

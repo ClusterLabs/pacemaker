@@ -387,7 +387,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         }
 
         if (interval > 0 &&
-            (is_set(data_set->flags, pe_flag_maintenance_mode) || node->details->maintenance)) {
+            (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
         } else if (is_probe || safe_str_eq(task, RSC_START) || interval > 0
@@ -2431,7 +2431,7 @@ stage8(pe_working_set_t * data_set)
         if (action->rsc
             && action->node
             && action->node->details->shutdown
-            && is_not_set(data_set->flags, pe_flag_maintenance_mode)
+            && is_not_set(action->rsc->flags, pe_rsc_maintenance)
             && is_not_set(action->flags, pe_action_optional)
             && is_not_set(action->flags, pe_action_runnable)
             && crm_str_eq(action->task, RSC_STOP, TRUE)
