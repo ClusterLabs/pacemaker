@@ -800,9 +800,10 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(patch && with_digest) {
-        const char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+        char *digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
 
         crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+        free(digest);
     }
     return patch;
 }
@@ -1355,7 +1356,9 @@ __xml_find_path(xmlNode *top, const char *key)
 
     free(remainder);
     free(current);
+    free(section);
     free(tag);
+    free(id);
     return target;
 }
 
@@ -1559,6 +1562,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
         }
         free(new_digest);
+        free(version);
     }
     free_xml(old);
     return rc;
