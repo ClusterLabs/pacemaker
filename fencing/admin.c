@@ -62,6 +62,7 @@ static struct crm_option long_options[] = {
     {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
     {"history",     1, 0, 'H', "Retrieve last fencing operation"},
+    {"last",        1, 0, 'h', "Indicate when the named node was last fenced. Optional: --as-node-id"},
 
     {"-spacer-",    0, 0, '-', ""},
     {"register",    1, 0, 'R', "Register the named stonith device. Requires: --agent, optional: --option"},
@@ -82,7 +83,8 @@ static struct crm_option long_options[] = {
     {"index",       1, 0, 'i', "The stonith level (1-9)"},
 
     {"timeout",     1, 0, 't', "Operation timeout in seconds"},
-    {"tolerance",   1, 0, 0, "(Advanced) Do nothing if an equivalent --fence request succeeded less than N seconds earlier" },
+    {"as-node-id",  0, 0, 'n', "(Advanced) The supplied node is the corosync nodeid (Only for use with --last)" },
+    {"tolerance",   1, 0,   0, "(Advanced) Do nothing if an equivalent --fence request succeeded less than N seconds earlier" },
 
     {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
 
@@ -217,6 +219,7 @@ main(int argc, char **argv)
     int fence_level = 0;
     int no_connect = 0;
     int tolerance = 0;
+    int as_nodeid = FALSE;
 
     char *name = NULL;
     char *value = NULL;
@@ -297,6 +300,10 @@ main(int argc, char **argv)
                 target = optarg;
                 action = flag;
                 break;
+            case 'n':
+                as_nodeid = TRUE;
+                break;
+            case 'h':
             case 'H':
             case 'r':
             case 'd':
@@ -441,6 +448,23 @@ main(int argc, char **argv)
             break;
         case 'U':
             rc = mainloop_fencing(st, target, "on", timeout, tolerance);
+            break;
+        case 'h':
+            {
+                time_t when = 0;
+
+                if(as_nodeid) {
+                    uint32_t nodeid = atol(target);
+                    when = stonith_api_time(nodeid, NULL, FALSE);
+                } else {
+                    when = stonith_api_time(0, target, FALSE);
+                }
+                if(when) {
+                    printf("Node %s last kicked at: %s\n", target, ctime(&when));
+                } else {
+                    printf("Node %s has never been kicked\n", target);
+                }
+            }
             break;
         case 'H':
             {
