@@ -277,6 +277,8 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     node_t *node = NULL;
     node_t *chosen = NULL;
     clone_variant_data_t *clone_data = NULL;
+    char score[33];
+    size_t len = sizeof(score);
 
     get_clone_variant_data(clone_data, rsc);
 
@@ -298,7 +300,6 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
-        char *score = NULL;
 
         chosen = child->fns->location(child, NULL, FALSE);
         if (chosen == NULL || child->sort_index < 0) {
@@ -309,10 +310,9 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         node = (node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
         /* adds in master preferences and rsc_location.role=Master */
-        score = score2char(child->sort_index);
+        score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
-        free(score);
         node->weight = merge_weights(child->sort_index, node->weight);
     }
 
@@ -638,6 +638,9 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     node_t *cons_node = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
+    char score[33];
+    size_t len = sizeof(score);
+
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -742,7 +745,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
-        char *score = score2char(child_rsc->sort_index);
+        score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
         if (show_scores) {
@@ -753,7 +756,6 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             do_crm_log(scores_log_level, "%s promotion score on %s: %s",
                        child_rsc->id, chosen ? chosen->details->uname : "none", score);
         }
-        free(score);
 
         chosen = NULL;          /* nuke 'chosen' so that we don't promote more than the
                                  * required number of instances

@@ -50,6 +50,7 @@
                                         /* Status of an offline client */
 #  endif
 
+char *crm_itoa_stack(int an_int, char *buf, size_t len);
 char *crm_itoa(int an_int);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
@@ -58,6 +59,7 @@ long long crm_get_msec(const char *input);
 unsigned long long crm_get_interval(const char *input);
 int char2score(const char *score);
 char *score2char(int score);
+char *score2char_stack(int score, char *buf, size_t len);
 
 int compare_version(const char *version1, const char *version2);
 

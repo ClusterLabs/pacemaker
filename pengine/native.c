@@ -213,7 +213,9 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
 
     if (multiple > 1) {
         int log_level = LOG_INFO;
-        char *score = score2char(chosen->weight);
+        static char score[33];
+
+        score2char_stack(chosen->weight, score, sizeof(score));
 
         if (chosen->weight >= INFINITY) {
             log_level = LOG_WARNING;
@@ -222,7 +224,6 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
         do_crm_log(log_level, "%d nodes with equal score (%s) for"
                    " running %s resources.  Chose %s.",
                    multiple, score, rsc->id, chosen->details->uname);
-        free(score);
     }
 
     result = native_assign_node(rsc, nodes, chosen, FALSE);
@@ -1635,11 +1636,12 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
         work = NULL;
 
     } else {
-        char *score = score2char(constraint->score);
+        static char score[33];
+
+        score2char_stack(constraint->score, score, sizeof(score));
 
         pe_rsc_info(rsc_lh, "%s: Rolling back scores from %s (%d, %s)",
                     rsc_lh->id, rsc_rh->id, do_check, score);
-        free(score);
     }
 
     if (work) {
