@@ -216,6 +216,20 @@ char2score(const char *score)
 }
 
 char *
+score2char_stack(int score, char *buf, size_t len)
+{
+    if (score >= node_score_infinity) {
+        strncpy(buf, INFINITY_S, 9);
+    } else if (score <= -node_score_infinity) {
+        strncpy(buf, MINUS_INFINITY_S , 10);
+    } else {
+        return crm_itoa_stack(score, buf, len);
+    }
+
+    return buf;
+}
+
+char *
 score2char(int score)
 {
     if (score >= node_score_infinity) {
@@ -364,6 +378,17 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 
     crm_trace("created hash key: (%s)", hash_key);
     return hash_key;
+}
+
+
+char *
+crm_itoa_stack(int an_int, char *buffer, size_t len)
+{
+    if (buffer != NULL) {
+        snprintf(buffer, len, "%d", an_int);
+    }
+
+    return buffer;
 }
 
 char *
