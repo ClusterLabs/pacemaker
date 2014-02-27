@@ -2447,7 +2447,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         int progress = 0;
         int completed = 0;
 
-        rc = st->cmds->history(st, st_opt_sync_call | st_opt_cs_nodeid, name, &history, 120);
+        rc = st->cmds->history(st, opts, name, &history, 120);
 
         for (hp = history; hp; hp = hp->next) {
             entries++;
