@@ -348,8 +348,8 @@ void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
  *
  * At least one of nodeid and uname are required
  */
-int stonith_api_kick(int nodeid, const char *uname, int timeout, bool off);
-time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
+int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
+time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
 /*
  * Helpers for using the above functions without install-time dependancies
@@ -394,7 +394,7 @@ time_t stonith_api_time(int nodeid, const char *uname, bool in_progress);
 #  define STONITH_LIBRARY "libstonithd.so.2"
 
 static inline int
-stonith_api_kick_helper(int nodeid, int timeout, bool off)
+stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
 {
     static void *st_library = NULL;
     static int (*st_kick_fn) (int nodeid, const char *uname, int timeout, bool off) = NULL;
@@ -413,7 +413,7 @@ stonith_api_kick_helper(int nodeid, int timeout, bool off)
 }
 
 static inline time_t
-stonith_api_time_helper(int nodeid, bool in_progress)
+stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 {
     static void *st_library = NULL;
     static time_t(*st_time_fn) (int nodeid, const char *uname, bool in_progress) = NULL;

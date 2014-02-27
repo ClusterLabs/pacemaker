@@ -2362,8 +2362,11 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
     }
 }
 
+#define api_log_open() openlog("stonith-api", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_DAEMON)
+#define api_log(level, fmt, args...) syslog(level, "%s: "fmt, __FUNCTION__, args)
+
 int
-stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
+stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     char *name = NULL;
     const char *action = "reboot";
@@ -2372,9 +2375,13 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
     stonith_t *st = NULL;
     enum stonith_call_options opts = st_opt_sync_call | st_opt_allow_suicide;
 
+    api_log_open();
     st = stonith_api_new();
     if (st) {
         rc = st->cmds->connect(st, "stonith-api", NULL);
+        if(rc != pcmk_ok) {
+            api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+        }
     }
 
     if (uname != NULL) {
@@ -2391,6 +2398,11 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 
     if (rc == pcmk_ok) {
         rc = st->cmds->fence(st, opts, name, action, timeout, 0);
+        if(rc != pcmk_ok) {
+            api_log(LOG_ERR, "Could not kick (%s) node %u/%s : %s (%d)", action, nodeid, uname, pcmk_strerror(rc), rc);
+        } else {
+            api_log(LOG_NOTICE, "Node %u/%s kicked: %s ", nodeid, uname, action);
+        }
     }
 
     if (st) {
@@ -2403,7 +2415,7 @@ stonith_api_kick(int nodeid, const char *uname, int timeout, bool off)
 }
 
 time_t
-stonith_api_time(int nodeid, const char *uname, bool in_progress)
+stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 {
     int rc = 0;
     char *name = NULL;
@@ -2417,6 +2429,9 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     st = stonith_api_new();
     if (st) {
         rc = st->cmds->connect(st, "stonith-api", NULL);
+        if(rc != pcmk_ok) {
+            api_log(LOG_NOTICE, "Connection failed: %s (%d)", pcmk_strerror(rc), rc);
+        }
     }
 
     if (uname != NULL) {
@@ -2428,17 +2443,30 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
     }
 
     if (st && rc == pcmk_ok) {
-        st->cmds->history(st, st_opt_sync_call | st_opt_cs_nodeid, name, &history, 120);
+        int entries = 0;
+        int progress = 0;
+        int completed = 0;
+
+        rc = st->cmds->history(st, st_opt_sync_call | st_opt_cs_nodeid, name, &history, 120);
 
         for (hp = history; hp; hp = hp->next) {
+            entries++;
             if (in_progress) {
+                progress++;
                 if (hp->state != st_done && hp->state != st_failed) {
                     progress = time(NULL);
                 }
 
             } else if (hp->state == st_done) {
+                completed++;
                 when = hp->completed;
             }
+        }
+
+        if(rc == pcmk_ok) {
+            api_log(LOG_INFO, "Found %d entries for %u/%s: %d in progress, %d completed", entries, nodeid, uname, progress, completed);
+        } else {
+            api_log(LOG_ERR, "Could not retrieve fence history for %u/%s: %s (%d)", nodeid, uname, pcmk_strerror(rc), rc);
         }
     }
 
@@ -2451,6 +2479,9 @@ stonith_api_time(int nodeid, const char *uname, bool in_progress)
         stonith_api_delete(st);
     }
 
+    if(when) {
+        api_log(LOG_INFO, "Node %u/%s last kicked at: %ld", nodeid, uname, (long int)when);
+    }
     free(name);
     return when;
 }
