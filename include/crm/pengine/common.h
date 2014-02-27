@@ -99,6 +99,7 @@ enum pe_print_options {
 	pe_print_xml		= 0x0400,
 	pe_print_brief		= 0x0800,
 	pe_print_pending	= 0x1000,
+        pe_print_clone_details  = 0x2000,
 };
 /* *INDENT-ON* */
 
