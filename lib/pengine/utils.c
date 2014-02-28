@@ -186,6 +186,8 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
     }
 
     if (level == 0) {
+        char score[128];
+        int len = sizeof(score);
         /* For now we want this in sorted order to keep the regression tests happy */
         GListPtr gIter = NULL;
         GListPtr list = g_hash_table_get_values(hash);
@@ -195,7 +197,8 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
         gIter = list;
         for (; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
-            char *score = score2char(node->weight);
+            /* This function is called a whole lot, use stack allocated score */
+            score2char_stack(node->weight, score, len);
 
             if (rsc) {
                 printf("%s: %s allocation score on %s: %s\n",
@@ -203,15 +206,17 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
             } else {
                 printf("%s: %s = %s\n", comment, node->details->uname, score);
             }
-            free(score);
         }
 
         g_list_free(list);
 
     } else if (hash) {
+        char score[128];
+        int len = sizeof(score);
         g_hash_table_iter_init(&iter, hash);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            char *score = score2char(node->weight);
+            /* This function is called a whole lot, use stack allocated score */
+            score2char_stack(node->weight, score, len);
 
             if (rsc) {
                 do_crm_log_alias(LOG_TRACE, file, function, line,
@@ -221,7 +226,6 @@ dump_node_scores_worker(int level, const char *file, const char *function, int l
                 do_crm_log_alias(LOG_TRACE, file, function, line + 1, "%s: %s = %s", comment,
                                  node->details->uname, score);
             }
-            free(score);
         }
     }
 
