@@ -323,16 +323,10 @@ pcmkDeregisterNode(xmlNodePtr node)
 {
     xml_private_t *p = node->_private;
 
-    switch(node->type) {
-        case XML_ELEMENT_NODE:
-        case XML_DOCUMENT_NODE:
-        case XML_ATTRIBUTE_NODE:
-            CRM_ASSERT(node->_private != NULL);
-            CRM_ASSERT(p->check == (long) 0x81726354);
-            free(node->_private);
-            break;
-        default:
-            break;
+    if(p) {
+        CRM_ASSERT(node->_private != NULL);
+        CRM_ASSERT(p->check == (long) 0x81726354);
+        free(node->_private);
     }
 }
 
