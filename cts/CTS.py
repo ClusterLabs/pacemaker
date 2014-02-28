@@ -1434,14 +1434,14 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]="up"
         return 1
 
-    def StopaCM(self, node, verbose=False):
+    def StopaCM(self, node, verbose=False, force=False):
 
         '''Stop the cluster manager on a given node'''
 
         if verbose: self.log("Stopping %s on node %s" %(self["Name"], node))
         else: self.debug("Stopping %s on node %s" %(self["Name"], node))
 
-        if self.ShouldBeStatus[node] != "up":
+        if self.ShouldBeStatus[node] != "up" and force == False:
             return 1
 
         if self.rsh(node, self["StopCmd"]) == 0:
@@ -1557,7 +1557,7 @@ class ClusterManager(UserDict):
 
         return 1
 
-    def stopall(self, nodelist=None, verbose=False):
+    def stopall(self, nodelist=None, verbose=False, force=False):
 
         '''Stop the cluster managers on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
@@ -1568,8 +1568,8 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up":
-                if not self.StopaCM(node, verbose=verbose):
+            if self.ShouldBeStatus[node] == "up" or force == True:
+                if not self.StopaCM(node, verbose=verbose, force=force):
                     ret = 0
         return ret
 

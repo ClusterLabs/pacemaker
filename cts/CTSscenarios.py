@@ -316,19 +316,19 @@ as they might have been rebooted or crashed for some reason beforehand.
         CM.prepare()
 
         #        Clear out the cobwebs ;-)
-        self.TearDown(CM)
+        self.TearDown(CM, force=True)
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")
         return CM.startall(verbose=True, quick=True)
 
-    def TearDown(self, CM):
+    def TearDown(self, CM, force=False):
         '''Set up the given ScenarioComponent'''
 
         # Stop the cluster manager everywhere
 
         CM.log("Stopping Cluster Manager on all nodes")
-        return CM.stopall(verbose=True)
+        return CM.stopall(verbose=True, force=force)
 
 class LeaveBooted(BootCluster):
     def TearDown(self, CM):
@@ -463,7 +463,7 @@ class BasicSanityCheck(ScenarioComponent):
         CM.prepare()
 
         # Clear out the cobwebs
-        self.TearDown(CM)
+        self.TearDown(CM, force=True)
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on BSC node(s).")
@@ -486,7 +486,7 @@ class Benchmark(ScenarioComponent):
         CM.prepare()
 
         # Clear out the cobwebs
-        self.TearDown(CM)
+        self.TearDown(CM, force=True)
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all node(s).")
@@ -536,7 +536,7 @@ Test a rolling upgrade between two versions of the stack
         CM.prepare()
 
         # Clear out the cobwebs
-        CM.stopall()
+        CM.stopall(force=True)
 
         CM.log("Downgrading all nodes to %s." % self.Env["previous-version"])
 

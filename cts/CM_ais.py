@@ -370,7 +370,7 @@ class crm_cs_v1(crm_cs_v0):
         self.update({
             "Name"           : "crm-plugin-v1",
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
 
             "EpocheCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
@@ -396,7 +396,7 @@ class crm_mcp(crm_cs_v0):
         self.update({
             "Name"           : "crm-mcp",
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
 
             "EpocheCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
@@ -433,7 +433,7 @@ class crm_cman(crm_cs_v0):
         self.update({
             "Name"           : "crm-cman",
             "StartCmd"       : "service pacemaker start",
-            "StopCmd"        : "service pacemaker stop",
+            "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop",
 
             "EpocheCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
