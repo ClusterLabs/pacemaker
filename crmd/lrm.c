@@ -2070,25 +2070,25 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
 
     switch (op->op_status) {
         case PCMK_LRM_OP_CANCELLED:
-            crm_info("Operation %s: %s (call=%d, confirmed=%s)",
-                     op_key, services_lrm_status_str(op->op_status),
+            crm_info("Operation %s: %s (node=%s, call=%d, confirmed=%s)",
+                     op_key, lrm_state->node_name, services_lrm_status_str(op->op_status),
                      op->call_id, removed ? "true" : "false");
             break;
 
         case PCMK_LRM_OP_DONE:
-            crm_notice("Operation %s: %s (call=%d, rc=%d, cib-update=%d, confirmed=%s)",
-                       op_key, services_ocf_exitcode_str(op->rc),
+            crm_notice("Operation %s: %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s)",
+                       lrm_state->node_name, op_key, services_ocf_exitcode_str(op->rc),
                        op->call_id, op->rc, update_id, removed ? "true" : "false");
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
-            crm_err("Operation %s: %s (call=%d, timeout=%dms)",
-                    op_key, services_lrm_status_str(op->op_status), op->call_id, op->timeout);
+            crm_err("Operation %s: %s (node=%s, call=%d, timeout=%dms)",
+                    op_key, lrm_state->node_name, services_lrm_status_str(op->op_status), op->call_id, op->timeout);
             break;
 
         default:
-            crm_err("Operation %s (call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                    op_key, op->call_id, op->op_status, update_id, removed ? "true" : "false",
+            crm_err("Operation %s (node=%s, call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
+                    op_key, lrm_state->node_name, op->call_id, op->op_status, update_id, removed ? "true" : "false",
                     services_lrm_status_str(op->op_status));
     }
 
