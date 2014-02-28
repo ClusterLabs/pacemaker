@@ -857,7 +857,7 @@ parse_cli_lifetime(const char *input)
     if (duration == NULL) {
         CMD_ERR("Invalid duration specified: %s\n", move_lifetime);
         CMD_ERR("Please refer to"
-                " http://en.wikipedia.org/wiki/ISO_8601#Duration"
+                " http://en.wikipedia.org/wiki/ISO_8601#Durations"
                 " for examples of valid durations\n");
         return NULL;
     }
