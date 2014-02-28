@@ -2097,13 +2097,13 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
 
     if (op->op_status == PCMK_LRM_OP_DONE) {
         do_crm_log(log_level,
-                   "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s",
-                   op_key, op->call_id, op->rc, update_id, removed ? "true" : "false",
+                   "LRM operation %s (node=%s, call=%d, rc=%d, cib-update=%d, confirmed=%s) %s",
+                   op_key, lrm_state->node_name, op->call_id, op->rc, update_id, removed ? "true" : "false",
                    services_ocf_exitcode_str(op->rc));
     } else {
         do_crm_log(log_level,
-                   "LRM operation %s (call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
-                   op_key, op->call_id, op->op_status, update_id, removed ? "true" : "false",
+                   "LRM operation %s (node=%s, call=%d, status=%d, cib-update=%d, confirmed=%s) %s",
+                   op_key, lrm_state->node_name, op->call_id, op->op_status, update_id, removed ? "true" : "false",
                    services_lrm_status_str(op->op_status));
     }
 
