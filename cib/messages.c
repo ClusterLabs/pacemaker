@@ -223,6 +223,8 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     crm_info("Reporting our current digest to %s: %s (%d)", host, digest, cs && cs->targets);
 
+    free(digest);
+
     return pcmk_ok;
 #endif
 }
