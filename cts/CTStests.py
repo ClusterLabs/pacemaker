@@ -2626,15 +2626,15 @@ class RemoteBaremetal(CTSTest):
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
         self.pcmk_started=0
-        self.rsc_added=0
         self.failed = 0
         self.fail_string = ""
+        self.remote_node_added = 0
+        self.remote_node="remote1"
+        self.remote_rsc_added = 0
+        self.remote_rsc="remote1-rsc"
         self.cib_cmd="""cibadmin -C -o %s -X '%s' """
 
-    def del_connection_rsc(self, node):
-
-        if self.rsc_added == 0:
-            return
+    def del_rsc(self, node, rsc):
 
         for othernode in self.CM.Env["nodes"]:
             if othernode == node:
@@ -2642,18 +2642,51 @@ class RemoteBaremetal(CTSTest):
                 # find a cluster node that is not our soon to be remote-node.
                 continue
 
-            rc = self.CM.rsh(othernode, "crm_resource -D -r remote1 -t primitive")
+            rc = self.CM.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
             if rc != 0:
-                self.fail_string = ("Connection resource removal failed")
+                self.fail_string = ("Removal of resource '%s' failed" % (rsc))
                 self.failed = 1
             else:
                 self.fail_string = ""
                 self.failed = 0
                 break
 
+    def add_rsc(self, node, rsc_xml):
+        failed=0
+        fail_string=""
+        for othernode in self.CM.Env["nodes"]:
+            if othernode == node:
+                # we don't want to try and use the cib that we just shutdown.
+                # find a cluster node that is not our soon to be remote-node.
+                continue
+
+            rc = self.CM.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+            if rc != 0:
+                fail_string = "resource creation failed"
+                failed = 1
+            else:
+                fail_string = ""
+                failed = 0
+                break
+
+        if failed == 1:
+            self.failed=failed
+            self.fail_string=fail_string
+
+    def add_primitive_rsc(self, node):
+        rsc_xml="""
+<primitive class="ocf" id="%s" provider="pacemaker" type="Dummy">
+    <operations>
+      <op id="remote1-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+    </operations>
+</primitive>""" % (self.remote_rsc)
+        self.add_rsc(node, rsc_xml)
+        if self.failed == 0:
+            self.remote_rsc_added=1
+
     def add_connection_rsc(self, node):
         rsc_xml="""
-<primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
+<primitive class="ocf" id="%s" provider="pacemaker" type="remote">
     <instance_attributes id="remote1-instance_attributes"/>
         <instance_attributes id="remote1-instance_attributes">
           <nvpair id="remote1-instance_attributes-server" name="server" value="%s"/>
@@ -2663,29 +2696,17 @@ class RemoteBaremetal(CTSTest):
           <op id="remote1-name-start-interval-0-timeout-60" interval="0" name="start" timeout="60"/>
     </operations>
     <meta_attributes id="remote1-meta_attributes"/>
-</primitive>""" % node
+</primitive>""" % (self.remote_node, node)
+        self.add_rsc(node, rsc_xml)
+        if self.failed == 0:
+            self.remote_node_added=1
 
-        for othernode in self.CM.Env["nodes"]:
-            if othernode == node:
-                # we don't want to try and use the cib that we just shutdown.
-                # find a cluster node that is not our soon to be remote-node.
-                continue
-
-            rc = self.CM.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
-            if rc != 0:
-                self.fail_string = "Connection resource creation failed"
-                self.failed = 1
-            else:
-                self.fail_string = ""
-                self.failed = 0
-                self.rsc_added = 1
-                break
-
-    def start_metal(self, node):
+    def step1_start_metal(self, node):
         pcmk_started=0
 
         # make sure the resource doesn't already exist for some reason
-        self.CM.rsh(node, "crm_resource -D -r remote1 -t primitive")
+        self.CM.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_rsc))
+        self.CM.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_node))
 
         if not self.stop(node):
             self.failed = 1
@@ -2709,7 +2730,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation remote1_start_0.*confirmed.*ok")
+        pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % (self.remote_node))
 
         self.add_connection_rsc(node)
 
@@ -2720,6 +2741,33 @@ class RemoteBaremetal(CTSTest):
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
+    def step2_add_rsc(self, node):
+        if self.failed == 1:
+            return
+
+
+        # verify we can put a resource on the remote node
+        pats = [ ]
+        watch = self.create_watch(pats, 120)
+        watch.setwatch()
+        pats.append("process_lrm_event: LRM operation %s_start_0.*node=%s, .*confirmed.*ok" % (self.remote_rsc, self.remote_node))
+
+        # Add a resource that must live on remote-node
+        self.add_primitive_rsc(node)
+        # this crm_resource command actually occurs on the remote node
+        # which verifies that the ipc proxy works
+        rc = self.CM.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
+        if rc != 0:
+            self.fail_string = "Failed to place primitive on remote-node"
+            self.failed = 1
+            return
+
+        self.set_timer("remoteMetalRsc")
+        watch.lookforall()
+        self.log_timer("remoteMetalRsc")
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.failed = 1
 
     def cleanup_metal(self, node):
         if self.pcmk_started == 0:
@@ -2729,10 +2777,18 @@ class RemoteBaremetal(CTSTest):
 
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation remote1_stop_0.*confirmed.*ok")
 
-        self.del_connection_rsc(node)
+        if self.remote_rsc_added == 1:
+            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % (self.remote_rsc))
+        if self.remote_node_added == 1:
+            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % (self.remote_node))
+
         self.set_timer("remoteMetalCleanup")
+        if self.remote_rsc_added == 1:
+            self.CM.rsh(node, "crm_resource -U -r remote1-rsc -N %s" % (self.remote_node))
+            self.del_rsc(node, self.remote_rsc)
+        if self.remote_node_added == 1:
+            self.del_rsc(node, self.remote_node)
         watch.lookforall()
         self.log_timer("remoteMetalCleanup")
 
@@ -2780,7 +2836,8 @@ class RemoteBaremetal(CTSTest):
             return self.failure("Setup failed, start all nodes failed.")
 
         self.setup_env()
-        self.start_metal(node)
+        self.step1_start_metal(node)
+        self.step2_add_rsc(node)
         self.cleanup_metal(node)
 
         self.CM.debug("Waiting for the cluster to recover")
