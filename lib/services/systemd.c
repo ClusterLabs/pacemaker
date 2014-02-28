@@ -141,7 +141,7 @@ systemd_unit_by_name(const gchar * arg_name, gchar ** out_unit)
 
     name = systemd_service_name(arg_name);
 
-    while(*out_unit == NULL) {
+    while(TRUE) {
         msg = systemd_new_method(BUS_NAME".Manager", method);
         CRM_ASSERT(msg != NULL);
 
