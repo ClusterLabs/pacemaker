@@ -139,7 +139,7 @@ static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 
 #define CHUNK_SIZE 1024
-#define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
+#define TRACKING_CHANGES(xml) xml && xml->doc && xml->doc->_private? is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
         int rc = (max);                                                 \
