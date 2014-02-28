@@ -2421,7 +2421,6 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     char *name = NULL;
 
     time_t when = 0;
-    time_t progress = 0;
     stonith_t *st = NULL;
     stonith_history_t *history, *hp = NULL;
     enum stonith_call_options opts = st_opt_sync_call;
@@ -2454,7 +2453,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
             if (in_progress) {
                 progress++;
                 if (hp->state != st_done && hp->state != st_failed) {
-                    progress = time(NULL);
+                    when = time(NULL);
                 }
 
             } else if (hp->state == st_done) {
@@ -2470,10 +2469,6 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         } else {
             api_log(LOG_ERR, "Could not retrieve fence history for %u/%s: %s (%d)", nodeid, uname, pcmk_strerror(rc), rc);
         }
-    }
-
-    if (progress) {
-        when = progress;
     }
 
     if (st) {
