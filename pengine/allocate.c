@@ -172,6 +172,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     cancel = custom_action(rsc, strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
 
     free(cancel->task);
+    free(cancel->cancel_task);
     cancel->task = strdup(RSC_CANCEL);
     cancel->cancel_task = strdup(task);
 

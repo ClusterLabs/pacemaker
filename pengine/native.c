@@ -730,6 +730,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
             mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
             free(mon->task);
+            free(mon->cancel_task);
             mon->task = strdup(RSC_CANCEL);
             mon->cancel_task = strdup(name);
             add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
@@ -907,6 +908,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             cancel_op = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
 
             free(cancel_op->task);
+            free(cancel_op->cancel_task);
             cancel_op->task = strdup(RSC_CANCEL);
             cancel_op->cancel_task = strdup(name);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval);
