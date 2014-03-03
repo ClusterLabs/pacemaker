@@ -704,6 +704,16 @@ xml_acl_enable(xmlNode *xml)
     set_doc_flag(xml, xpf_acl_enabled);
 }
 
+void
+xml_acl_disable(xmlNode *xml)
+{
+    if(xml && xml->doc && xml->doc->_private){
+        xml_private_t *p = xml->doc->_private;
+
+        clear_bit(p->flags, xpf_acl_enabled);
+    }
+}
+
 bool
 xml_acl_enabled(xmlNode *xml)
 {
@@ -725,6 +735,7 @@ xml_track_changes(xmlNode * xml, const char *user)
     set_doc_flag(xml, xpf_tracking);
     if(enable_acls) {
         __xml_acl_unpack(xml, user);
+        __xml_acl_apply(xml);
     }
 }
 
@@ -2169,7 +2180,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 return FALSE;
             }
 
-            __get_prefix(NULL, xml, buffer, offset);
+            offset = __get_prefix(NULL, xml, buffer, offset);
             if(name) {
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
             }
@@ -2198,6 +2209,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 parent = parent->parent;
             }
 
+            crm_trace("%x access denied to %s: default", mode, buffer);
             return FALSE;
         }
     }
