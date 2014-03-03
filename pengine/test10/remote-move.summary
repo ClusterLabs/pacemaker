@@ -12,19 +12,17 @@ RemoteOnline: [ remote1 ]
 
 Transition Summary:
  * Move    shooter	(Started 18node1 -> 18builder)
- * Move    remote1	(Started 18builder -> 18node1)
- * Restart FAKE2	(Started remote1)
+ * Migrate remote1	(Started 18builder -> 18node1)
 
 Executing cluster transition:
  * Resource action: shooter         stop on 18node1
- * Resource action: FAKE2           stop on remote1
+ * Resource action: remote1         migrate_to on 18builder
  * Resource action: shooter         start on 18builder
+ * Resource action: remote1         migrate_from on 18node1
  * Resource action: remote1         stop on 18builder
  * Pseudo action:   all_stopped
  * Resource action: shooter         monitor=60000 on 18builder
- * Resource action: remote1         start on 18node1
- * Resource action: FAKE2           start on remote1
- * Resource action: FAKE2           monitor=60000 on remote1
+ * Pseudo action:   remote1_start_0
  * Resource action: remote1         monitor=60000 on 18node1
 
 Revised cluster status:
