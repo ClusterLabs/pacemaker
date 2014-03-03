@@ -52,6 +52,7 @@ void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 
 int command_options = 0;
+const char *cib_user = NULL;
 const char *cib_action = NULL;
 
 typedef struct str_list_s {
@@ -100,6 +101,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
     {"force",	    0, 0, 'f'},
     {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
+    {"user",	    1, 0, 'U', "Run the command with permissions of the named user (valid only for the root and "CRM_DAEMON_USER" accounts)"},
     {"sync-call",   0, 0, 's', "Wait for call to complete before returning"},
     {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
     {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a --modify,-M operation to be created if they do not exist"},
@@ -256,6 +258,8 @@ main(int argc, char **argv)
                 cib_action = CIB_OP_APPLY_DIFF;
                 break;
             case 'U':
+                cib_user = optarg;
+                break;
             case 'M':
                 cib_action = CIB_OP_MODIFY;
                 break;
@@ -524,7 +528,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 
     if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, NULL);
+        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, cib_user);
 
     } else {
         crm_err("You must specify an operation");
