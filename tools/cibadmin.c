@@ -162,21 +162,6 @@ static struct crm_option long_options[] = {
 
     /* Legacy options */
     {"host",	     1, 0, 'h', NULL, 1},
-    {"force-quorum", 0, 0, 'f', NULL, 1},
-    {"obj_type",     1, 0, 'o', NULL, 1},
-    {F_CRM_DATA,     1, 0, 'X', NULL, 1},
-    {CIB_OP_ERASE,   0, 0, 'E', NULL, 1},
-    {CIB_OP_QUERY,   0, 0, 'Q', NULL, 1},
-    {CIB_OP_CREATE,  0, 0, 'C', NULL, 1},
-    {CIB_OP_REPLACE, 0, 0, 'R', NULL, 1},
-    {CIB_OP_UPDATE,  0, 0, 'U', NULL, 1},
-    {CIB_OP_MODIFY,  0, 0, 'M', NULL, 1},
-    {CIB_OP_DELETE,  0, 0, 'D', NULL, 1},
-    {CIB_OP_BUMP,    0, 0, 'B', NULL, 1},
-    {CIB_OP_SYNC,    0, 0, 'S', NULL, 1},
-    {CIB_OP_SLAVE,   0, 0, 'r', NULL, 1},
-    {CIB_OP_MASTER,  0, 0, 'w', NULL, 1},
-    {CIB_OP_ISMASTER,0, 0, 'm', NULL, 1},
 
     {0, 0, 0, 0}
 };
