@@ -353,6 +353,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     const char *value = NULL;
     const char *class = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    int container_remote_node = 0;
+    int baremetal_remote_node = 0;
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
@@ -449,9 +451,24 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         set_bit((*rsc)->flags, pe_rsc_notify);
     }
 
+    if (xml_contains_remote_node((*rsc)->xml)) {
+        if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+            container_remote_node = 1;
+        } else {
+            baremetal_remote_node = 1;
+        }
+    }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
+        set_bit((*rsc)->flags, pe_rsc_allow_migrate);
+    } else if (value == NULL && baremetal_remote_node) {
+        /* by default, we want baremetal remote-nodes to be able
+         * to float around the cluster without having to stop all the
+         * resources within the remote-node before moving. Allowing
+         * migration support enables this feature. If this ever causes
+         * problems, migration support can be explicitly turned off with
+         * allow-migrate=false. */
         set_bit((*rsc)->flags, pe_rsc_allow_migrate);
     }
 
@@ -622,7 +639,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
-    } else if (xml_contains_remote_node((*rsc)->xml) && g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+    } else if (container_remote_node) {
         /* remote resources tied to a container resource must always be allowed
          * to opt-in to the cluster. Whether the connection resource is actually
          * allowed to be placed on a node is dependent on the container resource */
