@@ -326,6 +326,9 @@ pcmkDeregisterNode(xmlNodePtr node)
     if(p) {
         CRM_ASSERT(node->_private != NULL);
         CRM_ASSERT(p->check == (long) 0x81726354);
+        if(p->deleted_paths) {
+            g_list_free_full(p->deleted_paths, free);
+        }
         free(node->_private);
     }
 }
