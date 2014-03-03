@@ -329,6 +329,7 @@ pcmkRegisterNode(xmlNodePtr node)
         default:
             /* Ignore */
             crm_trace("Ignoring %p %d", node, node->type);
+            CRM_ASSERT(node->type == XML_ELEMENT_NODE);
             break;
     }
 
@@ -388,6 +389,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
         return NULL;
 
     } else if (tag == NULL && ref == NULL && xpath == NULL) {
+        crm_trace("No criteria %p", xml);
         return NULL;
     }
 
@@ -399,6 +401,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
         acl->mode = mode;
         if(xpath) {
             acl->xpath = strdup(xpath);
+            crm_trace("Using xpath: %s", acl->xpath);
 
         } else {
             int offset = 0;
@@ -448,6 +451,7 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
     for (child = __xml_first_child(acl_entry); child; child = __xml_next(child)) {
         const char *tag = crm_element_name(child);
 
+        crm_trace("Processing %s %p", tag, child);
         if(tag == NULL) {
             CRM_ASSERT(tag != NULL);
 
@@ -462,7 +466,7 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
                         const char *role_id = crm_element_value(role, XML_ATTR_ID);
 
                         if (role_id && strcmp(ref_role, role_id) == 0) {
-                            crm_debug("Unpacking referenced role: %s", role);
+                            crm_debug("Unpacking referenced role: %s", role_id);
                             __xml_acl_parse_entry(acl_top, role, target);
                             break;
                         }
@@ -484,22 +488,6 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
         }
     }
 
-    return TRUE;
-}
-
-static bool
-__xml_acl_required(const char *user) 
-{
-    if(user == NULL || strlen(user) == 0) {
-        crm_trace("no user set");
-        return FALSE;
-
-    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
-        return FALSE;
-
-    } else if (strcmp(user, "root") == 0) {
-        return FALSE;
-    }
     return TRUE;
 }
 
@@ -545,7 +533,7 @@ static void
 __xml_acl_unpack(xmlNode *xml, const char *user)
 {
 #if ENABLE_ACL
-    if(__xml_acl_required(user)) {
+    if(pcmk_acl_required(user) == FALSE) {
         crm_trace("no acls needed for '%s'", user);
 
     } else {
@@ -630,16 +618,17 @@ __xml_purge_attributes(xmlNode *xml)
 bool
 xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
 {
-    bool filtered = FALSE;
     GListPtr aIter = NULL;
     xmlNode *target = NULL;
     xml_private_t *doc = NULL;
 
     *result = NULL;
-    if(__xml_acl_required(user)) {
+    if(pcmk_acl_required(user) == FALSE) {
         crm_trace("no acls needed for '%s'", user);
+        return FALSE;
     }
 
+    crm_trace("filtered copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
     __xml_acl_unpack(target, user);
 
@@ -659,7 +648,6 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
             for(lpc = 0; lpc < max; lpc++) {
                 xmlNode *match = getXpathResult(xpathObj, lpc);
 
-                filtered = TRUE;
                 if(__xml_purge_attributes(match) == FALSE) {
                     free_xml(match); /* Nothing readable under here, purge completely */
                     if(match == target) {
@@ -676,13 +664,18 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
     if(doc->acls) {
         g_list_free_full(doc->acls, __xml_acl_free);
         doc->acls = NULL;
+
+    } else {
+        crm_trace("Ordinary user '%s' cannot access the CIB without any defined ACLs", doc->user);
+        free_xml(target);
+        target = NULL;
     }
 
     if(target) {
         *result = target;
     }
 
-    return filtered;
+    return TRUE;
 }
 
 static void

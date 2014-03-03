@@ -254,6 +254,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
                              const char *user_name)
 {
     int rc = pcmk_ok;
+    char *effective_user = NULL;
     gboolean query = FALSE;
     gboolean changed = FALSE;
     xmlNode *request = NULL;
@@ -293,6 +294,15 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
 
     cib->call_id++;
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
+#if ENABLE_ACL
+    if(user_name != NULL) {
+        xml_acl_enable(in_mem_cib);
+        effective_user = uid2username(geteuid());
+        crm_trace("Checking if %s can impersonate %s", effective_user, user_name);
+        determine_request_user(effective_user, request, F_CIB_USER);
+    }
+    crm_trace("Performing %s operation as %s", op, crm_element_value(request, F_CIB_USER));
+#endif
     rc = cib_perform_op(op, call_options, fn, query,
                         section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
@@ -327,5 +337,6 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         free_xml(output);
     }
 
+    free(effective_user);
     return rc;
 }

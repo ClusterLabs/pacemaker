@@ -1035,19 +1035,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     return;
 }
 
-static bool
-acl_enabled(GHashTable * config_hash)
-{
-    bool rc = FALSE;
-    const char *value = NULL;
-
-    value = cib_pref(config_hash, "enable-acl");
-    rc = crm_is_true(value);
-
-    crm_debug("CIB ACL is %s", rc ? "enabled" : "disabled");
-    return rc;
-}
-
 int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
@@ -1055,10 +1042,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
     xmlNode *current_cib = NULL;
-
-#if ENABLE_ACL
-    xmlNode *filtered_current_cib = NULL;
-#endif
 
     int call_type = 0;
     int call_options = 0;
@@ -1106,26 +1089,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         goto done;
 
     } else if (cib_op_modifies(call_type) == FALSE) {
-        xmlNode *cib_ro = current_cib;
-
-#if ENABLE_ACL
-        if (acl_enabled(config_hash)) {
-            const char *user = crm_element_value(request, F_CIB_USER);
-
-            if(xml_acl_filtered_copy(user, current_cib, &filtered_current_cib)) {
-                if (filtered_current_cib == NULL) {
-                    crm_debug("Pre-filtered the entire cib");
-                    rc = -EACCES;
-                    goto done;
-                }
-                cib_ro = filtered_current_cib;
-            }
-        }
-#endif
-
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
                             section, request, input, FALSE, &config_changed,
-                            cib_ro, &result_cib, NULL, &output);
+                            current_cib, &result_cib, NULL, &output);
 
         CRM_CHECK(result_cib == NULL, free_xml(result_cib));
         goto done;
@@ -1158,9 +1124,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             clear_bit(call_options, cib_zero_copy);
         }
 
-        if(acl_enabled(config_hash)) {
-            xml_acl_enable(current_cib);
-        }
         /* result_cib must not be modified after cib_perform_op() returns */
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,
@@ -1220,21 +1183,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         output = result_cib;
-#if ENABLE_ACL
-        if (acl_enabled(config_hash)) {
-            const char *user = crm_element_value(request, F_CIB_USER);
-
-            if(xml_acl_filtered_copy(user, current_cib, &filtered_current_cib)) {
-                if (filtered_current_cib == NULL) {
-                    crm_debug("Pre-filtered the entire cib");
-                    rc = -EACCES;
-                    goto done;
-                }
-                free_xml(result_cib);
-                output = filtered_current_cib;
-            }
-        }
-#endif
 
     } else {
         CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
@@ -1282,11 +1230,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     crm_trace("cleanup");
-#if ENABLE_ACL
-    if (filtered_current_cib != NULL) {
-        free_xml(filtered_current_cib);
-    }
-#endif
 
     if (call_type >= 0) {
         cib_op_cleanup(call_type, call_options, &input, &output);

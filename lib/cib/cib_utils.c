@@ -289,6 +289,27 @@ createEmptyCib(void)
     return cib_root;
 }
 
+static bool
+cib_acl_enabled(xmlNode *xml, const char *user)
+{
+    bool rc = FALSE;
+
+#if ENABLE_ACL
+    if(pcmk_acl_required(user)) {
+        const char *value = NULL;
+        GHashTable *options = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        cib_read_config(options, xml);
+        value = cib_pref(options, "enable-acl");
+        rc = crm_is_true(value);
+        g_hash_table_destroy(options);
+    }
+
+    crm_debug("CIB ACL is %s", rc ? "enabled" : "disabled");
+#endif
+    return rc;
+}
+
 int
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
@@ -301,9 +322,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *user = crm_element_value(req, F_CIB_USER);
     const char *new_version = NULL;
     static struct qb_log_callsite *diff_cs = NULL;
+    const char *user = crm_element_value(req, F_CIB_USER);
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -320,7 +341,31 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     if (is_query) {
-        rc = (*fn) (op, call_options, section, req, input, current_cib, result_cib, output);
+        xmlNode *cib_ro = current_cib;
+        xmlNode *cib_filtered = NULL;
+
+        if(cib_acl_enabled(cib_ro, user)) {
+            if(xml_acl_filtered_copy(user, cib_ro, &cib_filtered)) {
+                if (cib_filtered == NULL) {
+                    crm_debug("Pre-filtered the entire cib");
+                    return -EACCES;
+                }
+                cib_ro = cib_filtered;
+                crm_log_xml_trace(cib_ro, "filtered");
+            }
+        }
+
+        rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
+        if(cib_filtered) {
+            if(*output == cib_filtered) {
+                cib_filtered = NULL;
+
+            } else if(*output) {
+                /* We're about to free the source XML */
+                *output = copy_xml(*output);
+            }
+            free_xml(cib_filtered);
+        }
         return rc;
     }
 
@@ -329,7 +374,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         /* Conditional on v2 patch style */
 
         scratch = current_cib;
-
+        if(cib_acl_enabled(scratch, user)) {
+            xml_acl_enable(scratch);
+        }
         /* Create a shallow copy of current_cib for the version details */
         current_cib = create_xml_node(NULL, (const char *)scratch->name);
         copy_in_properties(current_cib, scratch);
@@ -340,6 +387,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     } else {
         scratch = copy_xml(current_cib);
+        if(cib_acl_enabled(scratch, user)) {
+            xml_acl_enable(scratch);
+        }
 
         xml_track_changes(scratch, user);
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
@@ -511,7 +561,19 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
   done:
+
     *result_cib = scratch;
+#if ENABLE_ACL
+    if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
+        if(xml_acl_filtered_copy(user, scratch, result_cib)) {
+            if (*result_cib == NULL) {
+                crm_debug("Pre-filtered the entire cib result");
+            }
+            free_xml(scratch);
+        }
+    }
+#endif
+
     if(diff) {
         *diff = local_diff;
     } else {
