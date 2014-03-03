@@ -256,6 +256,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     int rc = pcmk_ok;
     gboolean query = FALSE;
     gboolean changed = FALSE;
+    xmlNode *request = NULL;
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
@@ -264,6 +265,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     static int max_msg_types = DIMOF(cib_file_ops);
 
     crm_info("%s on %s", op, section);
+    call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
 
     if (cib->state == cib_disconnected) {
         return -ENOTCONN;
@@ -290,10 +292,12 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     cib->call_id++;
-    rc = cib_perform_op(op, call_options | cib_no_mtime | cib_inhibit_bcast, fn, query,
-                        section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
+    request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
+    rc = cib_perform_op(op, call_options, fn, query,
+                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
+    free_xml(request);
     if (rc == -pcmk_err_dtd_validation) {
         validate_xml_verbose(result_cib);
     }
