@@ -154,7 +154,15 @@ static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 
 #define CHUNK_SIZE 1024
-#define TRACKING_CHANGES(xml) xml->doc?is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
+static inline bool TRACKING_CHANGES(xmlNode *xml)
+{
+    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
+        return FALSE;
+    } else if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
         int rc = (max);                                                 \
@@ -546,6 +554,7 @@ __xml_acl_unpack(xmlNode *xml, const char *user)
 
         p->user = strdup(user);
         xml_acl_enable(xml);
+        crm_trace("Enabling acls for '%s'", user);
 
         if(acls) {
             xmlNode *child = NULL;
@@ -719,7 +728,7 @@ xml_track_changes(xmlNode * xml, const char *user)
     bool enable_acls = xml_acl_enabled(xml);     /* Save the acl setting */
 
     xml_accept_changes(xml);
-    crm_trace("Tracking changes to %p", xml);
+    crm_trace("Tracking changes to %p %d", xml, enable_acls);
     set_doc_flag(xml, xpf_tracking);
     if(enable_acls) {
         __xml_acl_unpack(xml, user);
@@ -2163,7 +2172,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
             xml_private_t *docp = xml->doc->_private;
 
             if(docp->acls == NULL) {
-                crm_trace("Ordinary users cannot access the CIB without any defined ACLs");
+                crm_trace("Ordinary user %s cannot access the CIB without any defined ACLs", docp->user);
                 return FALSE;
             }
 
