@@ -830,5 +830,11 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                      xmlNode ** output_data, int call_options, const char *user_name) =
         cib->delegate_fn;
 
+#if ENABLE_ACL
+    if(user_name == NULL) {
+        user_name = getenv("CIB_user");
+    }
+#endif
+
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
