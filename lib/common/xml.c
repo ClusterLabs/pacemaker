@@ -108,6 +108,7 @@ enum xml_private_flags {
      xpf_acl_deny    = 0x0800,
 
      xpf_acl_create  = 0x1000,
+     xpf_acl_denied  = 0x2000,
 };
 
 typedef struct xml_private_s 
@@ -698,6 +699,17 @@ __xml_acl_post_process(xmlNode * xml)
     }
 }
 
+bool
+xml_acl_denied(xmlNode *xml) 
+{
+    if(xml && xml->doc && xml->doc->_private){
+        xml_private_t *p = xml->doc->_private;
+
+        return is_set(p->flags, xpf_acl_denied);
+    }
+    return FALSE;
+}
+
 void
 xml_acl_enable(xmlNode *xml)
 {
@@ -710,7 +722,11 @@ xml_acl_disable(xmlNode *xml)
     if(xml && xml->doc && xml->doc->_private){
         xml_private_t *p = xml->doc->_private;
 
-        clear_bit(p->flags, xpf_acl_enabled);
+        if(xml_acl_enabled(xml)) {
+            __xml_acl_apply(xml);
+            __xml_acl_post_process(xml);
+            clear_bit(p->flags, xpf_acl_enabled);
+        }
     }
 }
 
@@ -1145,11 +1161,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
 
-    if(xml_acl_enabled(target)) {
-        __xml_acl_apply(target);
-        __xml_acl_post_process(target);
-    }
-
+    xml_acl_disable(target);
     if(xml_document_dirty(target) == FALSE) {
         crm_trace("No change %d", format);
         return NULL; /* No change */
@@ -2177,6 +2189,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
             if(docp->acls == NULL) {
                 crm_trace("Ordinary user %s cannot access the CIB without any defined ACLs", docp->user);
+                set_doc_flag(xml, xpf_acl_denied);
                 return FALSE;
             }
 
@@ -2202,14 +2215,17 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 xml_private_t *p = parent->_private;
                 if(__xml_acl_mode_test(p->flags, mode)) {
                     return TRUE;
+
                 } else if(is_set(p->flags, xpf_acl_deny)) {
                     crm_trace("%x access denied to %s: parent", mode, buffer);
+                    set_doc_flag(xml, xpf_acl_denied);
                     return FALSE;
                 }
                 parent = parent->parent;
             }
 
             crm_trace("%x access denied to %s: default", mode, buffer);
+            set_doc_flag(xml, xpf_acl_denied);
             return FALSE;
         }
     }

@@ -407,6 +407,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         rc = -EINVAL;
         goto done;
 
+    } else if(rc == pcmk_ok && xml_acl_denied(scratch)) {
+        crm_trace("ACL rejected part or all of the proposed changes");
+        rc = -EACCES;
+        goto done;
+
     } else if (rc != pcmk_ok) {
         goto done;
     }
