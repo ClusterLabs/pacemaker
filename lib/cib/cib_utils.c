@@ -384,6 +384,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         xml_track_changes(scratch, user);
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
+        xml_acl_disable(scratch); /* Allow the system to make any additional changes */
 
     } else {
         scratch = copy_xml(current_cib);
@@ -399,6 +400,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             xml_calculate_changes(current_cib, scratch, user);
         }
         CRM_CHECK(current_cib != scratch, return -EINVAL);
+        xml_acl_disable(scratch); /* Allow the system to make any additional changes */
     }
 
     if (rc == pcmk_ok && scratch == NULL) {
