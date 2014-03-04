@@ -2290,10 +2290,6 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
                   return value);
     }
 #endif
-    if(__xml_acl_check(node, name, xpf_acl_create) == FALSE) {
-        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
-        return NULL;
-    }
 
     if(TRACKING_CHANGES(node)) {
         const char *old = crm_element_value(node, name);
@@ -2301,6 +2297,11 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
         if(old == NULL || value == NULL || strcmp(old, value) != 0) {
             dirty = TRUE;
         }
+    }
+
+    if(dirty && __xml_acl_check(node, name, xpf_acl_create) == FALSE) {
+        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        return NULL;
     }
 
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
