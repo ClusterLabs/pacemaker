@@ -362,17 +362,19 @@ process_ping_reply(xmlNode *reply)
                        crm_element_value(the_cib, XML_ATTR_GENERATION),
                        crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
                        ping_digest, host,
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION_ADMIN):"0",
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION):"0",
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"0",
+                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION_ADMIN):"_",
+                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION):"_",
+                       remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"_",
                        digest, remote_cib);
-            if(remote_cib) {
+
+            if(remote_cib->children) {
                 /* Additional debug */
                 xml_calculate_changes(the_cib, remote_cib);
                 xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);
-                free_xml(remote_cib);
+                crm_trace("End of differences");
             }
-            crm_trace("End of differences");
+
+            free_xml(remote_cib);
             sync_our_cib(reply, FALSE);
         }
     }

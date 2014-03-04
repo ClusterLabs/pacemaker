@@ -206,7 +206,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     static struct qb_log_callsite *cs = NULL;
 
-    crm_trace("Processing \"%s\" event %s from %s with%s digest", op, seq, host, digest?"":"out");
+    crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
     crm_xml_add(*answer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
@@ -219,9 +219,24 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     if (cs && cs->targets) {
         /* Append additional detail so the reciever can log the differences */
         add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+
+    } else {
+        /* Always include at least the version details */
+        const char *tag = TYPE(the_cib);
+        xmlNode *shallow = create_xml_node(NULL, tag);
+
+        copy_in_properties(shallow, the_cib);
+        add_message_xml(*answer, F_CIB_CALLDATA, shallow);
+        free_xml(shallow);
     }
 
-    crm_info("Reporting our current digest to %s: %s (%d)", host, digest, cs && cs->targets);
+    crm_info("Reporting our current digest to %s: %s for %s.%s.%s (%p %d)",
+             host, digest,
+             crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
+             crm_element_value(existing_cib, XML_ATTR_GENERATION),
+             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES),
+             existing_cib,
+             cs && cs->targets);
 
     free(digest);
 
