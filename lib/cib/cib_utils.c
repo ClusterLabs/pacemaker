@@ -114,9 +114,12 @@ get_cib_copy(cib_t * cib)
 
     if (cib->cmds->query(cib, NULL, &xml_cib, options) != pcmk_ok) {
         crm_err("Couldnt retrieve the CIB");
+        free_xml(xml_cib);
         return NULL;
+
     } else if (xml_cib == NULL) {
         crm_err("The CIB result was empty");
+        free_xml(xml_cib);
         return NULL;
     }
 
@@ -356,16 +359,23 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
-        if(cib_filtered) {
-            if(*output == cib_filtered) {
-                cib_filtered = NULL;
 
-            } else if(*output) {
-                /* We're about to free the source XML */
-                *output = copy_xml(*output);
-            }
-            free_xml(cib_filtered);
+        if(output == NULL) {
+            /* nothing */
+
+        } else if(cib_filtered == *output) {
+            cib_filtered = NULL; /* Let them have this copy */
+
+        } else if(cib_filtered) {
+            /* We're about to free the document of which *output is a part */
+            *output = copy_xml(*output);
+
+        } else if(*output != current_cib) {
+            /* Give them a copy they can free */
+            *output = copy_xml(*output);
         }
+
+        free_xml(cib_filtered);
         return rc;
     }
 

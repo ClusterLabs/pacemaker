@@ -327,12 +327,13 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     if (output_data && output) {
-        *output_data = copy_xml(output);
-    }
+        if(output == in_mem_cib) {
+            *output_data = copy_xml(output);
+        } else {
+            *output_data = output;
+        }
 
-    if (query == FALSE || (call_options & cib_no_children)) {
-        free_xml(output);
-    } else if (safe_str_eq(crm_element_name(output), "xpath-query")) {
+    } else if(output != in_mem_cib) {
         free_xml(output);
     }
 

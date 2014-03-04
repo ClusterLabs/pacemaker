@@ -1231,9 +1231,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     crm_trace("cleanup");
 
+    if (cib_op_modifies(call_type) == FALSE && output != current_cib) {
+        free_xml(output);
+    }
+
     if (call_type >= 0) {
         cib_op_cleanup(call_type, call_options, &input, &output);
     }
+
     crm_trace("done");
     return rc;
 }

@@ -2233,8 +2233,10 @@ main(int argc, char **argv)
 
   bail:
 
-    if (cib_conn != NULL) {
+    if (data_set.input != NULL) {
         cleanup_alloc_calculations(&data_set);
+    }
+    if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }
