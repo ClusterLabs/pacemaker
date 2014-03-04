@@ -250,17 +250,25 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     return xpathObj->nodesetval->nodeNr;
 }
 
-void xml_track_changes(xmlNode * xml);
-void xml_calculate_changes(xmlNode * old, xmlNode * new);
-void xml_accept_changes(xmlNode * xml);
+bool xml_acl_enabled(xmlNode *xml);
+void xml_acl_enable(xmlNode *xml, const char *user); /* Call prior to xml_track_changes() */
+void xml_acl_disable(xmlNode *xml);
+bool xml_acl_denied(xmlNode *xml); /* Part or all of a change was rejected */
+bool xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result);
+
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
-xmlNode *xml_create_patchset(
-    int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version, bool with_digest);
-int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
+void xml_track_changes(xmlNode * xml, const char *user, bool enforce_acls);
+void xml_calculate_changes(xmlNode * old, xmlNode * new); /* For comparing two documents after the fact */
+void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
 bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+
+xmlNode *xml_create_patchset(
+    int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version, bool with_digest);
+int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
+
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);
 

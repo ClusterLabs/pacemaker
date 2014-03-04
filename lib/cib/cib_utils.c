@@ -106,17 +106,25 @@ cib_compare_generation(xmlNode * left, xmlNode * right)
     return 0;
 }
 
+/* Deprecated - doesn't expose -EACCES */
 xmlNode *
 get_cib_copy(cib_t * cib)
 {
     xmlNode *xml_cib;
     int options = cib_scope_local | cib_sync_call;
+    int rc = cib->cmds->query(cib, NULL, &xml_cib, options);
 
-    if (cib->cmds->query(cib, NULL, &xml_cib, options) != pcmk_ok) {
-        crm_err("Couldnt retrieve the CIB");
+    if (rc == -EACCES) {
         return NULL;
+
+    } else if (rc != pcmk_ok) {
+        crm_err("Couldnt retrieve the CIB");
+        free_xml(xml_cib);
+        return NULL;
+
     } else if (xml_cib == NULL) {
         crm_err("The CIB result was empty");
+        free_xml(xml_cib);
         return NULL;
     }
 
@@ -130,9 +138,10 @@ get_cib_copy(cib_t * cib)
 xmlNode *
 cib_get_generation(cib_t * cib)
 {
-    xmlNode *the_cib = get_cib_copy(cib);
+    xmlNode *the_cib = NULL;
     xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
+    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
         copy_in_properties(generation, the_cib);
         free_xml(the_cib);
@@ -289,6 +298,27 @@ createEmptyCib(void)
     return cib_root;
 }
 
+static bool
+cib_acl_enabled(xmlNode *xml, const char *user)
+{
+    bool rc = FALSE;
+
+#if ENABLE_ACL
+    if(pcmk_acl_required(user)) {
+        const char *value = NULL;
+        GHashTable *options = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+        cib_read_config(options, xml);
+        value = cib_pref(options, "enable-acl");
+        rc = crm_is_true(value);
+        g_hash_table_destroy(options);
+    }
+
+    crm_debug("CIB ACL is %s", rc ? "enabled" : "disabled");
+#endif
+    return rc;
+}
+
 int
 cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
                const char *section, xmlNode * req, xmlNode * input,
@@ -303,6 +333,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     const char *new_version = NULL;
     static struct qb_log_callsite *diff_cs = NULL;
+    const char *user = crm_element_value(req, F_CIB_USER);
 
     crm_trace("Begin %s%s op", is_query ? "read-only " : "", op);
 
@@ -319,7 +350,38 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     if (is_query) {
-        rc = (*fn) (op, call_options, section, req, input, current_cib, result_cib, output);
+        xmlNode *cib_ro = current_cib;
+        xmlNode *cib_filtered = NULL;
+
+        if(cib_acl_enabled(cib_ro, user)) {
+            if(xml_acl_filtered_copy(user, cib_ro, &cib_filtered)) {
+                if (cib_filtered == NULL) {
+                    crm_debug("Pre-filtered the entire cib");
+                    return -EACCES;
+                }
+                cib_ro = cib_filtered;
+                crm_log_xml_trace(cib_ro, "filtered");
+            }
+        }
+
+        rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
+
+        if(output == NULL) {
+            /* nothing */
+
+        } else if(cib_filtered == *output) {
+            cib_filtered = NULL; /* Let them have this copy */
+
+        } else if(cib_filtered) {
+            /* We're about to free the document of which *output is a part */
+            *output = copy_xml(*output);
+
+        } else if(*output != current_cib) {
+            /* Give them a copy they can free */
+            *output = copy_xml(*output);
+        }
+
+        free_xml(cib_filtered);
         return rc;
     }
 
@@ -334,24 +396,31 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         copy_in_properties(current_cib, scratch);
         top = current_cib;
 
-        xml_track_changes(scratch);
+        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
     } else {
         scratch = copy_xml(current_cib);
-
-        xml_track_changes(scratch);
+        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
         if(xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
+            xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
             xml_calculate_changes(current_cib, scratch);
         }
         CRM_CHECK(current_cib != scratch, return -EINVAL);
     }
 
+    xml_acl_disable(scratch); /* Allow the system to make any additional changes */
+
     if (rc == pcmk_ok && scratch == NULL) {
         rc = -EINVAL;
+        goto done;
+
+    } else if(rc == pcmk_ok && xml_acl_denied(scratch)) {
+        crm_trace("ACL rejected part or all of the proposed changes");
+        rc = -EACCES;
         goto done;
 
     } else if (rc != pcmk_ok) {
@@ -510,7 +579,19 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
   done:
+
     *result_cib = scratch;
+#if ENABLE_ACL
+    if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
+        if(xml_acl_filtered_copy(user, scratch, result_cib)) {
+            if (*result_cib == NULL) {
+                crm_debug("Pre-filtered the entire cib result");
+            }
+            free_xml(scratch);
+        }
+    }
+#endif
+
     if(diff) {
         *diff = local_diff;
     } else {
@@ -764,6 +845,12 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                      const char *section, xmlNode * data,
                      xmlNode ** output_data, int call_options, const char *user_name) =
         cib->delegate_fn;
+
+#if ENABLE_ACL
+    if(user_name == NULL) {
+        user_name = getenv("CIB_user");
+    }
+#endif
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }

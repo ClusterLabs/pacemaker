@@ -92,23 +92,38 @@ typedef struct {
 } filter_t;
 
 enum xml_private_flags {
-     xpf_none      = 0x000,
-     xpf_dirty     = 0x001,
-     xpf_deleted   = 0x002,
-     xpf_created   = 0x004,
+     xpf_none        = 0x0000,
+     xpf_dirty       = 0x0001,
+     xpf_deleted     = 0x0002,
+     xpf_created     = 0x0004,
 
-     xpf_tracking  = 0x010,
-     xpf_processed = 0x020,
-     xpf_skip      = 0x040,
-     xpf_moved     = 0x080,
+     xpf_tracking    = 0x0010,
+     xpf_processed   = 0x0020,
+     xpf_skip        = 0x0040,
+     xpf_moved       = 0x0080,
+
+     xpf_acl_enabled = 0x0100,
+     xpf_acl_read    = 0x0200,
+     xpf_acl_write   = 0x0400,
+     xpf_acl_deny    = 0x0800,
+
+     xpf_acl_create  = 0x1000,
+     xpf_acl_denied  = 0x2000,
 };
 
 typedef struct xml_private_s 
 {
         long check;
         uint32_t flags;
+        char *user;
+        GListPtr acls;
         GListPtr deleted_paths;
 } xml_private_t;
+
+typedef struct xml_acl_s {
+        enum xml_private_flags mode;
+        char *xpath;
+} xml_acl_t;
 
 /* *INDENT-OFF* */
 
@@ -137,9 +152,18 @@ static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none'
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
+static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 
 #define CHUNK_SIZE 1024
-#define TRACKING_CHANGES(xml) xml && xml->doc && xml->doc->_private? is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking):FALSE
+static inline bool TRACKING_CHANGES(xmlNode *xml)
+{
+    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
+        return FALSE;
+    } else if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
         int rc = (max);                                                 \
@@ -285,6 +309,54 @@ crm_first_attr(xmlNode * xml)
     return xml->properties;
 }
 
+#define XML_PRIVATE_MAGIC (long) 0x81726354
+
+static void
+__xml_acl_free(void *data)
+{
+    if(data) {
+        xml_acl_t *acl = data;
+
+        free(acl->xpath);
+        free(acl);
+    }
+}
+
+static void
+__xml_private_clean(xml_private_t *p)
+{
+    if(p) {
+        CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
+
+        free(p->user);
+        p->user = NULL;
+
+        if(p->acls) {
+            g_list_free_full(p->acls, __xml_acl_free);
+            p->acls = NULL;
+        }
+
+        if(p->deleted_paths) {
+            g_list_free_full(p->deleted_paths, free);
+            p->deleted_paths = NULL;
+        }
+    }
+}
+
+
+static void
+__xml_private_free(xml_private_t *p)
+{
+    __xml_private_clean(p);
+    free(p);
+}
+
+static void
+pcmkDeregisterNode(xmlNodePtr node)
+{
+    __xml_private_free(node->_private);
+}
+
 static void
 pcmkRegisterNode(xmlNodePtr node)
 {
@@ -296,7 +368,7 @@ pcmkRegisterNode(xmlNodePtr node)
         case XML_ATTRIBUTE_NODE:
         case XML_COMMENT_NODE:
             p = calloc(1, sizeof(xml_private_t));
-            p->check = (long) 0x81726354;
+            p->check = XML_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             p->flags |= (xpf_dirty|xpf_created);
             node->_private = p;
@@ -306,6 +378,7 @@ pcmkRegisterNode(xmlNodePtr node)
         default:
             /* Ignore */
             crm_trace("Ignoring %p %d", node, node->type);
+            CRM_LOG_ASSERT(node->type == XML_ELEMENT_NODE);
             break;
     }
 
@@ -318,27 +391,420 @@ pcmkRegisterNode(xmlNodePtr node)
     }
 }
 
-static void
-pcmkDeregisterNode(xmlNodePtr node)
+static xml_acl_t *
+__xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
 {
-    xml_private_t *p = node->_private;
+    xml_acl_t *acl = NULL;
 
-    if(p) {
-        CRM_ASSERT(node->_private != NULL);
-        CRM_ASSERT(p->check == (long) 0x81726354);
-        if(p->deleted_paths) {
-            g_list_free_full(p->deleted_paths, free);
+    xml_private_t *p = target->doc->_private;
+    const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
+    const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
+    const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
+
+    if(target == NULL || target->doc == NULL || target->doc->_private == NULL){
+        CRM_ASSERT(target);
+        CRM_ASSERT(target->doc);
+        CRM_ASSERT(target->doc->_private);
+        return NULL;
+
+    } else if (tag == NULL && ref == NULL && xpath == NULL) {
+        crm_trace("No criteria %p", xml);
+        return NULL;
+    }
+
+    p = target->doc->_private;
+    acl = calloc(1, sizeof(xml_acl_t));
+    if (acl) {
+        const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
+
+        acl->mode = mode;
+        if(xpath) {
+            acl->xpath = strdup(xpath);
+            crm_trace("Using xpath: %s", acl->xpath);
+
+        } else {
+            int offset = 0;
+            char buffer[XML_BUFFER_SIZE];
+
+            if(tag) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "//%s", tag);
+            } else {
+                /* Is this even legal xpath syntax? */
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "*");
+            }
+
+            if(ref || attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[");
+            }
+
+            if(ref) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@id='%s'", ref);
+            }
+
+            if(ref && attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, " and ");
+            }
+
+            if(attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "@%s", attr);
+            }
+
+            if(ref || attr) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "]");
+            }
+
+            acl->xpath = strdup(buffer);
+            crm_trace("Built xpath: %s", acl->xpath);
         }
-        free(node->_private);
+
+        p->acls = g_list_append(p->acls, acl);
+    }
+    return acl;
+}
+
+static gboolean
+__xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
+{
+    xmlNode *child = NULL;
+
+    for (child = __xml_first_child(acl_entry); child; child = __xml_next(child)) {
+        const char *tag = crm_element_name(child);
+
+        crm_trace("Processing %s %p", tag, child);
+        if(tag == NULL) {
+            CRM_ASSERT(tag != NULL);
+
+        } else if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0) {
+            const char *ref_role = crm_element_value(child, XML_ATTR_ID);
+
+            if (ref_role) {
+                xmlNode *role = NULL;
+
+                for (role = __xml_first_child(acl_top); role; role = __xml_next(role)) {
+                    if (strcmp(XML_ACL_TAG_ROLE, (const char *)role->name) == 0) {
+                        const char *role_id = crm_element_value(role, XML_ATTR_ID);
+
+                        if (role_id && strcmp(ref_role, role_id) == 0) {
+                            crm_debug("Unpacking referenced role: %s", role_id);
+                            __xml_acl_parse_entry(acl_top, role, target);
+                            break;
+                        }
+                    }
+                }
+            }
+
+        } else if (strcmp(XML_ACL_TAG_READ, tag) == 0) {
+            __xml_acl_create(child, target, xpf_acl_read);
+
+        } else if (strcmp(XML_ACL_TAG_WRITE, tag) == 0) {
+            __xml_acl_create(child, target, xpf_acl_write);
+
+        } else if (strcmp(XML_ACL_TAG_DENY, tag) == 0) {
+            __xml_acl_create(child, target, xpf_acl_deny);
+
+        } else {
+            crm_warn("Unknown ACL entry: %s", tag);
+        }
+    }
+
+    return TRUE;
+}
+
+/*
+    <acls>
+      <acl_user id="lmb">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read" xpath="/cib"/>
+        <write id="observer-write" xpath="//primitive[@id='vm-01']/meta_attributes/nvpair[@name='target-role']"/>
+      </acl_role>
+    </acls>
+*/
+
+
+static void
+__xml_acl_apply(xmlNode *xml) 
+{
+    GListPtr aIter = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    xml_private_t *p = xml->doc->_private;
+
+    for(aIter = p->acls; aIter != NULL; aIter = aIter->next) {
+        int max = 0, lpc = 0;
+        xml_acl_t *acl = aIter->data;
+
+        xpathObj = xpath_search(xml, acl->xpath);
+        max = numXpathResults(xpathObj);
+
+        for(lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = getXpathResult(xpathObj, lpc);
+
+            p = match->_private;
+            p->flags |= acl->mode;
+        }
+        crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
+        freeXpathObject(xpathObj);
     }
 }
 
+static void
+__xml_acl_unpack(xmlNode *xml, const char *user)
+{
+#if ENABLE_ACL
+    xml_private_t *p = NULL;
+
+    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
+        return;
+    }
+
+    p = xml->doc->_private;
+    if(pcmk_acl_required(user) == FALSE) {
+        crm_trace("no acls needed for '%s'", user);
+
+    } else if(p->acls == NULL) {
+        xmlNode *acls = get_xpath_object("//"XML_CIB_TAG_ACLS, xml, LOG_TRACE);
+
+        free(p->user);
+        p->user = strdup(user);
+
+        if(acls) {
+            xmlNode *child = NULL;
+
+            for (child = __xml_first_child(acls); child; child = __xml_next(child)) {
+                const char *tag = crm_element_name(child);
+
+                if (strcmp(tag, XML_ACL_TAG_USER) == 0) {
+                    const char *id = crm_element_value(child, XML_ATTR_ID);
+
+                    if(id && strcmp(id, user) == 0) {
+                        crm_debug("Unpacking ACLs for %s", id);
+                        __xml_acl_parse_entry(acls, child, xml);
+                    }
+                }
+            }
+        }
+    }
+#endif
+}
+
+static inline bool
+__xml_acl_mode_test(enum xml_private_flags allowed, enum xml_private_flags requested)
+{
+    if(is_set(allowed, xpf_acl_deny)) {
+        return FALSE;
+
+    } else if(is_set(allowed, requested)) {
+        return TRUE;
+
+    } else if(is_set(requested, xpf_acl_read) && is_set(allowed, xpf_acl_write)) {
+        return TRUE;
+
+    } else if(is_set(requested, xpf_acl_create) && is_set(allowed, xpf_acl_write)) {
+        return TRUE;
+
+    } else if(is_set(requested, xpf_acl_create) && is_set(allowed, xpf_created)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/* rc = TRUE if orig_cib has been filtered
+ * That means '*result' rather than 'xml' should be exploited afterwards
+ */
+static bool
+__xml_purge_attributes(xmlNode *xml)
+{
+    xmlNode *child = NULL;
+    xmlAttr *xIter = NULL;
+    bool readable_children = FALSE;
+    xml_private_t *p = xml->_private;
+
+    if(__xml_acl_mode_test(p->flags, xpf_acl_read)) {
+        crm_trace("%s is readable", crm_element_name(xml), ID(xml));
+        return TRUE;
+    }
+
+    xIter = crm_first_attr(xml);
+    while(xIter != NULL) {
+        xmlAttr *tmp = xIter;
+        const char *prop_name = (const char *)xIter->name;
+
+        xIter = xIter->next;
+        if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+            continue;
+        }
+
+        xmlUnsetProp(xml, tmp->name);
+    }
+
+    child = __xml_first_child(xml);
+    while ( child != NULL ) {
+        xmlNode *tmp = child;
+
+        child = __xml_next(child);
+        readable_children |= __xml_purge_attributes(tmp);
+    }
+
+    if(readable_children == FALSE) {
+        free_xml(xml); /* Nothing readable under here, purge completely */
+    }
+    return readable_children;
+}
+
+bool
+xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
+{
+    GListPtr aIter = NULL;
+    xmlNode *target = NULL;
+    xml_private_t *doc = NULL;
+
+    *result = NULL;
+    if(pcmk_acl_required(user) == FALSE) {
+        crm_trace("no acls needed for '%s'", user);
+        return FALSE;
+    }
+
+    crm_trace("filtering copy of %p for '%s'", xml, user);
+    target = copy_xml(xml);
+    __xml_acl_unpack(target, user);
+    __xml_acl_apply(target);
+
+    doc = target->doc->_private;
+    for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
+        int max = 0;
+        xml_acl_t *acl = aIter->data;
+
+        if(acl->mode != xpf_acl_deny) {
+            /* Nothing to do */
+
+        } else if(acl->xpath) {
+            int lpc = 0;
+            xmlXPathObjectPtr xpathObj = xpath_search(target, acl->xpath);
+
+            max = numXpathResults(xpathObj);
+            for(lpc = 0; lpc < max; lpc++) {
+                xmlNode *match = getXpathResult(xpathObj, lpc);
+
+                crm_trace("Purging attributes from %s", acl->xpath);
+                if(__xml_purge_attributes(match) == FALSE && match == target) {
+                    crm_trace("No access to the entire document for %s", user);
+                    return TRUE;
+                }
+            }
+            crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);
+            freeXpathObject(xpathObj);
+        }
+    }
+
+    if(doc->acls) {
+        g_list_free_full(doc->acls, __xml_acl_free);
+        doc->acls = NULL;
+
+    } else {
+        crm_trace("Ordinary user '%s' cannot access the CIB without any defined ACLs", doc->user);
+        free_xml(target);
+        target = NULL;
+    }
+
+    if(target) {
+        *result = target;
+    }
+
+    return TRUE;
+}
+
+static void
+__xml_acl_post_process(xmlNode * xml)
+{
+    xmlNode *cIter = __xml_first_child(xml);
+    xml_private_t *p = xml->_private;
+
+    if(is_set(p->flags, xpf_created)) {
+        xmlAttr *xIter = NULL;
+
+        /* Always allow new scaffolding, ie. node with no attributes or only an 'id' */
+
+        for (xIter = crm_first_attr(xml); xIter != NULL; xIter = xIter->next) {
+            const char *prop_name = (const char *)xIter->name;
+
+            if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+                /* Delay the acl check */
+                continue;
+
+            } else if(__xml_acl_check(xml, NULL, xpf_acl_write)) {
+                crm_trace("Creation of %s=%s is allowed", crm_element_name(xml), ID(xml));
+                break;
+
+            } else {
+                char *path = xml_get_path(xml);
+                crm_trace("Cannot add new node %s at %s", crm_element_name(xml), path);
+                free_xml(xml);
+                return;
+            }
+        }
+    }
+
+    while (cIter != NULL) {
+        xmlNode *child = cIter;
+        cIter = __xml_next(cIter); /* In case it is free'd */
+        __xml_acl_post_process(child);
+    }
+}
+
+bool
+xml_acl_denied(xmlNode *xml) 
+{
+    if(xml && xml->doc && xml->doc->_private){
+        xml_private_t *p = xml->doc->_private;
+
+        return is_set(p->flags, xpf_acl_denied);
+    }
+    return FALSE;
+}
+
 void
-xml_track_changes(xmlNode * xml) 
+xml_acl_enable(xmlNode *xml, const char *user)
+{
+    crm_trace("Enabling acls for '%s'", user);
+    set_doc_flag(xml, xpf_acl_enabled);
+    __xml_acl_unpack(xml, user);
+    __xml_acl_apply(xml);
+}
+
+void
+xml_acl_disable(xmlNode *xml)
+{
+    if(xml_acl_enabled(xml)) {
+        xml_private_t *p = xml->doc->_private;
+
+        /* Catch anything that was created but shouldn't have been */
+        __xml_acl_apply(xml);
+        __xml_acl_post_process(xml);
+        clear_bit(p->flags, xpf_acl_enabled);
+    }
+}
+
+bool
+xml_acl_enabled(xmlNode *xml)
+{
+    if(xml && xml->doc && xml->doc->_private){
+        xml_private_t *p = xml->doc->_private;
+
+        return is_set(p->flags, xpf_acl_enabled);
+    }
+    return FALSE;
+}
+
+void
+xml_track_changes(xmlNode * xml, const char *user, bool enforce_acls) 
 {
     xml_accept_changes(xml);
-    crm_trace("Tracking changes to %p", xml);
+    crm_trace("Tracking changes to %p %d", xml, enforce_acls);
     set_doc_flag(xml, xpf_tracking);
+    if(enforce_acls) {
+        xml_acl_enable(xml, user);
+    }
 }
 
 bool xml_tracking_changes(xmlNode * xml)
@@ -747,6 +1213,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     xmlNode *patch = NULL;
     const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
 
+    xml_acl_disable(target);
     if(xml_document_dirty(target) == FALSE) {
         crm_trace("No change %d", format);
         return NULL; /* No change */
@@ -924,17 +1391,15 @@ xml_accept_changes(xmlNode * xml)
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
 
-    doc->flags = (doc->flags & ~xpf_tracking);
+    __xml_private_clean(xml->doc->_private);
 
     if(is_not_set(doc->flags, xpf_dirty)) {
+        doc->flags = xpf_none;
         return;
     }
 
+    doc->flags = xpf_none;
     __xml_accept_changes(top);
-    doc->flags = (doc->flags & ~xpf_dirty);
-
-    g_list_free_full(doc->deleted_paths, free);
-    doc->deleted_paths = NULL;
 }
 
 /* Simplified version for applying v1-style XML patches */
@@ -1182,7 +1647,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     if(changed == FALSE) {
         crm_notice("Versions did not change in patch %d.%d.%d", add[0], add[1], add[2]);
-        return -pcmk_err_diff_failed;
+        return -pcmk_err_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
@@ -1730,6 +2195,68 @@ add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
     return 1;
 }
 
+static bool
+__xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
+{
+    CRM_ASSERT(xml);
+    CRM_ASSERT(xml->doc);
+    CRM_ASSERT(xml->doc->_private);
+
+#if ENABLE_ACL
+    {
+        if(TRACKING_CHANGES(xml) && xml_acl_enabled(xml)) {
+            int offset = 0;
+            xmlNode *parent = xml;
+            char buffer[XML_BUFFER_SIZE];
+            xml_private_t *docp = xml->doc->_private;
+
+            if(docp->acls == NULL) {
+                crm_trace("Ordinary user %s cannot access the CIB without any defined ACLs", docp->user);
+                set_doc_flag(xml, xpf_acl_denied);
+                return FALSE;
+            }
+
+            offset = __get_prefix(NULL, xml, buffer, offset);
+            if(name) {
+                offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
+            }
+
+            /* Walk the tree upwards looking for xml_acl_* flags
+             * - Creating an attribute requires write permissions for the node
+             * - Creating a child requires write permissions for the parent
+             */
+
+            if(name) {
+                xmlAttr *attr = xmlHasProp(xml, (const xmlChar *)name);
+
+                if(attr && mode == xpf_acl_create) {
+                    mode = xpf_acl_write;
+                }
+            }
+
+            while(parent && parent->_private) {
+                xml_private_t *p = parent->_private;
+                if(__xml_acl_mode_test(p->flags, mode)) {
+                    return TRUE;
+
+                } else if(is_set(p->flags, xpf_acl_deny)) {
+                    crm_trace("%x access denied to %s: parent", mode, buffer);
+                    set_doc_flag(xml, xpf_acl_denied);
+                    return FALSE;
+                }
+                parent = parent->parent;
+            }
+
+            crm_trace("%x access denied to %s: default", mode, buffer);
+            set_doc_flag(xml, xpf_acl_denied);
+            return FALSE;
+        }
+    }
+#endif
+
+    return TRUE;
+}
+
 const char *
 crm_xml_add(xmlNode * node, const char *name, const char *value)
 {
@@ -1762,6 +2289,11 @@ crm_xml_add(xmlNode * node, const char *name, const char *value)
         }
     }
 
+    if(dirty && __xml_acl_check(node, name, xpf_acl_create) == FALSE) {
+        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        return NULL;
+    }
+
     attr = xmlSetProp(node, (const xmlChar *)name, (const xmlChar *)value);
     if(dirty) {
         crm_attr_dirty(attr);
@@ -1786,7 +2318,12 @@ crm_xml_replace(xmlNode * node, const char *name, const char *value)
     /* Could be re-setting the same value */
     CRM_CHECK(old_value != value, return value);
 
-    if (old_value != NULL && value == NULL) {
+    if(__xml_acl_check(node, name, xpf_acl_write) == FALSE) {
+        /* Create a fake object linked to doc->_private instead? */
+        crm_trace("Cannot replace %s=%s to %s", name, value, node->name);
+        return NULL;
+
+    } else if (old_value != NULL && value == NULL) {
         xml_remove_prop(node, name);
         return NULL;
 
@@ -1888,7 +2425,16 @@ free_xml(xmlNode * child)
             /* Free everything */
             xmlFreeDoc(doc);
 
+        } else if(__xml_acl_check(child, NULL, xpf_acl_write) == FALSE) {
+            int offset = 0;
+            char buffer[XML_BUFFER_SIZE];
+
+            __get_prefix(NULL, child, buffer, offset);
+            crm_trace("Cannot remove %s", buffer);
+            return;
+
         } else {
+
             if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
@@ -2979,7 +3525,10 @@ crm_element_value_copy(xmlNode * data, const char *name)
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
-    if(TRACKING_CHANGES(obj)) {
+    if(__xml_acl_check(obj, NULL, xpf_acl_write) == FALSE) {
+        crm_trace("Cannot remove %s from %s", name, obj->name);
+
+    } else if(TRACKING_CHANGES(obj)) {
         /* Leave in place (marked for removal) until after the diff is calculated */
         xml_private_t *p = NULL;
         xmlAttr *attr = xmlHasProp(obj, (const xmlChar *)name);
@@ -3231,7 +3780,10 @@ xml_calculate_changes(xmlNode * old, xmlNode * new)
     CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
     CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
 
-    xml_track_changes(new);
+    if(xml_tracking_changes(new) == FALSE) {
+        xml_track_changes(new, NULL, FALSE);
+    }
+
     __xml_diff_object(old, new);
     xml_log_changes(LOG_TRACE, __FUNCTION__, new);
 }

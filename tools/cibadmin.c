@@ -52,6 +52,7 @@ void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 
 int command_options = 0;
+const char *cib_user = NULL;
 const char *cib_action = NULL;
 
 typedef struct str_list_s {
@@ -90,20 +91,17 @@ static struct crm_option long_options[] = {
     {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (See also: crm_diff)"},
     {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
-    {"-spacer-",    0, 0, '-', "\n\tThe tagname and all attributes must match in order for the element to be deleted"},
-    {"delete-all",  0, 0, 'd', "\tWhen used with --xpath, remove all matching objects in the configuration instead of just the first one"},
-    {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},
-    {"md5-sum-versioned",  0, 0, '6', "\tCalculate an on-the-wire versioned CIB digest"},
-    {"sync",        0, 0, 'S', "\t(Advanced) Force a refresh of the CIB to all nodes\n"},
-    {"make-slave",  0, 0, 'r', NULL, 1},
-    {"make-master", 0, 0, 'w', NULL, 1},
-    {"is-master",   0, 0, 'm', NULL, 1},
+    {"-spacer-",    0, 0, '-', "\n\tThe tagname and all attributes must match in order for the element to be deleted\n"},
+    {"delete-all",  0, 0, 'd', "When used with --xpath, remove all matching objects in the configuration instead of just the first one"},
     {"empty",       0, 0, 'a', "\tOutput an empty CIB"},
-    {"blank",       0, 0, 'a', NULL, 1},
+    {"md5-sum",	    0, 0, '5', "\tCalculate the on-disk CIB digest"},
+    {"md5-sum-versioned",  0, 0, '6', "Calculate an on-the-wire versioned CIB digest"},
+    {"blank",       0, 0, '-', NULL, 1},
 
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
     {"force",	    0, 0, 'f'},
     {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
+    {"user",	    1, 0, 'U', "Run the command with permissions of the named user (valid only for the root and "CRM_DAEMON_USER" accounts)"},
     {"sync-call",   0, 0, 's', "Wait for call to complete before returning"},
     {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
     {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a --modify,-M operation to be created if they do not exist"},
@@ -162,21 +160,6 @@ static struct crm_option long_options[] = {
 
     /* Legacy options */
     {"host",	     1, 0, 'h', NULL, 1},
-    {"force-quorum", 0, 0, 'f', NULL, 1},
-    {"obj_type",     1, 0, 'o', NULL, 1},
-    {F_CRM_DATA,     1, 0, 'X', NULL, 1},
-    {CIB_OP_ERASE,   0, 0, 'E', NULL, 1},
-    {CIB_OP_QUERY,   0, 0, 'Q', NULL, 1},
-    {CIB_OP_CREATE,  0, 0, 'C', NULL, 1},
-    {CIB_OP_REPLACE, 0, 0, 'R', NULL, 1},
-    {CIB_OP_UPDATE,  0, 0, 'U', NULL, 1},
-    {CIB_OP_MODIFY,  0, 0, 'M', NULL, 1},
-    {CIB_OP_DELETE,  0, 0, 'D', NULL, 1},
-    {CIB_OP_BUMP,    0, 0, 'B', NULL, 1},
-    {CIB_OP_SYNC,    0, 0, 'S', NULL, 1},
-    {CIB_OP_SLAVE,   0, 0, 'r', NULL, 1},
-    {CIB_OP_MASTER,  0, 0, 'w', NULL, 1},
-    {CIB_OP_ISMASTER,0, 0, 'm', NULL, 1},
 
     {0, 0, 0, 0}
 };
@@ -274,10 +257,9 @@ main(int argc, char **argv)
             case 'P':
                 cib_action = CIB_OP_APPLY_DIFF;
                 break;
-            case 'S':
-                cib_action = CIB_OP_SYNC;
-                break;
             case 'U':
+                cib_user = optarg;
+                break;
             case 'M':
                 cib_action = CIB_OP_MODIFY;
                 break;
@@ -302,21 +284,8 @@ main(int argc, char **argv)
             case 'n':
                 command_options |= cib_no_children;
                 break;
-            case 'm':
-                cib_action = CIB_OP_ISMASTER;
-                command_options |= cib_scope_local;
-                break;
             case 'B':
                 cib_action = CIB_OP_BUMP;
-                break;
-            case 'r':
-                dangerous_cmd = TRUE;
-                cib_action = CIB_OP_SLAVE;
-                break;
-            case 'w':
-                dangerous_cmd = TRUE;
-                cib_action = CIB_OP_MASTER;
-                command_options |= cib_scope_local;
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;
@@ -557,22 +526,9 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
         }
     }
 
-    if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
-        crm_trace("Performing %s op...", cib_action);
-        return the_cib->cmds->sync_from(the_cib, host, obj_type, call_options);
-
-    } else if (strcasecmp(CIB_OP_SLAVE, cib_action) == 0 && (call_options ^ cib_scope_local)) {
-        crm_trace("Performing %s op on all nodes...", cib_action);
-        return the_cib->cmds->set_slave_all(the_cib, call_options);
-
-    } else if (strcasecmp(CIB_OP_MASTER, cib_action) == 0) {
-        crm_trace("Performing %s op on all nodes...", cib_action);
-        return the_cib->cmds->set_master(the_cib, call_options);
-
-    } else if (cib_action != NULL) {
+    if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options,
-                               NULL);
+        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, cib_user);
 
     } else {
         crm_err("You must specify an operation");
@@ -608,15 +564,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 {
     exit_code = rc;
 
-    if (safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != pcmk_ok) {
-        crm_info("CIB on %s is _not_ the master instance", host ? host : "localhost");
-        fprintf(stderr, "CIB on %s is _not_ the master instance\n", host ? host : "localhost");
-
-    } else if (safe_str_eq(cib_action, CIB_OP_ISMASTER)) {
-        crm_info("CIB on %s _is_ the master instance", host ? host : "localhost");
-        fprintf(stderr, "CIB on %s _is_ the master instance\n", host ? host : "localhost");
-
-    } else if (rc != 0) {
+    if (rc != 0) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
         print_xml_output(output);

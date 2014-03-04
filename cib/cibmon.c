@@ -242,7 +242,11 @@ cibmon_diff(const char *event, xmlNode * msg)
     }
 
     if (cib_copy == NULL) {
-        cib_copy = get_cib_copy(cib);
+        rc = cib->cmds->query(cib, NULL, &cib_copy, cib_scope_local | cib_sync_call);
+    }
+
+    if(rc == -EACCES) {
+        crm_exit(rc);
     }
 
     free_xml(cib_last);

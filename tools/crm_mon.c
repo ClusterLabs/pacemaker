@@ -281,10 +281,12 @@ cib_connect(gboolean full)
             return rc;
         }
 
-        current_cib = get_cib_copy(cib);
-        mon_refresh_display(NULL);
+        rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+        if (rc == pcmk_ok) {
+            mon_refresh_display(NULL);
+        }
 
-        if (full) {
+        if (rc == pcmk_ok && full) {
             if (rc == pcmk_ok) {
                 rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
                 if (rc == -EPROTONOSUPPORT) {
@@ -2462,7 +2464,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     if (current_cib == NULL) {
-        current_cib = get_cib_copy(cib);
+        cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 
     if (crm_mail_to || snmp_target || external_agent) {

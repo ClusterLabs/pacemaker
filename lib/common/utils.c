@@ -2285,6 +2285,28 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     return xml_op;
 }
 
+bool
+pcmk_acl_required(const char *user) 
+{
+#if ENABLE_ACL
+    if(user == NULL || strlen(user) == 0) {
+        crm_trace("no user set");
+        return FALSE;
+
+    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
+        return FALSE;
+
+    } else if (strcmp(user, "root") == 0) {
+        return FALSE;
+    }
+    crm_trace("acls required for %s", user);
+    return TRUE;
+#else
+    crm_trace("acls not supported");
+    return FALSE;
+#endif
+}
+
 #if ENABLE_ACL
 char *
 uid2username(uid_t uid)
@@ -2318,7 +2340,7 @@ determine_request_user(const char *user, xmlNode * request, const char *field)
 /*  } else { Legal delegation */
     }
 
-    crm_trace("Processing msg for user '%s'", crm_element_value(request, field));
+    crm_trace("Processing msg as user '%s'", crm_element_value(request, field));
 }
 #endif
 

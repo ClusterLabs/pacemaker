@@ -122,5 +122,6 @@ void crm_build_path(const char *path_c, mode_t mode);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 
 int crm_exit(int rc);
+bool pcmk_acl_required(const char *user);
 
 #endif

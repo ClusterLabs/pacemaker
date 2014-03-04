@@ -266,7 +266,7 @@ AC_ARG_WITH(acl,
     [  --with-acl
        Support CIB ACL ],
     [ SUPPORT_ACL=$withval ],
-    [ SUPPORT_ACL=no ],
+    [ SUPPORT_ACL=yes ],
 )
 
 AC_ARG_WITH(cibsecrets,

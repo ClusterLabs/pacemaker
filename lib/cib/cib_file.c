@@ -254,8 +254,10 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
                              const char *user_name)
 {
     int rc = pcmk_ok;
+    char *effective_user = NULL;
     gboolean query = FALSE;
     gboolean changed = FALSE;
+    xmlNode *request = NULL;
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
@@ -264,6 +266,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     static int max_msg_types = DIMOF(cib_file_ops);
 
     crm_info("%s on %s", op, section);
+    call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
 
     if (cib->state == cib_disconnected) {
         return -ENOTCONN;
@@ -290,10 +293,20 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     cib->call_id++;
-    rc = cib_perform_op(op, call_options | cib_no_mtime | cib_inhibit_bcast, fn, query,
-                        section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
+    request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
+#if ENABLE_ACL
+    if(user_name != NULL) {
+        effective_user = uid2username(geteuid());
+        crm_trace("Checking if %s can impersonate %s", effective_user, user_name);
+        determine_request_user(effective_user, request, F_CIB_USER);
+    }
+    crm_trace("Performing %s operation as %s", op, crm_element_value(request, F_CIB_USER));
+#endif
+    rc = cib_perform_op(op, call_options, fn, query,
+                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
+    free_xml(request);
     if (rc == -pcmk_err_dtd_validation) {
         validate_xml_verbose(result_cib);
     }
@@ -314,14 +327,16 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     if (output_data && output) {
-        *output_data = copy_xml(output);
+        if(output == in_mem_cib) {
+            *output_data = copy_xml(output);
+        } else {
+            *output_data = output;
+        }
+
+    } else if(output != in_mem_cib) {
+        free_xml(output);
     }
 
-    if (query == FALSE || (call_options & cib_no_children)) {
-        free_xml(output);
-    } else if (safe_str_eq(crm_element_name(output), "xpath-query")) {
-        free_xml(output);
-    }
-
+    free(effective_user);
     return rc;
 }

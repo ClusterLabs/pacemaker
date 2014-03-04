@@ -309,10 +309,12 @@ do_work(void)
             return -1;
         }
 
-        output = get_cib_copy(the_cib);
-        do_find_node_list(output);
+        rc = the_cib->cmds->query(the_cib, NULL, &output, cib_scope_local | cib_sync_call);
+        if(rc == pcmk_ok) {
+            do_find_node_list(output);
 
-        free_xml(output);
+            free_xml(output);
+        }
         the_cib->cmds->signoff(the_cib);
         crm_exit(rc);
 
