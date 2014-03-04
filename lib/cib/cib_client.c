@@ -288,7 +288,7 @@ cib_new(void)
 {
     const char *value = getenv("CIB_shadow");
 
-    if (value) {
+    if (value && value[0] != 0) {
         return cib_shadow_new(value);
     }
 
