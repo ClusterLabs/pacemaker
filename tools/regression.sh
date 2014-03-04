@@ -459,6 +459,20 @@ EOF
     desc="$CIB_user: Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role"
     test_assert 0
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Started"
+    test_assert 0
+
+    export CIB_user=root
+    desc="New ACL"
+    cmd="cibadmin -C -o acls --xml-text '<acl_user id=\"badidea\"><deny id=\"badidea-nothing\" xpath=\"/cib\"/><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert 0
+
+    export CIB_user=badidea
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert 0
 }
 
 for t in $tests; do

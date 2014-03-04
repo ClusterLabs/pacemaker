@@ -621,21 +621,34 @@ __xml_purge_attributes(xmlNode *xml)
     xml_private_t *p = xml->_private;
 
     if(__xml_acl_mode_test(p->flags, xpf_acl_read)) {
+        crm_trace("%s is readable", crm_element_name(xml), ID(xml));
         return TRUE;
     }
 
-    for (xIter = crm_first_attr(xml); xIter != NULL; xIter = xIter->next) {
+    xIter = crm_first_attr(xml);
+    while(xIter != NULL) {
+        xmlAttr *tmp = xIter;
         const char *prop_name = (const char *)xIter->name;
 
+        xIter = xIter->next;
         if (strcmp(prop_name, XML_ATTR_ID) == 0) {
             continue;
         }
+
+        xmlUnsetProp(xml, tmp->name);
     }
 
-    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
-        readable_children |= __xml_purge_attributes(child);
+    child = __xml_first_child(xml);
+    while ( child != NULL ) {
+        xmlNode *tmp = child;
+
+        child = __xml_next(child);
+        readable_children |= __xml_purge_attributes(tmp);
     }
 
+    if(readable_children == FALSE) {
+        free_xml(xml); /* Nothing readable under here, purge completely */
+    }
     return readable_children;
 }
 
@@ -652,9 +665,10 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
         return FALSE;
     }
 
-    crm_trace("filtered copy of %p for '%s'", xml, user);
+    crm_trace("filtering copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
     __xml_acl_unpack(target, user);
+    __xml_acl_apply(target);
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
@@ -672,12 +686,10 @@ xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result)
             for(lpc = 0; lpc < max; lpc++) {
                 xmlNode *match = getXpathResult(xpathObj, lpc);
 
-                if(__xml_purge_attributes(match) == FALSE) {
-                    free_xml(match); /* Nothing readable under here, purge completely */
-                    if(match == target) {
-                        crm_trace("No access to the entire document");
-                        return TRUE;
-                    }
+                crm_trace("Purging attributes from %s", acl->xpath);
+                if(__xml_purge_attributes(match) == FALSE && match == target) {
+                    crm_trace("No access to the entire document for %s", user);
+                    return TRUE;
                 }
             }
             crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);

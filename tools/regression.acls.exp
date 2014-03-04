@@ -589,10 +589,10 @@ Call failed: Permission denied
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - root: Create a resource
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5118 : *xml_blob != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
+   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
    error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
 Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
 Error performing operation: Required key not available
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
@@ -627,10 +627,10 @@ Error performing operation: Required key not available
 =#=#=#= End test: l33t-haxor: Create a resource meta attribute - Required key not available (126) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5118 : *xml_blob != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
+   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
    error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
 Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
 Error performing operation: Required key not available
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
@@ -665,10 +665,10 @@ Error performing operation: Required key not available
 =#=#=#= End test: l33t-haxor: Query a resource meta attribute - Required key not available (126) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5118 : *xml_blob != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
+   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
    error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5511 : data != NULL
+   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
 Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
 Error performing operation: Required key not available
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
@@ -810,3 +810,130 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 </cib>
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
+=#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
+<cib epoch="9" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
+* Passed: crm_resource   - niceguy: Create a resource meta attribute
+=#=#=#= Begin test: New ACL =#=#=#=
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: New ACL - OK (0) =#=#=#=
+* Passed: cibadmin       - New ACL
+=#=#=#= Begin test: badidea: Query configuration =#=#=#=
+<cib>
+  <configuration>
+    <resources>
+      <primitive id="dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+  </configuration>
+</cib>
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: badidea: Query configuration - OK (0) =#=#=#=
+* Passed: cibadmin       - badidea: Query configuration
