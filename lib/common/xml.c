@@ -389,6 +389,7 @@ pcmkRegisterNode(xmlNodePtr node)
             node->_private = p;
             break;
         case XML_TEXT_NODE:
+        case XML_DTD_NODE:
             break;
         default:
             /* Ignore */
