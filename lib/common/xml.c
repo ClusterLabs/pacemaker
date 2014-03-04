@@ -4376,6 +4376,8 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             xmlDoc *doc = tmp->doc;
             xmlNode *old = xmlReplaceNode(child, tmp);
 
+            __xml_node_dirty(tmp);
+
             free_xml(old);
             xmlDocSetRootElement(doc, NULL);
             xmlFreeDoc(doc);

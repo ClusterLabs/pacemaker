@@ -480,6 +480,7 @@ EOF
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     export CIB_user=niceguy
+    # Make sure we're rejecting things for the right reasons
     export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
     desc="$CIB_user: Replace - remove acls"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
