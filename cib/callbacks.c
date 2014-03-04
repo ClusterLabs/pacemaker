@@ -1235,6 +1235,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     if (cib_op_modifies(call_type) == FALSE && output != current_cib) {
         free_xml(output);
+        output = NULL;
     }
 
     if (call_type >= 0) {
