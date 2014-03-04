@@ -5,6 +5,8 @@ test_home=`dirname $0`
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
+verbose=0
+tests="dates tools acls"
 
 function test_assert() {
     target=$1; shift
@@ -45,6 +47,7 @@ do_save=0
 VALGRIND_CMD=
 while test "$done" = "0"; do
     case "$1" in
+	-t) tests=$2; shift; shift;;
 	-V|--verbose) verbose=1; shift;;
 	-v|--valgrind)
 	    export G_SLICE=always-malloc
@@ -293,7 +296,7 @@ function test_tools() {
     test_assert 0
  }
 
-function test_date() {
+function test_dates() {
     for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
 	desc="20$y-W01-7"
 	cmd="iso8601 -d '20$y-W01-7 00Z'"
@@ -331,36 +334,169 @@ function test_date() {
     desc="2009-03-31 - 1 Month"
     cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert 0 0
- }
+}
 
-echo "Testing dates"
-test_date > $test_home/regression.out
-echo "Testing tools"
-test_tools >> $test_home/regression.out
-sed -i -e 's/cib-last-written.*>/>/'	\
-    -e 's/ last-run=\"[0-9]*\"//'	\
-    -e 's/crm_feature_set="[^"]*"//'	\
-    -e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.out
+function test_acls() {
+    export CIB_shadow_dir=$test_home
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
+    export CIB_shadow=$shadow
 
-sed -i -e 's/cib-last-written.*>/>/'	\
-    -e 's/ last-run=\"[0-9]*\"//'	\
-    -e 's/crm_feature_set="[^"]*"//'	\
-    -e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.exp
+    cat<<EOF>/tmp/$$.acls.xml
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+    </acls>
+EOF
 
-if [ $do_save = 1 ]; then
-    cp $test_home/regression.out $test_home/regression.exp
-fi
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file /tmp/$$.acls.xml"
+    test_assert 0
 
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert 0
+
+    desc="Set cluster option"
+    cmd="crm_attribute -n no-quorum-policy -v ignore"
+    test_assert 0
+
+    export CIB_user=unknownguy
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert 13
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert 13
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert 13
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert 13
+
+    export CIB_user=l33t-haxor
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert 13
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert 13
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert 13
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert 13
+
+    export CIB_user=niceguy
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert 0
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert 13
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert 0
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert 13
+
+    export CIB_user=root
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert 0
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v true"
+    test_assert 0
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert 0
+
+    export CIB_user=l33t-haxor
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert 126
+
+    desc="$CIB_user: Query a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -g target-role"
+    test_assert 126
+
+    desc="$CIB_user: Remove a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert 126
+
+    export CIB_user=niceguy
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert 0
+
+    desc="$CIB_user: Query a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -g target-role"
+    test_assert 0
+
+    desc="$CIB_user: Remove a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert 0
+}
+
+for t in $tests; do
+    echo "Testing $t"
+    test_$t > $test_home/regression.$t.out
+
+    sed -i -e 's/cib-last-written.*>/>/'\
+	-e 's/ last-run=\"[0-9]*\"//'	\
+	-e 's/crm_feature_set="[^"]*"//'\
+	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
+
+    if [ $do_save = 1 ]; then
+	cp $test_home/regression.$t.out $test_home/regression.$t.exp
+    fi
+done
+    
 failed=0
 
 echo -e "\n\nResults"
-diff -wu $test_home/regression.exp $test_home/regression.out
-if [ $? != 0 ]; then
-    failed=1
-fi
+for t in $tests; do
+    if [ $do_save = 1 ]; then
+	cp $test_home/regression.$t.out $test_home/regression.$t.exp
+    fi
+    if [ $verbose = 1 ]; then
+	diff -u $test_home/regression.$t.exp $test_home/regression.$t.out
+    else
+	diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
+    fi
+    if [ $? != 0 ]; then
+	failed=1
+    fi
+done
+
 
 echo -e "\n\nSummary"
-grep -e "^*" $test_home/regression.out
+for t in $tests; do
+    grep -e "^*" $test_home/regression.$t.out
+done
 
 if [ $num_errors != 0 ]; then
     echo $num_errors tests failed
