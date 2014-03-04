@@ -978,6 +978,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:
+            case -pcmk_err_old_data:
                 break;
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:

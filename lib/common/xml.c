@@ -1651,7 +1651,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
         } else if(this[lpc] > del[lpc]) {
             crm_notice("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
-            return -pcmk_err_diff_failed;
+            return -pcmk_err_old_data;
         }
     }
 
