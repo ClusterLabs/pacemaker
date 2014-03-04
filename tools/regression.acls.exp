@@ -922,3 +922,384 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 </cib>
 =#=#=#= End test: badidea: Query configuration - OK (0) =#=#=#=
 * Passed: cibadmin       - badidea: Query configuration
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: niceguy: Replace - remove acls =#=#=#=
+__xml_acl_check: 	400 access denied to /cib/configuration/acls: default
+Call failed: Permission denied
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Replace - remove acls - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - remove acls
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: niceguy: Replace - create resource =#=#=#=
+__xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy2']: default
+__xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
+Call failed: Permission denied
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Replace - create resource - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - create resource
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: niceguy: Replace - modify attribute =#=#=#=
+__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
+Call failed: Permission denied
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Replace - modify attribute - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - modify attribute
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: niceguy: Replace - delete attribute =#=#=#=
+__xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
+Call failed: Permission denied
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Replace - delete attribute - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - delete attribute
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: niceguy: Replace - create attribute =#=#=#=
+__xml_acl_check: 	1000 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
+Call failed: Permission denied
+<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_user id="badidea">
+        <deny id="badidea-nothing" xpath="/cib"/>
+        <read id="badidea-resources" xpath="//meta_attributes"/>
+      </acl_user>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: niceguy: Replace - create attribute - Permission denied (13) =#=#=#=
+* Passed: cibadmin       - niceguy: Replace - create attribute

@@ -354,7 +354,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         xmlNode *cib_filtered = NULL;
 
         if(cib_acl_enabled(cib_ro, user)) {
-            if(xml_acl_filtered_copy(user, cib_ro, &cib_filtered)) {
+            if(xml_acl_filtered_copy(user, current_cib, current_cib, &cib_filtered)) {
                 if (cib_filtered == NULL) {
                     crm_debug("Pre-filtered the entire cib");
                     return -EACCES;
@@ -396,17 +396,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         copy_in_properties(current_cib, scratch);
         top = current_cib;
 
-        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
+        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
     } else {
         scratch = copy_xml(current_cib);
-        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
+        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
         if(xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
+            xml_track_changes(scratch, user, current_cib, cib_acl_enabled(current_cib, user));
             xml_calculate_changes(current_cib, scratch);
         }
         CRM_CHECK(current_cib != scratch, return -EINVAL);
@@ -583,7 +583,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     *result_cib = scratch;
 #if ENABLE_ACL
     if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
-        if(xml_acl_filtered_copy(user, scratch, result_cib)) {
+        if(xml_acl_filtered_copy(user, current_cib, scratch, result_cib)) {
             if (*result_cib == NULL) {
                 crm_debug("Pre-filtered the entire cib result");
             }

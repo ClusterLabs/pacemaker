@@ -473,6 +473,55 @@ EOF
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
     test_assert 0
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
+    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    export CIB_user=niceguy
+    export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
+    desc="$CIB_user: Replace - remove acls"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    test_assert 13
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
+    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create resource"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    test_assert 13
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
+    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    test_assert 13
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
+    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/num_updates=.1/num_updates=\"0/g' /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    test_assert 13
+
+    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    test_assert 13
+    rm -rf /tmp/$$.haxor.xml
 }
 
 for t in $tests; do
@@ -482,6 +531,8 @@ for t in $tests; do
     sed -i -e 's/cib-last-written.*>/>/'\
 	-e 's/ last-run=\"[0-9]*\"//'	\
 	-e 's/crm_feature_set="[^"]*"//'\
+        -e 's/.*__xml_acl_check/__xml_acl_check/g'\
+	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
 	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then

@@ -251,14 +251,13 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
 }
 
 bool xml_acl_enabled(xmlNode *xml);
-void xml_acl_enable(xmlNode *xml, const char *user); /* Call prior to xml_track_changes() */
 void xml_acl_disable(xmlNode *xml);
 bool xml_acl_denied(xmlNode *xml); /* Part or all of a change was rejected */
-bool xml_acl_filtered_copy(const char *user, xmlNode *xml, xmlNode ** result);
+bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNode ** result);
 
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
-void xml_track_changes(xmlNode * xml, const char *user, bool enforce_acls);
+void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
 void xml_calculate_changes(xmlNode * old, xmlNode * new); /* For comparing two documents after the fact */
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
