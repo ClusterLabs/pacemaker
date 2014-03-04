@@ -589,12 +589,7 @@ Call failed: Permission denied
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - root: Create a resource
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
-   error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
-Error performing operation: Required key not available
+Error performing operation: Permission denied
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
@@ -624,15 +619,10 @@ Error performing operation: Required key not available
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: l33t-haxor: Create a resource meta attribute - Required key not available (126) =#=#=#=
+=#=#=#= End test: l33t-haxor: Create a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
-   error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
-Error performing operation: Required key not available
+Error performing operation: Permission denied
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
@@ -662,15 +652,10 @@ Error performing operation: Required key not available
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: l33t-haxor: Query a resource meta attribute - Required key not available (126) =#=#=#=
+=#=#=#= End test: l33t-haxor: Query a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-   error: crm_abort: 	update_validation: Triggered assert at xml.c:5132 : *xml_blob != NULL
-   error: crm_element_value: 	Couldn't find validate-with in NULL
-   error: crm_abort: 	crm_element_value: Triggered assert at xml.c:5525 : data != NULL
-Your current configuration could only be upgraded to <null>... the minimum requirement is pacemaker-1.0.
-Error performing operation: Required key not available
+Error performing operation: Permission denied
 <cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
   <configuration>
     <crm_config>
@@ -700,7 +685,7 @@ Error performing operation: Required key not available
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Required key not available (126) =#=#=#=
+=#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="7" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">

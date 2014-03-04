@@ -436,15 +436,15 @@ EOF
 
     desc="$CIB_user: Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert 126
+    test_assert 13
 
     desc="$CIB_user: Query a resource meta attribute"
     cmd="crm_resource -r dummy --meta -g target-role"
-    test_assert 126
+    test_assert 13
 
     desc="$CIB_user: Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert 126
+    test_assert 13
 
     export CIB_user=niceguy
 

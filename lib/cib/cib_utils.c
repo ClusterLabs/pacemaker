@@ -111,8 +111,12 @@ get_cib_copy(cib_t * cib)
 {
     xmlNode *xml_cib;
     int options = cib_scope_local | cib_sync_call;
+    int rc = cib->cmds->query(cib, NULL, &xml_cib, options);
 
-    if (cib->cmds->query(cib, NULL, &xml_cib, options) != pcmk_ok) {
+    if (rc == -EACCES) {
+        return NULL;
+
+    } else if (rc != pcmk_ok) {
         crm_err("Couldnt retrieve the CIB");
         free_xml(xml_cib);
         return NULL;
