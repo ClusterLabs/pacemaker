@@ -2730,7 +2730,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation %s_start_0.*confirmed.*ok" % (self.remote_node))
+        pats.append(self.CM["Pat:RscOpOK"] % (self.remote_node, "start"))
 
         self.add_connection_rsc(node)
 
@@ -2750,7 +2750,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: LRM operation %s_start_0.*node=%s, .*confirmed.*ok" % (self.remote_rsc, self.remote_node))
+        pats.append("process_lrm_event: Operation %s_start_0.*node=%s, .*confirmed.*ok" % (self.remote_rsc, self.remote_node))
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
@@ -2779,9 +2779,9 @@ class RemoteBaremetal(CTSTest):
         watch.setwatch()
 
         if self.remote_rsc_added == 1:
-            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % (self.remote_rsc))
+            pats.append(self.CM["Pat:RscOpOK"] % (self.remote_rsc, "stop"))
         if self.remote_node_added == 1:
-            pats.append("process_lrm_event: LRM operation %s_stop_0.*confirmed.*ok" % (self.remote_node))
+            pats.append(self.CM["Pat:RscOpOK"] % (self.remote_node, "stop"))
 
         self.set_timer("remoteMetalCleanup")
         if self.remote_rsc_added == 1:
