@@ -374,34 +374,29 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         /* Conditional on v2 patch style */
 
         scratch = current_cib;
-        if(cib_acl_enabled(scratch, user)) {
-            xml_acl_enable(scratch);
-        }
+
         /* Create a shallow copy of current_cib for the version details */
         current_cib = create_xml_node(NULL, (const char *)scratch->name);
         copy_in_properties(current_cib, scratch);
         top = current_cib;
 
-        xml_track_changes(scratch, user);
+        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
-        xml_acl_disable(scratch); /* Allow the system to make any additional changes */
 
     } else {
         scratch = copy_xml(current_cib);
-        if(cib_acl_enabled(scratch, user)) {
-            xml_acl_enable(scratch);
-        }
-
-        xml_track_changes(scratch, user);
+        xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
         if(xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
-            xml_calculate_changes(current_cib, scratch, user);
+            xml_track_changes(scratch, user, cib_acl_enabled(scratch, user));
+            xml_calculate_changes(current_cib, scratch);
         }
         CRM_CHECK(current_cib != scratch, return -EINVAL);
-        xml_acl_disable(scratch); /* Allow the system to make any additional changes */
     }
+
+    xml_acl_disable(scratch); /* Allow the system to make any additional changes */
 
     if (rc == pcmk_ok && scratch == NULL) {
         rc = -EINVAL;

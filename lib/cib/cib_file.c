@@ -296,7 +296,6 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
 #if ENABLE_ACL
     if(user_name != NULL) {
-        xml_acl_enable(in_mem_cib);
         effective_user = uid2username(geteuid());
         crm_trace("Checking if %s can impersonate %s", effective_user, user_name);
         determine_request_user(effective_user, request, F_CIB_USER);

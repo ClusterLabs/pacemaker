@@ -309,6 +309,54 @@ crm_first_attr(xmlNode * xml)
     return xml->properties;
 }
 
+#define XML_PRIVATE_MAGIC (long) 0x81726354
+
+static void
+__xml_acl_free(void *data)
+{
+    if(data) {
+        xml_acl_t *acl = data;
+
+        free(acl->xpath);
+        free(acl);
+    }
+}
+
+static void
+__xml_private_clean(xml_private_t *p)
+{
+    if(p) {
+        CRM_ASSERT(p->check == XML_PRIVATE_MAGIC);
+
+        free(p->user);
+        p->user = NULL;
+
+        if(p->acls) {
+            g_list_free_full(p->acls, __xml_acl_free);
+            p->acls = NULL;
+        }
+
+        if(p->deleted_paths) {
+            g_list_free_full(p->deleted_paths, free);
+            p->deleted_paths = NULL;
+        }
+    }
+}
+
+
+static void
+__xml_private_free(xml_private_t *p)
+{
+    __xml_private_clean(p);
+    free(p);
+}
+
+static void
+pcmkDeregisterNode(xmlNodePtr node)
+{
+    __xml_private_free(node->_private);
+}
+
 static void
 pcmkRegisterNode(xmlNodePtr node)
 {
@@ -320,7 +368,7 @@ pcmkRegisterNode(xmlNodePtr node)
         case XML_ATTRIBUTE_NODE:
         case XML_COMMENT_NODE:
             p = calloc(1, sizeof(xml_private_t));
-            p->check = (long) 0x81726354;
+            p->check = XML_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             p->flags |= (xpf_dirty|xpf_created);
             node->_private = p;
@@ -330,7 +378,7 @@ pcmkRegisterNode(xmlNodePtr node)
         default:
             /* Ignore */
             crm_trace("Ignoring %p %d", node, node->type);
-            CRM_ASSERT(node->type == XML_ELEMENT_NODE);
+            CRM_LOG_ASSERT(node->type == XML_ELEMENT_NODE);
             break;
     }
 
@@ -340,36 +388,6 @@ pcmkRegisterNode(xmlNodePtr node)
          */
         set_doc_flag(node, xpf_dirty);
         crm_node_dirty(node);
-    }
-}
-
-static void
-pcmkDeregisterNode(xmlNodePtr node)
-{
-    xml_private_t *p = node->_private;
-
-    switch(node->type) {
-        case XML_ELEMENT_NODE:
-        case XML_DOCUMENT_NODE:
-        case XML_ATTRIBUTE_NODE:
-            CRM_ASSERT(node->_private != NULL);
-            CRM_ASSERT(p->check == (long) 0x81726354);
-            free(p->user);
-            free(node->_private);
-            break;
-        default:
-            break;
-    }
-}
-
-static void
-__xml_acl_free(void *data)
-{
-    if(data) {
-        xml_acl_t *acl = data;
-
-        free(acl->xpath);
-        free(acl);
     }
 }
 
@@ -534,16 +552,21 @@ static void
 __xml_acl_unpack(xmlNode *xml, const char *user)
 {
 #if ENABLE_ACL
+    xml_private_t *p = NULL;
+
+    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
+        return;
+    }
+
+    p = xml->doc->_private;
     if(pcmk_acl_required(user) == FALSE) {
         crm_trace("no acls needed for '%s'", user);
 
-    } else {
-        xml_private_t *p = xml->doc->_private;
+    } else if(p->acls == NULL) {
         xmlNode *acls = get_xpath_object("//"XML_CIB_TAG_ACLS, xml, LOG_TRACE);
 
+        free(p->user);
         p->user = strdup(user);
-        xml_acl_enable(xml);
-        crm_trace("Enabling acls for '%s'", user);
 
         if(acls) {
             xmlNode *child = NULL;
@@ -711,22 +734,24 @@ xml_acl_denied(xmlNode *xml)
 }
 
 void
-xml_acl_enable(xmlNode *xml)
+xml_acl_enable(xmlNode *xml, const char *user)
 {
+    crm_trace("Enabling acls for '%s'", user);
     set_doc_flag(xml, xpf_acl_enabled);
+    __xml_acl_unpack(xml, user);
+    __xml_acl_apply(xml);
 }
 
 void
 xml_acl_disable(xmlNode *xml)
 {
-    if(xml && xml->doc && xml->doc->_private){
+    if(xml_acl_enabled(xml)) {
         xml_private_t *p = xml->doc->_private;
 
-        if(xml_acl_enabled(xml)) {
-            __xml_acl_apply(xml);
-            __xml_acl_post_process(xml);
-            clear_bit(p->flags, xpf_acl_enabled);
-        }
+        /* Catch anything that was created but shouldn't have been */
+        __xml_acl_apply(xml);
+        __xml_acl_post_process(xml);
+        clear_bit(p->flags, xpf_acl_enabled);
     }
 }
 
@@ -742,16 +767,13 @@ xml_acl_enabled(xmlNode *xml)
 }
 
 void
-xml_track_changes(xmlNode * xml, const char *user) 
+xml_track_changes(xmlNode * xml, const char *user, bool enforce_acls) 
 {
-    bool enable_acls = xml_acl_enabled(xml);     /* Save the acl setting */
-
     xml_accept_changes(xml);
-    crm_trace("Tracking changes to %p %d", xml, enable_acls);
+    crm_trace("Tracking changes to %p %d", xml, enforce_acls);
     set_doc_flag(xml, xpf_tracking);
-    if(enable_acls) {
-        __xml_acl_unpack(xml, user);
-        __xml_acl_apply(xml);
+    if(enforce_acls) {
+        xml_acl_enable(xml, user);
     }
 }
 
@@ -1337,12 +1359,8 @@ xml_accept_changes(xmlNode * xml)
     crm_trace("Accepting changes to %p", xml);
     doc = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
-    if(doc->acls) {
-        g_list_free_full(doc->acls, __xml_acl_free);
-        doc->acls = NULL;
-    }
 
-    free(doc->user); doc->user = NULL;
+    __xml_private_clean(xml->doc->_private);
 
     if(is_not_set(doc->flags, xpf_dirty)) {
         doc->flags = xpf_none;
@@ -1351,9 +1369,6 @@ xml_accept_changes(xmlNode * xml)
 
     doc->flags = xpf_none;
     __xml_accept_changes(top);
-
-    g_list_free_full(doc->deleted_paths, free);
-    doc->deleted_paths = NULL;
 }
 
 /* Simplified version for applying v1-style XML patches */
@@ -2399,9 +2414,6 @@ free_xml(xmlNode * child)
 
         if (doc != NULL && top == child) {
             /* Free everything */
-            if(p->acls) {
-                g_list_free_full(p->acls, __xml_acl_free);
-            }
             xmlFreeDoc(doc);
 
         } else if(__xml_acl_check(child, NULL, xpf_acl_write) == FALSE) {
@@ -3754,12 +3766,15 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 }
 
 void
-xml_calculate_changes(xmlNode * old, xmlNode * new, const char *user)
+xml_calculate_changes(xmlNode * old, xmlNode * new)
 {
     CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
     CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
 
-    xml_track_changes(new, user);
+    if(xml_tracking_changes(new) == FALSE) {
+        xml_track_changes(new, NULL, FALSE);
+    }
+
     __xml_diff_object(old, new);
     xml_log_changes(LOG_TRACE, __FUNCTION__, new);
 }

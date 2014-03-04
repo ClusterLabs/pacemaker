@@ -368,7 +368,7 @@ process_ping_reply(xmlNode *reply)
                        digest, remote_cib);
             if(remote_cib) {
                 /* Additional debug */
-                xml_calculate_changes(the_cib, remote_cib, NULL);
+                xml_calculate_changes(the_cib, remote_cib);
                 xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);
                 free_xml(remote_cib);
             }
