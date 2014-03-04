@@ -19,7 +19,7 @@ function test_assert() {
     rc=$?
 
     if [ x$cib != x0 ]; then
-	cibadmin -Q
+	CIB_user=root cibadmin -Q
     fi
 
     printf "=#=#=#= End test: $desc - `crm_error $rc` ($rc) =#=#=#=\n"
