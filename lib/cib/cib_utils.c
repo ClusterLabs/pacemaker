@@ -106,6 +106,7 @@ cib_compare_generation(xmlNode * left, xmlNode * right)
     return 0;
 }
 
+/* Deprecated - doesn't expose -EACCES */
 xmlNode *
 get_cib_copy(cib_t * cib)
 {
@@ -137,9 +138,10 @@ get_cib_copy(cib_t * cib)
 xmlNode *
 cib_get_generation(cib_t * cib)
 {
-    xmlNode *the_cib = get_cib_copy(cib);
+    xmlNode *the_cib = NULL;
     xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
+    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
         copy_in_properties(generation, the_cib);
         free_xml(the_cib);

@@ -1133,14 +1133,18 @@ setup_input(const char *input, const char *output)
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
 
         if (rc == pcmk_ok) {
-            cib_object = get_cib_copy(cib_conn);
+            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_scope_local | cib_sync_call);
         }
 
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
         cib_conn = NULL;
 
-        if (cib_object == NULL) {
+        if (rc != pcmk_ok) {
+            fprintf(stderr, "Live CIB query failed: %s (%d)\n", pcmk_strerror(rc), rc);
+            crm_exit(rc);
+
+        } else if (cib_object == NULL) {
             fprintf(stderr, "Live CIB query failed: empty result\n");
             crm_exit(ENOTCONN);
         }

@@ -853,10 +853,13 @@ main(int argc, char **argv)
         cib_xml_copy = filename2xml(xml_file);
 
     } else {
-        cib_xml_copy = get_cib_copy(cib_conn);
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
     }
 
-    if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
+    if (rc != pcmk_ok) {
+        goto bail;
+
+    } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
         rc = -ENOKEY;
         goto bail;
     }

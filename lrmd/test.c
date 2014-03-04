@@ -384,11 +384,14 @@ generate_params(void)
         goto param_gen_bail;
     }
 
-    cib_xml_copy = get_cib_copy(cib_conn);
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+    if (rc != pcmk_ok) {
+        crm_err("Error retrieving cib copy: %s (%d)", pcmk_strerror(rc), rc);
+        goto param_gen_bail;
 
-    if (!cib_xml_copy) {
-        crm_err("Error retrieving cib copy.");
-        rc = -1;
+    } else if (cib_xml_copy == NULL) {
+        rc = -ENODATA;
+        crm_err("Error retrieving cib copy: %s (%d)", pcmk_strerror(rc), rc);
         goto param_gen_bail;
     }
 
