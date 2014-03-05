@@ -908,6 +908,22 @@ static int __xml_offset(xmlNode *xml)
     return position;
 }
 
+static int __xml_offset_no_deletions(xmlNode *xml) 
+{
+    int position = 0;
+    xmlNode *cIter = NULL;
+
+    for(cIter = xml; cIter->prev; cIter = cIter->prev) {
+        xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
+
+        if(is_not_set(p->flags, xpf_deleted)) {
+            position++;
+        }
+    }
+
+    return position;
+}
+
 static void
 __xml_build_changes(xmlNode * xml, xmlNode *patchset)
 {
@@ -921,7 +937,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         char buffer[XML_BUFFER_SIZE];
 
         if(__get_prefix(NULL, xml->parent, buffer, offset) > 0) {
-            int position = __xml_offset(xml);
+            int position = __xml_offset_no_deletions(xml);
 
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
@@ -998,7 +1014,7 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
 
             crm_xml_add(change, XML_DIFF_OP, "move");
             crm_xml_add(change, XML_DIFF_PATH, buffer);
-            crm_xml_add_int(change, XML_DIFF_POSITION, __xml_offset(xml));
+            crm_xml_add_int(change, XML_DIFF_POSITION, __xml_offset_no_deletions(xml));
         }
     }
 }
@@ -3101,6 +3117,12 @@ log_data_element(int log_level, const char *file, const char *function, int line
             prefix_m = NULL;
             goto dolog;
 
+        } else if(is_set(p->flags, xpf_moved)) {
+            prefix_m = strdup(prefix);
+            prefix_m[1] = '~';
+            prefix = prefix_m;
+            goto dolog;
+
         } else {
             for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
                 log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
@@ -3679,7 +3701,6 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
-    int insertions = 0;
 
     CRM_CHECK(new != NULL, return);
     if(old == NULL) {
@@ -3800,7 +3821,8 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         xmlNode *old_child = find_entity(old, crm_element_name(cIter), ID(cIter));
 
         if(old_child == NULL) {
-            insertions++;
+            xml_private_t *p = cIter->_private;
+            p->flags |= xpf_skip;
             __xml_diff_object(old_child, cIter);
 
         } else {
@@ -3809,10 +3831,19 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             int p_old = __xml_offset(old_child);
             xml_private_t *p = cIter->_private;
 
-            if(p_old != p_new - insertions) {
+            if(p_old != p_new) {
                 crm_info("%s.%s moved from %d to %d - %d",
-                         cIter->name, ID(cIter), p_old, p_new, insertions);
+                         cIter->name, ID(cIter), p_old, p_new);
                 p->flags |= xpf_moved;
+
+                if(p_old > p_new) {
+                    p = old_child->_private;
+                    p->flags |= xpf_skip;
+
+                } else {
+                    p = cIter->_private;
+                    p->flags |= xpf_skip;
+                }
             }
         }
     }
