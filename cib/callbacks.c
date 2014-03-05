@@ -1206,13 +1206,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib_replace_notify(origin, the_cib, rc, *cib_diff);
     }
 
-    if (rc != pcmk_ok) {
-        xml_log_patchset(LOG_DEBUG, "cib:diff", *cib_diff);
-
-    } else {
-        xml_log_patchset(LOG_INFO, "cib:diff", *cib_diff);
-    }
-
+    xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);
   done:
     if ((call_options & cib_discard_reply) == 0) {
         const char *caller = crm_element_value(request, F_CIB_CLIENTID);

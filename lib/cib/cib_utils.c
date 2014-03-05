@@ -494,7 +494,24 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
+    if(local_diff) {
+        int add[] = { 0, 0, 0 };
+        int del[] = { 0, 0, 0 };
+
+        const char *fmt = NULL;
+        const char *digest = NULL;
+
+        xml_patch_versions(local_diff, add, del);
+        fmt = crm_element_value(local_diff, "format");
+        digest = crm_element_value(local_diff, XML_ATTR_DIGEST);
+
+        if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
+            crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+            crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+        }
+    }
     xml_log_changes(LOG_INFO, __FUNCTION__, scratch);
+
     if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
