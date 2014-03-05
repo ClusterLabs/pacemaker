@@ -898,7 +898,7 @@ static int __xml_offset(xmlNode *xml)
     xmlNode *cIter = NULL;
 
     for(cIter = xml; cIter->prev; cIter = cIter->prev) {
-        xml_private_t *p = cIter->_private;
+        xml_private_t *p = ((xmlNode*)cIter->prev)->_private;
 
         if(is_not_set(p->flags, xpf_skip)) {
             position++;
@@ -3744,6 +3744,15 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             } else if(p_old != p_new) {
                 crm_info("Moved %s@%s (%d -> %d)", old->name, name, p_old, p_new);
                 crm_attr_dirty(exists);
+
+                if(p_old > p_new) {
+                    p = pIter->_private;
+                    p->flags |= xpf_skip;
+
+                } else {
+                    p = exists->_private;
+                    p->flags |= xpf_skip;
+                }
             }
         }
     }
