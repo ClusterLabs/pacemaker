@@ -74,7 +74,6 @@ main(int argc, char **argv)
     gboolean apply = FALSE;
     gboolean raw_1 = FALSE;
     gboolean raw_2 = FALSE;
-    gboolean filter = FALSE;
     gboolean use_stdin = FALSE;
     gboolean as_cib = FALSE;
     int argerr = 0;
@@ -119,9 +118,6 @@ main(int argc, char **argv)
             case 'p':
                 xml_file_2 = optarg;
                 apply = TRUE;
-                break;
-            case 'f':
-                filter = TRUE;
                 break;
             case 's':
                 use_stdin = TRUE;
@@ -199,7 +195,27 @@ main(int argc, char **argv)
             return rc;
         }
     } else {
-        output = diff_xml_object(object_1, object_2, filter);
+        xml_track_changes(object_2, NULL, object_2, FALSE);
+        xml_calculate_changes(object_1, object_2);
+        output = xml_create_patchset(0, object_1, object_2, NULL, FALSE, TRUE);
+
+        if(as_cib && output) {
+            int add[] = { 0, 0, 0 };
+            int del[] = { 0, 0, 0 };
+
+            const char *fmt = NULL;
+            const char *digest = NULL;
+
+            xml_patch_versions(output, add, del);
+            fmt = crm_element_value(output, "format");
+            digest = crm_element_value(output, XML_ATTR_DIGEST);
+
+            if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
+                crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+                crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+            }
+        }
+        xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
         xml_log_patchset(LOG_NOTICE, NULL, output);
     }
 
