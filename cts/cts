@@ -24,6 +24,8 @@ run=0
 boot=0
 setup=0
 target=rhel-7
+cmd=""
+trace=""
 
 custom_log=""
 patterns="-e CTS:"
@@ -56,6 +58,8 @@ while true; do
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
 	--setup|setup) setup=1; shift;;
+	trace-ls|tls) cmd=$1; shift;;
+	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
 
 	[0-9][0-9]|rhel|r*[0-9]|f*[0-9][0-9])
 	    case $1 in
@@ -167,6 +171,25 @@ case $cluster_name in
     read -p "Cluster log file: " cluster_log
     ;;
 esac
+
+if [ x$cmd != x ]; then
+    config=/etc/sysconfig/pacemaker
+    case $cmd in
+	trace-ls|tls)
+	    cluster-helper -g $cluster_name -- grep PCMK_trace_functions $config
+	    ;;
+	trace-add|tadd)
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/" $config
+	    ;;
+	trace-rm|trm)
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/" $config
+	    ;;
+	trace-set|tset)
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/" $config
+	    ;;
+    esac
+    exit 0
+fi
 
 if [ $build = 1 -a $run = 1 ]; then
     install=1
