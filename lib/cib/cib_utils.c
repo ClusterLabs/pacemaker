@@ -495,22 +495,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     if(local_diff) {
-        int add[] = { 0, 0, 0 };
-        int del[] = { 0, 0, 0 };
-
-        const char *fmt = NULL;
-        const char *digest = NULL;
-
-        xml_patch_versions(local_diff, add, del);
-        fmt = crm_element_value(local_diff, "format");
-        digest = crm_element_value(local_diff, XML_ATTR_DIGEST);
-
-        if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
-            crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
-            crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
-        }
+        xml_log_patchset(LOG_INFO, __FUNCTION__, local_diff);
     }
-    xml_log_changes(LOG_INFO, __FUNCTION__, scratch);
 
     if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
         && local_diff
@@ -533,6 +519,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         free_xml(c);
     }
 
+    xml_log_changes(LOG_TRACE, __FUNCTION__, scratch);
     xml_accept_changes(scratch);
 
     if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {

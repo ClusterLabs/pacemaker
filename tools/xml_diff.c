@@ -216,7 +216,7 @@ main(int argc, char **argv)
             }
         }
         xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
-        xml_log_patchset(LOG_NOTICE, NULL, output);
+        xml_log_patchset(LOG_NOTICE, __FUNCTION__, output);
     }
 
     if (output != NULL) {

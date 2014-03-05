@@ -48,7 +48,9 @@ enum xml_log_options
     xml_log_option_diff_short = 0x0040,
     xml_log_option_diff_all   = 0x0100,
     xml_log_option_dirty_add  = 0x1000,
-    xml_log_option_dirty_del  = 0x2000,
+    xml_log_option_open       = 0x2000,
+    xml_log_option_children   = 0x4000,
+    xml_log_option_close      = 0x8000,
 };
 
 void crm_enable_blackbox(int nsig);
