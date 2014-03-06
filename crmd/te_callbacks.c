@@ -354,13 +354,16 @@ te_update_diff(const char *event, xmlNode * msg)
         xmlNode *match = NULL;
         const char *node = NULL;
 
-        if(op && strcmp(op, "create") == 0) {
-            match = change->children;
-
-        } else if(op && strcmp(op, "move") == 0) {
+        if(op == NULL) {
             continue;
 
-        } else if(op && strcmp(op, "modify") == 0) {
+        } else if(strcmp(op, "create") == 0) {
+            match = change->children;
+
+        } else if(strcmp(op, "move") == 0) {
+            continue;
+
+        } else if(strcmp(op, "modify") == 0) {
             match = first_named_child(change, XML_DIFF_RESULT);
             if(match) {
                 match = match->children;
