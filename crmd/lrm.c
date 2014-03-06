@@ -2053,6 +2053,15 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
     } else if (pending->remove) {
         delete_op_entry(lrm_state, op, op->rsc_id, op_key, op->call_id);
 
+    } else if (pending && op->rsc_deleted) {
+        /* If we were expecting this operation to complete, but it was cancelled
+         * due to rsc deletion, make sure we report the operation completed so
+         * the transition engine entry can be matched. Otherwise the tengine will continue
+         * waiting for this update to occur until it is eventually timed out. We don't
+         * want this update going to the cib though, so use a direct ack. */
+        crm_trace("Op %s (call=%d): cancelled due to rsc deletion", op_key, op->call_id);
+        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
+
     } else {
         /* Before a stop is called, no need to direct ack */
         crm_trace("Op %s (call=%d): no delete event required", op_key, op->call_id);
