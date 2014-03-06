@@ -19,6 +19,7 @@ function test_assert() {
     rc=$?
 
     if [ x$cib != x0 ]; then
+	printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
 	CIB_user=root cibadmin -Q
     fi
 
@@ -60,6 +61,13 @@ while test "$done" = "0"; do
 	-*) echo "unknown option: $1"; usage 1;;
 	*) done=1;;
     esac
+done
+
+for t in $tests; do
+    if [ $t = acls -a $USER != root ]; then
+	echo You need to be root to run the ACL regression tests
+	exit 1
+    fi
 done
 
 if [ "x$VALGRIND_CMD" = "x" -a -x $test_home/crm_simulate ]; then
@@ -350,6 +358,7 @@ function test_acls() {
         <role_ref id="observer"/>
       </acl_user>
       <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
         <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
       </acl_role>
@@ -466,17 +475,27 @@ EOF
 
     export CIB_user=root
     desc="New ACL"
-    cmd="cibadmin -C -o acls --xml-text '<acl_user id=\"badidea\"><deny id=\"badidea-nothing\" xpath=\"/cib\"/><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
     test_assert 0
 
     export CIB_user=badidea
-    desc="$CIB_user: Query configuration"
+    desc="$CIB_user: Query configuration - implied deny"
+    cmd="cibadmin -Q"
+    test_assert 0
+
+    export CIB_user=root
+    desc="Updated ACL"
+    cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"badidea\"><deny id=\"badidea-nothing\" xpath=\"/cib\"/><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert 0
+
+    export CIB_user=badidea
+    desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
     test_assert 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
-    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     export CIB_user=niceguy
@@ -488,7 +507,7 @@ EOF
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
-    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create resource"
@@ -497,7 +516,7 @@ EOF
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
-    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - modify attribute"
@@ -506,7 +525,7 @@ EOF
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
-    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     sed -i 's/num_updates=.1/num_updates=\"0/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
@@ -516,7 +535,7 @@ EOF
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
-    sed -i 's/epoch=.11/epoch=\"10/g' /tmp/$$.haxor.xml
+    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create attribute"

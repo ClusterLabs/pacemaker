@@ -563,6 +563,14 @@ __xml_acl_apply(xmlNode *xml)
         crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
         freeXpathObject(xpathObj);
     }
+
+    p = xml->_private;
+    if(is_not_set(p->flags, xpf_acl_read) && is_not_set(p->flags, xpf_acl_write)) {
+        p->flags |= xpf_acl_deny;
+        p = xml->doc->_private;
+        crm_crit("Enforcing default ACL for %s to %s", p->user, crm_element_name(xml));
+    }
+
 }
 
 static void
@@ -674,6 +682,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
 {
     GListPtr aIter = NULL;
     xmlNode *target = NULL;
+    xml_private_t *p = NULL;
     xml_private_t *doc = NULL;
 
     *result = NULL;
@@ -712,6 +721,12 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
             crm_trace("Enforced ACL %s (%d matches)", acl->xpath, max);
             freeXpathObject(xpathObj);
         }
+    }
+
+    p = target->_private;
+    if(is_set(p->flags, xpf_acl_deny) && __xml_purge_attributes(target) == FALSE) {
+        crm_trace("No access to the entire document for %s", user);
+        return TRUE;
     }
 
     if(doc->acls) {
