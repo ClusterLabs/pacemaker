@@ -832,7 +832,9 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     const char *originator = crm_element_value(request, F_ORIG);
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *target = NULL;
+    const char *call_id = crm_element_value(request, F_CIB_CALLID);
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+    const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
     if (cib_client) {
@@ -867,11 +869,11 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     if (from_peer) {
-        crm_trace("Processing peer %s operation from %s on %s intended for %s (reply=%s)",
-                  op, client_id, originator, target, reply_to);
+        crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
+                  op, client_name, call_id, originator, target, reply_to);
     } else {
         crm_xml_add(request, F_ORIG, cib_our_uname);
-        crm_trace("Processing local %s operation from %s intended for %s", op, client_id, target);
+        crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
     }
 
     rc = cib_get_operation_id(op, &call_type);
@@ -909,8 +911,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
                  section ? section : "'all'",
                  host ? host : "master",
                  originator ? originator : "local",
-                 crm_element_value(request, F_CIB_CLIENTNAME),
-                 crm_element_value(request, F_CIB_CALLID));
+                 client_name, call_id);
 
         forward_request(request, cib_client, call_options);
         return;
@@ -968,9 +969,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
-                   originator ? originator : "local",
-                   crm_element_value(request, F_CIB_CLIENTNAME),
-                   crm_element_value(request, F_CIB_CALLID),
+                   originator ? originator : "local", client_name, call_id,
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
@@ -992,9 +991,7 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     /* from now on we are the server */
     if(is_update && cib_legacy_mode() == FALSE) {
         crm_trace("Completed pre-sync update from %s/%s/%s%s",
-                  originator ? originator : "local",
-                  crm_element_value(request, F_CIB_CLIENTNAME),
-                  crm_element_value(request, F_CIB_CALLID),
+                  originator ? originator : "local", client_name, call_id,
                   local_notify?" with local notification":"");
 
     } else if (needs_reply == FALSE || stand_alone) {
