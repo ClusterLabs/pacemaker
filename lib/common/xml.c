@@ -3835,7 +3835,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         if(exists == NULL) {
             p = new->doc->_private;
 
-            /* Prevent the dirty flag being set */
+            /* Prevent the dirty flag being set recursively upwards */
             clear_bit(p->flags, xpf_tracking);
             exists = xmlSetProp(new, (const xmlChar *)name, (const xmlChar *)old_value);
             set_bit(p->flags, xpf_tracking);
@@ -3888,8 +3888,12 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             char *value = crm_element_value_copy(new, name);
 
             crm_trace("Created %s@%s=%s", new->name, name, value);
-            xmlUnsetProp(new, pIter->name); /* Remove so we can recreate and check ACLs */
-            crm_xml_add(new, name, value);
+            /* Remove plus create wont work as it will modify the relative attribute ordering */
+            if(__xml_acl_check(new, name, xpf_acl_write)) {
+                crm_attr_dirty(pIter);
+            } else {
+                xmlUnsetProp(new, pIter->name); /* Remove - change not allowed */
+            }
 
             free(value);
             free(name);
