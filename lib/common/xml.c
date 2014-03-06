@@ -1305,6 +1305,10 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     return patch;
 }
 
+static void
+__xml_log_element(int log_level, const char *file, const char *function, int line,
+                  const char *prefix, xmlNode * data, int depth, int options);
+
 void
 xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
 {
@@ -1361,8 +1365,20 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
 
             if(op == NULL) {
             } else if(strcmp(op, "create") == 0) {
-                do_crm_log_alias(log_level, __FILE__, function, __LINE__, "++ %s", xpath);
-                log_data_element(log_level, __FILE__, function, __LINE__, "++", change->children, 1, xml_log_option_formatted);
+                int lpc = 0, max = 0;
+                char *prefix = g_strdup_printf("++ %s: ", xpath);
+
+                max = strlen(prefix);
+                __xml_log_element(log_level, __FILE__, function, __LINE__, prefix, change->children,
+                                  0, xml_log_option_formatted|xml_log_option_open);
+
+                for(lpc = 2; lpc < max; lpc++) {
+                    prefix[lpc] = ' ';
+                }
+
+                __xml_log_element(log_level, __FILE__, function, __LINE__, prefix, change->children,
+                                  0, xml_log_option_formatted|xml_log_option_close|xml_log_option_children);
+                free(prefix);
 
             } else if(strcmp(op, "move") == 0) {
                 do_crm_log_alias(log_level, __FILE__, function, __LINE__, "+~ %s moved to offset %s", xpath, crm_element_value(change, XML_DIFF_POSITION));
@@ -1373,8 +1389,6 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                 char buffer_unset[XML_BUFFER_SIZE];
                 int o_set = 0;
                 int o_unset = 0;
-
-                do_crm_log_alias(log_level, __FILE__, function, __LINE__, "+  %s", xpath);
 
                 buffer_set[0] = 0;
                 buffer_unset[0] = 0;
@@ -1399,10 +1413,10 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                     }
                 }
                 if(o_set) {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "+    %s", buffer_set);
+                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "+  %s:  %s", xpath, buffer_set);
                 }
                 if(o_unset) {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "--   %s", buffer_unset);
+                    do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s:  %s", xpath, buffer_unset);
                 }
 
             } else if(strcmp(op, "delete") == 0) {
@@ -3180,7 +3194,7 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         buffer = NULL;
 
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-            __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options);
+            __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options|xml_log_option_open|xml_log_option_close);
         }
     }
 
