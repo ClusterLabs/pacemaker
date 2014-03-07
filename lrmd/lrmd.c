@@ -122,6 +122,17 @@ log_execute(lrmd_cmd_t * cmd)
                cmd->rsc_id, cmd->action, cmd->call_id);
 }
 
+static const char *
+normalize_action_name(lrmd_rsc_t * rsc, const char *action)
+{
+    if (safe_str_eq(action, "monitor") &&
+        (safe_str_eq(rsc->class, "lsb") ||
+         safe_str_eq(rsc->class, "service") || safe_str_eq(rsc->class, "systemd"))) {
+        return "status";
+    }
+    return action;
+}
+
 static lrmd_rsc_t *
 build_rsc_from_xml(xmlNode * msg)
 {
@@ -233,13 +244,76 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
+static gboolean
+merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
+{
+    GListPtr gIter = NULL;
+    lrmd_cmd_t * dup = NULL;
+    gboolean dup_pending = FALSE;
+
+    if (cmd->interval == 0) {
+        return 0;
+    }
+
+    for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
+        dup = gIter->data;
+        if (safe_str_eq(cmd->action, dup->action) && cmd->interval == dup->interval) {
+            dup_pending = TRUE;
+            goto merge_dup;
+        }
+    }
+
+    /* if dup is in recurring_ops list, that means it has already executed
+     * and is in the interval loop. we can't just remove it in this case. */
+    for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
+        dup = gIter->data;
+        if (safe_str_eq(cmd->action, dup->action) && cmd->interval == dup->interval) {
+            goto merge_dup;
+        }
+    }
+
+    return FALSE;
+merge_dup:
+
+    /* merge */
+    dup->first_notify_sent = 0;
+    free(dup->userdata_str);
+    dup->userdata_str = cmd->userdata_str;
+    cmd->userdata_str = NULL;
+    dup->call_id = cmd->call_id;
+
+    if (safe_str_eq(rsc->class, "stonith")) {
+        /* if we are waiting for the next interval, kick it off now */
+        if (dup_pending == TRUE) {
+            g_source_remove(cmd->stonith_recurring_id);
+            cmd->stonith_recurring_id = 0;
+            stonith_recurring_op_helper(cmd);
+        }
+
+    } else if (dup_pending == FALSE) {
+        /* if we've already handed this to the service lib, kick off an early execution */
+        services_action_kick(rsc->rsc_id, normalize_action_name(rsc, dup->action), dup->interval);
+    }
+    free_lrmd_cmd(cmd);
+
+    return TRUE;
+}
+
 static void
 schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
+    gboolean dup_processed = FALSE;
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
     crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
+
+    dup_processed = merge_recurring_duplicate(rsc, cmd);
+    if (dup_processed) {
+        /* duplicate recurring cmd found, cmds merged */
+        return;
+    }
+
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
@@ -249,7 +323,6 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (cmd->start_delay) {
         cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
     }
-
 }
 
 static void
@@ -833,17 +906,6 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     return rc;
 }
 
-static const char *
-normalize_action_name(lrmd_rsc_t * rsc, const char *action)
-{
-    if (safe_str_eq(action, "monitor") &&
-        (safe_str_eq(rsc->class, "lsb") ||
-         safe_str_eq(rsc->class, "service") || safe_str_eq(rsc->class, "systemd"))) {
-        return "status";
-    }
-    return action;
-}
-
 static void
 dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1157,6 +1219,7 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
     lrmd_cmd_t *cmd = NULL;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    int call_id;
 
     if (!rsc_id) {
         return -EINVAL;
@@ -1168,9 +1231,13 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
     }
 
     cmd = create_lrmd_cmd(request, client);
+    call_id = cmd->call_id;
+
+    /* Don't reference cmd after handing it off to be scheduled.
+     * The cmd could get merged and freed. */
     schedule_lrmd_cmd(rsc, cmd);
 
-    return cmd->call_id;
+    return call_id;
 }
 
 static int

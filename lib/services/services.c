@@ -392,6 +392,35 @@ services_action_cancel(const char *name, const char *action, int interval)
     return TRUE;
 }
 
+gboolean
+services_action_kick(const char *name, const char *action, int interval /* ms */)
+{
+    svc_action_t * op = NULL;
+    char *id = NULL;
+
+    if (asprintf(&id, "%s_%s_%d", name, action, interval) == -1) {
+        return FALSE;
+    }
+
+    op = g_hash_table_lookup(recurring_actions, id);
+    free(id);
+
+    if (op == NULL) {
+        return FALSE;
+    }
+
+    if (op->pid) {
+        return TRUE;
+    } else {
+        if (op->opaque->repeat_timer) {
+            g_source_remove(op->opaque->repeat_timer);
+        }
+        recurring_action_timer(op);
+        return TRUE;
+    }
+
+}
+
 /* add new recurring operation, check for duplicates. 
  * - if duplicate found, return TRUE, immediately reschedule op.
  * - if no dup, return FALSE, inserve into recurring op list.*/
