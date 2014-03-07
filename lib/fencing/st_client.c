@@ -573,7 +573,7 @@ stonith_action_create(const char *agent,
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
-    crm_info("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
+    crm_debug("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
     action->args = make_args(_action, victim, victim_nodeid, device_args, port_map);
     action->agent = strdup(agent);
     action->action = strdup(_action);
