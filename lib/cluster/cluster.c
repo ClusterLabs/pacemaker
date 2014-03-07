@@ -510,7 +510,17 @@ get_cluster_type(void)
         hb = (*new_cluster) ("heartbeat");
 
         crm_debug("Testing with Heartbeat");
-        if (hb->llc_ops->signon(hb, crm_system_name) == HA_OK) {
+        /*
+         * Test as "casual" client (clientid == NULL; will be replaced by
+         * current pid).  We are trying to detect if we can communicate with
+         * heartbeat, not if we can register as some specific service.
+         * Otherwise all but one of several concurrent invocations will get
+         * HA_FAIL because of:
+         * WARN: duplicate client add request
+         * ERROR: api_process_registration_msg: cannot add client()
+         * and then likely fail :(
+         */
+        if (hb->llc_ops->signon(hb, NULL) == HA_OK) {
             hb->llc_ops->signoff(hb, FALSE);
 
             cluster_type = pcmk_cluster_heartbeat;
