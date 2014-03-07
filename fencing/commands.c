@@ -1329,8 +1329,16 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
     if (output) {
         /* Logging the whole string confuses syslog when the string is xml */
         char *prefix = g_strdup_printf("%s:%d", cmd->device, pid);
+        int level = LOG_DEBUG;
 
-        crm_log_output(rc == 0 ? LOG_INFO : LOG_WARNING, prefix, output);
+        if (rc == 0) {
+            if  (crm_str_eq(cmd->op, STONITH_OP_EXEC, TRUE) == FALSE) {
+                level = LOG_INFO;
+            }
+        } else {
+            level = LOG_WARNING;
+        }
+        crm_log_output(level, prefix, output);
         g_free(prefix);
     }
 }
@@ -2058,7 +2066,8 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
         rc = handle_request(client, id, flags, request, remote_peer);
     }
 
-    do_crm_log_unlikely(rc > 0 ? LOG_DEBUG : LOG_INFO, "Processed %s%s from %s: %s (%d)", op,
+    do_crm_log_unlikely(rc > 0 || crm_str_eq(op, STONITH_OP_EXEC, TRUE) ? LOG_DEBUG : LOG_INFO,
+                        "Processed %s%s from %s: %s (%d)", op,
                         is_reply ? " reply" : "", client ? client->name : remote_peer,
                         rc > 0 ? "" : pcmk_strerror(rc), rc);
 
