@@ -195,6 +195,11 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         char *sigfile = NULL;
         size_t fnsize;
 
+        if (buf.st_size == 0) {
+            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
+            return TRUE;
+        }
+
         crm_trace("Reading cluster configuration from: %s", filename);
         root = filename2xml(filename);
 
