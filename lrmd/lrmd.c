@@ -322,6 +322,11 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return;
     }
 
+    /* crmd expects lrmd to automatically cancel recurring ops before rsc stops. */
+    if (rsc && safe_str_eq(cmd->action, "stop")) {
+        cancel_all_recurring(rsc, NULL);
+    }
+
     rsc->pending_ops = g_list_append(rsc->pending_ops, cmd);
 #ifdef HAVE_SYS_TIMEB_H
     ftime(&cmd->t_queue);
@@ -509,11 +514,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 
     send_cmd_complete_notify(cmd);
-
-    /* crmd expects lrmd to automatically cancel recurring ops after rsc stops */
-    if (rsc && safe_str_eq(cmd->action, "stop")) {
-        cancel_all_recurring(rsc, NULL);
-    }
 
     if (cmd->interval && (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
         if (rsc) {

@@ -385,8 +385,15 @@ services_action_cancel(const char *name, const char *action, int interval)
         }
         services_action_free(op);
     } else {
-        crm_info("Cancelling op: %s will occur once operation completes", id);
+        int rc;
+        crm_info("Cancelling in-flight op: performing early termination of %s", id);
         op->cancel = 1;
+        rc = mainloop_child_kill(op->pid);
+        if (rc != 0 ) {
+            /* even though the early termination failed,
+             * the op will be marked as cancelled once it completes. */
+            crm_err("Termination of %s failed", id);
+        }
     }
 
     return TRUE;

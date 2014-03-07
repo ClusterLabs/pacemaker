@@ -861,10 +861,35 @@ mainloop_clear_child_userdata(mainloop_child_t * child)
     child->privatedata = NULL;
 }
 
+/* good function name */
+static void
+child_free(mainloop_child_t *child)
+{
+    if (child->timerid != 0) {
+        crm_trace("Removing timer %d", child->timerid);
+        g_source_remove(child->timerid);
+        child->timerid = 0;
+    }
+    free(child->desc);
+    free(child);
+}
+
+/* terrible function name */
+static int
+child_kill_helper(mainloop_child_t *child)
+{
+    if (kill(child->pid, SIGKILL) < 0) {
+        crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+        return -errno;
+    }
+    return 0;
+}
+
 static gboolean
 child_timeout_callback(gpointer p)
 {
     mainloop_child_t *child = p;
+    int rc = 0;
 
     child->timerid = 0;
     if (child->timeout) {
@@ -872,16 +897,14 @@ child_timeout_callback(gpointer p)
         return FALSE;
     }
 
+    rc = child_kill_helper(child);
+    if (rc == ESRCH) {
+        /* Nothing left to do. pid doesn't exist */
+        return FALSE;
+    }
+
     child->timeout = TRUE;
     crm_warn("%s process (PID %d) timed out", child->desc, (int)child->pid);
-
-    if (kill(child->pid, SIGKILL) < 0) {
-        if (errno == ESRCH) {
-            /* Nothing left to do */
-            return FALSE;
-        }
-        crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
-    }
 
     child->timerid = g_timeout_add(5000, child_timeout_callback, child);
     return FALSE;
@@ -889,71 +912,107 @@ child_timeout_callback(gpointer p)
 
 static GListPtr child_list = NULL;
 
+static gboolean
+child_waitpid(mainloop_child_t *child, int flags)
+{
+    int rc = 0;
+    int core = 0;
+    int signo = 0;
+    int status = 0;
+    int exitcode = 0;
+
+    rc = waitpid(child->pid, &status, flags);
+    if(rc == 0) {
+        return FALSE;
+
+    } else if(rc != child->pid) {
+        signo = SIGCHLD;
+        exitcode = 1;
+        status = 1;
+        crm_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
+
+    } else {
+        crm_trace("Managed process %d exited: %p", child->pid, child);
+
+        if (WIFEXITED(status)) {
+            exitcode = WEXITSTATUS(status);
+            crm_trace("Managed process %d (%s) exited with rc=%d", child->pid, child->desc, exitcode);
+
+        } else if (WIFSIGNALED(status)) {
+            signo = WTERMSIG(status);
+            crm_trace("Managed process %d (%s) exited with signal=%d", child->pid, child->desc, signo);
+        }
+#ifdef WCOREDUMP
+        if (WCOREDUMP(status)) {
+            core = 1;
+            crm_err("Managed process %d (%s) dumped core", child->pid, child->desc);
+        }
+#endif
+    }
+
+    if (child->callback) {
+        child->callback(child, child->pid, core, signo, exitcode);
+    }
+    return TRUE;
+}
+
 static void
 child_death_dispatch(int signal)
 {
     GListPtr iter = child_list;
+    gboolean exited;
 
     while(iter) {
-        int rc = 0;
-        int core = 0;
-        int signo = 0;
-        int status = 0;
-        int exitcode = 0;
-
         GListPtr saved = NULL;
         mainloop_child_t *child = iter->data;
-
-        rc = waitpid(child->pid, &status, WNOHANG);
-        if(rc == 0) {
-            iter = iter->next;
-            continue;
-
-        } else if(rc != child->pid) {
-            signo = signal;
-            exitcode = 1;
-            status = 1;
-            crm_perror(LOG_ERR, "Call to waitpid(%d) failed", child->pid);
-
-        } else {
-            crm_trace("Managed process %d exited: %p", child->pid, child);
-
-            if (WIFEXITED(status)) {
-                exitcode = WEXITSTATUS(status);
-                crm_trace("Managed process %d (%s) exited with rc=%d", child->pid, child->desc, exitcode);
-
-            } else if (WIFSIGNALED(status)) {
-                signo = WTERMSIG(status);
-                crm_trace("Managed process %d (%s) exited with signal=%d", child->pid, child->desc, signo);
-            }
-#ifdef WCOREDUMP
-            if (WCOREDUMP(status)) {
-                core = 1;
-                crm_err("Managed process %d (%s) dumped core", child->pid, child->desc);
-            }
-#endif
-        }
-
-        if (child->callback) {
-            child->callback(child, child->pid, core, signo, exitcode);
-        }
-
-        crm_trace("Removing process entry %p for %d", child, child->pid);
+        exited = child_waitpid(child, WNOHANG);
 
         saved = iter;
         iter = iter->next;
 
+        if (exited == FALSE) {
+            continue;
+        }
+        crm_trace("Removing process entry %p for %d", child, child->pid);
+
         child_list = g_list_remove_link(child_list, saved);
         g_list_free(saved);
-
-        if (child->timerid != 0) {
-            crm_trace("Removing timer %d", child->timerid);
-            g_source_remove(child->timerid);
-            child->timerid = 0;
-        }
-        free(child->desc);
-        free(child);
+        child_free(child);
     }
+}
+
+gboolean
+mainloop_child_kill(pid_t pid)
+{
+    GListPtr iter;
+    mainloop_child_t *child = NULL;
+
+    for (iter = child_list; iter != NULL; iter = iter->next) {
+        child = iter->data;
+        if (pid == child->pid) {
+            break;
+        }
+    }
+
+    if (child == NULL) {
+        return FALSE;
+    }
+
+    if (child_kill_helper(child) != 0) {
+        /* failed to terminate child process */
+        return FALSE;
+    }
+
+    /* It is impossible to block SIGKILL, this allows us to
+     * call waitpid without WNOHANG here */
+    if (child_waitpid(child, 0) == FALSE) {
+        /* not much we can do if this occurs */
+        return FALSE;
+    }
+
+    child_list = g_list_remove(child_list, child);
+    child_free(child);
+    return TRUE;
 }
 
 /* Create/Log a new tracked process
