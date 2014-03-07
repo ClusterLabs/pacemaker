@@ -195,11 +195,6 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         char *sigfile = NULL;
         size_t fnsize;
 
-        if (buf.st_size == 0) {
-            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
-            return TRUE;
-        }
-
         crm_trace("Reading cluster configuration from: %s", filename);
         root = filename2xml(filename);
 
@@ -219,6 +214,26 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
     }
 
     return passed;
+}
+
+static gboolean
+on_disk_cib_corrupt(const char *filename)
+{
+    int s_res = -1;
+    struct stat buf;
+    gboolean corrupt = FALSE;
+
+    CRM_ASSERT(filename != NULL);
+
+    s_res = stat(filename, &buf);
+    if (s_res == 0) {
+        if (buf.st_size == 0) {
+            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
+            corrupt = TRUE;
+        }
+    }
+
+    return corrupt;
 }
 
 static int
@@ -701,7 +716,8 @@ write_cib_contents(gpointer p)
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
     /* check the admin didnt modify it underneath us */
-    if (validate_on_disk_cib(primary_file, NULL) == FALSE) {
+    if (on_disk_cib_corrupt(primary_file) == FALSE
+        && validate_on_disk_cib(primary_file, NULL) == FALSE) {
         crm_err("%s was manually modified while the cluster was active!", primary_file);
         exit_rc = pcmk_err_cib_modified;
         goto cleanup;
