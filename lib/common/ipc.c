@@ -331,7 +331,7 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 
     client->id = crm_generate_uuid();
 
-    crm_info("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
+    crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
 #if ENABLE_ACL
     client->user = uid2username(uid_client);
@@ -365,7 +365,7 @@ crm_client_destroy(crm_client_t * c)
         g_source_remove(c->event_timer);
     }
 
-    crm_info("Destroying %d events", g_list_length(c->event_queue));
+    crm_debug("Destroying %d events", g_list_length(c->event_queue));
     while (c->event_queue) {
         struct iovec *event = c->event_queue->data;
 

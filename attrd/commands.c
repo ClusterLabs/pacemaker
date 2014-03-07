@@ -241,7 +241,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             election_vote(writer);
         }
 
-        crm_info("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
+        crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
         broadcast = TRUE;
 
         free(key);
@@ -423,11 +423,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
     v = g_hash_table_lookup(a->values, host);
 
     if(v == NULL) {
-        crm_trace("Setting %s[%s] to %s from %s", attr, host, value, peer->uname);
         v = calloc(1, sizeof(attribute_value_t));
-        if(value) {
-            v->current = strdup(value);
-        }
         v->nodename = strdup(host);
         crm_element_value_int(xml, F_ATTRD_IS_REMOTE, &v->is_remote);
         g_hash_table_replace(a->values, v->nodename, v);
@@ -435,10 +431,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         if (v->is_remote == TRUE) {
             crm_remote_peer_cache_add(host);
         }
+    }
 
-        changed = TRUE;
-
-    } else if(filter
+    if(filter
               && safe_str_neq(v->current, value)
               && safe_str_eq(host, attrd_cluster->uname)) {
         xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
