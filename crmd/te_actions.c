@@ -456,6 +456,9 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         update_graph(transition_graph, action);
         trigger_graph();
 
+    } else if (action->confirmed == TRUE) {
+        crm_debug("Action %d: %s %s on %s(timeout %dms) was already confirmed.",
+                  action->id, task, task_uuid, on_node, action->timeout);
     } else {
         if (action->timeout <= 0) {
             crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %dms instead",
