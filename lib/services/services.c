@@ -310,6 +310,9 @@ services_action_free(svc_action_t * op)
         return;
     }
 
+    if (op->opaque->repeat_timer) {
+        g_source_remove(op->opaque->repeat_timer);
+    }
     if (op->opaque->stderr_gsource) {
         mainloop_del_fd(op->opaque->stderr_gsource);
         op->opaque->stderr_gsource = NULL;
@@ -389,6 +392,44 @@ services_action_cancel(const char *name, const char *action, int interval)
     return TRUE;
 }
 
+/* add new recurring operation, check for duplicates. 
+ * - if duplicate found, return TRUE, immediately reschedule op.
+ * - if no dup, return FALSE, inserve into recurring op list.*/
+static gboolean
+handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_action_t *))
+{
+    svc_action_t * dup = NULL;
+
+    if (recurring_actions == NULL) {
+        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+        return FALSE;
+    }
+
+    /* check for duplicates */
+    dup = g_hash_table_lookup(recurring_actions, op->id);
+
+    if (dup && (dup != op)) {
+        /* update user data */
+        if (op->opaque->callback) {
+            dup->opaque->callback = op->opaque->callback;
+            dup->cb_data = op->cb_data;
+            op->cb_data = NULL;
+        }
+        /* immediately execute the next interval */
+        if (dup->pid != 0) {
+            if (op->opaque->repeat_timer) {
+                g_source_remove(op->opaque->repeat_timer);
+            }
+            recurring_action_timer(dup);
+        }
+        /* free the dup.  */
+        services_action_free(op);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 gboolean
 services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
 {
@@ -396,11 +437,11 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         op->opaque->callback = action_callback;
     }
 
-    if (recurring_actions == NULL) {
-        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-    }
-
     if (op->interval > 0) {
+        if (handle_duplicate_recurring(op, action_callback) == TRUE) {
+            /* entry rescheduled, dup freed */
+            return TRUE;
+        }
         g_hash_table_replace(recurring_actions, op->id, op);
     }
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
