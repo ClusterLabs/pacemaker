@@ -241,7 +241,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             election_vote(writer);
         }
 
-        crm_info("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
+        crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value, election_state(writer) == election_won?" (writer)":"");
         broadcast = TRUE;
 
         free(key);
