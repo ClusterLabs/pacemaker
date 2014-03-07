@@ -275,6 +275,14 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     return FALSE;
 merge_dup:
 
+
+    /* This should not occur, if it does we need to investigate in the crmd
+     * how something like this is possible */
+    crm_warn("Duplicate recurring op entry detected (%s_%s_%d), merging with previous op entry",
+            rsc->rsc_id,
+            normalize_action_name(rsc, dup->action),
+            dup->interval);
+
     /* merge */
     dup->first_notify_sent = 0;
     free(dup->userdata_str);
