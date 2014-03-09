@@ -54,6 +54,7 @@ cluster_status(pe_working_set_t * data_set)
     xmlNode *cib_nodes = get_xpath_object("//"XML_CIB_TAG_NODES, data_set->input, LOG_TRACE);
     xmlNode *cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
     xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
+    xmlNode *cib_tags = get_xpath_object("//"XML_CIB_TAG_TAGS, data_set->input, LOG_TRACE);
     const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
     crm_trace("Beginning unpack");
@@ -100,6 +101,7 @@ cluster_status(pe_working_set_t * data_set)
     }
 
     unpack_resources(cib_resources, data_set);
+    unpack_tags(cib_tags, data_set);
 
     if(is_not_set(data_set->flags, pe_flag_quick_location)) {
         unpack_status(cib_status, data_set);
@@ -198,6 +200,10 @@ cleanup_calculations(pe_working_set_t * data_set)
 
     if (data_set->template_rsc_sets) {
         g_hash_table_destroy(data_set->template_rsc_sets);
+    }
+
+    if (data_set->tags) {
+        g_hash_table_destroy(data_set->tags);
     }
 
     free(data_set->dc_uuid);

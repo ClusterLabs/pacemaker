@@ -119,6 +119,7 @@ typedef struct pe_working_set_s {
 
     GHashTable *template_rsc_sets;
     const char *localhost;
+    GHashTable *tags;
 
 } pe_working_set_t;
 
@@ -322,6 +323,11 @@ struct ticket_s {
     gboolean standby;
     GHashTable *state;
 };
+
+typedef struct tag_s {
+    char *id;
+    GListPtr refs;
+} tag_t;
 
 enum pe_link_state {
     pe_link_not_dumped,

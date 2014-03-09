@@ -305,8 +305,6 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     const char *template_ref = NULL;
     const char *id = NULL;
-    xmlNode *rsc_set = NULL;
-    xmlNode *rsc_ref = NULL;
 
     if (xml_obj == NULL) {
         pe_err("No resource object for processing resource list of template");
@@ -329,16 +327,9 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    rsc_set = g_hash_table_lookup(data_set->template_rsc_sets, template_ref);
-    if (rsc_set == NULL) {
-        rsc_set = create_xml_node(NULL, XML_CONS_TAG_RSC_SET);
-        crm_xml_add(rsc_set, XML_ATTR_ID, template_ref);
-
-        g_hash_table_insert(data_set->template_rsc_sets, strdup(template_ref), rsc_set);
+    if (add_tag_ref(data_set->template_rsc_sets, template_ref, id) == FALSE) {
+        return FALSE;
     }
-
-    rsc_ref = create_xml_node(rsc_set, XML_TAG_RESOURCE_REF);
-    crm_xml_add(rsc_ref, XML_ATTR_ID, id);
 
     return TRUE;
 }
