@@ -496,6 +496,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
     if(local_diff) {
         xml_log_patchset(LOG_INFO, __FUNCTION__, local_diff);
+        crm_log_xml_trace(local_diff, "raw patch");
     }
 
     if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
