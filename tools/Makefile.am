@@ -42,7 +42,7 @@ sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resou
 
 testdir			= $(datadir)/$(PACKAGE)/tests/cli
 test_SCRIPTS		= regression.sh
-test_DATA               = regression.exp
+test_DATA               = regression.dates.exp regression.tools.exp regression.acls.exp 
 
 if BUILD_HEARTBEAT_SUPPORT
 sbin_PROGRAMS           += crm_uuid
