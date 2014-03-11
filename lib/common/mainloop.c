@@ -981,6 +981,17 @@ child_death_dispatch(int signal)
     }
 }
 
+static gboolean
+child_signal_init(gpointer p)
+{
+    /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
+    mainloop_add_signal(SIGCHLD, child_death_dispatch);
+
+    /* In case they terminated before the signal handler was installed */
+    child_death_dispatch(SIGCHLD);
+    return FALSE;
+}
+
 gboolean
 mainloop_child_kill(pid_t pid)
 {
@@ -1043,12 +1054,11 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 
     if(need_init) {
         need_init = FALSE;
-
-        /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
-        mainloop_add_signal(SIGCHLD, child_death_dispatch);
-
-        /* In case they terminated before the signal handler was installed */
-        child_death_dispatch(SIGCHLD);
+        /* SIGCHLD processing has to be invoked from mainloop.
+         * We do not want it to be possible to both add a child pid
+         * to mainloop, and have the pid's exit callback invoked within
+         * the same callstack. */
+        g_timeout_add(1, child_signal_init, NULL);
     }
 }
 
