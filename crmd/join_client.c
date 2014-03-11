@@ -165,7 +165,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         if (fsa_our_dc) {
             send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         } else {
-            crm_warn("No DC for join-%s", join_id);
+            crm_info("No DC for join-%s", join_id);
             send_cluster_message(NULL, crm_msg_crmd, reply, TRUE);
         }
         free_xml(reply);
