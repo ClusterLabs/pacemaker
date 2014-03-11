@@ -4536,22 +4536,10 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             xmlNode *tmp = copy_xml(update);
             xmlDoc *doc = tmp->doc;
             xmlNode *old = NULL;
-            xml_private_t *p = child->doc->_private;
 
-            if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
-                int offset = 0;
-                char buffer[XML_BUFFER_SIZE];
-
-                if(__get_prefix(NULL, child, buffer, offset) > 0) {
-
-                    crm_trace("Replacing %s %p in %p", buffer, child, doc);
-                    p->deleted_paths = g_list_append(p->deleted_paths, strdup(buffer));
-                    set_doc_flag(child, xpf_dirty);
-                }
-            }
-
+            xml_accept_changes(tmp);
             old = xmlReplaceNode(child, tmp);
-            __xml_node_dirty(tmp);
+            xml_calculate_changes(old, tmp);
 
             xmlDocSetRootElement(doc, old);
             free_xml(old);
