@@ -68,6 +68,11 @@ class CTSTest:
 #        if not issubclass(cm.__class__, ClusterManager):
 #            raise ValueError("Must be a ClusterManager object")
         self.CM = cm
+        self.rsh = cm.rsh
+        self.Env = cm.Env
+        self.log = cm.log
+        self.debug = cm.debug
+        self.log_patterns = cm
         self.Audits = []
         self.timeout=120
         self.passed = 1
@@ -89,7 +94,7 @@ class CTSTest:
         return self.Stats[key]
 
     def log_mark(self, msg):
-        self.CM.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
+        self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
         return
 
     def get_timer(self,key = "test"):
@@ -105,7 +110,7 @@ class CTSTest:
         if key in self.timer:
             elapsed = time.time() - self.timer[key]
             s = key == "test" and self.name or "%s:%s" %(self.name,key)
-            self.CM.debug("%s runtime: %.2f" % (s, elapsed))
+            self.debug("%s runtime: %.2f" % (s, elapsed))
             del self.timer[key]
         return elapsed
 
@@ -123,7 +128,7 @@ class CTSTest:
         '''Increment the failure count'''
         self.passed = 0
         self.incr("failure")
-        self.CM.log(("Test %s" % self.name).ljust(35)  +" FAILED: %s" % reason)
+        self.log(("Test %s" % self.name).ljust(35)  +" FAILED: %s" % reason)
         return None
 
     def success(self):
@@ -147,7 +152,7 @@ class CTSTest:
         if len(self.Audits) > 0:
             for audit in self.Audits:
                 if not audit():
-                    self.CM.log("Internal %s Audit %s FAILED." % (self.name, audit.name()))
+                    self.log("Internal %s Audit %s FAILED." % (self.name, audit.name()))
                     self.incr("auditfail")
                     passed = 0
         return passed
@@ -163,7 +168,7 @@ class CTSTest:
     def create_watch(self, patterns, timeout, name=None):
         if not name:
             name = self.name
-        return CTS.LogWatcher(self.CM.Env, self.CM["LogFileName"], patterns, name, timeout)
+        return CTS.LogWatcher(self.Env, self.log_patterns["LogFileName"], patterns, name, timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=[]):
         errcount = 0
@@ -183,12 +188,12 @@ class CTSTest:
                    if add_err == 1 and re.search(ignore, match):
                        add_err = 0
                if add_err == 1:
-                   self.CM.log(prefix + " " + match)
+                   self.log(prefix + " " + match)
                    errcount=errcount+1
             else:
               break
         else:
-            self.CM.log("Too many errors!")
+            self.log("Too many errors!")
 
         return errcount
 
@@ -199,17 +204,17 @@ class CTSTest:
         '''Return TRUE if we are applicable in the current test configuration'''
         #raise ValueError("Abstract Class member (is_applicable)")
 
-        if self.is_loop and not self.CM.Env["loop-tests"]:
+        if self.is_loop and not self.Env["loop-tests"]:
             return 0
-        elif self.is_unsafe and not self.CM.Env["unsafe-tests"]:
+        elif self.is_unsafe and not self.Env["unsafe-tests"]:
             return 0
-        elif self.is_valgrind and not self.CM.Env["valgrind-tests"]:
+        elif self.is_valgrind and not self.Env["valgrind-tests"]:
             return 0
-        elif self.is_experimental and not self.CM.Env["experimental-tests"]:
+        elif self.is_experimental and not self.Env["experimental-tests"]:
             return 0
-        elif self.is_container and not self.CM.Env["container-tests"]:
+        elif self.is_container and not self.Env["container-tests"]:
             return 0
-        elif self.CM.Env["benchmark"] and self.benchmark == 0:
+        elif self.Env["benchmark"] and self.benchmark == 0:
             return 0
 
         return 1
@@ -218,19 +223,19 @@ class CTSTest:
         self.r_o2cb = None
         self.r_ocfs2 = []
 
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
                 if r.rtype == "o2cb" and r.parent != "NA":
-                    self.CM.debug("Found o2cb: %s" % self.r_o2cb)
+                    self.debug("Found o2cb: %s" % self.r_o2cb)
                     self.r_o2cb = r.parent
             if re.search("^Constraint", line):
                 c = AuditConstraint(self.CM, line)
                 if c.type == "rsc_colocation" and c.target == self.r_o2cb:
                     self.r_ocfs2.append(c.rsc)
 
-        self.CM.debug("Found ocfs2 filesystems: %s" % repr(self.r_ocfs2))
+        self.debug("Found ocfs2 filesystems: %s" % repr(self.r_ocfs2))
         return len(self.r_ocfs2)
 
     def canrunnow(self, node):
@@ -257,19 +262,19 @@ class StopTest(CTSTest):
 
         patterns = []
         # Technically we should always be able to notice ourselves stopping
-        patterns.append(self.CM["Pat:We_stopped"] % node)
+        patterns.append(self.log_patterns["Pat:We_stopped"] % node)
 
-        #if self.CM.Env["use_logd"]:
-        #    patterns.append(self.CM["Pat:Logd_stopped"] % node)
+        #if self.Env["use_logd"]:
+        #    patterns.append(self.log_patterns["Pat:Logd_stopped"] % node)
 
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
-        for other in self.CM.Env["nodes"]:
+        for other in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
-                patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
+                patterns.append(self.log_patterns["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
                 #self.debug("Checking %s will notice %s left"%(other, node))
 
-        watch = self.create_watch(patterns, self.CM["DeadTime"])
+        watch = self.create_watch(patterns, self.log_patterns["DeadTime"])
         watch.setwatch()
 
         if node == self.CM.OurNode:
@@ -286,20 +291,20 @@ class StopTest(CTSTest):
         failreason=None
         UnmatchedList = "||"
         if watch.unmatched:
-            (rc, output) = self.CM.rsh(node, "/bin/ps axf", None)
+            (rc, output) = self.rsh(node, "/bin/ps axf", None)
             for line in output:
-                self.CM.debug(line)
+                self.debug(line)
 
-            (rc, output) = self.CM.rsh(node, "/usr/sbin/dlm_tool dump", None)
+            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump", None)
             for line in output:
-                self.CM.debug(line)
+                self.debug(line)
 
             for regex in watch.unmatched:
-                self.CM.log ("ERROR: Shutdown pattern not found: %s" % (regex))
+                self.log ("ERROR: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
                 failreason="Missing shutdown pattern"
 
-        self.CM.cluster_stable(self.CM["DeadTime"])
+        self.CM.cluster_stable(self.log_patterns["DeadTime"])
 
         if not watch.unmatched or self.CM.upcount() == 0:
             return self.success()
@@ -340,7 +345,7 @@ class StartTest(CTSTest):
             return self.success()
         else:
             return self.failure("Startup %s on node %s failed"
-                                %(self.CM["Name"], node))
+                                %(self.log_patterns["Name"], node))
 
 #
 # We don't register StartTest because it's better when called by
@@ -367,7 +372,7 @@ class FlipTest(CTSTest):
             ret = self.stop(node)
             type="up->down"
             # Give the cluster time to recognize it's gone...
-            time.sleep(self.CM["StableTime"])
+            time.sleep(self.log_patterns["StableTime"])
         elif self.CM.ShouldBeStatus[node] == "down":
             self.incr("started")
             ret = self.start(node)
@@ -428,7 +433,7 @@ class StonithdTest(CTSTest):
 
     def __call__(self, node):
         self.incr("calls")
-        if len(self.CM.Env["nodes"]) < 2:
+        if len(self.Env["nodes"]) < 2:
             return self.skipped()
 
         ret = self.startall(None)
@@ -441,20 +446,20 @@ class StonithdTest(CTSTest):
         watchpats.append("log_operation: Operation .* for host '%s' with device .* returned: 0" % node)
         watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
 
-        if self.CM.Env["at-boot"] == 0:
-            self.CM.debug("Expecting %s to stay down" % node)
+        if self.Env["at-boot"] == 0:
+            self.debug("Expecting %s to stay down" % node)
             self.CM.ShouldBeStatus[node]="down"
         else:
-            self.CM.debug("Expecting %s to come up again %d" % (node, self.CM.Env["at-boot"]))
+            self.debug("Expecting %s to come up again %d" % (node, self.Env["at-boot"]))
             watchpats.append("%s .*do_state_transition: .* S_STARTING -> S_PENDING" % node)
             watchpats.append("%s .*do_state_transition: .* S_PENDING -> S_NOT_DC" % node)
 
-        watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch = self.create_watch(watchpats, 30 + self.log_patterns["DeadTime"] + self.log_patterns["StableTime"] + self.log_patterns["StartTime"])
         watch.setwatch()
 
-        origin = self.CM.Env.RandomGen.choice(self.CM.Env["nodes"])
+        origin = self.Env.RandomGen.choice(self.Env["nodes"])
 
-        rc = self.CM.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
+        rc = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
         if rc == 194:
             # 194 - 256 = -62 = Timer expired
@@ -468,20 +473,20 @@ class StonithdTest(CTSTest):
             # no confirmation, but pacemaker should be watching and
             # fence the node again
 
-            self.CM.log("Fencing command on %s to fence %s timed out" % (origin, node))
+            self.log("Fencing command on %s to fence %s timed out" % (origin, node))
 
         elif origin != node and rc != 0:
-            self.CM.debug("Waiting for the cluster to recover")
+            self.debug("Waiting for the cluster to recover")
             self.CM.cluster_stable()
 
-            self.CM.debug("Waiting STONITHd node to come back up")
-            self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+            self.debug("Waiting STONITHd node to come back up")
+            self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
-            self.CM.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
+            self.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
 
         elif origin == node and rc != 255:
             # 255 == broken pipe, ie. the node was fenced as epxected
-            self.CM.log("Logcally originated fencing returned %d" % rc)
+            self.log("Logcally originated fencing returned %d" % rc)
 
 
         self.set_timer("fence")
@@ -489,16 +494,16 @@ class StonithdTest(CTSTest):
         self.log_timer("fence")
         self.set_timer("reform")
         if watch.unmatched:
-            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            self.log("Patterns not found: " + repr(watch.unmatched))
 
-        self.CM.debug("Waiting for the cluster to recover")
+        self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.CM.debug("Waiting STONITHd node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+        self.debug("Waiting STONITHd node to come back up")
+        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
-        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self.CM.cluster_stable(self.CM["StartTime"])
+        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        is_stable = self.CM.cluster_stable(self.log_patterns["StartTime"])
 
         if not matched:
             return self.failure("Didn't find all expected patterns")
@@ -510,8 +515,8 @@ class StonithdTest(CTSTest):
 
     def errorstoignore(self):
         return [
-            self.CM["Pat:Fencing_start"] % ".*",
-            self.CM["Pat:Fencing_ok"] % ".*",
+            self.log_patterns["Pat:Fencing_start"] % ".*",
+            self.log_patterns["Pat:Fencing_ok"] % ".*",
             "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
             "error: remote_op_done: Operation reboot of .*by .* for stonith_admin.*: Timer expired",
             ]
@@ -520,8 +525,8 @@ class StonithdTest(CTSTest):
         if not self.is_applicable_common():
             return 0
 
-        if self.CM.Env.has_key("DoFencing"):
-            return self.CM.Env["DoFencing"]
+        if self.Env.has_key("DoFencing"):
+            return self.Env["DoFencing"]
 
         return 1
 
@@ -551,7 +556,7 @@ class StartOnebyOne(CTSTest):
 
         failed=[]
         self.set_timer()
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.start(node):
                 failed.append(node)
 
@@ -646,7 +651,7 @@ class StopOnebyOne(CTSTest):
 
         failed=[]
         self.set_timer()
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.stop(node):
                 failed.append(node)
 
@@ -682,7 +687,7 @@ class RestartOnebyOne(CTSTest):
         did_fail=[]
         self.set_timer()
         self.restart = RestartTest(self.CM)
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.restart(node):
                 did_fail.append(node)
 
@@ -718,13 +723,13 @@ class PartialStart(CTSTest):
 #       then it would be applicable in general
         watchpats = []
         watchpats.append("crmd.*Connecting to cluster infrastructure")
-        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.log_patterns["DeadTime"]+10)
         watch.setwatch()
 
         self.CM.StartaCMnoBlock(node)
         ret = watch.lookforall()
         if not ret:
-            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            self.log("Patterns not found: " + repr(watch.unmatched))
             return self.failure("Setup of %s failed" % node)
 
         ret = self.stop(node)
@@ -766,7 +771,7 @@ class StandbyTest(CTSTest):
         if not ret:
             return self.failure("Start all nodes failed")
 
-        self.CM.debug("Make sure node %s is active" % node)
+        self.debug("Make sure node %s is active" % node)
         if self.CM.StandbyStatus(node) != "off":
             if not self.CM.SetStandbyMode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
@@ -777,15 +782,15 @@ class StandbyTest(CTSTest):
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
-        self.CM.debug("Getting resources running on node %s" % node)
+        self.debug("Getting resources running on node %s" % node)
         rsc_on_node = self.CM.active_resources(node)
 
         watchpats = []
         watchpats.append("do_state_transition:.*-> S_POLICY_ENGINE")
-        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.log_patterns["DeadTime"]+10)
         watch.setwatch()
 
-        self.CM.debug("Setting node %s to standby mode" % node)
+        self.debug("Setting node %s to standby mode" % node)
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
@@ -793,7 +798,7 @@ class StandbyTest(CTSTest):
 
         ret = watch.lookforall()
         if not ret:
-            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            self.log("Patterns not found: " + repr(watch.unmatched))
             self.CM.SetStandbyMode(node, "off")
             return self.failure("cluster didn't react to standby change on %s" % node)
 
@@ -804,15 +809,15 @@ class StandbyTest(CTSTest):
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
         self.log_timer("on")
 
-        self.CM.debug("Checking resources")
+        self.debug("Checking resources")
         bad_run = self.CM.active_resources(node)
         if len(bad_run) > 0:
             rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
-            self.CM.debug("Setting node %s to active mode" % node)
+            self.debug("Setting node %s to active mode" % node)
             self.CM.SetStandbyMode(node, "off")
             return rc
 
-        self.CM.debug("Setting node %s to active mode" % node)
+        self.debug("Setting node %s to active mode" % node)
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
@@ -850,24 +855,24 @@ class ValgrindTest(CTSTest):
         # Enable valgrind
         self.logPat = "/tmp/%s-*.valgrind" % self.name
 
-        self.CM.Env["valgrind-prefix"] = self.name
+        self.Env["valgrind-prefix"] = self.name
 
-        self.CM.rsh(node, "rm -f %s" % self.logPat, None)
+        self.rsh(node, "rm -f %s" % self.logPat, None)
 
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
 
-        for node in self.CM.Env["nodes"]:
-            (rc, output) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
+        for node in self.Env["nodes"]:
+            (rc, output) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             for line in output:
-                self.CM.debug(line)
+                self.debug(line)
 
         return self.success()
 
     def teardown(self, node):
         # Disable valgrind
-        self.CM.Env["valgrind-prefix"] = None
+        self.Env["valgrind-prefix"] = None
 
         # Return all nodes to normal
         ret=self.stopall(None)
@@ -881,26 +886,26 @@ class ValgrindTest(CTSTest):
         leaked = []
         self.stop = StopTest(self.CM)
 
-        for node in self.CM.Env["nodes"]:
-            (rc, ps_out) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
+        for node in self.Env["nodes"]:
+            (rc, ps_out) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             rc = self.stop(node)
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
 
-            rc = self.CM.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e (ERROR|error).*SUMMARY:.*[1-9].*errors %s" % self.logPat, 0)
+            rc = self.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e (ERROR|error).*SUMMARY:.*[1-9].*errors %s" % self.logPat, 0)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
                 for line in ps_out:
-                    self.CM.log(line)
-                (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logPat, None)
+                    self.log(line)
+                (rc, output) = self.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logPat, None)
                 for line in output:
-                    self.CM.log(line)
-                (rc, output) = self.CM.rsh(node, "cat %s" % self.logPat, None)
+                    self.log(line)
+                (rc, output) = self.rsh(node, "cat %s" % self.logPat, None)
                 for line in output:
-                    self.CM.debug(line)
+                    self.debug(line)
 
-        self.CM.rsh(node, "rm -f %s" % self.logPat, None)
+        self.rsh(node, "rm -f %s" % self.logPat, None)
         return leaked
 
     def __call__(self, node):
@@ -927,7 +932,7 @@ class StandbyLoopTest(ValgrindTest):
         lpc = 0
         delay = 2
         failed = 0
-        done=time.time() + self.CM.Env["loop-minutes"]*60
+        done=time.time() + self.Env["loop-minutes"]*60
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -992,16 +997,16 @@ class BandwidthTest(CTSTest):
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
         %                (port, fstmpfile)
 
-        rc = self.CM.rsh(node, dumpcmd)
+        rc = self.rsh(node, dumpcmd)
         if rc == 0:
             farfile = "root@%s:%s" % (node, fstmpfile)
-            self.CM.rsh.cp(farfile, self.tempfile)
+            self.rsh.cp(farfile, self.tempfile)
             Bandwidth = self.countbandwidth(self.tempfile)
             if not Bandwidth:
-                self.CM.log("Could not compute bandwidth.")
+                self.log("Could not compute bandwidth.")
                 return self.success()
             intband = int(Bandwidth + 0.5)
-            self.CM.log("...bandwidth: %d bits/sec" % intband)
+            self.log("...bandwidth: %d bits/sec" % intband)
             self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
             if self.Stats["min"] == 0:
                 self.Stats["min"] = Bandwidth
@@ -1009,7 +1014,7 @@ class BandwidthTest(CTSTest):
                 self.Stats["max"] = Bandwidth
             if Bandwidth < self.Stats["min"]:
                 self.Stats["min"] = Bandwidth
-            self.CM.rsh(node, "rm -f %s" % fstmpfile)
+            self.rsh(node, "rm -f %s" % fstmpfile)
             os.unlink(self.tempfile)
             return self.success()
         else:
@@ -1034,7 +1039,7 @@ class BandwidthTest(CTSTest):
                 try:
                     sum = sum + int(linesplit[j+1])
                 except ValueError:
-                    self.CM.log("Invalid tcpdump line: %s" % line)
+                    self.log("Invalid tcpdump line: %s" % line)
                     return None
                 T1 = linesplit[0]
                 timesplit = string.split(T1,":")
@@ -1055,7 +1060,7 @@ class BandwidthTest(CTSTest):
                 try:
                     sum=int(linessplit[j+1])+sum
                 except ValueError:
-                    self.CM.log("Invalid tcpdump line: %s" % line)
+                    self.log("Invalid tcpdump line: %s" % line)
                     return None
 
         T2 = linessplit[0]
@@ -1091,36 +1096,36 @@ class MaintenanceMode(CTSTest):
 
     def toggleMaintenanceMode(self, node, action):
         pats = []
-        pats.append(self.CM["Pat:DC_IDLE"])
+        pats.append(self.log_patterns["Pat:DC_IDLE"])
 
         # fail the resource right after turning Maintenance mode on
         # verify it is not recovered until maintenance mode is turned off
         if action == "On":
             pats.append("Updating failcount for %s on .* after .* %s" % (self.rid, self.action))
         else:
-            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
-            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "start_0"))
+            pats.append(self.log_patterns["Pat:RscOpOK"] % (self.rid, "stop_0"))
+            pats.append(self.log_patterns["Pat:RscOpOK"] % (self.rid, "start_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
 
-        self.CM.debug("Turning maintenance mode %s" % action)
-        self.CM.rsh(node, self.CM["MaintenanceMode%s" % (action)])
+        self.debug("Turning maintenance mode %s" % action)
+        self.rsh(node, self.log_patterns["MaintenanceMode%s" % (action)])
         if (action == "On"):
-            self.CM.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
+            self.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover%s" % (action))
         watch.lookforall()
         self.log_timer("recover%s" % (action))
         if watch.unmatched:
-            self.CM.debug("Failed to find patterns when turning maintenance mode %s" % action)
+            self.debug("Failed to find patterns when turning maintenance mode %s" % action)
             return repr(watch.unmatched)
 
         return ""
 
     def insertMaintenanceDummy(self, node):
         pats = []
-        pats.append(("%s.*" % node) + (self.CM["Pat:RscOpOK"] % (self.rid, "start_0")))
+        pats.append(("%s.*" % node) + (self.log_patterns["Pat:RscOpOK"] % (self.rid, "start_0")))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1132,13 +1137,13 @@ class MaintenanceMode(CTSTest):
         self.log_timer("addDummy")
 
         if watch.unmatched:
-            self.CM.debug("Failed to find patterns when adding maintenance dummy resource")
+            self.debug("Failed to find patterns when adding maintenance dummy resource")
             return repr(watch.unmatched)
         return ""
 
     def removeMaintenanceDummy(self, node):
         pats = []
-        pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (self.rid, "stop_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1149,13 +1154,13 @@ class MaintenanceMode(CTSTest):
         self.log_timer("removeDummy")
 
         if watch.unmatched:
-            self.CM.debug("Failed to find patterns when removing maintenance dummy resource")
+            self.debug("Failed to find patterns when removing maintenance dummy resource")
             return repr(watch.unmatched)
         return ""
 
     def managedRscList(self, node):
         rscList = []
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1170,7 +1175,7 @@ class MaintenanceMode(CTSTest):
         if not managed:
             managed_str = "unmanaged"
 
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1182,10 +1187,10 @@ class MaintenanceMode(CTSTest):
                     managedList.remove(tmp.id)
 
         if len(managedList) == 0:
-            self.CM.debug("Found all %s resources on %s" % (managed_str, node))
+            self.debug("Found all %s resources on %s" % (managed_str, node))
             return True
 
-        self.CM.log("Could not find all %s resources on %s. %s" % (managed_str, node, managedList))
+        self.log("Could not find all %s resources on %s. %s" % (managed_str, node, managedList))
         return False
 
     def __call__(self, node):
@@ -1205,7 +1210,7 @@ class MaintenanceMode(CTSTest):
         # this list to verify all the resources become managed again.
         managedResources = self.managedRscList(node)
         if len(managedResources) == 0:
-            self.CM.log("No managed resources on %s" % node)
+            self.log("No managed resources on %s" % node)
             return self.skipped()
 
         # insert a fake resource we can fail during maintenance mode
@@ -1247,7 +1252,7 @@ class MaintenanceMode(CTSTest):
                  """LogActions: Recover %s""" % self.rid,
                  """Unknown operation: fail""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 self.CM["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
+                 self.log_patterns["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
                  """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                 ]
 
@@ -1282,14 +1287,14 @@ class ResourceRecover(CTSTest):
         resourcelist = self.CM.active_resources(node)
         # if there are no resourcelist, return directly
         if len(resourcelist)==0:
-            self.CM.log("No active resources on %s" % node)
+            self.log("No active resources on %s" % node)
             return self.skipped()
 
-        self.rid = self.CM.Env.RandomGen.choice(resourcelist)
+        self.rid = self.Env.RandomGen.choice(resourcelist)
         self.rid_alt = self.rid
 
         rsc = None
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1302,24 +1307,24 @@ class ResourceRecover(CTSTest):
         if not rsc:
             return self.failure("Could not find %s in the resource list" % self.rid)
 
-        self.CM.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
+        self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
         pats = []
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
 
         if rsc.managed():
-            pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "stop_0"))
+            pats.append(self.log_patterns["Pat:RscOpOK"] % (self.rid, "stop_0"))
             if rsc.unique():
-                pats.append(self.CM["Pat:RscOpOK"] % (self.rid, "start_0"))
+                pats.append(self.log_patterns["Pat:RscOpOK"] % (self.rid, "start_0"))
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append(self.CM["Pat:RscOpOK"] % (".*", "start_0"))
+                pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "start_0"))
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
 
-        self.CM.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
+        self.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover")
         watch.lookforall()
@@ -1335,7 +1340,7 @@ class ResourceRecover(CTSTest):
             return self.failure("%s is now active on more than one node: %s"%(self.rid, repr(recovered)))
 
         elif len(recovered) > 0:
-            self.CM.debug("%s is running on: %s" %(self.rid, repr(recovered)))
+            self.debug("%s is running on: %s" %(self.rid, repr(recovered)))
 
         elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
@@ -1349,7 +1354,7 @@ class ResourceRecover(CTSTest):
                  """LogActions: Recover %s""" % self.rid_alt,
                  """Unknown operation: fail""",
                  """(ERROR|error): sending stonithRA op to stonithd failed.""",
-                 self.CM["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
+                 self.log_patterns["Pat:RscOpOK"] % (self.rid, ("%s_%d" % (self.action, self.interval))),
                  """(ERROR|error): process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                  ]
 
@@ -1378,36 +1383,36 @@ class ComponentFail(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        if not self.CM.cluster_stable(self.CM["StableTime"]):
+        if not self.CM.cluster_stable(self.log_patterns["StableTime"]):
             return self.failure("Setup failed - unstable")
 
         node_is_dc = self.CM.is_node_dc(node, None)
 
         # select a component to kill
-        chosen = self.CM.Env.RandomGen.choice(self.complist)
+        chosen = self.Env.RandomGen.choice(self.complist)
         while chosen.dc_only == 1 and node_is_dc == 0:
-            chosen = self.CM.Env.RandomGen.choice(self.complist)
+            chosen = self.Env.RandomGen.choice(self.complist)
 
-        self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
+        self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
 
         if chosen.name != "aisexec" and chosen.name != "corosync":
-            if self.CM["Name"] != "crm-lha" or chosen.name != "pengine":
-                self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
-                self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+            if self.log_patterns["Name"] != "crm-lha" or chosen.name != "pengine":
+                self.patterns.append(self.log_patterns["Pat:ChildKilled"] %(node, chosen.name))
+                self.patterns.append(self.log_patterns["Pat:ChildRespawn"] %(node, chosen.name))
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
 
         # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if self.CM["Name"] == "crm-lha" and chosen.triggersreboot:
+        if self.log_patterns["Name"] == "crm-lha" and chosen.triggersreboot:
             # Make sure the node goes down and then comes back up if it should reboot...
-            for other in self.CM.Env["nodes"]:
+            for other in self.Env["nodes"]:
                 if other != node:
-                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
-            self.patterns.append(self.CM["Pat:Slave_started"] % node)
-            self.patterns.append(self.CM["Pat:Local_started"] % node)
+                    self.patterns.append(self.log_patterns["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
+            self.patterns.append(self.log_patterns["Pat:Slave_started"] % node)
+            self.patterns.append(self.log_patterns["Pat:Local_started"] % node)
 
             if chosen.dc_only:
                 # Sometimes these will be in the log, and sometimes they won't...
@@ -1417,9 +1422,9 @@ class ComponentFail(CTSTest):
                 self.okerrpatterns.append("(ERROR|error): Client .* exited with return code")
             else:
                 # Sometimes this won't be in the log...
-                self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
-                self.okerrpatterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
-                self.okerrpatterns.append(self.CM["Pat:ChildExit"])
+                self.okerrpatterns.append(self.log_patterns["Pat:ChildKilled"] %(node, chosen.name))
+                self.okerrpatterns.append(self.log_patterns["Pat:ChildRespawn"] %(node, chosen.name))
+                self.okerrpatterns.append(self.log_patterns["Pat:ChildExit"])
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
@@ -1428,34 +1433,34 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
-        stonithPats.append(self.CM["Pat:Fencing_ok"] % node)
+        stonithPats.append(self.log_patterns["Pat:Fencing_ok"] % node)
         stonith = self.create_watch(stonithPats, 0)
         stonith.setwatch()
 
         # set the watch for stable
         watch = self.create_watch(
-            tmpPats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+            tmpPats, self.log_patterns["DeadTime"] + self.log_patterns["StableTime"] + self.log_patterns["StartTime"])
         watch.setwatch()
 
         # kill the component
         chosen.kill(node)
 
-        self.CM.debug("Waiting for the cluster to recover")
+        self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.CM.debug("Waiting for any STONITHd node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+        self.debug("Waiting for any STONITHd node to come back up")
+        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
-        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
-        self.CM.cluster_stable(self.CM["StartTime"])
+        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        self.CM.cluster_stable(self.log_patterns["StartTime"])
 
-        self.CM.debug("Checking if %s was shot" % node)
+        self.debug("Checking if %s was shot" % node)
         shot = stonith.look(60)
         if shot:
-            self.CM.debug("Found: "+ repr(shot))
-            self.okerrpatterns.append(self.CM["Pat:Fencing_start"] % node)
+            self.debug("Found: "+ repr(shot))
+            self.okerrpatterns.append(self.log_patterns["Pat:Fencing_start"] % node)
 
-            if self.CM.Env["at-boot"] == 0:
+            if self.Env["at-boot"] == 0:
                 self.CM.ShouldBeStatus[node]="down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
@@ -1465,10 +1470,10 @@ class ComponentFail(CTSTest):
         # check for logs indicating a graceful recovery
         matched = watch.lookforall(allow_multiple_matches=1)
         if watch.unmatched:
-            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            self.log("Patterns not found: " + repr(watch.unmatched))
 
-        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self.CM.cluster_stable(self.CM["StartTime"])
+        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        is_stable = self.CM.cluster_stable(self.log_patterns["StartTime"])
 
         if not matched:
             return self.failure("Didn't find all expected %s patterns" % chosen.name)
@@ -1500,42 +1505,42 @@ class SplitBrainTest(CTSTest):
 
     def isolate_partition(self, partition):
         other_nodes = []
-        other_nodes.extend(self.CM.Env["nodes"])
+        other_nodes.extend(self.Env["nodes"])
 
         for node in partition:
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self.CM.log("Node "+node+" not in " + repr(self.CM.Env["nodes"]) + " from " +repr(partition))
+                self.log("Node "+node+" not in " + repr(self.Env["nodes"]) + " from " +repr(partition))
 
         if len(other_nodes) == 0:
             return 1
 
-        self.CM.debug("Creating partition: " + repr(partition))
-        self.CM.debug("Everyone else: " + repr(other_nodes))
+        self.debug("Creating partition: " + repr(partition))
+        self.debug("Everyone else: " + repr(other_nodes))
 
         for node in partition:
             if not self.CM.isolate_node(node, other_nodes):
-                self.CM.log("Could not isolate %s" % node)
+                self.log("Could not isolate %s" % node)
                 return 0
 
         return 1
 
     def heal_partition(self, partition):
         other_nodes = []
-        other_nodes.extend(self.CM.Env["nodes"])
+        other_nodes.extend(self.Env["nodes"])
 
         for node in partition:
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self.CM.log("Node "+node+" not in " + repr(self.CM.Env["nodes"]))
+                self.log("Node "+node+" not in " + repr(self.Env["nodes"]))
 
         if len(other_nodes) == 0:
             return 1
 
-        self.CM.debug("Healing partition: " + repr(partition))
-        self.CM.debug("Everyone else: " + repr(other_nodes))
+        self.debug("Healing partition: " + repr(partition))
+        self.debug("Everyone else: " + repr(other_nodes))
 
         for node in partition:
             self.CM.unisolate_node(node, other_nodes)
@@ -1553,9 +1558,9 @@ class SplitBrainTest(CTSTest):
         while 1:
             # Retry until we get multiple partitions
             partitions = {}
-            p_max = len(self.CM.Env["nodes"])
-            for node in self.CM.Env["nodes"]:
-                p = self.CM.Env.RandomGen.randint(1, p_max)
+            p_max = len(self.Env["nodes"])
+            for node in self.Env["nodes"]:
+                p = self.Env.RandomGen.randint(1, p_max)
                 if not partitions.has_key(p):
                     partitions[p]= []
                 partitions[p].append(node)
@@ -1564,12 +1569,12 @@ class SplitBrainTest(CTSTest):
                 break
             # else, try again
 
-        self.CM.debug("Created %d partitions" % p_max)
+        self.debug("Created %d partitions" % p_max)
         for key in partitions.keys():
-            self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
+            self.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
         # Disabling STONITH to reduce test complexity for now
-        self.CM.rsh(node, "crm_attribute -V -n stonith-enabled -v false")
+        self.rsh(node, "crm_attribute -V -n stonith-enabled -v false")
 
         for key in partitions.keys():
             self.isolate_partition(partitions[key])
@@ -1617,7 +1622,7 @@ class SplitBrainTest(CTSTest):
             if len(partitions) > 0:
                 members = partitions[0].split()
 
-            if len(members) != len(self.CM.Env["nodes"]):
+            if len(members) != len(self.Env["nodes"]):
                 time.sleep(10)
                 count -= 1
             else:
@@ -1634,8 +1639,8 @@ class SplitBrainTest(CTSTest):
                 raise ValueError("Reformed cluster not stable")
 
         # Turn fencing back on
-        if self.CM.Env["DoFencing"]:
-            self.CM.rsh(node, "crm_attribute -V -D -n stonith-enabled")
+        if self.Env["DoFencing"]:
+            self.rsh(node, "crm_attribute -V -D -n stonith-enabled")
 
         self.CM.cluster_stable()
 
@@ -1655,7 +1660,7 @@ class SplitBrainTest(CTSTest):
     def is_applicable(self):
         if not self.is_applicable_common():
             return 0
-        return len(self.CM.Env["nodes"]) > 2
+        return len(self.Env["nodes"]) > 2
 
 AllTestClasses.append(SplitBrainTest)
 
@@ -1681,9 +1686,9 @@ class Reattach(CTSTest):
         while not self.CM.cluster_stable(double_check=True):
             if attempt < 5:
                 attempt += 1
-                self.CM.debug("Not stable yet, re-testing")
+                self.debug("Not stable yet, re-testing")
             else:
-                self.CM.log("Cluster is not stable")
+                self.log("Cluster is not stable")
                 return None
 
         return 1
@@ -1694,18 +1699,18 @@ class Reattach(CTSTest):
         start = StartTest(self.CM)
         start(node)
 
-        is_managed = self.CM.rsh(node, "crm_attribute -Q -G -t crm_config -n is-managed-default -d true", 1)
+        is_managed = self.rsh(node, "crm_attribute -Q -G -t crm_config -n is-managed-default -d true", 1)
         is_managed = is_managed[:-1] # Strip off the newline
         if is_managed != "true":
-            self.CM.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
+            self.log("Attempting to re-enable resource management on %s (%s)" % (node, is_managed))
             managed = self.create_watch(["is-managed-default"], 60)
             managed.setwatch()
 
-            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
 
             if not managed.lookforall():
-                self.CM.log("Patterns not found: " + repr(managed.unmatched))
-                self.CM.log("Could not re-enable resource management")
+                self.log("Patterns not found: " + repr(managed.unmatched))
+                self.log("Could not re-enable resource management")
                 return 0
 
         return 1
@@ -1713,7 +1718,7 @@ class Reattach(CTSTest):
     def canrunnow(self, node):
         '''Return TRUE if we can meaningfully run right now'''
         if self.find_ocfs2_resources(node):
-            self.CM.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
+            self.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
             return 0
         return 1
 
@@ -1724,41 +1729,41 @@ class Reattach(CTSTest):
         managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
 
-        self.CM.debug("Disable resource management")
-        self.CM.rsh(node, "crm_attribute -V -n is-managed-default -v false")
+        self.debug("Disable resource management")
+        self.rsh(node, "crm_attribute -V -n is-managed-default -v false")
 
         if not managed.lookforall():
-            self.CM.log("Patterns not found: " + repr(managed.unmatched))
+            self.log("Patterns not found: " + repr(managed.unmatched))
             return self.failure("Resource management not disabled")
 
         pats = []
-        pats.append(self.CM["Pat:RscOpOK"] % (".*", "start"))
-        pats.append(self.CM["Pat:RscOpOK"] % (".*", "stop"))
-        pats.append(self.CM["Pat:RscOpOK"] % (".*", "promote"))
-        pats.append(self.CM["Pat:RscOpOK"] % (".*", "demote"))
-        pats.append(self.CM["Pat:RscOpOK"] % (".*", "migrate"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "start"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "stop"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "promote"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "demote"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (".*", "migrate"))
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.setwatch()
 
-        self.CM.debug("Shutting down the cluster")
+        self.debug("Shutting down the cluster")
         ret = self.stopall(None)
         if not ret:
-            self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self.debug("Re-enable resource management")
+            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Couldn't shut down the cluster")
 
-        self.CM.debug("Bringing the cluster back up")
+        self.debug("Bringing the cluster back up")
         ret = self.startall(None)
         time.sleep(5) # allow ping to update the CIB
         if not ret:
-            self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self.debug("Re-enable resource management")
+            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
-            self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
+            self.debug("Re-enable resource management")
+            self.rsh(node, "crm_attribute -V -D -n is-managed-default")
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = self.create_watch(pats, 60, "StartupActivity")
@@ -1767,25 +1772,25 @@ class Reattach(CTSTest):
         managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
 
-        self.CM.debug("Re-enable resource management")
-        self.CM.rsh(node, "crm_attribute -V -D -n is-managed-default")
+        self.debug("Re-enable resource management")
+        self.rsh(node, "crm_attribute -V -D -n is-managed-default")
 
         if not managed.lookforall():
-            self.CM.log("Patterns not found: " + repr(managed.unmatched))
+            self.log("Patterns not found: " + repr(managed.unmatched))
             return self.failure("Resource management not enabled")
 
         self.CM.cluster_stable()
 
         # Ignore actions for STONITH resources
         ignore = []
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
                 if r.rclass == "stonith":
 
-                    self.CM.debug("Ignoring start actions for %s" % r.id)
-                    ignore.append(self.CM["Pat:RscOpOK"] % (r.id, "start_0"))
+                    self.debug("Ignoring start actions for %s" % r.id)
+                    ignore.append(self.log_patterns["Pat:RscOpOK"] % (r.id, "start_0"))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
@@ -1802,7 +1807,7 @@ class Reattach(CTSTest):
             ]
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
+        if self.log_patterns["Name"] == "crm-lha":
             return None
         return 1
 
@@ -1829,7 +1834,7 @@ class SpecialTest1(CTSTest):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self.CM.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
+        self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
 
         #        Start the selected node
         ret = self.restart1(node)
@@ -1884,7 +1889,7 @@ class HAETest(CTSTest):
     def wait_on_state(self, node, resource, expected_clones, attempts=240):
         while attempts > 0:
             active=0
-            (rc, lines) = self.CM.rsh(node, "crm_resource -r %s -W -Q" % resource, stdout=None)
+            (rc, lines) = self.rsh(node, "crm_resource -r %s -W -Q" % resource, stdout=None)
 
             # Hack until crm_resource does the right thing
             if rc == 0 and lines:
@@ -1894,22 +1899,22 @@ class HAETest(CTSTest):
                 return 1
 
             elif rc == 1:
-                self.CM.debug("Resource %s is still inactive" % resource)
+                self.debug("Resource %s is still inactive" % resource)
 
             elif rc == 234:
-                self.CM.log("Unknown resource %s" % resource)
+                self.log("Unknown resource %s" % resource)
                 return 0
 
             elif rc == 246:
-                self.CM.log("Cluster is inactive")
+                self.log("Cluster is inactive")
                 return 0
 
             elif rc != 0:
-                self.CM.log("Call to crm_resource failed, rc=%d" % rc)
+                self.log("Call to crm_resource failed, rc=%d" % rc)
                 return 0
 
             else:
-                self.CM.debug("Resource %s is active on %d times instead of %d" % (resource, active, expected_clones))
+                self.debug("Resource %s is active on %d times instead of %d" % (resource, active, expected_clones))
 
             attempts -= 1
             time.sleep(1)
@@ -1919,12 +1924,12 @@ class HAETest(CTSTest):
     def find_dlm(self, node):
         self.r_dlm = None
 
-        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
                 if r.rtype == "controld" and r.parent != "NA":
-                    self.CM.debug("Found dlm: %s" % self.r_dlm)
+                    self.debug("Found dlm: %s" % self.r_dlm)
                     self.r_dlm = r.parent
                     return 1
         return 0
@@ -1940,7 +1945,7 @@ class HAETest(CTSTest):
     def is_applicable(self):
         if not self.is_applicable_common():
             return 0
-        if self.CM.Env["Schema"] == "hae":
+        if self.Env["Schema"] == "hae":
             return 1
         return None
 
@@ -1953,7 +1958,7 @@ class HAERoleTest(HAETest):
         self.name="HAERoleTest"
 
     def change_state(self, node, resource, target):
-        rc = self.CM.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
+        rc = self.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
         return rc
 
     def __call__(self, node):
@@ -1961,10 +1966,10 @@ class HAERoleTest(HAETest):
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + self.CM.Env["loop-minutes"]*60
+        done=time.time() + self.Env["loop-minutes"]*60
         self.find_hae_resources(node)
 
-        clone_max = len(self.CM.Env["nodes"])
+        clone_max = len(self.Env["nodes"])
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -2002,7 +2007,7 @@ class HAEStandbyTest(HAETest):
         self.name="HAEStandbyTest"
 
     def change_state(self, node, resource, target):
-        rc = self.CM.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
+        rc = self.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
         return rc
 
     def __call__(self, node):
@@ -2010,10 +2015,10 @@ class HAEStandbyTest(HAETest):
 
         lpc = 0
         failed = 0
-        done=time.time() + self.CM.Env["loop-minutes"]*60
+        done=time.time() + self.Env["loop-minutes"]*60
         self.find_hae_resources(node)
 
-        clone_max = len(self.CM.Env["nodes"])
+        clone_max = len(self.Env["nodes"])
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -2068,39 +2073,39 @@ class NearQuorumPointTest(CTSTest):
 
         stonith = self.CM.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
-        for node in self.CM.Env["nodes"]:
-            action = self.CM.Env.RandomGen.choice(["start","stop"])
-            #action = self.CM.Env.RandomGen.choice(["start","stop","no change"])
+        for node in self.Env["nodes"]:
+            action = self.Env.RandomGen.choice(["start","stop"])
+            #action = self.Env.RandomGen.choice(["start","stop","no change"])
             if action == "start" :
                 startset.append(node)
             elif action == "stop" :
                 stopset.append(node)
 
-        self.CM.debug("start nodes:" + repr(startset))
-        self.CM.debug("stop nodes:" + repr(stopset))
+        self.debug("start nodes:" + repr(startset))
+        self.debug("stop nodes:" + repr(stopset))
 
         #add search patterns
         watchpats = [ ]
         for node in stopset:
             if self.CM.ShouldBeStatus[node] == "up":
-                watchpats.append(self.CM["Pat:We_stopped"] % node)
+                watchpats.append(self.log_patterns["Pat:We_stopped"] % node)
 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == "down":
-                #watchpats.append(self.CM["Pat:Slave_started"] % node)
-                watchpats.append(self.CM["Pat:Local_started"] % node)
+                #watchpats.append(self.log_patterns["Pat:Slave_started"] % node)
+                watchpats.append(self.log_patterns["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
                     if self.CM.ShouldBeStatus[stopping] == "up":
-                        watchpats.append(self.CM["Pat:They_stopped"] % (node, self.CM.key_for_node(stopping)))
+                        watchpats.append(self.log_patterns["Pat:They_stopped"] % (node, self.CM.key_for_node(stopping)))
 
         if len(watchpats) == 0:
             return self.skipped()
 
         if len(startset) != 0:
-            watchpats.append(self.CM["Pat:DC_IDLE"])
+            watchpats.append(self.log_patterns["Pat:DC_IDLE"])
 
-        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.log_patterns["DeadTime"]+10)
 
         watch.setwatch()
 
@@ -2119,7 +2124,7 @@ class NearQuorumPointTest(CTSTest):
             self.CM.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
-        self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
+        self.log("Warn: Patterns not found: " + repr(watch.unmatched))
 
         #get the "bad" nodes
         upnodes = []
@@ -2138,20 +2143,20 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self.CM.rsh(node, self.CM["StopCmd"])
+                self.rsh(node, self.log_patterns["StopCmd"])
 
             return self.success()
 
         if len(upnodes) > 0:
-            self.CM.log("Warn: Unstoppable nodes: " + repr(upnodes))
+            self.log("Warn: Unstoppable nodes: " + repr(upnodes))
 
         if len(downnodes) > 0:
-            self.CM.log("Warn: Unstartable nodes: " + repr(downnodes))
+            self.log("Warn: Unstartable nodes: " + repr(downnodes))
 
         return self.failure()
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-cman":
+        if self.log_patterns["Name"] == "crm-cman":
             return None
         return 1
 
@@ -2175,7 +2180,7 @@ class RollingUpgradeTest(CTSTest):
         if not ret:
             return self.failure("Couldn't stop all nodes")
 
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.downgrade(node, None):
                 return self.failure("Couldn't downgrade %s" % node)
 
@@ -2190,7 +2195,7 @@ class RollingUpgradeTest(CTSTest):
         if not ret:
             return self.failure("Couldn't stop all nodes")
 
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.upgrade(node, None):
                 return self.failure("Couldn't upgrade %s" % node)
 
@@ -2199,19 +2204,19 @@ class RollingUpgradeTest(CTSTest):
     def install(self, node, version, start=1, flags="--force"):
 
         target_dir = "/tmp/rpm-%s" % version
-        src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
+        src_dir = "%s/%s" % (self.Env["rpm-dir"], version)
 
-        self.CM.log("Installing %s on %s with %s" % (version, node, flags))
+        self.log("Installing %s on %s with %s" % (version, node, flags))
         if not self.stop(node):
             return self.failure("stop failure: "+node)
 
-        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
-        rc = self.CM.rsh(node, "rm -f %s/*.rpm" % target_dir)
-        (rc, lines) = self.CM.rsh(node, "ls -1 %s/*.rpm" % src_dir, None)
+        rc = self.rsh(node, "mkdir -p %s" % target_dir)
+        rc = self.rsh(node, "rm -f %s/*.rpm" % target_dir)
+        (rc, lines) = self.rsh(node, "ls -1 %s/*.rpm" % src_dir, None)
         for line in lines:
             line = line[:-1]
-            rc = self.CM.rsh.cp("%s" % (line), "%s:%s/" % (node, target_dir))
-        rc = self.CM.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
+            rc = self.rsh.cp("%s" % (line), "%s:%s/" % (node, target_dir))
+        rc = self.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
 
         if start and not self.start(node):
             return self.failure("start failure: "+node)
@@ -2219,16 +2224,16 @@ class RollingUpgradeTest(CTSTest):
         return self.success()
 
     def upgrade(self, node, start=1):
-        return self.install(node, self.CM.Env["current-version"], start)
+        return self.install(node, self.Env["current-version"], start)
 
     def downgrade(self, node, start=1):
-        return self.install(node, self.CM.Env["previous-version"], start, "--force --nodeps")
+        return self.install(node, self.Env["previous-version"], start, "--force --nodeps")
 
     def __call__(self, node):
         '''Perform the 'Rolling Upgrade' test. '''
         self.incr("calls")
 
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.upgrade(node):
                 return self.failure("Couldn't upgrade %s" % node)
 
@@ -2240,11 +2245,11 @@ class RollingUpgradeTest(CTSTest):
         if not self.is_applicable_common():
             return None
 
-        if not self.CM.Env.has_key("rpm-dir"):
+        if not self.Env.has_key("rpm-dir"):
             return None
-        if not self.CM.Env.has_key("current-version"):
+        if not self.Env.has_key("current-version"):
             return None
-        if not self.CM.Env.has_key("previous-version"):
+        if not self.Env.has_key("previous-version"):
             return None
 
         return 1
@@ -2272,7 +2277,7 @@ class BSC_AddResource(CTSTest):
         patterns = []
         patterns.append(start_pat % r_id)
 
-        watch = self.create_watch(patterns, self.CM["DeadTime"])
+        watch = self.create_watch(patterns, self.log_patterns["DeadTime"])
         watch.setwatch()
 
         ip = self.NextIP()
@@ -2283,19 +2288,19 @@ class BSC_AddResource(CTSTest):
         watch_result = watch.lookforall()
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.CM.log ("Warn: Pattern not found: %s" % (regex))
+                self.log ("Warn: Pattern not found: %s" % (regex))
                 failed = 1
 
         if failed:
             return self.failure("Resource pattern(s) not found")
 
-        if not self.CM.cluster_stable(self.CM["DeadTime"]):
+        if not self.CM.cluster_stable(self.log_patterns["DeadTime"]):
             return self.failure("Unstable cluster")
 
         return self.success()
 
     def NextIP(self):
-        ip = self.CM.Env["IPBase"]
+        ip = self.Env["IPBase"]
         if ":" in ip:
             fields = ip.rpartition(":")
             fields[2] = str(hex(int(fields[2], 16)+1))
@@ -2305,11 +2310,11 @@ class BSC_AddResource(CTSTest):
             fields[2] = str(int(fields[2])+1)
 
         ip = fields[0] + fields[1] + fields[3];
-        self.CM.Env["IPBase"] = ip
+        self.Env["IPBase"] = ip
         return ip.strip()
 
     def make_ip_resource(self, node, id, rclass, type, ip):
-        self.CM.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
+        self.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
         rsc_xml="""
 <primitive id="%s" class="%s" type="%s"  provider="heartbeat">
     <instance_attributes id="%s"><attributes>
@@ -2325,20 +2330,20 @@ class BSC_AddResource(CTSTest):
       </rsc_location>""" % (id, id, id, id, node)
 
         rc = 0
-        (rc, lines) = self.CM.rsh(node, self.cib_cmd % ("constraints", node_constraint), None)
+        (rc, lines) = self.rsh(node, self.cib_cmd % ("constraints", node_constraint), None)
         if rc != 0:
-            self.CM.log("Constraint creation failed: %d" % rc)
+            self.log("Constraint creation failed: %d" % rc)
             return None
 
-        (rc, lines) = self.CM.rsh(node, self.cib_cmd % ("resources", rsc_xml), None)
+        (rc, lines) = self.rsh(node, self.cib_cmd % ("resources", rsc_xml), None)
         if rc != 0:
-            self.CM.log("Resource creation failed: %d" % rc)
+            self.log("Resource creation failed: %d" % rc)
             return None
 
         return 1
 
     def is_applicable(self):
-        if self.CM.Env["DoBSC"]:
+        if self.Env["DoBSC"]:
             return 1
         return None
 
@@ -2355,42 +2360,42 @@ class SimulStopLite(CTSTest):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
 
-        self.CM.debug("Setup: " + self.name)
+        self.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
         watchpats = [ ]
 
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
-                watchpats.append(self.CM["Pat:We_stopped"] % node)
-                #if self.CM.Env["use_logd"]:
-                #    watchpats.append(self.CM["Pat:Logd_stopped"] % node)
+                watchpats.append(self.log_patterns["Pat:We_stopped"] % node)
+                #if self.Env["use_logd"]:
+                #    watchpats.append(self.log_patterns["Pat:Logd_stopped"] % node)
 
         if len(watchpats) == 0:
             self.CM.clear_all_caches()
             return self.success()
 
         #     Stop all the nodes - at about the same time...
-        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.log_patterns["DeadTime"]+10)
 
         watch.setwatch()
         self.set_timer()
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
             self.CM.clear_all_caches()
 
             # Make sure they're completely down with no residule
-            for node in self.CM.Env["nodes"]:
-                self.CM.rsh(node, self.CM["StopCmd"])
+            for node in self.Env["nodes"]:
+                self.rsh(node, self.log_patterns["StopCmd"])
 
             return self.success()
 
         did_fail=0
         up_nodes = []
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.CM.StataCM(node) == 1:
                 did_fail=1
                 up_nodes.append(node)
@@ -2398,7 +2403,7 @@ class SimulStopLite(CTSTest):
         if did_fail:
             return self.failure("Active nodes exist: " + repr(up_nodes))
 
-        self.CM.log("Warn: All nodes stopped but CTS didnt detect: "
+        self.log("Warn: All nodes stopped but CTS didnt detect: "
                     + repr(watch.unmatched))
 
         self.CM.clear_all_caches()
@@ -2419,11 +2424,11 @@ class SimulStartLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
-        self.CM.debug("Setup: " + self.name)
+        self.debug("Setup: " + self.name)
 
         #        We ignore the "node" parameter...
         node_list = []
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "down":
                 self.incr("WasStopped")
                 node_list.append(node)
@@ -2432,18 +2437,18 @@ class SimulStartLite(CTSTest):
         while len(node_list) > 0:
             watchpats = [ ]
 
-            uppat = self.CM["Pat:Slave_started"]
+            uppat = self.log_patterns["Pat:Slave_started"]
             if self.CM.upcount() == 0:
-                uppat = self.CM["Pat:Local_started"]
+                uppat = self.log_patterns["Pat:Local_started"]
 
-            watchpats.append(self.CM["Pat:DC_IDLE"])
+            watchpats.append(self.log_patterns["Pat:DC_IDLE"])
             for node in node_list:
                 watchpats.append(uppat % node)
-                watchpats.append(self.CM["Pat:InfraUp"] % node)
-                watchpats.append(self.CM["Pat:PacemakerUp"] % node)
+                watchpats.append(self.log_patterns["Pat:InfraUp"] % node)
+                watchpats.append(self.log_patterns["Pat:PacemakerUp"] % node)
 
             #   Start all the nodes - at about the same time...
-            watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+            watch = self.create_watch(watchpats, self.log_patterns["DeadTime"]+10)
             watch.setwatch()
 
             stonith = self.CM.prepare_fencing_watcher(self.name)
@@ -2461,14 +2466,14 @@ class SimulStartLite(CTSTest):
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self.CM.log ("Warn: Startup pattern not found: %s" %(regex))
+                    self.log ("Warn: Startup pattern not found: %s" %(regex))
 
             if not self.CM.cluster_stable():
                 return self.failure("Cluster did not stabilize")
 
         did_fail=0
         unstable = []
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if self.CM.StataCM(node) == 0:
                 did_fail=1
                 unstable.append(node)
@@ -2477,7 +2482,7 @@ class SimulStartLite(CTSTest):
             return self.failure("Unstarted nodes exist: " + repr(unstable))
 
         unstable = []
-        for node in self.CM.Env["nodes"]:
+        for node in self.Env["nodes"]:
             if not self.CM.node_stable(node):
                 did_fail=1
                 unstable.append(node)
@@ -2516,23 +2521,23 @@ class RemoteLXC(CTSTest):
 
     def start_lxc_simple(self, node):
 
-        rc = self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
+        rc = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
         if rc == 1:
             return self.skipped()
 
         # restore any artifacts laying around from a previous test.
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append(self.CM["Pat:RscOpOK"] % ("lxc1", "start_0"))
-        pats.append(self.CM["Pat:RscOpOK"] % ("lxc2", "start_0"))
-        pats.append(self.CM["Pat:RscOpOK"] % ("lxc-ms", "start_0"))
-        pats.append(self.CM["Pat:RscOpOK"] % ("lxc-ms", "promote_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("lxc1", "start_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("lxc2", "start_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("lxc-ms", "start_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("lxc-ms", "promote_0"))
 
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
         watch.lookforall()
         self.log_timer("remoteSimpleInit")
@@ -2547,22 +2552,22 @@ class RemoteLXC(CTSTest):
         # as best as possible 
         if self.failed == 1:
             # restore libvirt and cib
-            self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r container1 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r container2 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
-            self.CM.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
+            self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+            self.rsh(node, "crm_resource -C -r container1 &>/dev/null")
+            self.rsh(node, "crm_resource -C -r container2 &>/dev/null")
+            self.rsh(node, "crm_resource -C -r lxc1 &>/dev/null")
+            self.rsh(node, "crm_resource -C -r lxc2 &>/dev/null")
+            self.rsh(node, "crm_resource -C -r lxc-ms &>/dev/null")
             time.sleep(20)
             return
 
         watch = self.create_watch(pats, 120)
         watch.setwatch()
 
-        pats.append(self.CM["Pat:RscOpOK"] % ("container1", "stop_0"))
-        pats.append(self.CM["Pat:RscOpOK"] % ("container2", "stop_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("container1", "stop_0"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % ("container2", "stop_0"))
 
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p &>/dev/null")
         self.set_timer("remoteSimpleCleanup")
         watch.lookforall()
         self.log_timer("remoteSimpleCleanup")
@@ -2572,7 +2577,7 @@ class RemoteLXC(CTSTest):
             self.failed = 1
 
         # cleanup libvirt
-        self.CM.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
+        self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
     def __call__(self, node):
         '''Perform the 'RemoteLXC' test. '''
@@ -2585,7 +2590,7 @@ class RemoteLXC(CTSTest):
         self.start_lxc_simple(node)
         self.cleanup_lxc_simple(node)
 
-        self.CM.debug("Waiting for the cluster to recover")
+        self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
         if self.failed == 1:
@@ -2636,13 +2641,13 @@ class RemoteBaremetal(CTSTest):
 
     def del_rsc(self, node, rsc):
 
-        for othernode in self.CM.Env["nodes"]:
+        for othernode in self.Env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
 
-            rc = self.CM.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
+            rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
             if rc != 0:
                 self.fail_string = ("Removal of resource '%s' failed" % (rsc))
                 self.failed = 1
@@ -2654,13 +2659,13 @@ class RemoteBaremetal(CTSTest):
     def add_rsc(self, node, rsc_xml):
         failed=0
         fail_string=""
-        for othernode in self.CM.Env["nodes"]:
+        for othernode in self.Env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
 
-            rc = self.CM.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+            rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
             if rc != 0:
                 fail_string = "resource creation failed"
                 failed = 1
@@ -2705,8 +2710,8 @@ class RemoteBaremetal(CTSTest):
         pcmk_started=0
 
         # make sure the resource doesn't already exist for some reason
-        self.CM.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_rsc))
-        self.CM.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_node))
+        self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_rsc))
+        self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_node))
 
         if not self.stop(node):
             self.failed = 1
@@ -2714,7 +2719,7 @@ class RemoteBaremetal(CTSTest):
             return
 
         for i in range(10):
-            rc = self.CM.rsh(node, "service pacemaker_remote start")
+            rc = self.rsh(node, "service pacemaker_remote start")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -2730,7 +2735,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append(self.CM["Pat:RscOpOK"] % (self.remote_node, "start"))
+        pats.append(self.log_patterns["Pat:RscOpOK"] % (self.remote_node, "start"))
 
         self.add_connection_rsc(node)
 
@@ -2756,7 +2761,7 @@ class RemoteBaremetal(CTSTest):
         self.add_primitive_rsc(node)
         # this crm_resource command actually occurs on the remote node
         # which verifies that the ipc proxy works
-        rc = self.CM.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
+        rc = self.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
         if rc != 0:
             self.fail_string = "Failed to place primitive on remote-node"
             self.failed = 1
@@ -2779,13 +2784,13 @@ class RemoteBaremetal(CTSTest):
         watch.setwatch()
 
         if self.remote_rsc_added == 1:
-            pats.append(self.CM["Pat:RscOpOK"] % (self.remote_rsc, "stop"))
+            pats.append(self.log_patterns["Pat:RscOpOK"] % (self.remote_rsc, "stop"))
         if self.remote_node_added == 1:
-            pats.append(self.CM["Pat:RscOpOK"] % (self.remote_node, "stop"))
+            pats.append(self.log_patterns["Pat:RscOpOK"] % (self.remote_node, "stop"))
 
         self.set_timer("remoteMetalCleanup")
         if self.remote_rsc_added == 1:
-            self.CM.rsh(node, "crm_resource -U -r remote1-rsc -N %s" % (self.remote_node))
+            self.rsh(node, "crm_resource -U -r remote1-rsc -N %s" % (self.remote_node))
             self.del_rsc(node, self.remote_rsc)
         if self.remote_node_added == 1:
             self.del_rsc(node, self.remote_node)
@@ -2798,7 +2803,7 @@ class RemoteBaremetal(CTSTest):
 
         # disable pcmk remote
         for i in range(10):
-            rc = self.CM.rsh(node, "service pacemaker_remote stop")
+            rc = self.rsh(node, "service pacemaker_remote stop")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -2810,8 +2815,8 @@ class RemoteBaremetal(CTSTest):
         # we are assuming if all nodes have a key, that it is
         # the right key... If any node doesn't have a remote
         # key, we regenerate it everywhere.
-        for node in self.CM.Env["nodes"]:
-            rc = self.CM.rsh(node, "ls /etc/pacemaker/authkey")
+        for node in self.Env["nodes"]:
+            rc = self.rsh(node, "ls /etc/pacemaker/authkey")
             if rc != 0:
                 sync_key = 1
                 break
@@ -2823,9 +2828,9 @@ class RemoteBaremetal(CTSTest):
         os.system("/usr/share/pacemaker/tests/cts/lxc_autogen.sh -k &> /dev/null")
 
         # sync key throughout the cluster
-        for node in self.CM.Env["nodes"]:
-            rc = self.CM.rsh(node, "mkdir /etc/pacemaker")
-            self.CM.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
+        for node in self.Env["nodes"]:
+            rc = self.rsh(node, "mkdir /etc/pacemaker")
+            self.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
@@ -2840,7 +2845,7 @@ class RemoteBaremetal(CTSTest):
         self.step2_add_rsc(node)
         self.cleanup_metal(node)
 
-        self.CM.debug("Waiting for the cluster to recover")
+        self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
         if self.failed == 1:
             return self.failure(self.fail_string)
