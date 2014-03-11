@@ -116,8 +116,8 @@ do_cl_join_offer_respond(long long action,
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
+        /* Calling remove_cib_op_callback() would result in a memory leak of the data field */
         crm_trace("Cancelling previous join query: %d", query_call_id);
-        remove_cib_op_callback(query_call_id, FALSE);
         query_call_id = 0;
     }
 
@@ -138,46 +138,42 @@ do_cl_join_offer_respond(long long action,
 void
 join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    xmlNode *local_cib = NULL;
     char *join_id = user_data;
     xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
     CRM_LOG_ASSERT(join_id != NULL);
 
-    query_call_id = 0;
-
-    if (rc == pcmk_ok) {
-        local_cib = output;
-        CRM_LOG_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
+    if (query_call_id != call_id) {
+        crm_trace("Query %d superceeded", call_id);
+        goto done;
     }
 
-    if (local_cib != NULL) {
+    query_call_id = 0;
+    if(rc != pcmk_ok || output == NULL) {
+        crm_err("Could not retrieve version details for join-%s: %s (%d)",
+                join_id, pcmk_strerror(rc), rc);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+
+    } else if (fsa_our_dc == NULL) {
+        crm_debug("Membership is in flux, not continuing join-%s", join_id);
+
+    } else {
         xmlNode *reply = NULL;
 
-        crm_debug("Respond to join offer join-%s", join_id);
-        crm_debug("Acknowledging %s as our DC", fsa_our_dc);
-        copy_in_properties(generation, local_cib);
+        crm_debug("Respond to join offer join-%s from %s", join_id, fsa_our_dc);
+        copy_in_properties(generation, output);
 
         reply = create_request(CRM_OP_JOIN_REQUEST, generation, fsa_our_dc,
                                CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-        if (fsa_our_dc) {
-            send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
-        } else {
-            crm_warn("No DC for join-%s", join_id);
-            send_cluster_message(NULL, crm_msg_crmd, reply, TRUE);
-        }
+        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         free_xml(reply);
-
-    } else {
-        crm_err("Could not retrieve Generation to attach to our"
-                " join acknowledgement: %s", pcmk_strerror(rc));
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
 
-    free(join_id);
+  done:
     free_xml(generation);
+    free(join_id);
 }
 
 /*	A_CL_JOIN_RESULT	*/
