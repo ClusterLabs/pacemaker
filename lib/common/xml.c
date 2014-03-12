@@ -3688,7 +3688,8 @@ xml_remove_prop(xmlNode * obj, const char *name)
         xmlAttr *attr = xmlHasProp(obj, (const xmlChar *)name);
 
         p = attr->_private;
-        p->flags |= xpf_dirty|xpf_deleted;
+        set_parent_flag(obj, xpf_dirty);
+        p->flags |= xpf_deleted;
         /* crm_trace("Setting flag %x due to %s[@id=%s].%s", xpf_dirty, obj->name, ID(obj), name); */
 
     } else {
