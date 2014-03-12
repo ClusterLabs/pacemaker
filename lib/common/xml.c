@@ -3164,11 +3164,14 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
 
         hidden = crm_element_value(data, "hidden");
         for (pIter = crm_first_attr(data); pIter != NULL; pIter = pIter->next) {
+            xml_private_t *p = pIter->_private;
             const char *p_name = (const char *)pIter->name;
             const char *p_value = crm_attr_value(pIter);
             char *p_copy = NULL;
 
-            if ((is_set(options, xml_log_option_diff_plus)
+            if(is_set(p->flags, xpf_deleted)) {
+                continue;
+            } else if ((is_set(options, xml_log_option_diff_plus)
                  || is_set(options, xml_log_option_diff_minus))
                 && strcmp(XML_DIFF_MARKER, p_name) == 0) {
                 continue;
