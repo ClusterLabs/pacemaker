@@ -33,6 +33,7 @@ ctslib_PYTHON	=	__init__.py		\
 			CTS.py			\
 			CTSaudits.py		\
 			CTStests.py		\
+			CTSpatt.py		\
 			CTSscenarios.py		\
 			CIB.py			\
 			cib_xml.py

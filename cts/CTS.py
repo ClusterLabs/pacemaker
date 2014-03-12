@@ -816,7 +816,7 @@ class JournalObj(SearchObj):
             if match:
                 last_offset = self.offset
                 self.offset = match.group(1)
-                if last_offset == "EOF": self.debug("Got %d lines, new cursor: %s" % (len(lines), self.offset))
+                self.debug("Got %d lines, new cursor: %s" % (len(lines), self.offset))
             else:
                 cache.append(line)
 
@@ -851,9 +851,13 @@ class LogWatcher(RemoteExec):
         else:
             self.kind    = self.Env["LogWatcher"]
 
+        if log:
+            self.filename    = log
+        else:
+            self.filename    = self.Env["LogFileName"]
+
         self.name        = name
         self.regexes     = regexes
-        self.filename    = log
         self.debug_level = debug_level
         self.whichmatch  = -1
         self.unmatched   = None
