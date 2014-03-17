@@ -1,6 +1,8 @@
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
 
+from cts.CTSvars import *
+
 patternvariants = {}
 class BasePatterns:
     def __init__(self, name):
@@ -8,10 +10,8 @@ class BasePatterns:
         patternvariants[name] = self
         self.ignore = []
         self.BadNews = []
+        self.components = {}
         self.commands = {
-            "DeadTime"       : 300,
-            "StartTime"      : 300,        # Max time to start up
-            "StableTime"     : 30,
             "StatusCmd"      : "crmadmin -t 60000 -S %s 2>/dev/null",
             "CibQuery"       : "cibadmin -Ql",
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
@@ -58,6 +58,12 @@ class BasePatterns:
             "Pat:RscOpOK"        : "process_lrm_event: Operation %s_%s.*ok.*confirmed",
         }
 
+    def get_component(self, key):
+        if self.components.has_key(key):
+            return self.components[key]
+        print "Unknown component '%s' for %s" % (key, self.name)
+        return []
+
     def get_patterns(self, key):
         if key == "BadNews":
             return self.BadNews
@@ -67,9 +73,13 @@ class BasePatterns:
             return self.commands
         elif key == "Search":
             return self.search
+        elif key == "Components":
+            return self.components
 
     def __getitem__(self, key):
-        if self.commands.has_key(key):
+        if key == "Name":
+            return self.name
+        elif self.commands.has_key(key):
             return self.commands[key]
         elif self.search.has_key(key):
             return self.search[key]
@@ -228,6 +238,137 @@ class crm_cs_v0(BasePatterns):
             r"stalled the FSA with pending inputs",
         ]
 
+
+        self.components["common-ignore"] = [
+                    "Pending action:",
+                    "error: crm_log_message_adv:",
+                    "error: MSG: No message to dump",
+                    "resources were active at shutdown",
+                    "pending LRM operations at shutdown",
+                    "Lost connection to the CIB service",
+                    "Connection to the CIB terminated...",
+                    "Sending message to CIB service FAILED",
+                    "apply_xml_diff: Diff application failed!",
+                    "crmd.*Action A_RECOVER .* not supported",
+                    "unconfirmed_actions: Waiting on .* unconfirmed actions",
+                    "cib_native_msgready: Message pending on command channel",
+                    "crmd.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
+                    "error: attrd_connection_destroy: Lost connection to attrd",
+                    "info: te_fence_node: Executing .* fencing operation",
+                    "crm_write_blackbox:",
+#                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+#                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
+            ]
+        
+        self.components["corosync-ignore"] = [
+            r"error: pcmk_cpg_dispatch: Connection to the CPG API failed: Library error",
+            r"pacemakerd.*error: pcmk_child_exit: Child process .* exited",
+            r"cib.*error: cib_cs_destroy: Corosync connection lost",
+            r"stonith-ng.*error: stonith_peer_cs_destroy: Corosync connection terminated",
+            r"error: pcmk_child_exit: Child process cib .* exited: Invalid argument",
+            r"error: pcmk_child_exit: Child process attrd .* exited: Transport endpoint is not connected",
+            r"error: pcmk_child_exit: Child process crmd .* exited: Link has been severed",
+            r"lrmd.*error: crm_ipc_read: Connection to stonith-ng failed",
+            r"lrmd.*error: mainloop_gio_callback: Connection to stonith-ng.* closed",
+            r"lrmd.*error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            r"crmd.*do_state_transition: State transition .* S_RECOVERY",
+            r"crmd.*error: do_log: FSA: Input I_ERROR",
+            r"crmd.*error: do_log: FSA: Input I_TERMINATE",
+            r"crmd.*error: pcmk_cman_dispatch: Connection to cman failed",
+            r"crmd.*error: crmd_fast_exit: Could not recover from internal error",
+            r"error: crm_ipc_read: Connection to cib_shm failed",
+            r"error: mainloop_gio_callback: Connection to cib_shm.* closed",
+            r"error: stonith_connection_failed: STONITH connection failed",
+            ]
+
+        self.components["corosync"] = [
+            r"pacemakerd.*error: cfg_connection_destroy: Connection destroyed",
+            r"pacemakerd.*error: mcp_cpg_destroy: Connection destroyed",
+            r"crit: attrd_(cs|cpg)_destroy: Lost connection to Corosync service",
+            r"stonith_peer_cs_destroy: Corosync connection terminated",
+            r"cib_cs_destroy: Corosync connection lost!  Exiting.",
+            r"crmd_(cs|quorum)_destroy: connection terminated",
+            r"pengine.*Scheduling Node .* for STONITH",
+            r"tengine_stonith_notify: Peer .* was terminated .*: OK",
+        ]
+
+        self.components["cib-ignore"] = [
+            "lrmd.*error: crm_ipc_read: Connection to stonith-ng failed",
+            "lrmd.*error: mainloop_gio_callback: Connection to stonith-ng.* closed",
+            "lrmd.*error: stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            "lrmd.*error: stonith_connection_failed: STONITH connection failed, finalizing .* pending operations",
+            ]
+
+        self.components["cib"] = [
+                    "State transition .* S_RECOVERY",
+                    "Respawning .* crmd",
+                    "Respawning .* attrd",
+                    "error: crm_ipc_read: Connection to cib_.* failed",
+                    "error: mainloop_gio_callback: Connection to cib_.* closed",
+                    "Connection to the CIB terminated...",
+                    "Child process crmd .* exited: Generic Pacemaker error",
+                    "Child process attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
+                     "error: attrd_cib_destroy_cb: Lost connection to CIB service",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "crmd.*Could not recover from internal error",
+                    ]
+
+        self.components["lrmd"] = [
+                    "State transition .* S_RECOVERY",
+                    "LRM Connection failed",
+                    "Respawning .* crmd",
+                    "error: crm_ipc_read: Connection to lrmd failed",
+                    "error: mainloop_gio_callback: Connection to lrmd.* closed",
+                    "crmd.*I_ERROR.*lrm_connection_destroy",
+                    "Child process crmd .* exited: Generic Pacemaker error",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.* Could not recover from internal error",
+                    ]
+        self.components["lrmd-ignore"] = []
+
+        self.components["crmd"] = [
+#                    "WARN: determine_online_status: Node .* is unclean",
+#                    "Scheduling Node .* for STONITH",
+#                    "Executing .* fencing operation",
+# Only if the node wasn't the DC:  "State transition S_IDLE",
+                    "State transition .* -> S_IDLE",
+                    ]
+        self.components["crmd-ignore"] = []
+
+        self.components["attrd"] = []
+        self.components["attrd-ignore"] = []
+
+        self.components["pengine"] = [
+                    "State transition .* S_RECOVERY",
+                    "Respawning .* crmd",
+                    "Child process crmd .* exited: Generic Pacemaker error",
+                    "crm_ipc_read: Connection to pengine failed",
+                    "error: mainloop_gio_callback: Connection to pengine.* closed",
+                    "crit: pe_ipc_destroy: Connection to the Policy Engine failed",
+                    "crmd.*I_ERROR.*save_cib_contents",
+                    "crmd.*Input I_TERMINATE from do_recover",
+                    "crmd.* Could not recover from internal error",
+                    ]
+        self.components["pengine-ignore"] = []
+
+        self.components["stonith"] = [
+            "crm_ipc_read: Connection to stonith-ng failed",
+            "stonith_connection_destroy_cb: LRMD lost STONITH connection",
+            "mainloop_gio_callback: Connection to stonith-ng.* closed",
+            "tengine_stonith_connection_destroy: Fencing daemon connection failed",
+            "crmd.*stonith_api_add_notification: Callback already present",
+        ]
+        self.components["stonith-ignore"] = [
+            "LogActions: Recover Fencing",
+            "update_failcount: Updating failcount for Fencing",
+            "error: te_connect_stonith: Sign-in failed: triggered a retry",
+            "stonith_connection_failed: STONITH connection failed, finalizing .* pending operations.",
+            "process_lrm_event: Operation Fencing.* Error"
+        ]
+        self.components["stonith-ignore"].extend(self.components["common-ignore"])
+
 class crm_mcp(crm_cs_v0):
     '''
     The crm version 4 cluster manager class.
@@ -295,7 +436,7 @@ class crm_cman(crm_cs_v0):
 
 class PatternSelector:
 
-    def __init__(self, name):
+    def __init__(self, name=None):
         self.name = name
         self.base = BasePatterns("crm-base")
 
@@ -303,6 +444,7 @@ class PatternSelector:
             crm_cs_v0("crm-plugin-v0")
             crm_cman("crm-cman")
             crm_mcp("crm-mcp")
+            crm_lha("crm-lha")
         elif name == "crm-lha":
             crm_lha(name)
         elif name == "crm-plugin-v0":
@@ -315,6 +457,7 @@ class PatternSelector:
     def get_variant(self, variant):
         if patternvariants.has_key(variant):
             return patternvariants[variant]
+        print "defaulting to crm-base for %s" % variant
         return self.base
 
     def get_patterns(self, variant, kind):
@@ -323,6 +466,9 @@ class PatternSelector:
     def get_template(self, variant, key):
         v = self.get_variant(variant)
         return v[key]
+
+    def get_component(self, variant, kind):
+        return self.get_variant(variant).get_component(kind)
 
     def __getitem__(self, key):
         return self.get_template(self.name, key)

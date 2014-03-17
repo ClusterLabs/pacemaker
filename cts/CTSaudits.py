@@ -23,6 +23,7 @@ Licensed under the GNU GPL.
 
 import time, os, string, re, uuid
 import CTS
+from watcher import LogWatcher
 
 class ClusterAudit:
 
@@ -93,11 +94,11 @@ class LogAudit(ClusterAudit):
         watch_pref = self.CM.Env["LogWatcher"]
         if watch_pref == "any": 
             for k in self.kinds:
-                watch[k] = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, kind=k)
+                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
                 watch[k].setwatch()
         else:
             k = watch_pref
-            watch[k] = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, kind=k)
+            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
             watch[k].setwatch()
 
         if watch_pref == "any": self.CM.log("Writing log with key: %s" % (suffix))

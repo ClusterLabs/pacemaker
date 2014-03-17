@@ -1,6 +1,8 @@
 from CTS import *
 from CTStests import CTSTest
 from CTSaudits import ClusterAudit
+from cts.watcher  import LogWatcher
+
 class ScenarioComponent:
 
     def __init__(self, Env):
@@ -37,6 +39,7 @@ A partially set up scenario is torn down if it fails during setup.
     def __init__(self, ClusterManager, Components, Audits, Tests):
 
         "Initialize the Scenario from the list of ScenarioComponents"
+
         self.ClusterManager = ClusterManager
         self.Components = Components
         self.Audits  = Audits
@@ -75,17 +78,19 @@ A partially set up scenario is torn down if it fails during setup.
     def SetUp(self):
         '''Set up the Scenario. Return TRUE on success.'''
 
-        self.audit() # Also detects remote/local log config
         self.ClusterManager.prepare()
+        self.audit() # Also detects remote/local log config
+        self.ClusterManager.StatsMark(0)
         self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
 
         self.audit()
         if self.ClusterManager.Env["valgrind-tests"]:
             self.ClusterManager.install_helper("cts.supp")
 
-        self.BadNews = LogWatcher(self.ClusterManager.Env,
-                                  self.ClusterManager["LogFileName"],
-                                  self.ClusterManager["BadRegexes"], "BadNews", 0)
+        self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
+                                  self.ClusterManager["BadNews"], "BadNews", 0,
+                                  kind=self.ClusterManager.Env["LogWatcher"],
+                                  hosts=self.ClusterManager.Env["nodes"])
         self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j=0
@@ -113,6 +118,7 @@ A partially set up scenario is torn down if it fails during setup.
             j=j-1
 
         self.audit()
+        self.ClusterManager.StatsExtract()
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
@@ -139,7 +145,7 @@ A partially set up scenario is torn down if it fails during setup.
         where = ""
         did_run = 0
 
-        self.ClusterManager.Env.StatsMark(testcount)
+        self.ClusterManager.StatsMark(testcount)
         self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
@@ -533,6 +539,7 @@ Test a rolling upgrade between two versions of the stack
         return self.install(node, self.CM.Env["previous-version"])
 
     def SetUp(self, CM):
+        print repr(self)+"prepare"
         CM.prepare()
 
         # Clear out the cobwebs
