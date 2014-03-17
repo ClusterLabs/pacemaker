@@ -878,7 +878,7 @@ child_free(mainloop_child_t *child)
 static int
 child_kill_helper(mainloop_child_t *child)
 {
-    if (kill(child->pid, SIGKILL) < 0) {
+    if (kill(-child->pid, SIGKILL) < 0) {
         crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
         return -errno;
     }
