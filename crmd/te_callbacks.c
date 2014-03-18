@@ -378,7 +378,7 @@ te_update_diff(const char *event, xmlNode * msg)
         if(xpath == NULL) {
             /* Version field, ignore */
 
-        } else if(strstr(xpath, "/cib/configuration/")) {
+        } else if(strstr(xpath, "/cib/configuration")) {
             abort_transition(INFINITY, tg_restart, "Non-status change", change);
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS"[") || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
