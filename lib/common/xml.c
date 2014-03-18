@@ -691,7 +691,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
     xml_private_t *doc = NULL;
 
     *result = NULL;
-    if(pcmk_acl_required(user) == FALSE) {
+    if(xml == NULL || pcmk_acl_required(user) == FALSE) {
         crm_trace("no acls needed for '%s'", user);
         return FALSE;
     }
@@ -700,6 +700,10 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
     target = copy_xml(xml);
     __xml_acl_unpack(acl_source, target, user);
     __xml_acl_apply(target);
+
+    if(target == NULL) {
+        return TRUE;
+    }
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
@@ -1868,7 +1872,7 @@ __xml_find_path(xmlNode *top, const char *key)
             target = NULL;
             break;
 
-        } else if(tag) {
+        } else if(tag && section) {
             int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
 
             switch(f) {
