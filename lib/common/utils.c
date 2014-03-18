@@ -2149,11 +2149,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
                origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
                op->interval);
 
-    if (op->op_status == PCMK_LRM_OP_CANCELLED) {
-        crm_trace("Ignoring cancelled op");
-        return NULL;
-    }
-
     crm_trace("DC version: %s", caller_version);
 
     task = op->op_type;

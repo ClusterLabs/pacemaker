@@ -2041,17 +2041,27 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
     } else if (pending == NULL) {
-        /* Operations that are cancelled may safely be removed
-         * from the pending op list before the lrmd completion event
-         * is received. Only report non-cancelled ops here. */
-        if (op->op_status != PCMK_LRM_OP_CANCELLED) {
-            crm_err("Op %s (call=%d): No 'pending' entry", op_key, op->call_id);
-        }
+        /* We don't need to do anything for cancelled ops
+         * that are not in our pending op list. There are no
+         * transition actions waiting on these operations. */
+
     } else if (op->user_data == NULL) {
+        /* At this point we have a pending entry, but no transition
+         * key present in the user_data field. report this */
         crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
 
     } else if (pending->remove) {
+        /* The tengine canceled this op, we have been waiting for the cancel to finish. */
         delete_op_entry(lrm_state, op, op->rsc_id, op_key, op->call_id);
+
+    } else if (pending && op->rsc_deleted) {
+        /* The tengine initiated this op, but it was cancelled outside of the
+         * tengine's control during a resource cleanup/re-probe request. The tengine
+         * must be alerted that this operation completed, otherwise the tengine
+         * will continue waiting for this update to occur until it is timed out.
+         * We don't want this update going to the cib though, so use a direct ack. */
+        crm_trace("Op %s (call=%d): cancelled due to rsc deletion", op_key, op->call_id);
+        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
     } else {
         /* Before a stop is called, no need to direct ack */
