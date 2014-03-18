@@ -341,7 +341,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
     CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
-    *output = NULL;
+    if(output) {
+        *output = NULL;
+    }
+
     *result_cib = NULL;
     *config_changed = FALSE;
 

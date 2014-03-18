@@ -413,7 +413,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
 {
     xml_acl_t *acl = NULL;
 
-    xml_private_t *p = target->doc->_private;
+    xml_private_t *p = NULL;
     const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
     const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
@@ -544,9 +544,14 @@ static void
 __xml_acl_apply(xmlNode *xml) 
 {
     GListPtr aIter = NULL;
+    xml_private_t *p = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    xml_private_t *p = xml->doc->_private;
 
+    if(xml == NULL) {
+        return;
+    }
+
+    p = xml->doc->_private;
     for(aIter = p->acls; aIter != NULL; aIter = aIter->next) {
         int max = 0, lpc = 0;
         xml_acl_t *acl = aIter->data;
@@ -1616,7 +1621,6 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
         add_xml_comment(parent, target, patch);
     }
 
-    id = ID(target);
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
     CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
@@ -1864,7 +1868,7 @@ __xml_find_path(xmlNode *top, const char *key)
             target = NULL;
             break;
 
-        } else {
+        } else if(tag) {
             int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
 
             switch(f) {
