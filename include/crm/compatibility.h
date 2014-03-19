@@ -289,7 +289,7 @@ update_attr(cib_t * the_cib, int call_options,
             const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
     return update_attr_delegate(the_cib, call_options, section, node_uuid, set_type, set_name,
-                                attr_id, attr_name, attr_value, to_console, NULL);
+                                attr_id, attr_name, attr_value, to_console, NULL, NULL);
 }
 
 static inline int

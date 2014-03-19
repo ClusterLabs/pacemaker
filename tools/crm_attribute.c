@@ -245,15 +245,6 @@ main(int argc, char **argv)
         }
     }
 
-    if (is_remote_node && safe_str_neq(type, XML_CIB_TAG_STATUS)) {
-        /* Only the status section can exists for remote_nodes */
-        type = XML_CIB_TAG_STATUS;
-        if (command == 'v') {
-            fprintf(stderr, "Remote-nodes do not maintain permanent attributes, '%s=%s' will be removed after %s reboots.\n",
-                attr_name, attr_value, dest_uname);
-        }
-    }
-
     if (attr_name == NULL && command == 'D') {
         fprintf(stderr, "Error during deletion, no attribute name specified.\n");
         return crm_exit(1);
@@ -281,7 +272,7 @@ main(int argc, char **argv)
 
             now_s = crm_itoa(now);
             update_attr_delegate(the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
-                                 NULL, "last-lrm-refresh", now_s, TRUE, NULL);
+                                 NULL, "last-lrm-refresh", now_s, TRUE, NULL, NULL);
             free(now_s);
         }
 
@@ -291,7 +282,7 @@ main(int argc, char **argv)
         CRM_LOG_ASSERT(attr_value != NULL);
 
         rc = update_attr_delegate(the_cib, cib_opts, type, dest_node, set_type, set_name,
-                                  attr_id, attr_name, attr_value, TRUE, NULL);
+                                  attr_id, attr_name, attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
 
     } else {                    /* query */
 
