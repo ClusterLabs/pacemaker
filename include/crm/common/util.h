@@ -72,7 +72,16 @@ gboolean decode_transition_magic(const char *magic, char **uuid, int *transition
 char * crm_strip_trailing_newline(char *str);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+/* used with hash tables where case does not matter */
+static inline gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+}
+
 gboolean safe_str_neq(const char *a, const char *b);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)

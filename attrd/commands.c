@@ -145,7 +145,7 @@ create_attribute(xmlNode *xml)
     a->id      = crm_element_value_copy(xml, F_ATTRD_ATTRIBUTE);
     a->set     = crm_element_value_copy(xml, F_ATTRD_SET);
     a->uuid    = crm_element_value_copy(xml, F_ATTRD_KEY);
-    a->values = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute_value);
+    a->values = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, free_attribute_value);
 
 #if ENABLE_ACL
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);

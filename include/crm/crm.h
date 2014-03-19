@@ -196,6 +196,7 @@ typedef GList *GListPtr;
 
 #  define crm_str_hash g_str_hash_traditional
 
+guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 
 #endif
