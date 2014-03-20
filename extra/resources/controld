@@ -242,6 +242,7 @@ controld_monitor() {
 }
 
 controld_validate() {
+    check_binary killall
     check_binary ${OCF_RESKEY_daemon}
 
     case ${OCF_RESKEY_CRM_meta_globally_unique} in
