@@ -280,7 +280,8 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
 #if ENABLE_ACL
-    determine_request_user(cib_client->user, op_request, F_CIB_USER);
+    CRM_ASSERT(cib_client->user != NULL);
+    crm_acl_get_set_user(op_request, F_CIB_USER, cib_client->user);
 #endif
 
     crm_log_xml_trace(op_request, "Client[inbound]");

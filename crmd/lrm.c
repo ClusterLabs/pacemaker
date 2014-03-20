@@ -1240,7 +1240,7 @@ do_lrm_invoke(long long action,
     CRM_ASSERT(lrm_state != NULL);
 
 #if ENABLE_ACL
-    user_name = crm_element_value(input->msg, F_CRM_USER);
+    user_name = crm_acl_get_set_user(input->msg, F_CRM_USER, NULL);
     crm_trace("LRM command from user '%s'", user_name);
 #endif
 

@@ -2317,6 +2317,60 @@ uid2username(uid_t uid)
     }
 }
 
+const char *
+crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user)
+{
+    /* field is only checked for backwards compatibility */
+    static const char *effective_user = NULL;
+    const char *requested_user = NULL;
+    const char *user = NULL;
+
+    if(effective_user == NULL) {
+        effective_user = uid2username(geteuid());
+    }
+
+    requested_user = crm_element_value(request, XML_ACL_TAG_USER);
+    if(requested_user == NULL) {
+        requested_user = crm_element_value(request, field);
+    }
+
+    if (is_privileged(effective_user) == FALSE) {
+        /* We're not running as a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
+        user = effective_user;
+
+    } else if(peer_user == NULL && requested_user == NULL) {
+        /* No user known or requested, use 'effective_user' and make sure one is set for the request */
+        user = effective_user;
+
+    } else if(peer_user == NULL) {
+        /* No user known, trusting 'requested_user' */
+        user = requested_user;
+
+    } else if (is_privileged(peer_user) == FALSE) {
+        /* The peer is not a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
+        user = peer_user;
+
+    } else if (requested_user == NULL) {
+        /* Even if we're privileged, make sure there is always a value set */
+        user = peer_user;
+
+    } else {
+        /* Legal delegation to 'requested_user' */
+        user = requested_user;
+    }
+
+    /* Yes, pointer comparision */
+    if(user != crm_element_value(request, XML_ACL_TAG_USER)) {
+        crm_xml_add(request, XML_ACL_TAG_USER, user);
+    }
+
+    if(field != NULL && user != crm_element_value(request, field)) {
+        crm_xml_add(request, field, user);
+    }
+
+    return requested_user;
+}
+
 void
 determine_request_user(const char *user, xmlNode * request, const char *field)
 {

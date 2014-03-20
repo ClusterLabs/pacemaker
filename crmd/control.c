@@ -677,8 +677,10 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     if (msg == NULL) {
         return 0;
     }
+
 #if ENABLE_ACL
-    determine_request_user(client->user, msg, F_CRM_USER);
+    CRM_ASSERT(client->user != NULL);
+    crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
     crm_trace("Processing msg from %s", crm_client_name(client));

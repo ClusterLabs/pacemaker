@@ -295,11 +295,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     cib->call_id++;
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
 #if ENABLE_ACL
-    if(user_name != NULL) {
-        effective_user = uid2username(geteuid());
-        crm_trace("Checking if %s can impersonate %s", effective_user, user_name);
-        determine_request_user(effective_user, request, F_CIB_USER);
-    }
+    crm_acl_get_set_user(request, F_CIB_USER, user_name);
     crm_trace("Performing %s operation as %s", op, crm_element_value(request, F_CIB_USER));
 #endif
     rc = cib_perform_op(op, call_options, fn, query,

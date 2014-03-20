@@ -40,6 +40,7 @@ void *convert_const_pointer(const void *ptr);
 /* For ACLs */
 char *uid2username(uid_t uid);
 void determine_request_user(const char *user, xmlNode * request, const char *field);
+const char *crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user);
 
 #  if ENABLE_ACL
 #    include <string.h>
