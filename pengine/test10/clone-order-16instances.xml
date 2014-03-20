@@ -1,0 +1,406 @@
+<cib epoch="17" num_updates="25" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Mar 19 19:51:25 2014" update-origin="virt-009.cluster-qe.lab.eng.brq.redhat.com" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="8">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-27.el7-368c726"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="virt-009.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="2" uname="virt-010.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="3" uname="virt-012.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="4" uname="virt-013.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="5" uname="virt-014.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="6" uname="virt-015.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="7" uname="virt-016.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="8" uname="virt-020.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="9" uname="virt-027.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="10" uname="virt-028.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="11" uname="virt-029.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="12" uname="virt-030.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="13" uname="virt-031.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="14" uname="virt-032.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="15" uname="virt-033.cluster-qe.lab.eng.brq.redhat.com"/>
+      <node id="16" uname="virt-034.cluster-qe.lab.eng.brq.redhat.com"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="virt-fencing" type="fence_xvm">
+        <instance_attributes id="virt-fencing-instance_attributes">
+          <nvpair id="virt-fencing-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
+          <nvpair id="virt-fencing-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="virt-009.cluster-qe.lab.eng.brq.redhat.com,virt-010.cluster-qe.lab.eng.brq.redhat.com,virt-012.cluster-qe.lab.eng.brq.redhat.com,virt-013.cluster-qe.lab.eng.brq.redhat.com,virt-014.cluster-qe.lab.eng.brq.redhat.com,virt-015.cluster-qe.lab.eng.brq.redhat.com,virt-016.cluster-qe.lab.eng.brq.redhat.com,virt-020.cluster-qe.lab.eng.brq.redhat.com,virt-027.cluster-qe.lab.eng.brq.redhat.com,virt-028.cluster-qe.lab.eng.brq.redhat.com,virt-029.cluster-qe.lab.eng.brq.redhat.com,virt-030.cluster-qe.lab.eng.brq.redhat.com,virt-031.cluster-qe.lab.eng.brq.redhat.com,virt-032.cluster-qe.lab.eng.brq.redhat.com,virt-033.cluster-qe.lab.eng.brq.redhat.com,virt-034.cluster-qe.lab.eng.brq.redhat.com"/>
+          <nvpair id="virt-fencing-instance_attributes-action" name="action" value="reboot"/>
+          <nvpair id="virt-fencing-instance_attributes-debug" name="debug" value="1"/>
+        </instance_attributes>
+        <operations>
+          <op id="virt-fencing-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="dlm-clone">
+        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
+          <instance_attributes id="dlm-instance_attributes"/>
+          <operations>
+            <op id="dlm-start-timeout-90" interval="0s" name="start" timeout="90"/>
+            <op id="dlm-stop-timeout-100" interval="0s" name="stop" timeout="100"/>
+            <op id="dlm-monitor-interval-30s" interval="30s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="dlm-clone-meta">
+          <nvpair id="dlm-interleave" name="interleave" value="true"/>
+          <nvpair id="dlm-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+        <meta_attributes id="dlm-clone-meta_attributes"/>
+      </clone>
+      <clone id="clvmd-clone">
+        <primitive class="ocf" id="clvmd" provider="heartbeat" type="clvm">
+          <instance_attributes id="clvmd-instance_attributes">
+            <nvpair id="clvmd-instance_attributes-with_cmirrord" name="with_cmirrord" value="1"/>
+          </instance_attributes>
+          <operations>
+            <op id="clvmd-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
+            <op id="clvmd-start-timeout-180s" interval="0s" name="start" timeout="180s"/>
+            <op id="clvmd-monitor-interval-120s" interval="120s" name="monitor" on-fail="fence"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clvmd-clone-meta">
+          <nvpair id="clvmd-interleave" name="interleave" value="true"/>
+          <nvpair id="clvmd-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+        <meta_attributes id="clvmd-clone-meta_attributes">
+          <nvpair id="clvmd-clone-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="dlm-clone" first-action="start" id="order-dlm-clone-clvmd-clone-mandatory" then="clvmd-clone" then-action="start"/>
+      <rsc_colocation id="colocation-clvmd-clone-dlm-clone-INFINITY" rsc="clvmd-clone" score="INFINITY" with-rsc="dlm-clone"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="10" uname="virt-028.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="10">
+        <instance_attributes id="status-10">
+          <nvpair id="status-10-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="10">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="22:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;22:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="953" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="32:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;32:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="98" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="33:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;33:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="421" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="11" uname="virt-029.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="11">
+        <instance_attributes id="status-11">
+          <nvpair id="status-11-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="11">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="24:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;24:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="956" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="35:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;35:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="69" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="36:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;36:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="464" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="12" uname="virt-030.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="12">
+        <instance_attributes id="status-12">
+          <nvpair id="status-12-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="12">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="26:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;26:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="953" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="38:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;38:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="144" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="39:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;39:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="431" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="14" uname="virt-032.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="14">
+        <instance_attributes id="status-14">
+          <nvpair id="status-14-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="14">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="30:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;30:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="956" queue-time="1" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="44:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;44:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="143" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="45:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;45:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="245" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="15" uname="virt-033.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="15">
+        <instance_attributes id="status-15">
+          <nvpair id="status-15-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="15">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="32:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;32:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="954" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="47:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;47:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="111" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="48:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;48:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="223" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="16" uname="virt-034.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="16">
+        <instance_attributes id="status-16">
+          <nvpair id="status-16-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="16">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="34:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;34:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="983" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="50:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;50:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="135" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="51:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;51:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="242" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="virt-009.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="7:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;7:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395255129" last-rc-change="1395255129" exec-time="3" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="8:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;8:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395255129" last-rc-change="1395255129" exec-time="61" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;9:10:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395255130" last-rc-change="1395255130" exec-time="122" queue-time="1" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="virt-010.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;23:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1395255112" last-rc-change="1395255112" exec-time="1047" queue-time="1" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+            <lrm_rsc_op id="virt-fencing_monitor_60000" operation_key="virt-fencing_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="24:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;24:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="27" rc-code="0" op-status="0" interval="60000" last-rc-change="1395255114" exec-time="22" queue-time="0" op-digest="38cec0e0676533d2d3de2c9af235ad9f"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1395255085" last-rc-change="1395255085" exec-time="1102" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dlm_monitor_30000" operation_key="dlm_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;23:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="25" rc-code="0" op-status="0" interval="30000" last-rc-change="1395255087" exec-time="58" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;9:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="214" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="virt-012.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;8:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="935" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="24:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;24:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1395255087" last-rc-change="1395255087" exec-time="1168" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dlm_monitor_30000" operation_key="dlm_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="25:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;25:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="25" rc-code="0" op-status="0" interval="30000" last-rc-change="1395255088" exec-time="46" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="12:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;12:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="235" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="virt-013.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="10:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;10:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="936" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="14:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;14:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="15:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;15:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="230" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="virt-014.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="12:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;12:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="933" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;17:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="125" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="18:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;18:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="241" queue-time="1" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="6" uname="virt-015.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="6">
+        <instance_attributes id="status-6">
+          <nvpair id="status-6-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="6">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="14:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;14:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="932" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="20:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;20:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="122" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="21:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;21:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="222" queue-time="1" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="7" uname="virt-016.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="7">
+        <instance_attributes id="status-7">
+          <nvpair id="status-7-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="7">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="16:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;16:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="948" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;23:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="117" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="24:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;24:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="283" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="8" uname="virt-020.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="8">
+        <instance_attributes id="status-8">
+          <nvpair id="status-8-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="8">
+        <lrm_resources>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="26:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;26:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="287" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="18:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;18:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="923" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="27:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;27:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="563" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="13" uname="virt-031.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="13">
+        <instance_attributes id="status-13">
+          <nvpair id="status-13-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="13">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="28:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;28:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="953" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="41:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;41:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="123" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="42:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;42:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="231" queue-time="0" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="9" uname="virt-027.cluster-qe.lab.eng.brq.redhat.com" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="9">
+        <instance_attributes id="status-9">
+          <nvpair id="status-9-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="9">
+        <lrm_resources>
+          <lrm_resource id="virt-fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="virt-fencing_last_0" operation_key="virt-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="20:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;20:1:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1395254312" last-rc-change="1395254312" exec-time="955" queue-time="0" op-digest="736da57eed084f96d2f01a7c80d1fed1"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="29:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;29:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="125" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="30:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:7;30:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="480" queue-time="1" op-digest="8c0920550ecae28ee15ea3371898e446"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
+
