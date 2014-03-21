@@ -14,6 +14,7 @@
 	- [Create a resource](#create-a-resource)
 	- [Display a resource](#display-a-resource)
 	- [Display fencing resources](#display-fencing-resources)
+	- [Display Stonith RA info](#display-stonith-ra-info)
 	- [Start a resource](#start-a-resource)
 	- [Stop a resource](#stop-a-resource)
 	- [Remove a resource](#remove-a-resource)
