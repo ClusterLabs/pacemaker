@@ -102,7 +102,7 @@ You can also filter by provider
 ## List RA info
 
     crmsh # crm ra meta IPaddr2
-    pcs   # pcs resource agent IPaddr2
+    pcs   # pcs resource describe IPaddr2
 
 Use any RA name (like IPaddr2) from the list displayed with the previous command
 You can also use the full class:provider:RA format if multiple RAs with the same name are available :
