@@ -20,6 +20,7 @@
 	- [Stop a resource](#stop-a-resource)
 	- [Remove a resource](#remove-a-resource)
 	- [Modify a resource](#modify-a-resource)
+	- [Delete parameters for a given resource](#delete-parameters-for-a-given-resource)
 	- [List the current resource defaults](#list-the-current-resource-defaults)
 	- [Set resource defaults](#set-resource-defaults)
 	- [List the current operation defaults](#list-the-current-operation-defaults)
