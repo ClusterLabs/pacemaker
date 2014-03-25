@@ -198,7 +198,7 @@ pcs treats STONITH devices separately.
 
 With roles
 
-    crmsh # crm configure colocation website-with-another-ip inf: WebSite:Master AnotherIP
+    crmsh # crm configure colocation another-ip-with-website inf: AnotherIP WebSite:Master
     pcs   # pcs constraint colocation add Started AnotherIP with Master WebSite INFINITY
 
 ## Set ordering
