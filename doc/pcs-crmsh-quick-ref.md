@@ -20,6 +20,7 @@
 	- [Stop a resource](#stop-a-resource)
 	- [Remove a resource](#remove-a-resource)
 	- [Modify a resource](#modify-a-resource)
+	- [Delete parameters for a given resource](#delete-parameters-for-a-given-resource)
 	- [List the current resource defaults](#list-the-current-resource-defaults)
 	- [Set resource defaults](#set-resource-defaults)
 	- [List the current operation defaults](#list-the-current-operation-defaults)
@@ -165,9 +166,9 @@ pcs treats STONITH devices separately.
     crmsh # crm resource param ClusterIP set clusterip_hash=sourceip
     pcs   # pcs resource update ClusterIP clusterip_hash=sourceip
 
-pcs can also delete parameters for a given resource:
+## Delete parameters for a given resource
 
-    crmsh #
+    crmsh # crm resource param ClusterIP delete nic
     pcs   # pcs resource update ClusterIP ip=192.168.0.98 nic=  
 
 ## List the current resource defaults
@@ -197,7 +198,7 @@ pcs can also delete parameters for a given resource:
 
 With roles
 
-    crmsh #
+    crmsh # crm configure colocation another-ip-with-website inf: AnotherIP WebSite:Master
     pcs   # pcs constraint colocation add Started AnotherIP with Master WebSite INFINITY
 
 ## Set ordering
@@ -207,7 +208,7 @@ With roles
 
 With roles:
 
-    crmsh #
+    crmsh # crm configure order ip-after-website Mandatory: WebSite:Master AnotherIP
     pcs   # pcs constraint order promote WebSite then start AnotherIP
 
 ## Set preferred location
@@ -217,7 +218,7 @@ With roles:
     
 With roles:
 
-    crmsh #
+    crmsh # crm configure location prefer-pcmk-1 WebSite rule role=Master 50: \#uname eq pcmk-1
     pcs   # pcs constraint location WebSite rule role=master 50 \#uname eq pcmk-1
 
 ## Move resources
@@ -232,7 +233,7 @@ Remember that moving a resource set a stickyness to -INF until unmoved
 
 ## Create a clone
 
-    crmsh # crm configure clone WebIP ClusterIP meta globally-unique="true" clone-max="2" clone-node-max="2"
+    crmsh # crm configure clone WebIP ClusterIP meta globally-unique=true clone-max=2 clone-node-max=2
     pcs   # pcs resource clone ClusterIP globally-unique=true clone-max=2 clone-node-max=2
 
 ## Create a master/slave clone
