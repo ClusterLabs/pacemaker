@@ -1786,7 +1786,7 @@ const char *rsc_printable_id(resource_t *rsc)
 gboolean
 is_baremetal_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc && (node->details->remote_rsc->container == FALSE)) {
+    if (is_remote_node(node) && (node->details->remote_rsc == FALSE || node->details->remote_rsc->container == FALSE)) {
         return TRUE;
     }
     return FALSE;
@@ -1795,7 +1795,7 @@ is_baremetal_remote_node(node_t *node)
 gboolean
 is_container_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc && node->details->remote_rsc->container) {
+    if (is_remote_node(node) && (node->details->remote_rsc && node->details->remote_rsc->container)) {
         return TRUE;
     }
     return FALSE;
@@ -1804,7 +1804,7 @@ is_container_remote_node(node_t *node)
 gboolean
 is_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc) {
+    if (node->details->type == node_remote) {
         return TRUE;
     }
     return FALSE;

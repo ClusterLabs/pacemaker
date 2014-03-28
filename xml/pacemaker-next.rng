@@ -118,6 +118,7 @@
 		<value>normal</value>
 		<value>member</value>
 		<value>ping</value>
+		<value>remote</value>
 	      </choice>
 	    </attribute>
 	  </optional>

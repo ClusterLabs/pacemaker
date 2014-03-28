@@ -731,7 +731,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         /* send update */
         rc = update_attr_delegate(cib_conn, cib_none, hash_entry->section,
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
-                                  hash_entry->id, hash_entry->value, FALSE, user_name);
+                                  hash_entry->id, hash_entry->value, FALSE, user_name, NULL);
         if (rc < 0) {
             crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value,
                        pcmk_strerror(rc));

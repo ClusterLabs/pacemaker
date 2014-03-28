@@ -1,0 +1,213 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-1.2" admin_epoch="1" epoch="98" num_updates="3394" cib-last-written="Fri Mar 28 16:48:31 2014" update-origin="rhel7-node2" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cts-stonith-enabled" name="stonith-enabled" value="1"/>
+        <nvpair id="cts-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cts-pe-input-series-max" name="pe-input-series-max" value="5000"/>
+        <nvpair id="cts-default-action-timeout" name="default-action-timeout" value="90s"/>
+        <nvpair id="cts-shutdown-escalation" name="shutdown-escalation" value="5min"/>
+        <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
+        <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
+        <nvpair id="cts-no-quorum-policy" name="no-quorum-policy" value="stop"/>
+        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-1.el7-773b2e8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-node1"/>
+      <node id="2" uname="rhel7-node2"/>
+      <node id="3" uname="rhel7-node3"/>
+      <node type="remote" id="remote1" uname="remote1">
+        <instance_attributes id="nodes-remote1"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-delay" name="delay" value="0"/>
+          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <op id="Fencing-start-0" interval="0" name="start" timeout="60s"/>
+        </operations>
+      </primitive>
+      <primitive id="FencingPass" class="stonith" type="fence_dummy">
+        <instance_attributes id="FencingPass-params">
+          <nvpair id="FencingPass-random_sleep_range" name="random_sleep_range" value="30"/>
+          <nvpair id="FencingPass-pcmk_host_list" name="pcmk_host_list" value="rhel7-node1 rhel7-node2 rhel7-node3"/>
+          <nvpair id="FencingPass-mode" name="mode" value="pass"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="rsc_rhel7-node1" class="ocf" type="IPaddr2" provider="heartbeat">
+        <instance_attributes id="rsc_rhel7-node1-params">
+          <nvpair id="rsc_rhel7-node1-ip" name="ip" value="192.168.122.201"/>
+          <nvpair id="rsc_rhel7-node1-cidr_netmask" name="cidr_netmask" value="32"/>
+        </instance_attributes>
+        <operations>
+          <op id="rsc_rhel7-node1-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive id="rsc_rhel7-node2" class="ocf" type="IPaddr2" provider="heartbeat">
+        <instance_attributes id="rsc_rhel7-node2-params">
+          <nvpair id="rsc_rhel7-node2-ip" name="ip" value="192.168.122.202"/>
+          <nvpair id="rsc_rhel7-node2-cidr_netmask" name="cidr_netmask" value="32"/>
+        </instance_attributes>
+        <operations>
+          <op id="rsc_rhel7-node2-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive id="rsc_rhel7-node3" class="ocf" type="IPaddr2" provider="heartbeat">
+        <instance_attributes id="rsc_rhel7-node3-params">
+          <nvpair id="rsc_rhel7-node3-ip" name="ip" value="192.168.122.203"/>
+          <nvpair id="rsc_rhel7-node3-cidr_netmask" name="cidr_netmask" value="32"/>
+        </instance_attributes>
+        <operations>
+          <op id="rsc_rhel7-node3-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive id="migrator" class="ocf" type="Dummy" provider="pacemaker">
+        <meta_attributes id="migrator-meta">
+          <nvpair id="migrator-allow-migrate" name="allow-migrate" value="1"/>
+          <nvpair id="migrator-resource-stickiness" name="resource-stickiness" value="1"/>
+        </meta_attributes>
+        <operations>
+          <op id="migrator-monitor-P10S" interval="P10S" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="Connectivity">
+        <meta_attributes id="Connectivity-meta">
+          <nvpair id="Connectivity-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive id="ping-1" class="ocf" type="ping" provider="pacemaker">
+          <instance_attributes id="ping-1-params">
+            <nvpair id="ping-1-debug" name="debug" value="true"/>
+            <nvpair id="ping-1-host_list" name="host_list" value="192.168.122.171"/>
+            <nvpair id="ping-1-name" name="name" value="connected"/>
+          </instance_attributes>
+          <operations>
+            <op id="ping-1-monitor-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+      <master id="master-1">
+        <meta_attributes id="master-1-meta">
+          <nvpair id="master-1-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="master-1-clone-max" name="clone-max" value="3"/>
+          <nvpair id="master-1-master-max" name="master-max" value="1"/>
+          <nvpair id="master-1-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <primitive id="stateful-1" class="ocf" type="Stateful" provider="pacemaker">
+          <operations>
+            <op id="stateful-1-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+            <op id="stateful-1-monitor-16s" interval="16s" role="Master" name="monitor" timeout="60s"/>
+          </operations>
+        </primitive>
+      </master>
+      <group id="group-1">
+        <primitive id="r192.168.122.204" class="ocf" type="IPaddr2" provider="heartbeat">
+          <instance_attributes id="r192.168.122.204-params">
+            <nvpair id="r192.168.122.204-ip" name="ip" value="192.168.122.204"/>
+            <nvpair id="r192.168.122.204-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.204-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive id="r192.168.122.205" class="ocf" type="IPaddr2" provider="heartbeat">
+          <instance_attributes id="r192.168.122.205-params">
+            <nvpair id="r192.168.122.205-ip" name="ip" value="192.168.122.205"/>
+            <nvpair id="r192.168.122.205-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.205-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive id="r192.168.122.206" class="ocf" type="IPaddr2" provider="heartbeat">
+          <instance_attributes id="r192.168.122.206-params">
+            <nvpair id="r192.168.122.206-ip" name="ip" value="192.168.122.206"/>
+            <nvpair id="r192.168.122.206-cidr_netmask" name="cidr_netmask" value="32"/>
+          </instance_attributes>
+          <operations>
+            <op id="r192.168.122.206-monitor-5s" interval="5s" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+      <primitive id="lsb-dummy" class="lsb" type="/usr/share/pacemaker/tests/cts/LSBDummy">
+        <operations>
+          <op id="lsb-dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="prefer-rhel7-node1" rsc="rsc_rhel7-node1">
+        <rule id="prefer-rhel7-node1-r" score="100" boolean-op="and">
+          <expression id="prefer-rhel7-node1-e" attribute="#uname" operation="eq" value="rhel7-node1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="prefer-rhel7-node2" rsc="rsc_rhel7-node2">
+        <rule id="prefer-rhel7-node2-r" score="100" boolean-op="and">
+          <expression id="prefer-rhel7-node2-e" attribute="#uname" operation="eq" value="rhel7-node2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="prefer-rhel7-node3" rsc="rsc_rhel7-node3">
+        <rule id="prefer-rhel7-node3-r" score="100" boolean-op="and">
+          <expression id="prefer-rhel7-node3-e" attribute="#uname" operation="eq" value="rhel7-node3"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="prefer-connected" rsc="master-1">
+        <rule id="connected" score="-INFINITY" boolean-op="or">
+          <expression id="m1-connected-1" attribute="connected" operation="lt" value="1"/>
+          <expression id="m1-connected-2" attribute="connected" operation="not_defined"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="group-1-after-master-1" first="master-1" then="group-1" kind="Mandatory" first-action="promote" then-action="start"/>
+      <rsc_colocation id="group-1-with-master-1" rsc="group-1" with-rsc="master-1" score="INFINITY" with-rsc-role="Master"/>
+      <rsc_order id="lsb-dummy-after-group-1" first="group-1" then="lsb-dummy" kind="Mandatory" first-action="start" then-action="start"/>
+      <rsc_colocation id="lsb-dummy-with-group-1" rsc="lsb-dummy" with-rsc="group-1" score="INFINITY"/>
+    </constraints>
+    <fencing-topology>
+      <fencing-level id="cts-rhel7-node1.1" index="1" target="rhel7-node1" devices="FencingPass,Fencing"/>
+      <fencing-level id="cts-rhel7-node2.1" index="1" target="rhel7-node2" devices="FencingPass,Fencing"/>
+      <fencing-level id="cts-rhel7-node3.1" index="1" target="rhel7-node3" devices="FencingPass,Fencing"/>
+    </fencing-topology>
+  </configuration>
+  <status>
+    <node_state id="2" uname="rhel7-node2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="rhel7-node1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="rhel7-node3" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -599,6 +599,8 @@ get_router_node(action_t *action)
         return NULL;
     }
 
+    CRM_ASSERT(action->node->details->remote_rsc != NULL);
+
     if (action->node->details->remote_rsc->running_on) {
         began_on = action->node->details->remote_rsc->running_on->data;
     }

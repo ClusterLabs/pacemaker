@@ -706,13 +706,12 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node && is_remote_node(node)) {
-            if (node->details->remote_rsc->running_on) {
-                node = node->details->remote_rsc->running_on->data;
-                router_node = node->details->uname;
-            } else {
+            if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
                 CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
                 return -ENXIO;
             }
+            node = node->details->remote_rsc->running_on->data;
+            router_node = node->details->uname;
         }
     }
 

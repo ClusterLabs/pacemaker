@@ -404,6 +404,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
     static gboolean unseen_are_unclean = TRUE;
     static gboolean init_startup_fence_params = FALSE;
 
+    if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
+        /* ignore fencing remote-nodes that don't have a conneciton resource associated
+         * with them. This happens when remote-node entries get left in the nodes section
+         * after the connection resource is removed */
+        return;
+    }
+
     if (init_startup_fence_params == FALSE) {
         blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
         init_startup_fence_params = TRUE;
@@ -617,7 +624,12 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 
         if (new_node_id) {
             crm_trace("detected remote node %s", new_node_id);
-            create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+
+            /* only create the remote node entry if the node didn't already exist */
+            if (pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+            }
+
         }
     }
     if (rsc_name_check) {
@@ -1234,7 +1246,14 @@ static gboolean
 determine_remote_online_status(node_t * this_node)
 {
     resource_t *rsc = this_node->details->remote_rsc;
-    resource_t *container = rsc->container;
+    resource_t *container = NULL;
+
+    if (rsc == NULL) {
+        this_node->details->online = FALSE;
+        goto remote_online_done;
+    }
+
+    container = rsc->container;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -1260,6 +1279,7 @@ determine_remote_online_status(node_t * this_node)
         this_node->details->online = FALSE;
     }
 
+remote_online_done:
     crm_trace("Remote node %s online=%s",
         this_node->details->id, this_node->details->online ? "TRUE" : "FALSE");
     return this_node->details->online;
@@ -1444,7 +1464,10 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
         rsc->is_remote_node = TRUE;
-        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        node = pe_find_node(data_set->nodes, rsc_id);
+        if (node == NULL) {
+	        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        }
         link_rsc2remotenode(data_set, rsc);
 
         if (node) {
