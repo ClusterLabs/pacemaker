@@ -155,6 +155,7 @@ static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode *
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
+const char *__xml_acl_to_text(enum xml_private_flags flags);
 
 #define CHUNK_SIZE 1024
 static inline bool TRACKING_CHANGES(xmlNode *xml)
@@ -540,6 +541,21 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
     </acls>
 */
 
+const char *
+__xml_acl_to_text(enum xml_private_flags flags)
+{
+    if(is_set(flags, xpf_acl_deny)) {
+        return "deny";
+    }
+    if(is_set(flags, xpf_acl_write)) {
+        return "read/write";
+    }
+    if(is_set(flags, xpf_acl_read)) {
+        return "read";
+    }
+
+    return "none";
+}
 
 static void
 __xml_acl_apply(xmlNode *xml) 
@@ -564,6 +580,21 @@ __xml_acl_apply(xmlNode *xml)
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
             p = match->_private;
+
+#ifdef SUSE_ACL_COMPAT
+            if(is_not_set(p->flags, acl->mode)) {
+                if(is_set(p->flags, xpf_acl_read)
+                   || is_set(p->flags, xpf_acl_write)
+                   || is_set(p->flags, xpf_acl_deny)) {
+                    char *path = xml_get_path(xml);
+                    crm_config_warn("Configuration element %s is matched by multiple ACL rules, only the first applies ('%s' wins over '%s')",
+                                    path, __xml_acl_to_text(p->flags), __xml_acl_to_text(acl->mode));
+                    free(path);
+                    continue;
+                }
+            }
+#endif
+
             p->flags |= acl->mode;
         }
         crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
