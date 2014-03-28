@@ -220,6 +220,10 @@ main(int argc, char **argv)
         return crm_exit(rc);
     }
 
+    if (type == NULL && dest_uname != NULL) {
+	    type = "forever";
+    }
+
     if (safe_str_eq(type, "reboot")) {
         type = XML_CIB_TAG_STATUS;
 
