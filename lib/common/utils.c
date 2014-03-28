@@ -2418,6 +2418,18 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+guint
+crm_strcase_hash(gconstpointer v)
+{
+    const signed char *p;
+    guint32 h = 0;
+
+    for (p = v; *p != '\0'; p++)
+        h = (h << 5) - h + g_ascii_tolower(*p);
+
+    return h;
+}
+
 void *
 find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal)
 {

@@ -373,11 +373,11 @@ main(int argc, char **argv)
     }
 
     rc = pcmk_ok;
-    if (command == 'c' || command == 'e') {
+    if (command == 'c' || command == 'e' || command == 'r') {
         xmlNode *output = NULL;
 
         /* create a shadow instance based on the current cluster config */
-        if (command == 'c') {
+        if (command == 'c' || command == 'r') {
             rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
             if (rc != pcmk_ok) {
                 fprintf(stderr, "Could not connect to the CIB: %s\n", pcmk_strerror(rc));
@@ -396,7 +396,8 @@ main(int argc, char **argv)
         free_xml(output);
 
         if (rc < 0) {
-            fprintf(stderr, "Could not create the shadow instance '%s': %s\n",
+            fprintf(stderr, "Could not %s the shadow instance '%s': %s\n",
+                    command == 'r' ? "reset" : "create",
                     shadow, strerror(errno));
             goto done;
         }

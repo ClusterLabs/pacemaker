@@ -293,7 +293,8 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
             op->rc = PCMK_OCF_TIMEOUT;
 
         } else {
-            crm_warn("%s - terminated with signal %d", prefix, signo);
+            do_crm_log_unlikely((op->cancel) ? LOG_INFO : LOG_WARNING,
+                                "%s - terminated with signal %d", prefix, signo);
             op->status = PCMK_LRM_OP_ERROR;
             op->rc = PCMK_OCF_SIGNAL;
         }

@@ -224,13 +224,13 @@ lrm_state_init_local(void)
     }
 
     lrm_state_table =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, internal_lrm_state_destroy);
+        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, internal_lrm_state_destroy);
     if (!lrm_state_table) {
         return FALSE;
     }
 
     proxy_table =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, remote_proxy_free);
+        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
     if (!proxy_table) {
          g_hash_table_destroy(lrm_state_table);
         return FALSE;

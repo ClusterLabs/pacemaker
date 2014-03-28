@@ -61,7 +61,7 @@ In most cases, it should be run as an anonymous clone.
 Any additional options to start the dlm_controld service with
 </longdesc>
 <shortdesc lang="en">DLM Options</shortdesc>
-<content type="string" default="-q 0" />
+<content type="string" default="-s 0" />
 </parameter>
 
 <parameter name="configdir" unique="1">
@@ -272,11 +272,11 @@ case "$OCF_RESOURCE_INSTANCE" in
 	: ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
 	;;
     *[dD][lL][mM]*)
-	: ${OCF_RESKEY_args=-q 0 -s 0}
+	: ${OCF_RESKEY_args=-s 0}
 	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 	;;
     *)
-	: ${OCF_RESKEY_args=-q 0 -s 0}
+	: ${OCF_RESKEY_args=-s 0}
 	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 esac
 

@@ -1,0 +1,467 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="29" operation="monitor" operation_key="dlm:10_monitor_30000" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1">
+        <primitive id="dlm" long-id="dlm:10" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:10_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="28" operation="start" operation_key="dlm:10_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1">
+        <primitive id="dlm" long-id="dlm:10" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="10" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="31" operation="monitor" operation_key="dlm:11_monitor_30000" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4">
+        <primitive id="dlm" long-id="dlm:11" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="dlm:11_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="30" operation="start" operation_key="dlm:11_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4">
+        <primitive id="dlm" long-id="dlm:11" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="11" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:10_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="33" operation="monitor" operation_key="dlm:12_monitor_30000" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5">
+        <primitive id="dlm" long-id="dlm:12" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="dlm:12_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="32" operation="start" operation_key="dlm:12_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5">
+        <primitive id="dlm" long-id="dlm:12" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="12" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="dlm:11_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="dlm:13_monitor_30000" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6">
+        <primitive id="dlm" long-id="dlm:13" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="34" operation="start" operation_key="dlm:13_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="34" operation="start" operation_key="dlm:13_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6">
+        <primitive id="dlm" long-id="dlm:13" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="13" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="dlm:12_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="37" operation="monitor" operation_key="dlm:14_monitor_30000" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7">
+        <primitive id="dlm" long-id="dlm:14" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="dlm:14_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="36" operation="start" operation_key="dlm:14_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7">
+        <primitive id="dlm" long-id="dlm:14" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="14" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="34" operation="start" operation_key="dlm:13_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="39" operation="monitor" operation_key="dlm:15_monitor_30000" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8">
+        <primitive id="dlm" long-id="dlm:15" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="dlm:15_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="38" operation="start" operation_key="dlm:15_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8">
+        <primitive id="dlm" long-id="dlm:15" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="15" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="dlm:14_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="dlm_monitor_30000" internal_operation_key="dlm:2_monitor_30000" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9">
+        <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="40" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9">
+        <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="dlm:15_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="43" operation="monitor" operation_key="dlm:3_monitor_30000" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10">
+        <primitive id="dlm" long-id="dlm:3" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="dlm:3_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="42" operation="start" operation_key="dlm:3_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10">
+        <primitive id="dlm" long-id="dlm:3" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="45" operation="monitor" operation_key="dlm:4_monitor_30000" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11">
+        <primitive id="dlm" long-id="dlm:4" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="44" operation="start" operation_key="dlm:4_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="44" operation="start" operation_key="dlm:4_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11">
+        <primitive id="dlm" long-id="dlm:4" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="dlm:3_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="47" operation="monitor" operation_key="dlm:5_monitor_30000" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12">
+        <primitive id="dlm" long-id="dlm:5" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="46" operation="start" operation_key="dlm:5_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="46" operation="start" operation_key="dlm:5_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12">
+        <primitive id="dlm" long-id="dlm:5" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="44" operation="start" operation_key="dlm:4_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="49" operation="monitor" operation_key="dlm:6_monitor_30000" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13">
+        <primitive id="dlm" long-id="dlm:6" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="dlm:6_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="48" operation="start" operation_key="dlm:6_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13">
+        <primitive id="dlm" long-id="dlm:6" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="46" operation="start" operation_key="dlm:5_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="51" operation="monitor" operation_key="dlm:7_monitor_30000" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14">
+        <primitive id="dlm" long-id="dlm:7" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="dlm:7_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="50" operation="start" operation_key="dlm:7_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14">
+        <primitive id="dlm" long-id="dlm:7" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="dlm:6_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="53" operation="monitor" operation_key="dlm:8_monitor_30000" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15">
+        <primitive id="dlm" long-id="dlm:8" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="start" operation_key="dlm:8_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="52" operation="start" operation_key="dlm:8_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15">
+        <primitive id="dlm" long-id="dlm:8" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="8" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="dlm:7_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="55" operation="monitor" operation_key="dlm:9_monitor_30000" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16">
+        <primitive id="dlm" long-id="dlm:9" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="dlm:9_start_0" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="54" operation="start" operation_key="dlm:9_start_0" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16">
+        <primitive id="dlm" long-id="dlm:9" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="9" CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="start" operation_key="dlm:8_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28" priority="1000000">
+    <action_set>
+      <pseudo_event id="57" operation="running" operation_key="dlm-clone_running_0">
+        <attributes CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:10_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="dlm:11_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="dlm:12_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="34" operation="start" operation_key="dlm:13_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="dlm:14_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="dlm:15_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="dlm:3_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="start" operation_key="dlm:4_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="start" operation_key="dlm:5_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="dlm:6_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="dlm:7_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="start" operation_key="dlm:8_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="dlm:9_start_0" on_node="virt-034.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="16"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="56" operation="start" operation_key="dlm-clone_start_0">
+        <attributes CRM_meta_clone_max="16" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
