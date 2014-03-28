@@ -15,6 +15,7 @@
 	<value>pacemaker-1.0</value>
 	<value>pacemaker-1.1</value>
 	<value>pacemaker-1.2</value>
+	<value>pacemaker-next</value>
       </choice>
     </attribute>
     <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>

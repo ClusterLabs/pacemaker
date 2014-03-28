@@ -39,7 +39,7 @@
 	</optional>
 	<ref name="element-nodes"/>
 	<element name="resources">
-	  <externalRef href="resources-1.1.rng"/>
+	  <externalRef href="resources-next.rng"/>
 	</element>
 	<optional>
 	  <element name="domains">
@@ -57,10 +57,10 @@
 	  </element>
 	</optional>
 	<element name="constraints">
-	  <externalRef href="constraints-1.1.rng"/>
+	  <externalRef href="constraints-next.rng"/>
 	</element>
 	<optional>
-	  <externalRef href="acls-1.1.rng"/>
+	  <externalRef href="acls-next.rng"/>
 	</optional>
 	<optional>
 	  <externalRef href="fencing.rng"/>

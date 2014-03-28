@@ -132,11 +132,12 @@ struct schema_s known_schemas[] = {
     /* 0 */    { 0, NULL, NULL, NULL, 1 },
     /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
     /* 2 */    { 1, "transitional-0.6", "crm-transitional.dtd",	"upgrade06.xsl", 4, NULL },
-    /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 0, NULL },
+    /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 4, NULL }, /* Legacy alias */
     /* 4 */    { 2, "pacemaker-1.0",    "pacemaker-1.0.rng",	NULL, 6, NULL },
-    /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-1.1.rng",	NULL, 6, NULL },
+    /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-next.rng",	NULL, 6, NULL }, /* Legacy alias */
     /* 6 */    { 2, "pacemaker-1.2",    "pacemaker-1.2.rng",	NULL, 0, NULL },
-    /* 7 */    { 0, "none", NULL, NULL, 0, NULL },
+    /* 7 */    { 2, "pacemaker-next",   "pacemaker-next.rng",   NULL, 0, NULL }, /* Feature playground */
+    /* 8 */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
 static filter_t filter[] = {
@@ -5140,9 +5141,6 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
 
     crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
     switch (type) {
-        case 0:
-            valid = TRUE;
-            break;
         case 1:
             valid = validate_with_dtd(doc, to_logs, file);
             break;
@@ -5344,27 +5342,30 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
     for (; lpc < max_schemas; lpc++) {
         gboolean valid = TRUE;
 
-        crm_debug("Testing '%s' validation",
-                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+        crm_debug("Testing '%s' validation (%d of %d)",
+                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
+                  lpc, max_schemas);
         valid = validate_with(xml, lpc, to_logs);
 
         if (valid) {
             *best = lpc;
+        } else {
+            crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
         }
 
         if (valid && transform) {
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
-            if (next <= 0) {
-                next = lpc + 1;
-            }
-
             crm_notice("Upgrading %s-style configuration to %s with %s",
                        known_schemas[lpc].name, known_schemas[next].name,
                        known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
 
-            if (known_schemas[lpc].transform == NULL) {
+            if (next == 0) {
+                crm_trace("Stopping at %s", known_schemas[lpc].name);
+                break;
+
+            } else if (known_schemas[lpc].transform == NULL) {
                 if (validate_with(xml, next, to_logs)) {
                     crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
                     lpc = next;
