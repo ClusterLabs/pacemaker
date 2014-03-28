@@ -689,6 +689,8 @@ do_test ticket-rsc-sets-12 "Ticket - Resource sets (2 tickets, standby, granted)
 do_test ticket-rsc-sets-13 "Ticket - Resource sets (2 tickets, granted, standby)"
 do_test ticket-rsc-sets-14 "Ticket - Resource sets (2 tickets, standby, revoked)"
 
+do_test site-specific-params "Site-specific instance attributes based on rules"
+
 echo ""
 do_test template-1 "Template - 1"
 do_test template-2 "Template - 2"

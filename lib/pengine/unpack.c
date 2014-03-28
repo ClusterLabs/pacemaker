@@ -914,6 +914,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
             xmlNode *xml_tickets = state;
             GHashTable *state_hash = NULL;
+            const char *site = NULL;
 
             /* Compatibility with the deprecated ticket state section:
              * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
@@ -928,6 +929,17 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
             if (state_hash) {
                 g_hash_table_destroy(state_hash);
+            }
+
+            site = crm_element_value(xml_tickets, XML_ATTR_ID);
+            if (site) {
+                GListPtr gIter = NULL;
+
+                for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+                    node_t *node = gIter->data;
+
+                    g_hash_table_insert(node->details->attrs, strdup("#site"), strdup(site));
+                }
             }
 
             /* Unpack the new "/cib/status/tickets/ticket_state"s */
