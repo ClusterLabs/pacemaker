@@ -404,6 +404,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
     static gboolean unseen_are_unclean = TRUE;
     static gboolean init_startup_fence_params = FALSE;
 
+    if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
+        /* ignore fencing remote-nodes that don't have a conneciton resource associated
+         * with them. This happens when remote-node entries get left in the nodes section
+         * after the connection resource is removed */
+        return;
+    }
+
     if (init_startup_fence_params == FALSE) {
         blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
         init_startup_fence_params = TRUE;
