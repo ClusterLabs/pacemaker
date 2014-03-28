@@ -500,6 +500,15 @@ dlm_dump() {
 	echo "---Lockspace history:"
 	dlm_tool dump
 
+	echo "---Lockspace status:"
+	dlm_tool status
+	dlm_tool status -v
+
+	echo "---Lockspace config:"
+	dlm_tool dump_config
+
+	dlm_tool log_plock
+
 	dlm_tool ls | grep name |
 	while read X N ; do
 	    echo "--- Lockspace $N:"
