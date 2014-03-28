@@ -5135,6 +5135,10 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
     int type = known_schemas[method].type;
     char *file = NULL;
 
+    if(type == 0) {
+        return TRUE;
+    }
+
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
     file = get_schema_path(known_schemas[method].location);

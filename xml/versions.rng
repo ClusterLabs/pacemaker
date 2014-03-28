@@ -6,6 +6,7 @@
   </start>
 
   <define name="attribute-version">
+    <optional>
     <attribute name="validate-with">
       <choice>
 	<value>none</value>
@@ -18,6 +19,7 @@
 	<value>pacemaker-next</value>
       </choice>
     </attribute>
+    </optional>
     <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>
     <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>
     <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>
