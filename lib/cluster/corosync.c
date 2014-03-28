@@ -131,7 +131,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     }
 
     if (name == NULL) {
-        crm_notice("Unable to get node name for nodeid %u", nodeid);
+        crm_info("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
 }
