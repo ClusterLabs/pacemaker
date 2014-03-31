@@ -133,11 +133,11 @@ struct schema_s known_schemas[] = {
     /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
     /* 2 */    { 1, "transitional-0.6", "crm-transitional.dtd",	"upgrade06.xsl", 4, NULL },
     /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 4, NULL }, /* Legacy alias */
-    /* 4 */    { 2, "pacemaker-1.0",    "pacemaker-1.0.rng",	NULL, 6, NULL },
+    /* 4 */    { 2, "pacemaker-1.0",    NULL,	NULL, 6, NULL },
     /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-next.rng",	NULL, 6, NULL }, /* Legacy alias */
-    /* 6 */    { 2, "pacemaker-1.2",    "pacemaker-1.2.rng",	NULL, 0, NULL },
-    /* 7 */    { 2, "pacemaker-next",   "pacemaker-next.rng",   NULL, 0, NULL }, /* Feature playground */
-    /* 8 */    { 0, "none", NULL, NULL, 0, NULL },
+    /* 6 */    { 2, "pacemaker-1.2",    NULL,	NULL, -1, NULL },
+    /* - */    { 2, "pacemaker-next",   NULL,   NULL, -1, NULL }, /* Feature playground */
+    /* - */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
 static filter_t filter[] = {
@@ -202,7 +202,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 }
 
 static char *
-get_schema_path(const char *file)
+get_schema_path(const char *name, const char *file)
 {
     static const char *base = NULL;
 
@@ -212,7 +212,10 @@ get_schema_path(const char *file)
     if (base == NULL || strlen(base) == 0) {
         base = CRM_DTD_DIRECTORY;
     }
-    return crm_concat(base, file, '/');
+    if(file) {
+        return g_strdup_printf("%s/%s", base, file);
+    }
+    return g_strdup_printf("%s/%s.rng", base, name);
 }
 
 static void
@@ -5172,7 +5175,7 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    file = get_schema_path(known_schemas[method].location);
+    file = get_schema_path(known_schemas[method].name, known_schemas[method].location);
 
     crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
     switch (type) {
@@ -5291,7 +5294,7 @@ apply_transformation(xmlNode * xml, const char *transform)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    xform = get_schema_path(transform);
+    xform = get_schema_path(NULL, transform);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
@@ -5392,15 +5395,18 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
-            crm_notice("Upgrading %s-style configuration to %s with %s",
-                       known_schemas[lpc].name, known_schemas[next].name,
-                       known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+            if(next == 0) {
+                next = lpc + 1;
+            }
 
-            if (next == 0) {
+            if (next < 0) {
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
                 break;
 
             } else if (known_schemas[lpc].transform == NULL) {
+                crm_notice("%s-style configuration is also valid for %s",
+                           known_schemas[lpc].name, known_schemas[next].name);
+
                 if (validate_with(xml, next, to_logs)) {
                     crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
                     lpc = next;
@@ -5412,6 +5418,10 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
                 }
 
             } else {
+                crm_notice("Upgrading %s-style configuration to %s with %s",
+                           known_schemas[lpc].name, known_schemas[next].name,
+                           known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+
 #if HAVE_LIBXSLT
                 upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 #endif
