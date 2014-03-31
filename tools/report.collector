@@ -475,8 +475,7 @@ sys_stats() {
     ps axf
     ps auxw
     top -b -n 1
-    ifconfig -a
-    ip addr list
+    ip addr
     netstat -i
     arp -an
     test -d /proc && {
