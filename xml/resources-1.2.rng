@@ -6,6 +6,7 @@
   </start>
 
   <define name="element-resources">
+    <element name="resources">
       <zeroOrMore>
 	<choice>
 	  <ref name="element-primitive"/>
@@ -15,6 +16,7 @@
 	  <ref name="element-master"/>
 	</choice>
       </zeroOrMore>
+    </element>
   </define>
 
   <define name="element-primitive">

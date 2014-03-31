@@ -17,43 +17,56 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-
 dtddir			= $(CRM_DTD_DIRECTORY)
+dtd_SCRIPTS		= crm.dtd crm-transitional.dtd
 
-VERSIONED_RNG_FILES	= pacemaker.rng constraints.rng resources.rng acls.rng
+schema_VERSIONS		= 1.2 next
+schema_GENERATED	= pacemaker.rng $(foreach base,$(schema_VERSIONS),pacemaker-$(base).rng)
 
-RNG_FILES_10		= $(foreach rng,pacemaker constraints resources,$(rng)-1.0.rng)
-RNG_FILES_12		= $(foreach rng,pacemaker cib options nodes resources constraints fencing acls status,$(rng)-1.2.rng)
-RNG_FILES		= $(RNG_FILES_10) $(RNG_FILES_12)	\
-			  $(VERSIONED_RNG_FILES:%.rng=%-next.rng)	\
-			  pacemaker.rng versions.rng score.rng rule.rng nvset.rng 
+schemadir		= $(CRM_DTD_DIRECTORY)
+RNG_cfg_files	 	= options nodes resources constraints fencing acls unused
+RNG_files	 	= cib $(RNG_cfg_files) status versions score rule nvset
+schema_SCRIPTS		= $(foreach base,$(RNG_files),$(wildcard $(base)*.rng)) $(schema_GENERATED) \
+			  pacemaker-1.0.rng upgrade06.xsl upgrade11.xsl
 
-EXTRA_DIST		= crm-1.0.dtd $(dtd_SCRIPTS)
-dtd_SCRIPTS		= crm.dtd $(RNG_FILES) upgrade06.xsl upgrade11.xsl crm-transitional.dtd
+EXTRA_DIST		= $(schema_SCRIPTS) $(dtd_SCRIPTS)
 
-NEXT ?= $(shell echo $(CRM_DTD_VERSION) | awk -F. '/[0-9]+\./{$$2+=1;OFS=".";print $$1,$$2}')
+# See Readme.md for details on updating schema files
 
-next:
-	echo $(NEXT)
-
-diff:
-	for c in `ls -1 *-$(CRM_DTD_VERSION).rng | sed 's/-$(CRM_DTD_VERSION).rng//'`; do diff -u $$c-$(CRM_DTD_VERSION).rng $$c-next.rng ; done 
-
-clone:
-	for c in `ls -1 *-$(CRM_DTD_VERSION).rng | sed 's/-$(CRM_DTD_VERSION).rng//'`; do cp $$c-$(CRM_DTD_VERSION).rng $$c-$(NEXT).rng; sed -i 's/$(CRM_DTD_VERSION).rng/$(NEXT).rng/g' $$c-$(NEXT).rng; git add $$c-$(NEXT).rng ; done 
-
-sync:
-	for c in `ls -1 *-$(CRM_DTD_VERSION).rng | sed 's/-$(CRM_DTD_VERSION).rng//'`; do cp $$c-$(CRM_DTD_VERSION).rng $$c-next.rng; sed -i 's/$(CRM_DTD_VERSION).rng/next.rng/g' $$c-next.rng; git add $$c-next.rng ; done 
-
-# Fake versioned subschemas not used by anything...
-acls-1.0.rng:
-	touch $@
-
-crm.dtd: crm-1.0.dtd
-	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
+best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
 
 pacemaker.rng: pacemaker-$(CRM_DTD_VERSION).rng
 	cp $(top_builddir)/xml/$< $@
 
+pacemaker-%.rng:
+	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
+	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
+	echo "  <start>" >> $@
+	echo "    <element name='cib'>" >> $@
+	echo "      <externalRef href=\"$(call best_match,cib,$*)\"/>" >> $@
+	echo "      <element name='configuration'>" >> $@
+	echo "        <interleave>" >> $@
+	echo -e " "$(foreach rng,$(RNG_cfg_files),"         <externalRef href=\"$(call best_match,$(rng),$*)\"/>\n") >> $@
+	echo "        </interleave>" >> $@
+	echo "      </element>" >> $@
+	echo "      <element name='status'>" >> $@
+	echo "        <externalRef href=\"$(call best_match,status,$*)\"/>" >> $@
+	echo "      </element>" >> $@
+	echo "    </element>" >> $@
+	echo "  </start>" >> $@
+	echo "</grammar>" >> $@
+
+	echo "Created $@"
+
+rng_next = $(shell echo $(wildcard *-next.rng) | sed 's/-next.rng//g')
+diff:
+	echo "Comparing changes to: $(rng_next)"
+	for rng in $(rng_next); do echo "### $${rng}"; diff -u $${rng}-$(CRM_DTD_VERSION).rng $${rng}-next.rng; done
+	echo "Done"
+
+sync:
+	git rm -f $(wildcard *-next.rng)
+	make pacemaker-next.rng
+
 clean:
-	rm -f crm.dtd pacemaker.rng
+	rm -f $(schema_GENERATED)

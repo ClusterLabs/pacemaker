@@ -6,6 +6,7 @@
   </start>
 
   <define name="element-nodes">
+    <element name="nodes">
       <zeroOrMore>
 	<element name="node">
 	  <attribute name="id"><text/></attribute>
@@ -37,6 +38,7 @@
 	  </zeroOrMore>
 	</element>
       </zeroOrMore>
+    </element>
   </define>
 
 </grammar>
