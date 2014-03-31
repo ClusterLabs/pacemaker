@@ -201,6 +201,7 @@
 		  <value>nothing</value>
 		  <value>quorum</value>
 		  <value>fencing</value>
+		  <value>unfencing</value>
 		</choice>
 	      </attribute>
 	    </optional>

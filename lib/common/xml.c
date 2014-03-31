@@ -135,7 +135,8 @@ struct schema_s known_schemas[] = {
     /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 4, NULL }, /* Legacy alias */
     /* 4 */    { 2, "pacemaker-1.0",    NULL,	NULL, 6, NULL },
     /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-next.rng",	NULL, 6, NULL }, /* Legacy alias */
-    /* 6 */    { 2, "pacemaker-1.2",    NULL,	NULL, -1, NULL },
+    /* 6 */    { 2, "pacemaker-1.2",    NULL,	NULL,  0, NULL },
+    /* 7 */    { 2, "pacemaker-1.3",    NULL,	NULL, -1, NULL },
     /* - */    { 2, "pacemaker-next",   NULL,   NULL, -1, NULL }, /* Feature playground */
     /* - */    { 0, "none", NULL, NULL, 0, NULL },
 };

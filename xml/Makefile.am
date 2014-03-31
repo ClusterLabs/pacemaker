@@ -26,7 +26,7 @@ xslt_SCRIPTS		= upgrade06.xsl upgrade11.xsl
 RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
-RNG_versions		= 1.0 1.2 next
+RNG_versions		= 1.0 1.2 1.3 next
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng)
 
 RNG_cfg_base	 	= options nodes resources constraints fencing acls
