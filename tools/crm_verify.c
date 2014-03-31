@@ -239,7 +239,7 @@ main(int argc, char **argv)
         cib_object = NULL;
         fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
         fprintf(stderr, "Please manually update the configuration to conform to the %s syntax.\n",
-                LATEST_SCHEMA_VERSION);
+                xml_latest_schema());
     }
 
     set_working_set_defaults(&data_set);

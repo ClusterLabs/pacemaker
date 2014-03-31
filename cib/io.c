@@ -428,7 +428,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add(root, XML_ATTR_GENERATION, "0");
         crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
         crm_xml_add(root, XML_ATTR_GENERATION_ADMIN, "0");
-        crm_xml_add(root, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+        crm_xml_add(root, XML_ATTR_VALIDATION, xml_latest_schema());
         crm_warn("Continuing with an empty configuration.");
     }
 

@@ -20,7 +20,6 @@ dnl     checks for library functions
 dnl     checks for system services
 
 AC_INIT(pacemaker, 1.1.10, pacemaker@oss.clusterlabs.org,,http://clusterlabs.org)
-CRM_DTD_VERSION="1.2"
 
 PCMK_FEATURES=""
 HB_PKG=heartbeat
@@ -1062,9 +1061,6 @@ dnl ===============================================
 CRM_DTD_DIRECTORY="${datadir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_DIRECTORY)
-
-AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_DTD_VERSION)
 
 CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/pacemaker/cores`
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)

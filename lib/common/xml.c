@@ -157,6 +157,12 @@ static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 const char *__xml_acl_to_text(enum xml_private_flags flags);
 
+const char *
+xml_latest_schema(void) 
+{
+    return get_schema_version("pacemaker-next") - 1;
+}
+
 #define CHUNK_SIZE 1024
 static inline bool TRACKING_CHANGES(xmlNode *xml)
 {
@@ -5579,7 +5585,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
         min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
     }
     if (max_version < 0) {
-        max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+        max_version = get_schema_version("pacemaker-next");
     }
 
     if (version < min_version) {

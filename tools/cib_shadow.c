@@ -389,7 +389,7 @@ main(int argc, char **argv)
             crm_xml_add(output, XML_ATTR_GENERATION, "0");
             crm_xml_add(output, XML_ATTR_NUMUPDATES, "0");
             crm_xml_add(output, XML_ATTR_GENERATION_ADMIN, "0");
-            crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+            crm_xml_add(output, XML_ATTR_VALIDATION, xml_latest_schema());
         }
 
         rc = write_xml_file(output, shadow_file, FALSE);

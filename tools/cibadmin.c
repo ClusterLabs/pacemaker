@@ -339,7 +339,7 @@ main(int argc, char **argv)
                 output = createEmptyCib();
                 crm_xml_add(output, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
                 if (optind >= argc) {
-                    crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+                    crm_xml_add(output, XML_ATTR_VALIDATION, xml_latest_schema());
                 } else {
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
