@@ -35,8 +35,7 @@ RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 
 RNG_SCRIPTS		= $(RNG_files) $(RNG_generated)
 
-# Needed?
-EXTRA_DIST		= $(RNG_SCRIPTS) $(dtd_SCRIPTS) $(xslt_SCRIPTS)
+EXTRA_DIST		= best-match.sh
 
 best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
 
