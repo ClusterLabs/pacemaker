@@ -4,143 +4,31 @@
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
     <element name="cib">
-      <ref name="element-cib"/>
+      <externalRef href="cib-1.2.rng"/>
+      <element name="configuration">
+	<interleave>
+	  <externalRef href="options-1.2.rng"/>
+	  <element name="nodes">
+	    <externalRef href="nodes-1.2.rng"/>
+	  </element>
+	  <element name="resources">
+	    <externalRef href="resources-1.2.rng"/>
+	  </element>
+	  <element name="constraints">
+	    <externalRef href="constraints-1.2.rng"/>
+	  </element>
+	  <optional>
+	    <externalRef href="acls-1.2.rng"/>
+	  </optional>
+	  <optional>
+	    <externalRef href="fencing-1.2.rng"/>
+	  </optional>
+	</interleave>
+      </element>
+      <element name="status">
+	<externalRef href="status-1.2.rng"/>
+      </element>
     </element>
   </start>
-
-  <define name="element-cib">
-    <ref name="attribute-options"/>
-    <element name="configuration">
-      <interleave>
-	<element name="crm_config">
-	  <zeroOrMore>
-	    <element name="cluster_property_set">
-	      <externalRef href="nvset.rng"/>
-	    </element>
-	  </zeroOrMore>
-	</element>
-	<optional>
-	  <element name="rsc_defaults">
-	    <zeroOrMore>
-	      <element name="meta_attributes">
-		<externalRef href="nvset.rng"/>
-	      </element>
-	    </zeroOrMore>
-	  </element>
-	</optional>
-	<optional>
-	  <element name="op_defaults">
-	    <zeroOrMore>
-	      <element name="meta_attributes">
-		<externalRef href="nvset.rng"/>
-	      </element>
-	    </zeroOrMore>
-	  </element>
-	</optional>
-	<ref name="element-nodes"/>
-	<element name="resources">
-	  <externalRef href="resources-1.2.rng"/>
-	</element>
-	<element name="constraints">
-	  <externalRef href="constraints-1.2.rng"/>
-	</element>
-	<optional>
-	  <externalRef href="acls-1.2.rng"/>
-	</optional>
-	<optional>
-	  <externalRef href="fencing.rng"/>
-	</optional>
-      </interleave>
-    </element>
-    <element name="status">
-      <ref name="element-status"/>
-    </element>
-  </define>
-
-  <define name="attribute-options">
-    <externalRef href="versions.rng"/>
-    <optional>
-      <attribute name="crm_feature_set"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
-    </optional>
-    <optional>
-      <attribute name="remote-clear-port"><data type="nonNegativeInteger"/></attribute>
-    </optional>
-    <optional>
-      <attribute name="have-quorum"><data type="boolean"/></attribute>
-    </optional>
-    <optional>
-      <attribute name="dc-uuid"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="cib-last-written"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="no-quorum-panic"><data type="boolean"/></attribute>
-    </optional>
-    <optional>
-      <attribute name="update-origin"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="update-client"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="update-user"><text/></attribute>
-    </optional>
-  </define>
-
-  <define name="element-nodes">
-    <element name="nodes">
-      <zeroOrMore>
-	<element name="node">
-	  <attribute name="id"><text/></attribute>
-	  <attribute name="uname"><text/></attribute>
-	  <optional>
-	    <attribute name="type">
-	      <choice>
-		<value>normal</value>
-		<value>member</value>
-		<value>ping</value>
-	      </choice>
-	    </attribute>
-	  </optional>
-	  <optional>
-	    <attribute name="description"><text/></attribute>
-	  </optional>
-	  <optional>
-	    <externalRef href="score.rng"/>
-	  </optional>
-	  <zeroOrMore>
-	    <choice>
-	      <element name="instance_attributes">
-	        <externalRef href="nvset.rng"/>
-	      </element>
-	      <element name="utilization">
-	        <externalRef href="nvset.rng"/>
-	      </element>
-	    </choice>
-	  </zeroOrMore>
-	</element>
-      </zeroOrMore>
-    </element>
-  </define>
-
-  <define name="element-status">
-    <zeroOrMore>
-      <choice>
-        <attribute>
-          <anyName/>
-          <text/>
-        </attribute>
-        <element>
-          <anyName/>
-          <ref name="element-status"/>
-        </element>
-        <text/>
-      </choice>
-    </zeroOrMore>
-  </define>
 
 </grammar>

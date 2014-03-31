@@ -22,11 +22,11 @@ dtddir			= $(CRM_DTD_DIRECTORY)
 
 VERSIONED_RNG_FILES	= pacemaker.rng constraints.rng resources.rng acls.rng
 
-RNG_FILES		= $(VERSIONED_RNG_FILES:%.rng=%-1.0.rng)	\
-			  $(VERSIONED_RNG_FILES:%.rng=%-1.2.rng)	\
+RNG_FILES_10		= $(foreach rng,pacemaker constraints resources,$(rng)-1.0.rng)
+RNG_FILES_12		= $(foreach rng,pacemaker cib options nodes resources constraints fencing acls status,$(rng)-1.2.rng)
+RNG_FILES		= $(RNG_FILES_10) $(RNG_FILES_12)	\
 			  $(VERSIONED_RNG_FILES:%.rng=%-next.rng)	\
-			  pacemaker.rng versions.rng score.rng rule.rng nvset.rng \
-			  fencing.rng
+			  pacemaker.rng versions.rng score.rng rule.rng nvset.rng 
 
 EXTRA_DIST		= crm-1.0.dtd $(dtd_SCRIPTS)
 dtd_SCRIPTS		= crm.dtd $(RNG_FILES) upgrade06.xsl upgrade11.xsl crm-transitional.dtd

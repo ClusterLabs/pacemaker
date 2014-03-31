@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <interleave>
+      <element name="crm_config">
+	<zeroOrMore>
+	  <element name="cluster_property_set">
+	    <externalRef href="nvset.rng"/>
+	  </element>
+	</zeroOrMore>
+      </element>
+      <optional>
+	<element name="rsc_defaults">
+	  <zeroOrMore>
+	    <element name="meta_attributes">
+	      <externalRef href="nvset.rng"/>
+	    </element>
+	  </zeroOrMore>
+	</element>
+      </optional>
+      <optional>
+	<element name="op_defaults">
+	  <zeroOrMore>
+	    <element name="meta_attributes">
+	      <externalRef href="nvset.rng"/>
+	    </element>
+	  </zeroOrMore>
+	</element>
+      </optional>
+    </interleave>
+  </start>
+
+</grammar>
