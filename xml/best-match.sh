@@ -2,13 +2,18 @@
 
 base=$1; shift
 target=$1; shift
+destination=$1; shift
+prefix=$1; shift
+
+echo "$base $target $destination" 1>&2
+
 best="0.0"
 candidates=$(ls -1 ${base}-*.rng 2>/dev/null)
 for rng in $candidates; do
     case $rng in
 	${base}-${target}.rng)
-	    echo $rng
-	    exit
+	    best=${target}
+	    break
 	    ;;
 	*next*)
 	    : skipping $rng
@@ -33,8 +38,12 @@ for rng in $candidates; do
 	    ;;
     esac
 done
+
 if [ "x${best}" != "x0.0" ]; then
-    echo ${base}-${best}.rng
-else
-    echo "empty.rng"
+    if [ "x$destination" = x ]; then
+	echo ${base}-${best}.rng
+    else
+	echo "Saving to $destination"
+	echo "$prefix<externalRef href=\"${base}-${best}.rng\"/>" >> ${destination}
+    fi
 fi

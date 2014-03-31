@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="attribute-options"/>
+  </start>
+
+  <define name="attribute-options">
+    <externalRef href="versions.rng"/>
+    <optional>
+      <attribute name="crm_feature_set"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
+    </optional>
+    <optional>
+      <attribute name="remote-clear-port"><data type="nonNegativeInteger"/></attribute>
+    </optional>
+    <optional>
+      <attribute name="have-quorum"><data type="boolean"/></attribute>
+    </optional>
+    <optional>
+      <attribute name="dc-uuid"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="cib-last-written"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="no-quorum-panic"><data type="boolean"/></attribute>
+    </optional>
+  </define>
+
+</grammar>
