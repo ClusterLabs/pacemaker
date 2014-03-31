@@ -39,10 +39,33 @@ EXTRA_DIST		= best-match.sh
 
 best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
 
+versions.rng: Makefile.am
+	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
+	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
+	echo "  <start>" >> $@
+	echo "    <optional>" >> $@
+	echo "    <attribute name='validate-with'>" >> $@
+	echo "      <choice>" >> $@
+	echo "        <value>none</value>" >> $@
+	echo "        <value>pacemaker-0.6</value>" >> $@
+	echo "        <value>transitional-0.6</value>" >> $@
+	echo "        <value>pacemaker-0.7</value>" >> $@
+	echo "        <value>pacemaker-1.1</value>" >> $@
+	for rng in $(RNG_versions); do echo "        <value>pacemaker-$$rng</value>" >> $@; done
+	echo "      </choice>" >> $@
+	echo "    </attribute>" >> $@
+	echo "    </optional>" >> $@
+	echo "    <attribute name='admin_epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
+	echo "    <attribute name='epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
+	echo "    <attribute name='num_updates'><data type='nonNegativeInteger'/></attribute>" >> $@
+	echo "  </start>" >> $@
+	echo "</grammar>" >> $@
+	echo "Built $@"
+
 pacemaker.rng: pacemaker-$(CRM_DTD_VERSION).rng
 	cp $(top_builddir)/xml/$< $@
 
-pacemaker-%.rng: 
+pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am 
 	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
 	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
 	echo "  <start>" >> $@
@@ -59,7 +82,7 @@ pacemaker-%.rng:
 	echo "    </element>" >> $@
 	echo "  </start>" >> $@
 	echo "</grammar>" >> $@
-	cat $@
+	echo "Built $@"
 
 rng_next = $(shell echo $(wildcard *-next.rng) | sed 's/-next.rng//g')
 diff:

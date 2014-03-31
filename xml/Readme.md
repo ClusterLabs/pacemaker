@@ -8,12 +8,11 @@ Create from the most recent `${base}-${X}.${Y}.rng` if it does not already exist
 
 ## Stable features ##
 
-The current stable version is set by  `CRM_DTD_VERSION` in `configure.ac` and has the form `${X}.${Y}`.
+The current stable version is set by `CRM_DTD_VERSION` in `configure.ac` and has the form `${X}.${Y}`.
 Bump `${X}` and set `${Y}` to `0` for syntax removals, bump `${Y}` for additions and then,
 
-1. Update the value `configure.ac`,
+1. Update the value of `CRM_DTD_VERSION` in `configure.ac`,
 1. Add the new `${X}.${Y}` to `RNG_versions` in xml/Makefile.am,
-1. Add the new `${X}.${Y}` to `xml/versions.rng`
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng`
 1. TBA: Possibly we should be bumping CRM_FEATURE_SET too
 1. Update `known_schemas` in `lib/common/xml.c`, add it prior to the entry for `pacemaker-next`.
