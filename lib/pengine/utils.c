@@ -362,7 +362,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
     GListPtr possible_matches = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
-    CRM_CHECK(task != NULL, return NULL);
+    CRM_CHECK(task != NULL, free(key); return NULL);
 
     if (save_action && rsc != NULL) {
         possible_matches = find_actions(rsc->actions, key, on_node);
