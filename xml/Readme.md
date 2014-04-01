@@ -27,7 +27,6 @@ See `xml/upgrade06.xsl` for an example.
 1. Commit the copy, eg. `"Clone the latest ${base} schema in preparation for changes"`.  
    This way the actual change will be included with the creation of the new schema.
 1. Modify `${base}-${X}.${Y}.rng` as required
-1. Add the new `${X}.${Y}` to `RNG_versions` in `xml/Makefile.am` 
 1. Add an XSLT file if required and update `xslt_SCRIPTS` in `xml/Makefile.am` 
 1. Update `known_schemas` in `lib/common/xml.c`, add it prior to the entry for `pacemaker-next`.
    The second last field of the previous entry needs to be set to `0`.

@@ -26,7 +26,8 @@ xslt_SCRIPTS		= upgrade06.xsl upgrade11.xsl
 RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
-RNG_versions		= 1.0 1.2 1.3 next
+RNG_max			= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
+RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng)
 
 RNG_cfg_base	 	= options nodes resources constraints fencing acls
@@ -38,6 +39,10 @@ RNG_SCRIPTS		= $(RNG_files) $(RNG_generated)
 EXTRA_DIST		= best-match.sh
 
 best_match		= $(shell $(top_srcdir)/xml/best-match.sh $(1) $(2))
+
+versions:
+	echo "Max: $(RNG_max)"
+	echo "Available: $(RNG_versions)"
 
 versions.rng: Makefile.am
 	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
@@ -62,7 +67,7 @@ versions.rng: Makefile.am
 	echo "</grammar>" >> $@
 	echo "Built $@"
 
-pacemaker.rng: pacemaker-$(CRM_DTD_VERSION).rng
+pacemaker.rng: pacemaker-$(RNG_max).rng
 	cp $(top_builddir)/xml/$< $@
 
 pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am 
