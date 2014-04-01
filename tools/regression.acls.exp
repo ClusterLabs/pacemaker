@@ -3,7 +3,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   CIB_shadow=tools-regression ; export CIB_shadow
 =#=#=#= Begin test: Configure some ACLs =#=#=#=
 =#=#=#= Current cib after: Configure some ACLs =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="1" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config/>
     <nodes/>
@@ -29,7 +29,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: cibadmin       - Configure some ACLs
 =#=#=#= Begin test: Enable ACLs =#=#=#=
 =#=#=#= Current cib after: Enable ACLs =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="2" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -59,7 +59,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_attribute  - Enable ACLs
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -91,7 +91,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 =#=#=#= Begin test: unknownguy: Query configuration =#=#=#=
 Call failed: Permission denied
 =#=#=#= Current cib after: unknownguy: Query configuration =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -123,7 +123,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: unknownguy: Set enable-acl =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: unknownguy: Set enable-acl =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -155,7 +155,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: unknownguy: Set stonith-enabled =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: unknownguy: Set stonith-enabled =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -187,7 +187,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 Call failed: Permission denied
 =#=#=#= Current cib after: unknownguy: Create a resource =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -219,7 +219,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: l33t-haxor: Query configuration =#=#=#=
 Call failed: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Query configuration =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -251,7 +251,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: l33t-haxor: Set enable-acl =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Set enable-acl =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -283,7 +283,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: l33t-haxor: Set stonith-enabled =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Set stonith-enabled =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -315,7 +315,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
 Call failed: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Create a resource =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -345,7 +345,7 @@ Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Create a resource
 =#=#=#= Begin test: niceguy: Query configuration =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -373,7 +373,7 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Current cib after: niceguy: Query configuration =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -406,7 +406,7 @@ Call failed: Permission denied
 Error performing operation: Permission denied
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
 =#=#=#= Current cib after: niceguy: Set enable-acl =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -437,7 +437,7 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
 * Passed: crm_attribute  - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
 =#=#=#= Current cib after: niceguy: Set stonith-enabled =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -470,7 +470,7 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Create a resource =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -501,7 +501,7 @@ Call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Create a resource
 =#=#=#= Begin test: root: Query configuration =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -530,7 +530,7 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Current cib after: root: Query configuration =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -562,7 +562,7 @@ Call failed: Permission denied
 * Passed: cibadmin       - root: Query configuration
 =#=#=#= Begin test: root: Set stonith-enabled =#=#=#=
 =#=#=#= Current cib after: root: Set stonith-enabled =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="5" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -594,7 +594,7 @@ Call failed: Permission denied
 * Passed: crm_attribute  - root: Set stonith-enabled
 =#=#=#= Begin test: root: Create a resource =#=#=#=
 =#=#=#= Current cib after: root: Create a resource =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -629,7 +629,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Create a resource meta attribute =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -664,7 +664,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Query a resource meta attribute =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -699,7 +699,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
 Error performing operation: Permission denied
 =#=#=#= Current cib after: l33t-haxor: Remove a resource meta attribute =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -733,7 +733,7 @@ Error performing operation: Permission denied
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -772,7 +772,7 @@ Error performing operation: Permission denied
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -811,7 +811,7 @@ Stopped
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
 Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="8" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -847,7 +847,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="9" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -885,7 +885,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 * Passed: crm_resource   - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: New ACL =#=#=#=
 =#=#=#= Current cib after: New ACL =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="10" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -937,7 +937,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
   </configuration>
 </cib>
 =#=#=#= Current cib after: badidea: Query configuration - implied deny =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="10" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -978,7 +978,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 * Passed: cibadmin       - badidea: Query configuration - implied deny
 =#=#=#= Begin test: Updated ACL =#=#=#=
 =#=#=#= Current cib after: Updated ACL =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1031,7 +1031,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
   </configuration>
 </cib>
 =#=#=#= Current cib after: badidea: Query configuration - explicit deny =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1071,7 +1071,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 </cib>
 =#=#=#= End test: badidea: Query configuration - explicit deny - OK (0) =#=#=#=
 * Passed: cibadmin       - badidea: Query configuration - explicit deny
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1096,7 +1096,7 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 __xml_acl_check: 	400 access denied to /cib/configuration/acls: default
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Replace - remove acls =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1136,7 +1136,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= End test: niceguy: Replace - remove acls - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - remove acls
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1180,7 +1180,7 @@ __xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@i
 __xml_acl_post_process: 	Cannot add new node primitive at /cib/configuration/resources/primitive[@id='dummy2']
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Replace - create resource =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1220,7 +1220,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= End test: niceguy: Replace - create resource - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create resource
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1262,7 +1262,7 @@ Call failed: Permission denied
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]: default
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Replace - modify attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1302,7 +1302,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= End test: niceguy: Replace - modify attribute - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - modify attribute
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1344,7 +1344,7 @@ Call failed: Permission denied
 __xml_acl_check: 	400 access denied to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']: default
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Replace - delete attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1384,7 +1384,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= End test: niceguy: Replace - delete attribute - Permission denied (13) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - delete attribute
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1426,7 +1426,7 @@ Call failed: Permission denied
 __xml_acl_check: 	400 access denied to /cib/configuration/resources/primitive[@id='dummy'][@description]: default
 Call failed: Permission denied
 =#=#=#= Current cib after: niceguy: Replace - create attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

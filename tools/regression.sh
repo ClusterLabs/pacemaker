@@ -553,6 +553,7 @@ for t in $tests; do
     sed -i -e 's/cib-last-written.*>/>/'\
 	-e 's/ last-run=\"[0-9]*\"//'	\
 	-e 's/crm_feature_set="[^"]*"//'\
+	-e 's/validate-with="[^"]*"//'\
         -e 's/.*__xml_acl_check/__xml_acl_check/g'\
 	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
 	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
