@@ -28,10 +28,10 @@ RNGdir			= $(dtddir)
 # See Readme.md for details on updating schema files
 RNG_max			= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
 RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
-RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng)
+RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
 RNG_cfg_base	 	= options nodes resources constraints fencing acls
-RNG_base	 	= cib $(RNG_cfg_base) status versions score rule nvset
+RNG_base	 	= cib $(RNG_cfg_base) status score rule nvset
 RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 
 RNG_SCRIPTS		= $(RNG_files) $(RNG_generated)
