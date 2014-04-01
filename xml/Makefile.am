@@ -48,21 +48,23 @@ versions.rng: Makefile.am
 	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
 	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
 	echo "  <start>" >> $@
+	echo "   <interleave>" >> $@
 	echo "    <optional>" >> $@
-	echo "    <attribute name='validate-with'>" >> $@
-	echo "      <choice>" >> $@
-	echo "        <value>none</value>" >> $@
-	echo "        <value>pacemaker-0.6</value>" >> $@
-	echo "        <value>transitional-0.6</value>" >> $@
-	echo "        <value>pacemaker-0.7</value>" >> $@
-	echo "        <value>pacemaker-1.1</value>" >> $@
-	for rng in $(RNG_versions); do echo "        <value>pacemaker-$$rng</value>" >> $@; done
-	echo "      </choice>" >> $@
-	echo "    </attribute>" >> $@
+	echo "      <attribute name='validate-with'>" >> $@
+	echo "        <choice>" >> $@
+	echo "          <value>none</value>" >> $@
+	echo "          <value>pacemaker-0.6</value>" >> $@
+	echo "          <value>transitional-0.6</value>" >> $@
+	echo "          <value>pacemaker-0.7</value>" >> $@
+	echo "          <value>pacemaker-1.1</value>" >> $@
+	for rng in $(RNG_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
+	echo "        </choice>" >> $@
+	echo "      </attribute>" >> $@
 	echo "    </optional>" >> $@
 	echo "    <attribute name='admin_epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
 	echo "    <attribute name='epoch'><data type='nonNegativeInteger'/></attribute>" >> $@
 	echo "    <attribute name='num_updates'><data type='nonNegativeInteger'/></attribute>" >> $@
+	echo "   </interleave>" >> $@
 	echo "  </start>" >> $@
 	echo "</grammar>" >> $@
 	echo "Built $@"
