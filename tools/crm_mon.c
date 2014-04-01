@@ -2504,6 +2504,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     if (current_cib == NULL) {
+        crm_trace("Re-requesting the full cib");
         cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 

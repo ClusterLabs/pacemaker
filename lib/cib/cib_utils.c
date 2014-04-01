@@ -816,12 +816,12 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
 
         if (rc != pcmk_ok) {
             crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);
-            free_xml(*output); *output = NULL;
 
             if (rc == -pcmk_err_old_data) {
                 crm_trace("Masking error, we already have the supplied update");
                 return pcmk_ok;
             }
+            free_xml(*output); *output = NULL;
 
             return rc;
         }
