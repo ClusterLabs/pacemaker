@@ -328,12 +328,12 @@ enum pe_link_state {
 
 /* *INDENT-OFF* */
 enum pe_ordering {
-    pe_order_none                  = 0x0,        /* deleted */
-    pe_order_optional              = 0x1,    /* pure ordering, nothing implied */
-    pe_order_apply_first_non_migratable = 0x2, /* Only apply this constraint's ordering if first is not migratable. */
+    pe_order_none                  = 0x0,       /* deleted */
+    pe_order_optional              = 0x1,       /* pure ordering, nothing implied */
+    pe_order_apply_first_non_migratable = 0x2,  /* Only apply this constraint's ordering if first is not migratable. */
 
-    pe_order_implies_first         = 0x10,      /* If 'first' is required, ensure 'then' is too */
-    pe_order_implies_then          = 0x20,       /* If 'then' is required, ensure 'first' is too */
+    pe_order_implies_first         = 0x10,      /* If 'then' is required, ensure 'first' is too */
+    pe_order_implies_then          = 0x20,      /* If 'first' is required, ensure 'then' is too */
     pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
 
     /* first requires then to be both runnable and migrate runnable. */
@@ -344,18 +344,18 @@ enum pe_ordering {
     pe_order_pseudo_left           = 0x200,     /* 'then' can only be pseudo if 'first' is runnable */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,     /* only applies if the action is non-pseudo */
-    pe_order_serialize_only        = 0x4000,   /* serialize */
+    pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
+    pe_order_serialize_only        = 0x4000,    /* serialize */
 
     pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not manditory */
-    pe_order_implies_then_printed  = 0x20000,    /* Like ..implies_then but only ensures 'then' is printed, not manditory */
+    pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not manditory */
 
-    pe_order_asymmetrical          = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
-    pe_order_load                  = 0x200000,    /* Only relevant if... */
-    pe_order_one_or_more           = 0x400000,    /* 'then' is only runnable if one or more of it's dependancies are too */
+    pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
+    pe_order_load                  = 0x200000,  /* Only relevant if... */
+    pe_order_one_or_more           = 0x400000,  /* 'then' is only runnable if one or more of it's dependancies are too */
     pe_order_anti_colocation       = 0x800000,
 
-    pe_order_trace                 = 0x4000000  /* test marker */
+    pe_order_trace                 = 0x4000000, /* test marker */
 };
 /* *INDENT-ON* */
 
