@@ -161,7 +161,8 @@ const char *__xml_acl_to_text(enum xml_private_flags flags);
 const char *
 xml_latest_schema(void) 
 {
-    return get_schema_version("pacemaker-next") - 1;
+    int index = get_schema_version("pacemaker-next");
+    return  known_schemas[index - 1].name;
 }
 
 #define CHUNK_SIZE 1024
