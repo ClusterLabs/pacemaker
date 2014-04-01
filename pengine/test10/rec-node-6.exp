@@ -54,7 +54,7 @@
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="13" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="13" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -97,7 +97,7 @@
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="13" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="13" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -112,7 +112,7 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <crm_event id="13" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1">
+      <crm_event id="13" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -126,7 +126,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="13" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="13" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
     </inputs>
   </synapse>

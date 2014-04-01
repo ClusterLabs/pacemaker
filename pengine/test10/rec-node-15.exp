@@ -445,7 +445,7 @@
   </synapse>
   <synapse id="28">
     <action_set>
-      <crm_event id="52" operation="stonith" operation_key="stonith-sapcl03" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+      <crm_event id="52" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
         <attributes CRM_meta_on_node="sapcl03" CRM_meta_on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750" CRM_meta_op_no_wait="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -459,7 +459,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="52" operation="stonith" operation_key="stonith-sapcl03" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+        <crm_event id="52" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
       </trigger>
     </inputs>
   </synapse>

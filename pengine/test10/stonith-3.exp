@@ -117,7 +117,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <crm_event id="22" operation="stonith" operation_key="stonith-rh5node1" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442">
+      <crm_event id="22" operation="stonith" operation_key="stonith-rh5node1-reboot" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442">
         <attributes CRM_meta_on_node="rh5node1" CRM_meta_on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -131,7 +131,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="22" operation="stonith" operation_key="stonith-rh5node1" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
+        <crm_event id="22" operation="stonith" operation_key="stonith-rh5node1-reboot" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
       </trigger>
     </inputs>
   </synapse>

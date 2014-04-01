@@ -23,7 +23,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -82,7 +82,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -142,7 +142,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -160,7 +160,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -178,7 +178,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -196,7 +196,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -214,7 +214,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -229,7 +229,7 @@
         <pseudo_event id="226" operation="stop" operation_key="base-group:3_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -304,7 +304,7 @@
         <pseudo_event id="247" operation="stop" operation_key="vm-61_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -316,7 +316,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -328,7 +328,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -340,7 +340,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -352,7 +352,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -364,7 +364,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -376,7 +376,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -388,7 +388,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -400,7 +400,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -412,7 +412,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -424,7 +424,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -436,7 +436,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -448,7 +448,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -460,7 +460,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -472,7 +472,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -484,7 +484,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
@@ -496,13 +496,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9">
+      <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9">
         <attributes CRM_meta_on_node="hex-9" CRM_meta_on_node_uuid="hex-9" CRM_meta_probe_complete="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -516,7 +516,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9" on_node="hex-9" on_node_uuid="hex-9"/>
+        <crm_event id="249" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
     </inputs>
   </synapse>

@@ -1299,15 +1299,21 @@ any_managed_resources(pe_working_set_t * data_set)
 action_t *
 pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
 {
-    action_t *stonith_op =
-        custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_FENCE, node->details->uname),
-                      CRM_OP_FENCE, node, FALSE, TRUE, data_set);
+    action_t *stonith_op = NULL;
+
+    if(op == NULL) {
+        op = data_set->stonith_action;
+    }
+
+    stonith_op = custom_action(
+        NULL, g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op),
+        CRM_OP_FENCE, node, FALSE, TRUE, data_set);
 
     add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
 
     add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
 
-    add_hash_param(stonith_op->meta, "stonith_action", op ? op : data_set->stonith_action);
+    add_hash_param(stonith_op->meta, "stonith_action", op);
 
     return stonith_op;
 }

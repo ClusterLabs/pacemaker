@@ -10,7 +10,7 @@
         <pseudo_event id="16" operation="stop" operation_key="clvm-clone_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>
+        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2-reboot" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
     </inputs>
   </synapse>
@@ -37,7 +37,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>
+        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2-reboot" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
     </inputs>
   </synapse>
@@ -52,7 +52,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2" on_node="pcmk-2" on_node_uuid="102">
+      <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2-reboot" on_node="pcmk-2" on_node_uuid="102">
         <attributes CRM_meta_fail_count_clvm="INFINITY" CRM_meta_last_failure_clvm="1371014555" CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_probe_complete="true" CRM_meta_shutdown="1371014551" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -66,7 +66,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>
+        <crm_event id="22" operation="stonith" operation_key="stonith-pcmk-2-reboot" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
     </inputs>
   </synapse>
