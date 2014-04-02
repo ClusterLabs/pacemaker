@@ -227,9 +227,19 @@ With roles:
     pcs   # pcs resource move WebSite pcmk-1
     
     crmsh # crm resource unmove WebSite
-    pcs   # pcs resource unmove WebSite
+    pcs   # pcs resource clear WebSite
 
-Remember that moving a resource set a stickyness to -INF until unmoved    
+A resource can also be moved away from a given node:
+
+    crmsh #
+    pcs   # pcs resource ban Website pcmk-2
+
+Remember that moving a resource sets a stickyness to -INF to a given node until unmoved    
+Also, pcs deals with constraints differently. These can be manipulated by the command above as well as the following and others
+
+    crmsh #
+    pcs   # pcs constraint list --full
+    pcs   # pcs constraint remove cli-ban-Website-on-pcmk-1
 
 ## Create a clone
 
