@@ -758,7 +758,9 @@ create_action_name(action_t * action)
         free(key);
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
-        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
+        const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+
+        action_name = g_strdup_printf("%s%s '%s' %s", prefix ? prefix : "", action->task, op, action_host);
 
     } else if (action->rsc && action_host) {
         action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
