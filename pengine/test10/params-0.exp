@@ -136,7 +136,7 @@
    </synapse>
   <synapse id="15" priority="1000000">
      <action_set>
-      <rsc_op id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+      <rsc_op id="22" operation="probe_complete" operation_key="probe_complete-c001n08" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
@@ -157,7 +157,7 @@
    </synapse>
    <synapse id="16" priority="1000000">
      <action_set>
-      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete-c001n03" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -178,7 +178,7 @@
    </synapse>
    <synapse id="17" priority="1000000">
      <action_set>
-       <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <rsc_op id="13" operation="probe_complete" operation_key="probe_complete-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -196,7 +196,7 @@
    </synapse>
    <synapse id="18" priority="1000000">
      <action_set>
-      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -223,16 +223,16 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>
-        <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+        <rsc_op id="17" operation="probe_complete" operation_key="probe_complete-c001n03" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-        <rsc_op id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+        <rsc_op id="22" operation="probe_complete" operation_key="probe_complete-c001n08" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
      </inputs>
    </synapse>

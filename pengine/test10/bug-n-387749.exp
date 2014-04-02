@@ -345,7 +345,7 @@
   </synapse>
   <synapse id="25" priority="1000000">
     <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-power720-1" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
@@ -375,7 +375,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-power720-1" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
        </trigger>
      </inputs>
    </synapse>

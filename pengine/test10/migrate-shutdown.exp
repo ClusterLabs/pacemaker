@@ -325,7 +325,7 @@
   </synapse>
   <synapse id="25">
     <action_set>
-      <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104">
+      <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown-pcmk-4" on_node="pcmk-4" on_node_uuid="104">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -343,7 +343,7 @@
   </synapse>
   <synapse id="26">
     <action_set>
-      <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103">
+      <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown-pcmk-3" on_node="pcmk-3" on_node_uuid="103">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -355,7 +355,7 @@
   </synapse>
   <synapse id="27">
     <action_set>
-      <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102">
+      <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="102">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -385,7 +385,7 @@
   </synapse>
   <synapse id="28">
     <action_set>
-      <crm_event id="56" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-1" on_node_uuid="101">
+      <crm_event id="56" operation="do_shutdown" operation_key="do_shutdown-pcmk-1" on_node="pcmk-1" on_node_uuid="101">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -406,13 +406,13 @@
         <rsc_op id="43" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
       </trigger>
       <trigger>
-        <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="102"/>
+        <crm_event id="57" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
-        <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-3" on_node_uuid="103"/>
+        <crm_event id="58" operation="do_shutdown" operation_key="do_shutdown-pcmk-3" on_node="pcmk-3" on_node_uuid="103"/>
       </trigger>
       <trigger>
-        <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-4" on_node_uuid="104"/>
+        <crm_event id="59" operation="do_shutdown" operation_key="do_shutdown-pcmk-4" on_node="pcmk-4" on_node_uuid="104"/>
       </trigger>
     </inputs>
   </synapse>

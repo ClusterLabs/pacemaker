@@ -36,7 +36,7 @@
   </synapse>
   <synapse id="3" priority="1000000">
     <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-hadev2" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -54,7 +54,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-hadev2" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
        </trigger>
      </inputs>
    </synapse>

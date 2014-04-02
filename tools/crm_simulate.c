@@ -760,8 +760,11 @@ create_action_name(action_t * action)
     } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
         action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
 
-    } else if (action_host) {
+    } else if (action->rsc && action_host) {
         action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->uuid, action_host);
+
+    } else if (action_host) {
+        action_name = g_strdup_printf("%s%s %s", prefix ? prefix : "", action->task, action_host);
 
     } else {
         action_name = g_strdup_printf("%s", action->uuid);
@@ -789,7 +792,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
         const char *color = "black";
         char *action_name = create_action_name(action);
 
-        crm_trace("Action %d: %p", action->id, action);
+        crm_trace("Action %d: %s %s %p", action->id, action_name, action->uuid, action);
 
         if (is_set(action->flags, pe_action_pseudo)) {
             font = "orange";
@@ -819,6 +822,8 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
         }
 
         set_bit(action->flags, pe_action_dumped);
+        crm_trace("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]",
+                action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   dont_write:
@@ -857,6 +862,8 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             if (all_actions || optional == FALSE) {
                 before_name = create_action_name(before->action);
                 after_name = create_action_name(action);
+                crm_trace("\"%s\" -> \"%s\" [ style = %s]",
+                        before_name, after_name, style);
                 fprintf(dot_strm, "\"%s\" -> \"%s\" [ style = %s]\n",
                         before_name, after_name, style);
                 free(before_name);

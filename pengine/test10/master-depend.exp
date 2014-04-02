@@ -225,7 +225,7 @@
    </synapse>
   <synapse id="19" priority="1000000">
      <action_set>
-       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-vbox4" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -261,7 +261,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-vbox4" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
       </trigger>
     </inputs>
   </synapse>

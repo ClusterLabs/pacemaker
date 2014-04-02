@@ -420,7 +420,7 @@
   </synapse>
   <synapse id="31">
     <action_set>
-      <crm_event id="80" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+      <crm_event id="80" operation="do_shutdown" operation_key="do_shutdown-c001n07" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -441,7 +441,7 @@
   </synapse>
   <synapse id="32">
     <action_set>
-      <crm_event id="79" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
+      <crm_event id="79" operation="do_shutdown" operation_key="do_shutdown-c001n06" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -462,7 +462,7 @@
   </synapse>
   <synapse id="33">
     <action_set>
-      <crm_event id="78" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
+      <crm_event id="78" operation="do_shutdown" operation_key="do_shutdown-c001n05" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -486,7 +486,7 @@
    </synapse>
   <synapse id="34">
      <action_set>
-      <crm_event id="77" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d">
+      <crm_event id="77" operation="do_shutdown" operation_key="do_shutdown-c001n04" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d">
         <attributes CRM_meta_op_no_wait="true" />
        </crm_event>
      </action_set>
@@ -510,31 +510,31 @@
    </synapse>
   <synapse id="35">
      <action_set>
-      <crm_event id="76" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
+      <crm_event id="76" operation="do_shutdown" operation_key="do_shutdown-c001n03" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
         <attributes CRM_meta_op_no_wait="true" />
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="75" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+        <crm_event id="75" operation="do_shutdown" operation_key="do_shutdown-c001n02" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
-        <crm_event id="77" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
+        <crm_event id="77" operation="do_shutdown" operation_key="do_shutdown-c001n04" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
        <trigger>
-        <crm_event id="78" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+        <crm_event id="78" operation="do_shutdown" operation_key="do_shutdown-c001n05" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
        <trigger>
-        <crm_event id="79" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
+        <crm_event id="79" operation="do_shutdown" operation_key="do_shutdown-c001n06" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431"/>
        </trigger>
        <trigger>
-        <crm_event id="80" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
+        <crm_event id="80" operation="do_shutdown" operation_key="do_shutdown-c001n07" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="36">
      <action_set>
-      <crm_event id="75" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+      <crm_event id="75" operation="do_shutdown" operation_key="do_shutdown-c001n02" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
         <attributes CRM_meta_op_no_wait="true" />
        </crm_event>
      </action_set>

@@ -79,13 +79,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-11" on_node_uuid="111"/>
+        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete-pcmk-11" on_node="pcmk-11" on_node_uuid="111"/>
       </trigger>
       <trigger>
-        <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-2" on_node_uuid="102"/>
+        <rsc_op id="6" operation="probe_complete" operation_key="probe_complete-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
-        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="pcmk-3" on_node_uuid="103"/>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-pcmk-3" on_node="pcmk-3" on_node_uuid="103"/>
       </trigger>
     </inputs>
   </synapse>

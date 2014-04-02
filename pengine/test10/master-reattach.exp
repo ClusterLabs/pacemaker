@@ -46,7 +46,7 @@
   </synapse>
   <synapse id="5" priority="1000000">
     <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="dktest2" on_node_uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-dktest2" on_node="dktest2" on_node_uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -54,7 +54,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
+      <rsc_op id="2" operation="probe_complete" operation_key="probe_complete-dktest1" on_node="dktest1" on_node_uuid="c738bee8-591f-4653-aaad-20a961923f25">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>

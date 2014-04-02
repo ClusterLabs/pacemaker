@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <crm_event id="92" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="pcmk-2">
+      <crm_event id="92" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="pcmk-2">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
@@ -9,13 +9,13 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <crm_event id="91" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-1" on_node_uuid="pcmk-1">
+      <crm_event id="91" operation="do_shutdown" operation_key="do_shutdown-pcmk-1" on_node="pcmk-1" on_node_uuid="pcmk-1">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="92" operation="do_shutdown" operation_key="do_shutdown" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
+        <crm_event id="92" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="pcmk-2"/>
       </trigger>
     </inputs>
   </synapse>

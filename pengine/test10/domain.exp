@@ -50,7 +50,7 @@
   </synapse>
   <synapse id="5" priority="1000000">
     <action_set>
-      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="puma4" on_node_uuid="puma4">
+      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete-puma4" on_node="puma4" on_node_uuid="puma4">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -62,7 +62,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="puma3">
+      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete-puma3" on_node="puma3" on_node_uuid="puma3">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -74,7 +74,7 @@
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma2" on_node_uuid="puma2">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-puma2" on_node="puma2" on_node_uuid="puma2">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -86,7 +86,7 @@
   </synapse>
   <synapse id="8" priority="1000000">
     <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="puma1">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-puma1" on_node="puma1" on_node_uuid="puma1">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -104,16 +104,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="puma1"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-puma1" on_node="puma1" on_node_uuid="puma1"/>
       </trigger>
       <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma2" on_node_uuid="puma2"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-puma2" on_node="puma2" on_node_uuid="puma2"/>
       </trigger>
       <trigger>
-        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="puma3"/>
+        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete-puma3" on_node="puma3" on_node_uuid="puma3"/>
       </trigger>
       <trigger>
-        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="puma4" on_node_uuid="puma4"/>
+        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete-puma4" on_node="puma4" on_node_uuid="puma4"/>
       </trigger>
     </inputs>
   </synapse>

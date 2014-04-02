@@ -864,14 +864,14 @@ probe_resources(pe_working_set_t * data_set)
         }
 
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            action_t *probe_op = custom_action(NULL, strdup(CRM_OP_REPROBE),
+            action_t *probe_op = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
                                                CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
 
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
             continue;
         }
 
-        probe_node_complete = custom_action(NULL, strdup(CRM_OP_PROBED),
+        probe_node_complete = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_PROBED, node->details->uname),
                                             CRM_OP_PROBED, node, FALSE, TRUE, data_set);
         if (crm_is_true(probed)) {
             crm_trace("unset");
@@ -1299,21 +1299,22 @@ any_managed_resources(pe_working_set_t * data_set)
 action_t *
 pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
 {
+    char *key = NULL;
     action_t *stonith_op = NULL;
 
     if(op == NULL) {
         op = data_set->stonith_action;
     }
 
-    stonith_op = custom_action(
-        NULL, g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op),
-        CRM_OP_FENCE, node, FALSE, TRUE, data_set);
+    key = g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
-    add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+    if(stonith_op == NULL) {
+        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, FALSE, TRUE, data_set);
 
-    add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
-
-    add_hash_param(stonith_op->meta, "stonith_action", op);
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+        add_hash_param(stonith_op->meta, "stonith_action", op);
+    }
 
     return stonith_op;
 }
@@ -1378,7 +1379,7 @@ stage6(pe_working_set_t * data_set)
 
             crm_notice("Scheduling Node %s for shutdown", node->details->uname);
 
-            down_op = custom_action(NULL, strdup(CRM_OP_SHUTDOWN),
+            down_op = custom_action(NULL, g_strdup_printf("%s-%s", CRM_OP_SHUTDOWN, node->details->uname),
                                     CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
 
             shutdown_constraints(node, down_op, data_set);
@@ -1407,20 +1408,22 @@ stage6(pe_working_set_t * data_set)
     }
 
     if (dc_down != NULL) {
-        GListPtr shutdown_matches = find_actions(data_set->actions, CRM_OP_SHUTDOWN, NULL);
+        GListPtr gIter = NULL;
 
         crm_trace("Ordering shutdowns before %s on %s (DC)",
                   dc_down->task, dc_down->node->details->uname);
 
         add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
-        gIter = shutdown_matches;
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
             action_t *node_stop = (action_t *) gIter->data;
 
-            if (node_stop->node->details->is_dc) {
+            if (safe_str_neq(CRM_OP_SHUTDOWN, node_stop->task)) {
+                continue;
+            } else if (node_stop->node->details->is_dc) {
                 continue;
             }
+
             crm_debug("Ordering shutdown on %s before %s on %s",
                       node_stop->node->details->uname,
                       dc_down->task, dc_down->node->details->uname);
@@ -1431,7 +1434,6 @@ stage6(pe_working_set_t * data_set)
         if (last_stonith && dc_down != last_stonith) {
             order_actions(last_stonith, dc_down, pe_order_optional);
         }
-        g_list_free(shutdown_matches);
     }
 
     if (last_stonith) {
