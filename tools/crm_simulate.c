@@ -499,31 +499,36 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
 {
-    int rc = 0;
-    char xpath[STATUS_PATH_MAX];
+    const char *op = crm_meta_value(action->params, "stonith_action");
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
-    xmlNode *cib_node = modify_node(global_cib, target, FALSE);
 
-    crm_xml_add(cib_node, XML_ATTR_ORIGIN, __FUNCTION__);
-    CRM_ASSERT(cib_node != NULL);
+    quiet_log(" * Fencing %s (%s)\n", target, op);
+    if(safe_str_neq(op, "on")) {
+        int rc = 0;
+        char xpath[STATUS_PATH_MAX];
+        xmlNode *cib_node = modify_node(global_cib, target, FALSE);
 
-    quiet_log(" * Fencing %s\n", target);
-    rc = global_cib->cmds->replace(global_cib, XML_CIB_TAG_STATUS, cib_node,
+        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __FUNCTION__);
+        CRM_ASSERT(cib_node != NULL);
+
+        rc = global_cib->cmds->replace(global_cib, XML_CIB_TAG_STATUS, cib_node,
                                    cib_sync_call | cib_scope_local);
-    CRM_ASSERT(rc == pcmk_ok);
+        CRM_ASSERT(rc == pcmk_ok);
 
-    snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
-    rc = global_cib->cmds->delete(global_cib, xpath, NULL,
-                                  cib_xpath | cib_sync_call | cib_scope_local);
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
+        rc = global_cib->cmds->delete(global_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
 
-    snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
-             XML_TAG_TRANSIENT_NODEATTRS);
-    rc = global_cib->cmds->delete(global_cib, xpath, NULL,
-                                  cib_xpath | cib_sync_call | cib_scope_local);
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
+                 XML_TAG_TRANSIENT_NODEATTRS);
+        rc = global_cib->cmds->delete(global_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
+
+        free_xml(cib_node);
+    }
 
     action->confirmed = TRUE;
     update_graph(graph, action);
-    free_xml(cib_node);
     free(target);
     return TRUE;
 }

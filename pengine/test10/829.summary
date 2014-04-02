@@ -36,7 +36,7 @@ Executing cluster transition:
  * Resource action: child_DoFencing:2 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n03
  * Resource action: child_DoFencing:3 monitor on c001n01
- * Fencing c001n02
+ * Fencing c001n02 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Pseudo action:   rsc_c001n02_stop_0

@@ -10,8 +10,8 @@ Node hs21d (737318c6-0f92-4592-9754-45967d45aff7): UNCLEAN (offline)
 Transition Summary:
 
 Executing cluster transition:
- * Fencing hs21d
- * Fencing hs21c
+ * Fencing hs21d (reboot)
+ * Fencing hs21c (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
 

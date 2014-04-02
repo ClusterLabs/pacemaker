@@ -36,7 +36,7 @@ Executing cluster transition:
  * Resource action: stonith-1       monitor on sapcl01
  * Pseudo action:   app02_stop_0
  * Pseudo action:   oracle_start_0
- * Fencing sapcl03
+ * Fencing sapcl03 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Resource action: stonith-1       start on sapcl01

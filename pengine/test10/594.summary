@@ -27,7 +27,7 @@ Executing cluster transition:
  * Resource action: child_DoFencing:0 monitor on hadev1
  * Resource action: child_DoFencing:2 monitor on hadev2
  * Pseudo action:   DoFencing_stop_0
- * Fencing hadev3
+ * Fencing hadev3 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Resource action: DcIPaddr        start on hadev1

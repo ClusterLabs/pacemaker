@@ -20,7 +20,7 @@ Executing cluster transition:
  * Resource action: remote1         stop on 18node1
  * Resource action: FAKE3           stop on 18builder
  * Resource action: FAKE4           stop on 18node1
- * Fencing remote1
+ * Fencing remote1 (reboot)
  * Pseudo action:   stonith_complete
  * Resource action: remote1         start on 18node1
  * Resource action: remote1         monitor=60000 on 18node1

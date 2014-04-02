@@ -36,7 +36,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: stateful-1:3    monitor=15000 on pcmk-3
  * Resource action: stateful-1:2    monitor=15000 on pcmk-2
- * Fencing pcmk-4
+ * Fencing pcmk-4 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   Fencing_stop_0
  * Pseudo action:   rsc_pcmk-4_stop_0

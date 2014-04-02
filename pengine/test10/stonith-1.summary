@@ -44,7 +44,7 @@ Executing cluster transition:
  * Resource action: lsb_dummy       monitor=5000 on sles-2
  * Resource action: rsc_sles-2      monitor=5000 on sles-2
  * Resource action: rsc_sles-4      monitor=5000 on sles-4
- * Fencing sles-3
+ * Fencing sles-3 (reboot)
  * Pseudo action:   stonith_complete
  * Resource action: r192.168.100.183 start on sles-1
  * Pseudo action:   migrator_stop_0

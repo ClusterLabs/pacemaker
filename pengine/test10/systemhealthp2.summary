@@ -15,7 +15,7 @@ Executing cluster transition:
  * Resource action: stonith-1       monitor on hs21c
  * Resource action: apache_1        monitor on hs21c
  * Resource action: nfs_1           monitor on hs21c
- * Fencing hs21d
+ * Fencing hs21d (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Pseudo action:   all_stopped
