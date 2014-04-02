@@ -190,6 +190,10 @@ cleanup_calculations(pe_working_set_t * data_set)
         g_hash_table_destroy(data_set->config_hash);
     }
 
+    if (data_set->singletons != NULL) {
+        g_hash_table_destroy(data_set->singletons);
+    }
+
     if (data_set->tickets) {
         g_hash_table_destroy(data_set->tickets);
     }

@@ -366,6 +366,17 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
     if (save_action && rsc != NULL) {
         possible_matches = find_actions(rsc->actions, key, on_node);
+    } else if(save_action) {
+#if 0
+        action = g_hash_table_lookup(data_set->singletons, key);
+#else
+        /* More expensive but takes 'node' into account */
+        possible_matches = find_actions(data_set->actions, key, on_node);
+#endif
+    }
+
+    if(data_set->singletons == NULL) {
+        data_set->singletons = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
     }
 
     if (possible_matches != NULL) {
@@ -430,6 +441,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         if (save_action) {
             data_set->actions = g_list_prepend(data_set->actions, action);
+            if(rsc == NULL) {
+                g_hash_table_insert(data_set->singletons, action->uuid, action);
+            }
         }
 
         if (rsc != NULL) {
@@ -1593,6 +1607,9 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
+    /* Ensure we never create a dependancy on ourselves... its happened */
+    CRM_ASSERT(lh_action != rh_action);
+
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1629,20 +1646,12 @@ action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
     action_t *op = NULL;
-    const char *op_s = name;
-    GListPtr possible_matches = NULL;
 
-    possible_matches = find_actions(data_set->actions, name, NULL);
-    if (possible_matches != NULL) {
-        if (g_list_length(possible_matches) > 1) {
-            pe_warn("Action %s exists %d times", name, g_list_length(possible_matches));
-        }
-
-        op = g_list_nth_data(possible_matches, 0);
-        g_list_free(possible_matches);
-
-    } else {
-        op = custom_action(NULL, strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
+    if(data_set->singletons) {
+        op = g_hash_table_lookup(data_set->singletons, name);
+    }
+    if (op == NULL) {
+        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
         set_bit(op->flags, pe_action_pseudo);
         set_bit(op->flags, pe_action_runnable);
     }

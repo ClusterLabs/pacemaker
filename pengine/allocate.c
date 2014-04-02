@@ -1308,6 +1308,10 @@ pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
 
     key = g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
+    if(data_set->singletons) {
+        stonith_op = g_hash_table_lookup(data_set->singletons, key);
+    }
+
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, FALSE, TRUE, data_set);
 
