@@ -145,8 +145,8 @@ int tools_remove_node_cache(const char *node, const char *target)
         rc = crm_ipc_send(conn, hello, 0, 0, NULL);
 
         free_xml(hello);
-        free(admin_uuid);
         if (rc < 0) {
+            free(admin_uuid);
             return rc;
         }
     }
@@ -185,6 +185,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_destroy(conn);
     }
     free_xml(cmd);
+    free(admin_uuid);
     return rc > 0 ? 0 : rc;
 }
 
