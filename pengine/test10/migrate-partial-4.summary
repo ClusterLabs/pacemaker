@@ -49,7 +49,7 @@ Transition Summary:
  * Start   drbd-stacked	(lustre02-left)
  * Start   drbd-testfs-local	(lustre03-left)
  * Migrate lustre	(Started lustre03-left -> lustre04-left)
- * Migrate testfs	(Started lustre02-left -> lustre03-left)
+ * Move    testfs	(Started lustre02-left -> lustre03-left)
  * Start   drbd-mgs:0	(lustre01-left)
  * Start   drbd-mgs:1	(lustre02-left)
 

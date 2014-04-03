@@ -10,7 +10,7 @@ Online: [ f20node2 ]
 
 Transition Summary:
  * Move    myclone:0	(Started f20node1 -> f20node2)
- * Migrate vm	(Started f20node1 -> f20node2)
+ * Move    vm	(Started f20node1 -> f20node2)
 
 Executing cluster transition:
  * Resource action: myclone         monitor on f20node2
