@@ -1900,6 +1900,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         && is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
+            pe_clear_action_bit(then, pe_action_migrate_runnable);
             pe_clear_action_bit(then, pe_action_pseudo);
             pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
