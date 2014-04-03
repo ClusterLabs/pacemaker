@@ -164,7 +164,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     crm_trace("Removing %s aka. %s from the membership cache", name, node);
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                         NULL, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
+                         NULL, NULL, target, "crm_node", admin_uuid);
 
     if (n) {
         char buffer[64];
