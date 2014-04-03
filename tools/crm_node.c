@@ -145,7 +145,6 @@ int tools_remove_node_cache(const char *node, const char *target)
         rc = crm_ipc_send(conn, hello, 0, 0, NULL);
 
         free_xml(hello);
-        free(admin_uuid);
         if (rc < 0) {
             return rc;
         }
@@ -165,6 +164,9 @@ int tools_remove_node_cache(const char *node, const char *target)
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
                          NULL, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
+    if (admin_uuid) {
+        free(admin_uuid);
+    }
 
     if (n) {
         char buffer[64];
