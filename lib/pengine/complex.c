@@ -627,7 +627,10 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         }
 
         isdefault = TRUE;
-        if (is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
+            value = "quorum";
+
+        } else if (is_set(data_set->flags, pe_flag_enable_unfencing)) {
             value = "unfencing";
 
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {

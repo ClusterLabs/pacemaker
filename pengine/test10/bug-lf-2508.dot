@@ -24,6 +24,7 @@ digraph "g" {
 "Group02_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "Group02_stopped_0" -> "Group02_start_0" [ style = bold]
 "Group02_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"all_stopped" -> "prmStonith3-3:1_start_0 srv01" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "clnStonith1_stop_0" -> "clnStonith1_stopped_0" [ style = bold]
 "clnStonith1_stop_0" -> "grpStonith1:1_stop_0" [ style = bold]
@@ -107,6 +108,5 @@ digraph "g" {
 "stonith_complete" -> "Dummy01_start_0 srv01" [ style = bold]
 "stonith_complete" -> "Dummy02_start_0 srv04" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "prmStonith3-3:1_start_0 srv01" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

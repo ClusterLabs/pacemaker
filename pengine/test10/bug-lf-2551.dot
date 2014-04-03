@@ -80,7 +80,6 @@ digraph "g" {
 "stonith 'reboot' hex-9" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" -> "dummy1_start_0 hex-0" [ style = bold]
-"stonith_complete" -> "fencing-sbd_start_0 hex-0" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 "vg1:3_stop_0 hex-9" -> "all_stopped" [ style = bold]
 "vg1:3_stop_0 hex-9" -> "base-group:3_stopped_0" [ style = bold]

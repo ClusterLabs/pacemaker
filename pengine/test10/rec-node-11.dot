@@ -1,4 +1,5 @@
 digraph "g" {
+"all_stopped" -> "stonith-1_start_0 node2" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "group1_running_0" [ style=bold color="green" fontcolor="orange" ]
 "group1_start_0" -> "group1_running_0" [ style = bold]
@@ -56,6 +57,5 @@ digraph "g" {
 "stonith_complete" -> "rsc1_start_0 node2" [ style = bold]
 "stonith_complete" -> "rsc2_start_0 node2" [ style = bold]
 "stonith_complete" -> "rsc3_start_0 node2" [ style = bold]
-"stonith_complete" -> "stonith-1_start_0 node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

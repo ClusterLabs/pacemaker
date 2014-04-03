@@ -10,9 +10,6 @@
       <trigger>
         <pseudo_event id="6" operation="stop" operation_key="rsc_stonith_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="20" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">

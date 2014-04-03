@@ -73,13 +73,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
         <pseudo_event id="9" operation="start" operation_key="grpStonith:0_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="21" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

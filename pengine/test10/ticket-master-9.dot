@@ -27,6 +27,5 @@ digraph "g" {
 "stonith 'reboot' node1" -> "stonith_complete" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "rsc_stonith_start_0 node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

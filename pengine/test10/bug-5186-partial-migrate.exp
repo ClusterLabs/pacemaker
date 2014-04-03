@@ -167,9 +167,6 @@
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
@@ -219,9 +216,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

@@ -10,9 +10,6 @@
       <trigger>
         <pseudo_event id="162" operation="stop" operation_key="fencing-sbd_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="248" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">

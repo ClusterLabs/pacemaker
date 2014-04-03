@@ -6,6 +6,7 @@ digraph "g" {
 "Fencing_monitor_0 pcmk-3" -> "probe_complete pcmk-3" [ style = dashed]
 "Fencing_monitor_0 pcmk-3" [ style=dashed color="red" fontcolor="black"]
 "Fencing_start_0 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"all_stopped" -> "Fencing_start_0 pcmk-1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "probe_complete pcmk-11" -> "probe_complete" [ style = bold]
 "probe_complete pcmk-11" [ style=dashed color="red" fontcolor="black"]
@@ -23,7 +24,6 @@ digraph "g" {
 "stonith 'reboot' pcmk-7" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' pcmk-8" -> "stonith_complete" [ style = bold]
 "stonith 'reboot' pcmk-8" [ style=bold color="green" fontcolor="black"]
-"stonith_complete" -> "Fencing_start_0 pcmk-1" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"]
 }

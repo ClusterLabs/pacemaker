@@ -42,6 +42,7 @@ digraph "g" {
 "LVM_22_start_0 sapcl01" -> "LVM_22_monitor_120000 sapcl01" [ style = bold]
 "LVM_22_start_0 sapcl01" -> "oracle_running_0" [ style = bold]
 "LVM_22_start_0 sapcl01" [ style=bold color="green" fontcolor="black" ]
+"all_stopped" -> "stonith-1_start_0 sapcl01" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "app02_running_0" [ style=bold color="green" fontcolor="orange" ]
 "app02_start_0" -> "Filesystem_13_start_0 sapcl01" [ style = bold]
@@ -98,6 +99,5 @@ digraph "g" {
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" -> "oracle_24_start_0 sapcl01" [ style = bold]
 "stonith_complete" -> "oralsnr_25_start_0 sapcl01" [ style = bold]
-"stonith_complete" -> "stonith-1_start_0 sapcl01" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }
