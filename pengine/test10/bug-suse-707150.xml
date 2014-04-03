@@ -11,7 +11,6 @@
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>
         <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1311186720"/>
-        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -147,15 +146,6 @@
       </meta_attributes>
     </op_defaults>
     <rsc_defaults/>
-    <acls>
-      <acl_user id="lmb">
-        <role_ref id="observer"/>
-      </acl_user>
-      <acl_role id="observer">
-        <read id="observer-read" xpath="/cib"/>
-        <write id="observer-write" xpath="//primitive[@id='vm-01']/meta_attributes/nvpair[@name='target-role']"/>
-      </acl_role>
-    </acls>
   </configuration>
   <status>
     <node_state id="hex-0" uname="hex-0" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
