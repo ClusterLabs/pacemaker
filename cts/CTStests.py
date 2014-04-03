@@ -2842,6 +2842,16 @@ class RemoteBaremetal(CTSTest):
             rc = self.rsh(node, "mkdir /etc/pacemaker")
             self.rsh.cp("/etc/pacemaker/authkey", "%s:/etc/pacemaker/authkey" % (node))
 
+    def is_applicable(self):
+        if not self.is_applicable_common():
+            return False
+
+        for node in self.Env["nodes"]:
+            rc = self.rsh(node, "type pacemaker_remoted >/dev/null 2>&1")
+            if rc != 0:
+                return False
+        return True
+
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
         self.incr("calls")
