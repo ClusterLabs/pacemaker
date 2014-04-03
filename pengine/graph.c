@@ -458,11 +458,49 @@ update_action(action_t * then)
                   uname : "", first_flags, other->type);
 
         if (first == other->action) {
-            clear_bit(first_flags, pe_action_pseudo);
-            changed |= graph_update_action(first, then, then->node, first_flags, other->type);
+            /*
+             * 'first' was not expanded (ie. from 'start' to 'running'), which could mean it:
+             * - has no associated resource,
+             * - was a primitive,
+             * - was pre-expanded (ie. 'running' instead of 'start')
+             *
+             * The third argument here to graph_update_action() is a node which is used under two conditions:
+             * - Interleaving, in which case first->node and
+             *   then->node are equal (and NULL)
+             * - If 'then' is a clone, to limit the scope of the
+             *   constraint to instances on the supplied node
+             *
+             */
+            int otype = other->type;
+            node_t *node = then->node;
 
+            if(is_set(otype, pe_order_implies_then_on_node)) {
+                /* Normally we want the _whole_ 'then' clone to
+                 * restart if 'first' is restarted, so then->node is
+                 * needed.
+                 *
+                 * However for unfencing, we want to limit this to
+                 * instances on the same node as 'first' (the
+                 * unfencing operation), so first->node is supplied.
+                 *
+                 * Swap the node, from then on we can can treat it
+                 * like any other 'pe_order_implies_then'
+                 */
+
+                clear_bit(otype, pe_order_implies_then_on_node);
+                set_bit(otype, pe_order_implies_then);
+                node = first->node;
+            }
+            clear_bit(first_flags, pe_action_pseudo);
+            changed |= graph_update_action(first, then, node, first_flags, otype);
+
+            /* 'first' was for a complex resource (clone, group, etc),
+             * create a new dependancy if necessary
+             */
         } else if (order_actions(first, then, other->type)) {
-            /* Start again to get the new actions_before list */
+            /* This was the first time 'first' and 'then' were associated,
+             * start again to get the new actions_before list
+             */
             changed |= (pe_graph_updated_then | pe_graph_disable);
         }
 

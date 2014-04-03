@@ -61,6 +61,7 @@ enum pe_find {
 
 #  define pe_flag_stonith_enabled	0x00000010ULL
 #  define pe_flag_have_stonith_resource	0x00000020ULL
+#  define pe_flag_enable_unfencing	0x00000040ULL
 
 #  define pe_flag_stop_rsc_orphans	0x00000100ULL
 #  define pe_flag_stop_action_orphans	0x00000200ULL
@@ -168,6 +169,7 @@ struct node_s {
 
 #  define pe_rsc_notify		0x00000010ULL
 #  define pe_rsc_unique		0x00000020ULL
+#  define pe_rsc_fence_device   0x00000040ULL
 
 #  define pe_rsc_provisional	0x00000100ULL
 #  define pe_rsc_allocating	0x00000200ULL
@@ -343,6 +345,10 @@ enum pe_ordering {
     pe_order_runnable_left         = 0x100,     /* 'then' requires 'first' to be runnable */
 
     pe_order_pseudo_left           = 0x200,     /* 'then' can only be pseudo if 'first' is runnable */
+    pe_order_implies_then_on_node  = 0x400,     /* If 'first' is required on 'nodeX',
+                                                 * ensure instances of 'then' on 'nodeX' are too.
+                                                 * Only really useful if 'then' is a clone and 'first' is not
+                                                 */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
     pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */

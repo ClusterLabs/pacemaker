@@ -347,11 +347,12 @@ gboolean
 common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               resource_t * parent, pe_working_set_t * data_set)
 {
+    bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     resource_t *top = NULL;
     const char *value = NULL;
-    const char *class = NULL; /* Look for this after any templates have been expanded */
+    const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     int container_remote_node = 0;
     int baremetal_remote_node = 0;
@@ -385,7 +386,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
-    class = crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS);
     (*rsc)->parent = parent;
 
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
@@ -581,47 +582,67 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         }
     }
 
+    if (safe_str_eq(rclass, "stonith")) {
+        set_bit(data_set->flags, pe_flag_have_stonith_resource);
+        set_bit((*rsc)->flags, pe_rsc_fence_device);
+    }
+
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+
+  handle_requires_pref:
     if (safe_str_eq(value, "nothing")) {
 
     } else if (safe_str_eq(value, "quorum")) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);
 
     } else if (safe_str_eq(value, "unfencing")) {
-        set_bit((*rsc)->flags, pe_rsc_needs_fencing);
-        set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
+        if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
+            crm_config_warn("%s is a fencing device but requires (un)fencing", (*rsc)->id);
+            value = "quorum";
+            isdefault = TRUE;
+            goto handle_requires_pref;
+
+        } else if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            crm_config_warn("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
+            value = "quorum";
+            isdefault = TRUE;
+            goto handle_requires_pref;
+
+        } else {
+            set_bit((*rsc)->flags, pe_rsc_needs_fencing);
+            set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
         }
 
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires fencing but fencing is disabled", (*rsc)->id);
+            crm_config_warn("%s requires (un)fencing but fencing is disabled", (*rsc)->id);
         }
 
     } else {
         if (value) {
             crm_config_err("Invalid value for %s->requires: %s%s",
                            (*rsc)->id, value,
-                           is_set(data_set->flags,
-                                  pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
+                           is_set(data_set->flags, pe_flag_stonith_enabled) ? "" : " (stonith-enabled=false)");
         }
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            set_bit((*rsc)->flags, pe_rsc_needs_fencing);
-            value = "fencing (default)";
+        isdefault = TRUE;
+        if (is_set(data_set->flags, pe_flag_enable_unfencing)) {
+            value = "unfencing";
+
+        } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            value = "fencing";
 
         } else if (data_set->no_quorum_policy == no_quorum_ignore) {
-            value = "nothing (default)";
+            value = "nothing";
 
         } else {
-            set_bit((*rsc)->flags, pe_rsc_needs_quorum);
-            value = "quorum (default)";
+            value = "quorum";
         }
+        goto handle_requires_pref;
     }
 
-    pe_rsc_trace((*rsc), "\tRequired to start: %s", value);
+    pe_rsc_trace((*rsc), "\tRequired to start: %s%s", value, isdefault?" (default)":"");
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
     if (value != NULL) {
@@ -648,10 +669,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     pe_rsc_trace((*rsc), "\tAction notification: %s",
                  is_set((*rsc)->flags, pe_rsc_notify) ? "required" : "not required");
-
-    if (safe_str_eq(class, "stonith")) {
-        set_bit(data_set->flags, pe_flag_have_stonith_resource);
-    }
 
     (*rsc)->utilization =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);

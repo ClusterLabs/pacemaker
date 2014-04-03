@@ -339,6 +339,11 @@ do_test clone-interleave-2 "Clone-3 must stop on pcmk-1 due to interleaved order
 do_test clone-interleave-3 "Clone-3 must be recovered on pcmk-1 due to interleaved ordering (no colocation)"
 
 echo ""
+do_test unfence-startup "Clean unfencing"
+do_test unfence-definition "Unfencing when the agent changes"
+do_test unfence-parameters "Unfencing when the agent parameters changes"
+
+echo ""
 do_test master-0 "Stopped -> Slave"
 do_test master-1 "Stopped -> Promote"
 do_test master-2 "Stopped -> Promote : notify"

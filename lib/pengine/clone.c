@@ -46,7 +46,7 @@ mark_as_orphan(resource_t * rsc)
     }
 }
 
-static void
+void
 clear_bit_recursive(resource_t * rsc, unsigned long long flag)
 {
     GListPtr gIter = rsc->children;

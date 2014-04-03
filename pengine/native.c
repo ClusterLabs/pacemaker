@@ -1348,9 +1348,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     resource_t *top = uber_parent(rsc);
     int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-    gboolean is_stonith =
-        (rsc->xml && safe_str_eq(crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS), "stonith")) ?
-        TRUE : FALSE;
+    gboolean is_stonith = is_set(rsc->flags, pe_rsc_fence_device);
 
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
@@ -1363,6 +1361,34 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_PROMOTE, 0), NULL,
                             pe_order_runnable_left, data_set);
+    }
+
+    if (is_stonith == FALSE
+        && is_set(data_set->flags, pe_flag_enable_unfencing)
+        && is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        /* Check if the node needs to be unfenced first */
+        node_t *node = NULL;
+        GHashTableIter iter;
+
+        if(rsc != top) {
+            /* Only create these constraints once, rsc is almost certainly cloned */
+            clear_bit_recursive(top, pe_rsc_needs_unfencing);
+        }
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);
+
+            custom_action_order(top, generate_op_key(top->id, top == rsc?RSC_STOP:RSC_STOPPED, 0), NULL,
+                                NULL, strdup(unfence->uuid), unfence,
+                                pe_order_optional, data_set);
+
+            crm_debug("Stopping %s prior to unfencing %s", top->id, unfence->uuid);
+
+            custom_action_order(NULL, strdup(unfence->uuid), unfence,
+                                top, generate_op_key(top->id, RSC_START, 0), NULL,
+                                pe_order_implies_then_on_node, data_set);
+        }
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -2683,20 +2709,9 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear);
 
-    /* Check if the node needs to be unfenced first */
-    if (is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", data_set);
-
-        crm_notice("Unfencing %s for %s", node->details->uname, rsc->id);
-        order_actions(unfence, probe, pe_order_implies_then);
-
-        /* The lack of ordering constraints on STONITH_UP would
-         * traditionally mean unfencing is initiated /before/ the
-         * devices are started.
-         *
-         * However this is a non-issue as stonithd is now smart
-         * enough to be able to use devices directly from the cib
-         */
+    if(is_set(rsc->flags, pe_rsc_fence_device)) {
+        crm_crit("TODO: %s: Trigger when probing the device or the resource that needs unfencing?", rsc->id);
+        trigger_unfencing(NULL, node, "node discovery", probe, data_set);
     }
 
     /*

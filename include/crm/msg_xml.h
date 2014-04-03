@@ -203,6 +203,7 @@
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_PRIORITY		"priority"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
+#  define XML_RSC_ATTR_PROVIDES		"provides"
 #  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"

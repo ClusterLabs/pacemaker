@@ -76,6 +76,35 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     GHashTable *config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//nvpair[@name='provides' and @value='unfencing']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//nvpair[@name='requires' and @value='unfencing']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+
+
+#ifdef REDHAT_COMPAT_6
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//primitive[@type='fence_scsi']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+#endif
+
     data_set->config_hash = config_hash;
 
     unpack_instance_attributes(data_set->input, config, XML_CIB_TAG_PROPSET, NULL, config_hash,

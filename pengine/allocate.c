@@ -123,6 +123,7 @@ check_rsc_parameters(resource_t * rsc, node_t * node, xmlNode * rsc_entry,
         }
 
         changed = TRUE;
+        trigger_unfencing(rsc, node, "Device definition changed", NULL, data_set);
         if (active_here) {
             force_restart = TRUE;
             crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
@@ -169,6 +170,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     crm_info("Action %s on %s will be stopped: %s",
              key, active_node->details->uname, reason ? reason : "unknown");
 
+    /* TODO: This looks highly dangerous if we ever try to schedule 'key' too */
     cancel = custom_action(rsc, strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
 
     free(cancel->task);
@@ -229,6 +231,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
+    crm_trace("Testing %s_%s_%d on %s", rsc->id, task, interval, active_node?active_node->details->uname:"N/A");
     if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;
@@ -254,6 +257,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+        trigger_unfencing(rsc, NULL, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
         /* Changes that can potentially be handled by a reload */
@@ -261,6 +265,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         const char *digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
         did_change = TRUE;
+        trigger_unfencing(rsc, NULL, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
         pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
@@ -1296,8 +1301,40 @@ any_managed_resources(pe_working_set_t * data_set)
     return FALSE;
 }
 
+void
+trigger_unfencing(
+    resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set) 
+{
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        /* No resources require it */
+        return;
+
+    } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
+        /* Wasnt a stonith device */
+        return;
+
+    } else if(node) {
+        action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
+
+        crm_notice("Unfencing %s: %s", node->details->uname, reason);
+        if(FALSE && dependancy) {
+            order_actions(dependancy, unfence, pe_order_optional);
+        }
+
+    } else if(rsc) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
+                trigger_unfencing(rsc, node, reason, dependancy, data_set);
+            }
+        }
+    }
+}
+
 action_t *
-pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
+pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set)
 {
     char *key = NULL;
     action_t *stonith_op = NULL;
@@ -1313,11 +1350,16 @@ pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set)
     }
 
     if(stonith_op == NULL) {
-        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, FALSE, TRUE, data_set);
+        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, optional, TRUE, data_set);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
+    }
+
+    if(optional == FALSE) {
+        crm_trace("%s is no longer optional", stonith_op->uuid);
+        pe_clear_action_bit(stonith_op, pe_action_optional);
     }
 
     return stonith_op;
@@ -1358,7 +1400,7 @@ stage6(pe_working_set_t * data_set)
         if (need_stonith && node->details->unclean && pe_can_fence(data_set, node)) {
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
 
-            stonith_op = pe_fence_op(node, NULL, data_set);
+            stonith_op = pe_fence_op(node, NULL, FALSE, data_set);
 
             stonith_constraints(node, stonith_op, data_set);
 

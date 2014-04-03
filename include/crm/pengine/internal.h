@@ -260,6 +260,7 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
+void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
 gboolean xml_contains_remote_node(xmlNode *xml);
 gboolean is_baremetal_remote_node(node_t *node);
 gboolean is_container_remote_node(node_t *node);
