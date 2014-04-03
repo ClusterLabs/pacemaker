@@ -224,16 +224,21 @@ time2str() {
 
 get_time() {
 	perl -e "\$time=\"$*\";" -e '
+	$unix_tm = 0;
 	eval "use Date::Parse";
 	if (index($time, ":") < 0) {
-
 	} elsif (!$@) {
-		print str2time($time);
+		$unix_tm = str2time($time);
 	} else {
 		eval "use Date::Manip";
 		if (!$@) {
-			print UnixDate(ParseDateString($time), "%s");
+			$unix_tm = UnixDate(ParseDateString($time), "%s");
 		}
+	}
+	if ($unix_tm != "") {
+		print int($unix_tm);
+	} else {
+		print "";
 	}
 	'
 }
@@ -250,11 +255,21 @@ get_time_legacy() {
     awk '{print $2}' | sed 's/_/ /'
 }
 
+get_time_iso8601() {
+    awk '{print $1}'
+}
+
 get_time_format_for_string() {
     l="$*"
     t=$(get_time `echo $l | get_time_syslog`)
     if [ "x$t" != x ]; then
 	echo syslog
+	return
+    fi
+
+    t=$(get_time `echo $l | get_time_iso8601`)
+    if [ "x$t" != x ]; then
+	echo iso8601
 	return
     fi
 
