@@ -33,7 +33,7 @@ before_install:
  - sudo apt-get update -qq
 
 install:
- - sudo apt-get install -qq automake autoconf chrpath libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-central python-dev libpam0g-dev libncurses5-dev libcorosync-dev libxslt1-dev libdbus-1-dev
+ - sudo apt-get install -qq automake autoconf chrpath libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-central python-dev libpam0g-dev libncurses5-dev libcorosync-dev libxslt1-dev libdbus-1-dev bc
  - sudo apt-get install -qq cluster-glue-dev heartbeat-dev libheartbeat2-dev 
  - sudo apt-get install -qq libqb-dev/raring
 
