@@ -584,7 +584,7 @@
   </synapse>
   <synapse id="55" priority="1000000">
     <action_set>
-      <rsc_op id="30" operation="probe_complete" operation_key="probe_complete" on_node="rhel7-node3" on_node_uuid="3">
+      <rsc_op id="30" operation="probe_complete" operation_key="probe_complete-rhel7-node3" on_node="rhel7-node3" on_node_uuid="3">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -629,7 +629,7 @@
   </synapse>
   <synapse id="56" priority="1000000">
     <action_set>
-      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="rhel7-node2" on_node_uuid="2">
+      <rsc_op id="17" operation="probe_complete" operation_key="probe_complete-rhel7-node2" on_node="rhel7-node2" on_node_uuid="2">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -674,7 +674,7 @@
   </synapse>
   <synapse id="57" priority="1000000">
     <action_set>
-      <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="rhel7-node1" on_node_uuid="1">
+      <rsc_op id="4" operation="probe_complete" operation_key="probe_complete-rhel7-node1" on_node="rhel7-node1" on_node_uuid="1">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
