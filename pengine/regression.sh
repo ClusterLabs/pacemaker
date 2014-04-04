@@ -100,7 +100,6 @@ do_test target-1 "Target Role : master"
 do_test target-2 "Target Role : invalid"
 
 echo ""
-do_test domain "Failover domains"
 do_test base-score "Set a node's default score for all nodes"
 
 echo ""
