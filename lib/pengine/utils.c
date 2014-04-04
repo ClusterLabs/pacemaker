@@ -1852,3 +1852,92 @@ xml_contains_remote_node(xmlNode *xml)
     return FALSE;
 }
 
+void
+clear_bit_recursive(resource_t * rsc, unsigned long long flag)
+{
+    GListPtr gIter = rsc->children;
+
+    clear_bit(rsc->flags, flag);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        clear_bit_recursive(child_rsc, flag);
+    }
+}
+
+void
+set_bit_recursive(resource_t * rsc, unsigned long long flag)
+{
+    GListPtr gIter = rsc->children;
+
+    set_bit(rsc->flags, flag);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        set_bit_recursive(child_rsc, flag);
+    }
+}
+
+action_t *
+pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set)
+{
+    char *key = NULL;
+    action_t *stonith_op = NULL;
+
+    if(op == NULL) {
+        op = data_set->stonith_action;
+    }
+
+    key = g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+
+    if(data_set->singletons) {
+        stonith_op = g_hash_table_lookup(data_set->singletons, key);
+    }
+
+    if(stonith_op == NULL) {
+        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, optional, TRUE, data_set);
+
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+        add_hash_param(stonith_op->meta, "stonith_action", op);
+    }
+
+    if(optional == FALSE) {
+        crm_trace("%s is no longer optional", stonith_op->uuid);
+        pe_clear_action_bit(stonith_op, pe_action_optional);
+    }
+
+    return stonith_op;
+}
+
+void
+trigger_unfencing(
+    resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set) 
+{
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        /* No resources require it */
+        return;
+
+    } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
+        /* Wasnt a stonith device */
+        return;
+
+    } else if(node) {
+        action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
+
+        crm_notice("Unfencing %s: %s", node->details->uname, reason);
+        if(FALSE && dependancy) {
+            order_actions(unfence, dependancy, pe_order_optional);
+        }
+
+    } else if(rsc) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
+                trigger_unfencing(rsc, node, reason, dependancy, data_set);
+            }
+        }
+    }
+}

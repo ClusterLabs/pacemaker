@@ -47,19 +47,6 @@ mark_as_orphan(resource_t * rsc)
 }
 
 void
-clear_bit_recursive(resource_t * rsc, unsigned long long flag)
-{
-    GListPtr gIter = rsc->children;
-
-    clear_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
-
-        clear_bit_recursive(child_rsc, flag);
-    }
-}
-
-void
 force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
 {
     if (rsc->variant == pe_clone || rsc->variant == pe_master) {

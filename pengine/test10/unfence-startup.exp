@@ -240,7 +240,14 @@
         <attributes CRM_meta_on_node="virt-3" CRM_meta_on_node_uuid="3" CRM_meta_stonith_action="on" />
       </crm_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="18">
     <action_set>

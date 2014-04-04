@@ -1365,14 +1365,15 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_stonith == FALSE
         && is_set(data_set->flags, pe_flag_enable_unfencing)
-        && is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        && is_set(rsc->flags, pe_rsc_needs_unfencing)
+        && is_not_set(rsc->flags, pe_rsc_have_unfencing)) {
         /* Check if the node needs to be unfenced first */
         node_t *node = NULL;
         GHashTableIter iter;
 
         if(rsc != top) {
             /* Only create these constraints once, rsc is almost certainly cloned */
-            clear_bit_recursive(top, pe_rsc_needs_unfencing);
+            clear_bit_recursive(top, pe_rsc_have_unfencing);
         }
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -2709,9 +2710,26 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device)) {
-        crm_crit("TODO: %s: Trigger when probing the device or the resource that needs unfencing?", rsc->id);
+    /* If enabled, require unfencing before probing any fence devices
+     * but ensure it happens after any resources that require
+     * unfencing have been probed.
+     *
+     * Doing it the other way (requiring unfencing after probing
+     * resources that need it) would result in the node being
+     * unfenced, and all its resources being stopped, whenever a new
+     * resource is added.  Which would be highly suboptimal.
+     *
+     * So essentially, at the point the fencing device(s) have been
+     * probed, we know the state of all resources that require
+     * unfencing and that unfencing occurred.
+     */
+    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         trigger_unfencing(NULL, node, "node discovery", probe, data_set);
+
+    } else if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);
+
+        order_actions(probe, unfence, pe_order_optional);
     }
 
     /*

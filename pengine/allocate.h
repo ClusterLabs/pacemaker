@@ -51,8 +51,6 @@ struct resource_alloc_functions_s {
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
 };
 
-action_t *pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set);
-
 extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                      const char *attr, float factor, enum pe_weights flags);
 
@@ -160,8 +158,6 @@ extern void free_notification_data(notify_data_t * n_data);
 extern void rsc_reload(resource_t * rsc, pe_working_set_t * data_set);
 extern void rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op,
                                  pe_working_set_t * data_set);
-
-void trigger_unfencing(resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set);
 
 extern enum pe_graph_flags native_update_actions(action_t * first, action_t * then, node_t * node,
                                                  enum pe_action_flags flags,
