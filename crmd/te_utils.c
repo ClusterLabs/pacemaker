@@ -124,7 +124,12 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         return;
     }
 
-    if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
+    if (st_event->result == pcmk_ok && safe_str_eq("on", st_event->action)) {
+        crm_notice("%s was successfully unfenced by %s for %s with %s",
+                   st_event->executioner, st_event->origin, st_event->device);
+        return;
+
+    } else if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
         crm_crit("We were alegedly just fenced by %s for %s with %s!", st_event->executioner,
                  st_event->origin, st_event->device); /* Dumps blackbox if enabled */
 
