@@ -575,7 +575,7 @@ __xml_acl_apply(xmlNode *xml)
     xml_private_t *p = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    if(xml == NULL) {
+    if(xml_acl_enabled(xml) == FALSE) {
         return;
     }
 
@@ -616,7 +616,7 @@ __xml_acl_apply(xmlNode *xml)
     if(is_not_set(p->flags, xpf_acl_read) && is_not_set(p->flags, xpf_acl_write)) {
         p->flags |= xpf_acl_deny;
         p = xml->doc->_private;
-        crm_crit("Enforcing default ACL for %s to %s", p->user, crm_element_name(xml));
+        crm_info("Enforcing default ACL for %s to %s", p->user, crm_element_name(xml));
     }
 
 }
