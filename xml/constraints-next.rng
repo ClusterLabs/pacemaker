@@ -39,13 +39,8 @@
       </choice>
       <choice>
 	<group>
-	  <choice>
-	    <attribute name="domain"><data type="IDREF"/></attribute>
-	    <group>
-	      <attribute name="node"><text/></attribute>
-	      <externalRef href="score.rng"/>
-	    </group>
-	  </choice>
+	  <externalRef href="score.rng"/>
+	  <attribute name="node"><text/></attribute>
 	</group>
 	<oneOrMore>
 	  <externalRef href="rule.rng"/>

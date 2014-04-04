@@ -584,7 +584,6 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
-    const char *domain = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
 
     if (rsc_lh == NULL) {
         /* only a warn as BSC adds the constraint then the resource */
@@ -596,18 +595,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
         score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     }
 
-    if (domain) {
-        GListPtr nodes = g_hash_table_lookup(data_set->domains, domain);
-
-        if (domain == NULL) {
-            crm_config_err("Invalid constraint %s: Domain %s does not exist", id, domain);
-            return FALSE;
-        }
-
-        location = rsc2node_new(id, rsc_lh, 0, NULL, data_set);
-        location->node_list_rh = node_list_dup(nodes, FALSE, FALSE);
-
-    } else if (node != NULL && score != NULL) {
+    if (node != NULL && score != NULL) {
         int score_i = char2score(score);
         node_t *match = pe_find_node(data_set->nodes, node);
 
