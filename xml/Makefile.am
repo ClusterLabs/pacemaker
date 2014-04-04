@@ -27,6 +27,7 @@ RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
 RNG_max			= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
+RNG_last		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr | head -n 2 | tail -n 1)
 RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
@@ -91,11 +92,14 @@ pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	echo "</grammar>" >> $@
 	echo "Built $@"
 
-rng_next = $(shell echo $(wildcard *-next.rng) | sed 's/-next.rng//g')
+files_next = $(shell echo $(wildcard *-next.rng) | sed 's/-next.rng//g')
+files_max = $(shell echo $(wildcard *-$(RNG_max).rng) | sed 's/-[0-9][0-9.]*.rng//g')
+
 diff:
-	echo "Comparing changes to: $(rng_next)"
-	for rng in $(rng_next); do echo "### $${rng}"; diff -u $${rng}-$(CRM_DTD_VERSION).rng $${rng}-next.rng; done
-	echo "Done"
+	echo "#  Comparing changes in: $(RNG_max)"
+	-for rng in $(files_max); do echo "### $${rng}"; diff -u `$(top_srcdir)/xml/best-match.sh $${rng} $(RNG_last)` $${rng}-$(RNG_max).rng; done
+	echo -e "\n\n\n#  Comparing changes since: $(RNG_max)"
+	-for rng in $(files_next); do echo "### $${rng}"; diff -u `$(top_srcdir)/xml/best-match.sh $${rng} $(RNG_max)` $${rng}-next.rng; done
 
 sync:
 	git rm -f $(wildcard *-next.rng)
