@@ -1,0 +1,54 @@
+
+Current cluster status:
+Online: [ rhel7-node2 rhel7-node3 ]
+Containers: [ rhel7-node1:remote-rsc ]
+
+ shooter1	(stonith:fence_xvm):	Started rhel7-node3 
+ FAKE1	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE2	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE3	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+ FAKE4	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+ FAKE5	(ocf::heartbeat:Dummy):	Started rhel7-node2 
+ FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE7	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+ remote-rsc	(ocf::heartbeat:Dummy):	Started rhel7-node2 
+
+Transition Summary:
+ * Move    shooter1	(Started rhel7-node3 -> rhel7-node2)
+ * Move    FAKE3	(Started rhel7-node3 -> rhel7-node2)
+ * Migrate remote-rsc	(Started rhel7-node2 -> rhel7-node3)
+ * Migrate rhel7-node1	(Started rhel7-node2 -> rhel7-node3)
+
+Executing cluster transition:
+ * Resource action: shooter1        stop on rhel7-node3
+ * Resource action: FAKE3           stop on rhel7-node3
+ * Resource action: remote-rsc      migrate_to on rhel7-node2
+ * Resource action: shooter1        start on rhel7-node2
+ * Resource action: FAKE3           start on rhel7-node2
+ * Resource action: remote-rsc      migrate_from on rhel7-node3
+ * Resource action: rhel7-node1     migrate_to on rhel7-node2
+ * Resource action: shooter1        monitor=60000 on rhel7-node2
+ * Resource action: FAKE3           monitor=10000 on rhel7-node2
+ * Resource action: rhel7-node1     migrate_from on rhel7-node3
+ * Resource action: rhel7-node1     stop on rhel7-node2
+ * Resource action: remote-rsc      stop on rhel7-node2
+ * Pseudo action:   all_stopped
+ * Pseudo action:   remote-rsc_start_0
+ * Pseudo action:   rhel7-node1_start_0
+ * Resource action: remote-rsc      monitor=10000 on rhel7-node3
+ * Resource action: rhel7-node1     monitor=30000 on rhel7-node3
+
+Revised cluster status:
+Online: [ rhel7-node2 rhel7-node3 ]
+Containers: [ rhel7-node1:remote-rsc ]
+
+ shooter1	(stonith:fence_xvm):	Started rhel7-node2 
+ FAKE1	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE2	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE3	(ocf::heartbeat:Dummy):	Started rhel7-node2 
+ FAKE4	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+ FAKE5	(ocf::heartbeat:Dummy):	Started rhel7-node2 
+ FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-node1 
+ FAKE7	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+ remote-rsc	(ocf::heartbeat:Dummy):	Started rhel7-node3 
+
