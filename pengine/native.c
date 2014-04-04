@@ -2187,13 +2187,18 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 
     if (rsc->role == rsc->next_role) {
+        action_t *migrate_to = NULL;
         key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
         possible_matches = find_actions(rsc->actions, key, next);
         free(key);
 
+        if (possible_matches) {
+            migrate_to = possible_matches->data;
+        }
+
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
-        } else if (possible_matches && current) {
+        } else if (migrate_to && is_set(migrate_to->flags, pe_action_runnable) && current) {
             log_change("Migrate %s\t(%s %s -> %s)",
                        rsc->id, role2text(rsc->role), current->details->uname,
                        next->details->uname);

@@ -87,7 +87,7 @@ crmd_cs_dispatch(cpg_handle_t handle,
                                                   cib_quorum_override | cib_scope_local |
                                                   cib_inhibit_notify,
                                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                                  XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL);
+                                                  XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL, NULL);
 
                     crm_info("Setting expected votes to %s", votes);
                     if (pcmk_ok > rc) {

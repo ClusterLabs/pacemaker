@@ -249,7 +249,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         free(host);
 
     } else if(safe_str_eq(op, "refresh")) {
-        crm_notice("Updating all attributes");
+        crm_info("Updating all attributes");
         write_attributes(TRUE, FALSE);
     }
 
@@ -590,7 +590,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        crm_notice("Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
+        do_crm_log(level, "Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
 
         if(rc == pcmk_ok) {
             free(v->stored);
@@ -760,7 +760,7 @@ write_attribute(attribute_t *a)
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);
 
-        crm_notice("Sent update %d with %d changes for %s, id=%s, set=%s",
+        crm_info("Sent update %d with %d changes for %s, id=%s, set=%s",
                    a->update, updates, a->id, a->uuid ? a->uuid : "<n/a>", a->set);
 
         the_cib->cmds->register_callback(

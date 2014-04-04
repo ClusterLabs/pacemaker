@@ -877,10 +877,18 @@ update_fencing_topology(const char *event, xmlNode * msg)
         for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+            xmlNode *f_topology = get_message_xml(change, XML_TAG_FENCING_TOPOLOGY);
 
-            if(op == NULL || strstr(xpath, "/fencing-topology/") == NULL) {
+            if(op == NULL) {
                 continue;
-
+            } else if (strstr(xpath, "/cib/configuration") && f_topology != NULL) {
+                if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
+                    crm_info("Re-initializing fencing topology after top-level %s operation", op);
+                    fencing_topology_init(NULL);
+                }
+                return;
+            } else if (strstr(xpath, "/fencing-topology/") == NULL) {
+                continue;
             } else if(strstr(xpath, "/fencing-level/") == NULL) {
                 if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
                     crm_info("Re-initializing fencing topology after top-level %s operation", op);

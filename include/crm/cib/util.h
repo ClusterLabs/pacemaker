@@ -35,7 +35,8 @@ int update_attr_delegate(cib_t * the_cib, int call_options,
                          const char *section, const char *node_uuid,
                          const char *set_type, const char *set_name,
                          const char *attr_id, const char *attr_name,
-                         const char *attr_value, gboolean to_console, const char *user_name);
+                         const char *attr_value, gboolean to_console,
+                         const char *user_name, const char *node_type);
 
 int find_nvpair_attr_delegate(cib_t * the_cib, const char *attr,
                               const char *section, const char *node_uuid,

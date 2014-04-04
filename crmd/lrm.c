@@ -830,7 +830,7 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
         crm_debug("Triggering a refresh after %s deleted %s from the LRM", from_sys, rsc_id);
 
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             "last-lrm-refresh", now_s, FALSE, NULL);
+                             "last-lrm-refresh", now_s, FALSE, NULL, NULL);
 
         free(now_s);
     }

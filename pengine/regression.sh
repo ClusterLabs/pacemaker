@@ -747,6 +747,6 @@ do_test remote-fence-unclean   "Fence unclean baremetal remote-node"
 do_test remote-move            "Move remote-node connection resource"
 do_test remote-disable         "Disable a baremetal remote-node"
 do_test remote-orphaned        "Properly shutdown orphaned connection resource"
-
+do_test remote-stale-node-entry "Make sure we properly handle leftover remote-node entries in the node section"
 echo ""
 test_results

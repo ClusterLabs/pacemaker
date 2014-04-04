@@ -164,7 +164,8 @@ int
 update_attr_delegate(cib_t * the_cib, int call_options,
                      const char *section, const char *node_uuid, const char *set_type,
                      const char *set_name, const char *attr_id, const char *attr_name,
-                     const char *attr_value, gboolean to_console, const char *user_name)
+                     const char *attr_value, gboolean to_console, const char *user_name,
+                     const char *node_type)
 {
     const char *tag = NULL;
     int rc = pcmk_ok;
@@ -191,8 +192,6 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         /*     return -EINVAL; */
 
     } else {
-        const char *node_type = NULL;
-
         crm_trace("%s does not exist, create it", attr_name);
         if (safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
             node_uuid = NULL;
@@ -203,9 +202,19 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
         } else if (safe_str_eq(section, XML_CIB_TAG_NODES)) {
-            tag = XML_CIB_TAG_NODE;
+
             if (node_uuid == NULL) {
                 return -EINVAL;
+            }
+
+            if (safe_str_eq(node_type, "remote")) {
+                xml_top = create_xml_node(xml_obj, XML_CIB_TAG_NODES);
+                xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
+                crm_xml_add(xml_obj, XML_ATTR_TYPE, "remote");
+                crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+                crm_xml_add(xml_obj, XML_ATTR_UNAME, node_uuid);
+            } else {
+                tag = XML_CIB_TAG_NODE;
             }
 
         } else if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
@@ -569,7 +578,7 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     }
 
     rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
-                              attr_id, "standby", standby_value, TRUE, NULL);
+                              attr_id, "standby", standby_value, TRUE, NULL, NULL);
 
     g_free(attr_id);
     return rc;

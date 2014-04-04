@@ -2646,37 +2646,23 @@ class RemoteBaremetal(CTSTest):
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
-
             rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
             if rc != 0:
                 self.fail_string = ("Removal of resource '%s' failed" % (rsc))
                 self.failed = 1
-            else:
-                self.fail_string = ""
-                self.failed = 0
-                break
+            return
 
     def add_rsc(self, node, rsc_xml):
-        failed=0
-        fail_string=""
-        for othernode in self.Env["nodes"]:
+        for othernode in self.CM.Env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
-
             rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
             if rc != 0:
-                fail_string = "resource creation failed"
-                failed = 1
-            else:
-                fail_string = ""
-                failed = 0
-                break
-
-        if failed == 1:
-            self.failed=failed
-            self.fail_string=fail_string
+                self.fail_string = "resource creation failed"
+                self.failed = 1
+            return
 
     def add_primitive_rsc(self, node):
         rsc_xml="""
@@ -2755,7 +2741,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: Operation %s_start_0.*node=%s, .*confirmed.*ok" % (self.remote_rsc, self.remote_node))
+        pats.append("process_lrm_event: Operation %s_start_0.*node=%s, .*confirmed.*true" % (self.remote_rsc, self.remote_node))
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
@@ -2773,6 +2759,30 @@ class RemoteBaremetal(CTSTest):
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
+
+    def step3_test_attributes(self, node):
+        if self.failed == 1:
+            return
+
+        # This verifies permanent attributes can be set on a remote-node. It also
+        # verifies the remote-node can edit it's own cib node section remotely.
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), None)
+        if rc != 0:
+            self.fail_string = "Failed to set remote-node attribute. rc:%s output:%s" % (rc, line)
+            self.failed = 1
+            return
+
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -Q -N %s" % (self.remote_node), None)
+        if rc != 0:
+            self.fail_string = "Failed to get remote-node attribute"
+            self.failed = 1
+            return
+
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % (self.remote_node), None)
+        if rc != 0:
+            self.fail_string = "Failed to delete remote-node attribute"
+            self.failed = 1
+            return
 
     def cleanup_metal(self, node):
         if self.pcmk_started == 0:
@@ -2843,6 +2853,7 @@ class RemoteBaremetal(CTSTest):
         self.setup_env()
         self.step1_start_metal(node)
         self.step2_add_rsc(node)
+        self.step3_test_attributes(node)
         self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
