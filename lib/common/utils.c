@@ -766,6 +766,10 @@ crm_get_msec(const char *input)
     }
 
     msec = crm_int_helper(cp, &end_text);
+    if (msec > LLONG_MAX/multiplier) {
+        /* arithmetics overflow while multiplier/divisor mutually exclusive */
+        return LLONG_MAX;
+    }
     msec *= multiplier;
     msec /= divisor;
     /* dret += 0.5; */
