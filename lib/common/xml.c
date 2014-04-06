@@ -576,6 +576,7 @@ __xml_acl_apply(xmlNode *xml)
     xmlXPathObjectPtr xpathObj = NULL;
 
     if(xml_acl_enabled(xml) == FALSE) {
+        crm_trace("Not applying ACLs for %s", p->user);
         return;
     }
 
@@ -589,15 +590,16 @@ __xml_acl_apply(xmlNode *xml)
 
         for(lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
+            char *path = xml_get_path(match);
 
             p = match->_private;
+            crm_trace("Applying %x to %s for %s", acl->mode, path, acl->xpath);
 
 #ifdef SUSE_ACL_COMPAT
             if(is_not_set(p->flags, acl->mode)) {
                 if(is_set(p->flags, xpf_acl_read)
                    || is_set(p->flags, xpf_acl_write)
                    || is_set(p->flags, xpf_acl_deny)) {
-                    char *path = xml_get_path(xml);
                     crm_config_warn("Configuration element %s is matched by multiple ACL rules, only the first applies ('%s' wins over '%s')",
                                     path, __xml_acl_to_text(p->flags), __xml_acl_to_text(acl->mode));
                     free(path);
@@ -607,6 +609,7 @@ __xml_acl_apply(xmlNode *xml)
 #endif
 
             p->flags |= acl->mode;
+            free(path);
         }
         crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
         freeXpathObject(xpathObj);
@@ -742,6 +745,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
     crm_trace("filtering copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
     __xml_acl_unpack(acl_source, target, user);
+    set_doc_flag(target, xpf_acl_enabled);
     __xml_acl_apply(target);
 
     if(target == NULL) {
