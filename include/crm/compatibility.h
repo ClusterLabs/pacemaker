@@ -32,6 +32,8 @@
 #  define CRMD_STATE_ACTIVE            CRMD_JOINSTATE_MEMBER
 #  define CRMD_STATE_INACTIVE          CRMD_JOINSTATE_DOWN
 
+#define pcmk_err_dtd_validation pcmk_err_schema_validation
+
 /* *INDENT-OFF* */
 enum cib_errors {
     cib_ok			=  pcmk_ok,
@@ -67,7 +69,7 @@ enum cib_errors {
     cib_diff_failed		= -pcmk_err_diff_failed,
     cib_diff_resync		= -pcmk_err_diff_resync,
     cib_old_data		= -pcmk_err_old_data,
-    cib_dtd_validation  	= -pcmk_err_dtd_validation,
+    cib_dtd_validation  	= -pcmk_err_schema_validation,
     cib_bad_section		= -EINVAL,
     cib_bad_permissions         = -EACCES,
     cib_invalid_argument	= -EINVAL,

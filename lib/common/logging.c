@@ -1032,7 +1032,7 @@ pcmk_errorname(int rc)
 
         case pcmk_err_generic: return "pcmk_err_generic";
         case pcmk_err_no_quorum: return "pcmk_err_no_quorum";
-        case pcmk_err_dtd_validation: return "pcmk_err_dtd_validation";
+        case pcmk_err_schema_validation: return "pcmk_err_schema_validation";
         case pcmk_err_transform_failed: return "pcmk_err_transform_failed";
         case pcmk_err_old_data: return "pcmk_err_old_data";
         case pcmk_err_diff_failed: return "pcmk_err_diff_failed";
@@ -1061,7 +1061,7 @@ pcmk_strerror(int rc)
             return "Generic Pacemaker error";
         case pcmk_err_no_quorum:
             return "Operation requires quorum";
-        case pcmk_err_dtd_validation:
+        case pcmk_err_schema_validation:
             return "Update does not conform to the configured schema";
         case pcmk_err_transform_failed:
             return "Schema transform failed";
@@ -1077,6 +1077,9 @@ pcmk_strerror(int rc)
             return "Could not archive the previous configuration";
         case pcmk_err_cib_save:
             return "Could not save the new configuration to disk";
+
+        case pcmk_err_schema_unchanged:
+            return "Schema is already the latest available";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */

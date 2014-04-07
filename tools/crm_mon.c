@@ -2564,7 +2564,7 @@ mon_refresh_display(gpointer user_data)
         if (cib) {
             cib->cmds->signoff(cib);
         }
-        print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_dtd_validation));
+        print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         if (as_console) {
             sleep(2);
         }

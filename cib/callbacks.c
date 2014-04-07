@@ -487,17 +487,26 @@ parse_local_options_v2(crm_client_t * cib_client, int call_type, int call_option
                     const char *op, gboolean * local_notify, gboolean * needs_reply,
                     gboolean * process, gboolean * needs_forward)
 {
-    if (cib_op_modifies(call_type)
-        && safe_str_neq(op, CIB_OP_MASTER)
-        && safe_str_neq(op, CIB_OP_SLAVE)) {
-        /* we need to send an update anyway */
-        *needs_reply = TRUE;
-        *needs_forward = TRUE;
-        *process = FALSE;
-        crm_trace("%s op from %s needs to be forwarded to %s",
-                  op, cib_client->name, host ? host : "the master instance");
-        return;
+    if (cib_op_modifies(call_type)) {
+        if(safe_str_eq(op, CIB_OP_MASTER) || safe_str_eq(op, CIB_OP_SLAVE)) {
+            /* Always handle these locally */
+            *process = TRUE;
+            *needs_reply = FALSE;
+            *local_notify = TRUE;
+            *needs_forward = FALSE;
+            return;
+
+        } else {
+            /* Redirect all other updates via CPG */
+            *needs_reply = TRUE;
+            *needs_forward = TRUE;
+            *process = FALSE;
+            crm_trace("%s op from %s needs to be forwarded to %s",
+                      op, cib_client->name, host ? host : "the master instance");
+            return;
+        }
     }
+
 
     *process = TRUE;
     *needs_reply = FALSE;
@@ -658,6 +667,33 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     } else if (is_reply && safe_str_eq(op, CRM_OP_PING)) {
         process_ping_reply(request);
         return FALSE;
+
+    } else if (safe_str_eq(op, CIB_OP_UPGRADE)) {
+        /* Only the DC (node with the oldest software) should process
+         * this operation if F_CIB_SCHEMA_MAX is unset
+         *
+         * If the DC is happy it will then send out another
+         * CIB_OP_UPGRADE which will tell all nodes to do the actual
+         * upgrade.
+         *
+         * Except this time F_CIB_SCHEMA_MAX will be set which puts a
+         * limit on how far newer nodes will go
+         */
+        const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
+
+        crm_trace("Parsing %s operation%s for %s with max=%s",
+                  op, is_reply?" reply":"", cib_is_master?"master":"slave", max);
+        if(max == NULL && cib_is_master) {
+            /* We are the DC, check if this upgrade is allowed */
+            goto skip_is_reply;
+
+        } else if(max) {
+            /* Ok, go ahead and upgrade to 'max' */
+            goto skip_is_reply;
+
+        } else {
+            return FALSE; /* Ignore */
+        }
 
     } else if (crm_is_true(update)) {
         crm_trace("Ingoring legacy %s global update from %s", op, originator);
@@ -1176,7 +1212,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         mainloop_timer_stop(digest_timer);
         mainloop_timer_start(digest_timer);
 
-    } else if (rc == -pcmk_err_dtd_validation) {
+    } else if (rc == -pcmk_err_schema_validation) {
         CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
 
         if (output != NULL) {

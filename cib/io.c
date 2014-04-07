@@ -488,18 +488,18 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     validation = crm_element_value(root, XML_ATTR_VALIDATION);
     if (validate_xml(root, NULL, TRUE) == FALSE) {
         crm_err("CIB does not validate with %s", crm_str(validation));
-        cib_status = -pcmk_err_dtd_validation;
+        cib_status = -pcmk_err_schema_validation;
 
     } else if (validation == NULL) {
         int version = 0;
 
-        update_validation(&root, &version, FALSE, FALSE);
+        update_validation(&root, &version, 0, FALSE, FALSE);
         if (version > 0) {
             crm_notice("Enabling %s validation on"
                        " the existing (sane) configuration", get_schema_name(version));
         } else {
             crm_err("CIB does not validate with any known DTD or schema");
-            cib_status = -pcmk_err_dtd_validation;
+            cib_status = -pcmk_err_schema_validation;
         }
     }
 

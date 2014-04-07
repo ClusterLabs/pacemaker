@@ -5372,7 +5372,7 @@ get_schema_version(const char *name)
 /* set which validation to use */
 #include <crm/cib.h>
 int
-update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean to_logs)
+update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, gboolean to_logs)
 {
     xmlNode *xml = NULL;
     char *value = NULL;
@@ -5424,12 +5424,18 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
-            if(next == 0) {
-                next = lpc + 1;
-            }
-
             if (next < 0) {
                 crm_trace("Stopping at %s", known_schemas[lpc].name);
+                break;
+
+            } else if (max > 0 && lpc == max) {
+                crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                          known_schemas[lpc].name, lpc, next, max);
+                break;
+
+            } else if (max > 0 && next > max) {
+                crm_debug("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                          known_schemas[lpc].name, lpc, next, max);
                 break;
 
             } else if (known_schemas[lpc].transform == NULL) {
@@ -5471,7 +5477,7 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
                             known_schemas[lpc].transform);
                     crm_log_xml_info(upgrade, "transform:bad");
                     free_xml(upgrade);
-                    rc = -pcmk_err_dtd_validation;
+                    rc = -pcmk_err_schema_validation;
                 }
             }
         }
@@ -5615,7 +5621,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
         xmlNode *converted = NULL;
 
         converted = copy_xml(*xml);
-        update_validation(&converted, &version, TRUE, to_logs);
+        update_validation(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {

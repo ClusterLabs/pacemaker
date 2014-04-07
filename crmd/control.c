@@ -916,7 +916,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
-        if (rc == -EACCES || rc == -pcmk_err_dtd_validation) {
+        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
             set_bit(fsa_input_register, R_STAYDOWN);
         }

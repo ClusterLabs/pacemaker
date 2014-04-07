@@ -110,7 +110,7 @@ load_file_cib(const char *filename)
     if (rc == 0) {
         root = filename2xml(filename);
         if (root == NULL) {
-            return -pcmk_err_dtd_validation;
+            return -pcmk_err_schema_validation;
         }
 
     } else {
@@ -128,7 +128,7 @@ load_file_cib(const char *filename)
     dtd_ok = validate_xml(root, NULL, TRUE);
     if (dtd_ok == FALSE) {
         crm_err("CIB does not validate against %s", ignore_dtd);
-        rc = -pcmk_err_dtd_validation;
+        rc = -pcmk_err_schema_validation;
         goto bail;
     }
 
@@ -303,7 +303,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
                         &output);
 
     free_xml(request);
-    if (rc == -pcmk_err_dtd_validation) {
+    if (rc == -pcmk_err_schema_validation) {
         validate_xml_verbose(result_cib);
     }
 

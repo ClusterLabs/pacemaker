@@ -197,7 +197,7 @@ char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do
 
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
 gboolean validate_xml_verbose(xmlNode * xml_blob);
-int update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean to_logs);
+int update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, gboolean to_logs);
 int get_schema_version(const char *name);
 const char *get_schema_name(int version);
 

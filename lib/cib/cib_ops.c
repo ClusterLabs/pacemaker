@@ -104,18 +104,26 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     int rc = 0;
     int new_version = 0;
     int current_version = 0;
-
-    const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);;
+    int max_version = 0;
+    const char *max = crm_element_value(req, F_CIB_SCHEMA_MAX);
+    const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
 
     *answer = NULL;
-    crm_trace("Processing \"%s\" event", op);
+    crm_trace("Processing \"%s\" event with max=%s", op, max);
 
     if (value != NULL) {
         current_version = get_schema_version(value);
     }
 
-    rc = update_validation(result_cib, &new_version, TRUE, TRUE);
+    if (max) {
+        max_version = get_schema_version(max);
+    }
+
+    rc = update_validation(result_cib, &new_version, max_version, TRUE, TRUE);
     if (new_version > current_version) {
+        cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
+        cib_update_counter(*result_cib, XML_ATTR_GENERATION, TRUE);
+        cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
         return pcmk_ok;
     }
 

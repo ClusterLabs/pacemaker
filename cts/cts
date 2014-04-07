@@ -179,12 +179,15 @@ if [ x$cmd != x ]; then
 	    cluster-helper -g $cluster_name -- grep PCMK_trace_functions $config
 	    ;;
 	trace-add|tadd)
+	    echo "Adding $trace to PCMK_trace_functions"
 	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/" $config
 	    ;;
 	trace-rm|trm)
+	    echo "Removing $trace from PCMK_trace_functions"
 	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/" $config
 	    ;;
 	trace-set|tset)
+	    echo "Setting PCMK_trace_functions to '$trace'"
 	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/" $config
 	    ;;
     esac

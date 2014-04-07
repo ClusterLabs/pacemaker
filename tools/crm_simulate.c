@@ -1181,7 +1181,7 @@ setup_input(const char *input, const char *output)
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        crm_exit(pcmk_err_dtd_validation);
+        crm_exit(pcmk_err_schema_validation);
     }
 
     if (output == NULL) {

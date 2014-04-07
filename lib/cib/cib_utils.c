@@ -583,7 +583,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
         crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
-        rc = -pcmk_err_dtd_validation;
+        rc = -pcmk_err_schema_validation;
     }
 
   done:

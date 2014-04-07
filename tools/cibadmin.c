@@ -476,14 +476,14 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(exit_code));
         operation_status = exit_code;
 
-        if (exit_code == -pcmk_err_dtd_validation) {
+        if (exit_code == -pcmk_err_schema_validation) {
             if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
 
                 rc = the_cib->cmds->query(the_cib, NULL, &obj, command_options);
                 if (rc == pcmk_ok) {
-                    update_validation(&obj, &version, TRUE, FALSE);
+                    update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
 
             } else if (output) {
