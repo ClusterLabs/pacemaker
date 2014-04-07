@@ -20,14 +20,14 @@ for rng in $candidates; do
 	    v=$(echo $rng | sed -e "s/${base}-//" -e 's/.rng//')
 	    : comparing $v with $target
 
-	    rc=$(echo "$v > ${best}" | bc)
-	    if [ $rc = 1 ]; then
+		echo | awk -v n1="$v" -v n2="${best}"  '{if (n1>n2) printf ("true"); else printf ("false");}' |  grep -q "true"
+	    if [ $? -eq 0 ]; then
 		: $v beats the previous ${best} for $target
 		if [ ${target} = next ]; then
 		    best=$v
 		else
-		    rc=$(echo "$v < ${target}" | bc)
-		    if [ $rc = 1 ]; then
+			echo | awk -v n1="$v" -v n2="${target}"  '{if (n1<n2) printf ("true"); else printf ("false");}' |  grep -q "true"
+		    if [ $? -eq 0 ]; then
 			: $v is still less than $target, using
 			best=$v
 		    fi
