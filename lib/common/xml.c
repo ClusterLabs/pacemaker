@@ -317,7 +317,7 @@ static void __xml_schema_add(
         char dummy[1024];
         CRM_ASSERT(name);
         CRM_ASSERT(location);
-        sscanf(name, "%[^-]-%f", &dummy, &version);
+        sscanf(name, "%[^-]-%f", dummy, &version);
         known_schemas[last].version = version;
         known_schemas[last].name = strdup(name);
         known_schemas[last].location = strdup(location);
