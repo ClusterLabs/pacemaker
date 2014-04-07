@@ -38,7 +38,7 @@ test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
 scratch_SOURCES	= scratch.c
-scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
+scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
 
 core:
 	@echo "Building only core components: $(CORE)"

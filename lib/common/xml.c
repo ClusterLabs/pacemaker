@@ -25,11 +25,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include <dirent.h>
 
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <math.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -79,6 +81,7 @@ typedef struct {
 
 struct schema_s {
     int type;
+    float version;
     const char *name;
     const char *location;
     const char *transform;
@@ -128,19 +131,6 @@ typedef struct xml_acl_s {
 
 /* *INDENT-OFF* */
 
-struct schema_s known_schemas[] = {
-    /* 0 */    { 0, NULL, NULL, NULL, 1 },
-    /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
-    /* 2 */    { 1, "transitional-0.6", "crm-transitional.dtd",	"upgrade06.xsl", 4, NULL },
-    /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 4, NULL }, /* Legacy alias */
-    /* 4 */    { 2, "pacemaker-1.0",    NULL,	NULL, 6, NULL },
-    /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-next.rng",	NULL, 6, NULL }, /* Legacy alias */
-    /* 6 */    { 2, "pacemaker-1.2",    NULL,	NULL,  0, NULL },
-    /* 7 */    { 2, "pacemaker-1.3",    NULL,	NULL, -1, NULL },
-    /* - */    { 2, "pacemaker-next",   NULL,   NULL, -1, NULL }, /* Feature playground */
-    /* - */    { 0, "none", NULL, NULL, 0, NULL },
-};
-
 static filter_t filter[] = {
     { 0, XML_ATTR_ORIGIN },
     { 0, XML_CIB_ATTR_WRITTEN },
@@ -150,19 +140,42 @@ static filter_t filter[] = {
 };
 /* *INDENT-ON* */
 
-static int all_schemas = DIMOF(known_schemas);
-static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none' */
+static struct schema_s *known_schemas = NULL;
+static int xml_schema_max = 0;
+
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
 const char *__xml_acl_to_text(enum xml_private_flags flags);
 
-const char *
-xml_latest_schema(void) 
+static int
+xml_latest_schema_index(void)
 {
-    int index = get_schema_version("pacemaker-next");
-    return  known_schemas[index - 1].name;
+    return xml_schema_max - 4;
+}
+
+static int
+xml_minimum_schema_index(void)
+{
+    int lpc = 0;
+    int best = xml_latest_schema_index();
+    float target = floor(known_schemas[lpc].version);
+
+    for(lpc = best; lpc > 0; lpc--) {
+        if(known_schemas[lpc].version < target) {
+            return best;
+        } else {
+            best = lpc;
+        }
+    }
+    return xml_latest_schema_index();
+}
+
+const char *
+xml_latest_schema(void)
+{
+    return get_schema_name(xml_latest_schema_index());
 }
 
 #define CHUNK_SIZE 1024
@@ -209,8 +222,8 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
     }
 }
 
-static char *
-get_schema_path(const char *name, const char *file)
+static const char *
+get_schema_root(void)
 {
     static const char *base = NULL;
 
@@ -220,10 +233,165 @@ get_schema_path(const char *name, const char *file)
     if (base == NULL || strlen(base) == 0) {
         base = CRM_DTD_DIRECTORY;
     }
+    return base;
+}
+
+static char *
+get_schema_path(const char *name, const char *file)
+{
+    const char *base = get_schema_root();
+
     if(file) {
         return g_strdup_printf("%s/%s", base, file);
     }
     return g_strdup_printf("%s/%s.rng", base, name);
+}
+
+static int schema_filter(const struct dirent * a)
+{
+    int rc = 0;
+    float version = 0;
+
+    if(strstr(a->d_name, "pacemaker-") != a->d_name) {
+        /* crm_trace("%s - wrong prefix", a->d_name); */
+
+    } else if(strstr(a->d_name, ".rng") == NULL) {
+        /* crm_trace("%s - wrong suffix", a->d_name); */
+
+    } else if(sscanf(a->d_name, "pacemaker-%f.rng", &version) == 0) {
+        /* crm_trace("%s - wrong format", a->d_name); */
+
+    } else if(strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
+        /* crm_trace("%s - hack", a->d_name); */
+
+    } else {
+        /* crm_debug("%s - candidate", a->d_name); */
+        rc = 1;
+    }
+
+    return rc;
+}
+
+static int schema_sort(const struct dirent ** a, const struct dirent **b)
+{
+    int rc = 0;
+    float a_version = 0.0;
+    float b_version = 0.0;
+
+    sscanf(a[0]->d_name, "pacemaker-%f.rng", &a_version);
+    sscanf(b[0]->d_name, "pacemaker-%f.rng", &b_version);
+
+    if(a_version > b_version) {
+        rc = 1;
+    } else if(a_version < b_version) {
+        rc = -1;
+    }
+
+    /* crm_trace("%s (%f) vs. %s (%f) : %d", a[0]->d_name, a_version, b[0]->d_name, b_version, rc); */
+    return rc;
+}
+
+static void __xml_schema_add(
+    int type, float version, const char *name, const char *location, const char *transform, int after_transform)
+{
+    int last = xml_schema_max;
+
+    xml_schema_max++;
+    known_schemas = realloc(known_schemas, xml_schema_max*sizeof(struct schema_s));
+    memset(known_schemas+last, 0, sizeof(struct schema_s));
+    known_schemas[last].type = type;
+    known_schemas[last].after_transform = after_transform;
+
+    if(version > 0.0) {
+        known_schemas[last].name = g_strdup_printf("pacemaker-%.1f", version);
+        known_schemas[last].location = g_strdup_printf("%s.rng", known_schemas[last].name);
+
+    } else {
+        CRM_ASSERT(name);
+        CRM_ASSERT(location);
+        known_schemas[last].name = strdup(name);
+        known_schemas[last].location = strdup(location);
+    }
+
+    if(transform) {
+        known_schemas[last].transform = strdup(transform);
+    }
+    if(after_transform == 0) {
+        after_transform = xml_schema_max;
+    }
+    known_schemas[last].after_transform = after_transform;
+
+    if(known_schemas[last].after_transform < 0) {
+        crm_debug("Added supported schema %d: %s (%s)",
+                  last, known_schemas[last].name, known_schemas[last].location);
+
+    } else if(known_schemas[last].transform) {
+        crm_debug("Added supported schema %d: %s (%s upgrades to %d with %s)",
+                  last, known_schemas[last].name, known_schemas[last].location,
+                  known_schemas[last].after_transform,
+                  known_schemas[last].transform);
+
+    } else {
+        crm_debug("Added supported schema %d: %s (%s upgrades to %d)",
+                  last, known_schemas[last].name, known_schemas[last].location,
+                  known_schemas[last].after_transform);
+    }
+}
+
+
+static int __xml_build_schema_list(void) 
+{
+    int lpc, max;
+    const char *base = get_schema_root();
+    struct dirent **namelist = NULL;
+
+    max = scandir(base, &namelist, schema_filter, schema_sort);
+    __xml_schema_add(1, 0.0, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
+    __xml_schema_add(1, 0.0, "transitional-0.6", "crm-transitional.dtd", "upgrade06.xsl", 3);
+    __xml_schema_add(2, 0.0, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
+
+    if (max < 0) {
+        crm_perror(LOG_NOTICE, "scandir(%s) failed", base);
+    } else {
+        for (lpc = 0; lpc < max; lpc++) {
+            int next = 0;
+            float version = 0.0;
+            char *transform = NULL;
+
+            sscanf(namelist[lpc]->d_name, "pacemaker-%f.rng", &version);
+            if((lpc + 1) < max) {
+                float next_version = 0.0;
+
+                sscanf(namelist[lpc+1]->d_name, "pacemaker-%f.rng", &next_version);
+
+                if(floor(version) < floor(next_version)) {
+                    struct stat s;
+                    char *xslt = NULL;
+
+                    transform = g_strdup_printf("upgrade-%.1f.xsl", version);
+                    xslt = get_schema_path(NULL, transform);
+                    if(stat(xslt, &s) != 0) {
+                        crm_err("Transform %s not found", xslt);
+                        __xml_schema_add(2, version, NULL, NULL, NULL, -1);
+                        break;
+                    }
+                }
+
+            } else {
+                next = -1;
+            }
+            __xml_schema_add(2, version, NULL, NULL, transform, next);
+            free(namelist[lpc]);
+            free(transform);
+        }
+    }
+
+    /* 1.1 was the old name for -next */
+    __xml_schema_add(2, 0.0, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
+    __xml_schema_add(2, 0.0, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
+    __xml_schema_add(0, 0.0, "none", "N/A", NULL, -1);
+    free(namelist);
+    return TRUE;
 }
 
 static void
@@ -5130,6 +5298,8 @@ crm_xml_init(void)
         /* Populate and free the _private field when nodes are created and destroyed */
         xmlDeregisterNodeDefault(pcmkDeregisterNode);
         xmlRegisterNodeDefault(pcmkRegisterNode);
+
+        __xml_build_schema_list();
     }
 }
 
@@ -5140,7 +5310,7 @@ crm_xml_cleanup(void)
     relaxng_ctx_cache_t *ctx = NULL;
 
     crm_info("Cleaning up memory from libxml2");
-    for (; lpc < all_schemas; lpc++) {
+    for (; lpc < xml_schema_max; lpc++) {
         switch (known_schemas[lpc].type) {
             case 0:
                 /* None */
@@ -5284,7 +5454,7 @@ validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs)
         }
 
         /* Work it out */
-        for (lpc = 0; lpc < all_schemas; lpc++) {
+        for (lpc = 0; lpc < xml_schema_max; lpc++) {
             if(validate_with(xml_blob, lpc, FALSE)) {
                 valid = TRUE;
                 crm_xml_add(xml_blob, XML_ATTR_VALIDATION, known_schemas[lpc].name);
@@ -5302,7 +5472,7 @@ validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs)
     if (strcmp(validation, "none") == 0) {
         return TRUE;
 
-    } else if(version < all_schemas) {
+    } else if(version < xml_schema_max) {
         return validate_with(xml_blob, version, to_logs);
 
     }
@@ -5350,7 +5520,7 @@ apply_transformation(xmlNode * xml, const char *transform)
 const char *
 get_schema_name(int version)
 {
-    if (version < 0 || version >= all_schemas) {
+    if (version < 0 || version >= xml_schema_max) {
         return "unknown";
     }
     return known_schemas[version].name;
@@ -5361,7 +5531,10 @@ get_schema_version(const char *name)
 {
     int lpc = 0;
 
-    for (; lpc < all_schemas; lpc++) {
+    if(name == NULL) {
+        name = "none";
+    }
+    for (; lpc < xml_schema_max; lpc++) {
         if (safe_str_eq(name, known_schemas[lpc].name)) {
             return lpc;
         }
@@ -5376,6 +5549,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
 {
     xmlNode *xml = NULL;
     char *value = NULL;
+    int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
 
     CRM_CHECK(best != NULL, return -EINVAL);
@@ -5399,19 +5573,19 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
         }
     }
 
-    if (match >= max_schemas) {
+    if (match >= max_stable_schemas) {
         /* nothing to do */
         free(value);
         *best = match;
         return pcmk_ok;
     }
 
-    for (; lpc < max_schemas; lpc++) {
+    for (; lpc < max_stable_schemas; lpc++) {
         gboolean valid = TRUE;
 
         crm_debug("Testing '%s' validation (%d of %d)",
                   known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
-                  lpc, max_schemas);
+                  lpc, max_stable_schemas);
         valid = validate_with(xml, lpc, to_logs);
 
         if (valid) {
@@ -5604,18 +5778,10 @@ gboolean
 cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
-    static int min_version = -1;
-    static int max_version = -1;
-
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
-    int version = get_schema_version(value);
 
-    if (min_version < 0) {
-        min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-    }
-    if (max_version < 0) {
-        max_version = get_schema_version("pacemaker-next");
-    }
+    int version = get_schema_version(value);
+    int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
         xmlNode *converted = NULL;
@@ -5628,10 +5794,11 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
             if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
                                "the minimum requirement is %s.\n", crm_str(value),
-                               MINIMUM_SCHEMA_VERSION);
+                               get_schema_name(min_version));
             } else {
                 fprintf(stderr, "Your current configuration could only be upgraded to %s... "
-                        "the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+                        "the minimum requirement is %s.\n",
+                        crm_str(value), get_schema_name(min_version));
             }
 
             free_xml(converted);
@@ -5642,7 +5809,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
             free_xml(*xml);
             *xml = converted;
 
-            if (version < max_version) {
+            if (version < xml_latest_schema_index()) {
                 crm_config_warn("Your configuration was internally updated to %s... "
                                 "which is acceptable but not the most recent",
                                 get_schema_name(version));
@@ -5652,7 +5819,8 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
                          get_schema_name(version));
             }
         }
-    } else if (version > max_version) {
+
+    } else if (version >= get_schema_version("none")) {
         if (to_logs) {
             crm_config_warn("Configuration validation is currently disabled."
                             " It is highly encouraged and prevents many common cluster issues.");
