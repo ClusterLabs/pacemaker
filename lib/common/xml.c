@@ -158,18 +158,24 @@ xml_latest_schema_index(void)
 static int
 xml_minimum_schema_index(void)
 {
-    int lpc = 0;
-    int best = xml_latest_schema_index();
-    float target = floor(known_schemas[lpc].version);
+    static int best = 0;
+    if(best == 0) {
+        int lpc = 0;
+        float target = 0.0;
 
-    for(lpc = best; lpc > 0; lpc--) {
-        if(known_schemas[lpc].version < target) {
-            return best;
-        } else {
-            best = lpc;
+        best = xml_latest_schema_index();
+        target = floor(known_schemas[best].version);
+
+        for(lpc = best; lpc > 0; lpc--) {
+            if(known_schemas[lpc].version < target) {
+                return best;
+            } else {
+                best = lpc;
+            }
         }
+        best = xml_latest_schema_index();
     }
-    return xml_latest_schema_index();
+    return best;
 }
 
 const char *
@@ -303,12 +309,16 @@ static void __xml_schema_add(
     known_schemas[last].after_transform = after_transform;
 
     if(version > 0.0) {
+        known_schemas[last].version = version;
         known_schemas[last].name = g_strdup_printf("pacemaker-%.1f", version);
         known_schemas[last].location = g_strdup_printf("%s.rng", known_schemas[last].name);
 
     } else {
+        char dummy[1024];
         CRM_ASSERT(name);
         CRM_ASSERT(location);
+        sscanf(name, "%[^-]-%f", &dummy, &version);
+        known_schemas[last].version = version;
         known_schemas[last].name = strdup(name);
         known_schemas[last].location = strdup(location);
     }
