@@ -2490,7 +2490,7 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
     int_value += offset;
 
     if (int_value > INFINITY) {
-        int_value = INFINITY;
+        int_value = (int)INFINITY;
     }
 
     crm_xml_add_int(target, name, int_value);
