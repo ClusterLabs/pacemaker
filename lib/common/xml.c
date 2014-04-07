@@ -2449,7 +2449,7 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
     int offset = 1;
     int name_len = 0;
-    int int_value = 0;
+    int32_t int_value = 0;
     int value_len = 0;
 
     const char *old_value = NULL;
