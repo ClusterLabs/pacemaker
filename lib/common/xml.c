@@ -2330,7 +2330,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (safe_str_neq(new_digest, digest)) {
-            crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
+            crm_info("v%d digest mis-match: expected %s, calculated %s", format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
 
             if (digest_cs && digest_cs->targets) {
@@ -2343,7 +2343,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             }
 
         } else {
-            crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
+            crm_trace("v%d digest matched: expected %s, calculated %s", format, digest, new_digest);
         }
         free(new_digest);
         free(version);
