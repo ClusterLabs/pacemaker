@@ -754,6 +754,7 @@ __xml_acl_apply(xmlNode *xml)
     xmlXPathObjectPtr xpathObj = NULL;
 
     if(xml_acl_enabled(xml) == FALSE) {
+        p = xml->doc->_private;
         crm_trace("Not applying ACLs for %s", p->user);
         return;
     }
