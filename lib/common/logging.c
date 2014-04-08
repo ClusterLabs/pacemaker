@@ -711,7 +711,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     crm_enable_stderr(to_stderr);
 
-    if (logfile) {
+    if (safe_str_eq("none", logfile)) {
+        /* No soup^Hlogs for you! */
+    } else if(crm_is_daemon) {
+        /* The daemons always get a log file, unless explicitly set to configured 'none' */
+        crm_add_logfile(logfile);
+    } else if(logfile) {
         crm_add_logfile(logfile);
     }
 
@@ -731,13 +736,6 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     if (crm_is_daemon) {
         set_daemon_option("logfacility", facility);
-    }
-
-    if (crm_is_daemon && crm_tracing_enabled()
-        && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
-        && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        /* Make sure tracing goes somewhere */
-        crm_add_logfile(NULL);
     }
 
     crm_update_callsites();
