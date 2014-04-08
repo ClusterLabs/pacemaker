@@ -62,34 +62,37 @@ set_fd_opts(int fd, int opts)
 }
 
 static gboolean
-read_output(int fd, svc_action_t * op)
+svc_read_output(int fd, svc_action_t * op, bool is_stderr)
 {
     char *data = NULL;
     int rc = 0, len = 0;
-    gboolean is_err = FALSE;
     char buf[500];
     static const size_t buf_read_len = sizeof(buf) - 1;
 
-    crm_trace("%p", op);
 
     if (fd < 0) {
+        crm_trace("No fd for %s", op->id);
         return FALSE;
     }
 
-    if (fd == op->opaque->stderr_fd) {
-        is_err = TRUE;
-        if (op->stderr_data) {
-            len = strlen(op->stderr_data);
-            data = op->stderr_data;
-        }
-    } else if (op->stdout_data) {
+    if (is_stderr && op->stderr_data) {
+        len = strlen(op->stderr_data);
+        data = op->stderr_data;
+        crm_trace("Reading %s stderr into offset %d", op->id, len);
+
+    } else if (is_stderr == FALSE && op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
+        crm_trace("Reading %s stdout into offset %d", op->id, len);
+
+    } else {
+        crm_trace("Reading %s %s", op->id, is_stderr?"stderr":"stdout", len);
     }
 
     do {
         rc = read(fd, buf, buf_read_len);
         if (rc > 0) {
+            crm_trace("Got %d characters starting with %.20s", rc, buf);
             buf[rc] = 0;
             data = realloc(data, len + rc + 1);
             sprintf(data + len, "%s", buf);
@@ -104,7 +107,7 @@ read_output(int fd, svc_action_t * op)
 
     } while (rc == buf_read_len || rc < 0);
 
-    if (data != NULL && is_err) {
+    if (data != NULL && is_stderr) {
         op->stderr_data = data;
     } else if (data != NULL) {
         op->stdout_data = data;
@@ -118,7 +121,7 @@ dispatch_stdout(gpointer userdata)
 {
     svc_action_t *op = (svc_action_t *) userdata;
 
-    return read_output(op->opaque->stdout_fd, op);
+    return svc_read_output(op->opaque->stdout_fd, op, FALSE);
 }
 
 static int
@@ -126,7 +129,7 @@ dispatch_stderr(gpointer userdata)
 {
     svc_action_t *op = (svc_action_t *) userdata;
 
-    return read_output(op->opaque->stderr_fd, op);
+    return svc_read_output(op->opaque->stderr_fd, op, TRUE);
 }
 
 static void
@@ -272,18 +275,23 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     op->status = PCMK_LRM_OP_DONE;
     CRM_ASSERT(op->pid == pid);
 
+    crm_trace("%s %p %p", prefix, op->opaque->stderr_gsource, op->opaque->stdout_gsource);
     if (op->opaque->stderr_gsource) {
         /* Make sure we have read everything from the buffer.
          * Depending on the priority mainloop gives the fd, operation_finished
          * could occur before all the reads are done.  Force the read now.*/
+        crm_trace("%s dispatching stderr", prefix);
         dispatch_stderr(op);
+        crm_trace("%s: %p", op->stderr_data);
     }
 
     if (op->opaque->stdout_gsource) {
         /* Make sure we have read everything from the buffer.
          * Depending on the priority mainloop gives the fd, operation_finished
          * could occur before all the reads are done.  Force the read now.*/
+        crm_trace("%s dispatching stdout", prefix);
         dispatch_stdout(op);
+        crm_trace("%s: %p", op->stdout_data);
     }
 
     if (signo) {
@@ -533,11 +541,11 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
 
             if (poll_rc > 0) {
                 if (fds[0].revents & POLLIN) {
-                    read_output(op->opaque->stdout_fd, op);
+                    svc_read_output(op->opaque->stdout_fd, op, FALSE);
                 }
 
                 if (fds[1].revents & POLLIN) {
-                    read_output(op->opaque->stderr_fd, op);
+                    svc_read_output(op->opaque->stderr_fd, op, TRUE);
                 }
 
                 if (fds[2].revents & POLLIN) {
@@ -616,8 +624,8 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
         }
 #endif
 
-        read_output(op->opaque->stdout_fd, op);
-        read_output(op->opaque->stderr_fd, op);
+        svc_read_output(op->opaque->stdout_fd, op, FALSE);
+        svc_read_output(op->opaque->stderr_fd, op, TRUE);
 
         close(op->opaque->stdout_fd);
         close(op->opaque->stderr_fd);

@@ -704,7 +704,9 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
-    if (action->stdout_data) {
+    if (action->stderr_data) {
+        cmd->output = strdup(action->stderr_data);
+    } else if (action->stdout_data) {
         cmd->output = strdup(action->stdout_data);
     }
 #if SUPPORT_NAGIOS
