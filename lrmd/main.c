@@ -258,6 +258,7 @@ main(int argc, char **argv)
     int rc = 0;
     int flag = 0;
     int index = 0;
+    const char *option = NULL;
 
 #ifdef ENABLE_PCMK_REMOTE
     crm_log_init("pacemaker_remoted", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -291,6 +292,20 @@ main(int argc, char **argv)
             default:
                 crm_help('?', EX_USAGE);
                 break;
+        }
+    }
+
+    option = daemon_option("logfacility");
+    if(safe_str_neq(option, "none")) {
+        setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
+    }
+
+    option = daemon_option("logfile");
+    if(safe_str_neq(option, "none")) {
+        setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
+
+        if (daemon_option_enabled(crm_system_name, "debug")) {
+            setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
         }
     }
 
