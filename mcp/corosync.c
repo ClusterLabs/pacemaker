@@ -266,15 +266,8 @@ mcp_read_config(void)
 {
     int rc = CS_OK;
     int retries = 0;
-    gboolean have_log = FALSE;
 
     const char *const_value = NULL;
-
-    char *logging_debug = NULL;
-    char *logging_logfile = NULL;
-    char *logging_to_logfile = NULL;
-    char *logging_to_syslog = NULL;
-    char *logging_syslog_facility = NULL;
 
 #if HAVE_CONFDB
     char *value = NULL;
@@ -379,35 +372,83 @@ mcp_read_config(void)
 #endif
 
     /* =::=::= Logging =::=::= */
-    get_config_opt(config, local_handle, KEY_PREFIX "debug", &logging_debug, "off");
-
-    const_value = daemon_option("debugfile");
-    if (const_value) {
-        logging_to_logfile = strdup("on");
-        logging_logfile = strdup(const_value);
-        crm_trace("Using debugfile setting from the environment: %s", logging_logfile);
+    if (daemon_option("debug")) {
+        /* Syslog logging is already setup by crm_log_init() */
 
     } else {
-        get_config_opt(config, local_handle, KEY_PREFIX "to_logfile", &logging_to_logfile, "off");
-        get_config_opt(config, local_handle, KEY_PREFIX "logfile", &logging_logfile,
-                       "/var/log/pacemaker");
-    }
+        /* Check corosync */
+        char *debug_enabled = NULL;
 
-    const_value = daemon_option("logfacility");
-    if (const_value) {
-        logging_syslog_facility = strdup(const_value);
-        crm_trace("Using logfacility setting from the environment: %s", logging_syslog_facility);
+        get_config_opt(config, local_handle, KEY_PREFIX "debug", &debug_enabled, "off");
 
-        if (safe_str_eq(logging_syslog_facility, "none")) {
-            logging_to_syslog = strdup("off");
+        if (crm_is_true(debug_enabled)) {
+            set_daemon_option("debug", "1");
+            if (get_crm_log_level() < LOG_DEBUG) {
+                set_crm_log_level(LOG_DEBUG);
+            }
+
         } else {
-            logging_to_syslog = strdup("on");
+            set_daemon_option("debug", "0");
         }
 
+        free(debug_enabled);
+    }
+
+    const_value = daemon_option("debugfile");
+    if (daemon_option("logfile")) {
+        /* File logging is already setup by crm_log_init() */
+
+    } else if(const_value) {
+        /* From when we cared what options heartbeat used */
+        set_daemon_option("logfile", const_value);
+        crm_add_logfile(const_value);
+
     } else {
-        get_config_opt(config, local_handle, KEY_PREFIX "to_syslog", &logging_to_syslog, "on");
-        get_config_opt(config, local_handle, KEY_PREFIX "syslog_facility", &logging_syslog_facility,
-                       "daemon");
+        /* Check corosync */
+        char *logfile = NULL;
+        char *logfile_enabled = NULL;
+
+        get_config_opt(config, local_handle, KEY_PREFIX "to_logfile", &logfile_enabled, "on");
+        get_config_opt(config, local_handle, KEY_PREFIX "logfile", &logfile, "/var/log/pacemaker.log");
+
+        if (crm_is_true(logfile_enabled) == FALSE) {
+            crm_trace("File logging disabled in corosync");
+
+        } else if (crm_add_logfile(logfile)) {
+            set_daemon_option("logfile", logfile);
+
+        } else {
+            crm_err("Couldn't create logfile: %s", logfile);
+            set_daemon_option("logfile", "none");
+        }
+
+        free(logfile);
+        free(logfile_enabled);
+    }
+
+    if (daemon_option("logfacility")) {
+        /* Syslog logging is already setup by crm_log_init() */
+
+    } else {
+        /* Check corosync */
+        char *syslog_enabled = NULL;
+        char *syslog_facility = NULL;
+
+        get_config_opt(config, local_handle, KEY_PREFIX "to_syslog", &syslog_enabled, "on");
+        get_config_opt(config, local_handle, KEY_PREFIX "syslog_facility", &syslog_facility, "daemon");
+
+        if (crm_is_true(syslog_enabled) == FALSE) {
+            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+            set_daemon_option("logfacility", "none");
+
+        } else {
+            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(syslog_facility));
+            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
+            set_daemon_option("logfacility", syslog_facility);
+        }
+
+        free(syslog_enabled);
+        free(syslog_facility);
     }
 
 #if HAVE_CONFDB
@@ -429,55 +470,5 @@ mcp_read_config(void)
     cmap_finalize(local_handle);
 #endif
 
-    if (daemon_option("debug")) {
-        crm_trace("Using debug setting from the environment: %s", daemon_option("debug"));
-        if (get_crm_log_level() < LOG_DEBUG && daemon_option_enabled("pacemakerd", "debug")) {
-            set_crm_log_level(LOG_DEBUG);
-        }
-
-    } else if (crm_is_true(logging_debug)) {
-        set_daemon_option("debug", "1");
-        if (get_crm_log_level() < LOG_DEBUG) {
-            set_crm_log_level(LOG_DEBUG);
-        }
-
-    } else {
-        set_daemon_option("debug", "0");
-    }
-
-    if (crm_is_true(logging_to_logfile)) {
-        if (crm_add_logfile(logging_logfile)) {
-            /* What a cluster fsck, eventually we need to mandate /one/ */
-            set_daemon_option("debugfile", logging_logfile);
-            set_daemon_option("DEBUGLOG", logging_logfile);
-            have_log = TRUE;
-
-        } else {
-            crm_err("Couldn't create logfile: %s", logging_logfile);
-        }
-    }
-
-    if (have_log && crm_is_true(logging_to_syslog) == FALSE) {
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-        free(logging_syslog_facility);
-        logging_syslog_facility = strdup("none");
-        crm_info("User configured file based logging and explicitly disabled syslog.");
-
-    } else if (crm_is_true(logging_to_syslog) == FALSE) {
-        crm_err("Please enable some sort of logging, either 'to_logfile: on' or 'to_syslog: on'.");
-        crm_err("If you use file logging, be sure to also define a value for 'logfile'");
-
-    } else {
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(logging_syslog_facility));
-    }
-
-    set_daemon_option("logfacility", logging_syslog_facility);
-    setenv("HA_LOGFACILITY", logging_syslog_facility, 1);
-
-    free(logging_debug);
-    free(logging_logfile);
-    free(logging_to_logfile);
-    free(logging_to_syslog);
-    free(logging_syslog_facility);
     return TRUE;
 }
