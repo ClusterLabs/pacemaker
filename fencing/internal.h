@@ -12,6 +12,12 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
+enum st_device_flags
+{
+    st_device_supports_list   = 0x0001,
+    st_device_supports_status = 0x0002,
+};
+
 typedef struct stonith_device_s {
     char *id;
     char *agent;
@@ -26,6 +32,8 @@ typedef struct stonith_device_s {
     gboolean include_nodeid;
     guint priority;
     guint active_pid;
+
+    enum st_device_flags flags;
 
     GHashTable *params;
     GHashTable *aliases;

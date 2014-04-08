@@ -524,24 +524,24 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
-static char *
-get_on_target_actions(xmlNode * xml)
+static void
+get_on_target_actions(stonith_device_t *device)
 {
     char *actions = NULL;
     xmlXPathObjectPtr xpath = NULL;
     int max = 0;
     int lpc = 0;
 
-    if (!xml) {
-        return NULL;
+    if (device->agent_metadata == NULL) {
+        return;
     }
 
-    xpath = xpath_search(xml, "//action");
+    xpath = xpath_search(device->agent_metadata, "//action");
     max = numXpathResults(xpath);
 
     if (max <= 0) {
         freeXpathObject(xpath);
-        return NULL;
+        return;
     }
 
     actions = calloc(1, 512);
@@ -555,6 +555,12 @@ get_on_target_actions(xmlNode * xml)
 
         on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
+
+        if(safe_str_eq(action, "list")) {
+            set_bit(device->flags, st_device_supports_list);
+        } else if(safe_str_eq(action, "status")) {
+            set_bit(device->flags, st_device_supports_status);
+        }
 
         if (action && crm_is_true(on_target)) {
             if (strlen(actions)) {
@@ -571,7 +577,7 @@ get_on_target_actions(xmlNode * xml)
         actions = NULL;
     }
 
-    return actions;
+    device->on_target_actions = actions;
 }
 
 static stonith_device_t *
@@ -596,7 +602,7 @@ build_device_from_xml(xmlNode * msg)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     device->agent_metadata = get_agent_metadata(device->agent);
-    device->on_target_actions = get_on_target_actions(device->agent_metadata);
+    get_on_target_actions(device);
 
     value = g_hash_table_lookup(device->params, "nodeid");
     if (!value) {
@@ -627,8 +633,12 @@ target_list_type(stonith_device_t * dev)
             check_type = "static-list";
         } else if (g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
             check_type = "static-list";
-        } else {
+        } else if(is_set(dev->flags, st_device_supports_list)){
             check_type = "dynamic-list";
+        } else if(is_set(dev->flags, st_device_supports_status)){
+            check_type = "status";
+        } else {
+            check_type = "none";
         }
     }
 
