@@ -699,6 +699,11 @@ cib_devices_update(void)
     GListPtr gIter = NULL;
     pe_working_set_t data_set;
 
+    crm_info("Updating devices to version %s.%s.%s",
+             crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
+             crm_element_value(local_cib, XML_ATTR_GENERATION),
+             crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
+
     set_working_set_defaults(&data_set);
     data_set.input = local_cib;
     data_set.now = crm_time_new(NULL);

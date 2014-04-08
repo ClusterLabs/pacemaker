@@ -705,6 +705,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         crm_trace("Host %s is not known by %s", search->host, dev->id);
 
     } else if (rc == 0 /* active */  || rc == 2 /* inactive */ ) {
+        crm_trace("Host %s is known by %s", search->host, dev->id);
         can = TRUE;
 
     } else {
@@ -1094,6 +1095,9 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
+            crm_trace("Running %s command to see if %s can fence %s (%s)",
+                      check_type, dev?dev->id:"N/A", search>host, search->action);
+
             schedule_internal_command(__FUNCTION__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
 
@@ -1106,6 +1110,8 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         }
 
     } else if (safe_str_eq(check_type, "status")) {
+        crm_trace("Running %s command to see if %s can fence %s (%s)",
+                  check_type, dev?dev->id:"N/A", search>host, search->action);
         schedule_internal_command(__FUNCTION__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
@@ -1115,9 +1121,9 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     }
 
     if (safe_str_eq(host, alias)) {
-        crm_notice("%s can%s fence %s: %s", dev->id, can ? "" : " not", host, check_type);
+        crm_notice("%s can%s fence (%s) %s: %s", dev->id, can ? "" : " not", search->action, host, check_type);
     } else {
-        crm_notice("%s can%s fence %s (aka. '%s'): %s", dev->id, can ? "" : " not", host, alias,
+        crm_notice("%s can%s fence (%s) %s (aka. '%s'): %s", dev->id, can ? "" : " not", search->action, host, alias,
                    check_type);
     }
 

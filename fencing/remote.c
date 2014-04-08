@@ -736,6 +736,8 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     for (iter = op->query_results; iter != NULL; iter = iter->next) {
         st_query_result_t *peer = iter->data;
 
+        crm_trace("Testing result from %s for %s with %d devices: %d %x",
+                  peer->host, op->target, peer->devices, peer->tried, options);
         if ((options & FIND_PEER_SKIP_TARGET) && safe_str_eq(peer->host, op->target)) {
             continue;
         }
