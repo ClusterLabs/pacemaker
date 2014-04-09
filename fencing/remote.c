@@ -615,7 +615,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
     op->call_options = call_options;
-    
+
     crm_element_value_int(request, F_STONITH_CALLID, (int *)&(op->client_callid));
 
     crm_trace("%s new stonith op: %s - %s of %s for %s",
@@ -665,7 +665,7 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
                    op->target, op->id);
         return op;
     }
-    
+
     CRM_CHECK(op->action, return NULL);
 
     if (stonith_topology_next(op) != pcmk_ok) {
@@ -698,6 +698,7 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
+    crm_xml_add_int(query, F_STONITH_CALLOPTS, op->call_options);
 
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
     free_xml(query);
@@ -978,29 +979,30 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 
     if (peer) {
         int timeout_one = 0;
-        xmlNode *query = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
+        xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
 
-        crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
-        crm_xml_add(query, F_STONITH_TARGET, op->target);
-        crm_xml_add(query, F_STONITH_ACTION, op->action);
-        crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
-        crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
-        crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
-        crm_xml_add_int(query, F_STONITH_TIMEOUT, timeout);
+        crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
+        crm_xml_add(remote_op, F_STONITH_TARGET, op->target);
+        crm_xml_add(remote_op, F_STONITH_ACTION, op->action);
+        crm_xml_add(remote_op, F_STONITH_ORIGIN, op->originator);
+        crm_xml_add(remote_op, F_STONITH_CLIENTID, op->client_id);
+        crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
+        crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
+        crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
 
         if (device) {
             timeout_one =
                 TIMEOUT_MULTIPLY_FACTOR * get_device_timeout(peer, device, op->base_timeout);
             crm_info("Requesting that %s perform op %s %s with %s for %s (%ds)", peer->host,
                      op->action, op->target, device, op->client_name, timeout_one);
-            crm_xml_add(query, F_STONITH_DEVICE, device);
-            crm_xml_add(query, F_STONITH_MODE, "slave");
+            crm_xml_add(remote_op, F_STONITH_DEVICE, device);
+            crm_xml_add(remote_op, F_STONITH_MODE, "slave");
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(peer, op->base_timeout);
             crm_info("Requesting that %s perform op %s %s for %s (%ds)",
                      peer->host, op->action, op->target, op->client_name, timeout_one);
-            crm_xml_add(query, F_STONITH_MODE, "smart");
+            crm_xml_add(remote_op, F_STONITH_MODE, "smart");
         }
 
         op->state = st_exec;
@@ -1009,9 +1011,9 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
         op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
 
-        send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, query, FALSE);
+        send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
-        free_xml(query);
+        free_xml(remote_op);
         return;
 
     } else if (op->owner == FALSE) {
@@ -1145,24 +1147,20 @@ process_remote_stonith_query(xmlNode * msg)
 
     if (devices <= 0) {
         /* If we're doing 'known' then we might need to fire anyway */
-        crm_trace("Query result from %s (%d devices)", host, devices);
+        crm_trace("Query result %d of %d from %s for %s/%s (%d devices) %s",
+                  op->replies, op->replies_expected, host,
+                  op->target, op->action, devices, id);
         if(op->state == st_query && (op->replies >= op->replies_expected || op->replies >= active)) {
-            crm_info("All queries have arrived, continuing (%d, %d, %d) ", op->replies_expected, active, op->replies);
+            crm_info("All queries have arrived, continuing (%d, %d, %d, %s)",
+                     op->replies_expected, active, op->replies, id);
             call_remote_stonith(op, NULL);
         }
         return pcmk_ok;
-
-    } else if (host_is_target) {
-        if (op->call_options & st_opt_allow_suicide) {
-            crm_trace("Allowing %s to potentialy fence itself", op->target);
-        } else {
-            crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide",
-                     op->target);
-            return pcmk_ok;
-        }
     }
 
-    crm_info("Query result %d of %d from %s (%d devices)", op->replies, op->replies_expected, host, devices);
+    crm_info("Query result %d of %d from %s for %s/%s (%d devices) %s",
+             op->replies, op->replies_expected, host,
+             op->target, op->action, devices, id);
     result = calloc(1, sizeof(st_query_result_t));
     result->host = strdup(host);
     result->devices = devices;
@@ -1218,10 +1216,6 @@ process_remote_stonith_query(xmlNode * msg)
         if (host_is_target == FALSE && g_hash_table_size(result->verified_devices)) {
             /* we have a verified device living on a peer that is not the target */
             crm_trace("Found %d verified devices", g_hash_table_size(result->verified_devices));
-            call_remote_stonith(op, result);
-
-        } else if (safe_str_eq(op->action, "on")) {
-            crm_trace("Unfencing %s", op->target);
             call_remote_stonith(op, result);
 
         } else if(op->replies >= op->replies_expected || op->replies >= active) {

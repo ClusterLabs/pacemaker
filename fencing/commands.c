@@ -60,6 +60,7 @@ struct device_search_s {
     int per_device_timeout;
     int replies_needed;
     int replies_received;
+    bool allow_suicide;
 
     void *user_data;
     void (*callback) (GList * devices, void *user_data);
@@ -1073,8 +1074,17 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
     if (dev->on_target_actions &&
         search->action &&
-        strstr(dev->on_target_actions, search->action) && safe_str_neq(host, stonith_our_uname)) {
+        strstr(dev->on_target_actions, search->action)) {
         /* this device can only execute this action on the target node */
+
+        if(safe_str_neq(host, stonith_our_uname)) {
+            crm_trace("%s operation with %s can only be executed for localhost not %s",
+                      search->action, dev->id, host);
+            goto search_report_results;
+        }
+
+    } else if(safe_str_eq(host, stonith_our_uname) && search->allow_suicide == FALSE) {
+        crm_trace("%s operation does not support self-fencing", search->action);
         goto search_report_results;
     }
 
@@ -1106,7 +1116,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
             crm_trace("Running %s command to see if %s can fence %s (%s)",
-                      check_type, dev?dev->id:"N/A", search>host, search->action);
+                      check_type, dev?dev->id:"N/A", search->host, search->action);
 
             schedule_internal_command(__FUNCTION__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -1121,7 +1131,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
     } else if (safe_str_eq(check_type, "status")) {
         crm_trace("Running %s command to see if %s can fence %s (%s)",
-                  check_type, dev?dev->id:"N/A", search>host, search->action);
+                  check_type, dev?dev->id:"N/A", search->host, search->action);
         schedule_internal_command(__FUNCTION__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
@@ -1152,7 +1162,7 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
 
 #define DEFAULT_QUERY_TIMEOUT 20
 static void
-get_capable_devices(const char *host, const char *action, int timeout, void *user_data,
+get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
                     void (*callback) (GList * devices, void *user_data))
 {
     struct device_search_s *search;
@@ -1205,6 +1215,7 @@ get_capable_devices(const char *host, const char *action, int timeout, void *use
      * unregistered some how during the async search, we will get
      * the correct number of replies. */
     search->replies_needed = g_hash_table_size(device_list);
+    search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
     /* kick off the search */
@@ -1319,7 +1330,9 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     query->action = action ? strdup(action) : NULL;
     query->call_options = call_options;
 
-    get_capable_devices(target, action, timeout, query, stonith_query_capable_device_cb);
+    get_capable_devices(target, action, timeout,
+                        is_set(call_options, st_opt_allow_suicide),
+                        query, stonith_query_capable_device_cb);
 }
 
 #define ST_LOG_OUTPUT_MAX 512
@@ -1638,8 +1651,10 @@ stonith_fence(xmlNode * msg)
                 host = node->uname;
             }
         }
-        get_capable_devices(host, cmd->action, cmd->default_timeout, cmd,
-                            stonith_fence_get_devices_cb);
+
+        /* If we get to here, then self-fencing is implicitly allowed */
+        get_capable_devices(host, cmd->action, cmd->default_timeout,
+                            TRUE, cmd, stonith_fence_get_devices_cb);
     }
 
     return -EINPROGRESS;
