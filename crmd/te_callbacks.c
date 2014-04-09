@@ -671,11 +671,12 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        const char *op = crm_meta_value(action->params, "stonith_action"); 
 
         crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action);
-            if (action->sent_update == FALSE) {
+            if (action->sent_update == FALSE && safe_str_neq("on", op)) {
                 send_stonith_update(action, target, uuid);
             }
         }
