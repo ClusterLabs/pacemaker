@@ -93,6 +93,7 @@ do_test params-5 "Params: Restart based on probe digest"
 do_test novell-251689 "Resource definition change + target_role=stopped"
 do_test bug-lf-2106 "Restart all anonymous clone instances after config change"
 do_test params-6 "Params: Detect reload in previously migrated resource"
+do_test nvpair-id-ref "Support id-ref in nvpair with optional name"
 
 echo ""
 do_test target-0 "Target Role : baseline"
