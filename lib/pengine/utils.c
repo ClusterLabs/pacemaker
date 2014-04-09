@@ -1410,6 +1410,7 @@ get_effective_time(pe_working_set_t * data_set)
 
 struct fail_search {
     resource_t *rsc;
+    pe_working_set_t * data_set;
 
     int count;
     long long last;
@@ -1420,17 +1421,29 @@ static void
 get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 {
     struct fail_search *search = user_data;
-    const char *key = key_p;
+    const char *attr_id = key_p;
+    const char *match = strstr(attr_id, search->key);
+    resource_t *parent = NULL;
 
-    const char *match = strstr(key, search->key);
+    if (match == NULL) {
+        return;
+    }
 
-    if (safe_str_eq((key+13), match)) {
-        if (strstr(key, "last-failure-") == key && (key + 13) == match) {
-            search->last = crm_int_helper(value, NULL);
+    /* we are only incrementing the failcounts here if the rsc
+     * that matches our prefix has the same uber parent as the rsc we're
+     * calculating the failcounts for. This prevents false positive matches
+     * where unrelated resources may have similar prefixes in their names.
+     *
+     * search->rsc is already set to be the uber parent. */
+    parent = uber_parent(pe_find_resource(search->data_set->resources, match));
+    if (parent == NULL || parent != search->rsc) {
+        return;
+    }
+    if (strstr(attr_id, "last-failure-") == attr_id) {
+        search->last = crm_int_helper(value, NULL);
 
-        } else if (strstr(key, "fail-count-") == key && (key + 11) == match) {
-            search->count += char2score(value);
-        }
+    } else if (strstr(attr_id, "fail-count-") == attr_id) {
+        search->count += char2score(value);
     }
 }
 
@@ -1445,7 +1458,7 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
 {
     char *key = NULL;
     const char *value = NULL;
-    struct fail_search search = { rsc, 0, 0, NULL };
+    struct fail_search search = { rsc, data_set, 0, 0, NULL };
 
     /* Optimize the "normal" case */
     key = crm_concat("fail-count", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
@@ -1469,6 +1482,7 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
 
         g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
         free(search.key);
+        search.key = NULL;
     }
 
     if (search.count != 0 && search.last != 0 && last_failure) {
