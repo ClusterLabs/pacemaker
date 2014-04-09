@@ -1926,7 +1926,7 @@ trigger_unfencing(
         action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
 
         crm_notice("Unfencing %s: %s", node->details->uname, reason);
-        if(FALSE && dependancy) {
+        if(dependancy) {
             order_actions(unfence, dependancy, pe_order_optional);
         }
 

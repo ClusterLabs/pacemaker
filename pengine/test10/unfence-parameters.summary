@@ -21,7 +21,6 @@ Transition Summary:
  * Start   clvmd:2	(virt-3)
 
 Executing cluster transition:
- * Resource action: fencing         monitor on virt-3
  * Resource action: dlm             monitor on virt-3
  * Resource action: clvmd           monitor on virt-2
  * Resource action: clvmd           monitor on virt-3
@@ -40,6 +39,7 @@ Executing cluster transition:
  * Fencing virt-2 (on)
  * Pseudo action:   all_stopped
  * Fencing virt-1 (on)
+ * Resource action: fencing         monitor on virt-3
  * Resource action: fencing         start on virt-1
  * Pseudo action:   dlm-clone_start_0
  * Resource action: dlm             start on virt-1

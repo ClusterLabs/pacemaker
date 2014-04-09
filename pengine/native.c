@@ -2750,8 +2750,21 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     }
 
     pe_rsc_debug(rsc, "Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
-    order_actions(probe, complete, pe_order_implies_then);
 
+    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        /* Normally rsc.start depends on probe complete which depends
+         * on rsc.probe. But this can't be the case in this scenario as
+         * it would create graph loops.
+         *
+         * So instead we explicitly order 'rsc.probe then rsc.start'
+         */
+        custom_action_order(rsc, NULL, probe,
+                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                            pe_order_optional, data_set);
+
+    } else {
+        order_actions(probe, complete, pe_order_implies_then);
+    }
     return TRUE;
 }
 

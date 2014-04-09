@@ -6,7 +6,11 @@
         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
@@ -185,9 +189,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="fencing_monitor_0" on_node="virt-3" on_node_uuid="3"/>
-      </trigger>
       <trigger>
         <rsc_op id="12" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
       </trigger>
