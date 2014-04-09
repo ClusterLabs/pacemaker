@@ -185,7 +185,7 @@ def metadata(avail_opt, options, docs):
 	print "</parameters>"
 	print "<actions>"
 	if avail_opt.count("io_fencing") == 0:
-		print "\t<action name=\"on\" />"
+		print "\t<action name=\"on\" on_target=\"1\" />"
 		print "\t<action name=\"off\" />"
 		print "\t<action name=\"reboot\" />"
 	else:
