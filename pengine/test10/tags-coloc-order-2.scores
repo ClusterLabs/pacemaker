@@ -1,0 +1,25 @@
+Allocation scores:
+native_color: rsc1 allocation score on node1: 0
+native_color: rsc1 allocation score on node2: 0
+native_color: rsc10 allocation score on node1: 0
+native_color: rsc10 allocation score on node2: -INFINITY
+native_color: rsc11 allocation score on node1: 0
+native_color: rsc11 allocation score on node2: -INFINITY
+native_color: rsc12 allocation score on node1: 0
+native_color: rsc12 allocation score on node2: -INFINITY
+native_color: rsc2 allocation score on node1: 0
+native_color: rsc2 allocation score on node2: -INFINITY
+native_color: rsc3 allocation score on node1: 0
+native_color: rsc3 allocation score on node2: -INFINITY
+native_color: rsc4 allocation score on node1: 0
+native_color: rsc4 allocation score on node2: -INFINITY
+native_color: rsc5 allocation score on node1: 0
+native_color: rsc5 allocation score on node2: -INFINITY
+native_color: rsc6 allocation score on node1: 0
+native_color: rsc6 allocation score on node2: -INFINITY
+native_color: rsc7 allocation score on node1: 0
+native_color: rsc7 allocation score on node2: -INFINITY
+native_color: rsc8 allocation score on node1: 0
+native_color: rsc8 allocation score on node2: -INFINITY
+native_color: rsc9 allocation score on node1: 0
+native_color: rsc9 allocation score on node2: -INFINITY

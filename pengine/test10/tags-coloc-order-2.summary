@@ -1,0 +1,86 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ rsc2	(ocf::pacemaker:Dummy):	Stopped 
+ rsc3	(ocf::pacemaker:Dummy):	Stopped 
+ rsc4	(ocf::pacemaker:Dummy):	Stopped 
+ rsc5	(ocf::pacemaker:Dummy):	Stopped 
+ rsc6	(ocf::pacemaker:Dummy):	Stopped 
+ rsc7	(ocf::pacemaker:Dummy):	Stopped 
+ rsc8	(ocf::pacemaker:Dummy):	Stopped 
+ rsc9	(ocf::pacemaker:Dummy):	Stopped 
+ rsc10	(ocf::pacemaker:Dummy):	Stopped 
+ rsc11	(ocf::pacemaker:Dummy):	Stopped 
+ rsc12	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node1)
+ * Start   rsc2	(node1)
+ * Start   rsc3	(node1)
+ * Start   rsc4	(node1)
+ * Start   rsc5	(node1)
+ * Start   rsc6	(node1)
+ * Start   rsc7	(node1)
+ * Start   rsc8	(node1)
+ * Start   rsc9	(node1)
+ * Start   rsc10	(node1)
+ * Start   rsc11	(node1)
+ * Start   rsc12	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc1            monitor on node1
+ * Resource action: rsc2            monitor on node2
+ * Resource action: rsc2            monitor on node1
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc3            monitor on node1
+ * Resource action: rsc4            monitor on node2
+ * Resource action: rsc4            monitor on node1
+ * Resource action: rsc5            monitor on node2
+ * Resource action: rsc5            monitor on node1
+ * Resource action: rsc6            monitor on node2
+ * Resource action: rsc6            monitor on node1
+ * Resource action: rsc7            monitor on node2
+ * Resource action: rsc7            monitor on node1
+ * Resource action: rsc8            monitor on node2
+ * Resource action: rsc8            monitor on node1
+ * Resource action: rsc9            monitor on node2
+ * Resource action: rsc9            monitor on node1
+ * Resource action: rsc10           monitor on node2
+ * Resource action: rsc10           monitor on node1
+ * Resource action: rsc11           monitor on node2
+ * Resource action: rsc11           monitor on node1
+ * Resource action: rsc12           monitor on node2
+ * Resource action: rsc12           monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc2            start on node1
+ * Resource action: rsc3            start on node1
+ * Resource action: rsc4            start on node1
+ * Resource action: rsc5            start on node1
+ * Resource action: rsc6            start on node1
+ * Resource action: rsc7            start on node1
+ * Resource action: rsc8            start on node1
+ * Resource action: rsc9            start on node1
+ * Resource action: rsc10           start on node1
+ * Resource action: rsc11           start on node1
+ * Resource action: rsc12           start on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1 
+ rsc2	(ocf::pacemaker:Dummy):	Started node1 
+ rsc3	(ocf::pacemaker:Dummy):	Started node1 
+ rsc4	(ocf::pacemaker:Dummy):	Started node1 
+ rsc5	(ocf::pacemaker:Dummy):	Started node1 
+ rsc6	(ocf::pacemaker:Dummy):	Started node1 
+ rsc7	(ocf::pacemaker:Dummy):	Started node1 
+ rsc8	(ocf::pacemaker:Dummy):	Started node1 
+ rsc9	(ocf::pacemaker:Dummy):	Started node1 
+ rsc10	(ocf::pacemaker:Dummy):	Started node1 
+ rsc11	(ocf::pacemaker:Dummy):	Started node1 
+ rsc12	(ocf::pacemaker:Dummy):	Started node1 
+

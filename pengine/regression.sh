@@ -717,6 +717,11 @@ do_test template-clone-group     "Cloned group from template"
 
 do_test location-sets-templates "Resource sets and templates - Location"
 
+do_test tags-coloc-order-1 "Tags - Colocation and Order (Simple)"
+do_test tags-coloc-order-2 "Tags - Colocation and Order (Resource Sets with Templates)"
+do_test tags-location      "Tags - Location"
+do_test tags-ticket        "Tags - Ticket"
+
 echo ""
 do_test container-1 "Container - initial"
 do_test container-2 "Container - monitor failed"
