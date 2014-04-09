@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- types: http://www.w3.org/TR/xmlschema-2/#dateTime -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="element-nvset"/>
+  </start>
+
+  <define name="element-nvset">
+   <choice>
+   <attribute name="id-ref"><data type="IDREF"/></attribute>
+   <group>
+    <attribute name="id"><data type="ID"/></attribute>
+    <interleave>
+      <optional>
+	<externalRef href="rule.rng"/>
+      </optional>
+	<zeroOrMore>
+	  <element name="nvpair">
+	    <choice>
+	      <group>
+	        <attribute name="id-ref"><data type="IDREF"/></attribute>
+	        <optional>
+	          <attribute name="name"><text/></attribute>
+	        </optional>
+	      </group>
+	      <group>
+	        <attribute name="id"><data type="ID"/></attribute>
+	        <attribute name="name"><text/></attribute>
+	        <optional>
+	          <attribute name="value"><text/></attribute>
+	        </optional>
+	      </group>
+	    </choice>
+	  </element>
+	</zeroOrMore>
+      <optional>
+	<externalRef href="score.rng"/>
+      </optional>
+    </interleave>
+   </group>
+   </choice>
+  </define>
+
+</grammar>

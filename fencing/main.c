@@ -748,7 +748,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             stonith_device_remove(rsc_id, TRUE);
             free(mutable);
 
-        } else if(strstr(xpath, XML_CIB_TAG_RESOURCE)) {
+        } else if(strstr(xpath, XML_CIB_TAG_RESOURCES)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = g_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
