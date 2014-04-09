@@ -1978,11 +1978,11 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         if(this[lpc] < del[lpc]) {
-            crm_info("Current %s is too low (%d < %d)", vfields[lpc], this[lpc], del[lpc]);
+            crm_debug("Current %s is too low (%d < %d)", vfields[lpc], this[lpc], del[lpc]);
             return -pcmk_err_diff_resync;
 
         } else if(this[lpc] > del[lpc]) {
-            crm_notice("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
+            crm_info("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
             return -pcmk_err_old_data;
         }
     }
