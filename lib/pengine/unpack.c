@@ -2470,17 +2470,8 @@ determine_op_status(
             if (is_probe && target_rc == 7) {
                 result = PCMK_LRM_OP_DONE;
                 set_bit(rsc->flags, pe_rsc_unexpectedly_running);
-
-                if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-                    /* _Require_ unfencing after probing resources that need unfencing and was found active */
-                    crm_warn("Operation %s found resource %s active on %s: triggering unfencing",
-                             task, rsc->id, node->details->uname);
-                    trigger_unfencing(NULL, node, "Unexpected state", NULL, data_set);
-
-                } else {
-                    pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
-                                task, rsc->id, node->details->uname);
-                }
+                pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
+                            task, rsc->id, node->details->uname);
 
                 /* legacy code for pre-0.6.5 operations */
             } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
