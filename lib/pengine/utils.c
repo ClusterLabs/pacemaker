@@ -1936,7 +1936,10 @@ trigger_unfencing(
         /* Wasnt a stonith device */
         return;
 
-    } else if(node) {
+    } else if(node
+              && node->details->online
+              && node->details->unclean == FALSE
+              && node->details->shutdown == FALSE) {
         action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
 
         crm_notice("Unfencing %s: %s", node->details->uname, reason);
