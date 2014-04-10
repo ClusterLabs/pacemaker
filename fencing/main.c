@@ -667,7 +667,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         const char *agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
         const char *provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 
-        crm_info("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
+        crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
         get_rsc_attributes(rsc->parameters, rsc, node, data_set);
 
         g_hash_table_iter_init(&gIter, rsc->parameters);

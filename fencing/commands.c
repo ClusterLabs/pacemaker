@@ -828,7 +828,7 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
 
     dup = device_has_duplicate(device);
     if (dup) {
-        crm_notice("Device '%s' already existed in device list (%d active devices)", device->id,
+        crm_debug("Device '%s' already existed in device list (%d active devices)", device->id,
                    g_hash_table_size(device_list));
         free_device(device);
         device = dup;
@@ -841,7 +841,7 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
              * copy any pending ops that currently exist on the old entry to the new one.
              * Otherwise the pending ops will be reported as failures
              */
-            crm_trace("Overwriting an existing entry for %s from the cib", device->id);
+            crm_info("Overwriting an existing entry for %s from the cib", device->id);
             device->pending_ops = old->pending_ops;
             device->api_registered = TRUE;
             old->pending_ops = NULL;
