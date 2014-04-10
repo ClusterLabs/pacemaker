@@ -125,20 +125,20 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
     }
 
     if (st_event->result == pcmk_ok && safe_str_eq("on", st_event->action)) {
-        crm_notice("%s was successfully unfenced by %s (at the request of %s) with %s",
-                   st_event->target, st_event->executioner, st_event->origin,
-                   st_event->device); /* TODO: Why is device never set? */
+        crm_notice("%s was successfully unfenced by %s (at the request of %s)",
+                   st_event->target, st_event->executioner, st_event->origin);
+                /* TODO: Hook up st_event->device */
         return;
 
     } else if (safe_str_eq("on", st_event->action)) {
-        crm_err("Unfencing of %s by %s with %s failed: %s (%d)",
-                st_event->target, st_event->executioner, st_event->device,
+        crm_err("Unfencing of %s by %s failed: %s (%d)",
+                st_event->target, st_event->executioner,
                 pcmk_strerror(st_event->result), st_event->result);
         return;
 
     } else if (st_event->result == pcmk_ok && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
-        crm_crit("We were alegedly just fenced by %s for %s with %s!", st_event->executioner,
-                 st_event->origin, st_event->device); /* Dumps blackbox if enabled */
+        crm_crit("We were alegedly just fenced by %s for %s!",
+                 st_event->executioner, st_event->origin); /* Dumps blackbox if enabled */
 
         qb_log_fini(); /* Try to get the above log message to disk - somehow */
 
