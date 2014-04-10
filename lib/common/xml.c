@@ -3431,7 +3431,10 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         } else {
             buffer_print(buffer, max, offset, "/>");
         }
+
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
+        free(buffer);
+        buffer = NULL; /* Reset the buffer */
     }
 
     if(data->type == XML_COMMENT_NODE) {
@@ -3443,12 +3446,12 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     } else if(is_set(options, xml_log_option_children)) {
         offset = 0;
         max = 0;
-        free(buffer);
-        buffer = NULL;
 
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
             __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options|xml_log_option_open|xml_log_option_close);
         }
+        free(buffer);
+        buffer = NULL; /* Reset the buffer */
     }
 
     if(is_set(options, xml_log_option_close)) {
@@ -3456,6 +3459,8 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         buffer_print(buffer, max, offset, "</%s>", name);
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
+        free(buffer);
+        buffer = NULL; /* Reset the buffer */
     }
 }
 
