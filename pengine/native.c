@@ -2730,6 +2730,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
      */
     if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         trigger_unfencing(NULL, node, "node discovery", probe, data_set);
+        probe->priority = INFINITY; /* Ensure this runs if unfencing succeeds */
 
     } else if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(node, "on", TRUE, data_set);

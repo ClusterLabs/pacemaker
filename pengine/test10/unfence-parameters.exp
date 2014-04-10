@@ -12,7 +12,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="1" priority="1000000">
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="fencing_monitor_0" on_node="virt-3" on_node_uuid="3">
         <primitive id="fencing" class="stonith" type="fence_scsi"/>
