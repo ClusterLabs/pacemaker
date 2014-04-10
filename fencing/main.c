@@ -590,6 +590,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     const char *value = NULL;
     const char *rclass = NULL;
     node_t *parent = NULL;
+    gboolean remove = TRUE;
 
     /* TODO: Mark each installed device and remove if untouched when this process finishes */
     if(rsc->children) {
@@ -604,10 +605,6 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         return;
     }
 
-    if(g_hash_table_lookup(device_list, rsc_name(rsc))) {
-        stonith_device_remove(rsc_name(rsc), TRUE);
-    }
-
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     if(safe_str_neq(rclass, "stonith")) {
         return;
@@ -616,7 +613,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     if(value && strcmp(RSC_STOPPED, value) == 0) {
         crm_info("Device %s has been disabled", rsc->id);
-        return;
+        goto update_done;
 
     } else if(stonith_our_uname) {
         GHashTableIter iter;
@@ -651,7 +648,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
             crm_trace("Available: %s = %d", node->details->uname, node->weight);
         }
 
-        return;
+        goto update_done;
 
     } else if(node->weight < 0 || (parent && parent->weight < 0)) {
         char *score = score2char((node->weight < 0) ? node->weight : parent->weight);
@@ -659,7 +656,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
         free(score);
 
-        return;
+        goto update_done;
 
     } else {
         xmlNode *data;
@@ -682,11 +679,18 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
             crm_trace(" %s=%s", name, value);
         }
 
+        remove = FALSE;
         data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
         stonith_device_register(data, NULL, TRUE);
 
         stonith_key_value_freeall(params, 1, 1);
         free_xml(data);
+    }
+
+update_done:
+
+    if(remove && g_hash_table_lookup(device_list, rsc_name(rsc))) {
+        stonith_device_remove(rsc_name(rsc), TRUE);
     }
 }
 
