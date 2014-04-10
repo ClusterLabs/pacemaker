@@ -615,7 +615,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     } else if (safe_str_eq(value, "fencing")) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_config_warn("%s requires fencing but fencing is disabled", (*rsc)->id);
         }
 
