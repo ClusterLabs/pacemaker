@@ -1411,7 +1411,8 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         crm_xml_add_int(notify_data, F_STONITH_RC, rc);
         crm_xml_add(notify_data, F_STONITH_TARGET, cmd->victim);
         crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
-        crm_xml_add(notify_data, F_STONITH_DELEGATE, cmd->device);
+        crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
+        crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
         crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
 
