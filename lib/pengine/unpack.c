@@ -310,6 +310,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     const char *remote_server = NULL;
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
+    const char *remote_allow_migrate=NULL;
     char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
@@ -329,6 +330,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
                 remote_port = value;
             } else if (safe_str_eq(name, "remote-connect-timeout")) {
                 connect_timeout = value;
+            } else if (safe_str_eq(name, "remote-allow-migrate")) {
+                remote_allow_migrate=value;
             }
         }
     }
@@ -379,6 +382,15 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
     free(tmp_id);
+
+    if (remote_allow_migrate) {
+        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+        tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
+        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
+        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
+        free(tmp_id);
+    }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
     attr = create_xml_node(xml_tmp, XML_ATTR_OP);
