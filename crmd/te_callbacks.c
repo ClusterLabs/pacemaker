@@ -381,7 +381,7 @@ te_update_diff(const char *event, xmlNode * msg)
         } else if(strstr(xpath, "/cib/configuration")) {
             abort_transition(INFINITY, tg_restart, "Non-status change", change);
 
-        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS"[") || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
+        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
 
         } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
@@ -490,7 +490,7 @@ te_update_diff(const char *event, xmlNode * msg)
             free(local_node);
 
         } else {
-            crm_err("Ingoring %s operation for %s %p, %s", op, xpath, match, name);
+            crm_err("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
         }
     }
 }
