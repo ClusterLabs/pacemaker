@@ -19,7 +19,7 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.1.10, pacemaker@oss.clusterlabs.org,,http://clusterlabs.org)
+AC_INIT(pacemaker, 1.1.11, pacemaker@oss.clusterlabs.org,,http://clusterlabs.org)
 
 PCMK_FEATURES=""
 HB_PKG=heartbeat

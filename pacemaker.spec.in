@@ -53,7 +53,7 @@
 
 Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
-Version:       1.1.10
+Version:       1.1.11
 Release:       %{pcmk_release}%{?dist}
 License:       GPLv2+ and LGPLv2+
 Url:           http://www.clusterlabs.org
