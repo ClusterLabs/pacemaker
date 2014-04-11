@@ -37,8 +37,8 @@ Executing cluster transition:
  * Pseudo action:   dlm-clone_stopped_0
  * Fencing virt-3 (on)
  * Fencing virt-2 (on)
- * Pseudo action:   all_stopped
  * Fencing virt-1 (on)
+ * Pseudo action:   all_stopped
  * Resource action: fencing         monitor on virt-3
  * Resource action: fencing         start on virt-1
  * Pseudo action:   dlm-clone_start_0
