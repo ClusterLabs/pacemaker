@@ -1450,11 +1450,131 @@ get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 int
 get_failcount(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
 {
-    return get_failcount_full(node, rsc, last_failure, TRUE, data_set);
+    return get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
+}
+
+static gboolean
+is_matched_failure(const char * rsc_id, xmlNode * conf_op_xml, xmlNode * lrm_op_xml)
+{
+    gboolean matched = FALSE;
+    const char *conf_op_name = NULL;
+    int conf_op_interval = 0;
+    const char *lrm_op_task = NULL;
+    int lrm_op_interval = 0;
+    const char *lrm_op_id = NULL;
+    char *last_failure_key = NULL;
+
+    if (rsc_id == NULL || conf_op_xml == NULL || lrm_op_xml == NULL) {
+        return FALSE;
+    }
+
+    conf_op_name = crm_element_value(conf_op_xml, "name");
+    conf_op_interval = crm_get_msec(crm_element_value(conf_op_xml, "interval"));
+    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
+    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL, &lrm_op_interval);
+
+    if (safe_str_eq(conf_op_name, lrm_op_task) == FALSE
+        || conf_op_interval != lrm_op_interval) {
+        return FALSE;
+    }
+
+    lrm_op_id = ID(lrm_op_xml);
+    last_failure_key = generate_op_key(rsc_id, "last_failure", 0);
+
+    if (safe_str_eq(last_failure_key, lrm_op_id)) {
+        matched = TRUE;
+
+    } else {
+        char *expected_op_key = generate_op_key(rsc_id, conf_op_name, conf_op_interval);
+
+        if (safe_str_eq(expected_op_key, lrm_op_id)) {
+            int rc = 0;
+            int target_rc = get_target_rc(lrm_op_xml);
+
+            crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
+            if (rc != target_rc) {
+                matched = TRUE;
+            }
+        }
+        free(expected_op_key);
+    }
+
+    free(last_failure_key);
+    return matched;
+}
+
+static gboolean
+block_failure(node_t * node, resource_t * rsc, xmlNode * xml_op, pe_working_set_t * data_set)
+{
+    char *xml_name = clone_strip(rsc->id);
+    char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
+    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    gboolean should_block = FALSE;
+
+    free(xpath);
+
+    if (xpathObj) {
+        int max = numXpathResults(xpathObj);
+        int lpc = 0;
+
+        for (lpc = 0; lpc < max; lpc++) {
+            xmlNode *pref = getXpathResult(xpathObj, lpc);
+
+            if (xml_op) {
+                should_block = is_matched_failure(xml_name, pref, xml_op);
+                if (should_block) {
+                    break;
+                }
+
+            } else {
+                const char *conf_op_name = NULL;
+                int conf_op_interval = 0;
+                char *lrm_op_xpath = NULL;
+                xmlXPathObject *lrm_op_xpathObj = NULL;
+
+                conf_op_name = crm_element_value(pref, "name");
+                conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
+
+                lrm_op_xpath = g_strdup_printf("//node_state[@uname='%s']"
+                                               "//lrm_resource[@id='%s']"
+                                               "/lrm_rsc_op[@operation='%s'][@interval='%d']",
+                                               node->details->uname, xml_name,
+                                               conf_op_name, conf_op_interval);
+                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
+
+                free(lrm_op_xpath);
+
+                if (lrm_op_xpathObj) {
+                    int max2 = numXpathResults(lrm_op_xpathObj);
+                    int lpc2 = 0;
+
+                    for (lpc2 = 0; lpc2 < max2; lpc2++) {
+                        xmlNode *lrm_op_xml = getXpathResult(lrm_op_xpathObj, lpc2);
+
+                        should_block = is_matched_failure(xml_name, pref, lrm_op_xml);
+                        if (should_block) {
+                            break;
+                        }
+                    }
+                }
+                freeXpathObject(lrm_op_xpathObj);
+
+                if (should_block) {
+                    break;
+                }
+            }
+        }
+    }
+
+    free(xml_name);
+    freeXpathObject(xpathObj);
+
+    return should_block;
 }
 
 int
-get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool effective, pe_working_set_t * data_set)
+get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
+                   bool effective, xmlNode * xml_op, pe_working_set_t * data_set)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -1491,16 +1611,8 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
 
     if(search.count && rsc->failure_timeout) {
         /* Never time-out if blocking failures are configured */
-        char *xml_name = clone_strip(rsc->id);
-        char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
-        xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
-
-        free(xml_name);
-        free(xpath);
-
-        if (numXpathResults(xpathObj) > 0) {
-            xmlNode *pref = getXpathResult(xpathObj, 0);
-            pe_warn("Setting %s.failure_timeout=%d in %s conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout, ID(pref));
+        if (block_failure(node, rsc, xml_op, data_set)) {
+            pe_warn("Setting %s.failure-timeout=%d conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout);
             rsc->failure_timeout = 0;
 #if 0
             /* A good idea? */
@@ -1509,7 +1621,6 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
             rsc->failure_timeout = 0;
 #endif
         }
-        freeXpathObject(xpathObj);
     }
 
     if (effective && search.count != 0 && search.last != 0 && rsc->failure_timeout) {
