@@ -1,0 +1,85 @@
+<cib epoch="1" num_updates="36" admin_epoch="0" validate-with="pacemaker-1.3" cib-last-written="Fri Jul 13 13:51:21 2012" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" type="normal" uname="node1"/>
+      <node id="node2" type="normal" uname="node2"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="rsc_stonith" type="null"/>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-meta_attributes-failure-timeout" name="failure-timeout" value="60"/>
+        </meta_attributes>
+        <operations>
+          <op id="rsc1-monitor-10" interval="10" name="monitor"/>
+          <op id="rsc1-stop-0" interval="0" name="stop" on-fail="block"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc2-meta_attributes">
+          <nvpair id="rsc2-meta_attributes-failure-timeout" name="failure-timeout" value="60"/>
+        </meta_attributes>
+        <operations>
+          <op id="rsc2-monitor-10" interval="10" name="monitor"/>
+          <op id="rsc2-stop-0" interval="0" name="stop" on-fail="block"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="rsc_stonith" class="stonith" type="null">
+            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc_stonith_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1397191766" last-rc-change="1397191766" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1397196440" last-rc-change="1397196440" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc2_monitor_10000" operation_key="rsc2_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="7:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;7:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="7" rc-code="0" op-status="0" interval="10000" last-rc-change="1397196440" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="rsc2_last_failure_0" operation_key="rsc2_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="1" op-status="0" interval="10000" last-rc-change="1397196403" exec-time="0" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="node1">
+        <instance_attributes id="node1">
+          <nvpair id="fail-count-rsc2-node1" name="fail-count-rsc2" value="1"/>
+          <nvpair id="last-failure-rsc2-node1" name="last-failure-rsc2" value="1397196403"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="rsc_stonith" class="stonith" type="null">
+            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.7" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1397191766" last-rc-change="1397191766" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_monitor_10000" operation_key="rsc1_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1397191766" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="rsc1_last_failure_0" operation_key="rsc1_stop_0" operation="stop" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="5" rc-code="1" op-status="0" interval="0" last-rc-change="1397196015" exec-time="0" queue-time="0" last-run="1397196015" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1397191766" last-rc-change="1397191766" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="node2">
+        <instance_attributes id="node2">
+          <nvpair id="fail-count-rsc1-node2" name="fail-count-rsc1" value="2"/>
+          <nvpair id="last-failure-rsc1-node2" name="last-failure-rsc1" value="1397196015"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
