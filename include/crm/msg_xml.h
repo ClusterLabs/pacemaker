@@ -352,6 +352,10 @@
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
 
+#  define XML_CIB_TAG_TAGS   		"tags"
+#  define XML_CIB_TAG_TAG   		"tag"
+#  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
+
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
 #  define XML_ATTR_STONITH_INDEX        "index"

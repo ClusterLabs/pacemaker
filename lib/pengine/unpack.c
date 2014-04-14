@@ -534,14 +534,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 }
 
 static void
-destroy_template_rsc_set(gpointer data)
-{
-    xmlNode *rsc_set = data;
-
-    free_xml(rsc_set);
-}
-
-static void
 setup_container(resource_t * rsc, pe_working_set_t * data_set)
 {
     const char *container_id = NULL;
@@ -650,6 +642,18 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
     }
 }
 
+static void
+destroy_tag(gpointer data)
+{
+    tag_t *tag = data;
+
+    if (tag) {
+        free(tag->id);
+        g_list_free_full(tag->refs, free);
+        free(tag);
+    }
+}
+
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
@@ -658,7 +662,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 
     data_set->template_rsc_sets =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_template_rsc_set);
+                              destroy_tag);
 
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
         resource_t *new_rsc = NULL;
@@ -707,6 +711,50 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_config_err("Resource start-up disabled since no STONITH resources have been defined");
         crm_config_err("Either configure some or disable STONITH with the stonith-enabled option");
         crm_config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
+    }
+
+    return TRUE;
+}
+
+gboolean
+unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
+{
+    xmlNode *xml_tag = NULL;
+
+    data_set->tags =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_tag);
+
+    for (xml_tag = __xml_first_child(xml_tags); xml_tag != NULL; xml_tag = __xml_next(xml_tag)) {
+        xmlNode *xml_obj_ref = NULL;
+        const char *tag_id = ID(xml_tag);
+
+        if (crm_str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, TRUE) == FALSE) {
+            continue;
+        }
+
+        if (tag_id == NULL) {
+            crm_config_err("Failed unpacking %s: %s should be specified",
+                           crm_element_name(xml_tag), XML_ATTR_ID);
+            continue;
+        }
+
+        for (xml_obj_ref = __xml_first_child(xml_tag); xml_obj_ref != NULL; xml_obj_ref = __xml_next(xml_obj_ref)) {
+            const char *obj_ref = ID(xml_obj_ref);
+
+            if (crm_str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, TRUE) == FALSE) {
+                continue;
+            }
+
+            if (obj_ref == NULL) {
+                crm_config_err("Failed unpacking %s for tag %s: %s should be specified",
+                               crm_element_name(xml_obj_ref), tag_id, XML_ATTR_ID);
+                continue;
+            }
+
+            if (add_tag_ref(data_set->tags, tag_id, obj_ref) == FALSE) {
+                return FALSE;
+            }
+        }
     }
 
     return TRUE;

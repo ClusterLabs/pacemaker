@@ -1958,3 +1958,40 @@ trigger_unfencing(
         }
     }
 }
+
+gboolean
+add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
+{
+    tag_t *tag = NULL;
+    GListPtr gIter = NULL;
+    gboolean is_existing = FALSE;
+
+    CRM_CHECK(tags && tag_name && obj_ref, return FALSE);
+
+    tag = g_hash_table_lookup(tags, tag_name);
+    if (tag == NULL) {
+        tag = calloc(1, sizeof(tag_t));
+        if (tag == NULL) {
+            return FALSE;
+        }
+        tag->id = strdup(tag_name);
+        tag->refs = NULL;
+        g_hash_table_insert(tags, strdup(tag_name), tag);
+    }
+
+    for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
+        const char *existing_ref = (const char *) gIter->data;
+
+        if (crm_str_eq(existing_ref, obj_ref, TRUE)){
+            is_existing = TRUE;
+            break;
+        }
+    }
+
+    if (is_existing == FALSE) {
+        tag->refs = g_list_append(tag->refs, strdup(obj_ref));
+        crm_trace("Added: tag=%s ref=%s", tag->id, obj_ref);
+    }
+
+    return TRUE;
+}

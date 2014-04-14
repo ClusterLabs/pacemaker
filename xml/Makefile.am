@@ -31,7 +31,7 @@ RNG_last		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr | h
 RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
-RNG_cfg_base	 	= options nodes resources constraints fencing acls
+RNG_cfg_base	 	= options nodes resources constraints fencing acls tags
 RNG_base	 	= cib $(RNG_cfg_base) status score rule nvset
 RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
 

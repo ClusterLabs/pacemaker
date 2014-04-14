@@ -1,0 +1,38 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Stopped 
+ rsc2	(ocf::pacemaker:Dummy):	Stopped 
+ rsc3	(ocf::pacemaker:Dummy):	Stopped 
+ rsc4	(ocf::pacemaker:Dummy):	Stopped 
+
+Transition Summary:
+ * Start   rsc1	(node1)
+ * Start   rsc2	(node1)
+ * Start   rsc3	(node1)
+ * Start   rsc4	(node1)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc1            monitor on node1
+ * Resource action: rsc2            monitor on node2
+ * Resource action: rsc2            monitor on node1
+ * Resource action: rsc3            monitor on node2
+ * Resource action: rsc3            monitor on node1
+ * Resource action: rsc4            monitor on node2
+ * Resource action: rsc4            monitor on node1
+ * Pseudo action:   probe_complete
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc2            start on node1
+ * Resource action: rsc3            start on node1
+ * Resource action: rsc4            start on node1
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::pacemaker:Dummy):	Started node1 
+ rsc2	(ocf::pacemaker:Dummy):	Started node1 
+ rsc3	(ocf::pacemaker:Dummy):	Started node1 
+ rsc4	(ocf::pacemaker:Dummy):	Started node1 
+
