@@ -408,8 +408,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Some additional information on ordering constraints can be found in the document <ulink url=\"http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf\">Ordering Explained</ulink>."
-msgstr "Informaţii adiţionale despre restricţiile de ordonare pot fi găsite în documentul <ulink url=\"http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf\">Ordonarea Explicată</ulink>"
+msgid "Some additional information on ordering constraints can be found in the document <ulink url=\"http://clusterlabs.org/doc/Ordering_Explained.pdf\">Ordering Explained</ulink>."
+msgstr "Informaţii adiţionale despre restricţiile de ordonare pot fi găsite în documentul <ulink url=\"http://clusterlabs.org/doc/Ordering_Explained.pdf\">Ordonarea Explicată</ulink>"
 
 #. Tag: title
 #, no-c-format
