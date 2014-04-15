@@ -467,7 +467,8 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
                     const char *obj_ref = (const char *) gIter->data;
                     xmlNode *new_rsc_ref = NULL;
 
-                    new_rsc_ref = create_xml_node(NULL, XML_TAG_RESOURCE_REF);
+                    new_rsc_ref = xmlNewDocRawNode(getDocPtr(set), NULL,
+                                                   (const xmlChar *)XML_TAG_RESOURCE_REF, NULL);
                     crm_xml_add(new_rsc_ref, XML_ATTR_ID, obj_ref);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
 
