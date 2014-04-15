@@ -753,10 +753,10 @@ class Tests:
 		### Simple test unfencing works
 		test = self.new_test("cpg_unfence_simple",
 				"Verify simple unfencing.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-		test.add_cmd("stonith_admin", "-U node3 -t 3")
+		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\"")
+		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\"")
+		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\"")
+		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
 
 		### verify unfencing using on_target device
 		test = self.new_test("cpg_unfence_on_target_1",
@@ -801,7 +801,7 @@ class Tests:
 		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
 		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
 
-		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 143)
+		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 237)
 		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 
