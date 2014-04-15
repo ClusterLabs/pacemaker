@@ -2991,6 +2991,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
+    const char *site = NULL;
+
     g_hash_table_insert(node->details->attrs,
                         strdup("#uname"), strdup(node->details->uname));
     g_hash_table_insert(node->details->attrs,
@@ -3004,6 +3006,11 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     } else {
         g_hash_table_insert(node->details->attrs,
                             strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
+    }
+
+    site = g_hash_table_lookup(data_set->config_hash, "site");
+    if (site) {
+        g_hash_table_insert(node->details->attrs, strdup("#site"), strdup(site));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
