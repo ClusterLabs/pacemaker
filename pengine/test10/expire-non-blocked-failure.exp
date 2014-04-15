@@ -1,0 +1,27 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <crm_event id="1" operation="clear_failcount" operation_key="rsc2_clear_failcount" on_node="node1" on_node_uuid="node1">
+        <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1" priority="1000000">
+    <action_set>
+      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete-node2" on_node="node2" on_node_uuid="node2">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2" priority="1000000">
+    <action_set>
+      <rsc_op id="6" operation="probe_complete" operation_key="probe_complete-node1" on_node="node1" on_node_uuid="node1">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

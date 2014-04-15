@@ -853,7 +853,7 @@ print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, 
     gboolean printed = FALSE;
 
     time_t last_failure = 0;
-    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
+    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set);
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;

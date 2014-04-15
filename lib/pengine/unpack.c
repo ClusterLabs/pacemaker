@@ -2643,10 +2643,15 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (expired) {
         if (rsc->failure_timeout > 0) {
-            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
-            if(fc && get_failcount_full(node, rsc, &last_failure, TRUE, data_set) == 0) {
-                clear_failcount = 1;
-                crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
+            if(fc) {
+                if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
+                    clear_failcount = 1;
+                    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+
+                } else {
+                    expired = FALSE;
+                }
             }
         }
 
@@ -2691,7 +2696,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     return expired;
 }
 
-static int get_target_rc(xmlNode *xml_op) 
+int get_target_rc(xmlNode *xml_op)
 {
     int dummy = 0;
     int target_rc = 0;

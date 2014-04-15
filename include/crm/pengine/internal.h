@@ -107,7 +107,7 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
 extern int get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
-                              bool effective, pe_working_set_t * data_set);
+                              bool effective, xmlNode * xml_op, pe_working_set_t * data_set);
 extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
                              pe_working_set_t * data_set);
 
@@ -233,6 +233,8 @@ extern ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
 
 char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
+
+int get_target_rc(xmlNode * xml_op);
 
 gint sort_node_uname(gconstpointer a, gconstpointer b);
 bool is_set_recursive(resource_t * rsc, long long flag, bool any);
