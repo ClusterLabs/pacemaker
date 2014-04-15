@@ -245,7 +245,7 @@ resources are stopping and/or starting.  Any change in state by the
 ======
 
 Some additional information on ordering constraints can be found in
-the document http://www.clusterlabs.org/mediawiki/images/d/d6/Ordering_Explained.pdf[Ordering Explained].
+the document http://clusterlabs.org/doc/Ordering_Explained.pdf[Ordering Explained].
 
 [[s-resource-colocation]]
 == Placing Resources Relative to other Resources ==
