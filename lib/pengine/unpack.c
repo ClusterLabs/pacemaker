@@ -1158,7 +1158,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
     } else {
         /* mark it unclean */
-        pe_fence_node(data_set, this_node, "because it is partially and/or un-expectedly down");
+        this_node->details->unclean = TRUE;
+        crm_warn("Node %s is partially & un-expectedly down", this_node->details->uname);
         crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
     }
