@@ -1914,6 +1914,8 @@ pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * dat
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
+    } else {
+        free(key);
     }
 
     if(optional == FALSE) {
