@@ -91,6 +91,11 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_trace("Removing %s from the CIB", name);
 
+    /* TODO: Use 'id' instead */
+    if(name == NULL) {
+        return -ENOTUNIQ;
+    }
+
     node = create_xml_node(NULL, XML_CIB_TAG_NODE);
     node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
