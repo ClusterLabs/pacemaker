@@ -25,6 +25,7 @@ typedef struct stonith_device_s {
 
     /*! list of actions that must execute on the target node. Used for unfencing */
     char *on_target_actions;
+    char *required_actions;
     GListPtr targets;
     time_t targets_age;
     gboolean has_attr_map;

@@ -46,7 +46,7 @@ xmlNode *create_level_registration_xml(const char *node, int level,
                                        stonith_key_value_t * device_list);
 
 xmlNode *create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                                        stonith_key_value_t * params);
+                                        stonith_key_value_t * params, const char *rsc_provides);
 
 #  define ST_LEVEL_MAX 10
 

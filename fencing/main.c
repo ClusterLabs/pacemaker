@@ -666,9 +666,13 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         const char *name = NULL;
         const char *agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
         const char *provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        const char *rsc_provides = NULL;
 
         crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
         get_rsc_attributes(rsc->parameters, rsc, node, data_set);
+        get_meta_attributes(rsc->meta, rsc, node, data_set);
+
+        rsc_provides = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROVIDES);
 
         g_hash_table_iter_init(&gIter, rsc->parameters);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
@@ -680,7 +684,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         }
 
         remove = FALSE;
-        data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
+        data = create_device_registration_xml(rsc_name(rsc), provider, agent, params, rsc_provides);
         stonith_device_register(data, NULL, TRUE);
 
         stonith_key_value_freeall(params, 1, 1);

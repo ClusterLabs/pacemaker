@@ -111,6 +111,20 @@ typedef struct async_command_s {
 static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
                                               xmlNode * data, int rc);
 
+static gboolean
+is_action_required(const char *action, stonith_device_t *device)
+{
+    if (device->required_actions == NULL) {
+        return FALSE;
+    }
+
+    if (strstr(device->required_actions, action)) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static int
 get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
 {
@@ -318,6 +332,7 @@ free_device(gpointer data)
     free_xml(device->agent_metadata);
     free(device->namespace);
     free(device->on_target_actions);
+    free(device->required_actions);
     free(device->agent);
     free(device->id);
     free(device);
@@ -525,10 +540,24 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
-static void
-get_on_target_actions(stonith_device_t *device)
+static char *
+add_action(char *actions, const char *action)
 {
-    char *actions = NULL;
+    static size_t len = 256;
+    if (actions == NULL) {
+        actions = calloc(1, len);
+    }
+    if (strlen(actions)) {
+        g_strlcat(actions, " ", len);
+    }
+    g_strlcat(actions, action, len);
+
+    return actions;
+}
+
+static void
+read_action_metadata(stonith_device_t *device)
+{
     xmlXPathObjectPtr xpath = NULL;
     int max = 0;
     int lpc = 0;
@@ -545,40 +574,38 @@ get_on_target_actions(stonith_device_t *device)
         return;
     }
 
-    actions = calloc(1, 512);
-
     for (lpc = 0; lpc < max; lpc++) {
         const char *on_target = NULL;
         const char *action = NULL;
+        const char *automatic = NULL;
+        const char *required = NULL;
         xmlNode *match = getXpathResult(xpath, lpc);
 
         CRM_CHECK(match != NULL, continue);
 
         on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
+        automatic = crm_element_value(match, "automatic");
+        required = crm_element_value(match, "required");
 
         if(safe_str_eq(action, "list")) {
             set_bit(device->flags, st_device_supports_list);
         } else if(safe_str_eq(action, "status")) {
             set_bit(device->flags, st_device_supports_status);
+        } else if(safe_str_eq(action, "on") && (crm_is_true(automatic))) {
+            /* this setting implies required=true for unfencing */
+            required = "true";
         }
 
         if (action && crm_is_true(on_target)) {
-            if (strlen(actions)) {
-                g_strlcat(actions, " ", 512);
-            }
-            g_strlcat(actions, action, 512);
+            device->on_target_actions = add_action(device->on_target_actions, action);
+        }
+        if (action && crm_is_true(required)) {
+            device->required_actions = add_action(device->required_actions, action);
         }
     }
 
     freeXpathObject(xpath);
-
-    if (!strlen(actions)) {
-        free(actions);
-        actions = NULL;
-    }
-
-    device->on_target_actions = actions;
 }
 
 static stonith_device_t *
@@ -603,11 +630,21 @@ build_device_from_xml(xmlNode * msg)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     device->agent_metadata = get_agent_metadata(device->agent);
-    get_on_target_actions(device);
+    read_action_metadata(device);
 
     value = g_hash_table_lookup(device->params, "nodeid");
     if (!value) {
         device->include_nodeid = is_nodeid_required(device->agent_metadata);
+    }
+
+    value = crm_element_value(dev, "rsc_provides");
+    if (safe_str_eq(value, "unfencing")) {
+        /* if this agent requires unfencing, 'on' is considered a required action */
+        device->required_actions = add_action(device->required_actions, "on");
+    }
+
+    if (is_action_required("on", device)) {
+        crm_info("The fencing device '%s' requires unfencing", device->id);
     }
 
     if (device->on_target_actions) {
@@ -1466,6 +1503,7 @@ static void
 st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 {
     stonith_device_t *device = NULL;
+    stonith_device_t *next_device = NULL;
     async_command_t *cmd = user_data;
 
     GListPtr gIter = NULL;
@@ -1489,21 +1527,37 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         mainloop_set_trigger(device->work);
     }
 
-    crm_trace("Operation %s on %s completed with rc=%d (%d remaining)",
+    crm_debug("Operation '%s' on '%s' completed with rc=%d (%d remaining)",
               cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
-    if (rc != 0 && cmd->device_next) {
-        stonith_device_t *dev = g_hash_table_lookup(device_list, cmd->device_next->data);
+    if (rc == 0) {
+        GListPtr iter;
+        /* see if there are any required devices left to execute for this op */
+        for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
+            next_device = g_hash_table_lookup(device_list, iter->data);
 
-        if (dev) {
-            log_operation(cmd, rc, pid, dev->id, output);
-
-            cmd->device_next = cmd->device_next->next;
-            schedule_stonith_command(cmd, dev);
-            /* Prevent cmd from being freed */
-            cmd = NULL;
-            goto done;
+            if (next_device != NULL && is_action_required(cmd->action, next_device)) {
+                cmd->device_next = iter->next;
+                break;
+            }
+            next_device = NULL;
         }
+
+    } else if (rc != 0 && cmd->device_next && (is_action_required(cmd->action, device) == FALSE)) {
+        /* if this device didn't work out, see if there are any others we can try.
+         * if the failed device was 'required', we can't pick another device. */
+        next_device = g_hash_table_lookup(device_list, cmd->device_next->data);
+        cmd->device_next = cmd->device_next->next;
+    }
+
+    /* this operation requires more fencing, hooray! */
+    if (next_device) {
+        log_operation(cmd, rc, pid, device->id, output);
+
+        schedule_stonith_command(cmd, next_device);
+        /* Prevent cmd from being freed */
+        cmd = NULL;
+        goto done;
     }
 
     if (rc > 0) {
