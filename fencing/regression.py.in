@@ -750,14 +750,6 @@ class Tests:
 		if our_uname:
 			our_uname = our_uname[0]
 
-		### Simple test unfencing works
-		test = self.new_test("cpg_unfence_simple",
-				"Verify simple unfencing.", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\"")
-		test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o \"mode=pass\"")
-		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\"")
-		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
-
 		### verify unfencing using on_target device
 		test = self.new_test("cpg_unfence_on_target_1",
 				"Verify unfencing with on_target = true", 1)
@@ -778,44 +770,28 @@ class Tests:
 		test = self.new_test("cpg_unfence_on_target_3",
 				"Verify unfencing with on_target = true using topology", 1)
 
-		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
 
-		test.add_cmd("stonith_admin", "-r %s -i 1 -v false1" % (our_uname))
-		test.add_cmd("stonith_admin", "-r %s -i 2 -v false2" % (our_uname))
-		test.add_cmd("stonith_admin", "-r %s -i 3 -v true1" % (our_uname))
+		test.add_cmd("stonith_admin", "-r %s -i 1 -v true1" % (our_uname))
+		test.add_cmd("stonith_admin", "-r %s -i 2 -v true2" % (our_uname))
 
 		test.add_cmd("stonith_admin", "-U %s -t 3" % (our_uname))
 		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
-		### verify unfencing using on_target device with topology fails
+		### verify unfencing using on_target device with topology fails when victim node doesn't exist
 		test = self.new_test("cpg_unfence_on_target_4",
 				"Verify unfencing failure with on_target = true using topology", 1)
 
-		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+		test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
 
-		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
-		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
-		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
+		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v true1")
+		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true2")
 
 		test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 237)
 		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
-
-		### verify use of on_target = true for "on" action does not interfere with "off" action
-		test = self.new_test("cpg_unfence_on_target_ignored",
-				"Verify on target is ignored for other actions", 1)
-		test.add_cmd("stonith_admin", "-R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
-		test.add_cmd("stonith_admin", "-r node_fake -i 1 -v false1")
-		test.add_cmd("stonith_admin", "-r node_fake -i 2 -v false2")
-		test.add_cmd("stonith_admin", "-r node_fake -i 3 -v true1")
-		test.add_cmd("stonith_admin", "-F node_fake -t 3")
-		test.add_stonith_log_pattern("(on) to be executed on the target node")
 
 	def setup_environment(self, use_corosync):
 		if self.autogen_corosync_cfg and use_corosync:
