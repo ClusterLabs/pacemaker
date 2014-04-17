@@ -206,6 +206,7 @@ static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
     int exec_rc = 0;
+    const char *action_str = NULL;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
 
@@ -246,8 +247,14 @@ stonith_device_execute(stonith_device_t * device)
     }
 #endif
 
+    action_str = cmd->action;
+    if (safe_str_eq(cmd->action, "reboot") && is_not_set(device->flags, st_device_supports_reboot)) {
+        crm_warn("Agent '%s' does not advertise support for 'reboot', performing 'off' action instead", device->agent);
+        action_str = "off";
+    }
+
     action = stonith_action_create(device->agent,
-                                   cmd->action,
+                                   action_str,
                                    cmd->victim,
                                    cmd->victim_nodeid,
                                    cmd->timeout, device->params, device->aliases);
@@ -592,6 +599,8 @@ read_action_metadata(stonith_device_t *device)
             set_bit(device->flags, st_device_supports_list);
         } else if(safe_str_eq(action, "status")) {
             set_bit(device->flags, st_device_supports_status);
+        } else if(safe_str_eq(action, "reboot")) {
+            set_bit(device->flags, st_device_supports_reboot);
         } else if(safe_str_eq(action, "on") && (crm_is_true(automatic))) {
             /* this setting implies required=true for unfencing */
             required = "true";
