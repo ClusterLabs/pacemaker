@@ -68,6 +68,12 @@ static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(remote_fencing_op_t * op, st_query_result_t * chosen_peer,
                                 int default_timeout);
 
+static gint
+sort_strings(gconstpointer a, gconstpointer b)
+{
+    return strcmp(a, b);
+}
+
 static void
 free_remote_query(gpointer data)
 {
@@ -127,6 +133,10 @@ free_remote_op(gpointer data)
     if (op->devices_list) {
         g_list_free_full(op->devices_list, free);
         op->devices_list = NULL;
+    }
+    if (op->required_list) {
+        g_list_free_full(op->required_list, free);
+        op->required_list = NULL;
     }
     free(op);
 }
@@ -400,6 +410,25 @@ topology_is_empty(stonith_topology_t *tp)
     return TRUE;
 }
 
+static void
+add_required_device(remote_fencing_op_t * op, const char *device)
+{
+    GListPtr match  = g_list_find_custom(op->required_list, device, sort_strings);
+    if (match) {
+        /* device already marked required */
+        return;
+    }
+    op->required_list = g_list_prepend(op->required_list, strdup(device));
+
+    /* make sure the required devices is in the current list of devices to be executed */
+    if (op->devices_list) {
+        GListPtr match  = g_list_find_custom(op->devices_list, device, sort_strings);
+        if (match == NULL) {
+           op->devices_list = g_list_append(op->devices_list, strdup(device));
+        }
+    }
+}
+
 /* deep copy the device list */
 static void
 set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
@@ -413,6 +442,18 @@ set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
     }
+
+    /* tack on whatever required devices have not been executed
+     * to the end of the current devices list. This ensures that
+     * the required devices will get executed regardless of what topology
+     * level they exist at. */
+    for (lpc = op->required_list; lpc != NULL; lpc = lpc->next) {
+        GListPtr match  = g_list_find_custom(op->devices_list, lpc->data, sort_strings);
+        if (match == NULL) {
+           op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
+        }
+    }
+
     op->devices = op->devices_list;
 }
 
@@ -712,12 +753,6 @@ initiate_remote_stonith_op(crm_client_t * client, xmlNode * request, gboolean ma
     op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
 
     return op;
-}
-
-static gint
-sort_strings(gconstpointer a, gconstpointer b)
-{
-    return strcmp(a, b);
 }
 
 enum find_best_peer_options {
@@ -1176,11 +1211,13 @@ process_remote_stonith_query(xmlNode * msg)
         const char *device = ID(child);
         int action_timeout = 0;
         int verified = 0;
+        int required = 0;
 
         if (device) {
             result->device_list = g_list_prepend(result->device_list, strdup(device));
             crm_element_value_int(child, F_STONITH_ACTION_TIMEOUT, &action_timeout);
             crm_element_value_int(child, F_STONITH_DEVICE_VERIFIED, &verified);
+            crm_element_value_int(child, F_STONITH_DEVICE_REQUIRED, &required);
             if (action_timeout) {
                 crm_trace("Peer %s with device %s returned action timeout %d",
                           result->host, device, action_timeout);
@@ -1191,6 +1228,13 @@ process_remote_stonith_query(xmlNode * msg)
                 crm_trace("Peer %s has confirmed a verified device %s", result->host, device);
                 g_hash_table_insert(result->verified_devices,
                                     strdup(device), GINT_TO_POINTER(verified));
+            }
+            if (required) {
+                crm_trace("Peer %s requires device %s to execute for action %s",
+                          result->host, device, op->action);
+                /* This matters when executing a topology. Required devices will get 
+                 * executed regardless of their topology level. We use this for unfencing. */
+                add_required_device(op, device);
             }
         }
     }
@@ -1323,9 +1367,13 @@ process_remote_stonith_exec(xmlNode * msg)
          * Continue the topology if more devices exist at the current level, otherwise
          * mark as done. */
         if (rc == pcmk_ok) {
+            GListPtr required_match = g_list_find_custom(op->required_list, device, sort_strings);
             if (op->devices) {
                 /* Success, are there any more? */
                 op->devices = op->devices->next;
+            }
+            if (required_match) {
+                op->required_list = g_list_remove(op->required_list, required_match->data);
             }
             /* if no more devices at this fencing level, we are done,
              * else we need to contine with executing the next device in the list */

@@ -178,7 +178,7 @@ stonith_connection_destroy(gpointer user_data)
 
 xmlNode *
 create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                               stonith_key_value_t * params)
+                               stonith_key_value_t * params, const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
@@ -195,6 +195,9 @@ create_device_registration_xml(const char *id, const char *namespace, const char
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, "agent", agent);
     crm_xml_add(data, "namespace", namespace);
+    if (rsc_provides) {
+        crm_xml_add(data, "rsc_provides", rsc_provides);
+    }
 
     for (; params; params = params->next) {
         hash2field((gpointer) params->key, (gpointer) params->value, args);
@@ -211,7 +214,7 @@ stonith_api_register_device(stonith_t * st, int call_options,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_device_registration_xml(id, namespace, agent, params);
+    data = create_device_registration_xml(id, namespace, agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);

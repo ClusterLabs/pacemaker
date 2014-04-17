@@ -91,6 +91,13 @@ all_opt = {
 		"required" : "0",
 		"shortdesc" : "Physical switch number on device",
 		"order" : 1 },
+	"nodeid" : {
+		"getopt" : "i:",
+		"longopt" : "nodeid",
+		"help" : "-i, --nodeid                    corosync id of fence victim",
+		"required" : "0",
+		"shortdesc" : "The corosync id of fence victim",
+		"order" : 1},
 	"uuid" : {
 		"getopt" : "U:",
 		"longopt" : "uuid",
