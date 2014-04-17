@@ -714,6 +714,23 @@ class Tests:
 
 			test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
+		# test what happens when no reboot action is advertised
+		for test_type in test_types:
+			test = self.new_test("%s_no_reboot_support" % test_type["prefix"],
+					"Verify reboot action defaults to off when no reboot action is advertised by agent.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-B node1 -t 5 -V");
+			test.add_stonith_log_pattern("does not advertise support for 'reboot', performing 'off'")
+			test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)");
+
+		# make sure reboot is used when reboot action is advertised
+		for test_type in test_types:
+			test = self.new_test("%s_with_reboot_support" % test_type["prefix"],
+					"Verify reboot action can be used when metadata advertises it.", test_type["use_cpg"])
+			test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+			test.add_cmd("stonith_admin", "-B node1 -t 5 -V");
+			test.add_stonith_negative_log_pattern("does not advertise support for 'reboot', performing 'off'")
+			test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)");
 
 	def build_nodeid_tests(self):
 		our_uname = output_from_command("uname -n")
@@ -927,6 +944,10 @@ if __name__ == "__main__":
 		os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/on_target=/automatic=/g' > /usr/sbin/fence_dummy_automatic_unfence");
 		os.system("chmod 711 /usr/sbin/fence_dummy_automatic_unfence")
 
+		# modifies dummy agent to not advertise reboot
+		os.system("cat /usr/share/pacemaker/tests/cts/fence_dummy  | sed 's/^.*<action.*name.*reboot.*>.*//g' > /usr/sbin/fence_dummy_no_reboot");
+		os.system("chmod 711 /usr/sbin/fence_dummy_no_reboot")
+
 	def cleanup_environment(self, use_corosync):
 		if use_corosync:
 			self.stop_corosync()
@@ -945,6 +966,7 @@ if __name__ == "__main__":
 		os.system("rm -f /usr/sbin/fence_dummy_list")
 		os.system("rm -f /usr/sbin/fence_dummy")
 		os.system("rm -f /usr/sbin/fence_dummy_automatic_unfence")
+		os.system("rm -f /usr/sbin/fence_dummy_no_reboot")
 
 class TestOptions:
 	def __init__(self):
