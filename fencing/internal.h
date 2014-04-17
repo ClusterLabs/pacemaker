@@ -113,6 +113,10 @@ typedef struct remote_fencing_op_s {
 
     /*! The current topology level being executed */
     guint level;
+
+    /*! List of required devices the topology must execute regardless of what
+     * topology level they exist at. */
+    GListPtr required_list;
     /*! The device list of all the devices at the current executing topology level. */
     GListPtr devices_list;
     /*! Current entry in the topology device list */

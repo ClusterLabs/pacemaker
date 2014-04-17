@@ -66,6 +66,8 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 /*! Has this device been verified using a monitor type
  *  operation (monitor, list, status) */
 #  define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"
+/*! device is required for this action */
+#  define F_STONITH_DEVICE_REQUIRED   "st_required"
 #  define F_STONITH_CALLBACK_TOKEN    "st_async_id"
 #  define F_STONITH_CLIENTNAME        "st_clientname"
 #  define F_STONITH_CLIENTNODE        "st_clientnode"
