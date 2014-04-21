@@ -894,15 +894,15 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
             if(op == NULL) {
                 continue;
-            } else if (strstr(xpath, "/cib/configuration") && f_topology != NULL) {
+            } else if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) && f_topology != NULL) {
                 if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
                     crm_info("Re-initializing fencing topology after top-level %s operation", op);
                     fencing_topology_init(NULL);
                 }
                 return;
-            } else if (strstr(xpath, "/fencing-topology/") == NULL) {
+            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY "/") == NULL) {
                 continue;
-            } else if(strstr(xpath, "/fencing-level/") == NULL) {
+            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL "/") == NULL) {
                 if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
                     crm_info("Re-initializing fencing topology after top-level %s operation", op);
                     fencing_topology_init(NULL);
