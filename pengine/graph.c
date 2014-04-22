@@ -1103,7 +1103,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
                && strstr(wrapper->action->uuid, "_stop_0")
                && action->rsc && action->rsc->variant >= pe_clone) {
-        crm_warn("Ignoring requirement that %s comeplete before %s:"
+        crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
                  wrapper->action->uuid, action->uuid);
         return FALSE;
