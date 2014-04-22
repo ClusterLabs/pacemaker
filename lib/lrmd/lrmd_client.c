@@ -941,14 +941,14 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 
     if (fd) {
         /* No mainloop */
-        native->ipc = crm_ipc_new("lrmd", 0);
+        native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
             rc = -ENOTCONN;
         }
     } else {
-        native->source = mainloop_add_ipc_client("lrmd", G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
+        native->source = mainloop_add_ipc_client(CRM_SYSTEM_LRMD, G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
         native->ipc = mainloop_get_ipc_client(native->source);
     }
 
