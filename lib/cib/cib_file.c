@@ -295,8 +295,10 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     cib->call_id++;
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
 #if ENABLE_ACL
-    crm_acl_get_set_user(request, F_CIB_USER, user_name);
-    crm_trace("Performing %s operation as %s", op, crm_element_value(request, F_CIB_USER));
+    if(user_name) {
+        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
+    }
+    crm_trace("Performing %s operation as %s", op, user_name);
 #endif
     rc = cib_perform_op(op, call_options, fn, query,
                         section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,

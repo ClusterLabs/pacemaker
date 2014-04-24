@@ -63,15 +63,6 @@ while test "$done" = "0"; do
     esac
 done
 
-case "$tests" in
-    *acls*)
-	if [ $USER != root ]; then
-	    echo "You need to be root to run the ACL regression tests"
-	    exit 1
-	fi
-	;;
-esac
-
 if [ "x$VALGRIND_CMD" = "x" -a -x $test_home/crm_simulate ]; then
     xml_home=`dirname ${test_home}`
     echo "Using local binaries from: $test_home, schemas from $xml_home"

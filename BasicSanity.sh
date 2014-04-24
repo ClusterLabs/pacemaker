@@ -65,21 +65,13 @@ for t in $tests; do
 
     elif [ -e $test_home/$t ]; then
         # pengine, cli
-	if [ x$TRAVIS = x ]; then
-            su root -c "$test_home/$t/regression.sh $verbose $valgrind"
-        else
-            sudo --  $test_home/$t/regression.sh $verbose $valgrind
-	fi
+	$test_home/$t/regression.sh $verbose $valgrind
         rc=$?
 
     elif [ $t = cli -a -e $test_home/tools ]; then
         # Running cli tests from the source tree
 	t=tools
-	if [ x$TRAVIS = x ]; then
-            su root -c "$test_home/$t/regression.sh $verbose $valgrind"
-        else
-            sudo --  $test_home/$t/regression.sh $verbose $valgrind
-	fi
+	$test_home/$t/regression.sh $verbose $valgrind
         rc=$?
 
     else
