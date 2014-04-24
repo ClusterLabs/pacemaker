@@ -1756,7 +1756,7 @@ static void
 __subtract_xml_object(xmlNode * target, xmlNode * patch)
 {
     xmlNode *patch_child = NULL;
-    xmlNode *target_child = NULL;
+    xmlNode *cIter = NULL;
     xmlAttrPtr xIter = NULL;
 
     char *id = NULL;
@@ -1797,8 +1797,11 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
     crm_xml_add(target, XML_ATTR_ID, id);
 
     /* changes to child objects */
-    for (target_child = __xml_first_child(target); target_child != NULL;
-         target_child = __xml_next(target_child)) {
+    cIter = __xml_first_child(target);
+    while (cIter) {
+        xmlNode *target_child = cIter;
+
+        cIter = __xml_next(cIter);
 
         if (target_child->type == XML_COMMENT_NODE) {
             patch_child = find_xml_comment(patch, target_child);
