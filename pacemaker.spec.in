@@ -3,8 +3,9 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
-%global upstream_version HEAD
-%global upstream_prefix ClusterLabs-pacemaker
+%global commit HEAD
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global github_owner ClusterLabs
 
 # Turn off the auto compilation of python files not in the site-packages directory
 # Needed so that the -devel package is multilib compliant
@@ -46,7 +47,7 @@
 %endif
 
 %if %{with pre_release}
-%global pcmk_release 0.%{specversion}.%{upstream_version}.git
+%global pcmk_release 0.%{specversion}.%{shortcommit}.git
 %else
 %global pcmk_release %{specversion}
 %endif
@@ -59,9 +60,7 @@ License:       GPLv2+ and LGPLv2+
 Url:           http://www.clusterlabs.org
 Group:         System Environment/Daemons
 
-# export VER={upstream_version}
-# wget --no-check-certificate -O ClusterLabs-pacemaker-${VER}.tar.gz https://github.com/ClusterLabs/pacemaker/tarball/${VER}
-Source0:       %{upstream_prefix}-%{upstream_version}.tar.gz
+Source0:        https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:   on
 Requires:      python
@@ -245,7 +244,7 @@ Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Corosync, CMAN and/or Linux-HA.
 
 %prep
-%setup -q -n %{upstream_prefix}-%{upstream_version}
+%autosetup -n %{name}-%{commit}
 
 # Force the local time
 #
