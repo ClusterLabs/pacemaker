@@ -609,6 +609,15 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
     const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
 
+    if(tag == NULL) {
+        /* Compatability handling for pacemaker < 1.1.12 */
+        tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
+    }
+    if(ref == NULL) {
+        /* Compatability handling for pacemaker < 1.1.12 */
+        ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
+    }
+
     if(target == NULL || target->doc == NULL || target->doc->_private == NULL){
         CRM_ASSERT(target);
         CRM_ASSERT(target->doc);
@@ -677,12 +686,18 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
 
     for (child = __xml_first_child(acl_entry); child; child = __xml_next(child)) {
         const char *tag = crm_element_name(child);
+        const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
+
+        if (strcmp(XML_ACL_TAG_PERMISSION, tag) == 0){
+            tag = kind;
+        }
 
         crm_trace("Processing %s %p", tag, child);
         if(tag == NULL) {
             CRM_ASSERT(tag != NULL);
 
-        } else if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0) {
+        } else if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0
+                   || strcmp(XML_ACL_TAG_ROLE_REFv1, tag) == 0) {
             const char *ref_role = crm_element_value(child, XML_ATTR_ID);
 
             if (ref_role) {
@@ -711,7 +726,7 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
             __xml_acl_create(child, target, xpf_acl_deny);
 
         } else {
-            crm_warn("Unknown ACL entry: %s", tag);
+            crm_warn("Unknown ACL entry: %s/%s", tag, kind);
         }
     }
 
@@ -720,12 +735,22 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
 
 /*
     <acls>
-      <acl_user id="lmb">
-        <role_ref id="observer"/>
-      </acl_user>
+      <acl_target id="l33t-haxor"><role id="auto-l33t-haxor"/></acl_target>
+      <acl_role id="auto-l33t-haxor">
+        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
       <acl_role id="observer">
-        <read id="observer-read" xpath="/cib"/>
-        <write id="observer-write" xpath="//primitive[@id='vm-01']/meta_attributes/nvpair[@name='target-role']"/>
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_target id="badidea"><role id="auto-badidea"/></acl_target>
+      <acl_role id="auto-badidea">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+        <acl_permission id="badidea-resources-2" kind="deny" reference="dummy-meta_attributes"/>
       </acl_role>
     </acls>
 */
@@ -829,7 +854,7 @@ __xml_acl_unpack(xmlNode *source, xmlNode *target, const char *user)
             for (child = __xml_first_child(acls); child; child = __xml_next(child)) {
                 const char *tag = crm_element_name(child);
 
-                if (strcmp(tag, XML_ACL_TAG_USER) == 0) {
+                if (strcmp(tag, XML_ACL_TAG_USER) == 0 || strcmp(tag, XML_ACL_TAG_USERv1) == 0) {
                     const char *id = crm_element_value(child, XML_ATTR_ID);
 
                     if(id && strcmp(id, user) == 0) {

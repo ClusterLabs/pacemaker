@@ -21,7 +21,7 @@ dtddir			= $(CRM_DTD_DIRECTORY)
 dtd_SCRIPTS		= crm.dtd crm-transitional.dtd
 
 xsltdir			= $(dtddir)
-xslt_SCRIPTS		= upgrade06.xsl upgrade11.xsl
+xslt_SCRIPTS		= upgrade06.xsl upgrade-*.xsl
 
 RNGdir			= $(dtddir)
 

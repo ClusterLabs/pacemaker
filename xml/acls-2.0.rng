@@ -11,23 +11,30 @@
     <element name="acls">
       <zeroOrMore>
 	<choice>
-	  <element name="acl_user">
+	  <element name="acl_target">
+	    <attribute name="id"><text/></attribute>
+	    <zeroOrMore>
+ 	      <element name="role">
+		<attribute name="id"><data type="IDREF"/></attribute>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	  <element name="acl_group">
+	    <!-- Here 'id' is the name of a unix group -->
 	    <attribute name="id"><data type="ID"/></attribute>
-	    <choice>
-	      <zeroOrMore>
- 		<element name="role_ref">
-		  <attribute name="id"><data type="IDREF"/></attribute>
-		</element>
-	      </zeroOrMore>
-	      <zeroOrMore>
-		<ref name="element-acl"/>
-	      </zeroOrMore>
-	    </choice>
+	    <zeroOrMore>
+ 	      <element name="role">
+		<attribute name="id"><data type="IDREF"/></attribute>
+	      </element>
+	    </zeroOrMore>
 	  </element>
 	  <element name="acl_role">
 	    <attribute name="id"><data type="ID"/></attribute>
+	    <optional>
+	      <attribute name="description"><text/></attribute>
+	    </optional>
 	    <zeroOrMore>
-	      <ref name="element-acl"/>
+	      <ref name="element-permission"/>
 	    </zeroOrMore>
 	  </element>
 	</choice>
@@ -35,34 +42,39 @@
     </element>
   </define>
 
-  <define name="element-acl">
-    <choice>
-      <element name="read">
-	<ref name="attribute-acl"/>
-      </element>
-      <element name="write">
-	<ref name="attribute-acl"/>
-      </element>
-      <element name="deny">
-	<ref name="attribute-acl"/>
-      </element>
-    </choice>
-  </define>
+  <define name="element-permission">
+    <element name="acl_permission">
+      <attribute name="id"><data type="ID"/></attribute>
 
-  <define name="attribute-acl">
-    <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="kind">
+	<choice>
+	  <value>read</value>
+	  <value>write</value>
+	  <value>deny</value>
+	</choice>
+      </attribute>
+
       <choice>
-	<attribute name="tag"><text/></attribute>
-	<attribute name="ref"><data type="IDREF"/></attribute>
-	<group>
-	  <attribute name="tag"><text/></attribute>
-	  <attribute name="ref"><data type="IDREF"/></attribute>
-	</group>
 	<attribute name="xpath"><text/></attribute>
+	<!-- reference is already sufficiently specific without 'object-type' --> 
+	<attribute name="reference"><data type="IDREF"/></attribute>
+	<group>
+	  <!-- Use 'object-type' to avoid conflicting with the 'tag' configuration concept -->
+	  <attribute name="object-type"><text/></attribute>
+	  <optional>
+	    <!-- 
+		 does not make sense with anything other than object-type
+		 xpath and reference are already sufficiently specific
+	    -->
+	    <attribute name="attribute"><text/></attribute>
+	  </optional>
+	</group>
       </choice>
+
       <optional>
-	<attribute name="attribute"><text/></attribute>
+	<attribute name="description"><text/></attribute>
       </optional>
+    </element>
   </define>
 
 </grammar>
