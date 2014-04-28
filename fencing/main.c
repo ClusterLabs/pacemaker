@@ -1246,7 +1246,7 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
         printf
-            ("    <shortdesc lang=\"en\">How to determin which machines are controlled by the device.</shortdesc>\n");
+            ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf
             ("    <longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n",
              STONITH_ATTR_HOSTLIST);
