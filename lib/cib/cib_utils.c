@@ -369,17 +369,20 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
 
-        if(output == NULL) {
+        if(output == NULL || *output == NULL) {
             /* nothing */
 
         } else if(cib_filtered == *output) {
             cib_filtered = NULL; /* Let them have this copy */
 
-        } else if(cib_filtered) {
+        } else if(*output == current_cib) {
+            /* They already know not to free it */
+
+        } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
             *output = copy_xml(*output);
 
-        } else if(*output != current_cib) {
+        } else if((*output)->doc == current_cib->doc) {
             /* Give them a copy they can free */
             *output = copy_xml(*output);
         }

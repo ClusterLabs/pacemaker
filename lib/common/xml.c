@@ -950,6 +950,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
                 crm_trace("Purging attributes from %s", acl->xpath);
                 if(__xml_purge_attributes(match) == FALSE && match == target) {
                     crm_trace("No access to the entire document for %s", user);
+                    freeXpathObject(xpathObj);
                     return TRUE;
                 }
             }
@@ -1011,6 +1012,7 @@ __xml_acl_post_process(xmlNode * xml)
                     xmlUnlinkNode(xml);
                     xmlFreeNode(xml);
                 }
+                free(path);
                 return;
             }
         }
