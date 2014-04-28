@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <optional>
+      <ref name="element-acls"/>
+    </optional>
+  </start>
+
+  <define name="element-acls">
+    <element name="acls">
+      <zeroOrMore>
+	<choice>
+	  <element name="acl_user">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <choice>
+	      <zeroOrMore>
+ 		<element name="role_ref">
+		  <attribute name="id"><data type="IDREF"/></attribute>
+		</element>
+	      </zeroOrMore>
+	      <zeroOrMore>
+		<ref name="element-acl"/>
+	      </zeroOrMore>
+	    </choice>
+	  </element>
+	  <element name="acl_role">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <zeroOrMore>
+	      <ref name="element-acl"/>
+	    </zeroOrMore>
+	  </element>
+	</choice>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="element-acl">
+    <choice>
+      <element name="read">
+	<ref name="attribute-acl"/>
+      </element>
+      <element name="write">
+	<ref name="attribute-acl"/>
+      </element>
+      <element name="deny">
+	<ref name="attribute-acl"/>
+      </element>
+    </choice>
+  </define>
+
+  <define name="attribute-acl">
+    <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+	<attribute name="tag"><text/></attribute>
+	<attribute name="ref"><data type="IDREF"/></attribute>
+	<group>
+	  <attribute name="tag"><text/></attribute>
+	  <attribute name="ref"><data type="IDREF"/></attribute>
+	</group>
+	<attribute name="xpath"><text/></attribute>
+      </choice>
+      <optional>
+	<attribute name="attribute"><text/></attribute>
+      </optional>
+  </define>
+
+</grammar>
