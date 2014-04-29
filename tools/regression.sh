@@ -355,7 +355,6 @@ function test_acl_loop() {
     export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
-    CIB_user=root cibadmin -Q
 
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
@@ -550,6 +549,19 @@ EOF
     desc="Updated ACL"
     cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
     test_assert 0
+
+    test_acl_loop
+
+    printf "\n\n    !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!\n"
+    printf "\nUpgrading to pacemaker-2.0 and re-testing\n" 1>&2
+
+    export CIB_user=root
+    desc="$CIB_user: Upgrade to pacemaker-2.0"
+    cmd="cibadmin --upgrade --force -V"
+    test_assert 0
+
+    sed -i 's/epoch=.2/epoch=\"6/g' $CIB_shadow_dir/shadow.$CIB_shadow
+    sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' $CIB_shadow_dir/shadow.$CIB_shadow
 
     test_acl_loop
 }
