@@ -336,17 +336,10 @@ main(int argc, char **argv)
                 command_options |= cib_quorum_override;
                 break;
             case 'a':
-                output = createEmptyCib();
-                crm_xml_add(output, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-                if (optind >= argc) {
-                    crm_xml_add(output, XML_ATTR_VALIDATION, xml_latest_schema());
-                } else {
+                output = createEmptyCib(1);
+                if (optind < argc) {
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
-                crm_xml_add_int(output, XML_ATTR_GENERATION_ADMIN, 1);
-                crm_xml_add_int(output, XML_ATTR_GENERATION, 0);
-                crm_xml_add_int(output, XML_ATTR_NUMUPDATES, 0);
-
                 admin_input_xml = dump_xml_formatted(output);
                 fprintf(stdout, "%s\n", crm_str(admin_input_xml));
                 goto bail;
@@ -357,7 +350,7 @@ main(int argc, char **argv)
                 break;
         }
     }
-    
+
     if (bump_log_num > 0) {
         quiet = FALSE;
     }

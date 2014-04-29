@@ -424,11 +424,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     free(namelist);
 
     if (root == NULL) {
-        root = createEmptyCib();
-        crm_xml_add(root, XML_ATTR_GENERATION, "0");
-        crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
-        crm_xml_add(root, XML_ATTR_GENERATION_ADMIN, "0");
-        crm_xml_add(root, XML_ATTR_VALIDATION, xml_latest_schema());
+        root = createEmptyCib(0);
         crm_warn("Continuing with an empty configuration.");
     }
 

@@ -88,7 +88,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
     free_xml(*result_cib);
-    *result_cib = createEmptyCib();
+    *result_cib = createEmptyCib(0);
 
     copy_in_properties(*result_cib, existing_cib);
     cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);

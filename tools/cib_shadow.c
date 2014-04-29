@@ -385,11 +385,7 @@ main(int argc, char **argv)
             }
 
         } else {
-            output = createEmptyCib();
-            crm_xml_add(output, XML_ATTR_GENERATION, "0");
-            crm_xml_add(output, XML_ATTR_NUMUPDATES, "0");
-            crm_xml_add(output, XML_ATTR_GENERATION_ADMIN, "0");
-            crm_xml_add(output, XML_ATTR_VALIDATION, xml_latest_schema());
+            output = createEmptyCib(1);
         }
 
         rc = write_xml_file(output, shadow_file, FALSE);

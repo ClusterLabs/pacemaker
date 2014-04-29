@@ -238,11 +238,17 @@ get_object_root(const char *object_type, xmlNode * the_root)
  *     and the new CIB (input)
  */
 xmlNode *
-createEmptyCib(void)
+createEmptyCib(int admin_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
     cib_root = create_xml_node(NULL, XML_TAG_CIB);
+    crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
+
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, admin_epoch);
+    crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);

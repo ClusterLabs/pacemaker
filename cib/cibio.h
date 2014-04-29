@@ -41,7 +41,6 @@ extern xmlNode *get_the_CIB(void);
 
 extern int initializeCib(xmlNode * cib);
 extern gboolean uninitializeCib(void);
-extern xmlNode *createEmptyCib(void);
 extern gboolean verifyCibXml(xmlNode * cib);
 extern xmlNode *readCibXml(char *buffer);
 extern xmlNode *readCibXmlFile(const char *dir, const char *file, gboolean discard_status);
