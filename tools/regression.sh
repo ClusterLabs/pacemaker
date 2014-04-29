@@ -336,7 +336,23 @@ function test_dates() {
     cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert 0 0
 }
+
+function get_epoch() {
+    CIB_user=root CIB_file=$1 CIB_shadow="" cibadmin -Q | head -n 1 | sed -e 's/.* epoch=\"\([0-9]*\).*/\1/'
+}
+
+function restore_epoch() {
+    infile=$1; shift
+    old=$1; shift
+    new=$(get_epoch $infile)
+    
+    sed -i 's/epoch=.$old/epoch=\"$new/g' $infile
+}
+
 function test_acl_loop() {
+    # Make sure we're rejecting things for the right reasons
+    export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
+    export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
     CIB_user=root cibadmin -Q
@@ -437,13 +453,11 @@ function test_acl_loop() {
     cmd="crm_resource -r dummy --meta -p target-role -v Started"
     test_assert 0
 
-    sed -i 's/epoch=\"9/epoch=\"10/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
     test_assert 0
 
-    sed -i 's/epoch=\"10/epoch=\"11/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
     export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
@@ -451,51 +465,43 @@ function test_acl_loop() {
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
-    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     export CIB_user=niceguy
-    # Make sure we're rejecting things for the right reasons
-    export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
     desc="$CIB_user: Replace - remove acls"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
-    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create resource"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
-    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - modify attribute"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
-    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
-    sed -i 's/num_updates=.1/num_updates=\"0/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - delete attribute"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
-    sed -i 's/epoch=.12/epoch=\"11/g' /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create attribute"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml -V"
+    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
     test_assert 13
     rm -rf /tmp/$$.haxor.xml
 }
@@ -544,8 +550,6 @@ EOF
     desc="Updated ACL"
     cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
     test_assert 0
-
-    sed -i 's/epoch=\"6/epoch=\"3/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
 
     test_acl_loop
 }
