@@ -233,49 +233,6 @@ get_object_root(const char *object_type, xmlNode * the_root)
     return get_xpath_object(xpath, the_root, LOG_DEBUG_4);
 }
 
-xmlNode *
-create_cib_fragment_adv(xmlNode * update, const char *update_section, const char *source)
-{
-    xmlNode *cib = NULL;
-    gboolean whole_cib = FALSE;
-    xmlNode *object_root = NULL;
-    char *local_section = NULL;
-
-/* 	crm_debug("Creating a blank fragment: %s", update_section); */
-
-    if (update == NULL && update_section == NULL) {
-        crm_trace("Creating a blank fragment");
-        update = createEmptyCib();
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-        return update;
-
-    } else if (update == NULL) {
-        crm_err("No update to create a fragment for");
-        return NULL;
-
-    }
-
-    CRM_CHECK(update_section != NULL, return NULL);
-    if (safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
-        whole_cib = TRUE;
-    }
-
-    if (whole_cib == FALSE) {
-        cib = createEmptyCib();
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-        object_root = get_object_root(update_section, cib);
-        add_node_copy(object_root, update);
-
-    } else {
-        cib = copy_xml(update);
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-    }
-
-    free(local_section);
-    crm_trace("Verifying created fragment");
-    return cib;
-}
-
 /*
  * It is the callers responsibility to free both the new CIB (output)
  *     and the new CIB (input)

@@ -27,8 +27,6 @@ xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const ch
 xmlNode *createEmptyCib(void);
 gboolean verifyCibXml(xmlNode * cib);
 
-#  define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
-
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
 
 int update_attr_delegate(cib_t * the_cib, int call_options,

@@ -750,7 +750,6 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 xmlNode *
 do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
 {
-    xmlNode *xml_result = NULL;
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
@@ -779,11 +778,9 @@ do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
     /* Build a list of active (not always running) resources */
     build_active_RAs(lrm_state, rsc_list);
 
-    xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
     crm_log_xml_trace(xml_state, "Current state of the LRM");
-    free_xml(xml_state);
 
-    return xml_result;
+    return xml_state;
 }
 
 xmlNode *
@@ -1640,7 +1637,6 @@ send_direct_ack(const char *to_host, const char *to_sys,
 {
     xmlNode *reply = NULL;
     xmlNode *update, *iter;
-    xmlNode *fragment;
     crm_node_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
@@ -1663,9 +1659,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
     build_operation_update(iter, rsc, op, __FUNCTION__);
-    fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
-
-    reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
+    reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "ACK Update");
 
@@ -1677,7 +1671,6 @@ send_direct_ack(const char *to_host, const char *to_sys,
         crm_log_xml_err(reply, "Unable to route reply");
     }
 
-    free_xml(fragment);
     free_xml(update);
     free_xml(reply);
 }
