@@ -390,7 +390,7 @@ main(int argc, char **argv)
             }
 
         } else {
-            output = createEmptyCib(1);
+            output = createEmptyCib(0);
             if(validation) {
                 crm_xml_add(output, XML_ATTR_VALIDATION, validation);
             }

@@ -336,39 +336,10 @@ function test_dates() {
     cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert 0 0
 }
+function test_acl_loop() {
 
-function test_acls() {
-    export CIB_shadow_dir=$test_home
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
-    export CIB_shadow=$shadow
-
-    cat<<EOF>/tmp/$$.acls.xml
-    <acls>
-      <acl_user id="l33t-haxor">
-        <deny id="crook-nothing" xpath="/cib"/>
-      </acl_user>
-      <acl_user id="niceguy">
-        <role_ref id="observer"/>
-      </acl_user>
-      <acl_role id="observer">
-        <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
-      </acl_role>
-    </acls>
-EOF
-
-    desc="Configure some ACLs"
-    cmd="cibadmin -M -o acls --xml-file /tmp/$$.acls.xml"
-    test_assert 0
-
-    desc="Enable ACLs"
-    cmd="crm_attribute -n enable-acl -v true"
-    test_assert 0
-
-    desc="Set cluster option"
-    cmd="crm_attribute -n no-quorum-policy -v ignore"
-    test_assert 0
+    CIB_user=root cibadmin --replace --xml-text '<resources/>'
+    CIB_user=root cibadmin -Q
 
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
@@ -466,22 +437,14 @@ EOF
     cmd="crm_resource -r dummy --meta -p target-role -v Started"
     test_assert 0
 
-    export CIB_user=root
-    desc="New ACL"
-    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
-    test_assert 0
-
+    sed -i 's/epoch=\"9/epoch=\"10/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
     test_assert 0
 
-    export CIB_user=root
-    desc="Updated ACL"
-    cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"badidea\"><deny id=\"badidea-nothing\" xpath=\"/cib\"/><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
-    test_assert 0
-
-    export CIB_user=badidea
+    sed -i 's/epoch=\"10/epoch=\"11/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
+    export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
     test_assert 0
@@ -537,14 +500,64 @@ EOF
     rm -rf /tmp/$$.haxor.xml
 }
 
+function test_acls() {
+    export CIB_shadow_dir=$test_home
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
+    export CIB_shadow=$shadow
+
+    cat<<EOF>/tmp/$$.acls.xml
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+    </acls>
+EOF
+
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file /tmp/$$.acls.xml"
+    test_assert 0
+
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert 0
+
+    desc="Set cluster option"
+    cmd="crm_attribute -n no-quorum-policy -v ignore"
+    test_assert 0
+
+    desc="New ACL"
+    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert 0
+
+    desc="Another ACL"
+    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"betteridea\"><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert 0
+
+    desc="Updated ACL"
+    cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert 0
+
+    sed -i 's/epoch=\"6/epoch=\"3/g' ${CIB_shadow_dir}/shadow.${CIB_shadow}
+
+    test_acl_loop
+}
+
 for t in $tests; do
     echo "Testing $t"
     test_$t > $test_home/regression.$t.out
 
     sed -i -e 's/cib-last-written.*>/>/'\
 	-e 's/ last-run=\"[0-9]*\"//'	\
-	-e 's/crm_feature_set="[^"]*"//'\
-	-e 's/validate-with="[^"]*"//'\
+	-e 's/crm_feature_set="[^"]*" //'\
+	-e 's/validate-with="[^"]*" //'\
         -e 's/.*__xml_acl_check/__xml_acl_check/g'\
 	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
 	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
