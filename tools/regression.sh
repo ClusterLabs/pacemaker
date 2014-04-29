@@ -591,7 +591,7 @@ for t in $tests; do
 	cp $test_home/regression.$t.out $test_home/regression.$t.exp
     fi
     if [ $verbose = 1 ]; then
-	diff -u $test_home/regression.$t.exp $test_home/regression.$t.out
+	diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
     else
 	diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
     fi
