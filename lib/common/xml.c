@@ -5634,7 +5634,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
         return pcmk_ok;
     }
 
-    for (; lpc < max_stable_schemas; lpc++) {
+    while(lpc <= max_stable_schemas) {
         gboolean valid = TRUE;
 
         crm_debug("Testing '%s' validation (%d of %d)",
@@ -5712,8 +5712,9 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     }
 
     if (*best > match) {
-        crm_notice("Upgraded from %s to %s validation", value ? value : "<none>",
-                   known_schemas[*best].name);
+        crm_notice("%s the configuration from %s to %s",
+                   transform?"Transformed":"Upgraded",
+                   value ? value : "<none>", known_schemas[*best].name);
         crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
     }
 
