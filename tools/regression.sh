@@ -360,45 +360,45 @@ function test_acl_loop() {
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13
+    test_assert 13 0
 
     export CIB_user=l33t-haxor
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13
+    test_assert 13 0
 
     export CIB_user=niceguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 0
+    test_assert 0 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -406,12 +406,12 @@ function test_acl_loop() {
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13
+    test_assert 13 0
 
     export CIB_user=root
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 0
+    test_assert 0 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v true"
@@ -425,15 +425,15 @@ function test_acl_loop() {
 
     desc="$CIB_user: Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Query a resource meta attribute"
     cmd="crm_resource -r dummy --meta -g target-role"
-    test_assert 13
+    test_assert 13 0
 
     desc="$CIB_user: Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert 13
+    test_assert 13 0
 
     export CIB_user=niceguy
 
@@ -456,12 +456,12 @@ function test_acl_loop() {
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
-    test_assert 0
+    test_assert 0 0
 
     export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
-    test_assert 0
+    test_assert 0 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
@@ -470,7 +470,7 @@ function test_acl_loop() {
     export CIB_user=niceguy
     desc="$CIB_user: Replace - remove acls"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13
+    test_assert 13 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -478,7 +478,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - create resource"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13
+    test_assert 13 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
@@ -486,7 +486,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - modify attribute"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13
+    test_assert 13 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
@@ -494,7 +494,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - delete attribute"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13
+    test_assert 13 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
@@ -502,7 +502,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - create attribute"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13
+    test_assert 13 0
     rm -rf /tmp/$$.haxor.xml
 }
 
