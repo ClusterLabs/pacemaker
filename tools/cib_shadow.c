@@ -149,7 +149,7 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
-    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration"},
+    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration. Optional: --validate-with"},
     {"commit",  required_argument, NULL, 'C', "\tUpload the contents of the named shadow copy to the cluster"},
     {"delete",  required_argument, NULL, 'D', "\tDelete the contents of the named shadow copy"},
     {"reset",   required_argument, NULL, 'r', "\tRecreate the named shadow copy from the active cluster configuration"},
@@ -159,6 +159,7 @@ static struct crm_option long_options[] = {
     {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
     {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
     {"all",     no_argument, NULL, 'a', "\t\t(Advanced) Upload the entire CIB, including status, with --commit" },
+    {"validate-with",     required_argument, NULL, 'v', "(Advanced) Create an older configuration version" },
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "Create a blank shadow configuration:", pcmk_option_paragraph},
@@ -183,6 +184,7 @@ main(int argc, char **argv)
     int flag;
     int argerr = 0;
     static int command = '?';
+    const char *validation = NULL;
     char *shadow = NULL;
     char *shadow_file = NULL;
     gboolean full_upload = FALSE;
@@ -227,6 +229,9 @@ main(int argc, char **argv)
                         crm_exit(ENOENT);
                     }
                 }
+                break;
+            case 'v':
+                validation = optarg;
                 break;
             case 'e':
             case 'c':
@@ -386,6 +391,11 @@ main(int argc, char **argv)
 
         } else {
             output = createEmptyCib(1);
+            if(validation) {
+                crm_xml_add(output, XML_ATTR_VALIDATION, validation);
+            }
+            printf("Created new %s configuration\n",
+                   crm_element_value(output, XML_ATTR_VALIDATION));
         }
 
         rc = write_xml_file(output, shadow_file, FALSE);
