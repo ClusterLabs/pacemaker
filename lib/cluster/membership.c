@@ -83,9 +83,11 @@ remote_cache_refresh_helper(xmlNode *cib, const char *xpath, const char *field, 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *xml = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(xml != NULL, continue);
+        CRM_LOG_ASSERT(xml != NULL);
+        if(xml != NULL) {
+            remote = crm_element_value(xml, field);
+        }
 
-        remote = crm_element_value(xml, field);
         if (remote) {
             crm_trace("added %s to remote cache", remote);
             node = calloc(1, sizeof(crm_node_t));

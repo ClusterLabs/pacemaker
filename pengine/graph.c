@@ -76,6 +76,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     char *raw_task = NULL;
     int task = no_action;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Processing %s", old_uuid);
     if (old_uuid == NULL) {
         return NULL;
@@ -866,7 +867,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             parent = parent->parent;
         }
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
         g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
     }
 

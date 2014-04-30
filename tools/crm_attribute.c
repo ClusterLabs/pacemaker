@@ -316,10 +316,12 @@ main(int argc, char **argv)
         } else if (read_value != NULL) {
             fprintf(stdout, "%s\n", read_value);
         }
+        free(read_value);
     }
 
     if (rc == -EINVAL) {
         printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
+
     } else if (rc != pcmk_ok) {
         fprintf(stderr, "Error performing operation: %s\n", pcmk_strerror(rc));
     }

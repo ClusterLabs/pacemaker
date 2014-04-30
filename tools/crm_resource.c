@@ -409,11 +409,14 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
     static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
-
     char *xpath_string = NULL;
 
     CRM_ASSERT(value != NULL);
     *value = NULL;
+
+    if(the_cib == NULL) {
+        return -ENOTCONN;
+    }
 
     xpath_string = calloc(1, xpath_max);
     offset +=
@@ -440,6 +443,7 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    CRM_LOG_ASSERT(offset > 0);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
@@ -522,7 +526,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
         xmlNode *cib_top = NULL;
         const char *tag = crm_element_name(rsc->xml);
 
-        rc = cib->cmds->query(cib, "/cib", &cib_top,
+        cib->cmds->query(cib, "/cib", &cib_top,
                               cib_sync_call | cib_scope_local | cib_xpath | cib_no_children);
         value = crm_element_value(cib_top, "ignore_dtd");
         if (value != NULL) {
@@ -644,6 +648,7 @@ delete_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_
 
     crm_log_xml_debug(xml_obj, "Delete");
 
+    CRM_ASSERT(cib);
     rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
     if (rc == pcmk_ok) {
@@ -983,6 +988,10 @@ prefer_resource(const char *rsc_id, const char *host, cib_t * cib_conn)
         return -EINVAL;
     }
 
+    if(cib_conn == NULL) {
+        return -ENOTCONN;
+    }
+
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
 
     id = g_strdup_printf("cli-prefer-%s", rsc_id);
@@ -1046,6 +1055,10 @@ clear_resource(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * 
     int rc = pcmk_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
+
+    if(cib_conn == NULL) {
+        return -ENOTCONN;
+    }
 
     fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
 

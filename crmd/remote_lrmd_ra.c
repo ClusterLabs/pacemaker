@@ -473,7 +473,10 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 static void
 handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 {
-    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+    remote_ra_data_t *ra_data = NULL;
+
+    CRM_ASSERT(lrm_state);
+    ra_data = lrm_state->remote_ra_data;
 
     if (ra_data->migrate_status != takeover_complete) {
         /* only clear the status if this stop is not apart of a successful migration */
@@ -513,10 +516,10 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
             key += 7;
         }
 
-        if (safe_str_eq(tmp->key, "addr") || safe_str_eq(tmp->key, "server")) {
+        if (safe_str_eq(key, "addr") || safe_str_eq(key, "server")) {
             server = tmp->value;
         }
-        if (safe_str_eq(tmp->key, "port")) {
+        if (safe_str_eq(key, "port")) {
             port = atoi(tmp->value);
         }
     }

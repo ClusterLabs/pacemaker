@@ -151,7 +151,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_data_t *fsa_data = NULL;
     long long register_copy = fsa_input_register;
     long long new_actions = A_NOTHING;
-    enum crmd_fsa_state last_state = fsa_state;
+    enum crmd_fsa_state last_state;
 
     crm_trace("FSA invoked with Cause: %s\tState: %s",
               fsa_cause2string(cause), fsa_state2string(fsa_state));
@@ -173,7 +173,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
 
         fsa_data = get_message();
-        CRM_CHECK(fsa_data != NULL, continue);
+        if(fsa_data == NULL) {
+            continue;
+        }
 
         log_fsa_input(fsa_data);
 
@@ -447,6 +449,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 void
 log_fsa_input(fsa_data_t * stored_msg)
 {
+    CRM_ASSERT(stored_msg);
     crm_trace("Processing queued input %d", stored_msg->id);
     if (stored_msg->fsa_cause == C_CCM_CALLBACK) {
         crm_trace("FSA processing CCM callback from %s", stored_msg->origin);

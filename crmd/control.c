@@ -486,7 +486,6 @@ do_startup(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int was_error = 0;
-    int interval = 1;           /* seconds between DC heartbeats */
 
     crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
@@ -509,8 +508,6 @@ do_startup(long long action,
     shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
     wait_timer = calloc(1, sizeof(fsa_timer_t));
     recheck_timer = calloc(1, sizeof(fsa_timer_t));
-
-    interval = interval * 1000;
 
     if (election_trigger != NULL) {
         election_trigger->source_id = 0;

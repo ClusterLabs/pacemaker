@@ -368,7 +368,7 @@ process_ping_reply(xmlNode *reply)
                        remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"_",
                        digest, remote_cib);
 
-            if(remote_cib->children) {
+            if(remote_cib && remote_cib->children) {
                 /* Additional debug */
                 xml_calculate_changes(the_cib, remote_cib);
                 xml_log_changes(LOG_INFO, __FUNCTION__, remote_cib);

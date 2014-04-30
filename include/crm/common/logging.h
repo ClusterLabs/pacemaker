@@ -123,6 +123,9 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
+/* 'failure_action' MUST NOT be 'continue' as it will apply to the
+ * macro's do-while loop
+ */
 #  define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \

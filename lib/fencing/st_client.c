@@ -316,13 +316,16 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
 static void
 append_const_arg(const char *key, const char *value, char **arg_list)
 {
-    char *glib_sucks_key = strdup(key);
-    char *glib_sucks_value = strdup(value);
+    CRM_LOG_ASSERT(key && value);
+    if(key && value) {
+        char *glib_sucks_key = strdup(key);
+        char *glib_sucks_value = strdup(value);
 
-    append_arg(glib_sucks_key, glib_sucks_value, arg_list);
+        append_arg(glib_sucks_key, glib_sucks_value, arg_list);
 
-    free(glib_sucks_value);
-    free(glib_sucks_key);
+        free(glib_sucks_value);
+        free(glib_sucks_key);
+    }
 }
 
 static void
@@ -1266,10 +1269,11 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            CRM_CHECK(match != NULL, continue);
-
-            crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-            *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
+            CRM_LOG_ASSERT(match != NULL);
+            if(match != NULL) {
+                crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+                *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
+            }
         }
 
         freeXpathObject(xpathObj);
@@ -1651,11 +1655,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 static int
 stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 {
+    int rc = pcmk_ok;
     xmlNode *notify_msg = create_xml_node(NULL, __FUNCTION__);
     stonith_private_t *native = stonith->private;
 
     if (stonith->state != stonith_disconnected) {
-        int rc;
 
         crm_xml_add(notify_msg, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         if (enabled) {
@@ -1663,15 +1667,18 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         } else {
             crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
         }
+
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
             rc = -ECOMM;
+        } else {
+            rc = pcmk_ok;
         }
     }
 
     free_xml(notify_msg);
-    return pcmk_ok;
+    return rc;
 }
 
 static int

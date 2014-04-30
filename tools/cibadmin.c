@@ -61,7 +61,7 @@ typedef struct str_list_s {
     struct str_list_s *next;
 } str_list_t;
 
-char *obj_type = NULL;
+const char *obj_type = NULL;
 char *status = NULL;
 char *migrate_from = NULL;
 char *migrate_res = NULL;
@@ -203,8 +203,8 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     const char *source = NULL;
-    char *admin_input_xml = NULL;
-    char *admin_input_file = NULL;
+    const char *admin_input_xml = NULL;
+    const char *admin_input_file = NULL;
     gboolean dangerous_cmd = FALSE;
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
@@ -236,7 +236,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'A':
-                obj_type = strdup(optarg);
+                obj_type = optarg;
                 command_options |= cib_xpath;
                 break;
             case 'e':
@@ -298,15 +298,15 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
-                obj_type = strdup(optarg);
+                obj_type = optarg;
                 break;
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_xml = strdup(optarg);
+                admin_input_xml = optarg;
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_file = strdup(optarg);
+                admin_input_file = optarg;
                 break;
             case 'p':
                 admin_input_stdin = TRUE;
@@ -493,8 +493,6 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
-    free(admin_input_xml);
-    free(admin_input_file);
     flag = the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
 

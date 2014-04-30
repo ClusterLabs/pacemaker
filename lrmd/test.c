@@ -508,7 +508,9 @@ main(int argc, char **argv)
                 options.rsc_id = optarg;
                 break;
             case 'x':
-                options.cancel_call_id = atoi(optarg);
+                if(optarg) {
+                    options.cancel_call_id = atoi(optarg);
+                }
                 break;
             case 'P':
                 options.provider = optarg;
@@ -520,13 +522,19 @@ main(int argc, char **argv)
                 options.type = optarg;
                 break;
             case 'i':
-                options.interval = atoi(optarg);
+                if(optarg) {
+                    options.interval = atoi(optarg);
+                }
                 break;
             case 't':
-                options.timeout = atoi(optarg);
+                if(optarg) {
+                    options.timeout = atoi(optarg);
+                }
                 break;
             case 's':
-                options.start_delay = atoi(optarg);
+                if(optarg) {
+                    options.start_delay = atoi(optarg);
+                }
                 break;
             case 'k':
                 key = optarg;

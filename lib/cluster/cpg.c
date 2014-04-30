@@ -298,6 +298,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
         if (rc != BZ_OK) {
             crm_err("Decompression failed: %d", rc);
+            free(uncompressed);
             goto badmsg;
         }
 
@@ -575,7 +576,9 @@ send_cluster_text(int class, const char *data,
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);
-    memcpy(msg->sender.uname, local_name, msg->sender.size);
+    if(local_name && msg->sender.size) {
+        memcpy(msg->sender.uname, local_name, msg->sender.size);
+    }
 
     msg->size = 1 + strlen(data);
     msg->header.size = sizeof(AIS_Message) + msg->size;

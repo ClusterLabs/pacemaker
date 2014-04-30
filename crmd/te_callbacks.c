@@ -192,7 +192,8 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
         xmlXPathObject *op_match = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
+        CRM_LOG_ASSERT(match != NULL);
+        if(match == NULL) { continue; };
 
         op_id = ID(match);
 

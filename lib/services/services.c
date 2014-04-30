@@ -164,6 +164,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
             free(op->standard);
             op->standard = strdup("lsb");
         }
+        CRM_ASSERT(op->standard);
     }
 
     if (strcasecmp(op->standard, "ocf") == 0) {

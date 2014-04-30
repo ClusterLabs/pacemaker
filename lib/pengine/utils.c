@@ -984,14 +984,14 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         return;
     }
 
+    CRM_ASSERT(node->details);
     crm_trace("%s%s%sNode %s: (weight=%d, fixed=%s)",
               pre_text == NULL ? "" : pre_text,
               pre_text == NULL ? "" : ": ",
-              node->details ==
-              NULL ? "error " : node->details->online ? "" : "Unavailable/Unclean ",
+              node->details->online ? "" : "Unavailable/Unclean ",
               node->details->uname, node->weight, node->fixed ? "True" : "False");
 
-    if (details && node != NULL && node->details != NULL) {
+    if (details) {
         char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
 

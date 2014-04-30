@@ -280,6 +280,7 @@ systemd_unit_metadata(const char *name)
     char *desc = NULL;
 
     if (systemd_unit_by_name(name, &path)) {
+        CRM_ASSERT(path);
         desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description");
     } else {
         desc = g_strdup_printf("systemd unit file for %s", name);
@@ -306,6 +307,7 @@ systemd_unit_metadata(const char *name)
                            "  <special tag=\"systemd\">\n"
                            "  </special>\n" "</resource-agent>\n", name, desc, name);
     free(desc);
+    free(path);
     return meta;
 }
 

@@ -123,6 +123,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         offset += snprintf(xpath_string + offset, xpath_max - offset, "@name='%.128s'", attr_name);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    CRM_LOG_ASSERT(offset > 0);
 
     rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
                          cib_sync_call | cib_scope_local | cib_xpath, user_name);

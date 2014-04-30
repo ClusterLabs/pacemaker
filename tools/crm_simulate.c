@@ -450,7 +450,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
-            rc = sscanf(spec, "%*[^=]=%d", (int *)&op->rc);
+            sscanf(spec, "%*[^=]=%d", (int *)&op->rc);
 
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
@@ -516,12 +516,12 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
         CRM_ASSERT(rc == pcmk_ok);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
-        rc = global_cib->cmds->delete(global_cib, xpath, NULL,
+        global_cib->cmds->delete(global_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
                  XML_TAG_TRANSIENT_NODEATTRS);
-        rc = global_cib->cmds->delete(global_cib, xpath, NULL,
+        global_cib->cmds->delete(global_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
         free_xml(cib_node);
@@ -586,10 +586,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
                 node_mode = "OFFLINE (maintenance)";
             }
 
-
-
         } else if (node->details->online) {
-            node_mode = "online";
             if (is_container_remote_node(node)) {
                 online_remote_containers = add_list_element(online_remote_containers, node_name);
             } else if (is_baremetal_remote_node(node)) {
@@ -601,7 +598,6 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             continue;
 
         } else {
-            node_mode = "OFFLINE";
             if (is_baremetal_remote_node(node)) {
                 offline_remote_nodes = add_list_element(offline_remote_nodes, node_name);
             } else if (is_container_remote_node(node)) {
@@ -906,7 +902,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
         offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
-
+    CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 

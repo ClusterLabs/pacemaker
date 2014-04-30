@@ -191,6 +191,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     }
     free_xml(cmd);
     free(admin_uuid);
+    free(name);
     return rc > 0 ? 0 : rc;
 }
 

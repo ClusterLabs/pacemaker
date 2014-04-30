@@ -1152,7 +1152,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 static void
 allocate_resources(pe_working_set_t * data_set)
 {
-    GListPtr gIter = data_set->resources;
+    GListPtr gIter = NULL;
 
     if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Force remote connection resources to be allocated first. This
@@ -1802,7 +1802,7 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
 static void
 expand_list(GListPtr list, char **rsc_list, char **node_list)
 {
-    GListPtr gIter = list;
+    GListPtr gIter = NULL;
     const char *uname = NULL;
     const char *rsc_id = NULL;
     const char *last_rsc_id = NULL;
@@ -1825,12 +1825,21 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
         *node_list = NULL;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
         notify_entry_t *entry = (notify_entry_t *) gIter->data;
 
-        CRM_CHECK(entry != NULL, continue);
-        CRM_CHECK(entry->rsc != NULL, continue);
-        CRM_CHECK(node_list == NULL || entry->node != NULL, continue);
+        CRM_LOG_ASSERT(entry != NULL);
+        CRM_LOG_ASSERT(entry && entry->rsc != NULL);
+
+        if(entry == NULL || entry->rsc == NULL) {
+            continue;
+        }
+
+        /* Uh, why? */
+        CRM_LOG_ASSERT(node_list == NULL || entry->node != NULL);
+        if(node_list != NULL && entry->node == NULL) {
+            continue;
+        }
 
         uname = NULL;
         rsc_id = entry->rsc->id;
@@ -1895,6 +1904,7 @@ pe_notify(resource_t * rsc, node_t * node, action_t * op, action_t * confirm,
         return NULL;
     }
 
+    CRM_CHECK(rsc != NULL, return NULL);
     CRM_CHECK(node != NULL, return NULL);
 
     if (node->details->online == FALSE) {

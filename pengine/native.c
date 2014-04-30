@@ -98,6 +98,9 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
 
     if (required > remaining) {
+        CRM_ASSERT(data->rsc);
+        CRM_ASSERT(data->node);
+
         pe_rsc_debug(data->rsc,
                      "Node %s has no enough %s for resource %s: required=%d remaining=%d",
                      data->node->details->uname, (char *)key, data->rsc->id, required, remaining);
@@ -283,7 +286,9 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
 
     g_hash_table_iter_init(&iter, list1);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        CRM_CHECK(node != NULL, continue);
+        CRM_LOG_ASSERT(node != NULL);
+        if(node == NULL) { continue; };
+
         score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
         new_score = merge_weights(factor * score, node->weight);
 
@@ -607,6 +612,7 @@ is_op_dup(resource_t * rsc, const char *name, const char *interval)
     const char *value = NULL;
     xmlNode *operation = NULL;
 
+    CRM_ASSERT(rsc);
     for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
          operation = __xml_next(operation)) {
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
@@ -660,6 +666,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         return;
     }
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Creating recurring action %s for %s in role %s on %s",
                  ID(operation), rsc->id, role2text(rsc->next_role),
                  node ? node->details->uname : "n/a");
@@ -1152,6 +1159,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
+    CRM_ASSERT(rsc);
     chosen = rsc->allocated_to;
     if (chosen != NULL && rsc->next_role == RSC_ROLE_UNKNOWN) {
         rsc->next_role = RSC_ROLE_STARTED;
@@ -1310,9 +1318,10 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     /* if we are stuck in a partial migration, where the target
      * of the partial migration no longer matches the chosen target.
      * A full stop/start is required */
-    if (rsc->partial_migration_target && (rsc->partial_migration_target->details != chosen->details)) {
+    if (rsc->partial_migration_target && (chosen == NULL || rsc->partial_migration_target->details != chosen->details)) {
         pe_rsc_trace(rsc, "Not allowing partial migration to continue. %s", rsc->id);
         allow_migrate = FALSE;
+
     } else if (is_moving == FALSE ||
                is_not_set(rsc->flags, pe_rsc_managed) ||
                is_set(rsc->flags, pe_rsc_failed) ||
@@ -1685,6 +1694,8 @@ native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
 {
     enum filter_colocation_res filter_results;
 
+    CRM_ASSERT(rsc_lh);
+    CRM_ASSERT(rsc_rh);
     filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint);
 
     switch (filter_results) {
@@ -2055,6 +2066,7 @@ native_expand(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
 
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
@@ -2324,22 +2336,22 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if (rsc->next_role > RSC_ROLE_SLAVE && rsc->role < rsc->next_role) {
         gboolean allowed = FALSE;
 
-        CRM_CHECK(next != NULL,);
+        CRM_LOG_ASSERT(next);
         if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
             && rsc->role > RSC_ROLE_STOPPED) {
             if (is_set(rsc->flags, pe_rsc_failed)) {
                 log_change("Recover %s\t(%s %s)",
-                           rsc->id, role2text(rsc->role), next->details->uname);
+                           rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
 
             } else if (is_set(rsc->flags, pe_rsc_reload)) {
                 log_change("Reload  %s\t(%s %s)", rsc->id, role2text(rsc->role),
-                           next->details->uname);
+                           next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
 
             } else {
                 log_change("Restart %s\t(%s %s)",
-                           rsc->id, role2text(rsc->role), next->details->uname);
+                           rsc->id, role2text(rsc->role), next?next->details->uname:NULL);
                 STOP_SANITY_ASSERT(__LINE__);
             }
         }
@@ -2351,7 +2363,9 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         log_change("Promote %s\t(%s -> %s %s%s)",
                    rsc->id,
                    role2text(rsc->role),
-                   role2text(rsc->next_role), next->details->uname, allowed ? "" : " - blocked");
+                   role2text(rsc->next_role),
+                   next?next->details->uname:NULL,
+                   allowed ? "" : " - blocked");
     }
 }
 
@@ -2360,6 +2374,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 {
     GListPtr gIter = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
@@ -2397,6 +2412,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 {
     action_t *start = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s on %s %d", rsc->id, next ? next->details->uname : "N/A", optional);
     start = start_action(rsc, next, TRUE);
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
@@ -2413,9 +2429,9 @@ PromoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t 
     gboolean runnable = TRUE;
     GListPtr action_list = NULL;
 
-    pe_rsc_trace(rsc, "%s on %s", rsc->id, next ? next->details->uname : "N/A");
-
+    CRM_ASSERT(rsc);
     CRM_CHECK(next != NULL, return FALSE);
+    pe_rsc_trace(rsc, "%s on %s", rsc->id, next->details->uname);
 
     key = start_key(rsc);
     action_list = find_actions_exact(rsc->actions, key, next);
@@ -2456,6 +2472,7 @@ DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 {
     GListPtr gIter = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
 
 /* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
@@ -2471,6 +2488,7 @@ DemoteRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 gboolean
 RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
+    CRM_ASSERT(rsc);
     crm_err("%s on %s", rsc->id, next ? next->details->uname : "N/A");
     CRM_CHECK(FALSE, return FALSE);
     return FALSE;
@@ -2479,6 +2497,7 @@ RoleError(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t *
 gboolean
 NullOp(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
     return FALSE;
 }

@@ -1816,7 +1816,7 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
     return -1;
 }
 
-void
+int
 crm_help(char cmd, int exit_code)
 {
     int i = 0;
@@ -1889,9 +1889,7 @@ crm_help(char cmd, int exit_code)
     fprintf(stream, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 
   out:
-    if (exit_code >= 0) {
-        crm_exit(exit_code);
-    }
+    return crm_exit(exit_code);
 }
 
 void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,

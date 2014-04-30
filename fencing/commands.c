@@ -114,11 +114,13 @@ static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char 
 static gboolean
 is_action_required(const char *action, stonith_device_t *device)
 {
-    if (device->required_actions == NULL) {
+    if(device == NULL) {
         return FALSE;
-    }
 
-    if (strstr(device->required_actions, action)) {
+    } else if (device->required_actions == NULL) {
+        return FALSE;
+
+    } else if (strstr(device->required_actions, action)) {
         return TRUE;
     }
 
@@ -588,7 +590,8 @@ read_action_metadata(stonith_device_t *device)
         const char *required = NULL;
         xmlNode *match = getXpathResult(xpath, lpc);
 
-        CRM_CHECK(match != NULL, continue);
+        CRM_LOG_ASSERT(match != NULL);
+        if(match == NULL) { continue; };
 
         on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
@@ -1565,7 +1568,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, device->id, output);
+        log_operation(cmd, rc, pid, cmd->device, output);
 
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */

@@ -564,7 +564,8 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
                     }
                     crm_debug("Attr %s is not reloadable", value);
                     copy = strdup(value);
-                    CRM_CHECK(copy != NULL, continue);
+                    CRM_LOG_ASSERT(copy != NULL);
+                    if(copy == NULL) { continue; };
                     reload->restart_list = g_list_append(reload->restart_list, copy);
                 }
             }
@@ -621,7 +622,9 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
 
         int start = len;
 
-        CRM_CHECK(param != NULL, continue);
+        CRM_LOG_ASSERT(param != NULL);
+        if(param == NULL) {  continue; };
+
         value = g_hash_table_lookup(op->params, param);
         if (value != NULL) {
             crm_xml_add(restart, param, value);
@@ -1031,12 +1034,14 @@ static gboolean
 cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, gboolean remove)
 {
     int rc = pcmk_ok;
+    char *local_key = NULL;
     struct recurring_op_s *pending = NULL;
 
     CRM_CHECK(op != 0, return FALSE);
     CRM_CHECK(rsc_id != NULL, return FALSE);
     if (key == NULL) {
-        key = make_stop_id(rsc_id, op);
+        local_key = make_stop_id(rsc_id, op);
+        key = local_key;
     }
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
@@ -1048,6 +1053,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
         if (pending->cancelled) {
             crm_debug("Operation %s already cancelled", key);
+            free(local_key);
             return FALSE;
         }
 
@@ -1055,6 +1061,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
     } else {
         crm_info("No pending op found for %s", key);
+        free(local_key);
         return FALSE;
     }
 
@@ -1062,6 +1069,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type, pending->interval);
     if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
+        free(local_key);
         return TRUE;
     }
 
@@ -1075,6 +1083,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
      * Not removing the entry from pending_ops will block
      * the node from shutting down
      */
+    free(local_key);
     return FALSE;
 }
 
@@ -1539,7 +1548,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     const char *transition = NULL;
 
-    CRM_LOG_ASSERT(rsc_id != NULL);
+    CRM_ASSERT(rsc_id != NULL);
 
     op = calloc(1, sizeof(lrmd_event_data_t));
     op->type = lrmd_event_exec_complete;
@@ -1641,7 +1650,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
-        CRM_LOG_ASSERT(rsc_id != NULL);
+        CRM_ASSERT(rsc_id != NULL);
         op->rsc_id = strdup(rsc_id);
     }
     if (to_sys == NULL) {

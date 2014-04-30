@@ -587,13 +587,22 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 free(pid_file);
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 xml_file = strdup(optarg);
                 one_shot = TRUE;
                 break;
             case 'h':
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 as_html_file = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
@@ -641,7 +650,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                return crm_help(flag, EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -657,7 +666,7 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        return crm_help('?', EX_USAGE);
     }
 
     if (one_shot) {
@@ -670,7 +679,7 @@ main(int argc, char **argv)
         if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
-            crm_help('?', EX_USAGE);
+            return crm_help('?', EX_USAGE);
         }
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
@@ -2198,9 +2207,11 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
 
     crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
 
+    if(rsc) {
+        setenv("CRM_notify_rsc", rsc, 1);
+    }
     setenv("CRM_notify_recipient", external_recipient, 1);
     setenv("CRM_notify_node", node, 1);
-    setenv("CRM_notify_rsc", rsc, 1);
     setenv("CRM_notify_task", task, 1);
     setenv("CRM_notify_desc", desc, 1);
     setenv("CRM_notify_rc", rc_s, 1);

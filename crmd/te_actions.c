@@ -659,7 +659,10 @@ notify_crmd(crm_graph_t * graph)
     switch (graph->completion_action) {
         case tg_stop:
             type = "stop";
-            /* fall through */
+            if (fsa_state == S_TRANSITION_ENGINE) {
+                event = I_TE_SUCCESS;
+            }
+            break;
         case tg_done:
             type = "done";
             if (fsa_state == S_TRANSITION_ENGINE) {

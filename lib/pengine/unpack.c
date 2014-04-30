@@ -1541,7 +1541,9 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             if (childnode->details == node->details) {
                 /* ->find_rsc() because we might be a cloned group */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                if(rsc) {
+                    pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                }
             }
 
             /* Keep this block, it means we'll do the right thing if
@@ -1710,6 +1712,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                   enum action_fail_response on_fail,
                   xmlNode * migrate_op, pe_working_set_t * data_set)
 {
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                  rsc->id, role2text(rsc->role), node->details->uname, fail2text(on_fail));
 
@@ -1871,6 +1874,7 @@ process_recurring(node_t * node, resource_t * rsc,
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s: Start index %d, stop index = %d", rsc->id, start_index, stop_index);
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -2204,6 +2208,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
     }
 
+    CRM_LOG_ASSERT(offset > 0);
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
@@ -2304,6 +2309,7 @@ unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_
 {
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
+    CRM_ASSERT(rsc);
     if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
         int stop_id = 0;
         int migrate_id = 0;
@@ -2392,6 +2398,7 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
+    CRM_ASSERT(rsc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2510,6 +2517,7 @@ determine_op_status(
 
     bool is_probe = FALSE;
 
+    CRM_ASSERT(rsc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2729,6 +2737,7 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
 {
     gboolean clear_past_failure = FALSE;
 
+    CRM_ASSERT(rsc);
     if (rc == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = TRUE;
 
@@ -3110,15 +3119,16 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             }
 
             this_node = pe_find_node(data_set->nodes, uname);
-            CRM_CHECK(this_node != NULL, continue);
-
             if (is_remote_node(this_node)) {
                 determine_remote_online_status(this_node);
             } else {
                 determine_online_status(node_state, this_node, data_set);
             }
 
-            if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if(this_node == NULL) {
+                CRM_LOG_ASSERT(this_node != NULL);
+
+            } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith

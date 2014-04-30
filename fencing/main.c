@@ -460,9 +460,10 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
         const char *standard = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
-
-        standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+        CRM_LOG_ASSERT(match != NULL);
+        if(match != NULL) {
+            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+        }
 
         if (safe_str_neq(standard, "stonith")) {
             continue;
@@ -507,9 +508,8 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
-
-        if (crm_element_value(match, XML_DIFF_MARKER)) {
+        CRM_LOG_ASSERT(match != NULL);
+        if (match && crm_element_value(match, XML_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
             const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
@@ -536,8 +536,6 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_CHECK(match != NULL, continue);
 
         handle_topology_change(match, TRUE);
     }

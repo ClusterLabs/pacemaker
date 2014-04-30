@@ -480,7 +480,7 @@ main(int argc, char **argv)
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
                     shadow, pcmk_strerror(rc));
-            return rc;
+            goto done;
         }
         shadow_teardown(shadow);
         free_xml(input);
@@ -607,8 +607,10 @@ print_xml_diff(FILE * where, xmlNode * diff)
             fprintf(where, " --- \n");
         }
 
-        CRM_CHECK(dump_data_element(0, &buffer, &max, &len, "-", child, TRUE) >= 0, continue);
-        fprintf(where, "%s", buffer);
+        dump_data_element(0, &buffer, &max, &len, "-", child, TRUE);
+        if(len) {
+            fprintf(where, "%s", buffer);
+        }
     }
 
     is_first = TRUE;
@@ -624,7 +626,9 @@ print_xml_diff(FILE * where, xmlNode * diff)
             fprintf(where, " +++ \n");
         }
 
-        CRM_CHECK(dump_data_element(0, &buffer, &max, &len, "+", child, TRUE) >= 0, continue);
-        fprintf(where, "%s", buffer);
+        dump_data_element(0, &buffer, &max, &len, "+", child, TRUE);
+        if(len) {
+            fprintf(where, "%s", buffer);
+        }
     }
 }

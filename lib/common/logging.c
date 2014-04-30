@@ -215,6 +215,8 @@ set_format_string(int method, const char *daemon)
     } else {
         offset += snprintf(fmt + offset, FMT_MAX - offset, "\t%%b");
     }
+
+    CRM_LOG_ASSERT(offset > 0);
     qb_log_format_set(method, fmt);
 }
 

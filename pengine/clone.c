@@ -399,6 +399,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
     node_t *local_node = NULL;
     GHashTable *backup = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Processing %s %d", rsc->id, all_coloc);
 
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
@@ -1507,6 +1508,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     gboolean any_created = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
+    CRM_ASSERT(rsc);
     get_clone_variant_data(clone_data, rsc);
 
     rsc->children = g_list_sort(rsc->children, sort_rsc_id);
@@ -1529,9 +1531,11 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         /* Try whoever we plan on starting there */
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
+            node_t *local_node = NULL;
             resource_t *child_rsc = (resource_t *) gIter->data;
-            node_t *local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
+            CRM_ASSERT(child_rsc);
+            local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
             if (local_node == NULL) {
                 continue;
             }
@@ -1542,6 +1546,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
 
         /* Fall back to the first clone instance */
+        CRM_ASSERT(rsc->children);
         child = rsc->children->data;
         return child->cmds->create_probe(child, node, complete, force, data_set);
     }

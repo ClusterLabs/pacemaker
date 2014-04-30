@@ -102,8 +102,9 @@ gboolean too_many_st_failures(void);
 void st_fail_count_reset(const char * target);
 void crmd_peer_down(crm_node_t *peer, bool full);
 
-#  define fsa_register_cib_callback(id, flag, data, fn) do {              \
-        fsa_cib_conn->cmds->register_callback(                          \
+#  define fsa_register_cib_callback(id, flag, data, fn) do {            \
+    CRM_ASSERT(fsa_cib_conn);                                           \
+    fsa_cib_conn->cmds->register_callback(                              \
             fsa_cib_conn, id, 10 * (1 + crm_active_peers()),            \
             flag, data, #fn, fn);                                       \
     } while(0)

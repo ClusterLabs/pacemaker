@@ -171,6 +171,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
 
+    CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
@@ -216,6 +217,7 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
                            ticket_id);
     }
 
+    CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
 
@@ -326,6 +328,7 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         free(long_key);
     }
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    CRM_LOG_ASSERT(offset > 0);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
@@ -463,6 +466,7 @@ ticket_warning(const char *ticket_id, const char *action)
     offset += snprintf(warning + offset, text_max - offset, 
                        "please specify --force.");
 
+    CRM_LOG_ASSERT(offset > 0);
     fprintf(stdout, "%s\n", warning);
 
     free(warning);
@@ -877,8 +881,6 @@ main(int argc, char **argv)
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;
         gboolean details = FALSE;
-
-        rc = pcmk_ok;
 
         if (ticket_cmd == 'L') {
             details = TRUE;

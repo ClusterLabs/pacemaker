@@ -52,8 +52,13 @@ static struct crm_option long_options[] = {
 static void
 log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
-    char *start = crm_time_as_string(dtp->start, flags);
-    char *end = crm_time_as_string(dtp->end, flags);
+    char *end = NULL;
+    char *start = NULL;
+
+    if(dtp) {
+        start = crm_time_as_string(dtp->start, flags);
+        end = crm_time_as_string(dtp->end, flags);
+    }
 
     if (log_level < LOG_CRIT) {
         printf("Period: %s to %s\n", start, end);

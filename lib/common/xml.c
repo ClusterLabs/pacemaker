@@ -200,13 +200,15 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         if(buffer) {                                                    \
             rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
         }                                                               \
-        if(rc < 0) {                                                    \
-            crm_perror(LOG_ERR, "snprintf failed");                     \
+        if(buffer && rc < 0) {                                          \
+            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
-            return;                                                     \
         } else if(rc >= ((max) - (offset))) {                           \
-            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                             \
-            (buffer) = realloc((buffer), (max) + 1);                    \
+            char *tmp = NULL;                                           \
+            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
+            tmp = realloc((buffer), (max) + 1);                         \
+            CRM_ASSERT(tmp);                                            \
+            (buffer) = tmp;                                             \
         } else {                                                        \
             offset += rc;                                               \
             break;                                                      \
@@ -671,6 +673,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "]");
             }
 
+            CRM_LOG_ASSERT(offset > 0);
             acl->xpath = strdup(buffer);
             crm_trace("Built xpath: %s", acl->xpath);
         }
@@ -2600,6 +2603,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
             if(name) {
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
             }
+            CRM_LOG_ASSERT(offset > 0);
 
             /* Walk the tree upwards looking for xml_acl_* flags
              * - Creating an attribute requires write permissions for the node
@@ -2814,8 +2818,7 @@ free_xml(xmlNode * child)
             return;
 
         } else {
-
-            if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
+            if(doc && TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
 
@@ -3039,7 +3042,6 @@ decompress_file(const char *filename)
     }
 
     buffer[length] = '\0';
-    read_len = length;
 
     if (rc != BZ_STREAM_END) {
         crm_err("Couldnt read compressed xml from file");
@@ -3388,6 +3390,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     char *p_value = NULL;
     const char *p_name = NULL;
 
+    CRM_ASSERT(buffer != NULL);
     if (attr == NULL || attr->children == NULL) {
         return;
     }
@@ -3404,7 +3407,6 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
 {
     int max = 0;
     int offset = 0;
-    char *buffer = NULL;
     const char *name = NULL;
     const char *hidden = NULL;
 
@@ -3418,6 +3420,8 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     name = crm_element_name(data);
 
     if(is_set(options, xml_log_option_open)) {
+        char *buffer = NULL;
+
         insert_prefix(options, &buffer, &offset, &max, depth);
         if(data->type == XML_COMMENT_NODE) {
             buffer_print(buffer, max, offset, "<!--");
@@ -3465,7 +3469,6 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
         free(buffer);
-        buffer = NULL; /* Reset the buffer */
     }
 
     if(data->type == XML_COMMENT_NODE) {
@@ -3481,17 +3484,16 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
             __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options|xml_log_option_open|xml_log_option_close);
         }
-        free(buffer);
-        buffer = NULL; /* Reset the buffer */
     }
 
     if(is_set(options, xml_log_option_close)) {
+        char *buffer = NULL;
+
         insert_prefix(options, &buffer, &offset, &max, depth);
         buffer_print(buffer, max, offset, "</%s>", name);
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
         free(buffer);
-        buffer = NULL; /* Reset the buffer */
     }
 }
 
@@ -5484,6 +5486,7 @@ validate_xml_verbose(xmlNode * xml_blob)
     free_xml(xml);
 
     unlink(filename);
+    free(filename);
 
     return rc;
 }
@@ -5918,6 +5921,8 @@ expand_idref(xmlNode * input, xmlNode * top)
         xpath_string = calloc(1, xpath_max);
 
         offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+        CRM_LOG_ASSERT(offset > 0);
+
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
             char *nodePath = (char *)xmlGetNodePath(top);
@@ -5988,11 +5993,12 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            CRM_CHECK(match != NULL, continue);
-
-            matchNodePath = (char *)xmlGetNodePath(match);
-            do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
-            free(matchNodePath);
+            CRM_LOG_ASSERT(match != NULL);
+            if(match != NULL) {
+                matchNodePath = (char *)xmlGetNodePath(match);
+                do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
+                free(matchNodePath);
+            }
         }
         crm_log_xml_explicit(xml_obj, "Bad Input");
 

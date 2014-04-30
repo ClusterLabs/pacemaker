@@ -926,7 +926,6 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
     GListPtr gIter = NULL;
     GListPtr match_L = NULL;
 
-    int score_f = 0;
     gboolean do_and = TRUE;
     gboolean accept = TRUE;
     gboolean raw_score = TRUE;
@@ -946,10 +945,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
     }
 
     score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
-    if (score != NULL) {
-        score_f = char2score(score);
-
-    } else {
+    if (score == NULL) {
         score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
         if (score == NULL) {
             score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
@@ -989,6 +985,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        int score_f = 0;
         node_t *node = (node_t *) gIter->data;
 
         accept = test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now);

@@ -95,8 +95,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
             crm_trace("Got %d characters starting with %.20s", rc, buf);
             buf[rc] = 0;
             data = realloc(data, len + rc + 1);
-            sprintf(data + len, "%s", buf);
-            len += rc;
+            len += sprintf(data + len, "%s", buf);
+
         } else if (errno != EINTR) {
             /* error or EOF
              * Cleanup happens in pipe_done()
@@ -107,9 +107,9 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
 
     } while (rc == buf_read_len || rc < 0);
 
-    if (data != NULL && is_stderr) {
+    if (is_stderr) {
         op->stderr_data = data;
-    } else if (data != NULL) {
+    } else {
         op->stdout_data = data;
     }
 
