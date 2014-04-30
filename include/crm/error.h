@@ -35,6 +35,7 @@
 #  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+            abort(); /* Redundant but it makes analyzers like coverity and clang happy */ \
 	}								\
     } while(0)
 
