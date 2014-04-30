@@ -35,9 +35,9 @@ halib_PROGRAMS	= cib cibmon
 if BUILD_HELP
 man8_MANS =
 %.8:	%
-	echo Creating $@
+	echo "  MAN      $@"
 	chmod a+x $(top_builddir)/cib/$<
-	$(top_builddir)/cib/$< --help
+	if $(AM_V_P); then $(top_builddir)/cib/$< --help; fi
 	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
 endif
 

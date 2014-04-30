@@ -46,6 +46,7 @@ versions:
 	echo "Available: $(RNG_versions)"
 
 versions.rng: Makefile.am
+	echo "  RNG      $@"
 	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
 	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
 	echo "  <start>" >> $@
@@ -68,12 +69,13 @@ versions.rng: Makefile.am
 	echo "   </interleave>" >> $@
 	echo "  </start>" >> $@
 	echo "</grammar>" >> $@
-	echo "Built $@"
 
 pacemaker.rng: pacemaker-$(RNG_max).rng
+	echo "  RNG      $@"
 	cp $(top_builddir)/xml/$< $@
 
 pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am 
+	echo "  RNG      $@"
 	echo "<?xml version='1.0' encoding='UTF-8'?>" > $@
 	echo "<grammar xmlns='http://relaxng.org/ns/structure/1.0' datatypeLibrary='http://www.w3.org/2001/XMLSchema-datatypes'>" >> $@
 	echo "  <start>" >> $@
@@ -90,7 +92,6 @@ pacemaker-%.rng: $(RNG_files) best-match.sh Makefile.am
 	echo "    </element>" >> $@
 	echo "  </start>" >> $@
 	echo "</grammar>" >> $@
-	echo "Built $@"
 
 files_next = $(shell echo $(wildcard *-next.rng) | sed 's/-next.rng//g')
 files_max = $(shell echo $(wildcard *-$(RNG_max).rng) | sed 's/-[0-9][0-9.]*.rng//g')

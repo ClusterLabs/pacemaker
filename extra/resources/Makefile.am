@@ -35,15 +35,20 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			SystemHealth \
 			remote
 
+pcmk_quiet = $(pcmk_quiet_@AM_V@)
+pcmk_quiet_ = $(pcmk_quiet_@AM_DEFAULT_V@)
+pcmk_quiet_0 = 2>/dev/null
+
 if BUILD_XML_HELP
 man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
 
 %.xml:	%
-	echo Building $< manpage
-	OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
+	echo "  DBOOK    $@"
+	OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@ $(pcmk_quiet)
 
 ocf_pacemaker_%.7:	%.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/extra/resources/$<
+	echo "  MAN      $@"
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/extra/resources/$< $(pcmk_quiet)
 endif
 
 clean-generic:

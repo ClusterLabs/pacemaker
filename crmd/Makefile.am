@@ -53,11 +53,17 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 if BUILD_XML_HELP
 man7_MANS =	crmd.7
 
+pcmk_quiet = $(pcmk_quiet_@AM_V@)
+pcmk_quiet_ = $(pcmk_quiet_@AM_DEFAULT_V@)
+pcmk_quiet_0 = 2>/dev/null
+
 %.xml:	%
+	echo "  DBOOK    $@"
 	$(top_builddir)/crmd/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
 
 %.7:	%.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+	echo "  MAN      $@"
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$< $(pcmk_quiet)
 endif
 
 clean-generic:

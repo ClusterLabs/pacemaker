@@ -36,9 +36,9 @@ man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 endif
 
 %.8:	%
-	echo Creating $@
+	echo "  MAN      $@"
 	chmod a+x $(top_builddir)/lrmd/$<
-	$(top_builddir)/lrmd/$< --help
+	if $(AM_V_P); then $(top_builddir)/lrmd/$< --help; fi
 	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/lrmd/$<
 
 lrmd_SOURCES	= main.c lrmd.c

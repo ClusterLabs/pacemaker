@@ -142,10 +142,11 @@ ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
 
+# https://www.gnu.org/software/automake/manual/html_node/Automake-silent_002drules-Option.html
 %.8:	% crm_attribute
-	echo Creating $@
+	echo "  MAN      $@"
 	chmod a+x $(top_builddir)/tools/$<
-	$(top_builddir)/tools/$< --help
+	if $(AM_V_P); then $(top_builddir)/tools/$< --help; fi
 	PATH=$(top_builddir)/tools:$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:

@@ -42,9 +42,9 @@ pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/
 pacemakerd_LDFLAGS	= $(CLUSTERLIBS)
 
 %.8:	%
-	echo Creating $@
+	echo "  MAN      $@"
 	chmod a+x $(top_builddir)/mcp/$<
-	$(top_builddir)/mcp/$< --help
+	if $(AM_V_P); then $(top_builddir)/mcp/$< --help; fi
 	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/mcp/$<
 
 clean-generic:

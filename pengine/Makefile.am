@@ -43,16 +43,22 @@ lib_LTLIBRARIES	= libpengine.la
 ## binary progs
 halib_PROGRAMS	= pengine
 
+pcmk_quiet = $(pcmk_quiet_@AM_V@)
+pcmk_quiet_ = $(pcmk_quiet_@AM_DEFAULT_V@)
+pcmk_quiet_0 = 2>/dev/null
+
 man7_MANS =
 
 if BUILD_XML_HELP
 man7_MANS +=	pengine.7
 
 pengine.xml:	pengine
+	echo "  DBOOK    $@"
 	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
 
 pengine.7:	pengine.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
+	echo "  MAN      $@"
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$< $(pcmk_quiet)
 endif
 
 ## SOURCES
