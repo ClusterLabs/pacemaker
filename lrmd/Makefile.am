@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-MAINTAINERCLEANFILES = Makefile.in
+include $(top_srcdir)/Makefile.common
 
 testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
 test_SCRIPTS		= regression.py
@@ -30,16 +30,6 @@ sbin_PROGRAMS	 = pacemaker_remoted
 if BUILD_SYSTEMD
 systemdunit_DATA = pacemaker_remote.service
 endif
-
-if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8)
-endif
-
-%.8:	%
-	echo "  MAN      $@"
-	chmod a+x $(top_builddir)/lrmd/$<
-	if $(AM_V_P); then $(top_builddir)/lrmd/$< --help; fi
-	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/lrmd/$<
 
 lrmd_SOURCES	= main.c lrmd.c
 lrmd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\

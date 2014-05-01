@@ -15,10 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
-
-INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl
+include $(top_srcdir)/Makefile.common
 
 EXTRA_DIST	= cib.pam
 
@@ -31,15 +28,6 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
-
-if BUILD_HELP
-man8_MANS =
-%.8:	%
-	echo "  MAN      $@"
-	chmod a+x $(top_builddir)/cib/$<
-	if $(AM_V_P); then $(top_builddir)/cib/$< --help; fi
-	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
-endif
 
 ## SOURCES
 noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h

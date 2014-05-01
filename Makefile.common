@@ -1,0 +1,73 @@
+# Not all current distros support AM_V_P
+# https://www.gnu.org/software/automake/manual/html_node/Automake-silent_002drules-Option.html
+
+V ?= $(AM_DEFAULT_VERBOSITY)
+
+PCMK_V = $(pcmk__v_$(V))
+pcmk__v_0 = :
+pcmk__v_1 =
+
+PCMK_quiet = $(pcmk_quiet_$(V))
+pcmk_quiet_0 = >/dev/null 2>&1
+pcmk_quiet_1 = 
+
+AM_V_XSL = $(am__v_XSL_$(V))
+am__v_XSL_0 = @echo "  XSL     " $@;
+am__v_XSL_1 = 
+
+AM_V_MAN = $(am__v_MAN_$(V))
+am__v_MAN_0 = @echo "  MAN     " $@;
+am__v_MAN_1 = 
+
+AM_V_ASCII = $(am__v_ASCII_$(V))
+am__v_ASCII_0 = @echo "  ASCII   " $@;
+am__v_ASCII_1 = 
+
+AM_V_PUB = $(am__v_PUB_$(V))
+am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
+am__v_PUB_1 = 
+
+MAINTAINERCLEANFILES	= Makefile.in
+
+AM_CPPFLAGS		= -I$(top_builddir)/include -I$(top_srcdir)/include   \
+			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
+
+if BUILD_HELP
+man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
+endif
+
+%.8:	%
+	chmod a+x $(abs_builddir)/$<
+	$(PCMK_V) $(abs_builddir)/$< --help
+	$(AM_V_MAN)$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+
+%.xml:  %
+	$(AM_V_GEN)$(abs_builddir)/$< metadata > $@
+
+%.dbook: %.xml
+	$(AM_V_XSL)$(XSLTPROC) --nonet --novalid --stringparam man.name $* $(DBOOK_OPTS) $(top_srcdir)/xml/ocf-meta2man.xsl $(abs_builddir)/$< > $(abs_builddir)/$@
+
+%.7:	%.dbook
+	$(AM_V_XSL)$(XSLTPROC) $(MANPAGE_XSLT) $(abs_builddir)/$< $(PCMK_quiet)
+
+# Build docbook from asciidoc because XML is a PITA to edit
+#
+# Build each chapter as a book (since the numbering isn't right for
+# articles and only books can have appendicies) and then strip out the
+# bits we don't want/need
+#
+%.xml:  %.txt
+	$(AM_V_ASCII)asciidoc -b docbook -a cli_name=$(ASCIIDOC_CLI_TYPE) -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
+	sed -i.sed 's///' $@
+	sed -i.sed 's///' $@                 # Fix line endings
+	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
+	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
+	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
+	sed -i.sed 's/.*preface>//g' $@        # Remove preface elements
+	sed -i.sed 's:<title></title>::g' $@   # Remove empty title
+	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
+	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
+	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
+	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
+
+#	echo Rebuilt $@ from $<

@@ -15,11 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+include $(top_srcdir)/Makefile.common
 
-INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
-		-I$(top_builddir)           -I$(top_srcdir)		\
-		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
+AM_CPPFLAGS     += -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
@@ -43,22 +41,8 @@ lib_LTLIBRARIES	= libpengine.la
 ## binary progs
 halib_PROGRAMS	= pengine
 
-pcmk_quiet = $(pcmk_quiet_@AM_V@)
-pcmk_quiet_ = $(pcmk_quiet_@AM_DEFAULT_V@)
-pcmk_quiet_0 = 2>/dev/null
-
-man7_MANS =
-
 if BUILD_XML_HELP
-man7_MANS +=	pengine.7
-
-pengine.xml:	pengine
-	echo "  DBOOK    $@"
-	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
-
-pengine.7:	pengine.xml
-	echo "  MAN      $@"
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$< $(pcmk_quiet)
+man7_MANS =	pengine.7
 endif
 
 ## SOURCES
