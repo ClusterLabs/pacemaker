@@ -17,7 +17,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
+AM_CPPFLAGS       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
 		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   \
 		  -I$(top_builddir)/lib/gnu  -I$(top_srcdir)/lib/gnu
 

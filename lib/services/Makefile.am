@@ -18,7 +18,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES         = -I$(top_builddir)/include
+AM_CPPFLAGS         = -I$(top_builddir)/include
 
 lib_LTLIBRARIES = libcrmservice.la
 noinst_HEADERS  = upstart.h systemd.h services_private.h
@@ -40,4 +40,4 @@ if BUILD_SYSTEMD
 libcrmservice_la_SOURCES += systemd.c
 endif
 
-AM_CFLAGS = $(INCLUDES)
+AM_CFLAGS = $(AM_CPPFLAGS)
