@@ -58,16 +58,16 @@ endif
 #
 %.xml:  %.txt
 	$(AM_V_ASCII)asciidoc -b docbook -a cli_name=$(ASCIIDOC_CLI_TYPE) -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
-	sed -i.sed 's///' $@
-	sed -i.sed 's///' $@                 # Fix line endings
-	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
-	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
-	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
-	sed -i.sed 's/.*preface>//g' $@        # Remove preface elements
-	sed -i.sed 's:<title></title>::g' $@   # Remove empty title
-	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
-	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
-	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
-	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
+	$(AM_V_at)sed -i 's///' $@
+	$(AM_V_at)sed -i 's///' $@                 # Fix line endings
+	$(AM_V_at)sed -i 's/\ lang="en"//' $@        # Never specify a language in the chapters
+	$(AM_V_at)sed -i 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
+	$(AM_V_at)sed -i 's/.*<date>.*//g' $@	       # Remove dangling tag
+	$(AM_V_at)sed -i 's/.*preface>//g' $@        # Remove preface elements
+	$(AM_V_at)sed -i 's:<title></title>::g' $@   # Remove empty title
+	$(AM_V_at)sed -i 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
+	$(AM_V_at)sed -i 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
+	-grep -qis "<appendix" $@ && sed -i 's/.*book>//' $@         # We just want the appendix tag
+	-grep -vqis "<appendix" $@ && sed -i 's/book>/chapter>/g' $@ # Rename to chapter
 
 #	echo Rebuilt $@ from $<
