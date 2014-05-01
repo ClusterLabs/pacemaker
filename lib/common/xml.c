@@ -361,7 +361,8 @@ static int __xml_build_schema_list(void)
     __xml_schema_add(2, 0.0, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
 
     if (max < 0) {
-        crm_perror(LOG_NOTICE, "scandir(%s) failed", base);
+        crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
+
     } else {
         for (lpc = 0; lpc < max; lpc++) {
             int next = 0;

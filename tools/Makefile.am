@@ -55,6 +55,8 @@ endif
 
 noinst_HEADERS		=
 
+MAN8DEPS		= crm_attribute crm_node
+
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
