@@ -1616,6 +1616,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         crm_trace("Empty patch");
         return;
 
+    } else if (log_level == 0) {
+        /* Log to stdout */
     } else if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
         return;
     }
@@ -1631,9 +1633,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                          "Diff: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
 
     } else if (patchset != NULL && (add[0] || add[1] || add[2])) {
-        do_crm_log(log_level,
-                   "%s: Local-only Change: %d.%d.%d", function ? function : "",
-                   add[0], add[1], add[2]);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__, 
+                         "%s: Local-only Change: %d.%d.%d", function ? function : "",
+                         add[0], add[1], add[2]);
     }
 
     crm_element_value_int(patchset, "format", &format);
@@ -1718,7 +1720,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log(log_level, " --- ");
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " --- ");
         }
     }
 
@@ -1730,7 +1732,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log(log_level, " +++ ");
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " +++ ");
         }
     }
 }
@@ -1750,7 +1752,7 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
     }
 
     for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", gIter->data);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", (char*)gIter->data);
     }
 
     log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,

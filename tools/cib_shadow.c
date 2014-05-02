@@ -48,30 +48,8 @@ const char *cib_action = NULL;
 
 cib_t *real_cib = NULL;
 
-int dump_data_element(int depth, char **buffer, int *max, int *offset, const char *prefix,
-                      xmlNode * data, gboolean formatted);
-
-void print_xml_diff(FILE * where, xmlNode * diff);
-
 static int force_flag = 0;
 static int batch_flag = 0;
-
-static int
-print_spaces(char *buffer, int depth, int max)
-{
-    int lpc = 0;
-    int spaces = 2 * depth;
-
-    max--;
-
-    /* <= so that we always print 1 space - prevents problems with syslog */
-    for (lpc = 0; lpc <= spaces && lpc < max; lpc++) {
-        if (sprintf(buffer + lpc, "%c", ' ') < 1) {
-            return -1;
-        }
-    }
-    return lpc;
-}
 
 static char *
 get_shadow_prompt(const char *name)
@@ -455,9 +433,9 @@ main(int argc, char **argv)
             goto done;
         }
 
-        diff = diff_xml_object(old_config, new_config, FALSE);
+        diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE, FALSE);
         if (diff != NULL) {
-            print_xml_diff(stdout, diff);
+            xml_log_patchset(0, "  ", diff);
             rc = 1;
             goto done;
         }
@@ -489,146 +467,4 @@ main(int argc, char **argv)
     free(shadow_file);
     free(shadow);
     return crm_exit(rc);
-}
-
-#define bhead(buffer, offset) ((*buffer) + (*offset))
-#define bremain(max, offset) ((*max) - (*offset))
-#define update_buffer_head(len) do {		\
-	int total = (*offset) + len + 1;	\
-	if(total >= (*max)) { /* too late */	\
-	    (*buffer) = EOS; return -1;		\
-	} else if(((*max) - total) < 256) {	\
-	    (*max) *= 10;			\
-	    *buffer = realloc(*buffer, (*max));	\
-	}					\
-	(*offset) += len;			\
-    } while(0)
-
-int
-dump_data_element(int depth, char **buffer, int *max, int *offset, const char *prefix,
-                  xmlNode * data, gboolean formatted)
-{
-    int printed = 0;
-    int has_children = 0;
-    xmlNode *child = NULL;
-    const char *name = NULL;
-
-    CRM_CHECK(data != NULL, return 0);
-
-    name = crm_element_name(data);
-
-    CRM_CHECK(name != NULL, return 0);
-    CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
-
-    crm_trace("Dumping %s...", name);
-
-    if (prefix) {
-        printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
-        update_buffer_head(printed);
-    }
-
-    if (formatted) {
-        printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
-        update_buffer_head(printed);
-    }
-
-    printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
-    update_buffer_head(printed);
-
-    if (data) {
-        xmlAttrPtr xIter = NULL;
-
-        for (xIter = data->properties; xIter; xIter = xIter->next) {
-            const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(data, prop_name);
-
-            crm_trace("Dumping <%s %s=\"%s\"...", name, prop_name, prop_value);
-            printed =
-                snprintf(bhead(buffer, offset), bremain(max, offset), " %s=\"%s\"", prop_name,
-                         prop_value);
-            update_buffer_head(printed);
-        }
-    }
-
-    has_children = xml_has_children(data);
-    printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s>%s",
-                       has_children == 0 ? "/" : "", formatted ? "\n" : "");
-    update_buffer_head(printed);
-
-    if (has_children == 0) {
-        return 0;
-    }
-
-    for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
-        if (dump_data_element(depth + 1, buffer, max, offset, prefix, child, formatted) < 0) {
-            return -1;
-        }
-    }
-
-    if (prefix) {
-        printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
-        update_buffer_head(printed);
-    }
-
-    if (formatted) {
-        printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
-        update_buffer_head(printed);
-    }
-
-    printed =
-        snprintf(bhead(buffer, offset), bremain(max, offset), "</%s>%s", name,
-                 formatted ? "\n" : "");
-    update_buffer_head(printed);
-    crm_trace("Dumped %s...", name);
-
-    return has_children;
-}
-
-void
-print_xml_diff(FILE * where, xmlNode * diff)
-{
-    char *buffer = NULL;
-    xmlNode *child = NULL;
-    int max = 1024, len = 0;
-    gboolean is_first = TRUE;
-    xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
-    xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
-
-    is_first = TRUE;
-    for (child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
-        len = 0;
-        max = 1024;
-        free(buffer);
-        buffer = calloc(1, max);
-
-        if (is_first) {
-            is_first = FALSE;
-        } else {
-            fprintf(where, " --- \n");
-        }
-
-        dump_data_element(0, &buffer, &max, &len, "-", child, TRUE);
-        if(len) {
-            fprintf(where, "%s", buffer);
-        }
-    }
-
-    is_first = TRUE;
-    for (child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
-        len = 0;
-        max = 1024;
-        free(buffer);
-        buffer = calloc(1, max);
-
-        if (is_first) {
-            is_first = FALSE;
-        } else {
-            fprintf(where, " +++ \n");
-        }
-
-        dump_data_element(0, &buffer, &max, &len, "+", child, TRUE);
-        if(len) {
-            fprintf(where, "%s", buffer);
-        }
-    }
 }

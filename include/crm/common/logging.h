@@ -149,7 +149,11 @@ unsigned int get_crm_log_level(void);
     } while(0)
 
 #  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
+        if(level > 0) {                                                 \
+            qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
+        } else {                                                        \
+            printf(fmt "\n", ##args);                                    \
+        }                                                               \
     } while(0)
 
 #  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __FUNCTION__ , ##args)
