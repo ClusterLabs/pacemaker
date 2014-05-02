@@ -55,6 +55,9 @@ static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     int rc = -1;
+    int format= 1;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *change = NULL;
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -63,10 +66,26 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    if (get_xpath_object
-        ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, msg,
-         LOG_TRACE) != NULL) {
-        mainloop_set_trigger(config_read);
+    crm_element_value_int(patchset, "format", &format);
+    if (format == 1) {
+        if (get_xpath_object
+            ("//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_CRMCONFIG, msg,
+             LOG_TRACE) != NULL) {
+            mainloop_set_trigger(config_read);
+        }
+
+    } else if (format == 2) {
+        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+            if (xpath != NULL
+                && strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG "/")) {
+                mainloop_set_trigger(config_read);
+                break;
+            }
+        }
+
+    } else {
+        crm_warn("Unknown patch format: %d", format);
     }
 }
 
