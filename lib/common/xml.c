@@ -82,9 +82,9 @@ typedef struct {
 struct schema_s {
     int type;
     float version;
-    const char *name;
-    const char *location;
-    const char *transform;
+    char *name;
+    char *location;
+    char *transform;
     int after_transform;
     void *cache;
 };
@@ -387,6 +387,8 @@ static int __xml_build_schema_list(void)
                         crm_err("Transform %s not found", xslt);
                         __xml_schema_add(2, version, NULL, NULL, NULL, -1);
                         break;
+                    } else {
+                        free(xslt);
                     }
                 }
 
@@ -5370,6 +5372,7 @@ crm_xml_cleanup(void)
 
     crm_info("Cleaning up memory from libxml2");
     for (; lpc < xml_schema_max; lpc++) {
+
         switch (known_schemas[lpc].type) {
             case 0:
                 /* None */
@@ -5398,7 +5401,11 @@ crm_xml_cleanup(void)
             default:
                 break;
         }
+        free(known_schemas[lpc].name);
+        free(known_schemas[lpc].location);
+        free(known_schemas[lpc].transform);
     }
+    free(known_schemas);
     xsltCleanupGlobals();
     xmlCleanupParser();
 }
