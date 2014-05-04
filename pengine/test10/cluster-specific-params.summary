@@ -9,6 +9,9 @@ Transition Summary:
  * Start   rsc1	(node2)
 
 Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc1            monitor on node1
+ * Pseudo action:   probe_complete
  * Resource action: rsc1            start on node2
  * Resource action: rsc1            monitor=10000 on node2
 
