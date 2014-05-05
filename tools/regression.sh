@@ -298,6 +298,10 @@ function test_tools() {
  }
 
 function test_dates() {
+    desc="2014-01-01 00:30:00 - 1 Hour"
+    cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
+    test_assert 0 0
+
     for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
 	desc="20$y-W01-7"
 	cmd="iso8601 -d '20$y-W01-7 00Z'"
