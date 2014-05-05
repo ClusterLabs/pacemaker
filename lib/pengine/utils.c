@@ -861,18 +861,39 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         } else {
             crm_time_t *delay = NULL;
             int rc = crm_time_compare(origin, data_set->now);
-            unsigned long long delay_s = 0;
+            long long delay_s = 0;
+            int interval_s = (interval / 1000);
 
-            while (rc < 0) {
-                crm_time_add_seconds(origin, interval / 1000);
+            crm_trace("Origin: %s, interval: %d", value, interval_s);
+
+            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
+            while(rc > 0) {
+                crm_time_add_seconds(origin, -interval_s);
                 rc = crm_time_compare(origin, data_set->now);
             }
 
-            delay = crm_time_subtract(origin, data_set->now);
+            /* Now find the first "multiple" that occurs after 'now' */
+            while (rc < 0) {
+                crm_time_add_seconds(origin, interval_s);
+                rc = crm_time_compare(origin, data_set->now);
+            }
+
+            delay = crm_time_calculate_duration(origin, data_set->now);
+
+            crm_time_log(LOG_TRACE, "origin", origin,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "now", data_set->now,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
+
             delay_s = crm_time_get_seconds(delay);
+
+            CRM_CHECK(delay_s >= 0, delay_s = 0);
             start_delay = delay_s * 1000;
 
-            crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
+            crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
             g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
                                  crm_itoa(start_delay));
             crm_time_free(origin);
