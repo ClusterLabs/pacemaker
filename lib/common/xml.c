@@ -4306,6 +4306,13 @@ can_prune_leaf(xmlNode * xml_node)
     xmlNode *cIter = NULL;
     xmlAttrPtr pIter = NULL;
     gboolean can_prune = TRUE;
+    const char *name = crm_element_name(xml_node);
+
+    if (safe_str_eq(name, XML_TAG_RESOURCE_REF)
+        || safe_str_eq(name, XML_CIB_TAG_OBJ_REF)
+        || safe_str_eq(name, XML_ACL_TAG_ROLE_REF)) {
+        return FALSE;
+    }
 
     for (pIter = crm_first_attr(xml_node); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
