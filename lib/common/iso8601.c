@@ -1078,6 +1078,7 @@ crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value)
     crm_time_add_days(answer, -utc->days);
     crm_time_add_seconds(answer, -utc->seconds);
 
+    crm_time_free(utc);
     return answer;
 }
 
