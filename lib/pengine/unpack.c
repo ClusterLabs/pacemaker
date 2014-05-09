@@ -3005,7 +3005,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
-    const char *cluster = NULL;
+    const char *cluster_name = NULL;
 
     g_hash_table_insert(node->details->attrs,
                         strdup("#uname"), strdup(node->details->uname));
@@ -3022,9 +3022,9 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
                             strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
-    cluster = g_hash_table_lookup(data_set->config_hash, "cluster");
-    if (cluster) {
-        g_hash_table_insert(node->details->attrs, strdup("#cluster"), strdup(cluster));
+    cluster_name = g_hash_table_lookup(data_set->config_hash, "cluster-name");
+    if (cluster_name) {
+        g_hash_table_insert(node->details->attrs, strdup("#cluster-name"), strdup(cluster_name));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
