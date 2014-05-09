@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:35+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,7 @@ msgstr "从头开始搭建集群"
 #. Tag: subtitle
 #, no-c-format
 msgid "Creating Active/Passive and Active/Active Clusters on Fedora"
-msgstr "在Fedora上面创建主/主和主备集群"
+msgstr "在Fedora上面创建主/主和主/备集群"
 
 #. Tag: productname
 #, no-c-format
@@ -31,7 +31,7 @@ msgstr "Pacemaker"
 #. Tag: para
 #, no-c-format
 msgid "The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one."
-msgstr "本文档的主要目的是提供一站式指南，教您如何使用Pacemaker创建一个主/备模式的集群并把它转换到主/主模式。"
+msgstr "本文档的主要目是提供一站式指南，教您如何使用Pacemaker创建一个主/备模式的集群并把它转换到主/主模式。"
 
 #. Tag: para
 #, no-c-format
@@ -39,24 +39,24 @@ msgid "The example cluster will use:"
 msgstr "示例集群会使用以下软件:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "&DISTRO; &DISTRO_VERSION; as the host operating system"
 msgstr "&DISTRO; &amp;DISTRO_VERSION; 作为基本操作系统"
 
 #. Tag: para
 #, no-c-format
 msgid "Corosync to provide messaging and membership services,"
-msgstr "Corosync作为通信层和提供关系管理服务"
+msgstr "Corosync作为通信层并提供关系管理服务,"
 
 #. Tag: para
 #, no-c-format
 msgid "Pacemaker to perform resource management,"
-msgstr "Pacemaker来实现资源管理"
+msgstr "Pacemaker来实现资源管理,"
 
 #. Tag: para
 #, no-c-format
 msgid "DRBD as a cost-effective alternative to shared storage,"
-msgstr "DRBD 作为一个经济的共享存储方案"
+msgstr "DRBD 作为一个经济的共享存储方案,"
 
 #. Tag: para
 #, no-c-format
@@ -66,7 +66,7 @@ msgstr "GFS2 作为集群文件系统（主/主模式中）"
 #. Tag: para
 #, no-c-format
 msgid "Given the graphical nature of the Fedora install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs."
-msgstr "虽然给出了图形化安装Fedora的过程，并且有很多截图，但是本文的主要是靠命令来操作，包括为什么要运行这个命令和这些操作产生的结果。(译者注:本文中基本是crm shell来操作的，这里应该是老版本文档的遗留)"
+msgstr "虽然给出了图形化安装Fedora的过程，并且有很多截图，但本文主要是靠命令来操作，包括为什么要运行这个命令和这些操作产生的结果。(译者注:本文中基本是crm shell来操作的，这里应该是老版本文档的遗留)"
 
 #~ msgid "The crm shell for displaying the configuration and making changes"
 #~ msgstr "crm shell 来显示并修改配置文件"
