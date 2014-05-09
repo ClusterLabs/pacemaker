@@ -3,20 +3,21 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="clusterA"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
       <node id="node1" uname="node1">
         <instance_attributes id="node1-instance_attributes">
-          <nvpair id="node1-instance_attributes-site" name="site" value="siteA"/>
+          <nvpair id="node1-instance_attributes-site-name" name="site-name" value="siteA"/>
         </instance_attributes>
       </node>  
       <node id="node2" uname="node2">
         <instance_attributes id="node2-instance_attributes">
-          <nvpair id="node2-instance_attributes-site" name="site" value="siteB"/>
+          <nvpair id="node2-instance_attributes-site-name" name="site-name" value="siteB"/>
         </instance_attributes>
       </node>  
+      <node id="node3" uname="node3"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="rsc_stonith" type="null"/>
@@ -24,13 +25,19 @@
         <instance_attributes id="rsc1-instance_attributes-1">
           <nvpair id="rsc1-instance_attributes-1-state" name="state" value="/var/run/Dummy-rsc1-siteA"/>
           <rule id="rsc1-instance_attributes-1-rule-1" score="0">
-            <expression id="rsc1-instance_attributes-1-rule-1-expr-1" attribute="site" operation="eq" value="siteA"/>
+            <expression id="rsc1-instance_attributes-1-rule-1-expr-1" attribute="#site-name" operation="eq" value="siteA"/>
           </rule>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes-2">
           <nvpair id="rsc1-instance_attributes-2-state" name="state" value="/var/run/Dummy-rsc1-siteB"/>
           <rule id="rsc1-instance_attributes-2-rule-1" score="0">
-            <expression id="rsc1-instance_attributes-2-rule-1-expr-1" attribute="site" operation="eq" value="siteB"/>
+            <expression id="rsc1-instance_attributes-2-rule-1-expr-1" attribute="#site-name" operation="eq" value="siteB"/>
+          </rule>
+        </instance_attributes>
+        <instance_attributes id="rsc1-instance_attributes-3">
+          <nvpair id="rsc1-instance_attributes-3-state" name="state" value="/var/run/Dummy-rsc1-clusterA"/>
+          <rule id="rsc1-instance_attributes-3-rule-1" score="0">
+            <expression id="rsc1-instance_attributes-3-rule-1-expr-1" attribute="#site-name" operation="eq" value="clusterA"/>
           </rule>
         </instance_attributes>
         <operations>
@@ -53,6 +60,15 @@
     </node_state>
     <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="rsc_stonith" class="stonith" type="null">
+            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="rsc_stonith" class="stonith" type="null">
             <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>

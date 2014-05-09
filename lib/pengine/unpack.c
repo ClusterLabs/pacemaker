@@ -3030,6 +3030,18 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                node->details->attrs, NULL, overwrite, data_set->now);
 
+    if (g_hash_table_lookup(node->details->attrs, "#site-name") == NULL) {
+        const char *site_name = g_hash_table_lookup(node->details->attrs, "site-name");
+
+        if (site_name) {
+            /* Prefix '#' to the key */
+            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(site_name));
+
+        } else if (cluster_name) {
+            /* Default to cluster-name if unset */
+            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(cluster_name));
+        }
+    }
     return TRUE;
 }
 
