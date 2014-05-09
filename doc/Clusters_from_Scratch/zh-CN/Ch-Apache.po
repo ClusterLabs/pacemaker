@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:37+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -21,12 +21,12 @@ msgstr "Apache - 添加更多的服务"
 #. Tag: title
 #, no-c-format
 msgid "Forward"
-msgstr ""
+msgstr "回顾"
 
 #. Tag: para
 #, no-c-format
 msgid "Now that we have a basic but functional active/passive two-node cluster, we’re ready to add some real services. We’re going to start with Apache because its a feature of many clusters and relatively simple to configure."
-msgstr "现在我们有了一个基本的但是功能齐全的双节点集群,我们已经可以往里面加些真的服务了。我们准备启动一个Apache服务，因为它是许多集群的主角，并且相对来说比较容易配置。"
+msgstr "现在我们有了一个基本的但是功能齐全的双节点集群，我们已经可以往里面加些真正的服务了。我们准备启动一个Apache服务，因为它是许多集群的主角，并且相对来说比较容易配置。"
 
 #. Tag: title
 #, no-c-format
@@ -34,9 +34,9 @@ msgid "Installation"
 msgstr "安装Apache"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Before continuing, we need to make sure Apache is installed on both hosts. We also need the wget tool in order for the cluster to be able to check the status of the Apache server."
-msgstr "同样的，为了检测Apache服务器，我们要安装wget这个工具。"
+msgstr "在继续前，我们需要确保两个节点上都安装了Apache。同样的，为了检测Apache服务器，我们要安装wget这个工具。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -174,9 +174,9 @@ msgid "Enable the Apache status URL"
 msgstr "开启 Apache status URL"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In order to monitor the health of your Apache instance, and recover it if it fails, the resource agent used by Pacemaker assumes the server-status URL is available. Look for the following in <emphasis>/etc/httpd/conf/httpd.conf</emphasis> and make sure it is not disabled or commented out:"
-msgstr "为了监控Apache实例的健康状态,并在它挂掉的时候恢复Apache服务，资源agent会假设 server-status URL是可用的。查看/etc/httpd/conf/httpd.conf并确保下面的选项没有被禁用或注释掉。"
+msgstr "为了监控Apache实例的健康状态，并在它挂掉的时候恢复Apache服务，pacemaker使用的资源agent会假设 server-status URL是可用的。查看/etc/httpd/conf/httpd.conf并确保下面的选项没有被禁用或注释掉。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -203,9 +203,9 @@ msgid "Update the Configuration"
 msgstr "更新配置文件"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "At this point, Apache is ready to go, all that needs to be done is to add it to the cluster. Lets call the resource WebSite. We need to use an OCF script called apache in the heartbeat namespace <footnote><para>Compare the key used here ocf:heartbeat:apache with the one we used earlier for the IP address: ocf:heartbeat:IPaddr2</para></footnote> , the only required parameter is the path to the main Apache configuration file and we’ll tell the cluster to check once a minute that apache is still running."
-msgstr "现在 ，Apache已经可以添加到集群中了。我们管这个资源叫WebSite。我们需要用一个叫做apache的OCF脚本，这个脚本在heartbeat这个名字空间里，唯一一个需要设定的参数就是Apache的主配置文件路径，并且我们告诉集群每一分钟检测一次Apache是否运行。"
+msgstr "现在，Apache已经可以添加到集群中了。我们管这个资源叫WebSite。我们需要用一个叫做apache的OCF脚本，这个脚本在heartbeat这个名字空间里，唯一一个需要设定的参数就是Apache的主配置文件路径，并且我们告诉集群每一分钟检测一次Apache是否运行。"
 
 #. Tag: screen
 #, no-c-format
@@ -218,7 +218,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "By default, the operation timeout for all resource’s start, stop, and monitor operations is 20 seconds. In many cases this timeout period is less than the advised timeout period. For the purposes of this tutorial, we will adjust the global operation timeout default to 240 seconds."
-msgstr ""
+msgstr "默认的，所有资源的start，stop和monitor操作的超时时间都是20秒。在很多情况下这个超时周期小于建议超时时间。在本教程中，我们将调整全局操作的超时时间为240秒。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -231,7 +231,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "After a short delay, we should see the cluster start apache"
-msgstr "过了一会，我们可以看到集群把apache启动起来了。"
+msgstr "过了一会儿，我们可以看到集群把apache启动起来了。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -272,12 +272,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Wait a moment, the WebSite resource isn’t running on the same host as our IP address!"
-msgstr "等等！WebSite这个资源跟IP没有跑在同一个节点上面！"
+msgstr "等等！WebSite这个资源跟IP地址没有跑在同一个节点上面！"
 
 #. Tag: para
 #, no-c-format
 msgid "If, in the <literal>pcs status</literal> output, you see the WebSite resource has failed to start, then you’ve likely not enabled the status URL correctly. You can check if this is the problem by running:"
-msgstr ""
+msgstr "如果在crm status的输出中，你看到WebSite资源启动失败了，那极有可能是你没有正确的启动status URL，你可以通过运行下面命令来检查是否是这个原因："
 
 #. Tag: literallayout
 #, no-c-format
@@ -287,7 +287,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "If you see <literal>Connection refused</literal> in the output, then this is indeed the problem. Check to ensure that <literal>Allow from 127.0.0.1</literal> is present for the <literal>&lt;Location /server-status&gt;</literal> block."
-msgstr ""
+msgstr "如果你看到的输出是“Connection refused”，这确实是个问题。检查配置确保“Allow from 127.0.0.1” 在 &lt;Location /server-status&gt; 块中。"
 
 #. Tag: title
 #, no-c-format
@@ -295,24 +295,24 @@ msgid "Ensuring Resources Run on the Same Host"
 msgstr "确保资源在同一个节点运行"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To reduce the load on any one machine, Pacemaker will generally try to spread the configured resources across the cluster nodes. However we can tell the cluster that two resources are related and need to run on the same host (or not at all). Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on."
-msgstr "为了减少每个机器的负载，Pacemaker会智能地尝试将资源分散到各个节点上面。 然而我们可以告诉集群某两个资源是有联系并且要在同一个节点运行(或不同的节点运行)。这里我们告诉集群WebSite只能在有ClusterIP的节点上运行。如果ClusterIP在哪个节点都不存在，那么WebSite也不能运行。"
+msgstr "为了减少每个机器的负载，Pacemaker会智能地尝试将资源分散到各个节点上面。然而我们可以告诉集群某两个资源是有联系并且要在同一个节点运行(或不同的节点运行)。这里我们告诉集群WebSite只能在有ClusterIP的节点上运行。"
 
 #. Tag: para
 #, no-c-format
 msgid "To achieve this we use a colocation constraint that indicates it is mandatory for WebSite to run on the same node as ClusterIP. The \"mandatory\" part of the colocation constraint is indicated by using a score of INFINITY. The INFINITY score also means that if ClusterIP is not active anywhere, WebSite will not be permitted to run."
-msgstr ""
+msgstr "为此我们使用托管约束来强制性的表明WebSite和ClusterIP运行在同一节点。“强制性”部分的托管约束使用分数INFINITY（无穷大）来表示。无穷大也表明了如果ClusterIP没有在任何节点运行，那么WebSite也不能运行。"
 
 #. Tag: para
 #, no-c-format
 msgid "If ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere."
-msgstr ""
+msgstr "如果ClusterIP在任何节点都不存在，那么WebSite也不能运行。"
 
 #. Tag: para
 #, no-c-format
 msgid "Colocation constraints are \"directional\", in that they imply certain things about the order in which the two resources will have a location chosen. In this case we’re saying <literal>WebSite</literal> needs to be placed on the same machine as <literal>ClusterIP</literal>, this implies that we must know the location of <literal>ClusterIP</literal> before choosing a location for <literal>WebSite</literal>."
-msgstr ""
+msgstr "托管约束是定向性的，这样他们意味该命令，两个资源将会有一个位置选择。这种情况下我们说WebSite需要被放置在和ClusterIP相同的集群上，这意味着在选择WebSite的位置前，我们必须要知道ClusterIP的位置。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -347,14 +347,14 @@ msgid "Controlling Resource Start/Stop Ordering"
 msgstr "控制资源的启动停止顺序"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "When Apache starts, it binds to the available IP addresses. It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. We do this by adding an ordering constraint."
-msgstr "当Apache启动了，它跟可用的IP绑在了一起。它不会知道我们后来添加的IP，所以我们不仅需要控制他们在相同的节点运行，也要确保ClusterIP在WebSite之前就启动了。我们用添加ordering约束来达到这个效果。我们需要给这个order取个名字(apache-after-ip之类 描述性的)，并指出他是托管的(这样当ClusterIP恢复了，同时会触发WebSite的恢复) 并且写明了这两个资源的启动顺序。"
+msgstr "当Apache启动了，它跟可用的IP绑在了一起。它不知道我们后来添加的IP，所以我们不仅需要控制他们在相同的节点运行，也要确保ClusterIP在WebSite之前就启动了。我们用添加ordering约束来达到这个效果。我们需要给这个order取个名字(apache-after-ip之类描述性的)，并指出他是托管的(这样当ClusterIP恢复了，同时会触发WebSite的恢复) 并写明了这两个资源的启动顺序。"
 
 #. Tag: para
 #, no-c-format
 msgid "By default all order constraints are mandatory constraints unless otherwise configured. This means that the recovery of ClusterIP will also trigger the recovery of WebSite."
-msgstr ""
+msgstr "默认情况下，所有的顺序约束是强制性约束，除非另有配置。这意味着ClusterIP的恢复也会触发WebSite的恢复。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -375,14 +375,14 @@ msgid "Specifying a Preferred Location"
 msgstr "指定优先的 Location"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Pacemaker does not rely on any sort of hardware symmetry between nodes, so it may well be that one machine is more powerful than the other. In such cases it makes sense to host the resources there if it is available. To do this we create a location constraint."
-msgstr "Pacemaker 并不要求你机器的硬件配置是相同的，可能某些机器比另外的机器配置要好。这种状况下我们会希望设置:当某个节点可用时，资源就要跑在上面之类的规则。为了达到这个效果我们创建location约束。同样的，我们给他取一个描述性的名字(prefer-pcmk-1)，指明我们想在上面跑WebSite这个服务，多想在上面跑(我们现在指定分值为50，但是在双节点的集群状态下，任何大于0的值都可以达到想要的效果)，以及目标节点的名字:"
+msgstr "Pacemaker 并不要求你机器的硬件配置是相同的，可能某些机器比另外的机器配置要好。这种状况下我们会希望设置当某个节点可用时，资源就要跑在上面之类的规则。为了达到这个效果我们创建location约束。"
 
 #. Tag: para
 #, no-c-format
 msgid "In the location constraint below, we are saying the WebSite resource prefers the node pcmk-1 with a score of 50. The score here indicates how badly we’d like the resource to run somewhere."
-msgstr ""
+msgstr "同样的，我们给他取一个描述性的名字(prefer-pcmk-1)，指明我们想在上面跑WebSite这个服务，多想在上面跑(我们现在指定分值为50，但是在双节点的集群状态下，任何大于0的值都可以达到想要的效果)，以及目标节点的名字:"
 
 #. Tag: programlisting
 #, no-c-format
@@ -421,12 +421,12 @@ msgstr "等等，资源还是在pcmk-2上面跑的！"
 #. Tag: para
 #, no-c-format
 msgid "Even though we now prefer pcmk-1 over pcmk-2, that preference is (intentionally) less than the resource stickiness (how much we preferred not to have unnecessary downtime)."
-msgstr "即使我们更希望资源在pcmk-1上面运行，但是 这个优先值还是比资源黏性值要小。"
+msgstr "即使我们更希望资源在pcmk-1上面运行，但是这个优先值还是比资源粘性值要小。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To see the current placement scores, you can use a tool called crm_simulate"
-msgstr "如果要看现在的分值，可以用ptest这个命令"
+msgstr "如果要看现在的分值，可以用crm_simulate这个命令"
 
 #. Tag: programlisting
 #, no-c-format
@@ -450,12 +450,12 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Manually Moving Resources Around the Cluster"
-msgstr "在集群中手工地移动资源"
+msgstr "在集群中手动迁移资源"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "There are always times when an administrator needs to override the cluster and force resources to move to a specific location. By updating our previous location constraint with a score of INFINITY, WebSite will be forced to move to pcmk-1."
-msgstr "经常性的会有管理员想要无视集群然后强制把资源移动到指定的地方。 底层的操作就像我们上面创建的location约束一样。只要提供资源和目标地址，我们会补全剩余部分。"
+msgstr "经常性的会有管理员想要无视集群然后强制把资源迁移到指定的地方。底层的操作就像我们上面创建的location约束一样。只要提供资源和目标地址，我们会补全剩余部分。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -495,7 +495,7 @@ msgstr "把控制权交还给集群"
 #. Tag: para
 #, no-c-format
 msgid "Once we’ve finished whatever activity that required us to move the resources to pcmk-1, in our case nothing, we can then allow the cluster to resume normal operation with the unmove command. Since we previously configured a default stickiness, the resources will remain on pcmk-1."
-msgstr "当我们完成那些要求要资源移动到pcmk-1的操作－－在我们的例子里面啥都没干 －－我们可以用unmove命令把集群恢复到强制移动前的状态。因为我们之前配置了默认的资源黏性值，恢复了以后资源还是会在pcmk-1上面。"
+msgstr "当我们完成那些要求要资源迁移到pcmk-1的操作－－在我们的例子里面啥都没干 －－我们可以用unmove命令把集群恢复到强制迁移前的状态。因为我们之前配置了默认的资源粘性值，恢复了以后资源还是会在pcmk-1上面。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -518,9 +518,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Note that the constraint is now gone. If we check the cluster status, we can also see that as expected the resources are still active on pcmk-1."
-msgstr "可以看到自动生成的约束已经没有了。如果我们查看集群的状态，我们也可以看到就如我们所预期的，资源还是在pcmk-1上面跑"
+msgstr "可以看到自动生成的约束已经没有了。如果我们查看集群的状态，也可以看到就如我们所预期的，资源还是在pcmk-1上面跑。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
