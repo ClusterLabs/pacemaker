@@ -4,7 +4,7 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-cluster" name="cluster" value="clusterA"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="clusterA"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -17,13 +17,13 @@
         <instance_attributes id="rsc1-instance_attributes-1">
           <nvpair id="rsc1-instance_attributes-1-state" name="state" value="/var/run/Dummy-rsc1-clusterA"/>
           <rule id="rsc1-instance_attributes-1-rule-1" score="0">
-            <expression id="rsc1-instance_attributes-1-rule-1-expr-1" attribute="#cluster" operation="eq" value="clusterA"/>
+            <expression id="rsc1-instance_attributes-1-rule-1-expr-1" attribute="#cluster-name" operation="eq" value="clusterA"/>
           </rule>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes-2">
           <nvpair id="rsc1-instance_attributes-2-state" name="state" value="/var/run/Dummy-rsc1-clusterB"/>
           <rule id="rsc1-instance_attributes-2-rule-1" score="0">
-            <expression id="rsc1-instance_attributes-2-rule-1-expr-1" attribute="#cluster" operation="eq" value="clusterB"/>
+            <expression id="rsc1-instance_attributes-2-rule-1-expr-1" attribute="#cluster-name" operation="eq" value="clusterB"/>
           </rule>
         </instance_attributes>
         <operations>

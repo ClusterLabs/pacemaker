@@ -392,6 +392,7 @@ void plugin_handle_membership(AIS_Message *msg);
 bool send_plugin_text(int class, struct iovec *iov);
 #    else
 char *corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid);
+char *corosync_cluster_name(void);
 #    endif
 
 gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent);

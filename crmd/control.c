@@ -370,6 +370,8 @@ crmd_exit(int rc)
     free(fsa_our_uuid); fsa_our_uuid = NULL;
     free(fsa_our_dc); fsa_our_dc = NULL;
 
+    free(fsa_cluster_name); fsa_cluster_name = NULL;
+
     free(te_uuid); te_uuid = NULL;
     free(te_client_id); te_client_id = NULL;
     free(fsa_pe_ref); fsa_pe_ref = NULL;
@@ -969,6 +971,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         send_cluster_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
     }
 #endif
+
+    free(fsa_cluster_name);
+    fsa_cluster_name = NULL;
+
+    value = g_hash_table_lookup(config_hash, "cluster-name");
+    if (value) {
+        fsa_cluster_name = strdup(value);
+    }
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

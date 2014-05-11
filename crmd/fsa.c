@@ -45,6 +45,8 @@ char *fsa_our_dc_version = NULL;
 char *fsa_our_uuid = NULL;
 char *fsa_our_uname = NULL;
 
+char *fsa_cluster_name = NULL;
+
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *fsa_cluster_conn;
 #endif
