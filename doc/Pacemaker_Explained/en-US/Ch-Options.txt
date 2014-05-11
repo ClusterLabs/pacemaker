@@ -209,7 +209,7 @@ cluster nodes.
 | stop-all-resources | FALSE |
 indexterm:[stop-all-resources,Cluster Option]
 indexterm:[Cluster,Option,stop-all-resources]
-Should the cluster stop all stop
+Should the cluster stop all resources
 
 | resources-orphan-resources | TRUE |
 indexterm:[stop-orphan-resources,Cluster Option]
