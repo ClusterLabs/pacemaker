@@ -161,7 +161,7 @@ create_attribute(xmlNode *xml)
 
     if(dampen > 0) {
         a->timeout_ms = dampen;
-        a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
+        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
     }
 
     g_hash_table_replace(attributes, a->id, a);
