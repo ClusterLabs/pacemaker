@@ -740,8 +740,8 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
         build_operation_update(xml_rsc, &(entry->rsc), entry->failed, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
             build_operation_update(xml_rsc, &(entry->rsc), gIter->data, __FUNCTION__);
         }
