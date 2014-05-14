@@ -730,7 +730,7 @@ static void
 update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
-    const char *reason = NULL;
+    char *reason = NULL;
     bool needs_update = FALSE;
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
@@ -772,6 +772,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         crm_info("Updating device list from the cib: %s", reason);
         cib_devices_update();
     }
+    free(reason);
 }
 
 
