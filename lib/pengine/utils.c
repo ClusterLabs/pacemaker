@@ -530,8 +530,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE
                    && data_set->no_quorum_policy == no_quorum_freeze) {
-            pe_rsc_trace(rsc, "Check resource is already active");
-            if (rsc->fns->active(rsc, TRUE) == FALSE) {
+            pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
+            if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
                 pe_clear_action_bit(action, pe_action_runnable);
                 pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
                              action->node->details->uname, action->uuid);

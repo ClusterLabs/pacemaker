@@ -527,6 +527,13 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesnt come up again */
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
+
+    } else if(rsc->next_role > rsc->role
+              && is_set(data_set->flags, pe_flag_have_quorum) == FALSE
+              && data_set->no_quorum_policy == no_quorum_freeze) {
+        crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
+                   rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+        rsc->next_role = rsc->role;
     }
 
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__,
