@@ -2871,10 +2871,14 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
         update_action_flags(action, pe_action_implied_by_stonith);
 
         {
+            enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
-            order_actions(stonith_op, action, pe_order_optional);
-            order_actions(stonith_op, parent_stop, pe_order_optional);
+            if(stonith_op->node->details->remote_rsc) {
+                flags |= pe_order_preserve;
+            }
+            order_actions(stonith_op, action, flags);
+            order_actions(stonith_op, parent_stop, flags);
         }
 
         if (is_set(rsc->flags, pe_rsc_notify)) {
@@ -2967,7 +2971,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
             update_action_flags(action, pe_action_pseudo);
             update_action_flags(action, pe_action_runnable);
             if (is_stonith == FALSE) {
-                order_actions(stonith_op, action, pe_order_optional);
+                order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }
     }

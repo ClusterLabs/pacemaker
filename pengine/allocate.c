@@ -1626,7 +1626,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 action->rsc,
                 NULL,
                 action,
-                pe_order_implies_then | pe_order_runnable_left,
+                pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
                 data_set);
 
         } else if (safe_str_eq(action->task, "demote")) {
@@ -1648,7 +1648,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     remote_rsc,
                     generate_op_key(remote_rsc->id, RSC_STOP, 0),
                     NULL,
-                    pe_order_implies_first,
+                    pe_order_preserve | pe_order_implies_first,
                     data_set);
             } else {
 
@@ -1658,7 +1658,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     action->rsc,
                     NULL,
                     action,
-                    pe_order_implies_then | pe_order_runnable_left,
+                    pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
                     data_set);
             }
 
@@ -1677,7 +1677,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 action->rsc,
                 NULL,
                 action,
-                pe_order_implies_then | pe_order_runnable_left,
+                pe_order_preserve | pe_order_implies_then | pe_order_runnable_left,
                 data_set);
 
         } else if (safe_str_eq(action->task, "stop")) {
@@ -1687,7 +1687,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 remote_rsc,
                 generate_op_key(remote_rsc->id, RSC_STOP, 0),
                 NULL,
-                pe_order_implies_first,
+                pe_order_preserve | pe_order_implies_first,
                 data_set);
         }
     }

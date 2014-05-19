@@ -368,6 +368,7 @@ enum pe_ordering {
     pe_order_one_or_more           = 0x400000,  /* 'then' is only runnable if one or more of it's dependancies are too */
     pe_order_anti_colocation       = 0x800000,
 
+    pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */
     pe_order_trace                 = 0x4000000, /* test marker */
 };
 /* *INDENT-ON* */
