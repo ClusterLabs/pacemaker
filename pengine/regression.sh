@@ -23,6 +23,7 @@ core=`dirname $0`
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
+
 info Done.
 echo ""
 
@@ -217,6 +218,7 @@ do_test quorum-3 "No quorum - stop  "
 do_test quorum-4 "No quorum - start anyway"
 do_test quorum-5 "No quorum - start anyway (group)"
 do_test quorum-6 "No quorum - start anyway (clone)"
+do_test bug-cl-5212 "No promotion with no-quorum-policy=freeze"
 
 echo ""
 do_test rec-node-1 "Node Recover - Startup   - no fence"

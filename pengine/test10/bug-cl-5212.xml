@@ -1,0 +1,243 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.0" epoch="4" num_updates="46" admin_epoch="0" cib-last-written="Fri May  9 23:02:01 2014" have-quorum="0" dc-uuid="3232238300" no-quorum-panic="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.11-f0f09b8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="no-quorum-policy" value="freeze" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3232238300" uname="srv03"/>
+      <node id="3232238280" uname="srv01"/>
+      <node id="3232238290" uname="srv02"/>
+    </nodes>
+    <resources>
+      <group id="grpStonith1">
+        <!--### Group Configuration ###-->
+        <primitive id="prmStonith1-1" class="stonith" type="external/ssh">
+          <instance_attributes id="prmStonith1-1-instance_attributes">
+            <nvpair name="pcmk_reboot_timeout" value="60s" id="prmStonith1-1-instance_attributes-pcmk_reboot_timeout"/>
+            <nvpair name="hostlist" value="srv01" id="prmStonith1-1-instance_attributes-hostlist"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith1-1-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="prmStonith1-1-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith1-1-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith2">
+        <primitive id="prmStonith2-1" class="stonith" type="external/ssh">
+          <instance_attributes id="prmStonith2-1-instance_attributes">
+            <nvpair name="pcmk_reboot_timeout" value="60s" id="prmStonith2-1-instance_attributes-pcmk_reboot_timeout"/>
+            <nvpair name="hostlist" value="srv02" id="prmStonith2-1-instance_attributes-hostlist"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith2-1-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="prmStonith2-1-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith2-1-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith3">
+        <primitive id="prmStonith3-1" class="stonith" type="external/ssh">
+          <instance_attributes id="prmStonith3-1-instance_attributes">
+            <nvpair name="pcmk_reboot_timeout" value="60s" id="prmStonith3-1-instance_attributes-pcmk_reboot_timeout"/>
+            <nvpair name="hostlist" value="srv03" id="prmStonith3-1-instance_attributes-hostlist"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith3-1-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="prmStonith3-1-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith3-1-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <master id="msPostgresql">
+        <!--### Master/Slave Configuration ###-->
+        <meta_attributes id="msPostgresql-meta_attributes">
+          <nvpair name="master-max" value="1" id="msPostgresql-meta_attributes-master-max"/>
+          <nvpair name="master-node-max" value="1" id="msPostgresql-meta_attributes-master-node-max"/>
+          <nvpair name="clone-max" value="3" id="msPostgresql-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msPostgresql-meta_attributes-clone-node-max"/>
+          <nvpair name="notify" value="true" id="msPostgresql-meta_attributes-notify"/>
+        </meta_attributes>
+        <primitive id="pgsql" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op name="start" interval="0s" timeout="300s" on-fail="restart" id="pgsql-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="pgsql-monitor-10s"/>
+            <op name="monitor" role="Master" interval="9s" timeout="60s" on-fail="restart" id="pgsql-monitor-9s"/>
+            <op name="promote" interval="0s" timeout="300s" on-fail="restart" id="pgsql-promote-0s"/>
+            <op name="demote" interval="0s" timeout="300s" on-fail="fence" id="pgsql-demote-0s"/>
+            <op name="notify" interval="0s" timeout="60s" id="pgsql-notify-0s"/>
+            <op name="stop" interval="0s" timeout="300s" on-fail="fence" id="pgsql-stop-0s"/>
+          </operations>
+        </primitive>
+      </master>
+      <clone id="clnPingd">
+        <!--### Clone Configuration ###-->
+        <primitive id="prmPingd" class="ocf" provider="pacemaker" type="ping">
+          <instance_attributes id="prmPingd-instance_attributes">
+            <nvpair name="name" value="default_ping_set" id="prmPingd-instance_attributes-name"/>
+            <nvpair name="host_list" value="192.168.40.1" id="prmPingd-instance_attributes-host_list"/>
+            <nvpair name="multiplier" value="100" id="prmPingd-instance_attributes-multiplier"/>
+            <nvpair name="attempts" value="2" id="prmPingd-instance_attributes-attempts"/>
+            <nvpair name="timeout" value="2" id="prmPingd-instance_attributes-timeout"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmPingd-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="prmPingd-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmPingd-stop-0s"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location-grpStonith1" rsc="grpStonith1">
+        <!--### Resource Location ###-->
+        <rule score="-INFINITY" id="rsc_location-grpStonith1-rule">
+          <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-grpStonith1-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpStonith2" rsc="grpStonith2">
+        <rule score="-INFINITY" id="rsc_location-grpStonith2-rule">
+          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-grpStonith2-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpStonith3" rsc="grpStonith3">
+        <rule score="-INFINITY" id="rsc_location-grpStonith3-rule">
+          <expression attribute="#uname" operation="eq" value="srv03" id="rsc_location-grpStonith3-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-msPostgresql-1" rsc="msPostgresql">
+        <rule role="master" score="300" id="rsc_location-msPostgresql-1-rule">
+          <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-msPostgresql-1-expression"/>
+        </rule>
+        <rule role="master" score="200" id="rsc_location-msPostgresql-1-rule-0">
+          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msPostgresql-1-expression-0"/>
+        </rule>
+        <rule role="master" score="100" id="rsc_location-msPostgresql-1-rule-1">
+          <expression attribute="#uname" operation="eq" value="srv03" id="rsc_location-msPostgresql-1-expression-1"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="rsc_colocation-msPostgresql-clnPingd-1" score="INFINITY" rsc="msPostgresql" rsc-role="Master" with-rsc="clnPingd">
+        <!--### Resource Colocation ###-->
+      </rsc_colocation>
+      <rsc_order id="rsc_order-clnPingd-msPostgresql-1" score="0" first="clnPingd" then="msPostgresql" symmetrical="false">
+        <!--### Resource Order ###-->
+      </rsc_order>
+    </constraints>
+    <fencing-topology>
+      <!--### Fencing Topology ###-->
+      <fencing-level target="srv01" devices="prmStonith1-1" index="1" id="fencing"/>
+      <fencing-level target="srv02" devices="prmStonith2-1" index="1" id="fencing-0"/>
+      <fencing-level target="srv03" devices="prmStonith3-1" index="1" id="fencing-1"/>
+    </fencing-topology>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <!--### Resource Defaults ###-->
+        <nvpair name="resource-stickiness" value="INFINITY" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="1" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="3232238290" uname="srv02" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="down">
+      <lrm id="3232238290">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1_last_0" operation_key="prmStonith1-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="21:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;21:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1399644124" last-rc-change="1399644124" exec-time="2046" queue-time="1" op-digest="a0de8e109dbd6484cce74591e3c8ae66" on_node="srv02"/>
+            <lrm_rsc_op id="prmStonith1-1_monitor_10000" operation_key="prmStonith1-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="22:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;22:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644126" exec-time="1042" queue-time="0" op-digest="d396328bb938a96b0c08874d9b46b027" on_node="srv02"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1_last_0" operation_key="prmStonith2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;11:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1399644124" last-rc-change="1399644124" exec-time="0" queue-time="0" op-digest="421522900dae0d8f1078ede6ab7fb795" on_node="srv02"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1_last_0" operation_key="prmStonith3-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;12:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1399644124" last-rc-change="1399644124" exec-time="0" queue-time="0" op-digest="50c850c4b67bfa708c5aa87c76c05e49" on_node="srv02"/>
+          </lrm_resource>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="31:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;31:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1399644127" last-rc-change="1399644127" exec-time="60" queue-time="11" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv02"/>
+            <lrm_rsc_op id="pgsql_monitor_10000" operation_key="pgsql_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="32:6:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;32:6:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644128" exec-time="27" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="srv02"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd_last_0" operation_key="prmPingd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="72:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;72:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1399644125" last-rc-change="1399644125" exec-time="1038" queue-time="0" op-digest="98163ce0ad14ff89c35e59ce09c6d0c0" on_node="srv02"/>
+            <lrm_rsc_op id="prmPingd_monitor_10000" operation_key="prmPingd_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="73:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;73:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644126" exec-time="1039" queue-time="0" op-digest="312f4722ab116a1edd893189e5793e02" on_node="srv02"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232238290">
+        <instance_attributes id="status-3232238290">
+          <nvpair id="status-3232238290-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238290-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232238290-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-3232238290-master-pgsql" name="master-pgsql" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3232238280" uname="srv01" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="down">
+      <lrm id="3232238280">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1_last_0" operation_key="prmStonith1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="4:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;4:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1399644122" last-rc-change="1399644122" exec-time="1971" queue-time="0" op-digest="a0de8e109dbd6484cce74591e3c8ae66" on_node="srv01"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1_last_0" operation_key="prmStonith2-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="27:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;27:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1399644124" last-rc-change="1399644124" exec-time="3048" queue-time="0" op-digest="421522900dae0d8f1078ede6ab7fb795" on_node="srv01"/>
+            <lrm_rsc_op id="prmStonith2-1_monitor_10000" operation_key="prmStonith2-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;17:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644127" exec-time="1041" queue-time="0" op-digest="ebbba4aa268e52b6aa9a9d0ad8e98c96" on_node="srv01"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1_last_0" operation_key="prmStonith3-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="33:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;33:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1399644125" last-rc-change="1399644125" exec-time="2044" queue-time="0" op-digest="50c850c4b67bfa708c5aa87c76c05e49" on_node="srv01"/>
+            <lrm_rsc_op id="prmStonith3-1_monitor_10000" operation_key="prmStonith3-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="24:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;24:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644127" exec-time="1046" queue-time="0" op-digest="e064e006ea599681818a14c4513987cf" on_node="srv01"/>
+          </lrm_resource>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:5:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;35:5:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1399644129" last-rc-change="1399644129" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv01"/>
+            <lrm_rsc_op id="pgsql_monitor_9000" operation_key="pgsql_monitor_9000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:6:8:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:8;37:6:8:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="35" rc-code="8" op-status="0" interval="9000" last-rc-change="1399644129" exec-time="13" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="srv01"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd_last_0" operation_key="prmPingd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="74:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;74:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1399644126" last-rc-change="1399644126" exec-time="1051" queue-time="0" op-digest="98163ce0ad14ff89c35e59ce09c6d0c0" on_node="srv01"/>
+            <lrm_rsc_op id="prmPingd_monitor_10000" operation_key="prmPingd_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="64:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;64:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="29" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644127" exec-time="1057" queue-time="0" op-digest="312f4722ab116a1edd893189e5793e02" on_node="srv01"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232238280">
+        <instance_attributes id="status-3232238280">
+          <nvpair id="status-3232238280-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238280-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232238280-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-3232238280-master-pgsql" name="master-pgsql" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3232238300" uname="srv03" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="3232238300">
+        <instance_attributes id="status-3232238300">
+          <nvpair id="status-3232238300-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238300-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232238300-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-3232238300-master-pgsql" name="master-pgsql" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3232238300">
+        <lrm_resources>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="29:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;29:4:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1399644126" last-rc-change="1399644126" exec-time="89" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv03"/>
+            <lrm_rsc_op id="pgsql_monitor_10000" operation_key="pgsql_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="40:6:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;40:6:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="30" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644127" exec-time="15" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="srv03"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1_last_0" operation_key="prmStonith2-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="17:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;17:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1399644123" last-rc-change="1399644123" exec-time="0" queue-time="0" op-digest="421522900dae0d8f1078ede6ab7fb795" on_node="srv03"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd_last_0" operation_key="prmPingd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="70:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;70:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1399644124" last-rc-change="1399644124" exec-time="1046" queue-time="0" op-digest="98163ce0ad14ff89c35e59ce09c6d0c0" on_node="srv03"/>
+            <lrm_rsc_op id="prmPingd_monitor_10000" operation_key="prmPingd_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="71:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:0;71:3:0:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="25" rc-code="0" op-status="0" interval="10000" last-rc-change="1399644125" exec-time="1041" queue-time="0" op-digest="312f4722ab116a1edd893189e5793e02" on_node="srv03"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1_last_0" operation_key="prmStonith3-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="18:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;18:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1399644123" last-rc-change="1399644123" exec-time="0" queue-time="0" op-digest="50c850c4b67bfa708c5aa87c76c05e49" on_node="srv03"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1_last_0" operation_key="prmStonith1-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="16:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" transition-magic="0:7;16:3:7:b72944fa-ae6c-44d4-9c41-890b3e87b879" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1399644121" last-rc-change="1399644121" exec-time="1973" queue-time="0" op-digest="a0de8e109dbd6484cce74591e3c8ae66" on_node="srv03"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

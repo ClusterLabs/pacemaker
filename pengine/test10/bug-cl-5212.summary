@@ -1,0 +1,61 @@
+
+Current cluster status:
+Node srv01 (3232238280): UNCLEAN (offline)
+Node srv02 (3232238290): UNCLEAN (offline)
+Online: [ srv03 ]
+
+ Resource Group: grpStonith1
+     prmStonith1-1	(stonith:external/ssh):	Started srv02 
+ Resource Group: grpStonith2
+     prmStonith2-1	(stonith:external/ssh):	Started srv01 
+ Resource Group: grpStonith3
+     prmStonith3-1	(stonith:external/ssh):	Started srv01 
+ Master/Slave Set: msPostgresql [pgsql]
+     Masters: [ srv01 ]
+     Slaves: [ srv02 srv03 ]
+ Clone Set: clnPingd [prmPingd]
+     Started: [ srv01 srv02 srv03 ]
+
+Transition Summary:
+ * Stop    prmStonith1-1	(Started srv03)
+ * Stop    prmStonith2-1	(Started srv03)
+ * Stop    prmStonith3-1	(srv01 - blocked)
+ * Stop    pgsql:0	(srv02 - blocked)
+ * Demote  pgsql:1	(Master -> Stopped srv01 - blocked)
+ * Stop    prmPingd:0	(srv02 - blocked)
+ * Stop    prmPingd:1	(srv01 - blocked)
+
+Executing cluster transition:
+ * Pseudo action:   grpStonith1_stop_0
+ * Pseudo action:   grpStonith1_start_0
+ * Pseudo action:   grpStonith2_stop_0
+ * Pseudo action:   grpStonith2_start_0
+ * Pseudo action:   grpStonith3_stop_0
+ * Pseudo action:   msPostgresql_pre_notify_stop_0
+ * Pseudo action:   clnPingd_stop_0
+ * Resource action: pgsql           notify on srv03
+ * Pseudo action:   msPostgresql_confirmed-pre_notify_stop_0
+ * Pseudo action:   msPostgresql_stop_0
+ * Pseudo action:   clnPingd_stopped_0
+ * Pseudo action:   msPostgresql_stopped_0
+ * Pseudo action:   msPostgresql_post_notify_stopped_0
+ * Resource action: pgsql           notify on srv03
+ * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
+
+Revised cluster status:
+Node srv01 (3232238280): UNCLEAN (offline)
+Node srv02 (3232238290): UNCLEAN (offline)
+Online: [ srv03 ]
+
+ Resource Group: grpStonith1
+     prmStonith1-1	(stonith:external/ssh):	Started srv02 
+ Resource Group: grpStonith2
+     prmStonith2-1	(stonith:external/ssh):	Started srv01 
+ Resource Group: grpStonith3
+     prmStonith3-1	(stonith:external/ssh):	Started srv01 
+ Master/Slave Set: msPostgresql [pgsql]
+     Masters: [ srv01 ]
+     Slaves: [ srv02 srv03 ]
+ Clone Set: clnPingd [prmPingd]
+     Started: [ srv01 srv02 srv03 ]
+
