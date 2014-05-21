@@ -367,6 +367,8 @@ class ConfigFactory:
             name = "pacemaker11";
         elif name == "pacemaker-1.2":
             name = "pacemaker12";
+        elif name == "pacemaker-2.0":
+            name = "pacemaker20";
         elif name == "hasi":
             name = "hae";
 
