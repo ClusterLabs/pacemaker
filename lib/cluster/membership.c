@@ -425,6 +425,23 @@ crm_get_peer(unsigned int id, const char *uname)
 
     node = crm_find_peer(id, uname);
 
+    /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
+     * we need to do a lookup of the node name using the id in the cluster membership. */
+    if ((node == NULL || node->uname == NULL) && (uname == NULL)) { 
+        uname_lookup = get_node_name(id);
+    }
+
+    if (uname_lookup) {
+        crm_trace("Inferred a name of '%s' for node %u", uname, id);
+        uname = uname_lookup;
+
+        /* try to turn up the node one more time now that we know the uname. */
+        if (node == NULL) {
+            node = crm_find_peer(id, uname);
+        }
+    }
+
+
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
 
@@ -434,12 +451,6 @@ crm_get_peer(unsigned int id, const char *uname)
         crm_info("Created entry %s/%p for node %s/%u (%d total)",
                  uniqueid, node, uname, id, 1 + g_hash_table_size(crm_peer_cache));
         g_hash_table_replace(crm_peer_cache, uniqueid, node);
-    }
-
-    if(id && uname == NULL && node->uname == NULL) {
-        uname_lookup = get_node_name(id);
-        uname = uname_lookup;
-        crm_trace("Inferred a name of '%s' for node %u", uname, id);
     }
 
     if(id > 0 && uname && (node->id == 0 || node->uname == NULL)) {
