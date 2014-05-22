@@ -879,7 +879,11 @@ static int
 child_kill_helper(mainloop_child_t *child)
 {
     if (kill(-child->pid, SIGKILL) < 0) {
-        crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+        if (child->timeout) {
+            /* only show this warning if this is the second time
+             * we're attempting to kill the pid after it has already timed out. */
+            crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+        }
         return -errno;
     }
     return 0;
@@ -997,6 +1001,9 @@ mainloop_child_kill(pid_t pid)
 {
     GListPtr iter;
     mainloop_child_t *child = NULL;
+    /* It is impossible to block SIGKILL, this allows us to
+     * call waitpid without WNOHANG flag.*/
+    int waitflags = 0;
 
     for (iter = child_list; iter != NULL; iter = iter->next) {
         child = iter->data;
@@ -1010,13 +1017,13 @@ mainloop_child_kill(pid_t pid)
     }
 
     if (child_kill_helper(child) != 0) {
-        /* failed to terminate child process */
-        return FALSE;
+        /* If KILL failed, likely the pid has already exited.
+         * We'll need to set the WNOHANG flag since we can't be
+         * certain though. */
+        waitflags = WNOHANG;
     }
 
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG here */
-    if (child_waitpid(child, 0) == FALSE) {
+    if (child_waitpid(child, waitflags) == FALSE) {
         /* not much we can do if this occurs */
         return FALSE;
     }

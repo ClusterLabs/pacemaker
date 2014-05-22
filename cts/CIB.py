@@ -317,6 +317,9 @@ class CIB12(CIB11):
     feature_set = "3.0"
     version = "pacemaker-1.2"
 
+class CIB2(CIB11):
+    feature_set = "3.0"
+    version = "pacemaker-2.0"
 #class HASI(CIB10):
 #    def add_resources(self):
 #        # DLM resource
@@ -335,6 +338,7 @@ class ConfigFactory:
         self.rsh = self.CM.rsh
         self.register("pacemaker11", CIB11, CM, self)
         self.register("pacemaker12", CIB12, CM, self)
+        self.register("pacemaker2", CIB2, CM, self)
 #        self.register("hae", HASI, CM, self)
         self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
@@ -362,6 +366,8 @@ class ConfigFactory:
             name = "pacemaker11";
         elif name == "pacemaker-1.2":
             name = "pacemaker12";
+        elif name == "pacemaker-2.0":
+            name = "pacemaker2";
         elif name == "hasi":
             name = "hae";
 
