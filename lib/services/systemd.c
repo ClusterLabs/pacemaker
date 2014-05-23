@@ -345,7 +345,10 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
-    if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
+    if(reply == NULL) {
+        crm_err("No reply for %s action on %s", op->action, op->rsc);
+
+    } else if(pcmk_dbus_find_error(op->action, pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
         if (!systemd_mask_error(op, error.name)) {
