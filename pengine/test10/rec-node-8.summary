@@ -10,8 +10,8 @@ Online: [ node2 ]
 
 Transition Summary:
  * Start   stonith-1	(node2 - blocked)
- * Stop    rsc1	(Started node2)
- * Stop    rsc2	(Started node2)
+ * Stop    rsc1	(Started node1 - blocked)
+ * Stop    rsc2	(Started node1 - blocked)
  * Start   rsc3	(node2 - blocked)
 
 Executing cluster transition:

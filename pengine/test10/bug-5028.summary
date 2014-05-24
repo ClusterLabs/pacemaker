@@ -7,7 +7,7 @@ Online: [ bl460g6a bl460g6b ]
      dummy02	(ocf::heartbeat:Dummy-stop-NG):	FAILED bl460g6a (unmanaged) 
 
 Transition Summary:
- * Stop    dummy01	(Started bl460g6b)
+ * Stop    dummy01	(Started bl460g6a - blocked)
 
 Executing cluster transition:
  * Pseudo action:   dummy-g_stop_0
