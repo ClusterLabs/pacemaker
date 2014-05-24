@@ -408,6 +408,7 @@ do_test unmanaged-stop-1 "cl#5155 - Block the stop of resources if any depending
 do_test unmanaged-stop-2 "cl#5155 - Block the stop of resources if the first resource in a mandatory stop order is unmanaged "
 do_test unmanaged-stop-3 "cl#5155 - Block the stop of resources if any depending resource in a group is unmanaged "
 do_test unmanaged-stop-4 "cl#5155 - Block the stop of resources if any depending resource in the middle of a group is unmanaged "
+do_test unmanaged-block-restart "Block restart of resources if any dependent resource in a group is unmanaged"
 
 echo ""
 do_test interleave-0 "Interleave (reference)"
