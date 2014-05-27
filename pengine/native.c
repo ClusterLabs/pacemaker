@@ -1614,6 +1614,9 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
     rh_value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
 
     if (!safe_str_eq(lh_value, rh_value)) {
+        if(constraint->score == INFINITY) {
+            rsc_lh->priority = -INFINITY;
+        }
         return;
     }
 
@@ -1704,6 +1707,9 @@ native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     CRM_ASSERT(rsc_lh);
     CRM_ASSERT(rsc_rh);
     filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint);
+    pe_rsc_trace(rsc_lh, "%sColocating %s with %s (%s, weight=%d, filter=%d)",
+                 constraint->score >= 0 ? "" : "Anti-",
+                 rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);
 
     switch (filter_results) {
         case influence_rsc_priority:
