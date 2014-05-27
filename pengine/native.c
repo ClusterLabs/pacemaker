@@ -1962,10 +1962,12 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             reason = "recover";
         }
 
-        if (reason && is_set(first->flags, pe_action_optional)
-            && is_set(first->flags, pe_action_runnable)) {
-            pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            pe_clear_action_bit(first, pe_action_optional);
+        if (reason && is_set(first->flags, pe_action_optional)) {
+            if (is_set(first->flags, pe_action_runnable)
+                || is_not_set(then->flags, pe_action_optional)) {
+                pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
+                pe_clear_action_bit(first, pe_action_optional);
+            }
         }
 
         if (reason && is_not_set(first->flags, pe_action_optional)
@@ -2231,7 +2233,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current->details->uname,
+                       stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
