@@ -84,7 +84,7 @@ class LabEnvironment(CtsLab):
         self["warn-inactive"] = 0
         self["ListTests"] = 0
         self["benchmark"] = 0
-        self["Schema"] = "pacemaker-1.0"
+        self["Schema"] = "pacemaker-2.0"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"

@@ -17,8 +17,8 @@ Online: [ srv03 ]
      Started: [ srv01 srv02 srv03 ]
 
 Transition Summary:
- * Stop    prmStonith1-1	(Started srv03)
- * Stop    prmStonith2-1	(Started srv03)
+ * Stop    prmStonith1-1	(Started srv02 - blocked)
+ * Stop    prmStonith2-1	(Started srv01 - blocked)
  * Stop    prmStonith3-1	(srv01 - blocked)
  * Stop    pgsql:0	(srv02 - blocked)
  * Demote  pgsql:1	(Master -> Stopped srv01 - blocked)
