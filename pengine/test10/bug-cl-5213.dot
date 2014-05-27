@@ -1,0 +1,3 @@
+digraph "g" {
+"pgsql_monitor_10000 srv01" [ style=bold color="green" fontcolor="black"]
+}

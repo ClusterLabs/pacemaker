@@ -1,0 +1,112 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.0" epoch="4" num_updates="22" admin_epoch="0" cib-last-written="Thu May 15 18:22:01 2014" have-quorum="1" dc-uuid="3232238190">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.11-f0f09b8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3232238190" uname="srv02"/>
+      <node id="3232238180" uname="srv01"/>
+    </nodes>
+    <resources>
+      <primitive id="A-master" class="ocf" provider="heartbeat" type="Dummy">
+        <!--### Primitive Configuration ###-->
+        <operations>
+          <op name="start" interval="0s" timeout="60s" on-fail="restart" id="A-master-start-0s"/>
+          <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="A-master-monitor-10s"/>
+          <op name="stop" interval="0s" timeout="60s" on-fail="block" id="A-master-stop-0s"/>
+        </operations>
+      </primitive>
+      <master id="msPostgresql">
+        <!--### Master/Slave Configuration ###-->
+        <meta_attributes id="msPostgresql-meta_attributes">
+          <nvpair name="master-max" value="1" id="msPostgresql-meta_attributes-master-max"/>
+          <nvpair name="master-node-max" value="1" id="msPostgresql-meta_attributes-master-node-max"/>
+          <nvpair name="clone-max" value="2" id="msPostgresql-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msPostgresql-meta_attributes-clone-node-max"/>
+          <nvpair name="notify" value="true" id="msPostgresql-meta_attributes-notify"/>
+        </meta_attributes>
+        <primitive id="pgsql" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op name="start" interval="0s" timeout="300s" on-fail="restart" id="pgsql-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="pgsql-monitor-10s"/>
+            <op name="monitor" role="Master" interval="9s" timeout="60s" on-fail="restart" id="pgsql-monitor-9s"/>
+            <op name="promote" interval="0s" timeout="300s" on-fail="restart" id="pgsql-promote-0s"/>
+            <op name="demote" interval="0s" timeout="300s" on-fail="block" id="pgsql-demote-0s"/>
+            <op name="notify" interval="0s" timeout="60s" id="pgsql-notify-0s"/>
+            <op name="stop" interval="0s" timeout="300s" on-fail="block" id="pgsql-stop-0s"/>
+          </operations>
+        </primitive>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location-msStateful-1" rsc="msPostgresql">
+        <rule role="master" score="200" id="rsc_location-msStateful-1-rule">
+          <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-msStateful-1-expression"/>
+        </rule>
+        <rule role="master" score="-INFINITY" id="rsc_location-msStateful-1-rule-0">
+          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msStateful-1-expression-0"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="rsc_colocation-master-1" score="INFINITY" rsc="msPostgresql" rsc-role="Master" with-rsc="A-master">
+        <!--### Resource Colocation ###-->
+      </rsc_colocation>
+      <rsc_order id="test-order-1" score="0" first="A-master" first-action="start" then="msPostgresql" then-action="promote" symmetrical="false">
+        <!--### Resource Order ###-->
+      </rsc_order>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <!--### Resource Defaults ###-->
+        <nvpair name="resource-stickiness" value="INFINITY" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="1" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="3232238190" uname="srv02" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="3232238190">
+        <instance_attributes id="status-3232238190">
+          <nvpair id="status-3232238190-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238190-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232238190-master-pgsql" name="master-pgsql" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3232238190">
+        <lrm_resources>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="8:2:0:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:0;8:2:0:7af869e0-f085-410d-9877-48e022013911" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1400145721" last-rc-change="1400145721" exec-time="143" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv02"/>
+            <lrm_rsc_op id="pgsql_monitor_10000" operation_key="pgsql_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="9:3:0:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:0;9:3:0:7af869e0-f085-410d-9877-48e022013911" call-id="15" rc-code="0" op-status="0" interval="10000" last-rc-change="1400145721" exec-time="17" queue-time="1" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="srv02"/>
+          </lrm_resource>
+          <lrm_resource id="A-master" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A-master_last_0" operation_key="A-master_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="6:2:0:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:0;6:2:0:7af869e0-f085-410d-9877-48e022013911" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1400145721" last-rc-change="1400145721" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv02" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="A-master_monitor_10000" operation_key="A-master_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="7:2:0:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:0;7:2:0:7af869e0-f085-410d-9877-48e022013911" call-id="13" rc-code="0" op-status="0" interval="10000" last-rc-change="1400145721" exec-time="19" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" on_node="srv02"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3232238180" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" uname="srv01" join="member" expected="member">
+      <transient_attributes id="3232238180">
+        <instance_attributes id="status-3232238180">
+          <nvpair id="status-3232238180-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232238180-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232238180-master-pgsql" name="master-pgsql" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3232238180">
+        <lrm_resources>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:4:0:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:0;13:4:0:7af869e0-f085-410d-9877-48e022013911" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1400145760" last-rc-change="1400145760" exec-time="83" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv01"/>
+          </lrm_resource>
+          <lrm_resource id="A-master" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="A-master_last_0" operation_key="A-master_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="6:4:7:7af869e0-f085-410d-9877-48e022013911" transition-magic="0:7;6:4:7:7af869e0-f085-410d-9877-48e022013911" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1400145760" last-rc-change="1400145760" exec-time="453" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="srv01" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

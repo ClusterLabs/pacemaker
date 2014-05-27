@@ -1,0 +1,11 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="pgsql_monitor_10000" internal_operation_key="pgsql:1_monitor_10000" on_node="srv01" on_node_uuid="3232238180">
+        <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
