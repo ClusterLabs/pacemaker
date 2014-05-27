@@ -984,7 +984,10 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         cib_num_local++;
         rc = cib_process_command(request, &op_reply, &result_diff, privileged);
 
-        if (global_update) {
+        if (is_update == FALSE) {
+            level = LOG_TRACE;
+
+        } else if (global_update) {
             switch (rc) {
                 case pcmk_ok:
                     level = LOG_INFO;
