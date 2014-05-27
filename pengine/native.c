@@ -1614,7 +1614,7 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
     rh_value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
 
     if (!safe_str_eq(lh_value, rh_value)) {
-        if(constraint->score == INFINITY) {
+        if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
             rsc_lh->priority = -INFINITY;
         }
         return;
