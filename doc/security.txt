@@ -105,7 +105,7 @@ Measure 1: As the CRMd, verify the "type" attribute when routing IPC messages fr
 Measure 2: As the CRMd, verfiy the "from" field on incoming messages and discard 
 	   if it is not "admin" or "dc"
 
-Measure 3: As the CRMd, Verfiy F_ORIG against known value for the DC.  Only the DC 
+Measure 3: As the CRMd, verfiy F_ORIG against known value for the DC.  Only the DC 
 	   should be sending us messages[3]
 
 Measure 4: As Heartbeat, only allow clients registered as "crmd" to send messages 
@@ -132,7 +132,7 @@ Measure 11: Don't create admin clients that pass a pre-defined set of credential
 [1] Shutting down Heartbeat to change permissions would mean the DC is 
     assigned elsewhere anyway
 [2] Sub-systems other than the CRMs/DC should not be making requests
-[3] If not implemented, then this exploit would only require acess to any
+[3] If not implemented, then this exploit would only require access to any
     member node
 [4] This is currently reported as an error and the second attempt is denied
 [5] It is envisioned that in the case of asynchronous RPC calls, that a 
