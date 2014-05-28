@@ -914,7 +914,8 @@ probe_resources(pe_working_set_t * data_set)
                 update_action_flags(probe_complete, pe_action_optional | pe_action_clear);
                 update_action_flags(probe_node_complete, pe_action_optional | pe_action_clear);
 
-                if (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc)) {
+                if (probe_cluster_nodes_complete
+                    && (rsc->is_remote_node || rsc_contains_remote_node(data_set, rsc))) {
                     update_action_flags(probe_cluster_nodes_complete, pe_action_optional | pe_action_clear);
                     /* allow remote connection resources and resources
                      * containing remote connection resources to run after all
