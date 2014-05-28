@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:34+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -91,7 +91,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "In xml it should look similar to this."
-msgstr ""
+msgstr "在xml中应该类似于这样。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -299,7 +299,7 @@ msgstr "这里我们设置所有资源共用的集群选项"
 #. Tag: para
 #, no-c-format
 msgid "resource-stickiness - Specify the aversion to moving resources to other machines"
-msgstr "resource-stickiness - 资源粘稠值"
+msgstr "resource-stickiness - 资源粘性值"
 
 #. Tag: programlisting
 #, no-c-format
@@ -334,7 +334,7 @@ msgstr "服务地址"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "Users of the services provided by the cluster require an unchanging address with which to access it. Additionally, we cloned the address so it will be active on both nodes. An iptables rule (created as part of the resource agent) is used to ensure that each request only gets processed by one of the two clone instances. The additional meta options tell the cluster that we want two instances of the clone (one \"request bucket\" for each node) and that if one node fails, then the remaining node should hold both."
-msgstr "用户需要一个不变的地址来访问集群所提供的服务。此外，我们clone了地址，以便在两个节点上都使用这个IP。一个iptables规则（resource agent的一部分）是用来确保每个请求只能由两个节点中的某一个处理。这些额外的集群选项告诉我们想要两个clone（每个节点一个“请求桶”）实例，如果一个节点失效，那么剩下的节点处理这两个请求桶。"
+msgstr "用户需要一个不变的地址来访问集群所提供的服务。此外，我们clone了地址，以便在两个节点上都使用这个IP。iptables规则（resource agent的一部分）是用来确保每个请求只能由两个节点中的某一个来处理。这些额外的集群选项告诉我们想要两个clone（每个节点一个“request bucket”）实例，如果一个节点失效，那么剩下的节点处理这两个request bucket。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -363,7 +363,7 @@ msgstr "DRBD - 共享存储"
 #. Tag: para
 #, no-c-format
 msgid "Here we define the DRBD service and specify which DRBD resource (from drbd.conf) it should manage. We make it a master/slave resource and, in order to have an active/active setup, allow both instances to be promoted by specifying master-max=2. We also set the notify option so that the cluster will tell DRBD agent when it’s peer changes state."
-msgstr "在这里，我们定义了DRBD技术服务，并指定DRBD应该管理的资源（从drbd.conf）。我们让它作为主/从资源，并且为了active/active，用设置master-max=2来允许两者都晋升为master。我们还可以设置通知选项，这样，当时集群的节点的状态发生改变时，该集群将告诉DRBD的agent。 "
+msgstr "在这里，我们定义了DRBD服务，并指定了应该管理的DRBD资源（从drbd.conf）。我们让它作为主/从资源，并且为了active/active，用设置master-max=2来允许两者都晋升为master。我们还可以设置通知选项，这样，当集群节点的状态发生改变时，该集群将告诉DRBD的agent。 "
 
 #. Tag: programlisting
 #, no-c-format
@@ -417,7 +417,7 @@ msgstr "Apache"
 #. Tag: para
 #, no-c-format
 msgid "Lastly we have the actual service, Apache. We need only tell the cluster where to find it’s main configuration file and restrict it to running on nodes that have the required filesystem mounted and the IP address active."
-msgstr "最后我们有了真正的服务，Apache，我们只需要告诉集群在哪里可以找到它的主配置文件，并限制其只在挂载了文件系统和有可用IP节点上运行"
+msgstr "最后我们有了真正的服务，Apache，我们只需要告诉集群在哪里可以找到它的主配置文件，并限制其只能在挂载了文件系统和有可用IP的节点上运行。"
 
 #. Tag: programlisting
 #, no-c-format

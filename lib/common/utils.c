@@ -2139,6 +2139,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     char *key = NULL;
     char *magic = NULL;
     char *op_id = NULL;
+    char *op_id_additional = NULL;
     char *local_user_data = NULL;
 
     xmlNode *xml_op = NULL;
@@ -2196,6 +2197,10 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+        if (op->interval == 0) {
+            /* Ensure 'last' gets updated too in case recording-pending="true" */
+            op_id_additional = generate_op_key(op->rsc_id, "last", 0);
+        }
 
     } else if (op->interval > 0) {
         op_id = strdup(key);
@@ -2204,6 +2209,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         op_id = generate_op_key(op->rsc_id, "last", 0);
     }
 
+  again:
     xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
     if (xml_op == NULL) {
         xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
@@ -2217,7 +2223,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         op->user_data = local_user_data;
     }
 
-    magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+    if(magic == NULL) {
+        magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+    }
 
     crm_xml_add(xml_op, XML_ATTR_ID, op_id);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
@@ -2271,6 +2279,13 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     }
 
     append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
+
+    if (op_id_additional) {
+        free(op_id);
+        op_id = op_id_additional;
+        op_id_additional = NULL;
+        goto again;
+    }
 
     if (local_user_data) {
         free(local_user_data);

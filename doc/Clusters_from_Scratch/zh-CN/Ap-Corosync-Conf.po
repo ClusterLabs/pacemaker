@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-15 23:35+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -16,12 +16,12 @@ msgstr ""
 #. Tag: title
 #, fuzzy, no-c-format
 msgid "Sample Corosync Configuration"
-msgstr "Corosync.conf 样例"
+msgstr "Corosync.conf 示例"
 
 #. Tag: title
 #, no-c-format
 msgid "Sample corosync.conf for two-node cluster using a node list."
-msgstr ""
+msgstr "配有node list选项的双节点集群corosync.conf示例。"
 
 #. Tag: literallayout
 #, no-c-format

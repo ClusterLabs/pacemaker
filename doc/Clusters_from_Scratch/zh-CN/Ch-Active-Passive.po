@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-16 00:24+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -51,9 +51,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "For those that are not of afraid of XML, you can see the raw cluster configuration and status by using the <literal>pcs cluster cib</literal> command."
-msgstr "如果有谁想看看XML格式的，你可以添加xml选项来看到原始的配置文件"
+msgstr "如果有谁想看看XML格式的，你可以命令“crm configure show xml”来看到原始的配置文件"
 
 #. Tag: title
 #, no-c-format
@@ -138,19 +138,19 @@ msgid "As you can see, the tool has found some errors."
 msgstr "就像你看到的，这个工具发现了一些错误。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In order to guarantee the safety of your data <footnote><para>If the data is corrupt, there is little point in continuing to make it available</para></footnote> , the default for STONITH <footnote><para>A common node fencing mechanism. Used to ensure data integrity by powering off \"bad\" nodes</para></footnote> in Pacemaker is <literal>enabled</literal>. However it also knows when no STONITH configuration has been supplied and reports this as a problem (since the cluster would not be able to make progress if a situation requiring node fencing arose)."
-msgstr "为了确保您数据的安全性 <footnote> <para>如果数据是损坏的，那保证它的可用性是没有意义的</para> </footnote> ，请使用配备STONITH <footnote> <para> 一个常见的隔离手段。用关掉坏节点电源的办法来保证数据完整 </para> </footnote>的Pacemaker。但是当没有配置STONITH的时候也会报这个错误(因为当集群中某个节点需要被隔离的时候，集群就无法工作了)。"
+msgstr "为了确保您数据的安全性 <footnote> <para>如果数据是损坏的，那保证它的可用性是没有意义的</para> </footnote> ，请在pacemaker中配置使用STONITH <footnote> <para> 一个常见的隔离手段。用关掉坏节点电源的办法来保证数据完整 </para> </footnote>。但是当没有配置STONITH的时候就会报这个错误(因为当集群中某个节点需要被隔离的时候，集群就无法工作了)。"
 
 #. Tag: para
 #, no-c-format
 msgid "For now, we will disable this feature and configure it later in the Configuring STONITH section. It is important to note that the use of STONITH is highly encouraged, turning it off tells the cluster to simply pretend that failed nodes are safely powered off. Some vendors will even refuse to support clusters that have it disabled."
-msgstr "目前，我们禁用这个特性，然后在 配置STONISH 章节来配置它。这里要指出，使用STONITH是非常有必要的。关闭这个特性就是告诉集群:假装故障的节点已经安全的关机了。一些供应商甚至不允许这个特性被关闭。"
+msgstr "目前，我们禁用这个特性，然后在“配置STONISH”章节来配置它。这里要指出，使用STONITH是非常有必要的。关闭这个特性就是告诉集群假装故障的节点已经安全的关机了。一些供应商甚至不允许集群的这个特性被关闭。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To disable STONITH, we set the <emphasis>stonith-enabled</emphasis> cluster option to false."
-msgstr "我们将 stonith-enabled设置为 false 来关闭STONITH"
+msgstr "我们将 stonith-enabled 设置为 false 来关闭STONITH"
 
 #. Tag: programlisting
 #, no-c-format
@@ -167,7 +167,7 @@ msgstr "设置完这个选项以后，校验配置文件就正常了。"
 #. Tag: para
 #, no-c-format
 msgid "The use of stonith-enabled=false is completely inappropriate for a production cluster. We use it here to defer the discussion of its configuration which can differ widely from one installation to the next. See <xref linkend=\"_what_is_stonith\" /> for information on why STONITH is important and details on how to configure it."
-msgstr ""
+msgstr "在用于生产环境的集群中配置 stonith-enabled=false 是非常不恰当的。我们在这里使用是为了推迟讨论它各种不同的配置。你可已在这里看到 <xref linkend=\"_what_is_stonith\" /> 如何配置 STONITH 已经它为何如此重要的详细内容。"
 
 #. Tag: title
 #, no-c-format
@@ -175,9 +175,9 @@ msgid "Adding a Resource"
 msgstr "添加一个资源"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "The first thing we should do is configure an IP address. Regardless of where the cluster service(s) are running, we need a consistent address to contact them on. Here I will choose and add 192.168.122.120 as the floating address, give it the imaginative name ClusterIP and tell the cluster to check that its running every 30 seconds."
-msgstr "首先要做的是配置一个IP地址，不管集群服务在哪运行，我们要一个固定的地址来提供服务。在这里我选择192.168.122.101作为浮动IP，给它取一个好记的名字 ClusterIP 并且告诉集群 每30秒检查它一次"
+msgstr "首先要做的是配置一个IP地址，不管集群服务在哪运行，我们要一个固定的地址来提供服务。在这里我选择192.168.122.101作为浮动IP，给它取一个好记的名字 ClusterIP 并且告诉集群每30秒检查它一次。"
 
 #. Tag: para
 #, no-c-format
@@ -198,15 +198,15 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "The other important piece of information here is ocf:heartbeat:IPaddr2."
-msgstr ""
+msgstr "这里是 ocf:heartbeat:IPaddr2 的其他重要信息。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "This tells Pacemaker three things about the resource you want to add. The first field, ocf, is the standard to which the resource script conforms to and where to find it. The second field is specific to OCF resources and tells the cluster which namespace to find the resource script in, in this case heartbeat. The last field indicates the name of the resource script."
-msgstr "另外一个重要的信息是 ocf:heartbeat:IPaddr2。这告诉Pacemaker三件事情，第一个部分，ocf，指明了这个资源采用的标准(类型)以及在哪能找到它。第二个部分标明这个资源脚本的在OCF中的名字空间，在这个例子中是heartbeat。最后一个部分指明了资源脚本的名称。"
+msgstr "另外一个重要的信息是 ocf:heartbeat:IPaddr2。这告诉Pacemaker三件事情，第一个部分ocf，指明了这个资源采用的标准(类型)以及在哪能找到它。第二个部分标明这个资源脚本的在ocf中的名字空间，在这个例子中是heartbeat。最后一个部分指明了资源脚本的名称。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To obtain a list of the available resource standards (the ocf part of ocf:heartbeat:IPaddr2), run"
 msgstr "可以运行下面的命令来获得可用的资源类"
 
@@ -222,9 +222,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To obtain a list of the available ocf resource providers (the heartbeat part of ocf:heartbeat:IPaddr2), run"
-msgstr "可以运行下面的命令来获得可用的资源类"
+msgstr "可以运行下面的命令来获得可用的ocf资源提供者"
 
 #. Tag: programlisting
 #, no-c-format
@@ -239,7 +239,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Finally, if you want to see all the resource agents available for a specific ocf provider (the IPaddr2 part of ocf:heartbeat:IPaddr2), run"
-msgstr ""
+msgstr "最后， 如果你想看特定一个ocf资源提供者的所有可用资源代理"
 
 #. Tag: programlisting
 #, no-c-format
@@ -292,12 +292,12 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Perform a Failover"
-msgstr " 做一次失效备援"
+msgstr " 做一次故障迁移"
 
 #. Tag: para
 #, no-c-format
 msgid "Being a high-availability cluster, we should test failover of our new resource before moving on."
-msgstr "作为一个高可用的集群，我们在继续本文档之前，我们要需要测试失效备援 。"
+msgstr "作为一个高可用的集群，我们在继续本文档之前，我们要需要测试故障迁移 。"
 
 #. Tag: para
 #, no-c-format
@@ -305,9 +305,9 @@ msgid "First, find the node on which the IP address is running."
 msgstr "首先，找到IP资源现在在哪个节点上运行。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Shut down Pacemaker and Corosync on that machine."
-msgstr "关闭那个节点上面的Corosync服务:"
+msgstr "关闭那个节点上面的Corosync和Pacemaker服务。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -317,9 +317,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Once Corosync is no longer running, go to the other node and check the cluster status."
-msgstr "当Corosync停止运行以后，我们到另外一个节点用crm_mon来检查集群状态."
+msgstr "当Corosync停止运行以后，我们到另外一个节点用 crm_mon -1 来检查集群状态。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -357,9 +357,9 @@ msgstr ""
 "<emphasis>ClusterIP (ocf::heartbeat:IPaddr): Started pcmk-2</emphasis>\n"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "There are three things to notice about the cluster’s current state. The first is that, as expected, <literal>pcmk-1</literal> is now offline. However we can also see that <literal>ClusterIP</literal> isn’t running anywhere!"
-msgstr "关于集群状态，我们有三个地方需要注意，首先，如我们所料pcmk-1已经下线了，然而我们发现ClusterIP不在任何地方运行！"
+msgstr "关于集群状态，我们有三个地方需要注意.首先，如我们所料pcmk-1已经离线了，但是我们发现ClusterIP没有在任何地方运行！"
 
 #. Tag: title
 #, no-c-format
@@ -367,9 +367,9 @@ msgid "Quorum and Two-Node Clusters"
 msgstr "法定人数和双节点集群"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "This is because the cluster no longer has quorum, as can be seen by the text \"partition WITHOUT quorum\" in the status output. In order to reduce the possibility of data corruption, Pacemaker’s default behavior is to stop all resources if the cluster does not have quorum."
-msgstr "这是因为集群已经达不到“法定人数”了，就像我们看到的“partition WITHOUT quorum” (用绿色强调的)。为了避免数据遭到破坏，当Pacemaker发现集群达不到法定人数时，就会停止所有的资源。"
+msgstr "这是因为集群已经达不到“法定人数”了，我们可以看到集群状态输出里有“partition WITHOUT quorum” (用绿色强调的)。为了避免数据遭到破坏，当Pacemaker发现集群达不到法定人数时，就会停止所有的资源。"
 
 #. Tag: para
 #, no-c-format
@@ -377,14 +377,14 @@ msgid "A cluster is said to have quorum when more than half the known or expecte
 msgstr "当有半数以上的节点在线时，这个集群就认为自己拥有法定人数了，是“合法”的，换而言之就是下面的公式:"
 
 #. Tag: literallayout
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "total_nodes &lt; 2 * active_nodes"
-msgstr "总节点数 - 1 &#60; 2 * 可用的节点"
+msgstr "总节点数 < 2 * 活跃节点数"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Therefore a two-node cluster only has quorum when both nodes are running, which is no longer the case for our cluster. This would normally make the creation of a two-node cluster pointless <footnote><para>Actually some would argue that two-node clusters are always pointless, but that is an argument for another time</para></footnote> , however it is possible to control how Pacemaker behaves when quorum is lost. In particular, we can tell the cluster to simply ignore quorum altogether."
-msgstr "因此在双节点的集群中，只有当两者都在线时才是合法的。 这个规则会让 双节点的集群 毫无意义，但是我们可以控制Pacemaker发现集群达不到法定人数时候的行为。简单来说，我们告诉集群忽略它 。"
+msgstr "因此在双节点的集群中只有当两者都在线时才是合法的的这个规则会让“双节点集群”毫无意义，但是我们可以控制Pacemaker发现集群达不到法定人数时候的行为。简单来说，我们告诉集群忽略它。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -400,7 +400,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "After a few moments, the cluster will start the IP address on the remaining node. Note that the cluster still does not have quorum."
-msgstr "过了一会，集群会在剩下的那个节点上启动这个IP。请注意集群现在依然没有达到法定人数。"
+msgstr "过一会儿，集群会在剩下的那个节点上启动这个IP。请注意集群现在依然没有达到法定人数。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -439,7 +439,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Now simulate node recovery by restarting the cluster stack on <literal>pcmk-1</literal> and check the cluster’s status. Note, if you get an authentication error with the <emphasis>pcs cluster start pcmk-1</emphasis> command, you must authenticate on the node using the <emphasis>pcs cluster auth pcmk pcmk-1 pcmk-2</emphasis> command discussed earlier."
-msgstr ""
+msgstr "现在通过重启pcmk-1的集群组建来模拟节点恢复，并检查集群的状态。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -466,22 +466,22 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "In the dark days, the cluster may have moved the IP back to its original location (<literal>pcmk-1</literal>). Usually this is no longer the case."
-msgstr ""
+msgstr "集群可能会迁移这个IP到原始的节点pcmk-1。"
 
 #. Tag: title
 #, no-c-format
 msgid "Prevent Resources from Moving after Recovery"
-msgstr "防止资源在节点恢复后移动"
+msgstr "防止资源在节点恢复后迁移"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In most circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long."
-msgstr "一些环境中会要求尽量避免资源在节点之间移动。移动资源通常意味着一段时间内无法提供服务，某些复杂的服务，比如Oracle数据库，这个时间可能会很长。"
+msgstr "一些环境中会要求尽量避免资源在节点之间迁移。迁移资源通常意味着一段时间内无法提供服务，某些复杂的服务，比如Oracle数据库，这个时间可能会很长。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the \"cost\" of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve \"optimal\" <footnote><para>It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them</para></footnote> resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default."
-msgstr "为了达到这个效果，Pacemaker 有一个叫做 资源黏性值 的概念，它能够控制一个服务(资源)有多想呆在它正在运行的节点上。你可以把它认为是无法提供服务的“代价”<footnote> <para> 这里要注意的是Pacemaker定义的代价跟人们所想的不一样。如果管理员没有明确的指定参数(创建稳定环境所必须的)，那么资源个节点在Pacemaker处理列表中的顺序会隐式地创建参数 </para> </footnote>”。 Pacemaker为了达到最优分布各个资源的目的，默认设置这个值为0。我们可以为每个资源定义不同的黏性值，但一般来说，更改默认黏性值就够了。"
+msgstr "为了达到这个效果，Pacemaker 有一个叫做“资源粘性值”的概念，它能够控制一个服务(资源)有多想呆在它正在运行的节点上。你可以把它认为是无法提供服务的“代价”<footnote> <para> 这里要注意的是Pacemaker定义的代价跟人们所想的不一样。如果管理员没有明确的指定参数(创建稳定环境所必须的)，那么资源及节点在Pacemaker处理列表中的顺序会隐式地创建参数 </para> </footnote>”。 Pacemaker为了达到最优分布各个资源的目的，默认设置这个值为0。我们可以为每个资源定义不同的粘性值，但一般来说，更改默认粘性值就够了。"
 
 #. Tag: programlisting
 #, no-c-format
