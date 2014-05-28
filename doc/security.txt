@@ -20,7 +20,7 @@ etc.  It is likely that this would be augmented by adding an identity
 store (leading candidates would be the CIB and /etc/passwd) and
 authorization mechanisms to the CRM RPC Server processes.  
 
-To achieve a moderatly sensible level of security granularity, the API
+To achieve a moderately sensible level of security granularity, the API
 should at least be split up into the following list of RPC Servers:
 
 cib_delete
