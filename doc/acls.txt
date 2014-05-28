@@ -195,6 +195,6 @@ necessary for proper operation of various Pacemaker tools,
 including `crm_mon` and the shell.  This is fine for viewing
 cluster status, but there are some tools for which this will
 not be sufficient access (notably `ptest`), which is why it is
-generally recommened that read access be allowed to the entire
+generally recommended that read access be allowed to the entire
 CIB.
 
