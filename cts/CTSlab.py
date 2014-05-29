@@ -3,7 +3,7 @@
 '''CTS: Cluster Testing System: Lab environment module
  '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2001,2005 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
 '''
@@ -26,7 +26,7 @@ Licensed under the GNU GPL.
 from UserDict import UserDict
 import sys, types, string, string, signal, os, socket
 
-pdir=os.path.dirname(sys.path[0])
+pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
@@ -56,6 +56,7 @@ Tests = []
 Chosen = []
 scenario = None
 
+
 # Not really used, the handler in
 def sig_handler(signum, frame) :
     if cm: cm.log("Interrupted by signal %d"%signum)
@@ -63,6 +64,7 @@ def sig_handler(signum, frame) :
     if signum == 15 :
         if scenario: scenario.TearDown()
         sys.exit(1)
+
 
 class LabEnvironment(CtsLab):
 
@@ -112,9 +114,10 @@ class LabEnvironment(CtsLab):
                 break;
         self["cts-master"] = master
 
+
 def usage(arg, status=1):
     print "Illegal argument " + arg
-    print "usage: " + sys.argv[0] +" [options] number-of-iterations"
+    print "usage: " + sys.argv[0] + " [options] number-of-iterations"
     print "\nCommon options: "
     print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"
     print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)"
@@ -184,15 +187,15 @@ if __name__ == '__main__':
 
     # Process arguments...
 
-    skipthis=None
-    args=sys.argv[1:]
+    skipthis = None
+    args = sys.argv[1:]
     for i in range(0, len(args)):
        if skipthis:
-           skipthis=None
+           skipthis = None
            continue
 
        elif args[i] == "-l" or args[i] == "--limit-nodes":
-           skipthis=1
+           skipthis = 1
            LimitNodes = int(args[i+1])
 
        elif args[i] == "-r" or args[i] == "--populate-resources":
@@ -200,31 +203,31 @@ if __name__ == '__main__':
            Environment["ClobberCIB"] = 1
 
        elif args[i] == "-L" or args[i] == "--logfile":
-           skipthis=1
+           skipthis = 1
            Environment["LogFileName"] = args[i+1]
 
        elif args[i] == "--outputfile":
-           skipthis=1
+           skipthis = 1
            Environment["OutputFile"] = args[i+1]
 
        elif args[i] == "--ip" or args[i] == "--test-ip-base":
-           skipthis=1
+           skipthis = 1
            Environment["IPBase"] = args[i+1]
            Environment["CIBResource"] = 1
            Environment["ClobberCIB"] = 1
 
        elif args[i] == "--oprofile":
-           skipthis=1
+           skipthis = 1
            Environment["oprofile"] = args[i+1].split(' ')
 
        elif args[i] == "--trunc":
-           Environment["TruncateLog"]=1
+           Environment["TruncateLog"] = 1
 
        elif args[i] == "--list-tests" or args[i] == "--list" :
-           Environment["ListTests"]=1
+           Environment["ListTests"] = 1
 
        elif args[i] == "--benchmark":
-           Environment["benchmark"]=1
+           Environment["benchmark"] = 1
 
        elif args[i] == "--bsc":
            Environment["DoBSC"] = 1
@@ -235,41 +238,41 @@ if __name__ == '__main__':
            rsh.enable_qarsh()
 
        elif args[i] == "--stonith" or args[i] == "--fencing":
-           skipthis=1
+           skipthis = 1
            if args[i+1] == "1" or args[i+1] == "yes":
-               Environment["DoFencing"]=1
+               Environment["DoFencing"] = 1
            elif args[i+1] == "0" or args[i+1] == "no":
-               Environment["DoFencing"]=0
+               Environment["DoFencing"] = 0
            elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
            elif args[i+1] == "scsi":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_scsi"
                Environment["stonith-params"] = "delay=0"
            elif args[i+1] == "ssh" or args[i+1] == "lha":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "external/ssh"
                Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
            elif args[i+1] == "north":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=north-apc,login=apc,passwd=apc,pcmk_host_map=north-01:2;north-02:3;north-03:4;north-04:5;north-05:6;north-06:7;north-07:9;north-08:10;north-09:11;north-10:12;north-11:13;north-12:14;north-13:15;north-14:18;north-15:17;north-16:19;"
            elif args[i+1] == "south":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=south-apc,login=apc,passwd=apc,pcmk_host_map=south-01:2;south-02:3;south-03:4;south-04:5;south-05:6;south-06:7;south-07:9;south-08:10;south-09:11;south-10:12;south-11:13;south-12:14;south-13:15;south-14:18;south-15:17;south-16:19;"
            elif args[i+1] == "east":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
            elif args[i+1] == "west":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=west-apc,login=apc,passwd=apc,pcmk_host_map=west-01:2;west-02:3;west-03:4;west-04:5;west-05:6;west-06:7;west-07:9;west-08:10;west-09:11;west-10:12;west-11:13;west-12:14;west-13:15;west-14:18;west-15:17;west-16:19;"
            elif args[i+1] == "openstack":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_openstack"
 
                print "Obtaining OpenStack credentials from the current environment"
@@ -282,7 +285,7 @@ if __name__ == '__main__':
                    )
 
            elif args[i+1] == "rhevm":
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_rhevm"
 
                print "Obtaining RHEV-M credentials from the current environment"
@@ -298,14 +301,14 @@ if __name__ == '__main__':
 
        elif args[i] == "--stonith-type":
            Environment["stonith-type"] = args[i+1]
-           skipthis=1
+           skipthis = 1
 
        elif args[i] == "--stonith-args":
            Environment["stonith-params"] = args[i+1]
-           skipthis=1
+           skipthis = 1
 
        elif args[i] == "--standby":
-           skipthis=1
+           skipthis = 1
            if args[i+1] == "1" or args[i+1] == "yes":
                Environment["DoStandby"] = 1
            elif args[i+1] == "0" or args[i+1] == "no":
@@ -317,7 +320,7 @@ if __name__ == '__main__':
            Environment["ClobberCIB"] = 1
 
        elif args[i] == "--cib-filename":
-           skipthis=1
+           skipthis = 1
            Environment["CIBfilename"] = args[i+1]
 
        elif args[i] == "--xmit-loss":
@@ -326,7 +329,7 @@ if __name__ == '__main__':
            except ValueError:
                print ("--xmit-loss parameter should be float")
                usage(args[i+1])
-           skipthis=1
+           skipthis = 1
            Environment["XmitLoss"] = args[i+1]
 
        elif args[i] == "--recv-loss":
@@ -335,20 +338,20 @@ if __name__ == '__main__':
            except ValueError:
                print ("--recv-loss parameter should be float")
                usage(args[i+1])
-           skipthis=1
+           skipthis = 1
            Environment["RecvLoss"] = args[i+1]
 
        elif args[i] == "--choose":
-           skipthis=1
+           skipthis = 1
            Chosen.append(args[i+1])
            Environment["scenario"] = "sequence"
 
        elif args[i] == "--nodes":
-           skipthis=1
+           skipthis = 1
            node_list = args[i+1].split(' ')
 
        elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
-           skipthis=1
+           skipthis = 1
            Environment["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
 
            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
@@ -356,21 +359,21 @@ if __name__ == '__main__':
            # Hacks to make my life easier
            if args[i+1] == "r6":
                Environment["Stack"] = "cman"
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "delay=0"
                Environment["IPBase"] = " fe80::1234:56:7890:4000"
 
            elif args[i+1] == "virt1":
                Environment["Stack"] = "corosync"
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_xvm"
                Environment["stonith-params"] = "delay=0"
                Environment["IPBase"] = " fe80::1234:56:7890:1000"
 
            elif args[i+1] == "east16" or args[i+1] == "nsew":
                Environment["Stack"] = "corosync"
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_apc"
                Environment["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
                Environment["IPBase"] = " fe80::1234:56:7890:2000"
@@ -381,7 +384,7 @@ if __name__ == '__main__':
 
            elif args[i+1] == "corosync8":
                Environment["Stack"] = "corosync"
-               Environment["DoStonith"]=1
+               Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_rhevm"
 
                print "Obtaining RHEV-M credentials from the current environment"
@@ -406,25 +409,25 @@ if __name__ == '__main__':
                print("Unknown DSH group: %s" % args[i+1])
 
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
-           skipthis=1
+           skipthis = 1
            Environment["SyslogFacility"] = args[i+1]
 
        elif args[i] == "--seed":
-           skipthis=1
+           skipthis = 1
            Environment.SeedRandom(args[i+1])
 
        elif args[i] == "--warn-inactive":
            Environment["warn-inactive"] = 1
 
        elif args[i] == "--schema":
-           skipthis=1
+           skipthis = 1
            Environment["Schema"] = args[i+1]
 
        elif args[i] == "--ais":
            Environment["Stack"] = "openais"
 
        elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
-           skipthis=1
+           skipthis = 1
            if args[i+1] == "1" or args[i+1] == "yes":
                Environment["at-boot"] = 1
            elif args[i+1] == "0" or args[i+1] == "no":
@@ -448,7 +451,7 @@ if __name__ == '__main__':
                Environment["Stack"] = "corosync"
            else:
                Environment["Stack"] = args[i+1]
-           skipthis=1
+           skipthis = 1
 
        elif args[i] == "--once":
            Environment["scenario"] = "all-once"
@@ -463,9 +466,9 @@ if __name__ == '__main__':
            Environment["loop-tests"] = 0
 
        elif args[i] == "--loop-minutes":
-           skipthis=1
+           skipthis = 1
            try:
-               Environment["loop-minutes"]=int(args[i+1])
+               Environment["loop-minutes"] = int(args[i+1])
            except ValueError:
                usage(args[i])
 
@@ -479,7 +482,7 @@ if __name__ == '__main__':
            Environment["container-tests"] = 1
 
        elif args[i] == "--set":
-           skipthis=1
+           skipthis = 1
            (name, value) = args[i+1].split('=')
            Environment[name] = value
            print "Setting %s = %s" % (name, value)
@@ -489,7 +492,7 @@ if __name__ == '__main__':
 
        else:
            try:
-               NumIter=int(args[i])
+               NumIter = int(args[i])
            except ValueError:
                usage(args[i])
 
@@ -547,7 +550,7 @@ if __name__ == '__main__':
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:
             print("Limiting the number of nodes configured=%d (max=%d)"
-                  %(len(node_list), LimitNodes))
+                  % (len(node_list), LimitNodes))
             while len(node_list) > LimitNodes:
                 node_list.pop(len(node_list)-1)
 
@@ -589,7 +592,7 @@ if __name__ == '__main__':
 
     # Try to determinw an offset for IPaddr resources
     if Environment["CIBResource"] and not Environment.has_key("IPBase"):
-        network=rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
+        network = rsh(discover, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", stdout=1).strip()
         Environment["IPBase"] = rsh(discover, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, stdout=1).strip()
         if not Environment["IPBase"]:
             Environment["IPBase"] = " fe80::1234:56:7890:1000"
@@ -666,7 +669,6 @@ if __name__ == '__main__':
     if Environment.has_key("IPBase"):
         Environment.log("Base IP for resources:  %s" % Environment["IPBase"])
     Environment.log("Cluster starts at boot: %d" % Environment["at-boot"])
-
 
     Environment.dump()
     rc = Environment.run(scenario, NumIter)

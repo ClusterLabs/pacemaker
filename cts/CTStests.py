@@ -4,7 +4,7 @@ There are a few things we want to do here:
 
  '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
 
@@ -46,6 +46,7 @@ from cts.CTSvars   import *
 
 AllTestClasses = [ ]
 
+
 class CTSTest:
     '''
     A Cluster test.
@@ -74,7 +75,7 @@ class CTSTest:
         self.debug = cm.debug
         self.log_patterns = cm
         self.Audits = []
-        self.timeout=120
+        self.timeout = 120
         self.passed = 1
         self.is_loop = 0
         self.is_unsafe = 0
@@ -109,7 +110,7 @@ class CTSTest:
         elapsed = 0
         if key in self.timer:
             elapsed = time.time() - self.timer[key]
-            s = key == "test" and self.name or "%s:%s" %(self.name,key)
+            s = key == "test" and self.name or "%s:%s" % (self.name,key)
             self.debug("%s runtime: %.2f" % (s, elapsed))
             del self.timer[key]
         return elapsed
@@ -117,7 +118,7 @@ class CTSTest:
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
         if not self.Stats.has_key(name):
-            self.Stats[name]=0
+            self.Stats[name] = 0
         self.Stats[name] = self.Stats[name]+1
 
         # Reset the test passed boolean
@@ -128,7 +129,7 @@ class CTSTest:
         '''Increment the failure count'''
         self.passed = 0
         self.incr("failure")
-        self.log(("Test %s" % self.name).ljust(35)  +" FAILED: %s" % reason)
+        self.log(("Test %s" % self.name).ljust(35)  + " FAILED: %s" % reason)
         return None
 
     def success(self):
@@ -181,7 +182,7 @@ class CTSTest:
         ignorelist.extend(local_ignore)
 
         while errcount < 100:
-            match=watch.look(0)
+            match = watch.look(0)
             if match:
                add_err = 1
                for ignore in ignorelist:
@@ -189,7 +190,7 @@ class CTSTest:
                        add_err = 0
                if add_err == 1:
                    self.log(prefix + " " + match)
-                   errcount=errcount+1
+                   errcount = errcount + 1
             else:
               break
         else:
@@ -246,13 +247,12 @@ class CTSTest:
         '''Return list of errors which are 'normal' and should be ignored'''
         return []
 
-###################################################################
+
 class StopTest(CTSTest):
-###################################################################
     '''Stop (deactivate) the cluster manager on a node'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
-        self.name="Stop"
+        self.name = "Stop"
 
     def __call__(self, node):
         '''Perform the 'stop' test. '''
@@ -271,7 +271,7 @@ class StopTest(CTSTest):
         # NOTE: This wont work if we have multiple partitions
         for other in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
-                patterns.append(self.log_patterns["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
+                patterns.append(self.log_patterns["Pat:They_stopped"] % (other, self.CM.key_for_node(node)))
                 #self.debug("Checking %s will notice %s left"%(other, node))
 
         watch = self.create_watch(patterns, self.log_patterns["DeadTime"])
@@ -288,7 +288,7 @@ class StopTest(CTSTest):
         self.CM.StopaCM(node)
         watch_result = watch.lookforall()
 
-        failreason=None
+        failreason = None
         UnmatchedList = "||"
         if watch.unmatched:
             (rc, output) = self.rsh(node, "/bin/ps axf", None)
@@ -302,7 +302,7 @@ class StopTest(CTSTest):
             for regex in watch.unmatched:
                 self.log ("ERROR: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
-                failreason="Missing shutdown pattern"
+                failreason = "Missing shutdown pattern"
 
         self.CM.cluster_stable(self.log_patterns["DeadTime"])
 
@@ -321,13 +321,12 @@ class StopTest(CTSTest):
 # another test...
 #
 
-###################################################################
+
 class StartTest(CTSTest):
-###################################################################
     '''Start (activate) the cluster manager on a node'''
     def __init__(self, cm, debug=None):
         CTSTest.__init__(self,cm)
-        self.name="start"
+        self.name = "start"
         self.debug = debug
 
     def __call__(self, node):
@@ -345,22 +344,21 @@ class StartTest(CTSTest):
             return self.success()
         else:
             return self.failure("Startup %s on node %s failed"
-                                %(self.log_patterns["Name"], node))
+                                % (self.log_patterns["Name"], node))
 
 #
 # We don't register StartTest because it's better when called by
 # another test...
 #
 
-###################################################################
+
 class FlipTest(CTSTest):
-###################################################################
     '''If it's running, stop it.  If it's stopped start it.
        Overthrow the status quo...
     '''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="Flip"
+        self.name = "Flip"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
 
@@ -370,13 +368,13 @@ class FlipTest(CTSTest):
         if self.CM.ShouldBeStatus[node] == "up":
             self.incr("stopped")
             ret = self.stop(node)
-            type="up->down"
+            type = "up->down"
             # Give the cluster time to recognize it's gone...
             time.sleep(self.log_patterns["StableTime"])
         elif self.CM.ShouldBeStatus[node] == "down":
             self.incr("started")
             ret = self.start(node)
-            type="down->up"
+            type = "down->up"
         else:
             return self.skipped()
 
@@ -389,13 +387,12 @@ class FlipTest(CTSTest):
 #        Register FlipTest as a good test to run
 AllTestClasses.append(FlipTest)
 
-###################################################################
+
 class RestartTest(CTSTest):
-###################################################################
     '''Stop and restart a node'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="Restart"
+        self.name = "Restart"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
         self.benchmark = 1
@@ -422,12 +419,11 @@ class RestartTest(CTSTest):
 #        Register RestartTest as a good test to run
 AllTestClasses.append(RestartTest)
 
-###################################################################
+
 class StonithdTest(CTSTest):
-###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
-        self.name="Stonithd"
+        self.name = "Stonithd"
         self.startall = SimulStartLite(cm)
         self.benchmark = 1
 
@@ -448,7 +444,7 @@ class StonithdTest(CTSTest):
 
         if self.Env["at-boot"] == 0:
             self.debug("Expecting %s to stay down" % node)
-            self.CM.ShouldBeStatus[node]="down"
+            self.CM.ShouldBeStatus[node] = "down"
         else:
             self.debug("Expecting %s to come up again %d" % (node, self.Env["at-boot"]))
             watchpats.append("%s .*do_state_transition: .* S_STARTING -> S_PENDING" % node)
@@ -487,7 +483,6 @@ class StonithdTest(CTSTest):
         elif origin == node and rc != 255:
             # 255 == broken pipe, ie. the node was fenced as epxected
             self.log("Logcally originated fencing returned %d" % rc)
-
 
         self.set_timer("fence")
         matched = watch.lookforall()
@@ -532,16 +527,15 @@ class StonithdTest(CTSTest):
 
 AllTestClasses.append(StonithdTest)
 
-###################################################################
+
 class StartOnebyOne(CTSTest):
-###################################################################
     '''Start all the nodes ~ one by one'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="StartOnebyOne"
+        self.name = "StartOnebyOne"
         self.stopall = SimulStopLite(cm)
         self.start = StartTest(cm)
-        self.ns=CTS.NodeStatus(cm.Env)
+        self.ns = CTS.NodeStatus(cm.Env)
 
     def __call__(self, dummy):
         '''Perform the 'StartOnebyOne' test. '''
@@ -554,7 +548,7 @@ class StartOnebyOne(CTSTest):
         if not ret:
             return self.failure("Test setup failed")
 
-        failed=[]
+        failed = []
         self.set_timer()
         for node in self.Env["nodes"]:
             if not self.start(node):
@@ -568,13 +562,12 @@ class StartOnebyOne(CTSTest):
 #        Register StartOnebyOne as a good test to run
 AllTestClasses.append(StartOnebyOne)
 
-###################################################################
+
 class SimulStart(CTSTest):
-###################################################################
     '''Start all the nodes ~ simultaneously'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SimulStart"
+        self.name = "SimulStart"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
 
@@ -599,13 +592,12 @@ class SimulStart(CTSTest):
 #        Register SimulStart as a good test to run
 AllTestClasses.append(SimulStart)
 
-###################################################################
+
 class SimulStop(CTSTest):
-###################################################################
     '''Stop all the nodes ~ simultaneously'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SimulStop"
+        self.name = "SimulStop"
         self.startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
 
@@ -628,13 +620,12 @@ class SimulStop(CTSTest):
 #     Register SimulStop as a good test to run
 AllTestClasses.append(SimulStop)
 
-###################################################################
+
 class StopOnebyOne(CTSTest):
-###################################################################
     '''Stop all the nodes in order'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="StopOnebyOne"
+        self.name = "StopOnebyOne"
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
 
@@ -649,7 +640,7 @@ class StopOnebyOne(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        failed=[]
+        failed = []
         self.set_timer()
         for node in self.Env["nodes"]:
             if not self.stop(node):
@@ -664,13 +655,12 @@ class StopOnebyOne(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(StopOnebyOne)
 
-###################################################################
+
 class RestartOnebyOne(CTSTest):
-###################################################################
     '''Restart all the nodes in order'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RestartOnebyOne"
+        self.name = "RestartOnebyOne"
         self.startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
@@ -684,7 +674,7 @@ class RestartOnebyOne(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        did_fail=[]
+        did_fail = []
         self.set_timer()
         self.restart = RestartTest(self.CM)
         for node in self.Env["nodes"]:
@@ -693,19 +683,18 @@ class RestartOnebyOne(CTSTest):
 
         if did_fail:
             return self.failure("Could not restart %d nodes: %s"
-                                %(len(did_fail), repr(did_fail)))
+                                % (len(did_fail), repr(did_fail)))
         return self.success()
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(RestartOnebyOne)
 
-###################################################################
+
 class PartialStart(CTSTest):
-###################################################################
     '''Start a node - but tell it to stop before it finishes starting up'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="PartialStart"
+        self.name = "PartialStart"
         self.startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
         self.stop = StopTest(cm)
@@ -747,12 +736,11 @@ class PartialStart(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
 
-#######################################################################
+
 class StandbyTest(CTSTest):
-#######################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="Standby"
+        self.name = "Standby"
         self.benchmark = 1
 
         self.start = StartTest(cm)
@@ -767,7 +755,7 @@ class StandbyTest(CTSTest):
     def __call__(self, node):
 
         self.incr("calls")
-        ret=self.startall(None)
+        ret = self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
 
@@ -833,13 +821,12 @@ class StandbyTest(CTSTest):
 
 AllTestClasses.append(StandbyTest)
 
-#######################################################################
+
 class ValgrindTest(CTSTest):
-#######################################################################
     '''Check for memory leaks'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="Valgrind"
+        self.name = "Valgrind"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
         self.is_valgrind = 1
@@ -848,7 +835,7 @@ class ValgrindTest(CTSTest):
     def setup(self, node):
         self.incr("calls")
 
-        ret=self.stopall(None)
+        ret = self.stopall(None)
         if not ret:
             return self.failure("Stop all nodes failed")
 
@@ -859,7 +846,7 @@ class ValgrindTest(CTSTest):
 
         self.rsh(node, "rm -f %s" % self.logPat, None)
 
-        ret=self.startall(None)
+        ret = self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
 
@@ -875,7 +862,7 @@ class ValgrindTest(CTSTest):
         self.Env["valgrind-prefix"] = None
 
         # Return all nodes to normal
-        ret=self.stopall(None)
+        ret = self.stopall(None)
         if not ret:
             return self.failure("Stop all nodes failed")
 
@@ -919,20 +906,19 @@ class ValgrindTest(CTSTest):
         '''Return list of errors which should be ignored'''
         return [ """cib:.*readCibXmlFile:""", """HA_VALGRIND_ENABLED""" ]
 
-#######################################################################
+
 class StandbyLoopTest(ValgrindTest):
-#######################################################################
     '''Check for memory leaks by putting a node in and out of standby for an hour'''
     def __init__(self, cm):
         ValgrindTest.__init__(self,cm)
-        self.name="StandbyLoop"
+        self.name = "StandbyLoop"
 
     def __call__(self, node):
 
         lpc = 0
         delay = 2
         failed = 0
-        done=time.time() + self.Env["loop-minutes"]*60
+        done = time.time() + self.Env["loop-minutes"] * 60
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -956,9 +942,8 @@ class StandbyLoopTest(ValgrindTest):
 
 AllTestClasses.append(StandbyLoopTest)
 
-##############################################################################
+
 class BandwidthTest(CTSTest):
-##############################################################################
 #        Tests should not be cluster-manager-specific
 #        If you need to find out cluster manager configuration to do this, then
 #        it should be added to the generic cluster manager API.
@@ -977,7 +962,7 @@ class BandwidthTest(CTSTest):
         '''Perform the Bandwidth test'''
         self.incr("calls")
 
-        if self.CM.upcount()<1:
+        if self.CM.upcount() < 1:
             return self.skipped()
 
         Path = self.CM.InternalCommConfig()
@@ -991,7 +976,6 @@ class BandwidthTest(CTSTest):
         if not ret:
             return self.failure("Test setup failed")
         time.sleep(5)  # We get extra messages right after startup.
-
 
         fstmpfile = "/var/run/band_estimate"
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
@@ -1030,11 +1014,11 @@ class BandwidthTest(CTSTest):
             if not line:
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
-                count=count+1
+                count = count + 1
                 linesplit = string.split(line," ")
                 for j in range(len(linesplit)-1):
-                    if linesplit[j]=="udp": break
-                    if linesplit[j]=="length:": break
+                    if linesplit[j] == "udp": break
+                    if linesplit[j] == "length:": break
 
                 try:
                     sum = sum + int(linesplit[j+1])
@@ -1055,10 +1039,10 @@ class BandwidthTest(CTSTest):
                 count = count+1
                 linessplit = string.split(line," ")
                 for j in range(len(linessplit)-1):
-                    if linessplit[j] =="udp": break
-                    if linesplit[j]=="length:": break
+                    if linessplit[j] == "udp": break
+                    if linesplit[j] == "length:": break
                 try:
-                    sum=int(linessplit[j+1])+sum
+                    sum = int(linessplit[j+1]) + sum
                 except ValueError:
                     self.log("Invalid tcpdump line: %s" % line)
                     return None
@@ -1084,15 +1068,15 @@ class MaintenanceMode(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="MaintenanceMode"
+        self.name = "MaintenanceMode"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
-        self.max=30
+        self.max = 30
         #self.is_unsafe = 1
         self.benchmark = 1
         self.action = "asyncmon"
         self.interval = 0
-        self.rid="maintenanceDummy"
+        self.rid = "maintenanceDummy"
 
     def toggleMaintenanceMode(self, node, action):
         pats = []
@@ -1258,17 +1242,16 @@ class MaintenanceMode(CTSTest):
 
 AllTestClasses.append(MaintenanceMode)
 
-###################################################################
+
 class ResourceRecover(CTSTest):
-###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="ResourceRecover"
+        self.name = "ResourceRecover"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
-        self.max=30
-        self.rid=None
-        self.rid_alt=None
+        self.max = 30
+        self.rid = None
+        self.rid_alt = None
         #self.is_unsafe = 1
         self.benchmark = 1
 
@@ -1286,7 +1269,7 @@ class ResourceRecover(CTSTest):
 
         resourcelist = self.CM.active_resources(node)
         # if there are no resourcelist, return directly
-        if len(resourcelist)==0:
+        if len(resourcelist) == 0:
             self.log("No active resources on %s" % node)
             return self.skipped()
 
@@ -1331,7 +1314,7 @@ class ResourceRecover(CTSTest):
         self.log_timer("recover")
 
         self.CM.cluster_stable()
-        recovered=self.CM.ResourceLocation(self.rid)
+        recovered = self.CM.ResourceLocation(self.rid)
 
         if watch.unmatched:
             return self.failure("Patterns not found: %s" % repr(watch.unmatched))
@@ -1340,7 +1323,7 @@ class ResourceRecover(CTSTest):
             return self.failure("%s is now active on more than one node: %s"%(self.rid, repr(recovered)))
 
         elif len(recovered) > 0:
-            self.debug("%s is running on: %s" %(self.rid, repr(recovered)))
+            self.debug("%s is running on: %s" % (self.rid, repr(recovered)))
 
         elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
@@ -1360,12 +1343,11 @@ class ResourceRecover(CTSTest):
 
 AllTestClasses.append(ResourceRecover)
 
-###################################################################
+
 class ComponentFail(CTSTest):
-###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="ComponentFail"
+        self.name = "ComponentFail"
         self.startall = SimulStartLite(cm)
         self.complist = cm.Components()
         self.patterns = []
@@ -1398,8 +1380,8 @@ class ComponentFail(CTSTest):
 
         if chosen.name != "aisexec" and chosen.name != "corosync":
             if self.log_patterns["Name"] != "crm-lha" or chosen.name != "pengine":
-                self.patterns.append(self.log_patterns["Pat:ChildKilled"] %(node, chosen.name))
-                self.patterns.append(self.log_patterns["Pat:ChildRespawn"] %(node, chosen.name))
+                self.patterns.append(self.log_patterns["Pat:ChildKilled"] % (node, chosen.name))
+                self.patterns.append(self.log_patterns["Pat:ChildRespawn"] % (node, chosen.name))
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
@@ -1410,20 +1392,20 @@ class ComponentFail(CTSTest):
             # Make sure the node goes down and then comes back up if it should reboot...
             for other in self.Env["nodes"]:
                 if other != node:
-                    self.patterns.append(self.log_patterns["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
+                    self.patterns.append(self.log_patterns["Pat:They_stopped"] % (other, self.CM.key_for_node(node)))
             self.patterns.append(self.log_patterns["Pat:Slave_started"] % node)
             self.patterns.append(self.log_patterns["Pat:Local_started"] % node)
 
             if chosen.dc_only:
                 # Sometimes these will be in the log, and sometimes they won't...
-                self.okerrpatterns.append("%s .*Process %s:.* exited" %(node, chosen.name))
-                self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" %node)
-                self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" %(node, chosen.name))
+                self.okerrpatterns.append("%s .*Process %s:.* exited" % (node, chosen.name))
+                self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" % node)
+                self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" % (node, chosen.name))
                 self.okerrpatterns.append("(ERROR|error): Client .* exited with return code")
             else:
                 # Sometimes this won't be in the log...
-                self.okerrpatterns.append(self.log_patterns["Pat:ChildKilled"] %(node, chosen.name))
-                self.okerrpatterns.append(self.log_patterns["Pat:ChildRespawn"] %(node, chosen.name))
+                self.okerrpatterns.append(self.log_patterns["Pat:ChildKilled"] % (node, chosen.name))
+                self.okerrpatterns.append(self.log_patterns["Pat:ChildRespawn"] % (node, chosen.name))
                 self.okerrpatterns.append(self.log_patterns["Pat:ChildExit"])
 
         # supply a copy so self.patterns doesnt end up empty
@@ -1457,11 +1439,11 @@ class ComponentFail(CTSTest):
         self.debug("Checking if %s was shot" % node)
         shot = stonith.look(60)
         if shot:
-            self.debug("Found: "+ repr(shot))
+            self.debug("Found: " + repr(shot))
             self.okerrpatterns.append(self.log_patterns["Pat:Fencing_start"] % node)
 
             if self.Env["at-boot"] == 0:
-                self.CM.ShouldBeStatus[node]="down"
+                self.CM.ShouldBeStatus[node] = "down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
             # will not be sent - or will be lost when the node reboots
@@ -1491,9 +1473,8 @@ class ComponentFail(CTSTest):
 
 AllTestClasses.append(ComponentFail)
 
-####################################################################
+
 class SplitBrainTest(CTSTest):
-####################################################################
     '''It is used to test split-brain. when the path between the two nodes break
        check the two nodes both take over the resource'''
     def __init__(self,cm):
@@ -1511,7 +1492,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self.log("Node "+node+" not in " + repr(self.Env["nodes"]) + " from " +repr(partition))
+                self.log("Node "+node+" not in " + repr(self.Env["nodes"]) + " from " + repr(partition))
 
         if len(other_nodes) == 0:
             return 1
@@ -1562,7 +1543,7 @@ class SplitBrainTest(CTSTest):
             for node in self.Env["nodes"]:
                 p = self.Env.RandomGen.randint(1, p_max)
                 if not partitions.has_key(p):
-                    partitions[p]= []
+                    partitions[p] = []
                 partitions[p].append(node)
             p_max = len(partitions.keys())
             if p_max > 1:
@@ -1664,19 +1645,18 @@ class SplitBrainTest(CTSTest):
 
 AllTestClasses.append(SplitBrainTest)
 
-####################################################################
+
 class Reattach(CTSTest):
-####################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="Reattach"
+        self.name = "Reattach"
         self.startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
         self.is_unsafe = 0 # Handled by canrunnow()
 
     def setup(self, node):
-        attempt=0
+        attempt = 0
         if not self.startall(None):
             return None
 
@@ -1813,13 +1793,12 @@ class Reattach(CTSTest):
 
 AllTestClasses.append(Reattach)
 
-####################################################################
+
 class SpecialTest1(CTSTest):
-####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SpecialTest1"
+        self.name = "SpecialTest1"
         self.startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
@@ -1861,13 +1840,12 @@ class SpecialTest1(CTSTest):
 
 AllTestClasses.append(SpecialTest1)
 
-####################################################################
+
 class HAETest(CTSTest):
-####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="HAETest"
+        self.name = "HAETest"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
         self.is_loop = 1
@@ -1888,7 +1866,7 @@ class HAETest(CTSTest):
 
     def wait_on_state(self, node, resource, expected_clones, attempts=240):
         while attempts > 0:
-            active=0
+            active = 0
             (rc, lines) = self.rsh(node, "crm_resource -r %s -W -Q" % resource, stdout=None)
 
             # Hack until crm_resource does the right thing
@@ -1949,13 +1927,12 @@ class HAETest(CTSTest):
             return 1
         return None
 
-####################################################################
+
 class HAERoleTest(HAETest):
-####################################################################
     def __init__(self, cm):
         '''Lars' mount/unmount test for the HA extension. '''
         HAETest.__init__(self,cm)
-        self.name="HAERoleTest"
+        self.name = "HAERoleTest"
 
     def change_state(self, node, resource, target):
         rc = self.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
@@ -1966,7 +1943,7 @@ class HAERoleTest(HAETest):
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + self.Env["loop-minutes"]*60
+        done = time.time() + self.Env["loop-minutes"]*60
         self.find_hae_resources(node)
 
         clone_max = len(self.Env["nodes"])
@@ -1998,13 +1975,12 @@ class HAERoleTest(HAETest):
 
 AllTestClasses.append(HAERoleTest)
 
-####################################################################
+
 class HAEStandbyTest(HAETest):
-####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
         HAETest.__init__(self,cm)
-        self.name="HAEStandbyTest"
+        self.name = "HAEStandbyTest"
 
     def change_state(self, node, resource, target):
         rc = self.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
@@ -2015,7 +1991,7 @@ class HAEStandbyTest(HAETest):
 
         lpc = 0
         failed = 0
-        done=time.time() + self.Env["loop-minutes"]*60
+        done = time.time() + self.Env["loop-minutes"]*60
         self.find_hae_resources(node)
 
         clone_max = len(self.Env["nodes"])
@@ -2047,9 +2023,8 @@ class HAEStandbyTest(HAETest):
 
 AllTestClasses.append(HAEStandbyTest)
 
-###################################################################
+
 class NearQuorumPointTest(CTSTest):
-###################################################################
     '''
     This test brings larger clusters near the quorum point (50%).
     In addition, it will test doing starts and stops at the same time.
@@ -2063,7 +2038,7 @@ class NearQuorumPointTest(CTSTest):
 
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="NearQuorumPoint"
+        self.name = "NearQuorumPoint"
 
     def __call__(self, dummy):
         '''Perform the 'NearQuorumPoint' test. '''
@@ -2162,13 +2137,12 @@ class NearQuorumPointTest(CTSTest):
 
 AllTestClasses.append(NearQuorumPointTest)
 
-###################################################################
+
 class RollingUpgradeTest(CTSTest):
-###################################################################
     '''Perform a rolling upgrade of the cluster'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RollingUpgrade"
+        self.name = "RollingUpgrade"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
         self.stopall = SimulStopLite(cm)
@@ -2257,15 +2231,14 @@ class RollingUpgradeTest(CTSTest):
 #        Register RestartTest as a good test to run
 AllTestClasses.append(RollingUpgradeTest)
 
-###################################################################
+
 class BSC_AddResource(CTSTest):
-###################################################################
     '''Add a resource to the cluster'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
-        self.name="AddResource"
+        self.name = "AddResource"
         self.resource_offset = 0
-        self.cib_cmd="""cibadmin -C -o %s -X '%s' """
+        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
 
     def __call__(self, node):
         self.incr("calls")
@@ -2315,14 +2288,14 @@ class BSC_AddResource(CTSTest):
 
     def make_ip_resource(self, node, id, rclass, type, ip):
         self.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
-        rsc_xml="""
+        rsc_xml = """
 <primitive id="%s" class="%s" type="%s"  provider="heartbeat">
     <instance_attributes id="%s"><attributes>
         <nvpair id="%s" name="ip" value="%s"/>
     </attributes></instance_attributes>
 </primitive>""" % (id, rclass, type, id, id, ip)
 
-        node_constraint="""
+        node_constraint = """
       <rsc_location id="run_%s" rsc="%s">
         <rule id="pref_run_%s" score="100">
           <expression id="%s_loc_expr" attribute="#uname" operation="eq" value="%s"/>
@@ -2349,12 +2322,12 @@ class BSC_AddResource(CTSTest):
 
 AllTestClasses.append(BSC_AddResource)
 
+
 class SimulStopLite(CTSTest):
-###################################################################
     '''Stop any active nodes ~ simultaneously'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SimulStopLite"
+        self.name = "SimulStopLite"
 
     def __call__(self, dummy):
         '''Perform the 'SimulStopLite' setup work. '''
@@ -2393,11 +2366,11 @@ class SimulStopLite(CTSTest):
 
             return self.success()
 
-        did_fail=0
+        did_fail = 0
         up_nodes = []
         for node in self.Env["nodes"]:
             if self.CM.StataCM(node) == 1:
-                did_fail=1
+                did_fail = 1
                 up_nodes.append(node)
 
         if did_fail:
@@ -2413,13 +2386,12 @@ class SimulStopLite(CTSTest):
         '''SimulStopLite is a setup test and never applicable'''
         return 0
 
-###################################################################
+
 class SimulStartLite(CTSTest):
-###################################################################
     '''Start any stopped nodes ~ simultaneously'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SimulStartLite"
+        self.name = "SimulStartLite"
 
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
@@ -2466,16 +2438,16 @@ class SimulStartLite(CTSTest):
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self.log ("Warn: Startup pattern not found: %s" %(regex))
+                    self.log ("Warn: Startup pattern not found: %s" % (regex))
 
             if not self.CM.cluster_stable():
                 return self.failure("Cluster did not stabilize")
 
-        did_fail=0
+        did_fail = 0
         unstable = []
         for node in self.Env["nodes"]:
             if self.CM.StataCM(node) == 0:
-                did_fail=1
+                did_fail = 1
                 unstable.append(node)
 
         if did_fail:
@@ -2484,7 +2456,7 @@ class SimulStartLite(CTSTest):
         unstable = []
         for node in self.Env["nodes"]:
             if not self.CM.node_stable(node):
-                did_fail=1
+                did_fail = 1
                 unstable.append(node)
 
         if did_fail:
@@ -2492,10 +2464,10 @@ class SimulStartLite(CTSTest):
 
         return self.success()
 
-
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
         return 0
+
 
 def TestList(cm, audits):
     result = []
@@ -2506,12 +2478,11 @@ def TestList(cm, audits):
             result.append(bound_test)
     return result
 
-###################################################################
+
 class RemoteLXC(CTSTest):
-###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RemoteLXC"
+        self.name = "RemoteLXC"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
@@ -2626,18 +2597,18 @@ class RemoteBaremetal(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="RemoteBaremetal"
+        self.name = "RemoteBaremetal"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
-        self.pcmk_started=0
+        self.pcmk_started = 0
         self.failed = 0
         self.fail_string = ""
         self.remote_node_added = 0
-        self.remote_node="remote1"
+        self.remote_node = "remote1"
         self.remote_rsc_added = 0
-        self.remote_rsc="remote1-rsc"
-        self.cib_cmd="""cibadmin -C -o %s -X '%s' """
+        self.remote_rsc = "remote1-rsc"
+        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
 
     def del_rsc(self, node, rsc):
 
@@ -2665,7 +2636,7 @@ class RemoteBaremetal(CTSTest):
             return
 
     def add_primitive_rsc(self, node):
-        rsc_xml="""
+        rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="Dummy">
     <operations>
       <op id="remote1-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
@@ -2673,10 +2644,10 @@ class RemoteBaremetal(CTSTest):
 </primitive>""" % (self.remote_rsc)
         self.add_rsc(node, rsc_xml)
         if self.failed == 0:
-            self.remote_rsc_added=1
+            self.remote_rsc_added = 1
 
     def add_connection_rsc(self, node):
-        rsc_xml="""
+        rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="remote">
     <instance_attributes id="remote1-instance_attributes"/>
         <instance_attributes id="remote1-instance_attributes">
@@ -2690,10 +2661,10 @@ class RemoteBaremetal(CTSTest):
 </primitive>""" % (self.remote_node, node)
         self.add_rsc(node, rsc_xml)
         if self.failed == 0:
-            self.remote_node_added=1
+            self.remote_node_added = 1
 
     def step1_start_metal(self, node):
-        pcmk_started=0
+        pcmk_started = 0
 
         # make sure the resource doesn't already exist for some reason
         self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_rsc))
@@ -2735,7 +2706,6 @@ class RemoteBaremetal(CTSTest):
     def step2_add_rsc(self, node):
         if self.failed == 1:
             return
-
 
         # verify we can put a resource on the remote node
         pats = [ ]

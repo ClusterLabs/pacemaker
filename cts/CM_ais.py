@@ -1,7 +1,7 @@
 '''CTS: Cluster Testing System: AIS dependent modules...
 '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 
 '''
@@ -31,6 +31,7 @@ from cts.CTS     import Process
 #  LinuxHA v2 dependent modules
 #
 #######################################################################
+
 
 class crm_ais(crm_lha):
     '''
@@ -246,6 +247,7 @@ class crm_ais(crm_lha):
         #self.complist = [ fullcomplist["pengine"] ]
         return self.complist
 
+
 class crm_whitetank(crm_ais):
     '''
     The crm version 3 cluster manager class.
@@ -292,6 +294,7 @@ class crm_whitetank(crm_ais):
                     "stonithd.*requests a STONITH operation RESET on node",
                     "stonithd.*Succeeded to STONITH the node",
                     ], badnews_ignore = aisexec_ignore))
+
 
 class crm_cs_v0(crm_ais):
     '''
@@ -357,6 +360,7 @@ class crm_cs_v0(crm_ais):
 
         return self.complist
 
+
 class crm_cs_v1(crm_cs_v0):
     '''
     The crm version 3 cluster manager class.
@@ -383,6 +387,7 @@ class crm_cs_v1(crm_cs_v0):
             "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
         })
+
 
 class crm_mcp(crm_cs_v0):
     '''
@@ -420,6 +425,7 @@ class crm_mcp(crm_cs_v0):
                 # When systemd is in use, we can look for this instead
                 "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
             })
+
 
 class crm_cman(crm_cs_v0):
     '''
