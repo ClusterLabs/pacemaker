@@ -103,29 +103,19 @@ main(int argc, char **argv)
             break;
 
         switch (flag) {
-#ifdef HAVE_GETOPT_H
-            case 0:
-                printf("option %s", long_options[option_index].name);
-                if (optarg)
-                    printf(" with arg %s", optarg);
-                printf("\n");
-
-                break;
-#endif
-
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_string = strdup(optarg);
+                xml_string = optarg;
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_file = strdup(optarg);
+                xml_file = optarg;
                 break;
             case 'p':
                 xml_stdin = TRUE;
                 break;
             case 'S':
-                cib_save = strdup(optarg);
+                cib_save = optarg;
                 break;
             case 'V':
                 verbose = TRUE;
@@ -179,44 +169,50 @@ main(int argc, char **argv)
 
         if (rc != pcmk_ok) {
             fprintf(stderr, "Live CIB query failed: %s\n", pcmk_strerror(rc));
-            return 3;
+            goto done;
         }
         if (cib_object == NULL) {
             fprintf(stderr, "Live CIB query failed: empty result\n");
-            return 3;
+            rc = -ENOMSG;
+            goto done;
         }
 
     } else if (xml_file != NULL) {
         cib_object = filename2xml(xml_file);
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input file: %s\n", xml_file);
-            return 4;
+            rc = -ENODATA;
+            goto done;
         }
 
     } else if (xml_string != NULL) {
         cib_object = string2xml(xml_string);
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input string: %s\n", xml_string);
-            return 4;
+            rc = -ENODATA;
+            goto done;
         }
     } else if (xml_stdin) {
         cib_object = stdin2xml();
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input from STDIN.\n");
-            return 4;
+            rc = -ENODATA;
+            goto done;
         }
 
     } else {
         fprintf(stderr, "No configuration source specified."
                 "  Use --help for usage information.\n");
-        return 5;
+        rc = -ENODATA;
+        goto done;
     }
 
     xml_tag = crm_element_name(cib_object);
     if (safe_str_neq(xml_tag, XML_TAG_CIB)) {
         fprintf(stderr,
                 "This tool can only check complete configurations (ie. those starting with <cib>).\n");
-        return 6;
+        rc = -EBADMSG;
+        goto done;
     }
 
     if (cib_save != NULL) {
@@ -239,7 +235,7 @@ main(int argc, char **argv)
         cib_object = NULL;
         fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
         fprintf(stderr, "Please manually update the configuration to conform to the %s syntax.\n",
-                LATEST_SCHEMA_VERSION);
+                xml_latest_schema());
     }
 
     set_working_set_defaults(&data_set);
@@ -261,20 +257,21 @@ main(int argc, char **argv)
         if (verbose == FALSE) {
             fprintf(stderr, "  -V may provide more details\n");
         }
-        rc = 2;
+        rc = -pcmk_err_generic;
 
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
         if (verbose == FALSE) {
             fprintf(stderr, "  Use -V for more details\n");
         }
-        rc = 1;
+        rc = -pcmk_err_generic;
     }
 
-    if (USE_LIVE_CIB) {
+    if (USE_LIVE_CIB && cib_conn) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }
 
+  done:
     return rc;
 }

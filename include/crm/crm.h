@@ -36,8 +36,6 @@
 #  include <libxml/tree.h>
 
 #  define CRM_FEATURE_SET		"3.0.9"
-#  define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
-#  define LATEST_SCHEMA_VERSION         "pacemaker-"CRM_DTD_VERSION
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
@@ -196,6 +194,7 @@ typedef GList *GListPtr;
 
 #  define crm_str_hash g_str_hash_traditional
 
+guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 
 #endif

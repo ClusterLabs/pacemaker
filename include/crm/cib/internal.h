@@ -36,6 +36,7 @@
 #  define CIB_OP_REPLACE	"cib_replace"
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
 #  define CIB_OP_UPGRADE    "cib_upgrade"
+#  define CIB_OP_UPGRADE_OK "cib_upgrade_ok"
 #  define CIB_OP_DELETE_ALT	"cib_delete_alt"
 #  define CIB_OP_NOTIFY	      "cib_notify"
 
@@ -65,6 +66,7 @@
 #  define F_CIB_USER		"cib_user"
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
+#  define F_CIB_SCHEMA_MAX      "cib_schema_max"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"

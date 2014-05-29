@@ -164,6 +164,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
             free(op->standard);
             op->standard = strdup("lsb");
         }
+        CRM_ASSERT(op->standard);
     }
 
     if (strcasecmp(op->standard, "ocf") == 0) {
@@ -310,6 +311,9 @@ services_action_free(svc_action_t * op)
         return;
     }
 
+    if (op->opaque->repeat_timer) {
+        g_source_remove(op->opaque->repeat_timer);
+    }
     if (op->opaque->stderr_gsource) {
         mainloop_del_fd(op->opaque->stderr_gsource);
         op->opaque->stderr_gsource = NULL;
@@ -382,11 +386,83 @@ services_action_cancel(const char *name, const char *action, int interval)
         }
         services_action_free(op);
     } else {
-        crm_info("Cancelling op: %s will occur once operation completes", id);
+        crm_info("Cancelling in-flight op: performing early termination of %s", id);
         op->cancel = 1;
+        if (mainloop_child_kill(op->pid) == FALSE) {
+            /* even though the early termination failed,
+             * the op will be marked as cancelled once it completes. */
+            crm_err("Termination of %s failed", id);
+        }
     }
 
     return TRUE;
+}
+
+gboolean
+services_action_kick(const char *name, const char *action, int interval /* ms */)
+{
+    svc_action_t * op = NULL;
+    char *id = NULL;
+
+    if (asprintf(&id, "%s_%s_%d", name, action, interval) == -1) {
+        return FALSE;
+    }
+
+    op = g_hash_table_lookup(recurring_actions, id);
+    free(id);
+
+    if (op == NULL) {
+        return FALSE;
+    }
+
+    if (op->pid) {
+        return TRUE;
+    } else {
+        if (op->opaque->repeat_timer) {
+            g_source_remove(op->opaque->repeat_timer);
+        }
+        recurring_action_timer(op);
+        return TRUE;
+    }
+
+}
+
+/* add new recurring operation, check for duplicates. 
+ * - if duplicate found, return TRUE, immediately reschedule op.
+ * - if no dup, return FALSE, inserve into recurring op list.*/
+static gboolean
+handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_action_t *))
+{
+    svc_action_t * dup = NULL;
+
+    if (recurring_actions == NULL) {
+        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+        return FALSE;
+    }
+
+    /* check for duplicates */
+    dup = g_hash_table_lookup(recurring_actions, op->id);
+
+    if (dup && (dup != op)) {
+        /* update user data */
+        if (op->opaque->callback) {
+            dup->opaque->callback = op->opaque->callback;
+            dup->cb_data = op->cb_data;
+            op->cb_data = NULL;
+        }
+        /* immediately execute the next interval */
+        if (dup->pid != 0) {
+            if (op->opaque->repeat_timer) {
+                g_source_remove(op->opaque->repeat_timer);
+            }
+            recurring_action_timer(dup);
+        }
+        /* free the dup.  */
+        services_action_free(op);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 gboolean
@@ -396,11 +472,11 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         op->opaque->callback = action_callback;
     }
 
-    if (recurring_actions == NULL) {
-        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-    }
-
     if (op->interval > 0) {
+        if (handle_duplicate_recurring(op, action_callback) == TRUE) {
+            /* entry rescheduled, dup freed */
+            return TRUE;
+        }
         g_hash_table_replace(recurring_actions, op->id, op);
     }
     if (op->standard && strcasecmp(op->standard, "upstart") == 0) {

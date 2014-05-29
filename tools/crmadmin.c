@@ -462,7 +462,6 @@ int
 admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
 {
     static int received_responses = 0;
-    const char *result = NULL;
     xmlNode *xml = string2xml(buffer);
 
     received_responses++;
@@ -476,37 +475,27 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     } else if (validate_crm_message(xml, crm_system_name, admin_uuid, XML_ATTR_RESPONSE) == FALSE) {
         crm_trace("Message was not a CRM response. Discarding.");
 
-    } else {
-        result = crm_element_value(xml, XML_ATTR_RESULT);
-        if (result == NULL || strcasecmp(result, "ok") == 0) {
-            result = "pass";
+    } else if (DO_HEALTH) {
+        xmlNode *data = get_message_xml(xml, F_CRM_DATA);
+        const char *state = crm_element_value(data, "crmd_state");
 
-        } else {
-            result = "fail";
+        printf("Status of %s@%s: %s (%s)\n",
+               crm_element_value(data, XML_PING_ATTR_SYSFROM),
+               crm_element_value(xml, F_CRM_HOST_FROM),
+               state, crm_element_value(data, XML_PING_ATTR_STATUS));
+
+        if (BE_SILENT && state != NULL) {
+            fprintf(stderr, "%s\n", state);
         }
 
-        if (DO_HEALTH) {
-            xmlNode *data = get_message_xml(xml, F_CRM_DATA);
-            const char *state = crm_element_value(data, "crmd_state");
+    } else if (DO_WHOIS_DC) {
+        const char *dc = crm_element_value(xml, F_CRM_HOST_FROM);
 
-            printf("Status of %s@%s: %s (%s)\n",
-                   crm_element_value(data, XML_PING_ATTR_SYSFROM),
-                   crm_element_value(xml, F_CRM_HOST_FROM),
-                   state, crm_element_value(data, XML_PING_ATTR_STATUS));
-
-            if (BE_SILENT && state != NULL) {
-                fprintf(stderr, "%s\n", state);
-            }
-
-        } else if (DO_WHOIS_DC) {
-            const char *dc = crm_element_value(xml, F_CRM_HOST_FROM);
-
-            printf("Designated Controller is: %s\n", dc);
-            if (BE_SILENT && dc != NULL) {
-                fprintf(stderr, "%s\n", dc);
-            }
-            crm_exit(pcmk_ok);
+        printf("Designated Controller is: %s\n", dc);
+        if (BE_SILENT && dc != NULL) {
+            fprintf(stderr, "%s\n", dc);
         }
+        crm_exit(pcmk_ok);
     }
 
     free_xml(xml);

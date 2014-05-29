@@ -1,0 +1,48 @@
+
+Current cluster status:
+Node virt-4 (4): UNCLEAN (offline)
+Online: [ virt-1 virt-2 virt-3 ]
+
+ fencing	(stonith:fence_scsi):	Started virt-1 
+ Clone Set: dlm-clone [dlm]
+     Started: [ virt-1 virt-2 ]
+     Stopped: [ virt-3 virt-4 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ virt-1 ]
+     Stopped: [ virt-2 virt-3 virt-4 ]
+
+Transition Summary:
+ * Start   dlm:2	(virt-3)
+ * Start   clvmd:1	(virt-2)
+ * Start   clvmd:2	(virt-3)
+
+Executing cluster transition:
+ * Resource action: dlm             monitor on virt-3
+ * Resource action: clvmd           monitor on virt-2
+ * Resource action: clvmd           monitor on virt-3
+ * Fencing virt-4 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   probe_complete
+ * Fencing virt-3 (on)
+ * Pseudo action:   all_stopped
+ * Resource action: fencing         monitor on virt-3
+ * Pseudo action:   dlm-clone_start_0
+ * Resource action: dlm             start on virt-3
+ * Pseudo action:   dlm-clone_running_0
+ * Pseudo action:   clvmd-clone_start_0
+ * Resource action: clvmd           start on virt-2
+ * Resource action: clvmd           start on virt-3
+ * Pseudo action:   clvmd-clone_running_0
+
+Revised cluster status:
+Online: [ virt-1 virt-2 virt-3 ]
+OFFLINE: [ virt-4 ]
+
+ fencing	(stonith:fence_scsi):	Started virt-1 
+ Clone Set: dlm-clone [dlm]
+     Started: [ virt-1 virt-2 virt-3 ]
+     Stopped: [ virt-4 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ virt-1 virt-2 virt-3 ]
+     Stopped: [ virt-4 ]
+

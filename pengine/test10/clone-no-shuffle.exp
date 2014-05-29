@@ -436,7 +436,7 @@
   </synapse>
   <synapse id="32" priority="1000000">
     <action_set>
-      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
+      <rsc_op id="9" operation="probe_complete" operation_key="probe_complete-dktest2sles10" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
@@ -448,7 +448,7 @@
    </synapse>
   <synapse id="33" priority="1000000">
      <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-dktest1sles10" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
@@ -472,10 +472,10 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-dktest1sles10" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
       </trigger>
       <trigger>
-        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
+        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete-dktest2sles10" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
       </trigger>
     </inputs>
   </synapse>

@@ -70,6 +70,7 @@ void crm_time_log_alias(int log_level, const char *file, const char *function, i
 #  define crm_time_log_date          0x001
 #  define crm_time_log_timeofday     0x002
 #  define crm_time_log_with_timezone 0x004
+#  define crm_time_log_duration      0x008
 
 #  define crm_time_ordinal           0x010
 #  define crm_time_weeks             0x020
@@ -77,6 +78,7 @@ void crm_time_log_alias(int log_level, const char *file, const char *function, i
 #  define crm_time_epoch             0x200
 
 crm_time_t *crm_time_parse_duration(const char *duration_str);
+crm_time_t *crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value);
 crm_time_period_t *crm_time_parse_period(const char *period_str);
 
 int crm_time_compare(crm_time_t * dt, crm_time_t * rhs);
@@ -88,10 +90,10 @@ int crm_time_get_ordinal(crm_time_t * dt, uint32_t * y, uint32_t * d);
 int crm_time_get_isoweek(crm_time_t * dt, uint32_t * y, uint32_t * w, uint32_t * d);
 
 /* Time in seconds since 0000-01-01 00:00:00Z */
-unsigned long long int crm_time_get_seconds(crm_time_t * dt);
+long long int crm_time_get_seconds(crm_time_t * dt);
 
 /* Time in seconds since 1970-01-01 00:00:00Z */
-unsigned long long int crm_time_get_seconds_since_epoch(crm_time_t * dt);
+long long int crm_time_get_seconds_since_epoch(crm_time_t * dt);
 
 void crm_time_set(crm_time_t * target, crm_time_t * source);
 void crm_time_set_timet(crm_time_t * target, time_t * source);

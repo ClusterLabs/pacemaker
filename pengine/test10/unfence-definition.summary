@@ -1,0 +1,63 @@
+
+Current cluster status:
+Node virt-4 (4): UNCLEAN (offline)
+Online: [ virt-1 virt-2 virt-3 ]
+
+ fencing	(stonith:fence_scsi):	Started virt-1 
+ Clone Set: dlm-clone [dlm]
+     Started: [ virt-1 virt-2 ]
+     Stopped: [ virt-3 virt-4 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ virt-1 ]
+     Stopped: [ virt-2 virt-3 virt-4 ]
+
+Transition Summary:
+ * Restart fencing	(Started virt-1)
+ * Restart dlm:0	(Started virt-1)
+ * Start   dlm:2	(virt-3)
+ * Restart clvmd:0	(Started virt-1)
+ * Start   clvmd:1	(virt-2)
+ * Start   clvmd:2	(virt-3)
+
+Executing cluster transition:
+ * Resource action: dlm             monitor on virt-3
+ * Resource action: clvmd           monitor on virt-2
+ * Resource action: clvmd           monitor on virt-3
+ * Pseudo action:   clvmd-clone_stop_0
+ * Fencing virt-4 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   probe_complete
+ * Resource action: fencing         stop on virt-1
+ * Resource action: clvmd           stop on virt-1
+ * Pseudo action:   clvmd-clone_stopped_0
+ * Resource action: fencing         delete on virt-1
+ * Pseudo action:   dlm-clone_stop_0
+ * Resource action: dlm             stop on virt-1
+ * Pseudo action:   dlm-clone_stopped_0
+ * Fencing virt-3 (on)
+ * Fencing virt-1 (on)
+ * Pseudo action:   all_stopped
+ * Resource action: fencing         monitor on virt-3
+ * Pseudo action:   dlm-clone_start_0
+ * Resource action: fencing         start on virt-1
+ * Resource action: dlm             start on virt-1
+ * Resource action: dlm             start on virt-3
+ * Pseudo action:   dlm-clone_running_0
+ * Pseudo action:   clvmd-clone_start_0
+ * Resource action: clvmd           start on virt-1
+ * Resource action: clvmd           start on virt-2
+ * Resource action: clvmd           start on virt-3
+ * Pseudo action:   clvmd-clone_running_0
+
+Revised cluster status:
+Online: [ virt-1 virt-2 virt-3 ]
+OFFLINE: [ virt-4 ]
+
+ fencing	(stonith:fence_scsi):	Started virt-1 
+ Clone Set: dlm-clone [dlm]
+     Started: [ virt-1 virt-2 virt-3 ]
+     Stopped: [ virt-4 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ virt-1 virt-2 virt-3 ]
+     Stopped: [ virt-4 ]
+

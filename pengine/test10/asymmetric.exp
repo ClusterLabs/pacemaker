@@ -37,7 +37,7 @@
    </synapse>
   <synapse id="4" priority="1000000">
      <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-puma3" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
      </action_set>
@@ -49,7 +49,7 @@
    </synapse>
    <synapse id="5" priority="1000000">
      <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-puma1" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -67,10 +67,10 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-puma1" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a"/>
       </trigger>
       <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-puma3" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3"/>
        </trigger>
      </inputs>
    </synapse>

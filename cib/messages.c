@@ -256,6 +256,56 @@ cib_process_sync(const char *op, int options, const char *section, xmlNode * req
 }
 
 int
+cib_process_upgrade_server(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
+                           xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+{
+#ifdef CIBPIPE
+    return -EINVAL;
+#else
+    int rc = pcmk_ok;
+
+    *answer = NULL;
+
+    if(crm_element_value(req, F_CIB_SCHEMA_MAX)) {
+        return cib_process_upgrade(
+            op, options, section, req, input, existing_cib, result_cib, answer);
+
+    } else {
+        int new_version = 0;
+        int current_version = 0;
+        xmlNode *scratch = copy_xml(existing_cib);
+        const char *host = crm_element_value(req, F_ORIG);
+        const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
+
+        crm_trace("Processing \"%s\" event", op);
+        if (value != NULL) {
+            current_version = get_schema_version(value);
+        }
+
+        rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
+        if (new_version > current_version) {
+            xmlNode *up = create_xml_node(NULL, __FUNCTION__);
+
+            rc = pcmk_ok;
+            crm_notice("Upgrade request from %s verified", host);
+
+            crm_xml_add(up, F_TYPE, "cib");
+            crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+            crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
+            send_cluster_message(NULL, crm_msg_cib, up, FALSE);
+            free_xml(up);
+
+        } else if(rc == pcmk_ok) {
+            rc = -pcmk_err_schema_unchanged;
+        }
+
+        free_xml(scratch);
+    }
+    return rc;
+#endif
+}
+
+int
 cib_process_sync_one(const char *op, int options, const char *section, xmlNode * req,
                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                      xmlNode ** answer)

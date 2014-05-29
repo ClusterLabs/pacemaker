@@ -486,7 +486,6 @@ do_startup(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int was_error = 0;
-    int interval = 1;           /* seconds between DC heartbeats */
 
     crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
@@ -509,8 +508,6 @@ do_startup(long long action,
     shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
     wait_timer = calloc(1, sizeof(fsa_timer_t));
     recheck_timer = calloc(1, sizeof(fsa_timer_t));
-
-    interval = interval * 1000;
 
     if (election_trigger != NULL) {
         election_trigger->source_id = 0;
@@ -677,8 +674,10 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     if (msg == NULL) {
         return 0;
     }
+
 #if ENABLE_ACL
-    determine_request_user(client->user, msg, F_CRM_USER);
+    CRM_ASSERT(client->user != NULL);
+    crm_acl_get_set_user(msg, F_CRM_USER, client->user);
 #endif
 
     crm_trace("Processing msg from %s", crm_client_name(client));
@@ -914,7 +913,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
-        if (rc == -EACCES || rc == -pcmk_err_dtd_validation) {
+        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
             set_bit(fsa_input_register, R_STAYDOWN);
         }

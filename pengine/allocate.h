@@ -51,8 +51,6 @@ struct resource_alloc_functions_s {
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
 };
 
-action_t *pe_fence_op(node_t * node, const char *op, pe_working_set_t * data_set);
-
 extern GHashTable *rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                      const char *attr, float factor, enum pe_weights flags);
 

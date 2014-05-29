@@ -69,6 +69,9 @@ be configured in cluster.conf, not directly in Pacemaker.
 <actions>
         <action name="enable" />
         <action name="disable" />
+        <action name="reboot" />
+        <action name="off" />
+        <action name="on" />
         <action name="status" />
         <action name="metadata" />
 </actions>

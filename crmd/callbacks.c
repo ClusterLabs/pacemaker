@@ -125,8 +125,23 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             if (safe_str_eq(data, node->state)) {
                 /* State did not change */
                 return;
+
             } else if(safe_str_eq(CRM_NODE_MEMBER, node->state)) {
+                GListPtr gIter = stonith_cleanup_list;
+
                 appeared = TRUE;
+
+                while (gIter != NULL) {
+                    GListPtr tmp = gIter;
+                    char *target = tmp->data;
+
+                    gIter = gIter->next;
+                    if(safe_str_eq(node->uname, target)) {
+                        crm_trace("Removing %s from the cleanup list", target);
+                        stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
+                        free(target);
+                    }
+                }
             }
             break;
         case crm_status_processes:

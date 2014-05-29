@@ -19,8 +19,8 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.1.10, pacemaker@oss.clusterlabs.org,,http://clusterlabs.org)
-CRM_DTD_VERSION="1.2"
+m4_include([version.m4])
+AC_INIT([pacemaker], VERSION_NUMBER, pacemaker@oss.clusterlabs.org,pacemaker,http://clusterlabs.org)
 
 PCMK_FEATURES=""
 HB_PKG=heartbeat
@@ -53,7 +53,8 @@ AC_ARG_WITH(pkg-name,
     [  --with-pkg-name=name     Override package name (if you're a packager needing to pretend) ],
     [ PACKAGE_NAME="$withval" ])
 
-AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
+dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
+AM_INIT_AUTOMAKE
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
 PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
@@ -1062,9 +1063,6 @@ dnl ===============================================
 CRM_DTD_DIRECTORY="${datadir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_DIRECTORY)
-
-AC_DEFINE_UNQUOTED(CRM_DTD_VERSION,"$CRM_DTD_VERSION", Current version of the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_DTD_VERSION)
 
 CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/pacemaker/cores`
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)

@@ -1,11 +1,11 @@
  digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
-"stonith node1" -> "stonith node3" [ style = bold]
-"stonith node1" [ style=bold color="green" fontcolor="black" ]
-"stonith node2" [ style=bold color="green" fontcolor="black" ]
-"stonith node3" -> "stonith node2" [ style = bold]
-"stonith node3" -> "stonith_complete" [ style = bold]
-"stonith node3" [ style=bold color="green" fontcolor="black" ]
+"stonith 'reboot' node1" -> "stonith 'reboot' node3" [ style = bold]
+"stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
+"stonith 'reboot' node2" [ style=bold color="green" fontcolor="black"]
+"stonith 'reboot' node3" -> "stonith 'reboot' node2" [ style = bold]
+"stonith 'reboot' node3" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' node3" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

@@ -1,0 +1,73 @@
+<cib epoch="17" num_updates="25" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Mar 19 19:51:25 2014" update-origin="virt-009.cluster-qe.lab.eng.brq.redhat.com" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="8">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-27.el7-368c726"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="virt-1"/>
+      <node id="2" uname="virt-2"/>
+      <node id="3" uname="virt-3"/>
+      <node id="4" uname="virt-4"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="fencing" type="fence_scsi">
+        <meta_attributes id="stonith-meta">
+          <nvpair id="stonith-unfence" name="provides" value="unfencing"/>
+        </meta_attributes>
+      </primitive>
+      <clone id="dlm-clone">
+        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld"/>
+        <meta_attributes id="dlm-clone-meta">
+          <nvpair id="dlm-interleave" name="interleave" value="true"/>
+          <nvpair id="dlm-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clvmd-clone">
+        <primitive class="ocf" id="clvmd" provider="heartbeat" type="clvm"/>
+        <meta_attributes id="clvmd-clone-meta">
+          <nvpair id="clvmd-interleave" name="interleave" value="true"/>
+          <nvpair id="clvmd-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="dlm-clone" first-action="start" id="order-dlm-clone-clvmd-clone-mandatory" then="clvmd-clone" then-action="start"/>
+      <rsc_colocation id="colocation-clvmd-clone-dlm-clone-INFINITY" rsc="clvmd-clone" score="INFINITY" with-rsc="dlm-clone"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="virt-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="fencing" type="fence_scsi" class="stonith">
+            <lrm_rsc_op id="fencing_last_0" operation_key="fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;23:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1395255112" last-rc-change="1395255112" exec-time="1047" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf9"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1395255085" last-rc-change="1395255085" exec-time="1102" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="9:2:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;9:2:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1395254324" last-rc-change="1395254324" exec-time="214" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="virt-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="fencing" type="fence_scsi" class="stonith">
+            <lrm_rsc_op id="fencing_last_0" operation_key="fencing_status_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="23:8:7:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;23:8:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1395255112" last-rc-change="1395255112" exec-time="1047" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf9"/>
+          </lrm_resource>
+          <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" transition-magic="0:0;22:7:0:d45f7bbd-8249-4af5-8120-a9199830d27a" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1395255085" last-rc-change="1395255085" exec-time="1102" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="virt-3" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member"/>
+  </status>
+</cib>
+

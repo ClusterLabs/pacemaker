@@ -178,7 +178,7 @@ stonith_connection_destroy(gpointer user_data)
 
 xmlNode *
 create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                               stonith_key_value_t * params)
+                               stonith_key_value_t * params, const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
@@ -195,6 +195,9 @@ create_device_registration_xml(const char *id, const char *namespace, const char
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, "agent", agent);
     crm_xml_add(data, "namespace", namespace);
+    if (rsc_provides) {
+        crm_xml_add(data, "rsc_provides", rsc_provides);
+    }
 
     for (; params; params = params->next) {
         hash2field((gpointer) params->key, (gpointer) params->value, args);
@@ -211,7 +214,7 @@ stonith_api_register_device(stonith_t * st, int call_options,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_device_registration_xml(id, namespace, agent, params);
+    data = create_device_registration_xml(id, namespace, agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
@@ -313,13 +316,16 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
 static void
 append_const_arg(const char *key, const char *value, char **arg_list)
 {
-    char *glib_sucks_key = strdup(key);
-    char *glib_sucks_value = strdup(value);
+    CRM_LOG_ASSERT(key && value);
+    if(key && value) {
+        char *glib_sucks_key = strdup(key);
+        char *glib_sucks_value = strdup(value);
 
-    append_arg(glib_sucks_key, glib_sucks_value, arg_list);
+        append_arg(glib_sucks_key, glib_sucks_value, arg_list);
 
-    free(glib_sucks_value);
-    free(glib_sucks_key);
+        free(glib_sucks_value);
+        free(glib_sucks_key);
+    }
 }
 
 static void
@@ -1263,10 +1269,11 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            CRM_CHECK(match != NULL, continue);
-
-            crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-            *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
+            CRM_LOG_ASSERT(match != NULL);
+            if(match != NULL) {
+                crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+                *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
+            }
         }
 
         freeXpathObject(xpathObj);
@@ -1648,11 +1655,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 static int
 stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 {
+    int rc = pcmk_ok;
     xmlNode *notify_msg = create_xml_node(NULL, __FUNCTION__);
     stonith_private_t *native = stonith->private;
 
     if (stonith->state != stonith_disconnected) {
-        int rc;
 
         crm_xml_add(notify_msg, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         if (enabled) {
@@ -1660,15 +1667,18 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         } else {
             crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
         }
+
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
             crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
             rc = -ECOMM;
+        } else {
+            rc = pcmk_ok;
         }
     }
 
     free_xml(notify_msg);
-    return pcmk_ok;
+    return rc;
 }
 
 static int
@@ -1982,6 +1992,8 @@ xml_to_event(xmlNode * msg)
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
+            event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
+
         } else {
             crm_err("No data for %s event", ntype);
             crm_log_xml_notice(msg, "BadEvent");

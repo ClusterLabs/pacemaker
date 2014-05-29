@@ -23,8 +23,7 @@ default: $(shell test ! -e configure && echo init) $(shell test -e configure && 
 PACKAGE		?= pacemaker
 
 # Force 'make dist' to be consistent with 'make export'
-distprefix		= ClusterLabs-$(PACKAGE)
-distdir			= $(distprefix)-$(TAG)
+distdir			= $(PACKAGE)-$(TAG)
 TARFILE			= $(distdir).tar.gz
 DIST_ARCHIVES		= $(TARFILE)
 
@@ -44,7 +43,7 @@ F       ?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-
 ARCH    ?= $(shell test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG ?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 DISTRO  ?= $(shell test -e /etc/SuSE-release && echo suse; echo fedora)
-TAG     ?= $(shell git log --pretty="format:%h" -n 1)
+TAG     ?= $(shell git log --pretty="format:%H" -n 1)
 WITH    ?= --without doc
 #WITH    ?= --without=doc --with=gcov
 
@@ -145,13 +144,13 @@ srpm-%:	export $(PACKAGE)-%.spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	sed -i 's/Source0:.*/Source0:\ $(TARFILE)/' $(PACKAGE).spec
 	sed -i 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec
-	sed -i 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
-	sed -i 's/global\ upstream_prefix.*/global\ upstream_prefix\ $(distprefix)/' $(PACKAGE).spec
-	case $(TAG) in 								\
-		Pacemaker*) sed -i 's/Version:.*/Version:\ $(shell echo $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;		\
-		*)          sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;; 	\
+	sed -i 's/global\ commit.*/global\ commit\ $(TAG)/' $(PACKAGE).spec
+	case "$(WITH)" in 	\
+	  *pre_release*)	\
+	    sed -i 's/Version:.*/Version:\ $(shell echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
+	  *)			\
+	    sed -i 's/Version:.*/Version:\ $(shell git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/' $(PACKAGE).spec;;\
 	esac
 	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
@@ -308,12 +307,18 @@ indent:
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
-ccc_analyzer=/usr/lib64/clang-analyzer/scan-build/ccc-analyzer
+CLANG_analyzer = $(shell which scan-build)
+CLANG_checkers = 
+
+check: clang cppcheck
+
+# Extra cppcheck options:  --enable=all --inconclusive --std=posix
+cppcheck:
+	for d in $(LIBLTDL_DIR) replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
 
 clang:
-	test -e $(ccc_analyzer) || echo "CLang Analyiser not available. Install the clang-analyzer package"
-	test -e $(ccc_analyzer) || false
-	make CC=$(ccc_analyzer) check
+	test -e $(CLANG_analyzer)
+	scan-build $(CLANG_checkers:%=-enable-checker %) make
 
 # V3	= scandir unsetenv alphasort
 # V2	= setenv strerror strchrnul strndup

@@ -22,7 +22,7 @@ Executing cluster transition:
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
- * Fencing node1
+ * Fencing node1 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   stonithcloneset_stop_0
  * Resource action: evmsclone:1     notify on node2

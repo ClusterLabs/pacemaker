@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES = Makefile.in
+include $(top_srcdir)/Makefile.common
 
 SUBDIRS =
 
@@ -31,25 +31,8 @@ sbin_SCRIPTS   = fence_legacy fence_pcmk
 
 noinst_HEADERS = internal.h
 
-man7_MANS      =
-man8_MANS      =
-
 if BUILD_XML_HELP
-man7_MANS +=	stonithd.7
-stonithd.xml:	stonithd
-	$(top_builddir)/fencing/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/fencing/$@
-
-stonithd.7:	stonithd.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/fencing/$<
-endif
-
-if BUILD_HELP
-man8_MANS +=	$(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
-%.8:	%
-	echo Creating $@
-	chmod a+x $(top_builddir)/fencing/$<
-	$(top_builddir)/fencing/$< --help
-	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/fencing/$<
+man7_MANS =	stonithd.7
 endif
 
 stonith_test_SOURCES	= test.c

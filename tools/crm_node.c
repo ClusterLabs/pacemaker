@@ -91,6 +91,11 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_trace("Removing %s from the CIB", name);
 
+    /* TODO: Use 'id' instead */
+    if(name == NULL) {
+        return -ENOTUNIQ;
+    }
+
     node = create_xml_node(NULL, XML_CIB_TAG_NODE);
     node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
@@ -145,8 +150,8 @@ int tools_remove_node_cache(const char *node, const char *target)
         rc = crm_ipc_send(conn, hello, 0, 0, NULL);
 
         free_xml(hello);
-        free(admin_uuid);
         if (rc < 0) {
+            free(admin_uuid);
             return rc;
         }
     }
@@ -164,7 +169,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     crm_trace("Removing %s aka. %s from the membership cache", name, node);
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                         NULL, NULL, CRM_SYSTEM_CRMD, "crm_node", admin_uuid);
+                         NULL, NULL, target, "crm_node", admin_uuid);
 
     if (n) {
         char buffer[64];
@@ -185,6 +190,8 @@ int tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_destroy(conn);
     }
     free_xml(cmd);
+    free(admin_uuid);
+    free(name);
     return rc > 0 ? 0 : rc;
 }
 

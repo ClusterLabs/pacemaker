@@ -313,7 +313,7 @@ main(int argc, char **argv)
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        return -pcmk_err_dtd_validation;
+        return -pcmk_err_schema_validation;
     }
 
     if (input_file != NULL) {

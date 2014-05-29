@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: 0\n"
 "POT-Creation-Date: 2012-10-17T05:19:03\n"
 "PO-Revision-Date: 2010-12-16 00:16+0800\n"
-"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Last-Translator: Hu Fu <askfuhu@gmail.com>\n"
 "Language-Team: None\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -24,102 +24,102 @@ msgid "OS Installation"
 msgstr "安装操作系统"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Detailed instructions for installing Fedora are available at <ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/17/html/Installation_Guide/\">http://docs.fedoraproject.org/en-US/Fedora/17/html/Installation_Guide/</ulink> in a number of languages. The abbreviated version is as follows…"
-msgstr "详细的安装手册在<ulink url=\"http://docs.fedoraproject.org/install-guide/f13/\">http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/</ulink>。下文是一个简短的版本..."
+msgstr "详细的安装手册在<ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/17/html/Installation_Guide/\">http://docs.fedoraproject.org/en-US/Fedora/17/html/Installation_Guide/</ulink>。下文是一个简短的版本..."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Point your browser to <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>, locate the <literal>Install Media</literal> section and download the install DVD that matches your hardware."
 msgstr "在你的浏览器中打开 <ulink url=\"http://fedoraproject.org/en/get-fedora-all\">http://fedoraproject.org/en/get-fedora-all</ulink>,找到<emphasis>Install Media</emphasis>部分并下载适合你硬件的安装DVD文件。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Burn the disk image to a DVD <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Burning_ISO_images_to_disc/index.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Burning_ISO_images_to_disc/index.html</ulink></para></footnote> and boot from it, or use the image to boot a virtual machine."
-msgstr "给你的机器取个名字。<footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> 我可以使用clusterlabs.org这个域名，所以在这里我用这个域名。"
+msgstr "制作DVD光盘<footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Burning_ISO_images_to_disc/index.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Burning_ISO_images_to_disc/index.html</ulink></para></footnote>并从它启动，或者使用这个镜像启动一个虚拟机。"
 
 #. Tag: para
 #, no-c-format
 msgid "After clicking through the welcome screen, select your language, keyboard layout <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-keyboard-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-keyboard-x86.html</ulink></para></footnote> and storage type <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/Storage_Devices-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/Storage_Devices-x86.html</ulink></para></footnote>"
-msgstr ""
+msgstr "点击跳过欢迎画面后，选择你的语言，键盘布局<footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-keyboard-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-keyboard-x86.html</ulink></para></footnote>以及存储类型<footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/Storage_Devices-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/Storage_Devices-x86.html</ulink></para></footnote>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Assign your machine a host name. <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-Netconfig-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-Netconfig-x86.html</ulink></para></footnote> I happen to control the clusterlabs.org domain name, so I will use that here."
-msgstr "给你的机器取个名字。<footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html </ulink> </para> </footnote> 我可以使用clusterlabs.org这个域名，所以在这里我用这个域名。"
+msgstr "给你的机器取个名字。<footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-Netconfig-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-Netconfig-x86.html</ulink></para></footnote> 我可以使用clusterlabs.org这个域名，所以在这里我用这个域名。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not accept the default network settings. Cluster machines should never obtain an IP address via DHCP."
-msgstr "不要使用默认的网络设置，集群<emphasis>永远</emphasis>不会靠DHCP来管理IP，这里我使用clusterslab的<emphasis>内部</emphasis>IP。"
+msgstr "不要使用默认的网络设置，集群<emphasis>永远</emphasis>不会靠DHCP来管理IP。"
 
 #. Tag: para
 #, no-c-format
 msgid "When you are presented with the <literal>Configure Network</literal> advanced option, select that option before continuing with the installation process to specify a fixed IPv4 address for <literal>System eth0</literal>. Be sure to also enter the <literal>Routes</literal> section and add an entry for your default gateway."
-msgstr ""
+msgstr "当你出现在配置网络高级选项画面时，在安装过程继续进行前指定一个固定的IPv4地址的System eth0。此外，请务必进入“路由”选项并添加你的默认网关。"
 
 #. Tag: phrase
 #, no-c-format
 msgid "Custom network settings"
-msgstr ""
+msgstr "自定义网络设置"
 
 #. Tag: para
 #, no-c-format
 msgid "If you miss this step, this can easily be configured after installation. You will have to navigate to <literal>system settings</literal> and select <literal>network</literal>. From there you can select what device to configure."
-msgstr ""
+msgstr "如果你错过了这一步，也可以很容易的在完成安装后配置。你会在“系统设置”导航中选择“网络”。从这里你可以选择配置哪些设备。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "You will then be prompted to indicate the machine’s physical location <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-timezone-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-timezone-x86.html</ulink></para></footnote> and to supply a root password. <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-account_configuration-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-account_configuration-x86.html</ulink></para></footnote>"
 msgstr "然后你会被提示选择机器所在地并设定root密码。<footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html\"> http://docs.fedoraproject.org/install-guide/f&amp;DISTRO_VERSION;/en-US/html/sn-account_configuration.html </ulink> </para> </footnote>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Now select where you want Fedora installed. <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-diskpartsetup-x86.html</ulink></para></footnote> As I don’t care about any existing data, I will accept the default and allow Fedora to use the complete drive."
-msgstr "如然后你选择想在哪安装Fedora <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote>。 如果你像我一样不在意已存在的数据，就选择默认让Fedora来使用完整的驱动器。然而我想为DRBD保留一些空间，所以我勾选了Review and modify partitioning layout。"
+msgstr "现在你选择想在哪安装Fedora <footnote> <para> <ulink url=\"http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html\">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink> </para> </footnote>。 如果你像我一样不在意已存在的数据，就选择默认让Fedora来使用完整的驱动器。"
 
 #. Tag: para
 #, no-c-format
 msgid "By default Fedora uses LVM for partitioning which allows us to dynamically change the amount of space allocated to a given partition."
-msgstr ""
+msgstr "默认情况下Fedora使用LVM的分区，它允许我们动态地改变空间分配给指定分区的数量。"
 
 #. Tag: para
 #, no-c-format
 msgid "However, by default it also allocates all free space to the <literal>/</literal> (aka. <literal>root</literal>) partition which cannot be dynamically <emphasis>reduced</emphasis> in size (dynamic increases are fine by-the-way)."
-msgstr ""
+msgstr "不过，默认情况下它也分配所有的自由空间，不能动态地降低分区（这种方法下的动态增加是可用的）。"
 
 #. Tag: para
 #, no-c-format
 msgid "So if you plan on following the DRBD or GFS2 portions of this guide, you should reserve at least 1Gb of space on each machine from which to create a shared volume. To do so select the <literal>Review and modify partitioning layout</literal> checkbox before clicking <literal>Next</literal>. You will then be given an opportunity to reduce the size of the <literal>root</literal> partition."
-msgstr ""
+msgstr "然而我想为DRBD和GFS2保留一些空间，所以我勾选了Review and modify partitioning layout。然后你将何以root分区的大小了。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Next choose which software should be installed. <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-pkgselection-x86.html\">http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-pkgselection-x86.html</ulink></para></footnote> Change the selection to Minimal so that we see everything that gets installed. Don’t enable updates yet, we’ll do that (and install any extra software we need) later. After you click next, Fedora will begin installing."
 msgstr "然后我们选择应该安装什么软件。因为我们想用Apache，所以选择<literal>Web Server</literal>。现在不要开启Update源，我们一会操作它。点击下一步，开始安装Fedora。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Go grab something to drink, this may take a while."
-msgstr "安装Fedora: 去搞点东西喝喝 这要一会儿"
+msgstr "安装Fedora: 去搞点东西喝喝 这需要一段时间。"
 
 #. Tag: para
 #, no-c-format
 msgid "Once the node reboots, you’ll see a (possibly mangled) login prompt on the console. Login using <literal>root</literal> and the password you created earlier."
-msgstr ""
+msgstr "一旦节点重启，你会在看到登录界面。使用你之前创建的root用户及密码登录。"
 
 #. Tag: phrase
 #, no-c-format
 msgid "Initial Console"
-msgstr ""
+msgstr "初始化控制台"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "From here on in we’re going to be working exclusively from the terminal."
 msgstr "这是最后一个截屏了，剩下的我们都用命令行来操作。"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Post Installation Tasks"
 msgstr "安装"
 
@@ -131,7 +131,7 @@ msgstr "设定网络"
 #. Tag: para
 #, no-c-format
 msgid "Bring up the network and ensure it starts at boot"
-msgstr ""
+msgstr "调出网络并确保主机开机后它会启动"
 
 #. Tag: programlisting
 #, no-c-format
@@ -143,7 +143,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Check the machine has the static IP address you configured earlier"
-msgstr ""
+msgstr "检查机器拥有你之前配置过的静态IP地址"
 
 #. Tag: programlisting
 #, no-c-format
@@ -164,7 +164,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Now check the default route setting:"
-msgstr ""
+msgstr "现在检查默认路由设置："
 
 #. Tag: programlisting
 #, no-c-format
@@ -177,7 +177,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "If there is no line beginning with <literal>default via</literal>, then you may need to add a line such as"
-msgstr ""
+msgstr "如果没有以 default via 开头的一行，那么你可能需要添加如下一行"
 
 #. Tag: programlisting
 #, no-c-format
@@ -187,12 +187,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "to <emphasis>/etc/sysconfig/network</emphasis> and restart the network."
-msgstr ""
+msgstr "到/etc/sysconfig/network，然后重启网络。"
 
 #. Tag: para
 #, no-c-format
 msgid "Now check for connectivity to the outside world. Start small by testing if we can read the gateway we configured."
-msgstr ""
+msgstr "现在检查网络是否连通了。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -221,7 +221,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Now try something external, choose a location you know will be available."
-msgstr ""
+msgstr "现在尝试一下外网，选择一个你熟悉的可用地址。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -238,17 +238,17 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Leaving the Console"
-msgstr ""
+msgstr "离开控制台"
 
 #. Tag: para
 #, no-c-format
 msgid "The console isn’t a very friendly place to work from, we will now switch to accessing the machine remotely via SSH where we can use copy&amp;paste etc."
-msgstr ""
+msgstr "控制台并不是一个友好的工作环境，我们现在使用SSH来控制机器，这样我们就可以使用粘贴/复制了。"
 
 #. Tag: para
 #, no-c-format
 msgid "First we check we can see the newly installed at all:"
-msgstr ""
+msgstr "首先我们检查所有所有新安装的："
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -277,7 +277,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Next we login via SSH"
-msgstr ""
+msgstr "接下来我们通过SSH登录"
 
 #. Tag: programlisting
 #, no-c-format
@@ -294,14 +294,14 @@ msgid "Security Shortcuts"
 msgstr "安全提示"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "To simplify this guide and focus on the aspects directly connected to clustering, we will now disable the machine’s firewall and SELinux installation."
-msgstr "为了简化本文档并更好的关注集群方面的问题，我们现在在先禁用防火墙和SELinux。这些操作都会导致重大的安全问题,并不推荐对公网上的集群这样做。"
+msgstr "为了简化本文档并更好的关注集群方面的问题，我们现在在先禁用防火墙和SELinux。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Both of these actions create significant security issues and should not be performed on machines that will be exposed to the outside world."
-msgstr "为了简化本文档并更好的关注集群方面的问题，我们现在在先禁用防火墙和SELinux。这些操作都会导致重大的安全问题,并不推荐对公网上的集群这样做。"
+msgstr "这些操作都会导致重大的安全问题,并不推荐对公网上的集群这样做。"
 
 #. Tag: literallayout
 #, no-c-format
@@ -324,7 +324,7 @@ msgid "Short Node Names"
 msgstr "简化节点名称"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "During installation, we filled in the machine’s fully qualifier domain name (FQDN) which can be rather long when it appears in cluster logs and status output. See for yourself how the machine identifies itself: <indexterm> <primary>Nodes</primary><secondary>short name</secondary> </indexterm> <indexterm> <primary>short name</primary> </indexterm>"
 msgstr "在安装过程中，我们发现FQDN域名太长了，不利于在日志或状态界面中查看，我们用以下操作来简化机器名:"
 
@@ -345,7 +345,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "The output from the second command is fine, but we really don’t need the domain name included in the basic host details. To address this, we need to update /etc/sysconfig/network. This is what it should look like before we start."
-msgstr "第二个命令的输出是正常的，但是我们真的不需要这么详细的输出，我们更改/etc/sysconfig/network文件来达到简化的目的。"
+msgstr "第二个命令的输出是正常的，但是我们真的不需要这么详细的输出，所以我们更改/etc/sysconfig/network文件来达到简化的目的。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -365,7 +365,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "All we need to do now is strip off the domain name portion, which is stored elsewhere anyway."
-msgstr "我们要做的只是要把域名后面的部分去掉。"
+msgstr "我们要做的只是把域名后面的部分去掉。"
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -395,7 +395,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "However we’re not finished. The machine wont normally see the shortened host name until about it reboots, but we can force it to update."
-msgstr "然而到这里还没结束，机器还没接受新的配置文件，我们强制它生效。"
+msgstr "到这里还没结束，机器还没接受新的配置文件，我们强制使它生效。"
 
 #. Tag: programlisting
 #, no-c-format
@@ -431,7 +431,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "It is highly recommended to enable NTP on your cluster nodes. Doing so ensures all nodes agree on the current time and makes reading log files significantly easier. <footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time\">http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time</ulink></para></footnote>"
-msgstr ""
+msgstr "强烈推荐在你的集群节点上启动NTP服务。这样做保证了所有节点时间一致，这使得查看日志变得容易。<footnote><para><ulink url=\"http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time\">http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time</ulink></para></footnote>"
 
 #. Tag: title
 #, no-c-format
@@ -439,14 +439,14 @@ msgid "Before You Continue"
 msgstr "写在开始之前"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Repeat the Installation steps so far, so that you have two Fedora nodes ready to have the cluster software installed."
-msgstr "在另一台Fedora 12机器上面重复以上操作步骤，这样你就有2台安装了集群软件的节点了。"
+msgstr "在另一台Fedora机器上面重复以上操作步骤，这样你就有2台安装了集群软件的节点了。"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "For the purposes of this document, the additional node is called pcmk-2 with address 192.168.122.102."
-msgstr "在这篇文档中, 另外一个节点叫 pcmk-2 并且IP地址为 192.168.122.42。"
+msgstr "在这篇文档中, 另外一个节点叫 pcmk-2 并且IP地址为 192.168.122.102。"
 
 #. Tag: title
 #, no-c-format
@@ -454,7 +454,7 @@ msgid "Finalize Networking"
 msgstr "设定网络"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Confirm that you can communicate between the two new nodes:"
 msgstr "确认这两个新节点能够通讯:"
 
@@ -485,9 +485,9 @@ msgstr ""
 "\t"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Now we need to make sure we can communicate with the machines by their name. If you have a DNS server, add additional entries for the two machines. Otherwise, you’ll need to add the machines to <emphasis>/etc/hosts</emphasis> . Below are the entries for my cluster nodes:"
-msgstr "现在我们需要确认我们能通过机器名访问这两台机器，如果你有一个DNS服务器，为这两台节点做域名解析。"
+msgstr "现在我们需要确认我们能通过机器名访问这两台机器，如果你有一个DNS服务器，为这两台节点做域名解析。否则你需要修改 /etc/hosts。下面是我的集群节点："
 
 #. Tag: programlisting
 #, fuzzy, no-c-format
@@ -540,9 +540,9 @@ msgid "Configure SSH"
 msgstr "配置SSH"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "SSH is a convenient and secure way to copy files and perform commands remotely. For the purposes of this guide, we will create a key without a password (using the -N option) so that we can perform remote actions without being prompted."
-msgstr "SSH 是一个方便又安全来的用来远程传输文件或运行命令 的工具. 在这个文档中, 我们创建ssh key(用 -N “” 选项)来免去登入要输入密码的麻烦。"
+msgstr "SSH 是一个方便又安全的用来远程传输文件或运行命令的工具. 在这个文档中, 我们创建ssh key(用 -N 选项)来免去登入要输入密码的麻烦。"
 
 #. Tag: para
 #, no-c-format
@@ -550,9 +550,9 @@ msgid "<indexterm> <primary>SSH</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Unprotected SSH keys, those without a password, are not recommended for servers exposed to the outside world. We use them here only to simplify the demo."
-msgstr "不推荐在公网的机器上采用未用密码保护的ssh-key"
+msgstr "没有密码的SSH密钥是不受保护的，因此不推荐在公网的机器上采用未用密码保护的ssh-key。在这里我们仅用于简化演示。"
 
 #. Tag: para
 #, no-c-format
@@ -1103,14 +1103,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Now install the cluster software on the second node."
-msgstr "安装集群软件"
+msgstr "在第二个节点上安装集群软件"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Install the Cluster Management Software"
-msgstr "安装集群软件"
+msgstr "安装集群管理软件"
 
 #. Tag: para
 #, no-c-format
@@ -1271,7 +1271,7 @@ msgid "That’s it. Corosync is configured across the cluster. If you received a
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "The final /etc/corosync.conf configuration on each node should look something like the sample in Appendix B, Sample Corosync Configuration."
 msgstr "最后配置文件应该看起来像下面的样子。"
 

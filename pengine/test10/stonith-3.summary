@@ -15,7 +15,7 @@ Executing cluster transition:
  * Resource action: prmIpPostgreSQLDB monitor on rh5node2
  * Resource action: prmStonith:0    monitor on rh5node2
  * Pseudo action:   clnStonith_start_0
- * Fencing rh5node1
+ * Fencing rh5node1 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Pseudo action:   all_stopped

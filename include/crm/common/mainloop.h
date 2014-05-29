@@ -107,6 +107,7 @@ const char *mainloop_child_name(mainloop_child_t * child);
 
 pid_t mainloop_child_pid(mainloop_child_t * child);
 void mainloop_clear_child_userdata(mainloop_child_t * child);
+gboolean mainloop_child_kill(pid_t pid);
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 

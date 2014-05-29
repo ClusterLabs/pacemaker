@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <optional>
+      <ref name="element-acls"/>
+    </optional>
+  </start>
+
+  <define name="element-acls">
+    <element name="acls">
+      <zeroOrMore>
+	<choice>
+	  <element name="acl_target">
+	    <attribute name="id"><text/></attribute>
+	    <zeroOrMore>
+ 	      <element name="role">
+		<attribute name="id"><data type="IDREF"/></attribute>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	  <element name="acl_group">
+	    <!-- Here 'id' is the name of a unix group -->
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <zeroOrMore>
+ 	      <element name="role">
+		<attribute name="id"><data type="IDREF"/></attribute>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	  <element name="acl_role">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <optional>
+	      <attribute name="description"><text/></attribute>
+	    </optional>
+	    <zeroOrMore>
+	      <ref name="element-permission"/>
+	    </zeroOrMore>
+	  </element>
+	</choice>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="element-permission">
+    <element name="acl_permission">
+      <attribute name="id"><data type="ID"/></attribute>
+
+      <attribute name="kind">
+	<choice>
+	  <value>read</value>
+	  <value>write</value>
+	  <value>deny</value>
+	</choice>
+      </attribute>
+
+      <choice>
+	<attribute name="xpath"><text/></attribute>
+	<!-- reference is already sufficiently specific without 'object-type' --> 
+	<attribute name="reference"><data type="IDREF"/></attribute>
+	<group>
+	  <!-- Use 'object-type' to avoid conflicting with the 'tag' configuration concept -->
+	  <attribute name="object-type"><text/></attribute>
+	  <optional>
+	    <!-- 
+		 does not make sense with anything other than object-type
+		 xpath and reference are already sufficiently specific
+	    -->
+	    <attribute name="attribute"><text/></attribute>
+	  </optional>
+	</group>
+      </choice>
+
+      <optional>
+	<attribute name="description"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+</grammar>

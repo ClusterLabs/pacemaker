@@ -6,6 +6,7 @@
   </start>
 
   <define name="element-constraints">
+    <element name="constraints">
       <zeroOrMore>
 	<choice>
 	  <ref name="element-location"/>
@@ -13,6 +14,7 @@
 	  <ref name="element-order"/>
 	</choice>
       </zeroOrMore>
+    </element>
   </define>
 
   <define name="element-location">

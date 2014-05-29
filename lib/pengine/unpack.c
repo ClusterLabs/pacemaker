@@ -76,6 +76,35 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     GHashTable *config_hash =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//nvpair[@name='provides' and @value='unfencing']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//nvpair[@name='requires' and @value='unfencing']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+
+
+#ifdef REDHAT_COMPAT_6
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        xpathObj = xpath_search(data_set->input, "//primitive[@type='fence_scsi']");
+        if(xpathObj && numXpathResults(xpathObj) > 0) {
+            set_bit(data_set->flags, pe_flag_enable_unfencing);
+        }
+        freeXpathObject(xpathObj);
+    }
+#endif
+
     data_set->config_hash = config_hash;
 
     unpack_instance_attributes(data_set->input, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
@@ -281,6 +310,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     const char *remote_server = NULL;
     const char *remote_port = NULL;
     const char *connect_timeout = "60s";
+    const char *remote_allow_migrate=NULL;
     char *tmp_id = NULL;
 
     for (attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
@@ -300,6 +330,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
                 remote_port = value;
             } else if (safe_str_eq(name, "remote-connect-timeout")) {
                 connect_timeout = value;
+            } else if (safe_str_eq(name, "remote-allow-migrate")) {
+                remote_allow_migrate=value;
             }
         }
     }
@@ -350,6 +382,15 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
     crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
     crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
     free(tmp_id);
+
+    if (remote_allow_migrate) {
+        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
+        tmp_id = crm_concat(remote_name, "meta-attributes-container", '_');
+        crm_xml_add(attr, XML_ATTR_ID, tmp_id);
+        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
+        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
+        free(tmp_id);
+    }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
     attr = create_xml_node(xml_tmp, XML_ATTR_OP);
@@ -403,6 +444,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
     static const char *blind_faith = NULL;
     static gboolean unseen_are_unclean = TRUE;
     static gboolean init_startup_fence_params = FALSE;
+
+    if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
+        /* ignore fencing remote-nodes that don't have a conneciton resource associated
+         * with them. This happens when remote-node entries get left in the nodes section
+         * after the connection resource is removed */
+        return;
+    }
 
     if (init_startup_fence_params == FALSE) {
         blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
@@ -486,82 +534,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 }
 
 static void
-g_hash_destroy_node_list(gpointer data)
-{
-    GListPtr domain = data;
-
-    g_list_free_full(domain, free);
-}
-
-gboolean
-unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set)
-{
-    const char *id = NULL;
-    GListPtr domain = NULL;
-    xmlNode *xml_node = NULL;
-    xmlNode *xml_domain = NULL;
-
-    crm_debug("Unpacking domains");
-    data_set->domains =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              g_hash_destroy_node_list);
-
-    for (xml_domain = __xml_first_child(xml_domains); xml_domain != NULL;
-         xml_domain = __xml_next(xml_domain)) {
-        if (crm_str_eq((const char *)xml_domain->name, XML_CIB_TAG_DOMAIN, TRUE)) {
-            domain = NULL;
-            id = crm_element_value(xml_domain, XML_ATTR_ID);
-
-            for (xml_node = __xml_first_child(xml_domain); xml_node != NULL;
-                 xml_node = __xml_next(xml_node)) {
-                if (crm_str_eq((const char *)xml_node->name, XML_CIB_TAG_NODE, TRUE)) {
-                    node_t *copy = NULL;
-                    node_t *node = NULL;
-                    const char *uname = crm_element_value(xml_node, "name");
-                    const char *score = crm_element_value(xml_node, XML_RULE_ATTR_SCORE);
-
-                    if (uname == NULL) {
-                        crm_config_err("Invalid domain %s: Must specify id tag in <node>", id);
-                        continue;
-                    }
-
-                    node = pe_find_node(data_set->nodes, uname);
-                    if (node == NULL) {
-                        node = pe_find_node_id(data_set->nodes, uname);
-                    }
-                    if (node == NULL) {
-                        crm_config_warn("Invalid domain %s: Node %s does not exist", id, uname);
-                        continue;
-                    }
-
-                    copy = node_copy(node);
-                    copy->weight = char2score(score);
-                    crm_debug("Adding %s to domain %s with score %s", node->details->uname, id,
-                              score);
-
-                    domain = g_list_prepend(domain, copy);
-                }
-            }
-
-            if (domain) {
-                crm_debug("Created domain %s with %d members", id, g_list_length(domain));
-                g_hash_table_replace(data_set->domains, strdup(id), domain);
-            }
-        }
-    }
-
-    return TRUE;
-}
-
-static void
-destroy_template_rsc_set(gpointer data)
-{
-    xmlNode *rsc_set = data;
-
-    free_xml(rsc_set);
-}
-
-static void
 setup_container(resource_t * rsc, pe_working_set_t * data_set)
 {
     const char *container_id = NULL;
@@ -617,7 +589,12 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
 
         if (new_node_id) {
             crm_trace("detected remote node %s", new_node_id);
-            create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+
+            /* only create the remote node entry if the node didn't already exist */
+            if (pe_find_node(data_set->nodes, new_node_id) == NULL) {
+                create_node(new_node_id, new_node_id, "remote", NULL, data_set);
+            }
+
         }
     }
     if (rsc_name_check) {
@@ -665,6 +642,18 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
     }
 }
 
+static void
+destroy_tag(gpointer data)
+{
+    tag_t *tag = data;
+
+    if (tag) {
+        free(tag->id);
+        g_list_free_full(tag->refs, free);
+        free(tag);
+    }
+}
+
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
@@ -673,7 +662,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 
     data_set->template_rsc_sets =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_template_rsc_set);
+                              destroy_tag);
 
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
         resource_t *new_rsc = NULL;
@@ -722,6 +711,50 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_config_err("Resource start-up disabled since no STONITH resources have been defined");
         crm_config_err("Either configure some or disable STONITH with the stonith-enabled option");
         crm_config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
+    }
+
+    return TRUE;
+}
+
+gboolean
+unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
+{
+    xmlNode *xml_tag = NULL;
+
+    data_set->tags =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_tag);
+
+    for (xml_tag = __xml_first_child(xml_tags); xml_tag != NULL; xml_tag = __xml_next(xml_tag)) {
+        xmlNode *xml_obj_ref = NULL;
+        const char *tag_id = ID(xml_tag);
+
+        if (crm_str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, TRUE) == FALSE) {
+            continue;
+        }
+
+        if (tag_id == NULL) {
+            crm_config_err("Failed unpacking %s: %s should be specified",
+                           crm_element_name(xml_tag), XML_ATTR_ID);
+            continue;
+        }
+
+        for (xml_obj_ref = __xml_first_child(xml_tag); xml_obj_ref != NULL; xml_obj_ref = __xml_next(xml_obj_ref)) {
+            const char *obj_ref = ID(xml_obj_ref);
+
+            if (crm_str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, TRUE) == FALSE) {
+                continue;
+            }
+
+            if (obj_ref == NULL) {
+                crm_config_err("Failed unpacking %s for tag %s: %s should be specified",
+                               crm_element_name(xml_obj_ref), tag_id, XML_ATTR_ID);
+                continue;
+            }
+
+            if (add_tag_ref(data_set->tags, tag_id, obj_ref) == FALSE) {
+                return FALSE;
+            }
+        }
     }
 
     return TRUE;
@@ -1125,7 +1158,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
     } else {
         /* mark it unclean */
-        pe_fence_node(data_set, this_node, "because it is partially and/or un-expectedly down");
+        this_node->details->unclean = TRUE;
+        crm_warn("Node %s is partially & un-expectedly down", this_node->details->uname);
         crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
     }
@@ -1234,7 +1268,14 @@ static gboolean
 determine_remote_online_status(node_t * this_node)
 {
     resource_t *rsc = this_node->details->remote_rsc;
-    resource_t *container = rsc->container;
+    resource_t *container = NULL;
+
+    if (rsc == NULL) {
+        this_node->details->online = FALSE;
+        goto remote_online_done;
+    }
+
+    container = rsc->container;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -1260,6 +1301,7 @@ determine_remote_online_status(node_t * this_node)
         this_node->details->online = FALSE;
     }
 
+remote_online_done:
     crm_trace("Remote node %s online=%s",
         this_node->details->id, this_node->details->online ? "TRUE" : "FALSE");
     return this_node->details->online;
@@ -1444,7 +1486,10 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
         rsc->is_remote_node = TRUE;
-        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        node = pe_find_node(data_set->nodes, rsc_id);
+        if (node == NULL) {
+	        node = create_node(rsc_id, rsc_id, "remote", NULL, data_set);
+        }
         link_rsc2remotenode(data_set, rsc);
 
         if (node) {
@@ -1496,7 +1541,9 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             if (childnode->details == node->details) {
                 /* ->find_rsc() because we might be a cloned group */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                if(rsc) {
+                    pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                }
             }
 
             /* Keep this block, it means we'll do the right thing if
@@ -1665,6 +1712,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                   enum action_fail_response on_fail,
                   xmlNode * migrate_op, pe_working_set_t * data_set)
 {
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                  rsc->id, role2text(rsc->role), node->details->uname, fail2text(on_fail));
 
@@ -1826,6 +1874,7 @@ process_recurring(node_t * node, resource_t * rsc,
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s: Start index %d, stop index = %d", rsc->id, start_index, stop_index);
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -2159,6 +2208,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
     }
 
+    CRM_LOG_ASSERT(offset > 0);
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
@@ -2259,6 +2309,7 @@ unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_
 {
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
+    CRM_ASSERT(rsc);
     if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
         int stop_id = 0;
         int migrate_id = 0;
@@ -2347,6 +2398,7 @@ unpack_rsc_op_failure(resource_t *rsc, node_t *node, int rc, xmlNode *xml_op, en
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
+    CRM_ASSERT(rsc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2465,6 +2517,7 @@ determine_op_status(
 
     bool is_probe = FALSE;
 
+    CRM_ASSERT(rsc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
     if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
@@ -2485,9 +2538,9 @@ determine_op_status(
         case PCMK_OCF_OK:
             if (is_probe && target_rc == 7) {
                 result = PCMK_LRM_OP_DONE;
+                set_bit(rsc->flags, pe_rsc_unexpectedly_running);
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
-                set_bit(rsc->flags, pe_rsc_unexpectedly_running);
 
                 /* legacy code for pre-0.6.5 operations */
             } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
@@ -2598,10 +2651,15 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (expired) {
         if (rsc->failure_timeout > 0) {
-            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
-            if(fc && get_failcount_full(node, rsc, &last_failure, TRUE, data_set) == 0) {
-                clear_failcount = 1;
-                crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
+            if(fc) {
+                if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
+                    clear_failcount = 1;
+                    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+
+                } else {
+                    expired = FALSE;
+                }
             }
         }
 
@@ -2646,7 +2704,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     return expired;
 }
 
-static int get_target_rc(xmlNode *xml_op) 
+int get_target_rc(xmlNode *xml_op)
 {
     int dummy = 0;
     int target_rc = 0;
@@ -2679,6 +2737,7 @@ update_resource_state(resource_t *rsc, node_t * node, xmlNode * xml_op, const ch
 {
     gboolean clear_past_failure = FALSE;
 
+    CRM_ASSERT(rsc);
     if (rc == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = TRUE;
 
@@ -2946,6 +3005,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
+    const char *cluster = NULL;
+
     g_hash_table_insert(node->details->attrs,
                         strdup("#uname"), strdup(node->details->uname));
     g_hash_table_insert(node->details->attrs,
@@ -2959,6 +3020,11 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     } else {
         g_hash_table_insert(node->details->attrs,
                             strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
+    }
+
+    cluster = g_hash_table_lookup(data_set->config_hash, "cluster");
+    if (cluster) {
+        g_hash_table_insert(node->details->attrs, strdup("#cluster"), strdup(cluster));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
@@ -3053,15 +3119,16 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             }
 
             this_node = pe_find_node(data_set->nodes, uname);
-            CRM_CHECK(this_node != NULL, continue);
-
             if (is_remote_node(this_node)) {
                 determine_remote_online_status(this_node);
             } else {
                 determine_online_status(node_state, this_node, data_set);
             }
 
-            if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if(this_node == NULL) {
+                CRM_LOG_ASSERT(this_node != NULL);
+
+            } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith

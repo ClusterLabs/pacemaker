@@ -166,7 +166,7 @@
    </synapse>
    <synapse id="12">
      <action_set>
-      <crm_event id="37" operation="do_shutdown" operation_key="do_shutdown" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
+      <crm_event id="37" operation="do_shutdown" operation_key="do_shutdown-process1a" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
      </action_set>

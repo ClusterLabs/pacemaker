@@ -208,10 +208,10 @@ do_dc_takeover(long long action,
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL);
+                         "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         "cluster-infrastructure", cluster_type, FALSE, NULL);
+                         "cluster-infrastructure", cluster_type, FALSE, NULL, NULL);
 
     mainloop_set_trigger(config_read);
     free_xml(cib);

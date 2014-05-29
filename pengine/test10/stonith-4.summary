@@ -17,10 +17,10 @@ Transition Summary:
  * Start   Fencing	(pcmk-1)
 
 Executing cluster transition:
- * Fencing pcmk-10
- * Fencing pcmk-5
- * Fencing pcmk-7
- * Fencing pcmk-8
+ * Fencing pcmk-10 (reboot)
+ * Fencing pcmk-5 (reboot)
+ * Fencing pcmk-7 (reboot)
+ * Fencing pcmk-8 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
 Transition failed: terminated

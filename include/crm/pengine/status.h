@@ -61,6 +61,7 @@ enum pe_find {
 
 #  define pe_flag_stonith_enabled	0x00000010ULL
 #  define pe_flag_have_stonith_resource	0x00000020ULL
+#  define pe_flag_enable_unfencing	0x00000040ULL
 
 #  define pe_flag_stop_rsc_orphans	0x00000100ULL
 #  define pe_flag_stop_action_orphans	0x00000200ULL
@@ -92,8 +93,8 @@ typedef struct pe_working_set_s {
     no_quorum_policy_t no_quorum_policy;
 
     GHashTable *config_hash;
-    GHashTable *domains;
     GHashTable *tickets;
+    GHashTable *singletons; /* Actions for which there can be only one - ie. fence nodeX */
 
     GListPtr nodes;
     GListPtr resources;
@@ -118,6 +119,7 @@ typedef struct pe_working_set_s {
 
     GHashTable *template_rsc_sets;
     const char *localhost;
+    GHashTable *tags;
 
 } pe_working_set_t;
 
@@ -167,6 +169,7 @@ struct node_s {
 
 #  define pe_rsc_notify		0x00000010ULL
 #  define pe_rsc_unique		0x00000020ULL
+#  define pe_rsc_fence_device   0x00000040ULL
 
 #  define pe_rsc_provisional	0x00000100ULL
 #  define pe_rsc_allocating	0x00000200ULL
@@ -188,11 +191,12 @@ struct node_s {
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
 #  define pe_rsc_unexpectedly_running 0x02000000ULL
-#  define pe_rsc_maintenance	0x04000000ULL
+#  define pe_rsc_maintenance	 0x04000000ULL
 
 #  define pe_rsc_needs_quorum	 0x10000000ULL
 #  define pe_rsc_needs_fencing	 0x20000000ULL
 #  define pe_rsc_needs_unfencing 0x40000000ULL
+#  define pe_rsc_have_unfencing  0x80000000ULL
 
 enum pe_graph_flags {
     pe_graph_none = 0x00000,
@@ -320,6 +324,11 @@ struct ticket_s {
     GHashTable *state;
 };
 
+typedef struct tag_s {
+    char *id;
+    GListPtr refs;
+} tag_t;
+
 enum pe_link_state {
     pe_link_not_dumped,
     pe_link_dumped,
@@ -328,12 +337,12 @@ enum pe_link_state {
 
 /* *INDENT-OFF* */
 enum pe_ordering {
-    pe_order_none                  = 0x0,        /* deleted */
-    pe_order_optional              = 0x1,    /* pure ordering, nothing implied */
-    pe_order_apply_first_non_migratable = 0x2, /* Only apply this constraint's ordering if first is not migratable. */
+    pe_order_none                  = 0x0,       /* deleted */
+    pe_order_optional              = 0x1,       /* pure ordering, nothing implied */
+    pe_order_apply_first_non_migratable = 0x2,  /* Only apply this constraint's ordering if first is not migratable. */
 
-    pe_order_implies_first         = 0x10,      /* If 'first' is required, ensure 'then' is too */
-    pe_order_implies_then          = 0x20,       /* If 'then' is required, ensure 'first' is too */
+    pe_order_implies_first         = 0x10,      /* If 'then' is required, ensure 'first' is too */
+    pe_order_implies_then          = 0x20,      /* If 'first' is required, ensure 'then' is too */
     pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
 
     /* first requires then to be both runnable and migrate runnable. */
@@ -342,20 +351,24 @@ enum pe_ordering {
     pe_order_runnable_left         = 0x100,     /* 'then' requires 'first' to be runnable */
 
     pe_order_pseudo_left           = 0x200,     /* 'then' can only be pseudo if 'first' is runnable */
+    pe_order_implies_then_on_node  = 0x400,     /* If 'first' is required on 'nodeX',
+                                                 * ensure instances of 'then' on 'nodeX' are too.
+                                                 * Only really useful if 'then' is a clone and 'first' is not
+                                                 */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,     /* only applies if the action is non-pseudo */
-    pe_order_serialize_only        = 0x4000,   /* serialize */
+    pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
+    pe_order_serialize_only        = 0x4000,    /* serialize */
 
     pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not manditory */
-    pe_order_implies_then_printed  = 0x20000,    /* Like ..implies_then but only ensures 'then' is printed, not manditory */
+    pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not manditory */
 
-    pe_order_asymmetrical          = 0x100000,    /* Indicates asymmetrical one way ordering constraint. */
-    pe_order_load                  = 0x200000,    /* Only relevant if... */
-    pe_order_one_or_more           = 0x400000,    /* 'then' is only runnable if one or more of it's dependancies are too */
+    pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
+    pe_order_load                  = 0x200000,  /* Only relevant if... */
+    pe_order_one_or_more           = 0x400000,  /* 'then' is only runnable if one or more of it's dependancies are too */
     pe_order_anti_colocation       = 0x800000,
 
-    pe_order_trace                 = 0x4000000  /* test marker */
+    pe_order_trace                 = 0x4000000, /* test marker */
 };
 /* *INDENT-ON* */
 

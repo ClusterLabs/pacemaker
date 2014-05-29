@@ -46,19 +46,6 @@ mark_as_orphan(resource_t * rsc)
     }
 }
 
-static void
-clear_bit_recursive(resource_t * rsc, unsigned long long flag)
-{
-    GListPtr gIter = rsc->children;
-
-    clear_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
-
-        clear_bit_recursive(child_rsc, flag);
-    }
-}
-
 void
 force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
 {
@@ -127,6 +114,7 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
     }
 /*  child_rsc->globally_unique = rsc->globally_unique; */
 
+    CRM_ASSERT(child_rsc);
     clone_data->total_clones += 1;
     pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
@@ -567,6 +555,7 @@ clone_free(resource_t * rsc)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
+        CRM_ASSERT(child_rsc);
         pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         free_xml(child_rsc->xml);
         child_rsc->xml = NULL;

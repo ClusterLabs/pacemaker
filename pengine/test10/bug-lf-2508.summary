@@ -39,7 +39,7 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   Group01_start_0
  * Resource action: prmStonith3-1:1 monitor=3600000 on srv01
- * Fencing srv02
+ * Fencing srv02 (reboot)
  * Pseudo action:   stonith_complete
  * Resource action: Dummy01         start on srv01
  * Pseudo action:   Group02_stop_0

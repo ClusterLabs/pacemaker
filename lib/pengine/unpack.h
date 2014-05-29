@@ -28,6 +28,8 @@ extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set);
 
 extern gboolean unpack_domains(xmlNode * xml_domains, pe_working_set_t * data_set);
 
+extern gboolean unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set);
+
 extern gboolean unpack_status(xmlNode * status, pe_working_set_t * data_set);
 
 extern gboolean unpack_remote_status(xmlNode * status, pe_working_set_t * data_set);

@@ -587,13 +587,22 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 free(pid_file);
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 xml_file = strdup(optarg);
                 one_shot = TRUE;
                 break;
             case 'h':
+                if(optarg == NULL) {
+                    return crm_help(flag, EX_USAGE);
+                }
                 as_html_file = strdup(optarg);
                 umask(S_IWGRP | S_IWOTH);
                 break;
@@ -641,7 +650,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                return crm_help(flag, EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -657,7 +666,7 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        return crm_help('?', EX_USAGE);
     }
 
     if (one_shot) {
@@ -670,7 +679,7 @@ main(int argc, char **argv)
         if (!as_html_file && !snmp_target && !crm_mail_to && !external_agent && !as_xml) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
-            crm_help('?', EX_USAGE);
+            return crm_help('?', EX_USAGE);
         }
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
@@ -853,7 +862,7 @@ print_rsc_summary(pe_working_set_t * data_set, node_t * node, resource_t * rsc, 
     gboolean printed = FALSE;
 
     time_t last_failure = 0;
-    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, data_set);
+    int failcount = get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set);
 
     if (all || failcount || last_failure > 0) {
         printed = TRUE;
@@ -1677,6 +1686,46 @@ print_xml_status(pe_working_set_t * data_set)
         fprintf(stream, "    </resources>\n");
     }
 
+    /*** FAILURES ***/
+    if (xml_has_children(data_set->failed)) {
+        xmlNode *xml_op = NULL;
+
+        fprintf(stream, "    <failures>\n");
+        for (xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
+             xml_op = __xml_next(xml_op)) {
+            int status = 0;
+            int rc = 0;
+	    int interval = 0;
+            const char *id = ID(xml_op);
+            const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+	    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK); // needed?
+            const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
+            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+            const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+            const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+
+            rc = crm_parse_int(rc_s, "0");
+	    interval = crm_parse_int(interval_s, "0");
+
+            if (last) {
+                time_t run_at = crm_parse_int(last, "0");
+                char *run_at_s = ctime(&run_at);
+                if(run_at_s) {
+                    run_at_s[24] = 0; /* Overwrite the newline */
+                }
+
+                fprintf(stream, "        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\" />\n",
+                        op_key ? "op_key" : "id" ,op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status),
+                        run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_QUEUE), crm_element_value(xml_op, XML_RSC_OP_T_EXEC), interval, task);
+            } else {
+                print_as("        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" />\n",
+                         op_key ? "op_key" : "id", op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status));
+            }
+        }
+        fprintf(stream, "    </failures>\n");
+    }
+
     fprintf(stream, "</crm_mon>\n");
     fflush(stream);
     fclose(stream);
@@ -2158,9 +2207,11 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
 
     crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
 
+    if(rsc) {
+        setenv("CRM_notify_rsc", rsc, 1);
+    }
     setenv("CRM_notify_recipient", external_recipient, 1);
     setenv("CRM_notify_node", node, 1);
-    setenv("CRM_notify_rsc", rsc, 1);
     setenv("CRM_notify_task", task, 1);
     setenv("CRM_notify_desc", desc, 1);
     setenv("CRM_notify_rc", rc_s, 1);
@@ -2464,6 +2515,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     if (current_cib == NULL) {
+        crm_trace("Re-requesting the full cib");
         cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 
@@ -2523,7 +2575,7 @@ mon_refresh_display(gpointer user_data)
         if (cib) {
             cib->cmds->signoff(cib);
         }
-        print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_dtd_validation));
+        print_as("Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         if (as_console) {
             sleep(2);
         }

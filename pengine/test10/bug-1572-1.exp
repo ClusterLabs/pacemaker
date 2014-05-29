@@ -750,7 +750,7 @@
   </synapse>
   <synapse id="50">
     <action_set>
-      <crm_event id="47" operation="do_shutdown" operation_key="do_shutdown" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
+      <crm_event id="47" operation="do_shutdown" operation_key="do_shutdown-arc-dknightlx" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
         <attributes CRM_meta_op_no_wait="true" />
       </crm_event>
     </action_set>

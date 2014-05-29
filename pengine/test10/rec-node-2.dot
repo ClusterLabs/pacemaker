@@ -1,6 +1,7 @@
 digraph "g" {
 "all_stopped" -> "rsc1_start_0 node2" [ style = bold]
 "all_stopped" -> "rsc3_start_0 node2" [ style = bold]
+"all_stopped" -> "stonith-1_start_0 node2" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "group1_running_0" [ style=bold color="green" fontcolor="orange" ]
 "group1_start_0" -> "group1_running_0" [ style = bold]
@@ -46,8 +47,8 @@ digraph "g" {
 "rsc6_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc6_start_0 node2" -> "group2_running_0" [ style = bold]
 "rsc6_start_0 node2" [ style=bold color="green" fontcolor="black" ]
-"stonith node1" -> "stonith_complete" [ style = bold]
-"stonith node1" [ style=bold color="green" fontcolor="black" ]
+"stonith 'reboot' node1" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith-1_monitor_0 node2" -> "probe_complete node2" [ style = bold]
 "stonith-1_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
 "stonith-1_start_0 node2" [ style=bold color="green" fontcolor="black" ]
@@ -56,6 +57,5 @@ digraph "g" {
 "stonith_complete" -> "rsc4_start_0 node2" [ style = bold]
 "stonith_complete" -> "rsc5_start_0 node2" [ style = bold]
 "stonith_complete" -> "rsc6_start_0 node2" [ style = bold]
-"stonith_complete" -> "stonith-1_start_0 node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

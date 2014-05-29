@@ -100,8 +100,8 @@ send_stonith_update(crm_action_t * action, const char *target, const char *uuid)
     /* Make sure it sticks */
     /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
 
-    erase_status_tag(target, XML_CIB_TAG_LRM, cib_scope_local);
-    erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+    erase_status_tag(peer->uname, XML_CIB_TAG_LRM, cib_scope_local);
+    erase_status_tag(peer->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 
     free_xml(node_state);
     return;
@@ -659,7 +659,10 @@ notify_crmd(crm_graph_t * graph)
     switch (graph->completion_action) {
         case tg_stop:
             type = "stop";
-            /* fall through */
+            if (fsa_state == S_TRANSITION_ENGINE) {
+                event = I_TE_SUCCESS;
+            }
+            break;
         case tg_done:
             type = "done";
             if (fsa_state == S_TRANSITION_ENGINE) {

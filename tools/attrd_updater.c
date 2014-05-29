@@ -149,5 +149,5 @@ main(int argc, char **argv)
         crm_exit(rc);
     }
 
-    crm_exit(pcmk_ok);
+    return crm_exit(pcmk_ok);
 }

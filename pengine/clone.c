@@ -28,6 +28,18 @@
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 static void append_parent_colocation(resource_t * rsc, resource_t * child, gboolean all);
 
+static gint
+sort_rsc_id(gconstpointer a, gconstpointer b)
+{
+    const resource_t *resource1 = (const resource_t *)a;
+    const resource_t *resource2 = (const resource_t *)b;
+
+    CRM_ASSERT(resource1 != NULL);
+    CRM_ASSERT(resource2 != NULL);
+
+    return strcmp(resource1->id, resource2->id);
+}
+
 static node_t *
 parent_node_instance(const resource_t * rsc, node_t * node)
 {
@@ -387,6 +399,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, pe_working
     node_t *local_node = NULL;
     GHashTable *backup = NULL;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Processing %s %d", rsc->id, all_coloc);
 
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
@@ -749,7 +762,7 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
     action_t *start = NULL;
     action_t *last_stop = NULL;
     action_t *last_start = NULL;
-    GListPtr gIter = rsc->children;
+    GListPtr gIter = NULL;
     gboolean active_only = TRUE;        /* change to false to get the old behavior */
     clone_variant_data_t *clone_data = NULL;
 
@@ -758,8 +771,10 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
     if (clone_data->ordered == FALSE) {
         return;
     }
+    /* we have to maintain a consistent sorted child list when building order constraints */
+    rsc->children = g_list_sort(rsc->children, sort_rsc_id);
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
         key = stop_key(child);
@@ -869,7 +884,7 @@ void
 clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
     resource_t *last_rsc = NULL;
-    GListPtr gIter = rsc->children;
+    GListPtr gIter;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -884,7 +899,11 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    if (clone_data->ordered) {
+        /* we have to maintain a consistent sorted child list when building order constraints */
+        rsc->children = g_list_sort(rsc->children, sort_rsc_id);
+    }
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
         child_rsc->cmds->internal_constraints(child_rsc, data_set);
@@ -1412,18 +1431,6 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
     clone_data->promote_notify = NULL;
 }
 
-static gint
-sort_rsc_id(gconstpointer a, gconstpointer b)
-{
-    const resource_t *resource1 = (const resource_t *)a;
-    const resource_t *resource2 = (const resource_t *)b;
-
-    CRM_ASSERT(resource1 != NULL);
-    CRM_ASSERT(resource2 != NULL);
-
-    return strcmp(resource1->id, resource2->id);
-}
-
 node_t *
 rsc_known_on(resource_t * rsc, GListPtr * list)
 {
@@ -1501,6 +1508,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     gboolean any_created = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
+    CRM_ASSERT(rsc);
     get_clone_variant_data(clone_data, rsc);
 
     rsc->children = g_list_sort(rsc->children, sort_rsc_id);
@@ -1523,9 +1531,11 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         /* Try whoever we plan on starting there */
         gIter = rsc->children;
         for (; gIter != NULL; gIter = gIter->next) {
+            node_t *local_node = NULL;
             resource_t *child_rsc = (resource_t *) gIter->data;
-            node_t *local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
+            CRM_ASSERT(child_rsc);
+            local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
             if (local_node == NULL) {
                 continue;
             }
@@ -1536,6 +1546,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
 
         /* Fall back to the first clone instance */
+        CRM_ASSERT(rsc->children);
         child = rsc->children->data;
         return child->cmds->create_probe(child, node, complete, force, data_set);
     }

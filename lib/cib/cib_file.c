@@ -110,7 +110,7 @@ load_file_cib(const char *filename)
     if (rc == 0) {
         root = filename2xml(filename);
         if (root == NULL) {
-            return -pcmk_err_dtd_validation;
+            return -pcmk_err_schema_validation;
         }
 
     } else {
@@ -128,7 +128,7 @@ load_file_cib(const char *filename)
     dtd_ok = validate_xml(root, NULL, TRUE);
     if (dtd_ok == FALSE) {
         crm_err("CIB does not validate against %s", ignore_dtd);
-        rc = -pcmk_err_dtd_validation;
+        rc = -pcmk_err_schema_validation;
         goto bail;
     }
 
@@ -295,19 +295,17 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     cib->call_id++;
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
 #if ENABLE_ACL
-    if(user_name != NULL) {
-        effective_user = uid2username(geteuid());
-        crm_trace("Checking if %s can impersonate %s", effective_user, user_name);
-        determine_request_user(effective_user, request, F_CIB_USER);
+    if(user_name) {
+        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     }
-    crm_trace("Performing %s operation as %s", op, crm_element_value(request, F_CIB_USER));
+    crm_trace("Performing %s operation as %s", op, user_name);
 #endif
     rc = cib_perform_op(op, call_options, fn, query,
                         section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
     free_xml(request);
-    if (rc == -pcmk_err_dtd_validation) {
+    if (rc == -pcmk_err_schema_validation) {
         validate_xml_verbose(result_cib);
     }
 

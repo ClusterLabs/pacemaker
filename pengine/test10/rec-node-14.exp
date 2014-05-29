@@ -1,31 +1,31 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
-      <crm_event id="5" operation="stonith" operation_key="stonith-node3" on_node="node3" on_node_uuid="uuid3">
+      <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3">
         <attributes CRM_meta_on_node="node3" CRM_meta_on_node_uuid="uuid3" CRM_meta_stonith_action="reboot" />
       </crm_event>
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="3" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="3" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-      <crm_event id="4" operation="stonith" operation_key="stonith-node2" on_node="node2" on_node_uuid="uuid2">
+      <crm_event id="4" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2">
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="5" operation="stonith" operation_key="stonith-node3" on_node="node3" on_node_uuid="uuid3"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <crm_event id="3" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="uuid1">
+      <crm_event id="3" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
        </crm_event>
      </action_set>
@@ -39,7 +39,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="5" operation="stonith" operation_key="stonith-node3" on_node="node3" on_node_uuid="uuid3"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
        </trigger>
      </inputs>
    </synapse>

@@ -143,7 +143,11 @@ should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 
         crm_trace("Processing input %d", prereq->id);
         if (prereq->confirmed == FALSE) {
-            crm_trace("Inputs for synapse %d not satisfied", synapse->id);
+            crm_trace("Inputs for synapse %d not satisfied: not confirmed", synapse->id);
+            synapse->ready = FALSE;
+            break;
+        } else if(prereq->failed && prereq->can_fail == FALSE) {
+            crm_trace("Inputs for synapse %d not satisfied: failed", synapse->id);
             synapse->ready = FALSE;
             break;
         }

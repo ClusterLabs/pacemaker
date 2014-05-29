@@ -600,6 +600,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, int
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
     *result = iov;
+    CRM_ASSERT(header->qb.size > 0);
     return header->qb.size;
 }
 

@@ -91,6 +91,13 @@ all_opt = {
 		"required" : "0",
 		"shortdesc" : "Physical switch number on device",
 		"order" : 1 },
+	"nodeid" : {
+		"getopt" : "i:",
+		"longopt" : "nodeid",
+		"help" : "-i, --nodeid                    corosync id of fence victim",
+		"required" : "0",
+		"shortdesc" : "The corosync id of fence victim",
+		"order" : 1},
 	"uuid" : {
 		"getopt" : "U:",
 		"longopt" : "uuid",
@@ -185,7 +192,7 @@ def metadata(avail_opt, options, docs):
 	print "</parameters>"
 	print "<actions>"
 	if avail_opt.count("io_fencing") == 0:
-		print "\t<action name=\"on\" />"
+		print "\t<action name=\"on\" on_target=\"1\" />"
 		print "\t<action name=\"off\" />"
 		print "\t<action name=\"reboot\" />"
 	else:
@@ -193,7 +200,6 @@ def metadata(avail_opt, options, docs):
 		print "\t<action name=\"disable\" />"	
 
 	print "\t<action name=\"status\" />"
-	print "\t<action name=\"list\" />"
 	print "\t<action name=\"monitor\" />"
 	print "\t<action name=\"metadata\" />"	
 	print "</actions>"

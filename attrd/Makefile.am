@@ -17,7 +17,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
+AM_CPPFLAGS                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
 halibdir		= $(CRM_DAEMON_DIR)
@@ -50,12 +50,6 @@ attrd_SOURCES	+= legacy.c
 endif
 
 endif
-
-%.8:	% crm_attribute
-	echo Creating $@
-	chmod a+x $(top_builddir)/tools/$<
-	$(top_builddir)/tools/$< --help
-	PATH=$(top_builddir)/tools:$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

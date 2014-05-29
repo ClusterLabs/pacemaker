@@ -23,7 +23,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -67,7 +67,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -106,7 +106,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -167,9 +167,6 @@
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
@@ -186,7 +183,7 @@
         <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -220,9 +217,6 @@
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="grpStonith8_start_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="74" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
@@ -236,7 +230,7 @@
         <pseudo_event id="45" operation="stop" operation_key="grpStonith8_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -251,7 +245,7 @@
         <pseudo_event id="54" operation="stop" operation_key="clnDiskd1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -278,7 +272,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -293,7 +287,7 @@
         <pseudo_event id="63" operation="stop" operation_key="clnDiskd2_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -320,7 +314,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -335,7 +329,7 @@
         <pseudo_event id="72" operation="stop" operation_key="clnPing_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
@@ -362,13 +356,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
-      <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593">
+      <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593">
         <attributes CRM_meta_default_ping_set="100" CRM_meta_diskcheck_status="normal" CRM_meta_diskcheck_status_internal="normal" CRM_meta_on_node="bl460g1n7" CRM_meta_on_node_uuid="3232261593" CRM_meta_probe_complete="true" CRM_meta_ringnumber_0="192.168.101.217 is UP" CRM_meta_ringnumber_1="192.168.102.217 is UP" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -382,7 +376,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7" on_node="bl460g1n7" on_node_uuid="3232261593"/>
+        <crm_event id="75" operation="stonith" operation_key="stonith-bl460g1n7-reboot" on_node="bl460g1n7" on_node_uuid="3232261593"/>
       </trigger>
     </inputs>
   </synapse>

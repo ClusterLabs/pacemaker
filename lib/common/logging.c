@@ -215,6 +215,8 @@ set_format_string(int method, const char *daemon)
     } else {
         offset += snprintf(fmt + offset, FMT_MAX - offset, "\t%%b");
     }
+
+    CRM_LOG_ASSERT(offset > 0);
     qb_log_format_set(method, fmt);
 }
 
@@ -234,6 +236,10 @@ crm_add_logfile(const char *filename)
     }
 
     if (filename == NULL) {
+        return FALSE;           /* Nothing to do */
+    } else if(safe_str_eq(filename, "none")) {
+        return FALSE;           /* Nothing to do */
+    } else if(safe_str_eq(filename, "/dev/null")) {
         return FALSE;           /* Nothing to do */
     }
 
@@ -318,6 +324,7 @@ crm_add_logfile(const char *filename)
     /* Enable callsites */
     crm_update_callsites();
     have_logfile = TRUE;
+
     return TRUE;
 }
 
@@ -638,7 +645,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
              int argc, char **argv, gboolean quiet)
 {
     int lpc = 0;
-    const char *logfile = daemon_option("debugfile");
+    int32_t qb_facility = 0;
+    const char *logfile = daemon_option("logfile");
     const char *facility = daemon_option("logfacility");
     const char *f_copy = facility;
 
@@ -658,14 +666,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     /* and for good measure... - this enum is a bit field (!) */
     g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
 
-    if (facility == NULL) {
-        facility = "daemon";
-
-    } else if (safe_str_eq(facility, "none")) {
-        facility = "daemon";
-        quiet = TRUE;
-    }
-
+    /* Who do we log as */
     if (entity) {
         free(crm_system_name);
         crm_system_name = strdup(entity);
@@ -688,30 +689,60 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     setenv("PCMK_service", crm_system_name, 1);
 
+    /* Should we log to syslog */
+    if (facility == NULL) {
+        if(crm_is_daemon) {
+            facility = "daemon";
+        } else {
+            facility = "none";
+        }
+        set_daemon_option("logfacility", facility);
+    }
+
+    if (safe_str_eq(facility, "none")) {
+        quiet = TRUE;
+        qb_facility = qb_log_facility2int("daemon");
+
+    } else {
+        qb_facility = qb_log_facility2int(facility);
+    }
+
     if (daemon_option_enabled(crm_system_name, "debug")) {
         /* Override the default setting */
         level = LOG_DEBUG;
     }
 
-    if (daemon_option_enabled(crm_system_name, "stderr")) {
-        /* Override the default setting */
-        to_stderr = TRUE;
-    }
-
+    /* What lower threshold do we have for sending to syslog */
     crm_log_priority = crm_priority2int(daemon_option("logpriority"));
 
     crm_log_level = level;
-    qb_log_init(crm_system_name, qb_log_facility2int(facility), level);
-    qb_log_tags_stringify_fn_set(crm_quark_to_string);
+    qb_log_init(crm_system_name, qb_facility, crm_log_level);
 
-    /* Set default format strings */
+    if (quiet) {
+        /* Nuke any syslog activity */
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+    }
+
+    /* Set format strings */
+    qb_log_tags_stringify_fn_set(crm_quark_to_string);
     for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
         set_format_string(lpc, crm_system_name);
     }
 
+    /* Should we log to stderr */ 
+    if (daemon_option_enabled(crm_system_name, "stderr")) {
+        /* Override the default setting */
+        to_stderr = TRUE;
+    }
     crm_enable_stderr(to_stderr);
 
-    if (logfile) {
+    /* Should we log to a file */
+    if (safe_str_eq("none", logfile)) {
+        /* No soup^Hlogs for you! */
+    } else if(crm_is_daemon) {
+        /* The daemons always get a log file, unless explicitly set to configured 'none' */
+        crm_add_logfile(logfile);
+    } else if(logfile) {
         crm_add_logfile(logfile);
     }
 
@@ -719,26 +750,10 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         crm_enable_blackbox(0);
     }
 
+    /* Summary */
     crm_trace("Quiet: %d, facility %s", quiet, f_copy);
-    daemon_option("debugfile");
+    daemon_option("logfile");
     daemon_option("logfacility");
-
-    if (quiet) {
-        /* Nuke any syslog activity */
-        facility = NULL;
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-    }
-
-    if (crm_is_daemon) {
-        set_daemon_option("logfacility", facility);
-    }
-
-    if (crm_is_daemon && crm_tracing_enabled()
-        && qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED
-        && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        /* Make sure tracing goes somewhere */
-        crm_add_logfile(NULL);
-    }
 
     crm_update_callsites();
 
@@ -1032,7 +1047,7 @@ pcmk_errorname(int rc)
 
         case pcmk_err_generic: return "pcmk_err_generic";
         case pcmk_err_no_quorum: return "pcmk_err_no_quorum";
-        case pcmk_err_dtd_validation: return "pcmk_err_dtd_validation";
+        case pcmk_err_schema_validation: return "pcmk_err_schema_validation";
         case pcmk_err_transform_failed: return "pcmk_err_transform_failed";
         case pcmk_err_old_data: return "pcmk_err_old_data";
         case pcmk_err_diff_failed: return "pcmk_err_diff_failed";
@@ -1061,7 +1076,7 @@ pcmk_strerror(int rc)
             return "Generic Pacemaker error";
         case pcmk_err_no_quorum:
             return "Operation requires quorum";
-        case pcmk_err_dtd_validation:
+        case pcmk_err_schema_validation:
             return "Update does not conform to the configured schema";
         case pcmk_err_transform_failed:
             return "Schema transform failed";
@@ -1077,6 +1092,9 @@ pcmk_strerror(int rc)
             return "Could not archive the previous configuration";
         case pcmk_err_cib_save:
             return "Could not save the new configuration to disk";
+
+        case pcmk_err_schema_unchanged:
+            return "Schema is already the latest available";
 
             /* The following cases will only be hit on systems for which they are non-standard */
             /* coverity[dead_error_condition] False positive on non-Linux */

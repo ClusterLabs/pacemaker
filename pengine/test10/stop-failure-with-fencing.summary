@@ -22,7 +22,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: Fencing         monitor on pcmk-1
- * Fencing pcmk-2
+ * Fencing pcmk-2 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Pseudo action:   clvm-clone_stop_0

@@ -13,7 +13,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   ms1_demote_0
- * Fencing node1
+ * Fencing node1 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   rsc_stonith_stop_0
  * Pseudo action:   rsc1:1_demote_0

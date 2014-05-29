@@ -560,7 +560,7 @@
    </synapse>
   <synapse id="48" priority="1000000">
      <action_set>
-      <rsc_op id="27" operation="probe_complete" operation_key="probe_complete" on_node="node3" on_node_uuid="uuid3">
+      <rsc_op id="27" operation="probe_complete" operation_key="probe_complete-node3" on_node="node3" on_node_uuid="uuid3">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -602,7 +602,7 @@
    </synapse>
   <synapse id="49" priority="1000000">
      <action_set>
-       <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
+      <rsc_op id="15" operation="probe_complete" operation_key="probe_complete-node2" on_node="node2" on_node_uuid="uuid2">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -644,7 +644,7 @@
    </synapse>
   <synapse id="50" priority="1000000">
      <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-node1" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_op_no_wait="true" />
        </rsc_op>
      </action_set>
@@ -692,13 +692,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-node1" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
-        <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2"/>
+        <rsc_op id="15" operation="probe_complete" operation_key="probe_complete-node2" on_node="node2" on_node_uuid="uuid2"/>
       </trigger>
       <trigger>
-        <rsc_op id="27" operation="probe_complete" operation_key="probe_complete" on_node="node3" on_node_uuid="uuid3"/>
+        <rsc_op id="27" operation="probe_complete" operation_key="probe_complete-node3" on_node="node3" on_node_uuid="uuid3"/>
        </trigger>
      </inputs>
    </synapse>

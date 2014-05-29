@@ -526,6 +526,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         }
     }
 
+    CRM_LOG_ASSERT(offset > 0);
     status_print("%s", buffer);
 
 #if CURSES_ENABLED
@@ -718,6 +719,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }
         offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
+        CRM_LOG_ASSERT(offset > 0);
 
         if (rsc_table) {
             rsc_counter = g_hash_table_lookup(rsc_table, buffer);

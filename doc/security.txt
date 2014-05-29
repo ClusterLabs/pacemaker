@@ -20,7 +20,7 @@ etc.  It is likely that this would be augmented by adding an identity
 store (leading candidates would be the CIB and /etc/passwd) and
 authorization mechanisms to the CRM RPC Server processes.  
 
-To achieve a moderatly sensible level of security granularity, the API
+To achieve a moderately sensible level of security granularity, the API
 should at least be split up into the following list of RPC Servers:
 
 cib_delete
@@ -38,7 +38,7 @@ Potential Exploits
 These exclude things like faking HA Messages, hacking IPC fifo's and for
 the moment packet sniffing of RPC requests.
 
-The "Measures" section is intended to contain messures to prevent the
+The "Measures" section is intended to contain measures to prevent the
 attack or to at least raise the bar for potential intruders. 
 
 
@@ -71,7 +71,7 @@ Exploit Class #4
 		     client name
 	Measures: 8, ?
 	Notes: This is probably the second worst scenario, about all we could potentially do
-	       is implement behavioural pattern recognition and that is :definitly: not 
+	       is implement behavioural pattern recognition and that is :definitely: not 
 	       going to be in 1.0 :)
 
 Exploit Class #5
@@ -102,10 +102,10 @@ List of Measures
 Measure 1: As the CRMd, verify the "type" attribute when routing IPC messages from 
 	   sub-systems and discard if it is not a response[2]
 
-Measure 2: As the CRMd, verfiy the "from" field on incomming messages and discard 
+Measure 2: As the CRMd, verfiy the "from" field on incoming messages and discard 
 	   if it is not "admin" or "dc"
 
-Measure 3: As the CRMd, Verfiy F_ORIG against known value for the DC.  Only the DC 
+Measure 3: As the CRMd, verfiy F_ORIG against known value for the DC.  Only the DC 
 	   should be sending us messages[3]
 
 Measure 4: As Heartbeat, only allow clients registered as "crmd" to send messages 
@@ -123,22 +123,22 @@ Measure 7: As the CIB, detect multiple active registrations and shutdown
 Measure 8: Require the admin clients to provide a credential which must be matched
 	   against an identity store.[6][7]
 
-Measure 9: Configure RPC security appropriatly
+Measure 9: Configure RPC security appropriately
 
 Measure 10: Invalidate the ticket and the result set once the ticket has been used.
 
-Measure 11: Dont create admin clients that pass a pre-defined set of credentials
+Measure 11: Don't create admin clients that pass a pre-defined set of credentials
 
 [1] Shutting down Heartbeat to change permissions would mean the DC is 
     assigned elsewhere anyway
 [2] Sub-systems other than the CRMs/DC should not be making requests
-[3] If not implemented, then this exploit would only require acess to any
+[3] If not implemented, then this exploit would only require access to any
     member node
 [4] This is currently reported as an error and the second attempt is denied
-[5] It is envisioned that in the case of asyncronous RPC calls, that a 
+[5] It is envisioned that in the case of asynchronous RPC calls, that a 
     "ticket" would be issued that the client would use to ask for a result, 
     or perhaps set up a callback.  A second async call would be made to 
-    retrieve the result.  Syncronous RPC calls would internally use a 
+    retrieve the result.  Synchronous RPC calls would internally use a 
     different call that would block on this ticket until a result was 
     available.
 [6] Depending on the type of client and where it takes its credentials from,

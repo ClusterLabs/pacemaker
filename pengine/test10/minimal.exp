@@ -69,7 +69,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="host2" on_node_uuid="host2">
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-host2" on_node="host2" on_node_uuid="host2">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -84,7 +84,7 @@
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="host1" on_node_uuid="host1">
+      <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-host1" on_node="host1" on_node_uuid="host1">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -105,10 +105,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="host1" on_node_uuid="host1"/>
+        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete-host1" on_node="host1" on_node_uuid="host1"/>
       </trigger>
       <trigger>
-        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="host2" on_node_uuid="host2"/>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-host2" on_node="host2" on_node_uuid="host2"/>
       </trigger>
     </inputs>
   </synapse>

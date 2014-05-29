@@ -107,7 +107,7 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
                          pe_working_set_t * data_set);
 extern int get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
-                              bool effective, pe_working_set_t * data_set);
+                              bool effective, xmlNode * xml_op, pe_working_set_t * data_set);
 extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
                              pe_working_set_t * data_set);
 
@@ -234,6 +234,8 @@ extern ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
 char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
+int get_target_rc(xmlNode * xml_op);
+
 gint sort_node_uname(gconstpointer a, gconstpointer b);
 bool is_set_recursive(resource_t * rsc, long long flag, bool any);
 
@@ -260,11 +262,19 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
+action_t *pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set);
+void trigger_unfencing(
+    resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set);
+
+void set_bit_recursive(resource_t * rsc, unsigned long long flag);
+void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
 gboolean xml_contains_remote_node(xmlNode *xml);
 gboolean is_baremetal_remote_node(node_t *node);
 gboolean is_container_remote_node(node_t *node);
 gboolean is_remote_node(node_t *node);
 resource_t * rsc_contains_remote_node(pe_working_set_t * data_set, resource_t *rsc);
+
+gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
 void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);

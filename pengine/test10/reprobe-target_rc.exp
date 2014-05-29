@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="4" operation="probe_again" operation_key="probe_again" on_node="node-1" on_node_uuid="node-1">
+      <rsc_op id="4" operation="probe_again" operation_key="probe_again-node-1" on_node="node-1" on_node_uuid="node-1">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -9,7 +9,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="3" operation="probe_again" operation_key="probe_again" on_node="node-0" on_node_uuid="node-0">
+      <rsc_op id="3" operation="probe_again" operation_key="probe_again-node-0" on_node="node-0" on_node_uuid="node-0">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>

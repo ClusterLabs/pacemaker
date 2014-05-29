@@ -10,9 +10,9 @@ Node node3 (uuid3): UNCLEAN (offline)
 Transition Summary:
 
 Executing cluster transition:
- * Fencing node1
- * Fencing node3
- * Fencing node2
+ * Fencing node1 (reboot)
+ * Fencing node3 (reboot)
+ * Fencing node2 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
 

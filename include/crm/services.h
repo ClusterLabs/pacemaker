@@ -226,6 +226,11 @@ enum nagios_exitcode {
                                           int timeout /* ms */ , GHashTable * params);
 
 /**
+ * Kick a recurring action so it is scheduled immediately for re-execution
+ */
+    gboolean services_action_kick(const char *name, const char *action, int interval /* ms */);
+
+/**
  * Find the first class that can provide service::${agent}
  *
  * \param[in] agent which agent to search for

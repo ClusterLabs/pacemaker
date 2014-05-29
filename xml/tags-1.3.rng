@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <optional>
+      <ref name="element-tags"/>
+    </optional>
+  </start>
+
+  <define name="element-tags">
+    <element name="tags">
+      <zeroOrMore>
+	<element name="tag">
+	  <attribute name="id"><data type="ID"/></attribute>
+	  <oneOrMore>
+	    <element name="obj_ref">
+	      <attribute name="id "><data type="IDREF"/></attribute>
+	    </element>
+	  </oneOrMore>
+	</element>
+      </zeroOrMore>
+    </element>
+  </define>
+
+</grammar>

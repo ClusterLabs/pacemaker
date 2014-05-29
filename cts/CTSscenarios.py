@@ -322,7 +322,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         CM.prepare()
 
         #        Clear out the cobwebs ;-)
-        self.TearDown(CM, force=True)
+        CM.stopall(verbose=True, force=True)
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")
@@ -469,7 +469,7 @@ class BasicSanityCheck(ScenarioComponent):
         CM.prepare()
 
         # Clear out the cobwebs
-        self.TearDown(CM, force=True)
+        self.TearDown(CM)
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on BSC node(s).")

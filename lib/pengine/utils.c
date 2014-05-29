@@ -362,10 +362,21 @@ custom_action(resource_t * rsc, char *key, const char *task,
     GListPtr possible_matches = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
-    CRM_CHECK(task != NULL, return NULL);
+    CRM_CHECK(task != NULL, free(key); return NULL);
 
     if (save_action && rsc != NULL) {
         possible_matches = find_actions(rsc->actions, key, on_node);
+    } else if(save_action) {
+#if 0
+        action = g_hash_table_lookup(data_set->singletons, key);
+#else
+        /* More expensive but takes 'node' into account */
+        possible_matches = find_actions(data_set->actions, key, on_node);
+#endif
+    }
+
+    if(data_set->singletons == NULL) {
+        data_set->singletons = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
     }
 
     if (possible_matches != NULL) {
@@ -430,6 +441,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         if (save_action) {
             data_set->actions = g_list_prepend(data_set->actions, action);
+            if(rsc == NULL) {
+                g_hash_table_insert(data_set->singletons, action->uuid, action);
+            }
         }
 
         if (rsc != NULL) {
@@ -847,18 +861,39 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         } else {
             crm_time_t *delay = NULL;
             int rc = crm_time_compare(origin, data_set->now);
-            unsigned long long delay_s = 0;
+            long long delay_s = 0;
+            int interval_s = (interval / 1000);
 
-            while (rc < 0) {
-                crm_time_add_seconds(origin, interval / 1000);
+            crm_trace("Origin: %s, interval: %d", value, interval_s);
+
+            /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
+            while(rc > 0) {
+                crm_time_add_seconds(origin, -interval_s);
                 rc = crm_time_compare(origin, data_set->now);
             }
 
-            delay = crm_time_subtract(origin, data_set->now);
+            /* Now find the first "multiple" that occurs after 'now' */
+            while (rc < 0) {
+                crm_time_add_seconds(origin, interval_s);
+                rc = crm_time_compare(origin, data_set->now);
+            }
+
+            delay = crm_time_calculate_duration(origin, data_set->now);
+
+            crm_time_log(LOG_TRACE, "origin", origin,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "now", data_set->now,
+                         crm_time_log_date | crm_time_log_timeofday |
+                         crm_time_log_with_timezone);
+            crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
+
             delay_s = crm_time_get_seconds(delay);
+
+            CRM_CHECK(delay_s >= 0, delay_s = 0);
             start_delay = delay_s * 1000;
 
-            crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
+            crm_info("Calculated a start delay of %llds for %s", delay_s, ID(xml_obj));
             g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
                                  crm_itoa(start_delay));
             crm_time_free(origin);
@@ -970,14 +1005,14 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         return;
     }
 
+    CRM_ASSERT(node->details);
     crm_trace("%s%s%sNode %s: (weight=%d, fixed=%s)",
               pre_text == NULL ? "" : pre_text,
               pre_text == NULL ? "" : ": ",
-              node->details ==
-              NULL ? "error " : node->details->online ? "" : "Unavailable/Unclean ",
+              node->details->online ? "" : "Unavailable/Unclean ",
               node->details->uname, node->weight, node->fixed ? "True" : "False");
 
-    if (details && node != NULL && node->details != NULL) {
+    if (details) {
         char *pe_mutable = strdup("\t\t");
         GListPtr gIter = node->details->running_rsc;
 
@@ -1396,6 +1431,7 @@ get_effective_time(pe_working_set_t * data_set)
 
 struct fail_search {
     resource_t *rsc;
+    pe_working_set_t * data_set;
 
     int count;
     long long last;
@@ -1406,32 +1442,164 @@ static void
 get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
 {
     struct fail_search *search = user_data;
-    const char *key = key_p;
+    const char *attr_id = key_p;
+    const char *match = strstr(attr_id, search->key);
+    resource_t *parent = NULL;
 
-    const char *match = strstr(key, search->key);
+    if (match == NULL) {
+        return;
+    }
 
-    if (match) {
-        if (strstr(key, "last-failure-") == key && (key + 13) == match) {
-            search->last = crm_int_helper(value, NULL);
+    /* we are only incrementing the failcounts here if the rsc
+     * that matches our prefix has the same uber parent as the rsc we're
+     * calculating the failcounts for. This prevents false positive matches
+     * where unrelated resources may have similar prefixes in their names.
+     *
+     * search->rsc is already set to be the uber parent. */
+    parent = uber_parent(pe_find_resource(search->data_set->resources, match));
+    if (parent == NULL || parent != search->rsc) {
+        return;
+    }
+    if (strstr(attr_id, "last-failure-") == attr_id) {
+        search->last = crm_int_helper(value, NULL);
 
-        } else if (strstr(key, "fail-count-") == key && (key + 11) == match) {
-            search->count += char2score(value);
-        }
+    } else if (strstr(attr_id, "fail-count-") == attr_id) {
+        search->count += char2score(value);
     }
 }
 
 int
 get_failcount(node_t * node, resource_t * rsc, time_t *last_failure, pe_working_set_t * data_set)
 {
-    return get_failcount_full(node, rsc, last_failure, TRUE, data_set);
+    return get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
+}
+
+static gboolean
+is_matched_failure(const char * rsc_id, xmlNode * conf_op_xml, xmlNode * lrm_op_xml)
+{
+    gboolean matched = FALSE;
+    const char *conf_op_name = NULL;
+    int conf_op_interval = 0;
+    const char *lrm_op_task = NULL;
+    int lrm_op_interval = 0;
+    const char *lrm_op_id = NULL;
+    char *last_failure_key = NULL;
+
+    if (rsc_id == NULL || conf_op_xml == NULL || lrm_op_xml == NULL) {
+        return FALSE;
+    }
+
+    conf_op_name = crm_element_value(conf_op_xml, "name");
+    conf_op_interval = crm_get_msec(crm_element_value(conf_op_xml, "interval"));
+    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
+    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL, &lrm_op_interval);
+
+    if (safe_str_eq(conf_op_name, lrm_op_task) == FALSE
+        || conf_op_interval != lrm_op_interval) {
+        return FALSE;
+    }
+
+    lrm_op_id = ID(lrm_op_xml);
+    last_failure_key = generate_op_key(rsc_id, "last_failure", 0);
+
+    if (safe_str_eq(last_failure_key, lrm_op_id)) {
+        matched = TRUE;
+
+    } else {
+        char *expected_op_key = generate_op_key(rsc_id, conf_op_name, conf_op_interval);
+
+        if (safe_str_eq(expected_op_key, lrm_op_id)) {
+            int rc = 0;
+            int target_rc = get_target_rc(lrm_op_xml);
+
+            crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
+            if (rc != target_rc) {
+                matched = TRUE;
+            }
+        }
+        free(expected_op_key);
+    }
+
+    free(last_failure_key);
+    return matched;
+}
+
+static gboolean
+block_failure(node_t * node, resource_t * rsc, xmlNode * xml_op, pe_working_set_t * data_set)
+{
+    char *xml_name = clone_strip(rsc->id);
+    char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
+    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    gboolean should_block = FALSE;
+
+    free(xpath);
+
+    if (xpathObj) {
+        int max = numXpathResults(xpathObj);
+        int lpc = 0;
+
+        for (lpc = 0; lpc < max; lpc++) {
+            xmlNode *pref = getXpathResult(xpathObj, lpc);
+
+            if (xml_op) {
+                should_block = is_matched_failure(xml_name, pref, xml_op);
+                if (should_block) {
+                    break;
+                }
+
+            } else {
+                const char *conf_op_name = NULL;
+                int conf_op_interval = 0;
+                char *lrm_op_xpath = NULL;
+                xmlXPathObject *lrm_op_xpathObj = NULL;
+
+                conf_op_name = crm_element_value(pref, "name");
+                conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
+
+                lrm_op_xpath = g_strdup_printf("//node_state[@uname='%s']"
+                                               "//lrm_resource[@id='%s']"
+                                               "/lrm_rsc_op[@operation='%s'][@interval='%d']",
+                                               node->details->uname, xml_name,
+                                               conf_op_name, conf_op_interval);
+                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
+
+                free(lrm_op_xpath);
+
+                if (lrm_op_xpathObj) {
+                    int max2 = numXpathResults(lrm_op_xpathObj);
+                    int lpc2 = 0;
+
+                    for (lpc2 = 0; lpc2 < max2; lpc2++) {
+                        xmlNode *lrm_op_xml = getXpathResult(lrm_op_xpathObj, lpc2);
+
+                        should_block = is_matched_failure(xml_name, pref, lrm_op_xml);
+                        if (should_block) {
+                            break;
+                        }
+                    }
+                }
+                freeXpathObject(lrm_op_xpathObj);
+
+                if (should_block) {
+                    break;
+                }
+            }
+        }
+    }
+
+    free(xml_name);
+    freeXpathObject(xpathObj);
+
+    return should_block;
 }
 
 int
-get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool effective, pe_working_set_t * data_set)
+get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
+                   bool effective, xmlNode * xml_op, pe_working_set_t * data_set)
 {
     char *key = NULL;
     const char *value = NULL;
-    struct fail_search search = { rsc, 0, 0, NULL };
+    struct fail_search search = { rsc, data_set, 0, 0, NULL };
 
     /* Optimize the "normal" case */
     key = crm_concat("fail-count", rsc->clone_name ? rsc->clone_name : rsc->id, '-');
@@ -1455,6 +1623,7 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
 
         g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
         free(search.key);
+        search.key = NULL;
     }
 
     if (search.count != 0 && search.last != 0 && last_failure) {
@@ -1463,16 +1632,8 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
 
     if(search.count && rsc->failure_timeout) {
         /* Never time-out if blocking failures are configured */
-        char *xml_name = clone_strip(rsc->id);
-        char *xpath = g_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']", xml_name);
-        xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
-
-        free(xml_name);
-        free(xpath);
-
-        if (numXpathResults(xpathObj) > 0) {
-            xmlNode *pref = getXpathResult(xpathObj, 0);
-            pe_warn("Setting %s.failure_timeout=%d in %s conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout, ID(pref));
+        if (block_failure(node, rsc, xml_op, data_set)) {
+            pe_warn("Setting %s.failure-timeout=%d conflicts with on-fail=block: ignoring timeout", rsc->id, rsc->failure_timeout);
             rsc->failure_timeout = 0;
 #if 0
             /* A good idea? */
@@ -1481,7 +1642,6 @@ get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure, bool e
             rsc->failure_timeout = 0;
 #endif
         }
-        freeXpathObject(xpathObj);
     }
 
     if (effective && search.count != 0 && search.last != 0 && rsc->failure_timeout) {
@@ -1593,6 +1753,9 @@ order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order
 
     crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
 
+    /* Ensure we never create a dependancy on ourselves... its happened */
+    CRM_ASSERT(lh_action != rh_action);
+
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1629,20 +1792,12 @@ action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
     action_t *op = NULL;
-    const char *op_s = name;
-    GListPtr possible_matches = NULL;
 
-    possible_matches = find_actions(data_set->actions, name, NULL);
-    if (possible_matches != NULL) {
-        if (g_list_length(possible_matches) > 1) {
-            pe_warn("Action %s exists %d times", name, g_list_length(possible_matches));
-        }
-
-        op = g_list_nth_data(possible_matches, 0);
-        g_list_free(possible_matches);
-
-    } else {
-        op = custom_action(NULL, strdup(op_s), op_s, NULL, TRUE, TRUE, data_set);
+    if(data_set->singletons) {
+        op = g_hash_table_lookup(data_set->singletons, name);
+    }
+    if (op == NULL) {
+        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
         set_bit(op->flags, pe_action_pseudo);
         set_bit(op->flags, pe_action_runnable);
     }
@@ -1786,7 +1941,7 @@ const char *rsc_printable_id(resource_t *rsc)
 gboolean
 is_baremetal_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc && (node->details->remote_rsc->container == FALSE)) {
+    if (is_remote_node(node) && (node->details->remote_rsc == FALSE || node->details->remote_rsc->container == FALSE)) {
         return TRUE;
     }
     return FALSE;
@@ -1795,7 +1950,7 @@ is_baremetal_remote_node(node_t *node)
 gboolean
 is_container_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc && node->details->remote_rsc->container) {
+    if (is_remote_node(node) && (node->details->remote_rsc && node->details->remote_rsc->container)) {
         return TRUE;
     }
     return FALSE;
@@ -1804,7 +1959,7 @@ is_container_remote_node(node_t *node)
 gboolean
 is_remote_node(node_t *node)
 {
-    if (node->details->remote_rsc) {
+    if (node->details->type == node_remote) {
         return TRUE;
     }
     return FALSE;
@@ -1843,3 +1998,134 @@ xml_contains_remote_node(xmlNode *xml)
     return FALSE;
 }
 
+void
+clear_bit_recursive(resource_t * rsc, unsigned long long flag)
+{
+    GListPtr gIter = rsc->children;
+
+    clear_bit(rsc->flags, flag);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        clear_bit_recursive(child_rsc, flag);
+    }
+}
+
+void
+set_bit_recursive(resource_t * rsc, unsigned long long flag)
+{
+    GListPtr gIter = rsc->children;
+
+    set_bit(rsc->flags, flag);
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+
+        set_bit_recursive(child_rsc, flag);
+    }
+}
+
+action_t *
+pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set)
+{
+    char *key = NULL;
+    action_t *stonith_op = NULL;
+
+    if(op == NULL) {
+        op = data_set->stonith_action;
+    }
+
+    key = g_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+
+    if(data_set->singletons) {
+        stonith_op = g_hash_table_lookup(data_set->singletons, key);
+    }
+
+    if(stonith_op == NULL) {
+        stonith_op = custom_action(NULL, key, CRM_OP_FENCE, node, optional, TRUE, data_set);
+
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+        add_hash_param(stonith_op->meta, "stonith_action", op);
+    } else {
+        free(key);
+    }
+
+    if(optional == FALSE) {
+        crm_trace("%s is no longer optional", stonith_op->uuid);
+        pe_clear_action_bit(stonith_op, pe_action_optional);
+    }
+
+    return stonith_op;
+}
+
+void
+trigger_unfencing(
+    resource_t * rsc, node_t *node, const char *reason, action_t *dependancy, pe_working_set_t * data_set) 
+{
+    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
+        /* No resources require it */
+        return;
+
+    } else if (rsc != NULL && is_not_set(rsc->flags, pe_rsc_fence_device)) {
+        /* Wasnt a stonith device */
+        return;
+
+    } else if(node
+              && node->details->online
+              && node->details->unclean == FALSE
+              && node->details->shutdown == FALSE) {
+        action_t *unfence = pe_fence_op(node, "on", FALSE, data_set);
+
+        crm_notice("Unfencing %s: %s", node->details->uname, reason);
+        if(dependancy) {
+            order_actions(unfence, dependancy, pe_order_optional);
+        }
+
+    } else if(rsc) {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+            if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
+                trigger_unfencing(rsc, node, reason, dependancy, data_set);
+            }
+        }
+    }
+}
+
+gboolean
+add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
+{
+    tag_t *tag = NULL;
+    GListPtr gIter = NULL;
+    gboolean is_existing = FALSE;
+
+    CRM_CHECK(tags && tag_name && obj_ref, return FALSE);
+
+    tag = g_hash_table_lookup(tags, tag_name);
+    if (tag == NULL) {
+        tag = calloc(1, sizeof(tag_t));
+        if (tag == NULL) {
+            return FALSE;
+        }
+        tag->id = strdup(tag_name);
+        tag->refs = NULL;
+        g_hash_table_insert(tags, strdup(tag_name), tag);
+    }
+
+    for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
+        const char *existing_ref = (const char *) gIter->data;
+
+        if (crm_str_eq(existing_ref, obj_ref, TRUE)){
+            is_existing = TRUE;
+            break;
+        }
+    }
+
+    if (is_existing == FALSE) {
+        tag->refs = g_list_append(tag->refs, strdup(obj_ref));
+        crm_trace("Added: tag=%s ref=%s", tag->id, obj_ref);
+    }
+
+    return TRUE;
+}

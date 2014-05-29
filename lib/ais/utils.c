@@ -234,7 +234,7 @@ spawn_child(crm_child_t * child)
 /* *INDENT-ON* */
 
         if (pcmk_env.logfile) {
-            setenv("HA_debugfile", pcmk_env.logfile, 1);
+            setenv("HA_logfile", pcmk_env.logfile, 1);
         }
 
         if (use_valgrind) {

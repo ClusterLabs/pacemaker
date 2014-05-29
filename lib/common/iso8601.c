@@ -62,6 +62,7 @@ struct crm_time_s {
     int days;
     int seconds;
     int offset;                 /* Seconds */
+    bool duration;
 };
 
 char *crm_time_as_string(crm_time_t * date_time, int flags);
@@ -264,12 +265,12 @@ crm_time_get_timezone(crm_time_t * dt, uint * h, uint * m)
     return crm_time_get_sec(dt->seconds, h, m, &s);
 }
 
-unsigned long long
+long long
 crm_time_get_seconds(crm_time_t * dt)
 {
     int lpc;
     crm_time_t *utc = NULL;
-    unsigned long long in_seconds = 0;
+    long long in_seconds = 0;
 
     utc = crm_get_utc_time(dt);
 
@@ -300,7 +301,7 @@ crm_time_get_seconds(crm_time_t * dt)
 }
 
 #define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
-unsigned long long
+long long
 crm_time_get_seconds_since_epoch(crm_time_t * dt)
 {
     return crm_time_get_seconds(dt) - EPOCH_SECONDS;
@@ -309,15 +310,11 @@ crm_time_get_seconds_since_epoch(crm_time_t * dt)
 int
 crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
 {
-    int months = 1;
+    int months = 0;
     int days = dt->days;
 
-    if (dt->months) {
-        /* This is a duration including months, don't convert the days field */
-        months = dt->months;
-
-    } else {
-        for (; months <= 12 && days > 0; months++) {
+    if(dt->years != 0) {
+        for (months = 1; months <= 12 && days > 0; months++) {
             int mdays = crm_time_days_in_month(months, dt->years);
 
             if (mdays >= days) {
@@ -326,6 +323,13 @@ crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
                 days -= mdays;
             }
         }
+
+    } else if (dt->months) {
+        /* This is a duration including months, don't convert the days field */
+        months = dt->months;
+
+    } else {
+        /* This is a duration not including months, still don't convert the days field */
     }
 
     *y = dt->years;
@@ -419,22 +423,57 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     }
 
     CRM_CHECK(dt != NULL, return NULL);
+    if (flags & crm_time_log_duration) {
+        uint h = 0, m = 0, s = 0;
+        int offset = 0, max = 128;
+
+        date_s = calloc(1, max+1);
+        crm_time_get_sec(dt->seconds, &h, &m, &s);
+
+        if (date_s == NULL) {
+            goto done;
+        }
+
+        if(dt->years) {
+            offset += snprintf(date_s+offset, max-offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
+        }
+        if(dt->months) {
+            offset += snprintf(date_s+offset, max-offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
+        }
+        if(dt->days) {
+            offset += snprintf(date_s+offset, max-offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
+        }
+        if(dt->seconds) {
+            offset += snprintf(date_s+offset, max-offset, "%d seconds ( ", dt->seconds);
+            if(h) {
+                offset += snprintf(date_s+offset, max-offset, "%d hour%s ", h, h>1?"s":"");
+            }
+            if(m) {
+                offset += snprintf(date_s+offset, max-offset, "%d minute%s ", m, m>1?"s":"");
+            }
+            if(s) {
+                offset += snprintf(date_s+offset, max-offset, "%d second%s ", s, s>1?"s":"");
+            }
+            offset += snprintf(date_s+offset, max-offset, ")");
+        }
+        goto done;
+    }
 
     if (flags & crm_time_log_date) {
         date_s = calloc(1, 32);
         if (date_s == NULL) {
-            return NULL;
+            goto done;
 
         } else if (flags & crm_time_seconds) {
             unsigned long long s = crm_time_get_seconds(date_time);
 
-            snprintf(date_s, 31, "%llu", s);
+            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_epoch) {
             unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
 
-            snprintf(date_s, 31, "%llu", s);
+            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_weeks) {
@@ -1021,6 +1060,29 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
 }
 
 crm_time_t *
+crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value)
+{
+    crm_time_t *utc = NULL;
+    crm_time_t *answer = NULL;
+
+    CRM_CHECK(dt != NULL && value != NULL, return NULL);
+
+    utc = crm_get_utc_time(value);
+    answer = crm_get_utc_time(dt);
+    answer->duration = TRUE;
+
+    answer->years -= utc->years;
+    if(utc->months != 0) {
+        crm_time_add_months(answer, -utc->months);
+    }
+    crm_time_add_days(answer, -utc->days);
+    crm_time_add_seconds(answer, -utc->seconds);
+
+    crm_time_free(utc);
+    return answer;
+}
+
+crm_time_t *
 crm_time_subtract(crm_time_t * dt, crm_time_t * value)
 {
     crm_time_t *utc = NULL;
@@ -1030,11 +1092,12 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
 
     answer = calloc(1, sizeof(crm_time_t));
     crm_time_set(answer, dt);
-
     utc = crm_get_utc_time(value);
 
     answer->years -= utc->years;
-    crm_time_add_months(answer, -utc->months);
+    if(utc->months != 0) {
+        crm_time_add_months(answer, -utc->months);
+    }
     crm_time_add_days(answer, -utc->days);
     crm_time_add_seconds(answer, -utc->seconds);
 
@@ -1115,10 +1178,8 @@ crm_time_add_seconds(crm_time_t * a_time, int extra)
     }
 
     while (a_time->seconds < 0) {
-        crm_trace("s=%d, d=%d", a_time->seconds, days);
         a_time->seconds += seconds;
         days--;
-        crm_trace("s=%d, d=%d", a_time->seconds, days);
     }
     crm_time_add_days(a_time, days);
 }
@@ -1126,6 +1187,7 @@ crm_time_add_seconds(crm_time_t * a_time, int extra)
 void
 crm_time_add_days(crm_time_t * a_time, int extra)
 {
+    int lower_bound = 1;
     int ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
 
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
@@ -1137,7 +1199,11 @@ crm_time_add_days(crm_time_t * a_time, int extra)
         ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
     }
 
-    while (a_time->days <= 0) {
+    if(a_time->duration) {
+        lower_bound = 0;
+    }
+
+    while (a_time->days < lower_bound) {
         a_time->years--;
         a_time->days += crm_time_leapyear(a_time->years) ? 366 : 365;
     }

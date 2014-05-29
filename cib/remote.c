@@ -298,6 +298,7 @@ cib_remote_listen(gpointer data)
 
     /* accept the connection */
     laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     crm_debug("New %s connection from %s",
               ssock == remote_tls_fd ? "secure" : "clear-text", inet_ntoa(addr.sin_addr));
@@ -694,7 +695,7 @@ authenticate_user(const char *user, const char *passwd)
     pass = TRUE;
 
   bail:
-    rc = pam_end(pam_h, rc);
+    pam_end(pam_h, rc);
 #endif
     return pass;
 }

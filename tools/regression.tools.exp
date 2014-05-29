@@ -1,8 +1,9 @@
+Created new pacemaker-2.0 configuration
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow
 =#=#=#= Begin test: Validate CIB =#=#=#=
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="0" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -12,7 +13,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   <status/>
 </cib>
 =#=#=#= Current cib after: Validate CIB =#=#=#=
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="0" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -25,7 +26,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: cibadmin       - Validate CIB
 =#=#=#= Begin test: Configure something before erasing =#=#=#=
 =#=#=#= Current cib after: Configure something before erasing =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -43,7 +44,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
 =#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2">
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -60,7 +61,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Require --force for CIB erasure
 =#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
 =#=#=#= Current cib after: Allow CIB erasure with --force =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -73,7 +74,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Allow CIB erasure with --force
 =#=#=#= Begin test: Query CIB =#=#=#=
 =#=#=#= Current cib after: Query CIB =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -86,7 +87,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query CIB
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -104,7 +105,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= Begin test: Query new cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 =#=#=#= Current cib after: Query new cluster option =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -121,7 +122,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query new cluster option
 =#=#=#= Begin test: Query cluster options =#=#=#=
 =#=#=#= Current cib after: Query cluster options =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="3" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -138,7 +139,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query cluster options
 =#=#=#= Begin test: Set no-quorum policy =#=#=#=
 =#=#=#= Current cib after: Set no-quorum policy =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="4" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -156,7 +157,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: crm_attribute  - Set no-quorum policy
 =#=#=#= Begin test: Delete nvpair =#=#=#=
 =#=#=#= Current cib after: Delete nvpair =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="5" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -181,7 +182,7 @@ Call failed: Name not unique on network
   </failed_update>
 </failed>
 =#=#=#= Current cib after: Create operaton should fail =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="5" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -198,7 +199,7 @@ Call failed: Name not unique on network
 * Passed: cibadmin       - Create operaton should fail
 =#=#=#= Begin test: Modify cluster options section =#=#=#=
 =#=#=#= Current cib after: Modify cluster options section =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -217,7 +218,7 @@ Call failed: Name not unique on network
 =#=#=#= Begin test: Query updated cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 =#=#=#= Current cib after: Query updated cluster option =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="6" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -235,7 +236,7 @@ Call failed: Name not unique on network
 * Passed: cibadmin       - Query updated cluster option
 =#=#=#= Begin test: Set duplicate cluster option =#=#=#=
 =#=#=#= Current cib after: Set duplicate cluster option =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -260,7 +261,7 @@ Multiple attributes match name=cluster-delay
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="7" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -281,7 +282,7 @@ Multiple attributes match name=cluster-delay
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail
 =#=#=#= Begin test: Set cluster option with -s =#=#=#=
 =#=#=#= Current cib after: Set cluster option with -s =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="8" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -304,7 +305,7 @@ Multiple attributes match name=cluster-delay
 Deleted crm_config option: id=(null) name=cluster-delay
 
 =#=#=#= Current cib after: Delete cluster option with -i =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="9" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -339,7 +340,7 @@ Online: [ node1 ]
 
 
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
-<cib epoch="10" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="10" num_updates="2" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -363,7 +364,7 @@ Online: [ node1 ]
 * Passed: crm_simulate   - Create node1 and bring it online
 =#=#=#= Begin test: Create node attribute =#=#=#=
 =#=#=#= Current cib after: Create node attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -392,7 +393,7 @@ Online: [ node1 ]
 =#=#=#= Begin test: Query new node attribute =#=#=#=
       <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
 =#=#=#= Current cib after: Query new node attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -420,7 +421,7 @@ Online: [ node1 ]
 * Passed: cibadmin       - Query new node attribute
 =#=#=#= Begin test: Digest calculation =#=#=#=
 Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -449,7 +450,7 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
 =#=#=#= Current cib after: Replace operation should fail =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -479,7 +480,7 @@ Call failed: Update was older than existing configuration
 Error performing operation: No such device or address
 scope=status  name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="11" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -507,7 +508,7 @@ scope=status  name=standby value=off
 * Passed: crm_standby    - Default standby value
 =#=#=#= Begin test: Set standby status =#=#=#=
 =#=#=#= Current cib after: Set standby status =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="12" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -537,7 +538,7 @@ scope=status  name=standby value=off
 =#=#=#= Begin test: Query standby value =#=#=#=
 scope=nodes  name=standby value=true
 =#=#=#= Current cib after: Query standby value =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="12" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -573,7 +574,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 =#=#=#= Current cib after: Delete standby value =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="13" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -601,7 +602,7 @@ Could not establish attrd connection: Connection refused (111)
 * Passed: crm_standby    - Delete standby value
 =#=#=#= Begin test: Create a resource =#=#=#=
 =#=#=#= Current cib after: Create a resource =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="14" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -631,7 +632,7 @@ Could not establish attrd connection: Connection refused (111)
 * Passed: cibadmin       - Create a resource
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="15" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -666,7 +667,7 @@ Could not establish attrd connection: Connection refused (111)
 =#=#=#= Begin test: Query a resource meta attribute =#=#=#=
 false
 =#=#=#= Current cib after: Query a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="15" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -701,7 +702,7 @@ false
 =#=#=#= Begin test: Remove a resource meta attribute =#=#=#=
 Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Remove a resource meta attribute =#=#=#=
-<cib epoch="16" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="16" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -733,7 +734,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 * Passed: crm_resource   - Remove a resource meta attribute
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -769,7 +770,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Begin test: List the configured resources =#=#=#=
  dummy	(ocf::pacemaker:Dummy):	Stopped 
 =#=#=#= Current cib after: List the configured resources =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -809,7 +810,7 @@ Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 Could not establish attrd connection: Connection refused (111)
 =#=#=#= Current cib after: Set a resource's fail-count =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -853,7 +854,7 @@ Resource 'dummy' not moved: active in 0 locations.
 You can prevent 'dummy' from running on a specific location with: --ban --host <name>
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -896,7 +897,7 @@ Error performing operation: Invalid argument
 Error performing operation: node 'i.dont.exist' is unknown
 Error performing operation: No such device or address
 =#=#=#= Current cib after: Don't support migration to non-existant locations =#=#=#=
-<cib epoch="17" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="17" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -937,7 +938,7 @@ Error performing operation: No such device or address
 * Passed: crm_resource   - Don't support migration to non-existant locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1003,7 +1004,7 @@ Online: [ node1 ]
  Fence	(stonith:fence_true):	Started node1 
 
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="18" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="4" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1041,10 +1042,10 @@ Online: [ node1 ]
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1057,7 +1058,7 @@ Online: [ node1 ]
 Error performing operation: dummy is already active on node1
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="18" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="18" num_updates="4" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1095,10 +1096,10 @@ Error performing operation: Invalid argument
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1113,7 +1114,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will be the case even if node1 is the last node in the cluster
 	This message can be disabled with --quiet
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="19" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1153,10 +1154,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1167,7 +1168,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 * Passed: crm_resource   - Move a resource from its existing location
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
-<cib epoch="20" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1205,10 +1206,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1220,7 +1221,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Default ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Default ticket granted state =#=#=#=
-<cib epoch="20" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1258,10 +1259,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1272,7 +1273,7 @@ false
 * Passed: crm_ticket     - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set ticket granted state =#=#=#=
-<cib epoch="20" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1310,10 +1311,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1328,7 +1329,7 @@ false
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Query ticket granted state =#=#=#=
-<cib epoch="20" num_updates="1" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1366,10 +1367,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1383,7 +1384,7 @@ false
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
-<cib epoch="20" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="2" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1421,10 +1422,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1438,7 +1439,7 @@ false
 * Passed: crm_ticket     - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
 =#=#=#= Current cib after: Make a ticket standby =#=#=#=
-<cib epoch="20" num_updates="3" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="3" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1476,10 +1477,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1494,7 +1495,7 @@ false
 =#=#=#= Begin test: Query ticket standby state =#=#=#=
 true
 =#=#=#= Current cib after: Query ticket standby state =#=#=#=
-<cib epoch="20" num_updates="3" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="3" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1532,10 +1533,10 @@ true
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1549,7 +1550,7 @@ true
 * Passed: crm_ticket     - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
 =#=#=#= Current cib after: Activate a ticket =#=#=#=
-<cib epoch="20" num_updates="4" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="4" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1587,10 +1588,10 @@ true
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1604,7 +1605,7 @@ true
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
 =#=#=#= Current cib after: Delete ticket standby state =#=#=#=
-<cib epoch="20" num_updates="5" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="5" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1642,10 +1643,10 @@ true
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1661,7 +1662,7 @@ true
 Error performing operation: node 'host1' is unknown
 Error performing operation: No such device or address
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
-<cib epoch="20" num_updates="5" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="20" num_updates="5" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1699,10 +1700,10 @@ Error performing operation: No such device or address
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1746,7 +1747,7 @@ Online: [ node1 node2 node3 ]
  Fence	(stonith:fence_true):	Started node2 
 
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="22" num_updates="8" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="22" num_updates="8" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1786,10 +1787,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1801,10 +1802,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1813,10 +1814,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1831,7 +1832,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will be the case even if node1 is the last node in the cluster
 	This message can be disabled with --quiet
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
-<cib epoch="23" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="23" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1873,10 +1874,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1888,10 +1889,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1900,10 +1901,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1918,7 +1919,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 	This will be the case even if node2 is the last node in the cluster
 	This message can be disabled with --quiet
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
-<cib epoch="24" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="24" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1961,10 +1962,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1976,10 +1977,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -1988,10 +1989,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2023,7 +2024,7 @@ Online: [ node1 node2 node3 ]
  Fence	(stonith:fence_true):	Started node2 
 
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="24" num_updates="2" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="24" num_updates="2" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2066,10 +2067,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2081,10 +2082,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2093,10 +2094,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2107,7 +2108,7 @@ Online: [ node1 node2 node3 ]
 * Passed: crm_simulate   - Relocate resources due to ban
 =#=#=#= Begin test: Move dummy to node1 =#=#=#=
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
-<cib epoch="26" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="26" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2150,10 +2151,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2165,10 +2166,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2177,10 +2178,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2191,7 +2192,7 @@ Online: [ node1 node2 node3 ]
 * Passed: crm_resource   - Move dummy to node1
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="27" num_updates="0" admin_epoch="1" validate-with="pacemaker-1.2">
+<cib epoch="27" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2233,10 +2234,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate"  transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2248,10 +2249,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -2260,10 +2261,10 @@ Online: [ node1 node2 node3 ]
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate"  transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

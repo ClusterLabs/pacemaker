@@ -436,10 +436,13 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
          * implies nothing
          */
         rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
-        pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
-        if (g_hash_table_lookup(rsc->known_on, node->details->id)) {
-            free(key);
-            return TRUE;
+        CRM_LOG_ASSERT(rsc);
+        if(rsc) {
+            pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
+            if (g_hash_table_lookup(rsc->known_on, node->details->id)) {
+                free(key);
+                return TRUE;
+            }
         }
     }
     free(key);

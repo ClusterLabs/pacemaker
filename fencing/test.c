@@ -223,8 +223,9 @@ run_fence_failure_rollover_test(void)
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
                 "Fence rollover results off", 1, 0);
 
+    /* we expect -19 here because fence_dummy now requires 'on' to be executed on target. */
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3, 0),
-                "Fence rollover results on", 1, 0);
+                "Fence rollover results on", 1, -19);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for rollover tests", 1, 0);
@@ -263,8 +264,9 @@ run_standard_test(void)
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1, 0),
                 "Fence false_1_node1", 1, 0);
 
+    /* we expect -19 here because fence_dummy now requires 'on' to be executed on target. */
     single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
-                "Unfence false_1_node1", 1, 0);
+                "Unfence false_1_node1", 1, -19);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id"), "Remove test-id", 1, 0);
 

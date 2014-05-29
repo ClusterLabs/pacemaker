@@ -460,9 +460,10 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
         const char *standard = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
-
-        standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+        CRM_LOG_ASSERT(match != NULL);
+        if(match != NULL) {
+            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+        }
 
         if (safe_str_neq(standard, "stonith")) {
             continue;
@@ -507,9 +508,8 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
-
-        if (crm_element_value(match, XML_DIFF_MARKER)) {
+        CRM_LOG_ASSERT(match != NULL);
+        if (match && crm_element_value(match, XML_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
             const char *target = crm_element_value(match, XML_ATTR_STONITH_TARGET);
@@ -536,8 +536,6 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj, gboolean force)
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_CHECK(match != NULL, continue);
 
         handle_topology_change(match, TRUE);
     }
@@ -583,7 +581,6 @@ fencing_topology_init(xmlNode * msg)
 }
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
-static bool have_fence_scsi = FALSE;
 
 static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -591,6 +588,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     const char *value = NULL;
     const char *rclass = NULL;
     node_t *parent = NULL;
+    gboolean remove = TRUE;
 
     /* TODO: Mark each installed device and remove if untouched when this process finishes */
     if(rsc->children) {
@@ -605,10 +603,6 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         return;
     }
 
-    if(g_hash_table_lookup(device_list, rsc_name(rsc))) {
-        stonith_device_remove(rsc_name(rsc), TRUE);
-    }
-
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     if(safe_str_neq(rclass, "stonith")) {
         return;
@@ -617,7 +611,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     if(value && strcmp(RSC_STOPPED, value) == 0) {
         crm_info("Device %s has been disabled", rsc->id);
-        return;
+        goto update_done;
 
     } else if(stonith_our_uname) {
         GHashTableIter iter;
@@ -652,7 +646,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
             crm_trace("Available: %s = %d", node->details->uname, node->weight);
         }
 
-        return;
+        goto update_done;
 
     } else if(node->weight < 0 || (parent && parent->weight < 0)) {
         char *score = score2char((node->weight < 0) ? node->weight : parent->weight);
@@ -660,7 +654,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
         free(score);
 
-        return;
+        goto update_done;
 
     } else {
         xmlNode *data;
@@ -670,9 +664,13 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         const char *name = NULL;
         const char *agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
         const char *provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        const char *rsc_provides = NULL;
 
-        crm_info("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
+        crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
         get_rsc_attributes(rsc->parameters, rsc, node, data_set);
+        get_meta_attributes(rsc->meta, rsc, node, data_set);
+
+        rsc_provides = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROVIDES);
 
         g_hash_table_iter_init(&gIter, rsc->parameters);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
@@ -683,39 +681,18 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
             crm_trace(" %s=%s", name, value);
         }
 
-        data = create_device_registration_xml(rsc_name(rsc), provider, agent, params);
+        remove = FALSE;
+        data = create_device_registration_xml(rsc_name(rsc), provider, agent, params, rsc_provides);
         stonith_device_register(data, NULL, TRUE);
-
-        /* If required, unfence ourselves on cluster startup
-         *
-         * Make this generic/smarter if/when more than a single agent needs this
-         */
-        if(have_fence_scsi == FALSE && safe_str_eq(agent, "fence_scsi")) {
-            stonith_device_t *device = g_hash_table_lookup(device_list, rsc->id);
-
-            if(stonith_our_uname == NULL) {
-                crm_trace("Cannot unfence ourselves: no local host name");
-
-            } else if(device == NULL) {
-                crm_err("Cannot unfence ourselves: no such device '%s'", rsc->id);
-
-            } else {
-                const char *alias = g_hash_table_lookup(device->aliases, stonith_our_uname);
-
-                if (!alias) {
-                    alias = stonith_our_uname;
-                }
-
-                if (device->targets && string_in_list(device->targets, alias)) {
-                    have_fence_scsi = TRUE;
-                    crm_notice("Unfencing ourselves with %s (%s)", agent, device->id);
-                    schedule_internal_command(__FUNCTION__, device, "on", stonith_our_uname, 0, NULL, unfence_cb);
-                }
-            }
-        }
 
         stonith_key_value_freeall(params, 1, 1);
         free_xml(data);
+    }
+
+update_done:
+
+    if(remove && g_hash_table_lookup(device_list, rsc_name(rsc))) {
+        stonith_device_remove(rsc_name(rsc), TRUE);
     }
 }
 
@@ -727,6 +704,11 @@ cib_devices_update(void)
 {
     GListPtr gIter = NULL;
     pe_working_set_t data_set;
+
+    crm_info("Updating devices to version %s.%s.%s",
+             crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
+             crm_element_value(local_cib, XML_ATTR_GENERATION),
+             crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 
     set_working_set_defaults(&data_set);
     data_set.input = local_cib;
@@ -772,7 +754,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             stonith_device_remove(rsc_id, TRUE);
             free(mutable);
 
-        } else if(strstr(xpath, XML_CIB_TAG_RESOURCE)) {
+        } else if(strstr(xpath, "/"XML_CIB_TAG_RESOURCES)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = g_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
@@ -906,11 +888,19 @@ update_fencing_topology(const char *event, xmlNode * msg)
         for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+            xmlNode *f_topology = get_message_xml(change, XML_TAG_FENCING_TOPOLOGY);
 
-            if(op == NULL || strstr(xpath, "/fencing-topology/") == NULL) {
+            if(op == NULL) {
                 continue;
-
-            } else if(strstr(xpath, "/fencing-level/") == NULL) {
+            } else if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) && f_topology != NULL) {
+                if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
+                    crm_info("Re-initializing fencing topology after top-level %s operation", op);
+                    fencing_topology_init(NULL);
+                }
+                return;
+            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY "/") == NULL) {
+                continue;
+            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL "/") == NULL) {
                 if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
                     crm_info("Re-initializing fencing topology after top-level %s operation", op);
                     fencing_topology_init(NULL);
@@ -1254,7 +1244,7 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
         printf
-            ("    <shortdesc lang=\"en\">How to determin which machines are controlled by the device.</shortdesc>\n");
+            ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf
             ("    <longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n",
              STONITH_ATTR_HOSTLIST);

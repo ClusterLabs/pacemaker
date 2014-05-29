@@ -123,6 +123,9 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
+/* 'failure_action' MUST NOT be 'continue' as it will apply to the
+ * macro's do-while loop
+ */
 #  define CRM_CHECK(expr, failure_action) do {				\
 	if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
@@ -146,7 +149,11 @@ unsigned int get_crm_log_level(void);
     } while(0)
 
 #  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
-	qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
+        if(level > 0) {                                                 \
+            qb_log_from_external_source(function, file, fmt, level, line, 0,  ##args); \
+        } else {                                                        \
+            printf(fmt "\n", ##args);                                    \
+        }                                                               \
     } while(0)
 
 #  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __FUNCTION__ , ##args)

@@ -1,0 +1,111 @@
+
+Current cluster status:
+Online: [ rhel7-node1 rhel7-node2 rhel7-node3 ]
+RemoteOFFLINE: [ remote1 ]
+
+ Fencing	(stonith:fence_xvm):	Stopped 
+ FencingPass	(stonith:fence_dummy):	Stopped 
+ rsc_rhel7-node1	(ocf::heartbeat:IPaddr2):	Stopped 
+ rsc_rhel7-node2	(ocf::heartbeat:IPaddr2):	Stopped 
+ rsc_rhel7-node3	(ocf::heartbeat:IPaddr2):	Stopped 
+ migrator	(ocf::pacemaker:Dummy):	Stopped 
+ Clone Set: Connectivity [ping-1]
+     Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
+ Resource Group: group-1
+     r192.168.122.204	(ocf::heartbeat:IPaddr2):	Stopped 
+     r192.168.122.205	(ocf::heartbeat:IPaddr2):	Stopped 
+     r192.168.122.206	(ocf::heartbeat:IPaddr2):	Stopped 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Stopped 
+
+Transition Summary:
+ * Start   Fencing	(rhel7-node1)
+ * Start   FencingPass	(rhel7-node2)
+ * Start   rsc_rhel7-node1	(rhel7-node1)
+ * Start   rsc_rhel7-node2	(rhel7-node2)
+ * Start   rsc_rhel7-node3	(rhel7-node3)
+ * Start   migrator	(rhel7-node3)
+ * Start   ping-1:0	(rhel7-node1)
+ * Start   ping-1:1	(rhel7-node2)
+ * Start   ping-1:2	(rhel7-node3)
+
+Executing cluster transition:
+ * Resource action: Fencing         monitor on rhel7-node3
+ * Resource action: Fencing         monitor on rhel7-node2
+ * Resource action: Fencing         monitor on rhel7-node1
+ * Resource action: FencingPass     monitor on rhel7-node3
+ * Resource action: FencingPass     monitor on rhel7-node2
+ * Resource action: FencingPass     monitor on rhel7-node1
+ * Resource action: rsc_rhel7-node1 monitor on rhel7-node3
+ * Resource action: rsc_rhel7-node1 monitor on rhel7-node2
+ * Resource action: rsc_rhel7-node1 monitor on rhel7-node1
+ * Resource action: rsc_rhel7-node2 monitor on rhel7-node3
+ * Resource action: rsc_rhel7-node2 monitor on rhel7-node2
+ * Resource action: rsc_rhel7-node2 monitor on rhel7-node1
+ * Resource action: rsc_rhel7-node3 monitor on rhel7-node3
+ * Resource action: rsc_rhel7-node3 monitor on rhel7-node2
+ * Resource action: rsc_rhel7-node3 monitor on rhel7-node1
+ * Resource action: migrator        monitor on rhel7-node3
+ * Resource action: migrator        monitor on rhel7-node2
+ * Resource action: migrator        monitor on rhel7-node1
+ * Resource action: ping-1:0        monitor on rhel7-node1
+ * Resource action: ping-1:1        monitor on rhel7-node2
+ * Resource action: ping-1:2        monitor on rhel7-node3
+ * Pseudo action:   Connectivity_start_0
+ * Resource action: stateful-1:0    monitor on rhel7-node3
+ * Resource action: stateful-1:0    monitor on rhel7-node2
+ * Resource action: stateful-1:0    monitor on rhel7-node1
+ * Resource action: r192.168.122.204 monitor on rhel7-node3
+ * Resource action: r192.168.122.204 monitor on rhel7-node2
+ * Resource action: r192.168.122.204 monitor on rhel7-node1
+ * Resource action: r192.168.122.205 monitor on rhel7-node3
+ * Resource action: r192.168.122.205 monitor on rhel7-node2
+ * Resource action: r192.168.122.205 monitor on rhel7-node1
+ * Resource action: r192.168.122.206 monitor on rhel7-node3
+ * Resource action: r192.168.122.206 monitor on rhel7-node2
+ * Resource action: r192.168.122.206 monitor on rhel7-node1
+ * Resource action: lsb-dummy       monitor on rhel7-node3
+ * Resource action: lsb-dummy       monitor on rhel7-node2
+ * Resource action: lsb-dummy       monitor on rhel7-node1
+ * Pseudo action:   probe_complete
+ * Resource action: Fencing         start on rhel7-node1
+ * Resource action: FencingPass     start on rhel7-node2
+ * Resource action: rsc_rhel7-node1 start on rhel7-node1
+ * Resource action: rsc_rhel7-node2 start on rhel7-node2
+ * Resource action: rsc_rhel7-node3 start on rhel7-node3
+ * Resource action: migrator        start on rhel7-node3
+ * Resource action: ping-1:0        start on rhel7-node1
+ * Resource action: ping-1:1        start on rhel7-node2
+ * Resource action: ping-1:2        start on rhel7-node3
+ * Pseudo action:   Connectivity_running_0
+ * Resource action: Fencing         monitor=120000 on rhel7-node1
+ * Resource action: rsc_rhel7-node1 monitor=5000 on rhel7-node1
+ * Resource action: rsc_rhel7-node2 monitor=5000 on rhel7-node2
+ * Resource action: rsc_rhel7-node3 monitor=5000 on rhel7-node3
+ * Resource action: migrator        monitor=10000 on rhel7-node3
+ * Resource action: ping-1:0        monitor=60000 on rhel7-node1
+ * Resource action: ping-1:1        monitor=60000 on rhel7-node2
+ * Resource action: ping-1:2        monitor=60000 on rhel7-node3
+
+Revised cluster status:
+Online: [ rhel7-node1 rhel7-node2 rhel7-node3 ]
+RemoteOFFLINE: [ remote1 ]
+
+ Fencing	(stonith:fence_xvm):	Started rhel7-node1 
+ FencingPass	(stonith:fence_dummy):	Started rhel7-node2 
+ rsc_rhel7-node1	(ocf::heartbeat:IPaddr2):	Started rhel7-node1 
+ rsc_rhel7-node2	(ocf::heartbeat:IPaddr2):	Started rhel7-node2 
+ rsc_rhel7-node3	(ocf::heartbeat:IPaddr2):	Started rhel7-node3 
+ migrator	(ocf::pacemaker:Dummy):	Started rhel7-node3 
+ Clone Set: Connectivity [ping-1]
+     Started: [ rhel7-node1 rhel7-node2 rhel7-node3 ]
+     Stopped: [ remote1 ]
+ Master/Slave Set: master-1 [stateful-1]
+     Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
+ Resource Group: group-1
+     r192.168.122.204	(ocf::heartbeat:IPaddr2):	Stopped 
+     r192.168.122.205	(ocf::heartbeat:IPaddr2):	Stopped 
+     r192.168.122.206	(ocf::heartbeat:IPaddr2):	Stopped 
+ lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	Stopped 
+

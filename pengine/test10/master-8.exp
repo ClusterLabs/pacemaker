@@ -39,7 +39,7 @@
         <pseudo_event id="17" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -349,7 +349,7 @@
         <pseudo_event id="17" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -367,7 +367,7 @@
         <pseudo_event id="72" operation="stop" operation_key="DoFencing_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -430,7 +430,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -489,7 +489,7 @@
         <pseudo_event id="90" operation="stop" operation_key="master_rsc_1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -504,7 +504,7 @@
         <pseudo_event id="94" operation="demote" operation_key="master_rsc_1_demote_0"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -647,7 +647,7 @@
         <pseudo_event id="95" operation="demoted" operation_key="master_rsc_1_demoted_0"/>
       </trigger>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -683,7 +683,7 @@
   </synapse>
   <synapse id="49">
     <action_set>
-      <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+      <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
         <attributes CRM_meta_on_node="c001n01" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -697,13 +697,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+        <crm_event id="97" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="51" priority="1000000">
     <action_set>
-      <rsc_op id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+      <rsc_op id="30" operation="probe_complete" operation_key="probe_complete-c001n08" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -724,7 +724,7 @@
   </synapse>
   <synapse id="52" priority="1000000">
     <action_set>
-      <rsc_op id="23" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+      <rsc_op id="23" operation="probe_complete" operation_key="probe_complete-c001n03" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -751,7 +751,7 @@
   </synapse>
   <synapse id="53" priority="1000000">
     <action_set>
-      <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <rsc_op id="18" operation="probe_complete" operation_key="probe_complete-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -778,13 +778,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <rsc_op id="18" operation="probe_complete" operation_key="probe_complete-c001n02" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
       <trigger>
-        <rsc_op id="23" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+        <rsc_op id="23" operation="probe_complete" operation_key="probe_complete-c001n03" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
       </trigger>
       <trigger>
-        <rsc_op id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+        <rsc_op id="30" operation="probe_complete" operation_key="probe_complete-c001n08" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
     </inputs>
   </synapse>

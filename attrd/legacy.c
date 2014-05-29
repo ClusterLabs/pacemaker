@@ -130,7 +130,8 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 #if ENABLE_ACL
-    determine_request_user(client->user, msg, F_ATTRD_USER);
+    CRM_ASSERT(client->user != NULL);
+    crm_acl_get_set_user(msg, F_ATTRD_USER, client->user);
 #endif
 
     crm_trace("Processing msg from %d (%p)", crm_ipcs_client_pid(c), c);
@@ -730,7 +731,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
         /* send update */
         rc = update_attr_delegate(cib_conn, cib_none, hash_entry->section,
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
-                                  hash_entry->id, hash_entry->value, FALSE, user_name);
+                                  hash_entry->id, hash_entry->value, FALSE, user_name, NULL);
         if (rc < 0) {
             crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value,
                        pcmk_strerror(rc));

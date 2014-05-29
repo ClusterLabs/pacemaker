@@ -474,6 +474,29 @@ if __name__ == "__main__":
 			test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
 			test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
+		### monitor duplicate test ###
+		for rsc in self.rsc_classes:
+			test = self.new_test("generic_monitor_duplicate_%s" % (rsc), "Test creation and canceling of duplicate monitors for %s standard" % (rsc))
+			test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this fails, that means the monitor may not be getting rescheduled ####
+			test.add_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this fails, that means the monitor may not be getting rescheduled ####
+
+			# Add the duplicate monitors. 
+			test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+			# verify we still get update events
+			test.add_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this fails, that means the monitor may not be getting rescheduled ####
+
+			# cancel the monitor, if the duplicate merged with the original, we should no longer see monitor updates
+			test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
+			test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this happens the monitor did not actually cancel correctly. ###
+			test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)]) ### If this happens the monitor did not actually cancel correctly. ###
+			test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
+			test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
 		### stop implies cancel test ###
 		for rsc in self.rsc_classes:

@@ -15,10 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
-
-INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
-		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
+include $(top_srcdir)/Makefile.common
 
 halibdir	= $(CRM_DAEMON_DIR)
 
@@ -50,22 +47,13 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/services/libcrmservice.la		\
 		$(top_builddir)/lib/lrmd/liblrmd.la		\
 		$(CLUSTERLIBS)
+
 if BUILD_XML_HELP
 man7_MANS =	crmd.7
-
-%.xml:	%
-	$(top_builddir)/crmd/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
-
-%.7:	%.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
 endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
-
-install-exec-local:
-
-uninstall-local:
 
 graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 

@@ -38,19 +38,19 @@ test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
 scratch_SOURCES	= scratch.c
-scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
+scratch_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la -lm
 
 core:
 	@echo "Building only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; make -C $$subdir all || exit 1; done
+	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; $(MAKE) -C $$subdir all || exit 1; done
 
 core-install:
 	@echo "Installing only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Installing $$subdir"; make -C $$subdir install || exit 1; done
+	list='$(CORE)'; for subdir in $$list; do echo "Installing $$subdir"; $(MAKE) -C $$subdir install || exit 1; done
 
 core-clean:
 	@echo "Cleaning only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; make -C $$subdir clean || exit 1; done
+	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; $(MAKE) -C $$subdir clean || exit 1; done
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)

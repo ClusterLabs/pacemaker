@@ -15,10 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
-
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
+include $(top_srcdir)/Makefile.common
 
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
@@ -54,13 +51,11 @@ if BUILD_OPENIPMI_SERVICELOG
 sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
-if BUILD_HELP
-man8_MANS =		$(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
-endif
-
 ## SOURCES
 
 noinst_HEADERS		=
+
+MAN8DEPS		= crm_attribute crm_node
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
@@ -141,12 +136,6 @@ ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
 ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
-
-%.8:	% crm_attribute
-	echo Creating $@
-	chmod a+x $(top_builddir)/tools/$<
-	$(top_builddir)/tools/$< --help
-	PATH=$(top_builddir)/tools:$$PATH $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

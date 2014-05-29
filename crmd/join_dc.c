@@ -395,7 +395,7 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+    if (max_generation_from && is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
         set_bit(fsa_input_register, R_CIB_ASKED);

@@ -192,7 +192,8 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
         xmlXPathObject *op_match = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        CRM_CHECK(match != NULL, continue);
+        CRM_LOG_ASSERT(match != NULL);
+        if(match == NULL) { continue; };
 
         op_id = ID(match);
 
@@ -378,10 +379,10 @@ te_update_diff(const char *event, xmlNode * msg)
         if(xpath == NULL) {
             /* Version field, ignore */
 
-        } else if(strstr(xpath, "/cib/configuration/")) {
+        } else if(strstr(xpath, "/cib/configuration")) {
             abort_transition(INFINITY, tg_restart, "Non-status change", change);
 
-        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS"[") || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
+        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
 
         } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
@@ -490,7 +491,7 @@ te_update_diff(const char *event, xmlNode * msg)
             free(local_node);
 
         } else {
-            crm_err("Ingoring %s operation for %s %p, %s", op, xpath, match, name);
+            crm_err("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
         }
     }
 }
@@ -671,11 +672,12 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        const char *op = crm_meta_value(action->params, "stonith_action"); 
 
         crm_debug("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action);
-            if (action->sent_update == FALSE) {
+            if (action->sent_update == FALSE && safe_str_neq("on", op)) {
                 send_stonith_update(action, target, uuid);
             }
         }

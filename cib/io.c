@@ -195,11 +195,6 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
         char *sigfile = NULL;
         size_t fnsize;
 
-        if (buf.st_size == 0) {
-            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
-            return TRUE;
-        }
-
         crm_trace("Reading cluster configuration from: %s", filename);
         root = filename2xml(filename);
 
@@ -219,6 +214,26 @@ validate_on_disk_cib(const char *filename, xmlNode ** on_disk_cib)
     }
 
     return passed;
+}
+
+static gboolean
+on_disk_cib_corrupt(const char *filename)
+{
+    int s_res = -1;
+    struct stat buf;
+    gboolean corrupt = FALSE;
+
+    CRM_ASSERT(filename != NULL);
+
+    s_res = stat(filename, &buf);
+    if (s_res == 0) {
+        if (buf.st_size == 0) {
+            crm_warn("Cluster configuration file %s is corrupt: size is zero", filename);
+            corrupt = TRUE;
+        }
+    }
+
+    return corrupt;
 }
 
 static int
@@ -409,11 +424,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     free(namelist);
 
     if (root == NULL) {
-        root = createEmptyCib();
-        crm_xml_add(root, XML_ATTR_GENERATION, "0");
-        crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
-        crm_xml_add(root, XML_ATTR_GENERATION_ADMIN, "0");
-        crm_xml_add(root, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+        root = createEmptyCib(0);
         crm_warn("Continuing with an empty configuration.");
     }
 
@@ -473,18 +484,18 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     validation = crm_element_value(root, XML_ATTR_VALIDATION);
     if (validate_xml(root, NULL, TRUE) == FALSE) {
         crm_err("CIB does not validate with %s", crm_str(validation));
-        cib_status = -pcmk_err_dtd_validation;
+        cib_status = -pcmk_err_schema_validation;
 
     } else if (validation == NULL) {
         int version = 0;
 
-        update_validation(&root, &version, FALSE, FALSE);
+        update_validation(&root, &version, 0, FALSE, FALSE);
         if (version > 0) {
             crm_notice("Enabling %s validation on"
                        " the existing (sane) configuration", get_schema_name(version));
         } else {
             crm_err("CIB does not validate with any known DTD or schema");
-            cib_status = -pcmk_err_dtd_validation;
+            cib_status = -pcmk_err_schema_validation;
         }
     }
 
@@ -701,7 +712,8 @@ write_cib_contents(gpointer p)
     crm_xml_add(cib_local, XML_ATTR_NUMUPDATES, "0");
 
     /* check the admin didnt modify it underneath us */
-    if (validate_on_disk_cib(primary_file, NULL) == FALSE) {
+    if (on_disk_cib_corrupt(primary_file) == FALSE
+        && validate_on_disk_cib(primary_file, NULL) == FALSE) {
         crm_err("%s was manually modified while the cluster was active!", primary_file);
         exit_rc = pcmk_err_cib_modified;
         goto cleanup;

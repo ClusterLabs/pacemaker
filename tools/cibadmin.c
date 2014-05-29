@@ -61,7 +61,7 @@ typedef struct str_list_s {
     struct str_list_s *next;
 } str_list_t;
 
-char *obj_type = NULL;
+const char *obj_type = NULL;
 char *status = NULL;
 char *migrate_from = NULL;
 char *migrate_res = NULL;
@@ -203,8 +203,8 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     const char *source = NULL;
-    char *admin_input_xml = NULL;
-    char *admin_input_file = NULL;
+    const char *admin_input_xml = NULL;
+    const char *admin_input_file = NULL;
     gboolean dangerous_cmd = FALSE;
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
@@ -236,7 +236,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'A':
-                obj_type = strdup(optarg);
+                obj_type = optarg;
                 command_options |= cib_xpath;
                 break;
             case 'e':
@@ -298,15 +298,15 @@ main(int argc, char **argv)
                 break;
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
-                obj_type = strdup(optarg);
+                obj_type = optarg;
                 break;
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_xml = strdup(optarg);
+                admin_input_xml = optarg;
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                admin_input_file = strdup(optarg);
+                admin_input_file = optarg;
                 break;
             case 'p':
                 admin_input_stdin = TRUE;
@@ -336,17 +336,10 @@ main(int argc, char **argv)
                 command_options |= cib_quorum_override;
                 break;
             case 'a':
-                output = createEmptyCib();
-                crm_xml_add(output, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-                if (optind >= argc) {
-                    crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
-                } else {
+                output = createEmptyCib(1);
+                if (optind < argc) {
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
-                crm_xml_add_int(output, XML_ATTR_GENERATION_ADMIN, 1);
-                crm_xml_add_int(output, XML_ATTR_GENERATION, 0);
-                crm_xml_add_int(output, XML_ATTR_NUMUPDATES, 0);
-
                 admin_input_xml = dump_xml_formatted(output);
                 fprintf(stdout, "%s\n", crm_str(admin_input_xml));
                 goto bail;
@@ -357,7 +350,7 @@ main(int argc, char **argv)
                 break;
         }
     }
-    
+
     if (bump_log_num > 0) {
         quiet = FALSE;
     }
@@ -476,14 +469,14 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(exit_code));
         operation_status = exit_code;
 
-        if (exit_code == -pcmk_err_dtd_validation) {
+        if (exit_code == -pcmk_err_schema_validation) {
             if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
 
                 rc = the_cib->cmds->query(the_cib, NULL, &obj, command_options);
                 if (rc == pcmk_ok) {
-                    update_validation(&obj, &version, TRUE, FALSE);
+                    update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
 
             } else if (output) {
@@ -500,8 +493,6 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
-    free(admin_input_xml);
-    free(admin_input_file);
     flag = the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
 

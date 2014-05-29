@@ -35,6 +35,7 @@
 #  define CRM_ASSERT(expr) do {						\
 	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+            abort(); /* Redundant but it makes analyzers like coverity and clang happy */ \
 	}								\
     } while(0)
 
@@ -43,7 +44,7 @@
 #  define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
 #  define pcmk_err_generic              201
 #  define pcmk_err_no_quorum            202
-#  define pcmk_err_dtd_validation       203
+#  define pcmk_err_schema_validation    203
 #  define pcmk_err_transform_failed     204
 #  define pcmk_err_old_data             205
 #  define pcmk_err_diff_failed          206
@@ -51,6 +52,7 @@
 #  define pcmk_err_cib_modified         208
 #  define pcmk_err_cib_backup           209
 #  define pcmk_err_cib_save             210
+#  define pcmk_err_schema_unchanged     211
 
 const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);

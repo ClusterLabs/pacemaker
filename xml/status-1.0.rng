@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-status"/>
+  </start>
+
+  <define name="element-status">
+    <zeroOrMore>
+      <choice>
+        <attribute>
+          <anyName/>
+          <text/>
+        </attribute>
+        <element>
+          <anyName/>
+          <ref name="element-status"/>
+        </element>
+        <text/>
+      </choice>
+    </zeroOrMore>
+  </define>
+
+</grammar>

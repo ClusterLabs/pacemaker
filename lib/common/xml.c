@@ -25,11 +25,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include <dirent.h>
 
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <math.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -79,9 +81,10 @@ typedef struct {
 
 struct schema_s {
     int type;
-    const char *name;
-    const char *location;
-    const char *transform;
+    float version;
+    char *name;
+    char *location;
+    char *transform;
     int after_transform;
     void *cache;
 };
@@ -128,17 +131,6 @@ typedef struct xml_acl_s {
 
 /* *INDENT-OFF* */
 
-struct schema_s known_schemas[] = {
-    /* 0 */    { 0, NULL, NULL, NULL, 1 },
-    /* 1 */    { 1, "pacemaker-0.6",    "crm.dtd",		"upgrade06.xsl", 4, NULL },
-    /* 2 */    { 1, "transitional-0.6", "crm-transitional.dtd",	"upgrade06.xsl", 4, NULL },
-    /* 3 */    { 2, "pacemaker-0.7",    "pacemaker-1.0.rng",	NULL, 0, NULL },
-    /* 4 */    { 2, "pacemaker-1.0",    "pacemaker-1.0.rng",	NULL, 6, NULL },
-    /* 5 */    { 2, "pacemaker-1.1",    "pacemaker-1.1.rng",	NULL, 6, NULL },
-    /* 6 */    { 2, "pacemaker-1.2",    "pacemaker-1.2.rng",	NULL, 0, NULL },
-    /* 7 */    { 0, "none", NULL, NULL, 0, NULL },
-};
-
 static filter_t filter[] = {
     { 0, XML_ATTR_ORIGIN },
     { 0, XML_CIB_ATTR_WRITTEN },
@@ -148,12 +140,49 @@ static filter_t filter[] = {
 };
 /* *INDENT-ON* */
 
-static int all_schemas = DIMOF(known_schemas);
-static int max_schemas = DIMOF(known_schemas) - 2;      /* skip back past 'none' */
+static struct schema_s *known_schemas = NULL;
+static int xml_schema_max = 0;
+
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment);
 static int add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update);
 static bool __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode);
+const char *__xml_acl_to_text(enum xml_private_flags flags);
+
+static int
+xml_latest_schema_index(void)
+{
+    return xml_schema_max - 4;
+}
+
+static int
+xml_minimum_schema_index(void)
+{
+    static int best = 0;
+    if(best == 0) {
+        int lpc = 0;
+        float target = 0.0;
+
+        best = xml_latest_schema_index();
+        target = floor(known_schemas[best].version);
+
+        for(lpc = best; lpc > 0; lpc--) {
+            if(known_schemas[lpc].version < target) {
+                return best;
+            } else {
+                best = lpc;
+            }
+        }
+        best = xml_latest_schema_index();
+    }
+    return best;
+}
+
+const char *
+xml_latest_schema(void)
+{
+    return get_schema_name(xml_latest_schema_index());
+}
 
 #define CHUNK_SIZE 1024
 static inline bool TRACKING_CHANGES(xmlNode *xml)
@@ -171,13 +200,15 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         if(buffer) {                                                    \
             rc = snprintf((buffer) + (offset), (max) - (offset), fmt, ##args); \
         }                                                               \
-        if(rc < 0) {                                                    \
-            crm_perror(LOG_ERR, "snprintf failed");                     \
+        if(buffer && rc < 0) {                                          \
+            crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
-            return;                                                     \
         } else if(rc >= ((max) - (offset))) {                           \
-            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                             \
-            (buffer) = realloc((buffer), (max) + 1);                    \
+            char *tmp = NULL;                                           \
+            (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
+            tmp = realloc((buffer), (max) + 1);                         \
+            CRM_ASSERT(tmp);                                            \
+            (buffer) = tmp;                                             \
         } else {                                                        \
             offset += rc;                                               \
             break;                                                      \
@@ -199,8 +230,8 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
     }
 }
 
-static char *
-get_schema_path(const char *file)
+static const char *
+get_schema_root(void)
 {
     static const char *base = NULL;
 
@@ -210,7 +241,172 @@ get_schema_path(const char *file)
     if (base == NULL || strlen(base) == 0) {
         base = CRM_DTD_DIRECTORY;
     }
-    return crm_concat(base, file, '/');
+    return base;
+}
+
+static char *
+get_schema_path(const char *name, const char *file)
+{
+    const char *base = get_schema_root();
+
+    if(file) {
+        return g_strdup_printf("%s/%s", base, file);
+    }
+    return g_strdup_printf("%s/%s.rng", base, name);
+}
+
+static int schema_filter(const struct dirent * a)
+{
+    int rc = 0;
+    float version = 0;
+
+    if(strstr(a->d_name, "pacemaker-") != a->d_name) {
+        /* crm_trace("%s - wrong prefix", a->d_name); */
+
+    } else if(strstr(a->d_name, ".rng") == NULL) {
+        /* crm_trace("%s - wrong suffix", a->d_name); */
+
+    } else if(sscanf(a->d_name, "pacemaker-%f.rng", &version) == 0) {
+        /* crm_trace("%s - wrong format", a->d_name); */
+
+    } else if(strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
+        /* crm_trace("%s - hack", a->d_name); */
+
+    } else {
+        /* crm_debug("%s - candidate", a->d_name); */
+        rc = 1;
+    }
+
+    return rc;
+}
+
+static int schema_sort(const struct dirent ** a, const struct dirent **b)
+{
+    int rc = 0;
+    float a_version = 0.0;
+    float b_version = 0.0;
+
+    sscanf(a[0]->d_name, "pacemaker-%f.rng", &a_version);
+    sscanf(b[0]->d_name, "pacemaker-%f.rng", &b_version);
+
+    if(a_version > b_version) {
+        rc = 1;
+    } else if(a_version < b_version) {
+        rc = -1;
+    }
+
+    /* crm_trace("%s (%f) vs. %s (%f) : %d", a[0]->d_name, a_version, b[0]->d_name, b_version, rc); */
+    return rc;
+}
+
+static void __xml_schema_add(
+    int type, float version, const char *name, const char *location, const char *transform, int after_transform)
+{
+    int last = xml_schema_max;
+
+    xml_schema_max++;
+    known_schemas = realloc(known_schemas, xml_schema_max*sizeof(struct schema_s));
+    memset(known_schemas+last, 0, sizeof(struct schema_s));
+    known_schemas[last].type = type;
+    known_schemas[last].after_transform = after_transform;
+
+    if(version > 0.0) {
+        known_schemas[last].version = version;
+        known_schemas[last].name = g_strdup_printf("pacemaker-%.1f", version);
+        known_schemas[last].location = g_strdup_printf("%s.rng", known_schemas[last].name);
+
+    } else {
+        char dummy[1024];
+        CRM_ASSERT(name);
+        CRM_ASSERT(location);
+        sscanf(name, "%[^-]-%f", dummy, &version);
+        known_schemas[last].version = version;
+        known_schemas[last].name = strdup(name);
+        known_schemas[last].location = strdup(location);
+    }
+
+    if(transform) {
+        known_schemas[last].transform = strdup(transform);
+    }
+    if(after_transform == 0) {
+        after_transform = xml_schema_max;
+    }
+    known_schemas[last].after_transform = after_transform;
+
+    if(known_schemas[last].after_transform < 0) {
+        crm_debug("Added supported schema %d: %s (%s)",
+                  last, known_schemas[last].name, known_schemas[last].location);
+
+    } else if(known_schemas[last].transform) {
+        crm_debug("Added supported schema %d: %s (%s upgrades to %d with %s)",
+                  last, known_schemas[last].name, known_schemas[last].location,
+                  known_schemas[last].after_transform,
+                  known_schemas[last].transform);
+
+    } else {
+        crm_debug("Added supported schema %d: %s (%s upgrades to %d)",
+                  last, known_schemas[last].name, known_schemas[last].location,
+                  known_schemas[last].after_transform);
+    }
+}
+
+
+static int __xml_build_schema_list(void) 
+{
+    int lpc, max;
+    const char *base = get_schema_root();
+    struct dirent **namelist = NULL;
+
+    max = scandir(base, &namelist, schema_filter, schema_sort);
+    __xml_schema_add(1, 0.0, "pacemaker-0.6", "crm.dtd", "upgrade06.xsl", 3);
+    __xml_schema_add(1, 0.0, "transitional-0.6", "crm-transitional.dtd", "upgrade06.xsl", 3);
+    __xml_schema_add(2, 0.0, "pacemaker-0.7", "pacemaker-1.0.rng", NULL, 0);
+
+    if (max < 0) {
+        crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
+
+    } else {
+        for (lpc = 0; lpc < max; lpc++) {
+            int next = 0;
+            float version = 0.0;
+            char *transform = NULL;
+
+            sscanf(namelist[lpc]->d_name, "pacemaker-%f.rng", &version);
+            if((lpc + 1) < max) {
+                float next_version = 0.0;
+
+                sscanf(namelist[lpc+1]->d_name, "pacemaker-%f.rng", &next_version);
+
+                if(floor(version) < floor(next_version)) {
+                    struct stat s;
+                    char *xslt = NULL;
+
+                    transform = g_strdup_printf("upgrade-%.1f.xsl", version);
+                    xslt = get_schema_path(NULL, transform);
+                    if(stat(xslt, &s) != 0) {
+                        crm_err("Transform %s not found", xslt);
+                        __xml_schema_add(2, version, NULL, NULL, NULL, -1);
+                        break;
+                    } else {
+                        free(xslt);
+                    }
+                }
+
+            } else {
+                next = -1;
+            }
+            __xml_schema_add(2, version, NULL, NULL, transform, next);
+            free(namelist[lpc]);
+            free(transform);
+        }
+    }
+
+    /* 1.1 was the old name for -next */
+    __xml_schema_add(2, 0.0, "pacemaker-1.1", "pacemaker-next.rng", NULL, 0);
+    __xml_schema_add(2, 0.0, "pacemaker-next", "pacemaker-next.rng", NULL, -1);
+    __xml_schema_add(0, 0.0, "none", "N/A", NULL, -1);
+    free(namelist);
+    return TRUE;
 }
 
 static void
@@ -413,10 +609,19 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
 {
     xml_acl_t *acl = NULL;
 
-    xml_private_t *p = target->doc->_private;
+    xml_private_t *p = NULL;
     const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
     const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
+
+    if(tag == NULL) {
+        /* Compatability handling for pacemaker < 1.1.12 */
+        tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
+    }
+    if(ref == NULL) {
+        /* Compatability handling for pacemaker < 1.1.12 */
+        ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
+    }
 
     if(target == NULL || target->doc == NULL || target->doc->_private == NULL){
         CRM_ASSERT(target);
@@ -470,6 +675,7 @@ __xml_acl_create(xmlNode * xml, xmlNode *target, enum xml_private_flags mode)
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "]");
             }
 
+            CRM_LOG_ASSERT(offset > 0);
             acl->xpath = strdup(buffer);
             crm_trace("Built xpath: %s", acl->xpath);
         }
@@ -486,12 +692,18 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
 
     for (child = __xml_first_child(acl_entry); child; child = __xml_next(child)) {
         const char *tag = crm_element_name(child);
+        const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
+
+        if (strcmp(XML_ACL_TAG_PERMISSION, tag) == 0){
+            tag = kind;
+        }
 
         crm_trace("Processing %s %p", tag, child);
         if(tag == NULL) {
             CRM_ASSERT(tag != NULL);
 
-        } else if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0) {
+        } else if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0
+                   || strcmp(XML_ACL_TAG_ROLE_REFv1, tag) == 0) {
             const char *ref_role = crm_element_value(child, XML_ATTR_ID);
 
             if (ref_role) {
@@ -520,7 +732,7 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
             __xml_acl_create(child, target, xpf_acl_deny);
 
         } else {
-            crm_warn("Unknown ACL entry: %s", tag);
+            crm_warn("Unknown ACL entry: %s/%s", tag, kind);
         }
     }
 
@@ -529,24 +741,56 @@ __xml_acl_parse_entry(xmlNode * acl_top, xmlNode * acl_entry, xmlNode *target)
 
 /*
     <acls>
-      <acl_user id="lmb">
-        <role_ref id="observer"/>
-      </acl_user>
+      <acl_target id="l33t-haxor"><role id="auto-l33t-haxor"/></acl_target>
+      <acl_role id="auto-l33t-haxor">
+        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
       <acl_role id="observer">
-        <read id="observer-read" xpath="/cib"/>
-        <write id="observer-write" xpath="//primitive[@id='vm-01']/meta_attributes/nvpair[@name='target-role']"/>
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_target id="badidea"><role id="auto-badidea"/></acl_target>
+      <acl_role id="auto-badidea">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+        <acl_permission id="badidea-resources-2" kind="deny" reference="dummy-meta_attributes"/>
       </acl_role>
     </acls>
 */
 
+const char *
+__xml_acl_to_text(enum xml_private_flags flags)
+{
+    if(is_set(flags, xpf_acl_deny)) {
+        return "deny";
+    }
+    if(is_set(flags, xpf_acl_write)) {
+        return "read/write";
+    }
+    if(is_set(flags, xpf_acl_read)) {
+        return "read";
+    }
+
+    return "none";
+}
 
 static void
 __xml_acl_apply(xmlNode *xml) 
 {
     GListPtr aIter = NULL;
+    xml_private_t *p = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    xml_private_t *p = xml->doc->_private;
 
+    if(xml_acl_enabled(xml) == FALSE) {
+        p = xml->doc->_private;
+        crm_trace("Not applying ACLs for %s", p->user);
+        return;
+    }
+
+    p = xml->doc->_private;
     for(aIter = p->acls; aIter != NULL; aIter = aIter->next) {
         int max = 0, lpc = 0;
         xml_acl_t *acl = aIter->data;
@@ -556,9 +800,26 @@ __xml_acl_apply(xmlNode *xml)
 
         for(lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
+            char *path = xml_get_path(match);
 
             p = match->_private;
+            crm_trace("Applying %x to %s for %s", acl->mode, path, acl->xpath);
+
+#ifdef SUSE_ACL_COMPAT
+            if(is_not_set(p->flags, acl->mode)) {
+                if(is_set(p->flags, xpf_acl_read)
+                   || is_set(p->flags, xpf_acl_write)
+                   || is_set(p->flags, xpf_acl_deny)) {
+                    crm_config_warn("Configuration element %s is matched by multiple ACL rules, only the first applies ('%s' wins over '%s')",
+                                    path, __xml_acl_to_text(p->flags), __xml_acl_to_text(acl->mode));
+                    free(path);
+                    continue;
+                }
+            }
+#endif
+
             p->flags |= acl->mode;
+            free(path);
         }
         crm_trace("Now enforcing ACL: %s (%d matches)", acl->xpath, max);
         freeXpathObject(xpathObj);
@@ -568,7 +829,7 @@ __xml_acl_apply(xmlNode *xml)
     if(is_not_set(p->flags, xpf_acl_read) && is_not_set(p->flags, xpf_acl_write)) {
         p->flags |= xpf_acl_deny;
         p = xml->doc->_private;
-        crm_crit("Enforcing default ACL for %s to %s", p->user, crm_element_name(xml));
+        crm_info("Enforcing default ACL for %s to %s", p->user, crm_element_name(xml));
     }
 
 }
@@ -599,7 +860,7 @@ __xml_acl_unpack(xmlNode *source, xmlNode *target, const char *user)
             for (child = __xml_first_child(acls); child; child = __xml_next(child)) {
                 const char *tag = crm_element_name(child);
 
-                if (strcmp(tag, XML_ACL_TAG_USER) == 0) {
+                if (strcmp(tag, XML_ACL_TAG_USER) == 0 || strcmp(tag, XML_ACL_TAG_USERv1) == 0) {
                     const char *id = crm_element_value(child, XML_ATTR_ID);
 
                     if(id && strcmp(id, user) == 0) {
@@ -686,7 +947,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
     xml_private_t *doc = NULL;
 
     *result = NULL;
-    if(pcmk_acl_required(user) == FALSE) {
+    if(xml == NULL || pcmk_acl_required(user) == FALSE) {
         crm_trace("no acls needed for '%s'", user);
         return FALSE;
     }
@@ -694,7 +955,12 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
     crm_trace("filtering copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
     __xml_acl_unpack(acl_source, target, user);
+    set_doc_flag(target, xpf_acl_enabled);
     __xml_acl_apply(target);
+
+    if(target == NULL) {
+        return TRUE;
+    }
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
@@ -715,6 +981,7 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
                 crm_trace("Purging attributes from %s", acl->xpath);
                 if(__xml_purge_attributes(match) == FALSE && match == target) {
                     crm_trace("No access to the entire document for %s", user);
+                    freeXpathObject(xpathObj);
                     return TRUE;
                 }
             }
@@ -776,6 +1043,7 @@ __xml_acl_post_process(xmlNode * xml)
                     xmlUnlinkNode(xml);
                     xmlFreeNode(xml);
                 }
+                free(path);
                 return;
             }
         }
@@ -1350,6 +1618,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         crm_trace("Empty patch");
         return;
 
+    } else if (log_level == 0) {
+        /* Log to stdout */
     } else if (crm_is_callsite_active(patchset_cs, log_level, 0) == FALSE) {
         return;
     }
@@ -1365,9 +1635,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
                          "Diff: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
 
     } else if (patchset != NULL && (add[0] || add[1] || add[2])) {
-        do_crm_log(log_level,
-                   "%s: Local-only Change: %d.%d.%d", function ? function : "",
-                   add[0], add[1], add[2]);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__, 
+                         "%s: Local-only Change: %d.%d.%d", function ? function : "",
+                         add[0], add[1], add[2]);
     }
 
     crm_element_value_int(patchset, "format", &format);
@@ -1452,7 +1722,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log(log_level, " --- ");
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " --- ");
         }
     }
 
@@ -1464,7 +1734,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode * patchset)
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log(log_level, " +++ ");
+            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " +++ ");
         }
     }
 }
@@ -1484,7 +1754,7 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
     }
 
     for(gIter = doc->deleted_paths; gIter; gIter = gIter->next) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", gIter->data);
+        do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s", (char*)gIter->data);
     }
 
     log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,
@@ -1521,7 +1791,7 @@ static void
 __subtract_xml_object(xmlNode * target, xmlNode * patch)
 {
     xmlNode *patch_child = NULL;
-    xmlNode *target_child = NULL;
+    xmlNode *cIter = NULL;
     xmlAttrPtr xIter = NULL;
 
     char *id = NULL;
@@ -1562,8 +1832,11 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
     crm_xml_add(target, XML_ATTR_ID, id);
 
     /* changes to child objects */
-    for (target_child = __xml_first_child(target); target_child != NULL;
-         target_child = __xml_next(target_child)) {
+    cIter = __xml_first_child(target);
+    while (cIter) {
+        xmlNode *target_child = cIter;
+
+        cIter = __xml_next(cIter);
 
         if (target_child->type == XML_COMMENT_NODE) {
             patch_child = find_xml_comment(patch, target_child);
@@ -1616,7 +1889,6 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
         add_xml_comment(parent, target, patch);
     }
 
-    id = ID(target);
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
     CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
@@ -1744,11 +2016,11 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 
     for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
         if(this[lpc] < del[lpc]) {
-            crm_info("Current %s is too low (%d < %d)", vfields[lpc], this[lpc], del[lpc]);
+            crm_debug("Current %s is too low (%d < %d)", vfields[lpc], this[lpc], del[lpc]);
             return -pcmk_err_diff_resync;
 
         } else if(this[lpc] > del[lpc]) {
-            crm_notice("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
+            crm_info("Current %s is too high (%d > %d)", vfields[lpc], this[lpc], del[lpc]);
             return -pcmk_err_old_data;
         }
     }
@@ -1864,7 +2136,7 @@ __xml_find_path(xmlNode *top, const char *key)
             target = NULL;
             break;
 
-        } else {
+        } else if(tag && section) {
             int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
 
             switch(f) {
@@ -2096,7 +2368,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (safe_str_neq(new_digest, digest)) {
-            crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
+            crm_info("v%d digest mis-match: expected %s, calculated %s", format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
 
             if (digest_cs && digest_cs->targets) {
@@ -2109,7 +2381,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             }
 
         } else {
-            crm_trace("Digest matched: expected %s, calculated %s", digest, new_digest);
+            crm_trace("v%d digest matched: expected %s, calculated %s", format, digest, new_digest);
         }
         free(new_digest);
         free(version);
@@ -2159,7 +2431,8 @@ find_entity(xmlNode * parent, const char *node_name, const char *id)
     for (a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
         /* Uncertain if node_name == NULL check is strictly necessary here */
         if (node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
-            if (id == NULL || safe_str_eq(id, ID(a_child))) {
+            const char *cid = ID(a_child);
+            if (id == NULL || (cid != NULL && strcmp(id, cid) == 0)) {
                 return a_child;
             }
         }
@@ -2256,7 +2529,7 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
     int_value += offset;
 
     if (int_value > INFINITY) {
-        int_value = INFINITY;
+        int_value = (int)INFINITY;
     }
 
     crm_xml_add_int(target, name, int_value);
@@ -2334,6 +2607,7 @@ __xml_acl_check(xmlNode *xml, const char *name, enum xml_private_flags mode)
             if(name) {
                 offset += snprintf(buffer + offset, XML_BUFFER_SIZE - offset, "[@%s]", name);
             }
+            CRM_LOG_ASSERT(offset > 0);
 
             /* Walk the tree upwards looking for xml_acl_* flags
              * - Creating an attribute requires write permissions for the node
@@ -2548,8 +2822,7 @@ free_xml(xmlNode * child)
             return;
 
         } else {
-
-            if(TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
+            if(doc && TRACKING_CHANGES(child) && is_not_set(p->flags, xpf_created)) {
                 int offset = 0;
                 char buffer[XML_BUFFER_SIZE];
 
@@ -2773,7 +3046,6 @@ decompress_file(const char *filename)
     }
 
     buffer[length] = '\0';
-    read_len = length;
 
     if (rc != BZ_STREAM_END) {
         crm_err("Couldnt read compressed xml from file");
@@ -3122,6 +3394,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     char *p_value = NULL;
     const char *p_name = NULL;
 
+    CRM_ASSERT(buffer != NULL);
     if (attr == NULL || attr->children == NULL) {
         return;
     }
@@ -3138,7 +3411,6 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
 {
     int max = 0;
     int offset = 0;
-    char *buffer = NULL;
     const char *name = NULL;
     const char *hidden = NULL;
 
@@ -3152,6 +3424,8 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     name = crm_element_name(data);
 
     if(is_set(options, xml_log_option_open)) {
+        char *buffer = NULL;
+
         insert_prefix(options, &buffer, &offset, &max, depth);
         if(data->type == XML_COMMENT_NODE) {
             buffer_print(buffer, max, offset, "<!--");
@@ -3196,7 +3470,9 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
         } else {
             buffer_print(buffer, max, offset, "/>");
         }
+
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
+        free(buffer);
     }
 
     if(data->type == XML_COMMENT_NODE) {
@@ -3208,8 +3484,6 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     } else if(is_set(options, xml_log_option_children)) {
         offset = 0;
         max = 0;
-        free(buffer);
-        buffer = NULL;
 
         for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
             __xml_log_element(log_level, file, function, line, prefix, child, depth + 1, options|xml_log_option_open|xml_log_option_close);
@@ -3217,10 +3491,13 @@ __xml_log_element(int log_level, const char *file, const char *function, int lin
     }
 
     if(is_set(options, xml_log_option_close)) {
+        char *buffer = NULL;
+
         insert_prefix(options, &buffer, &offset, &max, depth);
         buffer_print(buffer, max, offset, "</%s>", name);
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix, buffer);
+        free(buffer);
     }
 }
 
@@ -3845,12 +4122,14 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         p->flags |= xpf_created;
     }
 
-    for (pIter = crm_first_attr(old); pIter != NULL; pIter = pIter->next) {
+    for (pIter = crm_first_attr(old); pIter != NULL; ) {
+        xmlAttr *prop = pIter;
         xml_private_t *p = NULL;
         const char *name = (const char *)pIter->name;
         const char *old_value = crm_element_value(old, name);
         xmlAttr *exists = xmlHasProp(new, pIter->name);
 
+        pIter = pIter->next;
         if(exists == NULL) {
             p = new->doc->_private;
 
@@ -3867,7 +4146,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
         } else {
             int p_new = __xml_offset((xmlNode*)exists);
-            int p_old = __xml_offset((xmlNode*)pIter);
+            int p_old = __xml_offset((xmlNode*)prop);
             const char *value = crm_element_value(new, name);
 
             p = exists->_private;
@@ -3878,7 +4157,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
                 char *vcopy = crm_element_value_copy(new, name);
 
                 crm_trace("Modified %s@%s %s->%s", old->name, name, old_value, vcopy);
-                xmlSetProp(new, pIter->name, (const xmlChar *)old_value);
+                xmlSetProp(new, prop->name, (const xmlChar *)old_value);
                 crm_xml_add(new, name, vcopy);
                 free(vcopy);
 
@@ -3888,7 +4167,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
                 p->flags |= xpf_dirty|xpf_moved;
 
                 if(p_old > p_new) {
-                    p = pIter->_private;
+                    p = prop->_private;
                     p->flags |= xpf_skip;
 
                 } else {
@@ -3899,19 +4178,21 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
     }
 
-    for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
+    for (pIter = crm_first_attr(new); pIter != NULL; ) {
+        xmlAttr *prop = pIter;
         xml_private_t *p = pIter->_private;
 
+        pIter = pIter->next;
         if(is_set(p->flags, xpf_created)) {
-            char *name = strdup((const char *)pIter->name);
+            char *name = strdup((const char *)prop->name);
             char *value = crm_element_value_copy(new, name);
 
             crm_trace("Created %s@%s=%s", new->name, name, value);
             /* Remove plus create wont work as it will modify the relative attribute ordering */
             if(__xml_acl_check(new, name, xpf_acl_write)) {
-                crm_attr_dirty(pIter);
+                crm_attr_dirty(prop);
             } else {
-                xmlUnsetProp(new, pIter->name); /* Remove - change not allowed */
+                xmlUnsetProp(new, prop->name); /* Remove - change not allowed */
             }
 
             free(value);
@@ -3919,46 +4200,50 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
     }
 
-    for (cIter = __xml_first_child(old); cIter != NULL; cIter = __xml_next(cIter)) {
+    for (cIter = __xml_first_child(old); cIter != NULL; ) {
+        xmlNode *old_child = cIter;
         xmlNode *new_child = find_entity(new, crm_element_name(cIter), ID(cIter));
 
+        cIter = __xml_next(cIter);
         if(new_child) {
-            __xml_diff_object(cIter, new_child);
+            __xml_diff_object(old_child, new_child);
 
         } else {
-            xml_private_t *p = cIter->_private;
+            xml_private_t *p = old_child->_private;
 
             /* Create then free (which will check the acls if necessary) */
-            xmlNode *candidate = add_node_copy(new, cIter);
+            xmlNode *candidate = add_node_copy(new, old_child);
             xmlNode *top = xmlDocGetRootElement(candidate->doc);
 
             __xml_node_clean(candidate);
             __xml_acl_apply(top); /* Make sure any ACLs are applied to 'candidate' */
             free_xml(candidate);
 
-            if(NULL == find_entity(new, crm_element_name(cIter), ID(cIter))) {
+            if(NULL == find_entity(new, crm_element_name(old_child), ID(old_child))) {
                 p->flags |= xpf_skip;
             }
         }
     }
 
-    for (cIter = __xml_first_child(new); cIter != NULL; cIter = __xml_next(cIter)) {
+    for (cIter = __xml_first_child(new); cIter != NULL; ) {
+        xmlNode *new_child = cIter;
         xmlNode *old_child = find_entity(old, crm_element_name(cIter), ID(cIter));
 
+        cIter = __xml_next(cIter);
         if(old_child == NULL) {
-            xml_private_t *p = cIter->_private;
+            xml_private_t *p = new_child->_private;
             p->flags |= xpf_skip;
-            __xml_diff_object(old_child, cIter);
+            __xml_diff_object(old_child, new_child);
 
         } else {
             /* Check for movement, we already checked for differences */
-            int p_new = __xml_offset(cIter);
+            int p_new = __xml_offset(new_child);
             int p_old = __xml_offset(old_child);
-            xml_private_t *p = cIter->_private;
+            xml_private_t *p = new_child->_private;
 
             if(p_old != p_new) {
                 crm_info("%s.%s moved from %d to %d - %d",
-                         cIter->name, ID(cIter), p_old, p_new);
+                         new_child->name, ID(new_child), p_old, p_new);
                 p->flags |= xpf_moved;
 
                 if(p_old > p_new) {
@@ -3966,7 +4251,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
                     p->flags |= xpf_skip;
 
                 } else {
-                    p = cIter->_private;
+                    p = new_child->_private;
                     p->flags |= xpf_skip;
                 }
             }
@@ -4021,6 +4306,14 @@ can_prune_leaf(xmlNode * xml_node)
     xmlNode *cIter = NULL;
     xmlAttrPtr pIter = NULL;
     gboolean can_prune = TRUE;
+    const char *name = crm_element_name(xml_node);
+
+    if (safe_str_eq(name, XML_TAG_RESOURCE_REF)
+        || safe_str_eq(name, XML_CIB_TAG_OBJ_REF)
+        || safe_str_eq(name, XML_ACL_TAG_ROLE_REF)
+        || safe_str_eq(name, XML_ACL_TAG_ROLE_REFv1)) {
+        return FALSE;
+    }
 
     for (pIter = crm_first_attr(xml_node); pIter != NULL; pIter = pIter->next) {
         const char *p_name = (const char *)pIter->name;
@@ -5074,6 +5367,8 @@ crm_xml_init(void)
         /* Populate and free the _private field when nodes are created and destroyed */
         xmlDeregisterNodeDefault(pcmkDeregisterNode);
         xmlRegisterNodeDefault(pcmkRegisterNode);
+
+        __xml_build_schema_list();
     }
 }
 
@@ -5084,7 +5379,8 @@ crm_xml_cleanup(void)
     relaxng_ctx_cache_t *ctx = NULL;
 
     crm_info("Cleaning up memory from libxml2");
-    for (; lpc < all_schemas; lpc++) {
+    for (; lpc < xml_schema_max; lpc++) {
+
         switch (known_schemas[lpc].type) {
             case 0:
                 /* None */
@@ -5113,7 +5409,11 @@ crm_xml_cleanup(void)
             default:
                 break;
         }
+        free(known_schemas[lpc].name);
+        free(known_schemas[lpc].location);
+        free(known_schemas[lpc].transform);
     }
+    free(known_schemas);
     xsltCleanupGlobals();
     xmlCleanupParser();
 }
@@ -5126,15 +5426,16 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
     int type = known_schemas[method].type;
     char *file = NULL;
 
+    if(type == 0) {
+        return TRUE;
+    }
+
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    file = get_schema_path(known_schemas[method].location);
+    file = get_schema_path(known_schemas[method].name, known_schemas[method].location);
 
     crm_trace("Validating with: %s (type=%d)", crm_str(file), type);
     switch (type) {
-        case 0:
-            valid = TRUE;
-            break;
         case 1:
             valid = validate_with_dtd(doc, to_logs, file);
             break;
@@ -5202,6 +5503,7 @@ validate_xml_verbose(xmlNode * xml_blob)
     free_xml(xml);
 
     unlink(filename);
+    free(filename);
 
     return rc;
 }
@@ -5209,29 +5511,45 @@ validate_xml_verbose(xmlNode * xml_blob)
 gboolean
 validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs)
 {
-    int lpc = 0;
+    int version = 0;
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
     }
 
     if (validation == NULL) {
+        int lpc = 0;
+        bool valid = FALSE;
+
         validation = crm_element_value(xml_blob, "ignore-dtd");
         if (crm_is_true(validation)) {
-            validation = "none";
-        } else {
-            validation = "pacemaker-1.0";
+            /* Legacy compatibilty */
+            crm_xml_add(xml_blob, XML_ATTR_VALIDATION, "none");
+            return TRUE;
         }
+
+        /* Work it out */
+        for (lpc = 0; lpc < xml_schema_max; lpc++) {
+            if(validate_with(xml_blob, lpc, FALSE)) {
+                valid = TRUE;
+                crm_xml_add(xml_blob, XML_ATTR_VALIDATION, known_schemas[lpc].name);
+                crm_info("XML validated against %s", known_schemas[lpc].name);
+                if(known_schemas[lpc].after_transform == 0) {
+                    break;
+                }
+            }
+        }
+
+        return valid;
     }
 
+    version = get_schema_version(validation);
     if (strcmp(validation, "none") == 0) {
         return TRUE;
-    }
 
-    for (; lpc < all_schemas; lpc++) {
-        if (known_schemas[lpc].name && strcmp(validation, known_schemas[lpc].name) == 0) {
-            return validate_with(xml_blob, lpc, to_logs);
-        }
+    } else if(version < xml_schema_max) {
+        return validate_with(xml_blob, version, to_logs);
+
     }
 
     crm_err("Unknown validator: %s", validation);
@@ -5250,7 +5568,7 @@ apply_transformation(xmlNode * xml, const char *transform)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    xform = get_schema_path(transform);
+    xform = get_schema_path(NULL, transform);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
@@ -5277,7 +5595,7 @@ apply_transformation(xmlNode * xml, const char *transform)
 const char *
 get_schema_name(int version)
 {
-    if (version < 0 || version >= all_schemas) {
+    if (version < 0 || version >= xml_schema_max) {
         return "unknown";
     }
     return known_schemas[version].name;
@@ -5288,7 +5606,10 @@ get_schema_version(const char *name)
 {
     int lpc = 0;
 
-    for (; lpc < all_schemas; lpc++) {
+    if(name == NULL) {
+        name = "none";
+    }
+    for (; lpc < xml_schema_max; lpc++) {
         if (safe_str_eq(name, known_schemas[lpc].name)) {
             return lpc;
         }
@@ -5299,10 +5620,11 @@ get_schema_version(const char *name)
 /* set which validation to use */
 #include <crm/cib.h>
 int
-update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean to_logs)
+update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, gboolean to_logs)
 {
     xmlNode *xml = NULL;
     char *value = NULL;
+    int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
 
     CRM_CHECK(best != NULL, return -EINVAL);
@@ -5326,37 +5648,49 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
         }
     }
 
-    if (match >= max_schemas) {
+    if (match >= max_stable_schemas) {
         /* nothing to do */
         free(value);
         *best = match;
         return pcmk_ok;
     }
 
-    for (; lpc < max_schemas; lpc++) {
+    while(lpc <= max_stable_schemas) {
         gboolean valid = TRUE;
 
-        crm_debug("Testing '%s' validation",
-                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+        crm_debug("Testing '%s' validation (%d of %d)",
+                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
+                  lpc, max_stable_schemas);
         valid = validate_with(xml, lpc, to_logs);
 
         if (valid) {
             *best = lpc;
+        } else {
+            crm_trace("%s validation failed", known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
         }
 
         if (valid && transform) {
             xmlNode *upgrade = NULL;
             int next = known_schemas[lpc].after_transform;
 
-            if (next <= 0) {
-                next = lpc + 1;
-            }
+            if (next < 0) {
+                crm_trace("Stopping at %s", known_schemas[lpc].name);
+                break;
 
-            crm_notice("Upgrading %s-style configuration to %s with %s",
-                       known_schemas[lpc].name, known_schemas[next].name,
-                       known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+            } else if (max > 0 && lpc == max) {
+                crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                          known_schemas[lpc].name, lpc, next, max);
+                break;
 
-            if (known_schemas[lpc].transform == NULL) {
+            } else if (max > 0 && next > max) {
+                crm_debug("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                          known_schemas[lpc].name, lpc, next, max);
+                break;
+
+            } else if (known_schemas[lpc].transform == NULL) {
+                crm_notice("%s-style configuration is also valid for %s",
+                           known_schemas[lpc].name, known_schemas[next].name);
+
                 if (validate_with(xml, next, to_logs)) {
                     crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
                     lpc = next;
@@ -5368,6 +5702,10 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
                 }
 
             } else {
+                crm_notice("Upgrading %s-style configuration to %s with %s",
+                           known_schemas[lpc].name, known_schemas[next].name,
+                           known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+
 #if HAVE_LIBXSLT
                 upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 #endif
@@ -5388,15 +5726,16 @@ update_validation(xmlNode ** xml_blob, int *best, gboolean transform, gboolean t
                             known_schemas[lpc].transform);
                     crm_log_xml_info(upgrade, "transform:bad");
                     free_xml(upgrade);
-                    rc = -pcmk_err_dtd_validation;
+                    rc = -pcmk_err_schema_validation;
                 }
             }
         }
     }
 
     if (*best > match) {
-        crm_notice("Upgraded from %s to %s validation", value ? value : "<none>",
-                   known_schemas[*best].name);
+        crm_notice("%s the configuration from %s to %s",
+                   transform?"Transformed":"Upgraded",
+                   value ? value : "<none>", known_schemas[*best].name);
         crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
     }
 
@@ -5515,34 +5854,27 @@ gboolean
 cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
-    static int min_version = -1;
-    static int max_version = -1;
-
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
-    int version = get_schema_version(value);
 
-    if (min_version < 0) {
-        min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-    }
-    if (max_version < 0) {
-        max_version = get_schema_version(LATEST_SCHEMA_VERSION);
-    }
+    int version = get_schema_version(value);
+    int min_version = xml_minimum_schema_index();
 
     if (version < min_version) {
         xmlNode *converted = NULL;
 
         converted = copy_xml(*xml);
-        update_validation(&converted, &version, TRUE, to_logs);
+        update_validation(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, XML_ATTR_VALIDATION);
         if (version < min_version) {
             if (to_logs) {
                 crm_config_err("Your current configuration could only be upgraded to %s... "
                                "the minimum requirement is %s.\n", crm_str(value),
-                               MINIMUM_SCHEMA_VERSION);
+                               get_schema_name(min_version));
             } else {
                 fprintf(stderr, "Your current configuration could only be upgraded to %s... "
-                        "the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+                        "the minimum requirement is %s.\n",
+                        crm_str(value), get_schema_name(min_version));
             }
 
             free_xml(converted);
@@ -5553,7 +5885,7 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
             free_xml(*xml);
             *xml = converted;
 
-            if (version < max_version) {
+            if (version < xml_latest_schema_index()) {
                 crm_config_warn("Your configuration was internally updated to %s... "
                                 "which is acceptable but not the most recent",
                                 get_schema_name(version));
@@ -5563,7 +5895,8 @@ cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs)
                          get_schema_name(version));
             }
         }
-    } else if (version > max_version) {
+
+    } else if (version >= get_schema_version("none")) {
         if (to_logs) {
             crm_config_warn("Configuration validation is currently disabled."
                             " It is highly encouraged and prevents many common cluster issues.");
@@ -5605,6 +5938,8 @@ expand_idref(xmlNode * input, xmlNode * top)
         xpath_string = calloc(1, xpath_max);
 
         offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+        CRM_LOG_ASSERT(offset > 0);
+
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
             char *nodePath = (char *)xmlGetNodePath(top);
@@ -5675,11 +6010,12 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            CRM_CHECK(match != NULL, continue);
-
-            matchNodePath = (char *)xmlGetNodePath(match);
-            do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
-            free(matchNodePath);
+            CRM_LOG_ASSERT(match != NULL);
+            if(match != NULL) {
+                matchNodePath = (char *)xmlGetNodePath(match);
+                do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
+                free(matchNodePath);
+            }
         }
         crm_log_xml_explicit(xml_obj, "Bad Input");
 

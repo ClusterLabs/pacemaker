@@ -12,6 +12,13 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
+enum st_device_flags
+{
+    st_device_supports_list   = 0x0001,
+    st_device_supports_status = 0x0002,
+    st_device_supports_reboot = 0x0004,
+};
+
 typedef struct stonith_device_s {
     char *id;
     char *agent;
@@ -19,6 +26,7 @@ typedef struct stonith_device_s {
 
     /*! list of actions that must execute on the target node. Used for unfencing */
     char *on_target_actions;
+    char *required_actions;
     GListPtr targets;
     time_t targets_age;
     gboolean has_attr_map;
@@ -26,6 +34,8 @@ typedef struct stonith_device_s {
     gboolean include_nodeid;
     guint priority;
     guint active_pid;
+
+    enum st_device_flags flags;
 
     GHashTable *params;
     GHashTable *aliases;
@@ -104,6 +114,10 @@ typedef struct remote_fencing_op_s {
 
     /*! The current topology level being executed */
     guint level;
+
+    /*! List of required devices the topology must execute regardless of what
+     * topology level they exist at. */
+    GListPtr required_list;
     /*! The device list of all the devices at the current executing topology level. */
     GListPtr devices_list;
     /*! Current entry in the topology device list */

@@ -203,6 +203,7 @@ lrmd_remote_listen(gpointer data)
 
     /* accept the connection */
     laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     crm_debug("New remote connection from %s", inet_ntoa(addr.sin_addr));
 

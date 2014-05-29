@@ -1010,23 +1010,28 @@ main(int argc, char **argv)
         crm_exit(ENOPROTOOPT);
     }
 
+    rc = pcmk_ok;
     if (is_corosync_cluster()) {
         /* Keep the membership list up-to-date for crm_node to query */
-        rc = cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy);
+        if(cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy) == FALSE) {
+            rc = -ENOTCONN;
+        }
     }
 
-    local_name = get_local_node_name();
-    update_node_processes(local_nodeid, local_name, get_process_list());
+    if(rc == pcmk_ok) {
+        local_name = get_local_node_name();
+        update_node_processes(local_nodeid, local_name, get_process_list());
 
-    mainloop_add_signal(SIGTERM, pcmk_shutdown);
-    mainloop_add_signal(SIGINT, pcmk_shutdown);
+        mainloop_add_signal(SIGTERM, pcmk_shutdown);
+        mainloop_add_signal(SIGINT, pcmk_shutdown);
 
-    find_and_track_existing_processes();
-    init_children_processes();
+        find_and_track_existing_processes();
+        init_children_processes();
 
-    crm_info("Starting mainloop");
+        crm_info("Starting mainloop");
 
-    g_main_run(mainloop);
+        g_main_run(mainloop);
+    }
 
     if (ipcs) {
         crm_trace("Closing IPC server");
@@ -1041,5 +1046,5 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    crm_exit(pcmk_ok);
+    return crm_exit(rc);
 }

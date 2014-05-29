@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-nodes"/>
+  </start>
+
+  <define name="element-nodes">
+    <element name="nodes">
+      <zeroOrMore>
+	<element name="node">
+	  <attribute name="id"><text/></attribute>
+	  <attribute name="uname"><text/></attribute>
+	  <optional>
+	    <attribute name="type">
+	      <choice>
+		<value>normal</value>
+		<value>member</value>
+		<value>ping</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="description"><text/></attribute>
+	  </optional>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
+	  <zeroOrMore>
+	    <choice>
+	      <element name="instance_attributes">
+	        <externalRef href="nvset.rng"/>
+	      </element>
+	      <element name="utilization">
+	        <externalRef href="nvset.rng"/>
+	      </element>
+	    </choice>
+	  </zeroOrMore>
+	</element>
+      </zeroOrMore>
+    </element>
+  </define>
+
+</grammar>

@@ -155,7 +155,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
                 gIterNext = gIter->next;
 
-                if (safe_str_eq(op->rsc_id, existing->rsc_id)
+                if (crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
                     && safe_str_eq(op->op_type, existing->op_type)
                     && op->interval == existing->interval) {
                     lrmd_free_event(existing);
@@ -404,7 +404,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
             g_hash_table_iter_init(&hIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
-                if (safe_str_eq(entry->id, pending->rsc_id)) {
+                if (crm_str_eq(entry->id, pending->rsc_id, TRUE)) {
                     crm_notice("%sction %s (%s) incomplete at %s",
                                pending->interval == 0 ? "A" : "Recurring a",
                                key, pending->op_key, when);
@@ -564,7 +564,8 @@ get_rsc_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
                     }
                     crm_debug("Attr %s is not reloadable", value);
                     copy = strdup(value);
-                    CRM_CHECK(copy != NULL, continue);
+                    CRM_LOG_ASSERT(copy != NULL);
+                    if(copy == NULL) { continue; };
                     reload->restart_list = g_list_append(reload->restart_list, copy);
                 }
             }
@@ -621,7 +622,9 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
 
         int start = len;
 
-        CRM_CHECK(param != NULL, continue);
+        CRM_LOG_ASSERT(param != NULL);
+        if(param == NULL) {  continue; };
+
         value = g_hash_table_lookup(op->params, param);
         if (value != NULL) {
             crm_xml_add(restart, param, value);
@@ -737,8 +740,8 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
         build_operation_update(xml_rsc, &(entry->rsc), entry->failed, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->last, __FUNCTION__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
             build_operation_update(xml_rsc, &(entry->rsc), gIter->data, __FUNCTION__);
         }
@@ -750,7 +753,6 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 xmlNode *
 do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
 {
-    xmlNode *xml_result = NULL;
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
@@ -779,11 +781,9 @@ do_lrm_query_internal(lrm_state_t * lrm_state, gboolean is_replace)
     /* Build a list of active (not always running) resources */
     build_active_RAs(lrm_state, rsc_list);
 
-    xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
     crm_log_xml_trace(xml_state, "Current state of the LRM");
-    free_xml(xml_state);
 
-    return xml_result;
+    return xml_state;
 }
 
 xmlNode *
@@ -830,7 +830,7 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
         crm_debug("Triggering a refresh after %s deleted %s from the LRM", from_sys, rsc_id);
 
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             "last-lrm-refresh", now_s, FALSE, NULL);
+                             "last-lrm-refresh", now_s, FALSE, NULL, NULL);
 
         free(now_s);
     }
@@ -842,7 +842,7 @@ lrm_remove_deleted_rsc(gpointer key, gpointer value, gpointer user_data)
     struct delete_event_s *event = user_data;
     struct pending_deletion_op_s *op = value;
 
-    if (safe_str_eq(event->rsc, op->rsc)) {
+    if (crm_str_eq(event->rsc, op->rsc, TRUE)) {
         notify_deleted(event->lrm_state, op->input, event->rsc, event->rc);
         return TRUE;
     }
@@ -855,7 +855,7 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     const char *rsc = user_data;
     struct recurring_op_s *pending = value;
 
-    if (safe_str_eq(rsc, pending->rsc_id)) {
+    if (crm_str_eq(rsc, pending->rsc_id, TRUE)) {
         crm_info("Removing op %s:%d for deleted resource %s",
                  pending->op_key, pending->call_id, rsc);
         return TRUE;
@@ -1019,7 +1019,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name)
 
         g_hash_table_iter_init(&iter, lrm_state->resource_history);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
-            if (safe_str_eq(rsc_id, entry->id)) {
+            if (crm_str_eq(rsc_id, entry->id, TRUE)) {
                 lrmd_free_event(entry->failed);
                 entry->failed = NULL;
             }
@@ -1034,12 +1034,14 @@ static gboolean
 cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, gboolean remove)
 {
     int rc = pcmk_ok;
+    char *local_key = NULL;
     struct recurring_op_s *pending = NULL;
 
     CRM_CHECK(op != 0, return FALSE);
     CRM_CHECK(rsc_id != NULL, return FALSE);
     if (key == NULL) {
-        key = make_stop_id(rsc_id, op);
+        local_key = make_stop_id(rsc_id, op);
+        key = local_key;
     }
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
@@ -1051,6 +1053,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
         if (pending->cancelled) {
             crm_debug("Operation %s already cancelled", key);
+            free(local_key);
             return FALSE;
         }
 
@@ -1058,6 +1061,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
     } else {
         crm_info("No pending op found for %s", key);
+        free(local_key);
         return FALSE;
     }
 
@@ -1065,6 +1069,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type, pending->interval);
     if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
+        free(local_key);
         return TRUE;
     }
 
@@ -1078,6 +1083,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
      * Not removing the entry from pending_ops will block
      * the node from shutting down
      */
+    free(local_key);
     return FALSE;
 }
 
@@ -1096,7 +1102,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
     struct cancel_data *data = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    if (safe_str_eq(op->op_key, data->key)) {
+    if (crm_str_eq(op->op_key, data->key, TRUE)) {
         data->done = TRUE;
         remove = !cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove);
     }
@@ -1240,7 +1246,7 @@ do_lrm_invoke(long long action,
     CRM_ASSERT(lrm_state != NULL);
 
 #if ENABLE_ACL
-    user_name = crm_element_value(input->msg, F_CRM_USER);
+    user_name = crm_acl_get_set_user(input->msg, F_CRM_USER, NULL);
     crm_trace("LRM command from user '%s'", user_name);
 #endif
 
@@ -1542,7 +1548,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     const char *transition = NULL;
 
-    CRM_LOG_ASSERT(rsc_id != NULL);
+    CRM_ASSERT(rsc_id != NULL);
 
     op = calloc(1, sizeof(lrmd_event_data_t));
     op->type = lrmd_event_exec_complete;
@@ -1640,12 +1646,11 @@ send_direct_ack(const char *to_host, const char *to_sys,
 {
     xmlNode *reply = NULL;
     xmlNode *update, *iter;
-    xmlNode *fragment;
     crm_node_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
-        CRM_LOG_ASSERT(rsc_id != NULL);
+        CRM_ASSERT(rsc_id != NULL);
         op->rsc_id = strdup(rsc_id);
     }
     if (to_sys == NULL) {
@@ -1663,9 +1668,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
     build_operation_update(iter, rsc, op, __FUNCTION__);
-    fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
-
-    reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
+    reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "ACK Update");
 
@@ -1677,7 +1680,6 @@ send_direct_ack(const char *to_host, const char *to_sys,
         crm_log_xml_err(reply, "Unable to route reply");
     }
 
-    free_xml(fragment);
     free_xml(update);
     free_xml(reply);
 }
@@ -1715,7 +1717,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     struct stop_recurring_action_s *event = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    if (op->interval != 0 && safe_str_eq(op->rsc_id, event->rsc->id)) {
+    if (op->interval != 0 && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
@@ -2041,17 +2043,27 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op)
         send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
     } else if (pending == NULL) {
-        /* Operations that are cancelled may safely be removed
-         * from the pending op list before the lrmd completion event
-         * is received. Only report non-cancelled ops here. */
-        if (op->op_status != PCMK_LRM_OP_CANCELLED) {
-            crm_err("Op %s (call=%d): No 'pending' entry", op_key, op->call_id);
-        }
+        /* We don't need to do anything for cancelled ops
+         * that are not in our pending op list. There are no
+         * transition actions waiting on these operations. */
+
     } else if (op->user_data == NULL) {
+        /* At this point we have a pending entry, but no transition
+         * key present in the user_data field. report this */
         crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
 
     } else if (pending->remove) {
+        /* The tengine canceled this op, we have been waiting for the cancel to finish. */
         delete_op_entry(lrm_state, op, op->rsc_id, op_key, op->call_id);
+
+    } else if (pending && op->rsc_deleted) {
+        /* The tengine initiated this op, but it was cancelled outside of the
+         * tengine's control during a resource cleanup/re-probe request. The tengine
+         * must be alerted that this operation completed, otherwise the tengine
+         * will continue waiting for this update to occur until it is timed out.
+         * We don't want this update going to the cib though, so use a direct ack. */
+        crm_trace("Op %s (call=%d): cancelled due to rsc deletion", op_key, op->call_id);
+        send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
     } else {
         /* Before a stop is called, no need to direct ack */

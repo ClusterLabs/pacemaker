@@ -40,6 +40,7 @@ void *convert_const_pointer(const void *ptr);
 /* For ACLs */
 char *uid2username(uid_t uid);
 void determine_request_user(const char *user, xmlNode * request, const char *field);
+const char *crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user);
 
 #  if ENABLE_ACL
 #    include <string.h>
@@ -93,7 +94,7 @@ void crm_set_options(const char *short_options, const char *usage, struct crm_op
                      const char *app_desc);
 int crm_get_option(int argc, char **argv, int *index);
 int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-void crm_help(char cmd, int exit_code);
+int crm_help(char cmd, int exit_code);
 
 /* Cluster Option Processing */
 typedef struct pe_cluster_option_s {

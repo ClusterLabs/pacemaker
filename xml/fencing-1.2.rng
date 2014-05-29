@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <optional>
+      <ref name="element-stonith"/>
+    </optional>
+  </start>
+
+  <define name="element-stonith">
+    <element name="fencing-topology">
+      <zeroOrMore>
+	<ref name="element-level"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  
+  <define name="element-level">
+    <element name="fencing-level">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="target"><text/></attribute>
+      <attribute name="index"><data type="positiveInteger"/></attribute>
+      <attribute name="devices">
+	<data type="string">
+          <param name="pattern">([a-zA-Z0-9_\.\-]+)(,[a-zA-Z0-9_\.\-]+)*</param>
+	</data>
+      </attribute>
+    </element>
+  </define>
+
+</grammar>

@@ -52,8 +52,13 @@ static struct crm_option long_options[] = {
 static void
 log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 {
-    char *start = crm_time_as_string(dtp->start, flags);
-    char *end = crm_time_as_string(dtp->end, flags);
+    char *end = NULL;
+    char *start = NULL;
+
+    if(dtp) {
+        start = crm_time_as_string(dtp->start, flags);
+        end = crm_time_as_string(dtp->end, flags);
+    }
 
     if (log_level < LOG_CRIT) {
         printf("Period: %s to %s\n", start, end);
@@ -168,11 +173,8 @@ main(int argc, char **argv)
             fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
             crm_help('?', 1);
         }
-        crm_time_log(LOG_TRACE, "Duration", duration,
-                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(-1, "Duration", duration,
-                     print_options | crm_time_log_date | crm_time_log_timeofday |
-                     crm_time_log_with_timezone);
+        crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
+        crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
     }
 
     if (period_s) {

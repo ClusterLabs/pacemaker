@@ -1,0 +1,19 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="resD_monitor_3600000" on_node="node1" on_node_uuid="node1">
+        <primitive id="resD" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="3600000" CRM_meta_interval_origin="2014-06-01 00:35:00" CRM_meta_name="monitor" CRM_meta_start_delay="2100000" CRM_meta_timeout="2160000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1" priority="1000000">
+    <action_set>
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-node1" on_node="node1" on_node_uuid="node1">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

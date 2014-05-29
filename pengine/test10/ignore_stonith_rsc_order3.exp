@@ -132,7 +132,7 @@
   </synapse>
   <synapse id="10" priority="1000000">
     <action_set>
-      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="fc16-builder" on_node_uuid="fc16-builder">
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-fc16-builder" on_node="fc16-builder" on_node_uuid="fc16-builder">
         <attributes CRM_meta_op_no_wait="true" />
       </rsc_op>
     </action_set>
@@ -156,7 +156,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete-fc16-builder" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>

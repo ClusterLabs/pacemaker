@@ -32,7 +32,7 @@ Executing cluster transition:
  * Pseudo action:   group2_start_0
  * Resource action: rsc5            monitor on node2
  * Resource action: rsc6            monitor on node2
- * Fencing node1
+ * Fencing node1 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   probe_complete
  * Pseudo action:   all_stopped

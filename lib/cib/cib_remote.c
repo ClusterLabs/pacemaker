@@ -384,16 +384,20 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 
     if (private->passwd == NULL) {
         struct termios settings;
-        int rc;
 
         rc = tcgetattr(0, &settings);
-        settings.c_lflag &= ~ECHO;
-        rc = tcsetattr(0, TCSANOW, &settings);
+        if(rc == 0) {
+            settings.c_lflag &= ~ECHO;
+            rc = tcsetattr(0, TCSANOW, &settings);
+        }
 
-        fprintf(stderr, "Password: ");
-        private->passwd = calloc(1, 1024);
-        rc = scanf("%s", private->passwd);
-        fprintf(stdout, "\n");
+        if(rc == 0) {
+            fprintf(stderr, "Password: ");
+            private->passwd = calloc(1, 1024);
+            rc = scanf("%s", private->passwd);
+            fprintf(stdout, "\n");
+        }
+
         /* fprintf(stderr, "entered: '%s'\n", buffer); */
         if (rc < 1) {
             private->passwd = NULL;

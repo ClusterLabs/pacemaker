@@ -74,7 +74,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -148,7 +148,7 @@
         <pseudo_event id="34" operation="stop" operation_key="Group02_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -196,7 +196,7 @@
         <pseudo_event id="54" operation="stop" operation_key="grpStonith1:1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -211,7 +211,7 @@
         <pseudo_event id="54" operation="stop" operation_key="grpStonith1:1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -238,7 +238,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -286,7 +286,7 @@
         <pseudo_event id="108" operation="stop" operation_key="grpStonith3:0_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -301,7 +301,7 @@
         <pseudo_event id="108" operation="stop" operation_key="grpStonith3:0_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -363,10 +363,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="115" operation="start" operation_key="grpStonith3:1_start_0"/>
+        <pseudo_event id="18" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
       <trigger>
-        <pseudo_event id="165" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="115" operation="start" operation_key="grpStonith3:1_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -393,7 +393,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -468,7 +468,7 @@
         <pseudo_event id="147" operation="stop" operation_key="grpStonith4:1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -483,7 +483,7 @@
         <pseudo_event id="147" operation="stop" operation_key="grpStonith4:1_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
@@ -510,13 +510,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="36">
     <action_set>
-      <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182">
+      <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182">
         <attributes CRM_meta_on_node="srv02" CRM_meta_on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -530,7 +530,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="166" operation="stonith" operation_key="stonith-srv02" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
+        <crm_event id="166" operation="stonith" operation_key="stonith-srv02-reboot" on_node="srv02" on_node_uuid="71085d5e-1c63-49e0-8c8c-400d610b4182"/>
       </trigger>
     </inputs>
   </synapse>

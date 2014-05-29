@@ -76,6 +76,7 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
     char *raw_task = NULL;
     int task = no_action;
 
+    CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Processing %s", old_uuid);
     if (old_uuid == NULL) {
         return NULL;
@@ -458,11 +459,49 @@ update_action(action_t * then)
                   uname : "", first_flags, other->type);
 
         if (first == other->action) {
-            clear_bit(first_flags, pe_action_pseudo);
-            changed |= graph_update_action(first, then, then->node, first_flags, other->type);
+            /*
+             * 'first' was not expanded (ie. from 'start' to 'running'), which could mean it:
+             * - has no associated resource,
+             * - was a primitive,
+             * - was pre-expanded (ie. 'running' instead of 'start')
+             *
+             * The third argument here to graph_update_action() is a node which is used under two conditions:
+             * - Interleaving, in which case first->node and
+             *   then->node are equal (and NULL)
+             * - If 'then' is a clone, to limit the scope of the
+             *   constraint to instances on the supplied node
+             *
+             */
+            int otype = other->type;
+            node_t *node = then->node;
 
+            if(is_set(otype, pe_order_implies_then_on_node)) {
+                /* Normally we want the _whole_ 'then' clone to
+                 * restart if 'first' is restarted, so then->node is
+                 * needed.
+                 *
+                 * However for unfencing, we want to limit this to
+                 * instances on the same node as 'first' (the
+                 * unfencing operation), so first->node is supplied.
+                 *
+                 * Swap the node, from then on we can can treat it
+                 * like any other 'pe_order_implies_then'
+                 */
+
+                clear_bit(otype, pe_order_implies_then_on_node);
+                set_bit(otype, pe_order_implies_then);
+                node = first->node;
+            }
+            clear_bit(first_flags, pe_action_pseudo);
+            changed |= graph_update_action(first, then, node, first_flags, otype);
+
+            /* 'first' was for a complex resource (clone, group, etc),
+             * create a new dependancy if necessary
+             */
         } else if (order_actions(first, then, other->type)) {
-            /* Start again to get the new actions_before list */
+            /* This was the first time 'first' and 'then' were associated,
+             * start again to get the new actions_before list
+             */
             changed |= (pe_graph_updated_then | pe_graph_disable);
         }
 
@@ -598,6 +637,8 @@ get_router_node(action_t *action)
     if (is_remote_node(action->node) == FALSE) {
         return NULL;
     }
+
+    CRM_ASSERT(action->node->details->remote_rsc != NULL);
 
     if (action->node->details->remote_rsc->running_on) {
         began_on = action->node->details->remote_rsc->running_on->data;
@@ -826,7 +867,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             parent = parent->parent;
         }
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
         g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
     }
 
@@ -1062,7 +1103,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
                && strstr(wrapper->action->uuid, "_stop_0")
                && action->rsc && action->rsc->variant >= pe_clone) {
-        crm_warn("Ignoring requirement that %s comeplete before %s:"
+        crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
                  wrapper->action->uuid, action->uuid);
         return FALSE;

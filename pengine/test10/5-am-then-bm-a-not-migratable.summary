@@ -7,7 +7,7 @@ Online: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
  * Move    A	(Started 18node1 -> 18node2)
- * Migrate B	(Started 18node2 -> 18node1)
+ * Move    B	(Started 18node2 -> 18node1)
 
 Executing cluster transition:
  * Resource action: B               stop on 18node2

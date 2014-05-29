@@ -203,6 +203,7 @@ group_free(resource_t * rsc)
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
+        CRM_ASSERT(child_rsc);
         pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         child_rsc->fns->free(child_rsc);
     }

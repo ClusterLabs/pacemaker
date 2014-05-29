@@ -1,0 +1,265 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0" priority="1000000">
+    <action_set>
+      <rsc_op id="11" operation="monitor" operation_key="fencing_monitor_0" on_node="virt-3" on_node_uuid="3">
+        <primitive id="fencing" class="stonith" type="fence_scsi"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="20" operation="start" operation_key="dlm:2_start_0" on_node="virt-3" on_node_uuid="3">
+        <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3">
+        <primitive id="dlm" long-id="dlm:2" class="ocf" provider="pacemaker" type="controld"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3" priority="1000000">
+    <action_set>
+      <pseudo_event id="22" operation="running" operation_key="dlm-clone_running_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:2_start_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="start" operation_key="dlm-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="21" operation="start" operation_key="dlm-clone_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="27" operation="start" operation_key="clvmd:1_start_0" on_node="virt-2" on_node_uuid="2">
+        <primitive id="clvmd" long-id="clvmd:1" class="ocf" provider="heartbeat" type="clvm"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="29" operation="start" operation_key="clvmd-clone_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="clvmd:1_monitor_0" on_node="virt-2" on_node_uuid="2">
+        <primitive id="clvmd" long-id="clvmd:1" class="ocf" provider="heartbeat" type="clvm"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="28" operation="start" operation_key="clvmd:2_start_0" on_node="virt-3" on_node_uuid="3">
+        <primitive id="clvmd" long-id="clvmd:2" class="ocf" provider="heartbeat" type="clvm"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:2_start_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="clvmd:1_start_0" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="29" operation="start" operation_key="clvmd-clone_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3">
+        <primitive id="clvmd" long-id="clvmd:2" class="ocf" provider="heartbeat" type="clvm"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <pseudo_event id="30" operation="running" operation_key="clvmd-clone_running_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="clvmd:1_start_0" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="clvmd:2_start_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="29" operation="start" operation_key="clvmd-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <pseudo_event id="29" operation="start" operation_key="clvmd-clone_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="running" operation_key="dlm-clone_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <crm_event id="34" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4">
+        <attributes CRM_meta_on_node="virt-4" CRM_meta_on_node_uuid="4" CRM_meta_stonith_action="reboot" />
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="34" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13" priority="1000000">
+    <action_set>
+      <rsc_op id="10" operation="probe_complete" operation_key="probe_complete-virt-3" on_node="virt-3" on_node_uuid="3">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-virt-2" on_node="virt-2" on_node_uuid="2">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="clvmd:1_monitor_0" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <rsc_op id="7" operation="probe_complete" operation_key="probe_complete-virt-1" on_node="virt-1" on_node_uuid="1">
+        <attributes CRM_meta_op_no_wait="true" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete-virt-1" on_node="virt-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete-virt-2" on_node="virt-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="probe_complete" operation_key="probe_complete-virt-3" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3">
+        <attributes CRM_meta_on_node="virt-3" CRM_meta_on_node_uuid="3" CRM_meta_stonith_action="on" />
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="dlm:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="clvmd:2_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="33" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

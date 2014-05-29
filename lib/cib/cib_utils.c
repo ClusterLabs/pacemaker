@@ -233,59 +233,22 @@ get_object_root(const char *object_type, xmlNode * the_root)
     return get_xpath_object(xpath, the_root, LOG_DEBUG_4);
 }
 
-xmlNode *
-create_cib_fragment_adv(xmlNode * update, const char *update_section, const char *source)
-{
-    xmlNode *cib = NULL;
-    gboolean whole_cib = FALSE;
-    xmlNode *object_root = NULL;
-    char *local_section = NULL;
-
-/* 	crm_debug("Creating a blank fragment: %s", update_section); */
-
-    if (update == NULL && update_section == NULL) {
-        crm_trace("Creating a blank fragment");
-        update = createEmptyCib();
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-        return update;
-
-    } else if (update == NULL) {
-        crm_err("No update to create a fragment for");
-        return NULL;
-
-    }
-
-    CRM_CHECK(update_section != NULL, return NULL);
-    if (safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
-        whole_cib = TRUE;
-    }
-
-    if (whole_cib == FALSE) {
-        cib = createEmptyCib();
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-        object_root = get_object_root(update_section, cib);
-        add_node_copy(object_root, update);
-
-    } else {
-        cib = copy_xml(update);
-        crm_xml_add(cib, XML_ATTR_ORIGIN, source);
-    }
-
-    free(local_section);
-    crm_trace("Verifying created fragment");
-    return cib;
-}
-
 /*
  * It is the callers responsibility to free both the new CIB (output)
  *     and the new CIB (input)
  */
 xmlNode *
-createEmptyCib(void)
+createEmptyCib(int admin_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
     cib_root = create_xml_node(NULL, XML_TAG_CIB);
+    crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
+
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, admin_epoch);
+    crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);
@@ -341,7 +304,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
     CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
-    *output = NULL;
+    if(output) {
+        *output = NULL;
+    }
+
     *result_cib = NULL;
     *config_changed = FALSE;
 
@@ -366,17 +332,20 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
 
-        if(output == NULL) {
+        if(output == NULL || *output == NULL) {
             /* nothing */
 
         } else if(cib_filtered == *output) {
             cib_filtered = NULL; /* Let them have this copy */
 
-        } else if(cib_filtered) {
+        } else if(*output == current_cib) {
+            /* They already know not to free it */
+
+        } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
             *output = copy_xml(*output);
 
-        } else if(*output != current_cib) {
+        } else if((*output)->doc == current_cib->doc) {
             /* Give them a copy they can free */
             *output = copy_xml(*output);
         }
@@ -580,7 +549,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
         crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
-        rc = -pcmk_err_dtd_validation;
+        rc = -pcmk_err_schema_validation;
     }
 
   done:
@@ -813,12 +782,12 @@ cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int l
 
         if (rc != pcmk_ok) {
             crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);
-            free_xml(*output); *output = NULL;
 
             if (rc == -pcmk_err_old_data) {
                 crm_trace("Masking error, we already have the supplied update");
                 return pcmk_ok;
             }
+            free_xml(*output); *output = NULL;
 
             return rc;
         }

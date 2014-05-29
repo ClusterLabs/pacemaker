@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+include $(top_srcdir)/Makefile.common
 
 helpdir		= $(datadir)/$(PACKAGE)
 
@@ -48,13 +48,13 @@ BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 graphics: $(PNGS)
 
 %.png: %.svg
-	$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@
+	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@
 
 %-small.png: %.svg
-	$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@
+	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@
 
 %-large.png: %.svg
-	$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
+	$(AM_V_IMG)$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
 
 if BUILD_ASCIIDOC
 generated_docs	+= $(ascii:%.txt=%.html)
@@ -67,30 +67,8 @@ endif
 EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.html: %.txt
-	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
-%.8: %.8.txt
-	a2x -L -f manpage $<
+	$(AM_V_ASCII)$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
-# Build docbook from asciidoc because XML is a PITA to edit
-#
-# Build each chapter as a book (since the numbering isn't right for
-# articles and only books can have appendicies) and then strip out the
-# bits we don't want/need
-#
-%.xml:  %.txt
-	asciidoc -b docbook -a cli_name=$(ASCIIDOC_CLI_TYPE) -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
-	sed -i.sed 's///' $@
-	sed -i.sed 's///' $@                 # Fix line endings
-	sed -i.sed 's/\ lang="en"//' $@        # Never specify a language in the chapters
-	sed -i.sed 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
-	sed -i.sed 's/.*<date>.*//g' $@	       # Remove dangling tag
-	sed -i.sed 's/.*preface>//g' $@        # Remove preface elements
-	sed -i.sed 's:<title></title>::g' $@   # Remove empty title
-	sed -i.sed 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
-	sed -i.sed 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
-	-grep -qis "<appendix" $@ && sed -i.sed 's/.*book>//' $@         # We just want the appendix tag
-	-grep -vqis "<appendix" $@ && sed -i.sed 's/book>/chapter>/g' $@ # Rename to chapter
-	echo Rebuilt $@ from $<
 
 CFS_TXT=$(wildcard Clusters_from_Scratch/en-US/*.txt)
 CFS_XML=$(CFS_TXT:%.txt=%.xml)
@@ -98,9 +76,9 @@ CFS_XML=$(CFS_TXT:%.txt=%.xml)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML)
-	@echo Building $(@:%.build=%) because of $?
+	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -110,9 +88,9 @@ PE_XML=$(PE_TXT:%.txt=%.xml)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML)
-	@echo Building $(@:%.build=%) because of $?
+	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 
@@ -123,9 +101,9 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails
 Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML)
-	@echo Building $(@:%.build=%) because of $?
+	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
 	rm -rf $(@:%.build=%)/publish/*
-	cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS)
+	$(AM_V_PUB)cd $(@:%.build=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=$(DOCBOOK_LANGS) --formats=$(DOCBOOK_FORMATS) $(PCMK_quiet)
 	rm -rf $(@:%.build=%)/tmp
 	touch $@
 

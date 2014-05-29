@@ -17,7 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES = Makefile.in
+include $(top_srcdir)/Makefile.common
+
 EXTRA_DIST		= $(ocf_SCRIPTS)
 
 ocfdir		    = @OCF_RA_DIR@/pacemaker
@@ -36,14 +37,13 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			remote
 
 if BUILD_XML_HELP
+
 man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
+DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7
 
-%.xml:	%
-	echo Building $< manpage
-	OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
+ocf_pacemaker_%.xml:  %
+	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(abs_builddir)/$< meta-data > $@
 
-ocf_pacemaker_%.7:	%.xml
-	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/extra/resources/$<
 endif
 
 clean-generic:

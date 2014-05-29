@@ -102,7 +102,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: dummy1          monitor=300000 on hex-8
  * Resource action: dummy1          monitor=300000 on hex-7
- * Fencing hex-9
+ * Fencing hex-9 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   load_stopped_hex-8
  * Pseudo action:   load_stopped_hex-7

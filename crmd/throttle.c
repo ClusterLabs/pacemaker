@@ -329,14 +329,14 @@ static bool throttle_io_load(float *load, unsigned int *blocked)
         /* Borrowed from procps-ng's sysinfo.c */
 
         char *b = NULL;
-        long long cpu_use = 0;
-        long long cpu_nic = 0;
-        long long cpu_sys = 0;
-        long long cpu_idl = 0;
-        long long cpu_iow = 0; /* not separated out until the 2.5.41 kernel */
-        long long cpu_xxx = 0; /* not separated out until the 2.6.0-test4 kernel */
-        long long cpu_yyy = 0; /* not separated out until the 2.6.0-test4 kernel */
-        long long cpu_zzz = 0; /* not separated out until the 2.6.11 kernel */
+        unsigned long long cpu_use = 0;
+        unsigned long long cpu_nic = 0;
+        unsigned long long cpu_sys = 0;
+        unsigned long long cpu_idl = 0;
+        unsigned long long cpu_iow = 0; /* not separated out until the 2.5.41 kernel */
+        unsigned long long cpu_xxx = 0; /* not separated out until the 2.6.0-test4 kernel */
+        unsigned long long cpu_yyy = 0; /* not separated out until the 2.6.0-test4 kernel */
+        unsigned long long cpu_zzz = 0; /* not separated out until the 2.6.11 kernel */
 
         long long divo2 = 0;
         long long duse = 0;

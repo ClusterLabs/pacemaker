@@ -10,7 +10,7 @@
         <pseudo_event id="12" operation="stop" operation_key="stonithcloneset_stop_0"/>
        </trigger>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
      </inputs>
    </synapse>
@@ -37,7 +37,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
     </inputs>
   </synapse>
@@ -93,7 +93,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
      </inputs>
    </synapse>
@@ -114,7 +114,7 @@
         <pseudo_event id="46" operation="stop" operation_key="configstoreclone:0_stop_0" internal_operation_key="configstoreclone:1_stop_0"/>
        </trigger>
        <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
     </inputs>
   </synapse>
@@ -203,7 +203,7 @@
         <pseudo_event id="58" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
      </inputs>
    </synapse>
@@ -259,7 +259,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
     </inputs>
   </synapse>
@@ -274,7 +274,7 @@
         <pseudo_event id="38" operation="stop" operation_key="imagestorecloneset_stop_0"/>
       </trigger>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
      </inputs>
    </synapse>
@@ -357,7 +357,7 @@
         <pseudo_event id="41" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
      </inputs>
    </synapse>
@@ -413,7 +413,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
     </inputs>
   </synapse>
@@ -428,7 +428,7 @@
         <pseudo_event id="53" operation="stop" operation_key="configstorecloneset_stop_0"/>
        </trigger>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
     </inputs>
   </synapse>
@@ -511,13 +511,13 @@
         <pseudo_event id="56" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
       <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
      </inputs>
    </synapse>
   <synapse id="36">
      <action_set>
-      <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
+      <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
       </crm_event>
     </action_set>
@@ -531,7 +531,7 @@
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="60" operation="stonith" operation_key="stonith-node1" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+        <crm_event id="60" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
      </inputs>
    </synapse>

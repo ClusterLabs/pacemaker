@@ -32,7 +32,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: prmVM2          stop on bl460g1n6
- * Fencing bl460g1n7
+ * Fencing bl460g1n7 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   prmDummy_stop_0
  * Pseudo action:   prmVM2_stop_0

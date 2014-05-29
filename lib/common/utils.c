@@ -766,6 +766,10 @@ crm_get_msec(const char *input)
     }
 
     msec = crm_int_helper(cp, &end_text);
+    if (msec > LLONG_MAX/multiplier) {
+        /* arithmetics overflow while multiplier/divisor mutually exclusive */
+        return LLONG_MAX;
+    }
     msec *= multiplier;
     msec /= divisor;
     /* dret += 0.5; */
@@ -1812,7 +1816,7 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
     return -1;
 }
 
-void
+int
 crm_help(char cmd, int exit_code)
 {
     int i = 0;
@@ -1885,9 +1889,7 @@ crm_help(char cmd, int exit_code)
     fprintf(stream, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 
   out:
-    if (exit_code >= 0) {
-        crm_exit(exit_code);
-    }
+    return crm_exit(exit_code);
 }
 
 void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
@@ -2137,6 +2139,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     char *key = NULL;
     char *magic = NULL;
     char *op_id = NULL;
+    char *op_id_additional = NULL;
     char *local_user_data = NULL;
 
     xmlNode *xml_op = NULL;
@@ -2148,11 +2151,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
                origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
                op->interval);
-
-    if (op->op_status == PCMK_LRM_OP_CANCELLED) {
-        crm_trace("Ignoring cancelled op");
-        return NULL;
-    }
 
     crm_trace("DC version: %s", caller_version);
 
@@ -2199,6 +2197,10 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+        if (op->interval == 0) {
+            /* Ensure 'last' gets updated too in case recording-pending="true" */
+            op_id_additional = generate_op_key(op->rsc_id, "last", 0);
+        }
 
     } else if (op->interval > 0) {
         op_id = strdup(key);
@@ -2207,6 +2209,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         op_id = generate_op_key(op->rsc_id, "last", 0);
     }
 
+  again:
     xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
     if (xml_op == NULL) {
         xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
@@ -2220,7 +2223,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
         op->user_data = local_user_data;
     }
 
-    magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+    if(magic == NULL) {
+        magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+    }
 
     crm_xml_add(xml_op, XML_ATTR_ID, op_id);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
@@ -2275,6 +2280,13 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
 
     append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
 
+    if (op_id_additional) {
+        free(op_id);
+        op_id = op_id_additional;
+        op_id_additional = NULL;
+        goto again;
+    }
+
     if (local_user_data) {
         free(local_user_data);
         op->user_data = NULL;
@@ -2322,6 +2334,60 @@ uid2username(uid_t uid)
     }
 }
 
+const char *
+crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user)
+{
+    /* field is only checked for backwards compatibility */
+    static const char *effective_user = NULL;
+    const char *requested_user = NULL;
+    const char *user = NULL;
+
+    if(effective_user == NULL) {
+        effective_user = uid2username(geteuid());
+    }
+
+    requested_user = crm_element_value(request, XML_ACL_TAG_USER);
+    if(requested_user == NULL) {
+        requested_user = crm_element_value(request, field);
+    }
+
+    if (is_privileged(effective_user) == FALSE) {
+        /* We're not running as a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
+        user = effective_user;
+
+    } else if(peer_user == NULL && requested_user == NULL) {
+        /* No user known or requested, use 'effective_user' and make sure one is set for the request */
+        user = effective_user;
+
+    } else if(peer_user == NULL) {
+        /* No user known, trusting 'requested_user' */
+        user = requested_user;
+
+    } else if (is_privileged(peer_user) == FALSE) {
+        /* The peer is not a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
+        user = peer_user;
+
+    } else if (requested_user == NULL) {
+        /* Even if we're privileged, make sure there is always a value set */
+        user = peer_user;
+
+    } else {
+        /* Legal delegation to 'requested_user' */
+        user = requested_user;
+    }
+
+    /* Yes, pointer comparision */
+    if(user != crm_element_value(request, XML_ACL_TAG_USER)) {
+        crm_xml_add(request, XML_ACL_TAG_USER, user);
+    }
+
+    if(field != NULL && user != crm_element_value(request, field)) {
+        crm_xml_add(request, field, user);
+    }
+
+    return requested_user;
+}
+
 void
 determine_request_user(const char *user, xmlNode * request, const char *field)
 {
@@ -2365,6 +2431,18 @@ g_str_hash_traditional(gconstpointer v)
 
     for (p = v; *p != '\0'; p++)
         h = (h << 5) - h + *p;
+
+    return h;
+}
+
+guint
+crm_strcase_hash(gconstpointer v)
+{
+    const signed char *p;
+    guint32 h = 0;
+
+    for (p = v; *p != '\0'; p++)
+        h = (h << 5) - h + g_ascii_tolower(*p);
 
     return h;
 }

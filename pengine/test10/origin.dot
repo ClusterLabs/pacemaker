@@ -1,0 +1,4 @@
+digraph "g" {
+"probe_complete node1" [ style=bold color="green" fontcolor="black"]
+"resD_monitor_3600000 node1" [ style=bold color="green" fontcolor="black"]
+}

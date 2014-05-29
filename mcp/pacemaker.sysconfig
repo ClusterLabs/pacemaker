@@ -14,7 +14,7 @@
 # Send INFO (and higher) messages to the named log file
 # Additional messages may also appear here depending on any configured debug and trace settings
 # By default Pacemaker will inherit the logfile specified in corosync.conf
-# PCMK_debugfile=/var/log/pacemaker.log
+# PCMK_logfile=/var/log/pacemaker.log
 
 # Specify an alternate syslog target for NOTICE (and higher) messages
 # Use 'none' to disable - not recommended

@@ -6,6 +6,7 @@
   </start>
 
   <define name="element-constraints">
+    <element name="constraints">
       <zeroOrMore>
 	<choice>
 	  <ref name="element-location"/>
@@ -14,17 +15,25 @@
 	  <ref name="element-rsc_ticket"/>
 	</choice>
       </zeroOrMore>
+    </element>
   </define>
 
   <define name="element-location">
     <element name="rsc_location">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="rsc"><data type="IDREF"/></attribute>
-      <optional>
-	<attribute name="role">
-	  <ref name="attribute-roles"/>
-	</attribute>
-      </optional>
+      <choice>
+	<group>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
+	  <optional>
+	    <attribute name="role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	</group>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+      </choice>
       <choice>
 	<group>
 	  <externalRef href="score.rng"/>
