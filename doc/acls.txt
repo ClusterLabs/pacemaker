@@ -51,7 +51,7 @@ Note that rules are applied from first to last with the first
 matching rule being used.  This means specific +write+ rules
 usually need to be listed before general +read+ rules.  Any
 permission not explicitly granted is denied by default, but note
-that +write+ implies +read+, so there is no need to specicify both
+that +write+ implies +read+, so there is no need to specify both
 to allow full read/write access.
 
 === Minimum Required ACLs
@@ -130,8 +130,8 @@ constraints.
         write xpath:"/cib"
 ...............
 
-This is a single rule which allows rull read-write access to the
-entirue CIB.  Users with this role will have equivalent access to
+This is a single rule which allows full read-write access to the
+entire CIB.  Users with this role will have equivalent access to
 the +root+ and +hacluster+ users.
 
 === User Syntax
