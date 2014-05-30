@@ -2,7 +2,7 @@
 
 '''OCF IPaddr/IPaddr2 Resource Agent Test'''
 
-__copyright__='''
+__copyright__ = '''
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright (C) 2004 International Business Machines
 Licensed under the GNU GPL.
@@ -26,6 +26,7 @@ Licensed under the GNU GPL.
 import string,sys,struct,os,random,time,syslog
 from cts.CTSvars import *
 
+
 def usage():
     print "usage: " + sys.argv[0]  \
     +  " [-2]"\
@@ -36,6 +37,7 @@ def usage():
     +  " [number-of-iterations]"
     sys.exit(1)
 
+
 def perform_op(ra, ip, op):
     os.environ["OCF_RA_VERSION_MAJOR"]    = "1"
     os.environ["OCF_RA_VERSION_MINOR"]    = "0"
@@ -45,8 +47,9 @@ def perform_op(ra, ip, op):
     os.environ["OCF_RESKEY_ip"]           = ip
     os.environ["HA_LOGFILE"]              = "/dev/null"
     os.environ["HA_LOGFACILITY"]          = "local7"
-    path = CTSvars.OCF_ROOT_DIR +"/resource.d/heartbeat/" + ra
+    path = CTSvars.OCF_ROOT_DIR + "/resource.d/heartbeat/" + ra
     return os.spawnvpe(os.P_WAIT, path, [ra, op], os.environ)
+
 
 def audit(ra, iplist, ipstatus, summary):
     passed = 1
@@ -54,7 +57,7 @@ def audit(ra, iplist, ipstatus, summary):
         ret = perform_op(ra, ip, "monitor")
         if ret != ipstatus[ip]:
             passed = 0
-            log("audit: status of %s should be %d but it is %d\t [failure]"%
+            log("audit: status of %s should be %d but it is %d\t [failure]" %
                 (ip,ipstatus[ip],ret))
             ipstatus[ip] = ret    
     summary["audit"]["called"] += 1;
@@ -63,6 +66,7 @@ def audit(ra, iplist, ipstatus, summary):
     else :
         summary["audit"]["failure"] += 1
         
+
 def log(towrite):
     t = time.strftime("%Y/%m/%d_%H:%M:%S\t", time.localtime(time.time()))  
     logstr = t + " "+str(towrite)
@@ -114,7 +118,7 @@ if __name__ == '__main__':
     for i in range(0, ipnum) :
         ip = string.join(fields, '.')
         iplist.append(ip)
-        ipstatus[ip]=perform_op(ra,ip,"monitor")
+        ipstatus[ip] = perform_op(ra,ip,"monitor")
         fields[3] = str(int(fields[3])+1)
     log("Test ip:" + str(iplist))
     
@@ -131,7 +135,7 @@ if __name__ == '__main__':
         
     # Prepare Random
     f = open("/dev/urandom", "r")
-    seed=struct.unpack("BBB", f.read(3))
+    seed = struct.unpack("BBB", f.read(3))
     f.close()
     #seed=(123,321,231)
     rand = random.Random()
