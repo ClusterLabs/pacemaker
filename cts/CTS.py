@@ -32,6 +32,7 @@ from UserDict import UserDict
 from subprocess import Popen,PIPE
 from cts.CTSvars import *
 from threading import Thread
+from __future__ import print_function
 
 trace_rsh = None
 trace_lw = None
@@ -264,7 +265,7 @@ class CtsLab(UserDict):
                 try:
                     self.Nodes[node] = gethostbyname_ex(node)
                 except:
-                    print node+" not found in DNS... aborting"
+                    print(node+" not found in DNS... aborting")
                     raise
         #
         #        List of Logging Mechanism(s)
@@ -321,7 +322,7 @@ class CtsLab(UserDict):
                 self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
 
                 fname = "cts-stats-%d-nodes-%s.csv" % (len(self["nodes"]), host)
-                print "Extracted stats: %s" % fname
+                print("Extracted stats: %s" % fname)
                 fd = open(fname, "a")
                 fd.writelines(lines)
                 fd.close()
@@ -484,13 +485,13 @@ class AsyncWaitProc(Thread):
 
     def log(self, args):
         if not self.Env:
-            print (args)
+            print(args)
         else:
             self.Env.log(args)
 
     def debug(self, args):
         if not self.Env:
-            print (args)
+            print(args)
         else:
             self.Env.debug(args)
     def run(self):
@@ -554,25 +555,25 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        #print "sysname: %s, us: %s" % (sysname, self.OurNode)
+        # print("sysname: %s, us: %s" % (sysname, self.OurNode))
         if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
             ret = command
         else:
             ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
-        #print ("About to run %s\n" % ret)
+        # print("About to run %s\n" % ret)
         return ret
 
     def log(self, args):
         if not self.silent:
             if not self.Env:
-                print (args)
+                print(args)
             else:
                 self.Env.log(args)
 
     def debug(self, args):
         if not self.silent:
             if not self.Env:
-                print (args)
+                print(args)
             else:
                 self.Env.debug(args)
 
@@ -690,7 +691,7 @@ for i in range(0, len(args)):
         skipthis=1
 
 if not os.access(filename, os.R_OK):
-    print prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0)
+    print(prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0))
     sys.exit(1)
 
 logfile=open(filename, 'r')
@@ -702,7 +703,7 @@ if offset != 'EOF':
     if newsize >= offset:
         logfile.seek(offset)
     else:
-        print prefix + ('File truncated from %d to %d' % (offset, newsize))
+        print(prefix + ('File truncated from %d to %d' % (offset, newsize)))
         if (newsize*1.05) < offset:
             logfile.seek(0)
         # else: we probably just lost a few logs after a fencing op
@@ -720,10 +721,10 @@ while True:
     line = logfile.readline()
     if not line: break
 
-    print line.strip()
+    print(line.strip())
     count += 1
 
-print prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count)
+print(prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count))
 logfile.close()
 """
 
@@ -749,14 +750,14 @@ class SearchObj:
     def log(self, args):
         message = "lw: %s: %s" % (self, args)
         if not self.Env:
-            print (message)
+            print(message)
         else:
             self.Env.log(message)
 
     def debug(self, args):
         message = "lw: %s: %s" % (self, args)
         if not self.Env:
-            print (message)
+            print(message)
         else:
             self.Env.debug(message)
 
@@ -890,7 +891,7 @@ class LogWatcher(RemoteExec):
     def debug(self, args):
         message = "lw: %s: %s" % (self.name, args)
         if not self.Env:
-            print (message)
+            print(message)
         else:
             self.Env.debug(message)
 
