@@ -447,8 +447,8 @@ gio_poll_destroy(gpointer data)
 }
 
 static int32_t
-gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
-                      void *data, qb_ipcs_dispatch_fn_t fn)
+gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
+                         void *data, qb_ipcs_dispatch_fn_t fn, int32_t add)
 {
     struct gio_to_qb_poll *adaptor;
     GIOChannel *channel;
@@ -460,10 +460,14 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
         return res;
     }
 
-    crm_trace("Adding fd=%d to mainloop as adapater %p", fd, adaptor);
-    if (adaptor->is_used) {
-        crm_err("Adapter for descriptor %d is still in-use", fd);
+    crm_trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
+    if (add && adaptor->is_used) {
+        crm_err("Adaptor for descriptor %d is still in-use", fd);
         return -EEXIST;
+    }
+    if (!add && !adaptor->is_used) {
+        crm_err("Adaptor for descriptor %d is not in-use", fd);
+        return -ENOENT;
     }
 
     /* channel is created with ref_count = 1 */
@@ -475,6 +479,10 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
 
     /* Because unlike the poll() API, glib doesn't tell us about HUPs by default */
     evts |= (G_IO_HUP | G_IO_NVAL | G_IO_ERR);
+
+    if (adaptor->is_used) {
+        g_source_remove(adaptor->source);
+    }
 
     adaptor->fn = fn;
     adaptor->events = evts;
@@ -505,10 +513,17 @@ gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
 }
 
 static int32_t
+gio_poll_dispatch_add(enum qb_loop_priority p, int32_t fd, int32_t evts,
+                      void *data, qb_ipcs_dispatch_fn_t fn)
+{
+    return gio_poll_dispatch_update(p, fd, evts, data, fn, QB_TRUE);
+}
+
+static int32_t
 gio_poll_dispatch_mod(enum qb_loop_priority p, int32_t fd, int32_t evts,
                       void *data, qb_ipcs_dispatch_fn_t fn)
 {
-    return 0;
+    return gio_poll_dispatch_update(p, fd, evts, data, fn, QB_FALSE);
 }
 
 static int32_t
