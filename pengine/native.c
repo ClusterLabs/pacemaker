@@ -2190,7 +2190,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
         possible_matches = find_actions(rsc->actions, key, NULL);
     } else {
-        possible_matches = find_actions(rsc->actions, key, next);
+        possible_matches = find_actions(rsc->actions, key, current);
     }
     free(key);
     if (possible_matches) {
@@ -2278,7 +2278,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                        current->details->uname, allowed ? "" : " - blocked");
 
             if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
-                && rsc->next_role > RSC_ROLE_STOPPED) {
+                && rsc->next_role > RSC_ROLE_STOPPED && moving == FALSE) {
                 if (is_set(rsc->flags, pe_rsc_failed)) {
                     log_change("Recover %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);

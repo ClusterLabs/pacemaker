@@ -2521,10 +2521,6 @@ class RemoteLXC(CTSTest):
 
     def start_lxc_simple(self, node):
 
-        rc = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
-        if rc == 1:
-            return self.skipped()
-
         # restore any artifacts laying around from a previous test.
         self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -R &>/dev/null")
 
@@ -2586,6 +2582,11 @@ class RemoteLXC(CTSTest):
         ret = self.startall(None)
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
+
+        rc = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
+        if rc == 1:
+            self.log("Environment test for lxc support failed."
+            return self.skipped()
 
         self.start_lxc_simple(node)
         self.cleanup_lxc_simple(node)
