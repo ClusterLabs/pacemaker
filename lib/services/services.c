@@ -386,12 +386,12 @@ services_action_cancel(const char *name, const char *action, int interval)
         }
         services_action_free(op);
     } else {
-        crm_info("Cancelling in-flight op: performing early termination of %s", id);
+        crm_info("Cancelling in-flight op: performing early termination of %s (pid=%d)", id, op->pid);
         op->cancel = 1;
         if (mainloop_child_kill(op->pid) == FALSE) {
             /* even though the early termination failed,
              * the op will be marked as cancelled once it completes. */
-            crm_err("Termination of %s failed", id);
+            crm_err("Termination of %s (pid=%d) failed", id, op->pid);
         }
     }
 
