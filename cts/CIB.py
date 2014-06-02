@@ -7,6 +7,7 @@ Copyright (C) 2008 Andrew Beekhof
 
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
+from __future__ import print_function
 
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager
@@ -413,4 +414,4 @@ if __name__ == '__main__':
 
     CibFactory = ConfigFactory(manager)
     cib = CibFactory.createConfig("pacemaker-1.1")
-    print cib.contents()
+    print(cib.contents())

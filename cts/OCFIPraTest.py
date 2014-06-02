@@ -25,16 +25,13 @@ Licensed under the GNU GPL.
 
 import string,sys,struct,os,random,time,syslog
 from cts.CTSvars import *
+from __future__ import print_function
 
 
 def usage():
-    print "usage: " + sys.argv[0]  \
-    +  " [-2]"\
-    +  " [--ipbase|-i first-test-ip]"\
-    +  " [--ipnum|-n test-ip-num]"\
-    +  " [--help|-h]"\
-    +  " [--perform|-p op]"\
-    +  " [number-of-iterations]"
+    print("usage: %s [-2] [--ipbase|-i first-test-ip] [--ipnum|-n test-ip-num]"
+          " [--help|-h] [--perform|-p op] [number-of-iterations]"
+          % sys.argv[0])
     sys.exit(1)
 
 
@@ -71,7 +68,7 @@ def log(towrite):
     t = time.strftime("%Y/%m/%d_%H:%M:%S\t", time.localtime(time.time()))  
     logstr = t + " "+str(towrite)
     syslog.syslog(logstr)
-    print logstr
+    print(logstr)
 
 if __name__ == '__main__': 
     ra = "IPaddr"

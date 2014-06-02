@@ -25,6 +25,7 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, types, string, string, signal, os, socket
+from __future__ import print_function
 
 pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
@@ -116,51 +117,51 @@ class LabEnvironment(CtsLab):
 
 
 def usage(arg, status=1):
-    print "Illegal argument " + arg
-    print "usage: " + sys.argv[0] + " [options] number-of-iterations"
-    print "\nCommon options: "
-    print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"
-    print "\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)"
-    print "\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes"
-    print "\t [--stack (v0|v1|cman|corosync|heartbeat|openais)]    which cluster stack is installed"
-    print "\t [--list-tests]               list the valid tests"
-    print "\t [--benchmark]                add the timing information"
-    print "\t "
-    print "Options that CTS will usually auto-detect correctly: "
-    print "\t [--logfile path]             where should the test software look for logs from cluster nodes"
-    print "\t [--syslog-facility name]     which syslog facility should the test software log to"
-    print "\t [--at-boot (1|0)]            does the cluster software start at boot time"
-    print "\t [--test-ip-base ip]          offset for generated IP address resources"
-    print "\t "
-    print "Options for release testing: "
-    print "\t [--populate-resources | -r]  generate a sample configuration"
-    print "\t [--choose name]              run only the named test"
-    print "\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]"
-    print "\t [--once]                     run all valid tests once"
-    print "\t "
-    print "Additional (less common) options: "
-    print "\t [--clobber-cib | -c ]        erase any existing configuration"
-    print "\t [--outputfile path]          optional location for the test software to write logs to"
-    print "\t [--trunc]                    truncate logfile before starting"
-    print "\t [--xmit-loss lost-rate(0.0-1.0)]"
-    print "\t [--recv-loss lost-rate(0.0-1.0)]"
-    print "\t [--standby (1 | 0 | yes | no)]"
-    print "\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]"
-    print "\t [--stonith-type type]"
-    print "\t [--stonith-args name=value]"
-    print "\t [--bsc]"
-    print "\t [--no-loop-tests]            dont run looping/time-based tests"
-    print "\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd"
-    print "\t [--valgrind-tests]           include tests using valgrind"
-    print "\t [--experimental-tests]       include experimental tests"
-    print "\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources"
-    print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]"
-    print "\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH"
-    print "\t [--seed random_seed]"
-    print "\t [--set option=value]"
-    print "\t "
-    print "\t Example: "
-    print "\t    python ./CTSlab.py -g virt1 --stack cs -r --stonith ssh --schema pacemaker-1.0 500"
+    print("Illegal argument " + arg)
+    print("usage: " + sys.argv[0] + " [options] number-of-iterations")
+    print("\nCommon options: ")
+    print("\t [--nodes 'node list']        list of cluster nodes separated by whitespace")
+    print("\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
+    print("\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes")
+    print("\t [--stack (v0|v1|cman|corosync|heartbeat|openais)]    which cluster stack is installed")
+    print("\t [--list-tests]               list the valid tests")
+    print("\t [--benchmark]                add the timing information")
+    print("\t ")
+    print("Options that CTS will usually auto-detect correctly: ")
+    print("\t [--logfile path]             where should the test software look for logs from cluster nodes")
+    print("\t [--syslog-facility name]     which syslog facility should the test software log to")
+    print("\t [--at-boot (1|0)]            does the cluster software start at boot time")
+    print("\t [--test-ip-base ip]          offset for generated IP address resources")
+    print("\t ")
+    print("Options for release testing: ")
+    print("\t [--populate-resources | -r]  generate a sample configuration")
+    print("\t [--choose name]              run only the named test")
+    print("\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]")
+    print("\t [--once]                     run all valid tests once")
+    print("\t ")
+    print("Additional (less common) options: ")
+    print("\t [--clobber-cib | -c ]        erase any existing configuration")
+    print("\t [--outputfile path]          optional location for the test software to write logs to")
+    print("\t [--trunc]                    truncate logfile before starting")
+    print("\t [--xmit-loss lost-rate(0.0-1.0)]")
+    print("\t [--recv-loss lost-rate(0.0-1.0)]")
+    print("\t [--standby (1 | 0 | yes | no)]")
+    print("\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]")
+    print("\t [--stonith-type type]")
+    print("\t [--stonith-args name=value]")
+    print("\t [--bsc]")
+    print("\t [--no-loop-tests]            dont run looping/time-based tests")
+    print("\t [--no-unsafe-tests]          dont run tests that are unsafe for use with ocfs2/drbd")
+    print("\t [--valgrind-tests]           include tests using valgrind")
+    print("\t [--experimental-tests]       include experimental tests")
+    print("\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources")
+    print("\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]")
+    print("\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH")
+    print("\t [--seed random_seed]")
+    print("\t [--set option=value]")
+    print("\t ")
+    print("\t Example: ")
+    print("\t    python ./CTSlab.py -g virt1 --stack cs -r --stonith ssh --schema pacemaker-1.0 500")
 
     sys.exit(status)
 
@@ -275,7 +276,7 @@ if __name__ == '__main__':
                Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_openstack"
 
-               print "Obtaining OpenStack credentials from the current environment"
+               print("Obtaining OpenStack credentials from the current environment")
                Environment["stonith-params"] = "region=%s,tenant=%s,auth=%s,user=%s,password=%s" % (
                    os.environ['OS_REGION_NAME'],
                    os.environ['OS_TENANT_NAME'],
@@ -288,7 +289,7 @@ if __name__ == '__main__':
                Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_rhevm"
 
-               print "Obtaining RHEV-M credentials from the current environment"
+               print("Obtaining RHEV-M credentials from the current environment")
                Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
                    os.environ['RHEVM_USERNAME'],
                    os.environ['RHEVM_PASSWORD'],
@@ -327,7 +328,7 @@ if __name__ == '__main__':
            try:
                float(args[i+1])
            except ValueError:
-               print ("--xmit-loss parameter should be float")
+               print("--xmit-loss parameter should be float")
                usage(args[i+1])
            skipthis = 1
            Environment["XmitLoss"] = args[i+1]
@@ -336,7 +337,7 @@ if __name__ == '__main__':
            try:
                float(args[i+1])
            except ValueError:
-               print ("--recv-loss parameter should be float")
+               print("--recv-loss parameter should be float")
                usage(args[i+1])
            skipthis = 1
            Environment["RecvLoss"] = args[i+1]
@@ -387,7 +388,7 @@ if __name__ == '__main__':
                Environment["DoStonith"] = 1
                Environment["stonith-type"] = "fence_rhevm"
 
-               print "Obtaining RHEV-M credentials from the current environment"
+               print("Obtaining RHEV-M credentials from the current environment")
                Environment["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
                    os.environ['RHEVM_USERNAME'],
                    os.environ['RHEVM_PASSWORD'],
@@ -485,7 +486,7 @@ if __name__ == '__main__':
            skipthis = 1
            (name, value) = args[i+1].split('=')
            Environment[name] = value
-           print "Setting %s = %s" % (name, value)
+           print("Setting %s = %s" % (name, value))
 
        elif args[i] == "--":
            break
@@ -540,11 +541,11 @@ if __name__ == '__main__':
         Environment["use_logd"] = 0
 
     else:
-        print "Unknown stack: "+Environment["Stack"]
+        print("Unknown stack: "+Environment["Stack"])
         sys.exit(1)
 
     if len(node_list) < 1:
-        print "No nodes specified!"
+        print("No nodes specified!")
         sys.exit(1)
 
     if LimitNodes > 0:
