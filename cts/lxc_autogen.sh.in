@@ -344,7 +344,7 @@ distribute_configs()
 {
     nodes=`crm_node -l | awk '{print $2}'`
     for node in $nodes; do
-		ssh $node -- mkdir -p /$working_dir
+		ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o BatchMode=yes -l root $node mkdir -p /$working_dir
 		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKeyChecking=no' $working_dir/lxc*.xml $node:/$working_dir
 		rsync -ave 'ssh -o UserKnownHostsFile=/dev/null -o BatchMode=yes -o StrictHostKeyChecking=no' $working_dir/lxc*-filesystem $node:/$working_dir
     done
