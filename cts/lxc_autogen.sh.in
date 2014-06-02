@@ -230,7 +230,7 @@ END
 		rm -f lxc$c-filesystem/launch-helper
 		cat << END >> lxc$c-filesystem/launch-helper
 #!/bin/bash
-ifconfig eth0 $prefix.$subnet.$suffix
+ip -f inet addr add $prefix.$subnet.$suffix/24 dev eth0
 route add 0.0.0.0 gw $addr.1 eth0
 hostname lxc$c
 df > $working_dir/lxc$c-filesystem/disk_usage.txt
