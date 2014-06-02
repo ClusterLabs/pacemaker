@@ -8,7 +8,6 @@ Online: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
  * Demote  dummystateful	(Master -> Started 18node2)
- * Restart dummystateful	(Started 18node3)
  * Move    dummystateful	(Started 18node2 -> 18node3)
 
 Executing cluster transition:
