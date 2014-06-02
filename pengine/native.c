@@ -2190,7 +2190,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
         possible_matches = find_actions(rsc->actions, key, NULL);
     } else {
-        possible_matches = find_actions(rsc->actions, key, next);
+        possible_matches = find_actions(rsc->actions, key, current);
     }
     free(key);
     if (possible_matches) {
