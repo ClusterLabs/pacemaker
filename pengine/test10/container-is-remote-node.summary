@@ -1,0 +1,51 @@
+
+Current cluster status:
+Online: [ lama2 lama3 ]
+Containers: [ RNVM1:VM1 ]
+
+ restofencelama2	(stonith:fence_ipmilan):	Started lama3 
+ restofencelama3	(stonith:fence_ipmilan):	Started lama2 
+ Clone Set: dlm-clone [dlm]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: gfs2-lv_1_1-clone [gfs2-lv_1_1]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: gfs2-lv_1_2-clone [gfs2-lv_1_2]
+     Stopped: [ RNVM1 lama2 lama3 ]
+ VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
+ Resource Group: RES1
+     FSdata1	(ocf::heartbeat:Filesystem):	Started RNVM1 
+     RES1-IP	(ocf::heartbeat:IPaddr2):	Started RNVM1 
+     res-rsyslog	(ocf::heartbeat:rsyslog.test):	Started RNVM1 
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Online: [ lama2 lama3 ]
+Containers: [ RNVM1:VM1 ]
+
+ restofencelama2	(stonith:fence_ipmilan):	Started lama3 
+ restofencelama3	(stonith:fence_ipmilan):	Started lama2 
+ Clone Set: dlm-clone [dlm]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: gfs2-lv_1_1-clone [gfs2-lv_1_1]
+     Started: [ lama2 lama3 ]
+     Stopped: [ RNVM1 ]
+ Clone Set: gfs2-lv_1_2-clone [gfs2-lv_1_2]
+     Stopped: [ RNVM1 lama2 lama3 ]
+ VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
+ Resource Group: RES1
+     FSdata1	(ocf::heartbeat:Filesystem):	Started RNVM1 
+     RES1-IP	(ocf::heartbeat:IPaddr2):	Started RNVM1 
+     res-rsyslog	(ocf::heartbeat:rsyslog.test):	Started RNVM1 
+
