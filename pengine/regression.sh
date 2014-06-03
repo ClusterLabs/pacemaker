@@ -739,6 +739,7 @@ do_test container-group-1 "Container in group - initial"
 do_test container-group-2 "Container in group - monitor failed"
 do_test container-group-3 "Container in group - stop failed"
 do_test container-group-4 "Container in group - reached migration-threshold"
+do_test container-is-remote-node "Place resource within container when container is remote-node"
 do_test bug-rh-1097457 "Kill user defined container/contents ordering"
 
 echo ""

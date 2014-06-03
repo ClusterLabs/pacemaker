@@ -2585,7 +2585,7 @@ class RemoteLXC(CTSTest):
 
         rc = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
         if rc == 1:
-            self.log("Environment test for lxc support failed."
+            self.log("Environment test for lxc support failed.")
             return self.skipped()
 
         self.start_lxc_simple(node)
