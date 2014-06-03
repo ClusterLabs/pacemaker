@@ -1463,17 +1463,40 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->container) {
-        crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
-        custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        resource_t *remote_rsc = NULL;
 
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
-                            pe_order_implies_first, data_set);
+        /* find out if the container is associated with remote node connection resource */
+        if (rsc->container->is_remote_node) {
+            remote_rsc = rsc->container;
+        } else if (rsc->is_remote_node == FALSE) {
+            remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
+        }
 
-        rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
-                           NULL, data_set);
+        /* if the container is a remote-node, force the resource within the container
+         * instead of colocating the resource with the container. */
+        if (remote_rsc) {
+            GHashTableIter iter;
+            node_t *node = NULL;
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+                if (node->details->remote_rsc != remote_rsc) {
+                    node->weight = -INFINITY;
+                }
+            }
+        } else {
+
+            crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
+            custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
+                                rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                                pe_order_implies_then | pe_order_runnable_left, data_set);
+
+            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                                rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
+                                pe_order_implies_first, data_set);
+
+            rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
+                               NULL, data_set);
+        }
     }
 
     if (rsc->is_remote_node || is_stonith) {
