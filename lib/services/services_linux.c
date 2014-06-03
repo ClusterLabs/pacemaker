@@ -282,7 +282,9 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
          * could occur before all the reads are done.  Force the read now.*/
         crm_trace("%s dispatching stderr", prefix);
         dispatch_stderr(op);
-        crm_trace("%s: %p", op->stderr_data);
+        crm_trace("%s: %p", op->id, op->stderr_data);
+        mainloop_del_fd(op->opaque->stderr_gsource);
+        op->opaque->stderr_gsource = NULL;
     }
 
     if (op->opaque->stdout_gsource) {
@@ -291,7 +293,9 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
          * could occur before all the reads are done.  Force the read now.*/
         crm_trace("%s dispatching stdout", prefix);
         dispatch_stdout(op);
-        crm_trace("%s: %p", op->stdout_data);
+        crm_trace("%s: %p", op->id, op->stdout_data);
+        mainloop_del_fd(op->opaque->stdout_gsource);
+        op->opaque->stdout_gsource = NULL;
     }
 
     if (signo) {
