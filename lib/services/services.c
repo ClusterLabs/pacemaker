@@ -361,6 +361,7 @@ cancel_recurring_action(svc_action_t * op)
 
     if (op->opaque->repeat_timer) {
         g_source_remove(op->opaque->repeat_timer);
+        op->opaque->repeat_timer = 0;
     }
 
     return TRUE;
@@ -378,13 +379,16 @@ services_action_cancel(const char *name, const char *action, int interval)
         return FALSE;
     }
 
+    /* Always kill the recurring timer */
+    cancel_recurring_action(op);
+
     if (op->pid == 0) {
-        cancel_recurring_action(op);
         op->status = PCMK_LRM_OP_CANCELLED;
         if (op->opaque->callback) {
             op->opaque->callback(op);
         }
         services_action_free(op);
+
     } else {
         crm_info("Cancelling in-flight op: performing early termination of %s (pid=%d)", id, op->pid);
         op->cancel = 1;
@@ -392,6 +396,7 @@ services_action_cancel(const char *name, const char *action, int interval)
             /* even though the early termination failed,
              * the op will be marked as cancelled once it completes. */
             crm_err("Termination of %s (pid=%d) failed", id, op->pid);
+            return FALSE;
         }
     }
 
