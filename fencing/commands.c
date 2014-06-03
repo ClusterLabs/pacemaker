@@ -506,22 +506,33 @@ parse_host_list(const char *hosts)
     return output;
 }
 
+GHashTable *metadata_cache = NULL;
+
 static xmlNode *
 get_agent_metadata(const char *agent)
 {
-    stonith_t *st = stonith_api_new();
     xmlNode *xml = NULL;
     char *buffer = NULL;
-    int rc = 0;
 
-    rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
-    if (rc || !buffer) {
-        crm_err("Could not retrieve metadata for fencing agent %s", agent);
-        return NULL;
+    if(metadata_cache == NULL) {
+        metadata_cache = g_hash_table_new_full(
+            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     }
+
+    buffer = g_hash_table_lookup(metadata_cache, agent);
+    if(buffer == NULL) {
+        stonith_t *st = stonith_api_new();
+        int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+
+        stonith_api_delete(st);
+        if (rc || !buffer) {
+            crm_err("Could not retrieve metadata for fencing agent %s", agent);
+            return NULL;
+        }
+        g_hash_table_replace(metadata_cache, strdup(agent), buffer);
+    }
+
     xml = string2xml(buffer);
-    free(buffer);
-    stonith_api_delete(st);
 
     return xml;
 }
