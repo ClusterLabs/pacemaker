@@ -1075,13 +1075,56 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
                   action->node ? action->node->details->uname : "");
 
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
-            /* Remove the orders like :
+            /* Remove the orders like the following if not needed or introducing transition loop:
              *     "load_stopped_node2" -> "rscA_migrate_to node1"
-             * which were created from: pengine/native.c: MigrateRsc()
+             * which were created also from: pengine/native.c: MigrateRsc()
              *     order_actions(other, then, other_w->type);
              */
-            wrapper->type = pe_order_none;
-            return FALSE;
+
+            /* For migrate_to ops, we care about where it has been
+             * allocated to, not where the action will be executed
+             */
+            if (wrapper->action->node == NULL || action->rsc->allocated_to == NULL
+                || wrapper->action->node->details != action->rsc->allocated_to->details) {
+                /* Check if the actions are for the same node, ignore otherwise */
+                crm_trace("load filter - migrate");
+                wrapper->type = pe_order_none;
+                return FALSE;
+
+            } else {
+                GListPtr lpc = NULL;
+
+                for (lpc = wrapper->action->actions_before; lpc != NULL; lpc = lpc->next) {
+                    action_wrapper_t *wrapper_before = (action_wrapper_t *) lpc->data;
+
+                    /* If there's any order like:
+                     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
+                     * rscA is being migrated from node1 to node2,
+                     * while rscB is being migrated from node2 to node1.
+                     * There will be potential transition loop.
+                     * Break the order "load_stopped_node2" -> "rscA_migrate_to node1".
+                     */
+
+                    if (wrapper_before->type != pe_order_load
+                        || is_set(wrapper_before->action->flags, pe_action_optional)
+                        || is_not_set(wrapper_before->action->flags, pe_action_migrate_runnable)
+                        || wrapper_before->action->node == NULL
+                        || wrapper->action->node == NULL
+                        || wrapper_before->action->node->details != wrapper->action->node->details) {
+                        continue;
+                    }
+
+                    if (wrapper_before->action->rsc
+                        && wrapper_before->action->rsc->allocated_to
+                        && action->node
+                        && wrapper_before->action->rsc->allocated_to->details == action->node->details) {
+
+                        crm_trace("load filter - migrate loop");
+                        wrapper->type = pe_order_none;
+                        return FALSE;
+                    }
+                }
+            }
 
         } else if (wrapper->action->node == NULL || action->node == NULL
                    || wrapper->action->node->details != action->node->details) {
