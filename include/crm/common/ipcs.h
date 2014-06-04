@@ -60,7 +60,7 @@ struct crm_remote_s {
 
 enum crm_client_flags
 {
-    crm_client_flag_have_events = 0x00001, /* ipc_proxy code only */
+    crm_client_flag_ipc_proxied = 0x00001, /* ipc_proxy code only */
 };
 
 struct crm_client_s {
@@ -90,6 +90,7 @@ struct crm_client_s {
     qb_ipcs_connection_t *ipcs; /* IPC */
 
     struct crm_remote_s *remote;        /* TCP/TLS */
+
 };
 
 extern GHashTable *client_connections;

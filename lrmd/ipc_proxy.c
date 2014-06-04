@@ -158,30 +158,21 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      * Looking at the chain of events.
      *
      * -----remote node----------------|---- cluster node ------
-     * ipc_client <--1--> this code <--2--> crmd:remote_proxy_cb() <----3----> ipc server
+     * ipc_client <--1--> this code <--2--> crmd:remote_proxy_cb/remote_proxy_relay_event() <----3----> ipc server
      *
      * This function is receiving a msg from connection 2
      * and forwarding it to connection 1.
      */
 
     if (safe_str_eq(msg_type, "event")) {
-        if(ipc_client->request_id) {
-            crm_info("Sending response for request %u to %s", ipc_client->request_id, ipc_client->id);
-            CRM_LOG_ASSERT(is_not_set(ipc_client->flags, crm_client_flag_have_events));
-            rc = crm_ipcs_send(ipc_client, ipc_client->request_id, msg, FALSE);
-            ipc_client->request_id = 0;
-
-        } else {
-            crm_info("Sending event to %s", ipc_client->request_id, ipc_client->id);
-            set_bit(ipc_client->flags, crm_client_flag_have_events);
-            rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
-        }
+        crm_info("Sending event to %s", ipc_client->id);
+        rc = crm_ipcs_send(ipc_client, 0, msg, crm_ipc_server_event);
 
     } else if (safe_str_eq(msg_type, "response")) {
         int msg_id = 0;
-        /* For backwards compatibility with crmd <= 1.1.10 */
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
+        crm_info("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
         rc = crm_ipcs_send(ipc_client, msg_id, msg, FALSE);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
@@ -204,7 +195,6 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    int api_options = 0;
     crm_client_t *client = crm_client_get(c);
     crm_client_t *ipc_proxy = crm_client_get_by_id(client->userdata);
     xmlNode *request = NULL;
@@ -237,41 +227,10 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
               return FALSE);
 
-    /* We send things out as async requests to avoid blocking in the
-     * crmd but 'ipc_client' is expecting a synchronous response
-     *
-     * Record the request_id here and assume the next event
-     * destined for 'ipc_client' is the reply
-     *
-     * This will break badly if a client makes a synchronous call
-     * after events start arriving.  No known clients do this
-     * though
-     */
-
+    /* this ensures that synced request/responses happen over the event channel
+     * in the crmd, allowing the crmd to process the messages async */
     set_bit(flags, crm_ipc_proxied);
-
-    /* Now clear the sync option from each message type
-     * Not ideal, but necessary
-     */
-    crm_element_value_int(request, F_CIB_CALLOPTS, &api_options);
-    if(api_options & cib_sync_call) {
-        client->request_id = id;
-        crm_info("Fixing and forwarding cib request %u for %s", client->request_id, client->name);
-
-        clear_bit(api_options, cib_sync_call);
-        crm_xml_add_int(request, F_CIB_CALLOPTS, api_options);
-        CRM_LOG_ASSERT(is_not_set(client->flags, crm_client_flag_have_events));
-    }
-
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &api_options);
-    if(api_options & st_opt_sync_call) {
-        client->request_id = id;
-        crm_info("Fixing and forwarding st request %u for %s", client->request_id, client->name);
-
-        clear_bit(api_options, st_opt_sync_call);
-        crm_xml_add_int(request, F_STONITH_CALLOPTS, api_options);
-        CRM_LOG_ASSERT(is_not_set(client->flags, crm_client_flag_have_events));
-    }
+    client->request_id = id;
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(msg, F_LRMD_IPC_OP, "request");

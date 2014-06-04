@@ -413,6 +413,13 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
         *flags = header->flags;
     }
 
+    if (is_set(header->flags, crm_ipc_proxied)) {
+        /* mark this client as being the endpoint of a proxy connection.
+         * Proxy connections responses are sent on the event channel to avoid
+         * blocking the proxy daemon (crmd) */
+        c->flags |= crm_client_flag_ipc_proxied;
+    }
+
     if(header->version > PCMK_IPC_VERSION) {
         crm_err("Filtering incompatible v%d IPC message, we only support versions <= %d",
                 header->version, PCMK_IPC_VERSION);
@@ -611,11 +618,17 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
     static uint32_t id = 1;
     struct crm_ipc_response_header *header = iov[0].iov_base;
 
-    if (flags & crm_ipc_proxied) {
+    if (c->flags & crm_client_flag_ipc_proxied) {
         /* _ALL_ replies to proxied connections need to be sent as events */
-        flags |= crm_ipc_server_event;
+        if (is_not_set(flags, crm_ipc_server_event)) {
+            flags |= crm_ipc_server_event;
+            /* this flag lets us know this was originally meant to be a response.
+             * even though we're sending it over the event channel. */
+            flags |= crm_ipc_proxied_relay_response;
+        }
     }
 
+    header->flags |= flags;
     if (flags & crm_ipc_server_event) {
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
@@ -727,6 +740,7 @@ struct crm_ipc_s {
     int need_reply;
     char *buffer;
     char *name;
+    uint32_t buffer_flags;
 
     qb_ipcc_connection_t *ipc;
 
@@ -989,6 +1003,20 @@ crm_ipc_buffer(crm_ipc_t * client)
 {
     CRM_ASSERT(client != NULL);
     return client->buffer + sizeof(struct crm_ipc_response_header);
+}
+
+uint32_t
+crm_ipc_buffer_flags(crm_ipc_t * client)
+{
+    struct crm_ipc_response_header *header = NULL;
+
+    CRM_ASSERT(client != NULL);
+    if (client->buffer == NULL) {
+        return 0;
+    }
+
+    header = (struct crm_ipc_response_header *)(void*)client->buffer;
+    return header->flags;
 }
 
 const char *
