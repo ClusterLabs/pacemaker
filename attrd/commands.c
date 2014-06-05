@@ -63,8 +63,8 @@ typedef struct attribute_value_s {
 
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
-void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
-void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter, bool force_write);
+void attrd_peer_sync(crm_node_t *peer, xmlNode *xml, bool force_write);
 void attrd_peer_remove(const char *host, const char *source);
 
 static gboolean
@@ -250,7 +250,12 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
 
     } else if(safe_str_eq(op, "refresh")) {
         crm_info("Updating all attributes");
-        write_attributes(TRUE, FALSE);
+        if (election_state(writer) == election_won) {
+            write_attributes(TRUE, FALSE);
+        } else {
+            /* Consigned the refesh of the attribute to attrd which is "election_won". */
+            attrd_peer_sync(NULL, NULL, TRUE);
+        }
     }
 
     if(broadcast) {
@@ -265,6 +270,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     const char *v = crm_element_value(xml, F_ATTRD_VERSION);
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
+    const char *force_write = crm_element_value(xml, F_ATTRD_FORCE_WRITE);
 
     if(election_op) {
         enum election_result rc = 0;
@@ -293,7 +299,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
 
             crm_trace("Compatibility update of %s from %s", name, peer->uname);
-            attrd_peer_update(peer, xml, FALSE);
+            attrd_peer_update(peer, xml, FALSE, FALSE);
 
         } else if(safe_str_eq(op, "flush")) {
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
@@ -336,10 +342,10 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     }
 
     if(safe_str_eq(op, "update")) {
-        attrd_peer_update(peer, xml, FALSE);
+        attrd_peer_update(peer, xml, FALSE, FALSE);
 
     } else if(safe_str_eq(op, "sync")) {
-        attrd_peer_sync(peer, xml);
+        attrd_peer_sync(peer, xml, FALSE);
 
     } else if(safe_str_eq(op, "peer-remove")) {
         const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -351,13 +357,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
         crm_notice("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
-            attrd_peer_update(peer, child, TRUE);
+            attrd_peer_update(peer, child, TRUE, crm_is_true(force_write));
         }
     }
 }
 
 void
-attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
+attrd_peer_sync(crm_node_t *peer, xmlNode *xml, bool force_write)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
@@ -367,6 +373,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
 
     crm_xml_add(sync, F_ATTRD_TASK, "sync-response");
+    crm_xml_add(sync, F_ATTRD_FORCE_WRITE, force_write ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
@@ -405,7 +412,7 @@ attrd_peer_remove(const char *host, const char *source)
 }
 
 void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
+attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter, bool force_write)
 {
     bool changed = FALSE;
     attribute_value_t *v = NULL;
@@ -459,7 +466,12 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
         changed = TRUE;
 
     } else {
-        crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
+        if (force_write) {
+            changed = TRUE;
+            crm_debug("Unchanged %s[%s] from %s is %s.(Forced)", attr, host, peer->uname, value);
+        } else {
+            crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
+        }
     }
 
     a->changed |= changed;
@@ -515,7 +527,7 @@ attrd_election_cb(gpointer user_data)
     peer_writer = strdup(attrd_cluster->uname);
 
     /* Update the peers after an election */
-    attrd_peer_sync(NULL, NULL);
+    attrd_peer_sync(NULL, NULL, FALSE);
 
     /* Update the CIB after an election */
     write_attributes(TRUE, FALSE);
@@ -530,7 +542,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
         && kind == crm_status_nstate
         && safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
 
-        attrd_peer_sync(peer, NULL);
+        attrd_peer_sync(peer, NULL, FALSE);
 
     } else if(kind == crm_status_nstate
               && safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
