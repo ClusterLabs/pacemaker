@@ -255,7 +255,7 @@ apply_cib_master()
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -Mc -x tmp_constraint
-		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
 		rm -f tmp_constraint
 	done
@@ -299,7 +299,7 @@ restore_cib()
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
-		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
 		rm -f tmp_constraint
 	done
