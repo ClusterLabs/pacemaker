@@ -3,7 +3,7 @@
 Classes related to testing high-availability clusters...
  '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
 '''
@@ -237,8 +237,8 @@ class NodeStatus:
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
         '''Return TRUE when given node comes up, or None/FALSE if timeout'''
-        timeout=Timeout
-        anytimeouts=0
+        timeout = Timeout
+        anytimeouts = 0
         while timeout > 0:
             if self.IsNodeBooted(node) and self.IsSshdUp(node):
                 if anytimeouts:
@@ -251,7 +251,7 @@ class NodeStatus:
             if (not anytimeouts):
                 LogFactory().debug("Waiting for node %s to come up" % node)
 
-            anytimeouts=1
+            anytimeouts = 1
             timeout = timeout - 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, Timeout))
@@ -266,6 +266,7 @@ class NodeStatus:
             if not self.WaitForNodeToComeUp(node, timeout):
                 return None
         return 1
+
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -305,7 +306,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteFactory().getInstance()
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
-        self.OurNode=string.lower(os.uname()[1])
+        self.OurNode = string.lower(os.uname()[1])
         self.__instance_errorstoignore = []
 
     def __getitem__(self, key):
@@ -349,29 +350,29 @@ class ClusterManager(UserDict):
         print repr(self)+"prepare"
         for node in self.Env["nodes"]:
             if self.StataCM(node):
-                self.ShouldBeStatus[node]="up"
+                self.ShouldBeStatus[node] = "up"
             else:
-                self.ShouldBeStatus[node]="down"
+                self.ShouldBeStatus[node] = "down"
 
             self.unisolate_node(node)
 
     def upcount(self):
         '''How many nodes are up?'''
-        count=0
+        count = 0
         for node in self.Env["nodes"]:
-          if self.ShouldBeStatus[node]=="up":
-            count=count+1
+          if self.ShouldBeStatus[node] == "up":
+            count = count + 1
         return count
 
     def install_helper(self, filename, destdir=None, nodes=None, sourcedir=None):
         if sourcedir == None:
             sourcedir = CTSvars.CTS_home
-        file_with_path="%s/%s" % (sourcedir, filename)
+        file_with_path = "%s/%s" % (sourcedir, filename)
         if not nodes:
             nodes = self.Env["nodes"]
 
         if not destdir:
-            destdir=CTSvars.CTS_home
+            destdir = CTSvars.CTS_home
 
         self.debug("Installing %s to %s on %s" % (filename, destdir, repr(self.Env["nodes"])))
         for node in nodes:
@@ -394,7 +395,7 @@ class ClusterManager(UserDict):
     def prepare_fencing_watcher(self, node):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
-        upnode=None
+        upnode = None
         if self.HasQuorum(None):
             return None
 
@@ -450,7 +451,7 @@ class ClusterManager(UserDict):
         shot = stonith.look(0)
         while shot:
             line = repr(shot)
-            self.debug("Found: "+ line)
+            self.debug("Found: " + line)
             del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
@@ -469,7 +470,7 @@ class ClusterManager(UserDict):
                 self.logger.log("ERROR: Unknown stonith match: %s" % line)
 
             elif not peer in peer_list:
-                self.debug("Found peer: "+ peer)
+                self.debug("Found peer: " + peer)
                 peer_list.append(peer)
 
             # Get the next one
@@ -488,7 +489,7 @@ class ClusterManager(UserDict):
                 shot = stonith.look(60)
                 while len(stonith.regexes) and shot:
                     line = repr(shot)
-                    self.debug("Found: "+ line)
+                    self.debug("Found: " + line)
                     del stonith.regexes[stonith.whichmatch]
                     shot = stonith.look(60)
 
@@ -509,8 +510,8 @@ class ClusterManager(UserDict):
     def StartaCM(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node'''
-        if verbose: self.logger.log("Starting %s on node %s" %(self.templates["Name"], node))
-        else: self.debug("Starting %s on node %s" %(self.templates["Name"], node))
+        if verbose: self.logger.log("Starting %s on node %s" % (self.templates["Name"], node))
+        else: self.debug("Starting %s on node %s" % (self.templates["Name"], node))
         ret = 1
 
         if not self.ShouldBeStatus.has_key(node):
@@ -534,7 +535,7 @@ class ClusterManager(UserDict):
 
         self.ShouldBeStatus[node] = "any"
         if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
-            self.logger.log ("%s was already started" %(node))
+            self.logger.log ("%s was already started" % (node))
             return 1
 
         # Clear out the host cache so autojoin can be exercised
@@ -558,16 +559,16 @@ class ClusterManager(UserDict):
         watch.setwatch()
 
         if self.rsh(node, startCmd) != 0:
-            self.logger.log ("Warn: Start command failed on node %s" %(node))
+            self.logger.log ("Warn: Start command failed on node %s" % (node))
             self.fencing_cleanup(node, stonith)
             return None
 
-        self.ShouldBeStatus[node]="up"
+        self.ShouldBeStatus[node] = "up"
         watch_result = watch.lookforall()
 
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.logger.log ("Warn: Startup pattern not found: %s" %(regex))
+                self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
 
         if watch_result and self.cluster_stable(self.Env["DeadTime"]):
             #self.debug("Found match: "+ repr(watch_result))
@@ -578,15 +579,15 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return 1
 
-        self.logger.log ("Warn: Start failed for node %s" %(node))
+        self.logger.log ("Warn: Start failed for node %s" % (node))
         return None
 
     def StartaCMnoBlock(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node with none-block mode'''
 
-        if verbose: self.logger.log("Starting %s on node %s" %(self["Name"], node))
-        else: self.debug("Starting %s on node %s" %(self["Name"], node))
+        if verbose: self.logger.log("Starting %s on node %s" % (self["Name"], node))
+        else: self.debug("Starting %s on node %s" % (self["Name"], node))
 
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
@@ -606,15 +607,15 @@ class ClusterManager(UserDict):
                 self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self.templates["StartCmd"])
 
         self.rsh(node, startCmd, synchronous=0)
-        self.ShouldBeStatus[node]="up"
+        self.ShouldBeStatus[node] = "up"
         return 1
 
     def StopaCM(self, node, verbose=False, force=False):
 
         '''Stop the cluster manager on a given node'''
 
-        if verbose: self.logger.log("Stopping %s on node %s" %(self["Name"], node))
-        else: self.debug("Stopping %s on node %s" %(self["Name"], node))
+        if verbose: self.logger.log("Stopping %s on node %s" % (self["Name"], node))
+        else: self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         if self.ShouldBeStatus[node] != "up" and force == False:
             return 1
@@ -623,11 +624,11 @@ class ClusterManager(UserDict):
             # Make sure we can continue even if corosync leaks
             # fdata-* is the old name
             #self.rsh(node, "rm -f /dev/shm/qb-* /dev/shm/fdata-*")
-            self.ShouldBeStatus[node]="down"
+            self.ShouldBeStatus[node] = "down"
             self.cluster_stable(self.Env["DeadTime"])
             return 1
         else:
-            self.logger.log ("ERROR: Could not stop %s on node %s" %(self["Name"], node))
+            self.logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
 
         return None
 
@@ -635,10 +636,10 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node with none-block mode'''
 
-        self.debug("Stopping %s on node %s" %(self["Name"], node))
+        self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         self.rsh(node, self.templates["StopCmd"], synchronous=0)
-        self.ShouldBeStatus[node]="down"
+        self.ShouldBeStatus[node] = "down"
         return 1
 
     def cluster_stable(self, timeout = None):
@@ -661,7 +662,6 @@ class ClusterManager(UserDict):
             %        (self["Name"], node))
         return None
 
-
     def StataCM(self, node):
 
         '''Report the status of the cluster manager on a given node'''
@@ -682,8 +682,10 @@ class ClusterManager(UserDict):
                     %        (node, "down", self.ShouldBeStatus[node]))
         except KeyError:        pass
 
-        if ret:        self.ShouldBeStatus[node]="up"
-        else:        self.ShouldBeStatus[node]="down"
+        if ret:
+            self.ShouldBeStatus[node] = "up"
+        else:
+            self.ShouldBeStatus[node] = "down"
         return ret
 
     def startall(self, nodelist=None, verbose=False, quick=False):
@@ -693,7 +695,7 @@ class ClusterManager(UserDict):
         '''
         map = {}
         if not nodelist:
-            nodelist=self.Env["nodes"]
+            nodelist = self.Env["nodes"]
 
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
@@ -724,7 +726,7 @@ class ClusterManager(UserDict):
         watch.lookforall()
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.logger.log ("Warn: Startup pattern not found: %s" %(regex))
+                self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
 
         if not self.cluster_stable():
             self.logger.log("Cluster did not stabilize")
@@ -741,7 +743,7 @@ class ClusterManager(UserDict):
         ret = 1
         map = {}
         if not nodelist:
-            nodelist=self.Env["nodes"]
+            nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up" or force == True:
                 if not self.StopaCM(node, verbose=verbose, force=force):
@@ -757,11 +759,10 @@ class ClusterManager(UserDict):
 
         map = {}
         if not nodelist:
-            nodelist=self.Env["nodes"]
+            nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
                 self.RereadCM(node)
-
 
     def statall(self, nodelist=None):
 
@@ -769,9 +770,9 @@ class ClusterManager(UserDict):
         We can do it on a subset of the cluster if nodelist is not None.
         '''
 
-        result={}
+        result = {}
         if not nodelist:
-            nodelist=self.Env["nodes"]
+            nodelist = self.Env["nodes"]
         for node in nodelist:
             if self.StataCM(node):
                 result[node] = "up"
@@ -821,7 +822,7 @@ class ClusterManager(UserDict):
     def restorecomm_node(self,node):
         '''restore the saved communication between the nodes'''
         rc = 0
-        if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
+        if float(self.Env["XmitLoss"]) != 0 or float(self.Env["RecvLoss"]) != 0 :
             rc = self.rsh(node, self.templates["RestoreCommCmd"]);
         if rc == 0:
             return 1
@@ -964,7 +965,6 @@ class Resource:
         raise ValueError("Abstract Class member (IsWorkingCorrectly)")
         return None
 
-
     def Start(self, nodename):
         '''
         This member function starts or activates the resource.
@@ -984,9 +984,12 @@ class Resource:
                 return "{" + self.ResourceType + "::" + self.Instance + "}"
         else:
                 return "{" + self.ResourceType + "}"
+
+
 class Component:
     def kill(self, node):
         None
+
 
 class Process(Component):
     def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], common_ignore=[], triggersreboot=0):
@@ -1007,6 +1010,6 @@ class Process(Component):
 
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
-            self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))
+            self.CM.log ("ERROR: Kill %s failed on node %s" % (self.name,node))
             return None
         return 1

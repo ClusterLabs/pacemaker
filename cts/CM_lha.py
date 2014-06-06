@@ -1,7 +1,7 @@
 '''CTS: Cluster Testing System: LinuxHA v2 dependent modules...
 '''
 
-__copyright__='''
+__copyright__ = '''
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright (C) 2004 International Business Machines
 
@@ -103,12 +103,12 @@ class crm_lha(ClusterManager):
 
             self.cib_installed = 1
             if self.Env["CIBfilename"] == None:
-                self.log("Installing Generated CIB on node %s" %(node))
+                self.log("Installing Generated CIB on node %s" % (node))
                 self.cib.install(node)
 
             else:
-                self.log("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
-                if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"]%node)):
+                self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
+                if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)):
                     raise ValueError("Can not scp file to %s %d"%(node))
         
             self.rsh(node, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
@@ -139,16 +139,16 @@ class crm_lha(ClusterManager):
             if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %(node, "down", self.ShouldBeStatus[node]))
-            self.ShouldBeStatus[node]="down"
+                    % (node, "down", self.ShouldBeStatus[node]))
+            self.ShouldBeStatus[node] = "down"
             return 0
 
         if self.ShouldBeStatus[node] == "down":
             self.log(
                 "Node status for %s is %s but we think it should be %s: %s"
-                %(node, "up", self.ShouldBeStatus[node], out))
+                % (node, "up", self.ShouldBeStatus[node], out))
 
-        self.ShouldBeStatus[node]="up"
+        self.ShouldBeStatus[node] = "up"
 
         # check the output first - because syslog-ng looses messages
         if string.find(out, 'S_NOT_DC') != -1:
@@ -161,7 +161,7 @@ class crm_lha(ClusterManager):
         # fall back to syslog-ng and wait
         if not idle_watch.look():
             # just up
-            self.debug("Warn: Node %s is unstable: %s" %(node, out))
+            self.debug("Warn: Node %s is unstable: %s" % (node, out))
             return 1
 
         # Up and stable
@@ -181,7 +181,7 @@ class crm_lha(ClusterManager):
 
         if self.test_node_CM(node) == 2:
             return 1
-        self.log("Warn: Node %s not stable" %(node)) 
+        self.log("Warn: Node %s not stable" % (node)) 
         return None
 
     def partition_stable(self, nodes, timeout=None):
@@ -202,7 +202,7 @@ class crm_lha(ClusterManager):
 
         for node in nodes.split():
             # have each node dump its current state
-            self.rsh(node, self.templates["StatusCmd"] %node, 1)
+            self.rsh(node, self.templates["StatusCmd"] % node, 1)
 
         ret = idle_watch.look()
         while ret:
@@ -292,23 +292,23 @@ class crm_lha(ClusterManager):
                 partition = self.rsh(node, self.templates["ParitionCmd"], 1)
 
                 if not partition:
-                    self.log("no partition details for %s" %node)
+                    self.log("no partition details for %s" % node)
                 elif len(partition) > 2:
                     partition = partition[:-1]
-                    found=0
+                    found = 0
                     for a_partition in ccm_partitions:
                         if partition == a_partition:
                             found = 1
                     if found == 0:
-                        self.debug("Adding partition from %s: %s" %(node, partition))
+                        self.debug("Adding partition from %s: %s" % (node, partition))
                         ccm_partitions.append(partition)
                     else:
-                        self.debug("Partition '%s' from %s is consistent with existing entries" %(partition, node))
+                        self.debug("Partition '%s' from %s is consistent with existing entries" % (partition, node))
 
                 else:
-                    self.log("bad partition details for %s" %node)
+                    self.log("bad partition details for %s" % node)
             else:
-                self.debug("Node %s is down... skipping" %node)
+                self.debug("Node %s is down... skipping" % node)
 
         return ccm_partitions
 
@@ -328,7 +328,7 @@ class crm_lha(ClusterManager):
                 elif string.find(quorum, "0") != -1:
                     return 0
                 else:
-                    self.debug("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
+                    self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)
 
         return 0
     def Components(self):    
@@ -473,14 +473,14 @@ class crm_lha(ClusterManager):
     def NodeUUID(self, node):
         lines = self.rsh(node, self.templates["UUIDQueryCmd"], 1)
         for line in lines:
-            self.debug("UUIDLine:"+ line)
+            self.debug("UUIDLine:" + line)
             m = re.search(r'%s.+\((.+)\)' % node, line)
             if m:
                 return m.group(1)
         return ""
 
     def StandbyStatus(self, node):
-        out=self.rsh(node, self.templates["StandbyQueryCmd"]%node, 1)
+        out=self.rsh(node, self.templates["StandbyQueryCmd"] % node, 1)
         if not out:
             return "off"
         out = out[:-1]

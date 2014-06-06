@@ -1,6 +1,6 @@
 '''CTS: Cluster Testing System: CIB generator
 '''
-__copyright__='''
+__copyright__ = '''
 Author: Andrew Beekhof <abeekhof@suse.de>
 Copyright (C) 2008 Andrew Beekhof
 '''
@@ -10,6 +10,7 @@ import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager
+
 
 class CibBase:
     def __init__(self, Factory, tag, _id, **kwargs):
@@ -34,6 +35,7 @@ class CibBase:
 
 from cib_xml import *
 
+
 class ConfigBase:
     cts_cib = None
     version = "unknown"
@@ -46,7 +48,7 @@ class ConfigBase:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
-            tmpfile=os.tmpnam()
+            tmpfile = os.tmpnam()
             warnings.resetwarnings()
 
         self.Factory.tmpfile = tmpfile
@@ -66,6 +68,7 @@ class ConfigBase:
         ip = prefix + sep + suffix
         self.CM.Env["IPBase"] = ip
         return ip.strip()
+
 
 class CIB11(ConfigBase):
     feature_set = "3.0"
@@ -102,7 +105,6 @@ class CIB11(ConfigBase):
             if not name:
                 name = "r%s%d" % (self.CM.Env["IPagent"], counter)
                 self.counter = self.counter + 1
-
 
         r.add_op("monitor", "5s")
         return r
@@ -313,6 +315,7 @@ class CIB11(ConfigBase):
 
         lsb.commit()
 
+
 class CIB12(CIB11):
     feature_set = "3.0"
     version = "pacemaker-1.2"
@@ -332,6 +335,7 @@ class CIB20(CIB11):
 #        self._create('''clone o2cb-clone o2cb meta globally-unique=false interleave=true''')
 #        self._create('''colocation o2cb-with-dlm INFINITY: o2cb-clone dlm-clone''')
 #        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
+
 
 class ConfigFactory:
     def __init__(self, CM):
@@ -379,6 +383,7 @@ class ConfigFactory:
 
         return self.pacemaker12()
 
+
 class ConfigFactoryItem:
     def __init__(self, function, *args, **kargs):
         assert callable(function), "function should be a callable obj"
@@ -406,7 +411,7 @@ if __name__ == '__main__':
 
     env["CIBResource"] = 1
     env["IPBase"] = "fe80::1234:56:7890:1000"
-    env["DoStonith"]=1
+    env["DoStonith"] = 1
     env["stonith-type"] = "fence_xvm"
     env["stonith-params"] = "pcmk_arg_map=domain:uname"
 

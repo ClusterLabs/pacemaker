@@ -1318,7 +1318,6 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         if (is_action_required(query->action, device)) {
             crm_xml_add_int(dev, F_STONITH_DEVICE_REQUIRED, 1);
         }
-        crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
         if (action_specific_timeout) {
             crm_xml_add_int(dev, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
         }

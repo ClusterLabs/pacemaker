@@ -1,6 +1,6 @@
 '''CTS: Cluster Testing System: CIB generator
 '''
-__copyright__='''
+__copyright__ = '''
 Author: Andrew Beekhof <abeekhof@suse.de>
 Copyright (C) 2008 Andrew Beekhof
 '''
@@ -11,6 +11,7 @@ import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager
 from cts.CIB     import CibBase
+
 
 class XmlBase(CibBase):
     def __init__(self, Factory, tag, _id, **kwargs):
@@ -56,7 +57,6 @@ class FencingTopology(XmlBase):
         self._run("create", self.show(), "configuration", "--allow-create")
 
 
-
 class Option(XmlBase):
     def __init__(self, Factory, name=None, value=None, section="cib-bootstrap-options"):
         XmlBase.__init__(self, Factory, "cluster_property_set", section)
@@ -69,11 +69,13 @@ class Option(XmlBase):
     def commit(self):
         self._run("modify", self.show(), "crm_config", "--allow-create")
 
+
 class Expression(XmlBase):
     def __init__(self, Factory, name, attr, op, value=None):
         XmlBase.__init__(self, Factory, "expression", name, attribute=attr, operation=op)
         if value:
             self["value"] = value
+
 
 class Rule(XmlBase):
     def __init__(self, Factory, name, score, op="and", expr=None):
@@ -83,6 +85,7 @@ class Rule(XmlBase):
         if expr:
             self.add_child(expr)
 
+
 class Resource(XmlBase):
     def __init__(self, Factory, name, rtype, standard, provider=None):
         XmlBase.__init__(self, Factory, "native", name)
@@ -91,13 +94,13 @@ class Resource(XmlBase):
         self.standard = standard
         self.provider = provider
 
-        self.op=[]
-        self.meta={}
-        self.param={}
+        self.op = []
+        self.meta = {}
+        self.param = {}
 
-        self.scores={}
-        self.needs={}
-        self.coloc={}
+        self.scores = {}
+        self.needs = {}
+        self.coloc = {}
 
         if self.standard == "ocf" and not provider:
             self.provider = "heartbeat"
@@ -227,6 +230,7 @@ class Group(Resource):
         text += '''</%s>''' % self.tag
         return text
 
+
 class Clone(Group):
     def __init__(self, Factory, name, child=None):
         Group.__init__(self, Factory, name)
@@ -239,6 +243,7 @@ class Clone(Group):
             self.children.append(resource)
         else:
             self.Factory.log("Clones can only have a single child. Ignoring %s" % resource.name)
+
 
 class Master(Clone):
     def __init__(self, Factory, name, child=None):

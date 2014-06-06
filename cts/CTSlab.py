@@ -3,7 +3,7 @@
 '''CTS: Cluster Testing System: Lab environment module
  '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2001,2005 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
 '''
@@ -26,7 +26,7 @@ Licensed under the GNU GPL.
 from UserDict import UserDict
 import sys, types, string, string, signal, os, socket
 
-pdir=os.path.dirname(sys.path[0])
+pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
@@ -57,7 +57,6 @@ cm = None
 scenario = None
 
 LogFactory().add_stderr()
-
 def sig_handler(signum, frame) :
     LogFactory().log("Interrupted by signal %d"%signum)
     if scenario: scenario.summarize()

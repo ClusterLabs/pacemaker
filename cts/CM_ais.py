@@ -1,7 +1,7 @@
 '''CTS: Cluster Testing System: AIS dependent modules...
 '''
 
-__copyright__='''
+__copyright__ = '''
 Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 
 '''
@@ -32,6 +32,7 @@ from cts.patterns    import PatternSelector
 #  LinuxHA v2 dependent modules
 #
 #######################################################################
+
 
 class crm_ais(crm_lha):
     '''
@@ -87,6 +88,7 @@ class crm_ais(crm_lha):
         #self.complist = [ fullcomplist["pengine"] ]
         return complist
 
+
 class crm_cs_v0(crm_ais):
     '''
     The crm version 3 cluster manager class.
@@ -111,6 +113,7 @@ class crm_cs_v0(crm_ais):
 
         return self.ais_components()
 
+
 class crm_cs_v1(crm_cs_v0):
     '''
     The crm version 3 cluster manager class.
@@ -121,6 +124,7 @@ class crm_cs_v1(crm_cs_v0):
     def __init__(self, Environment, randseed=None, name=None):
         if not name: name="crm-plugin-v1"
         crm_cs_v0.__init__(self, Environment, randseed=randseed, name=name)
+
 
 class crm_mcp(crm_cs_v0):
     '''
@@ -137,6 +141,7 @@ class crm_mcp(crm_cs_v0):
                 # When systemd is in use, we can look for this instead
                 "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
             })
+
 
 class crm_cman(crm_cs_v0):
     '''
