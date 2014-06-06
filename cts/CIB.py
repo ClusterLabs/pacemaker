@@ -103,8 +103,9 @@ class CIB11(ConfigBase):
 
         else:
             if not name:
-                name = "r%s%d" % (self.CM.Env["IPagent"], counter)
+                name = "r%s%d" % (self.CM.Env["IPagent"], self.counter)
                 self.counter = self.counter + 1
+	    r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
 
         r.add_op("monitor", "5s")
         return r

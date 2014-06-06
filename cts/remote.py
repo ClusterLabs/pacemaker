@@ -224,6 +224,6 @@ class RemoteFactory:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         print "Using QARSH for connections to cluster nodes"
 
-        rsh.Command = "qarsh -t 300 -l root"
-        rsh.CpCommand = "qacp -q"
+        RemoteFactory.rsh.Command = "qarsh -t 300 -l root"
+        RemoteFactory.rsh.CpCommand = "qacp -q"
 
