@@ -157,16 +157,8 @@ class FileObj(SearchObj):
 
         self.next()
 
-    def next(self):
-        cache = []
-
-        global log_watcher_bin
-        (rc, lines) = self.rsh(
-                self.host,
-                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
-                stdout=None, silent=True, blocking=False)
-
-        for line in lines:
+    def async_complete(self, pid, returncode, outLines, errLines):
+        for line in outLines:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
             if match:
                 last_offset = self.offset
@@ -178,9 +170,36 @@ class FileObj(SearchObj):
             elif re.search("^CTSwatcher:", line):
                 self.debug("Got control line: "+ line)
             else:
-                cache.append(line)
+                self.cache.append(line)
 
-        return cache
+        self.in_progress = False
+        if self.delegate:
+            self.delegate.async_complete(pid, returncode, self.cache, errLines)
+
+    def next(self, delegate=None):
+        self.cache = []
+        self.in_progress = True
+
+        dosync = True
+        if delegate:
+            dosync = False
+            self.delegate = delegate
+        else:
+            delegate = self
+            self.delegate = None
+
+        global log_watcher_bin
+        self.rsh(self.host,
+                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
+                stdout=None, silent=True, synchronous=dosync, completionDelegate=self)
+
+        if delegate:
+            return []
+
+        while self.in_progress:
+            time.sleep(1)
+
+        return self.cache
 
 class JournalObj(SearchObj):
 
@@ -188,24 +207,46 @@ class JournalObj(SearchObj):
         SearchObj.__init__(self, name, host, name)
         self.next()
 
-    def next(self):
-        cache = []
-        command = "journalctl -q --after-cursor='%s' --show-cursor" % (self.offset)
-        if self.offset == "EOF":
-            command = "journalctl -q -n 0 --show-cursor"
-
-        (rc, lines) = self.rsh(self.host, command, stdout=None, silent=True, blocking=False)
-
-        for line in lines:
+    def async_complete(self, pid, returncode, outLines, errLines):
+        #print "%d returned on %s" % (pid, self.host)
+        for line in outLines:
             match = re.search("^-- cursor: ([^.]+)", line)
             if match:
                 last_offset = self.offset
-                self.offset = match.group(1)
-                self.debug("Got %d lines, new cursor: %s" % (len(lines), self.offset))
+                self.offset = match.group(1).strip()
+                self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
             else:
-                cache.append(line)
+                self.cache.append(line)
 
-        return cache
+        self.in_progress = False
+        if self.delegate:
+            self.delegate.async_complete(pid, returncode, self.cache, errLines)
+
+    def next(self, delegate=None):
+        self.cache = []
+        self.in_progress = True
+
+        dosync = True
+        if delegate:
+            dosync = False
+            self.delegate = delegate
+        else:
+            delegate = self
+            self.delegate = None
+
+        # Use --lines to prevent journalctl from overflowing the Popen input buffer
+        command = "journalctl -q --after-cursor='%s' --lines=500 --show-cursor" % (self.offset)
+        if self.offset == "EOF":
+            command = "journalctl -q -n 0 --show-cursor"
+
+        self.rsh(self.host, command, stdout=None, silent=True, synchronous=dosync, completionDelegate=self)
+        if delegate:
+            return []
+
+        while self.in_progress:
+            time.sleep(1)
+
+        return self.cache
 
 class LogWatcher(RemoteExec):
 
@@ -296,14 +337,26 @@ class LogWatcher(RemoteExec):
         '''
         self.returnonlymatch = onlymatch
 
+    def async_complete(self, pid, returncode, outLines, errLines):
+        self.pending = self.pending - 1
+        if len(outLines):
+            self.line_cache.extend(outLines)
+        #print "Got %d lines from %d" % (len(outLines), pid)
+
     def __get_lines(self):
         if not len(self.file_list):
             raise ValueError("No sources to read from")
 
+        self.pending = len(self.file_list)
+        #print "%s waiting for %d operations" % (self.name, self.pending)
         for f in self.file_list:
-            lines = f.next()
-            if len(lines):
-                self.line_cache.extend(lines)
+            lines = f.next(delegate=self)
+
+        while self.pending > 0:
+            #print "waiting for %d more" % self.pending
+            time.sleep(1)
+
+        #print "Got %d lines" % len(self.line_cache)
 
     def look(self, timeout=None, silent=False):
         '''Examine the log looking for the given patterns.

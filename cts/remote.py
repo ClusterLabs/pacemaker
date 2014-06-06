@@ -42,30 +42,36 @@ trace_rsh=None
 trace_lw=None
 
 class AsyncWaitProc(Thread):
-    def __init__(self, proc, node, command):
+    def __init__(self, proc, node, command, completionDelegate=None):
         self.proc = proc
         self.node = node
         self.command = command
         self.logger = LogFactory()
+        self.delegate = completionDelegate;
         Thread.__init__(self)
 
     def run(self):
+        outLines = None
+        errLines = None
         self.logger.debug("cmd: async: target=%s, pid=%d: %s" % (self.node, self.proc.pid, self.command))
 
         self.proc.wait()
         self.logger.debug("cmd: pid %d returned %d" % (self.proc.pid, self.proc.returncode))
 
         if self.proc.stderr:
-            lines = self.proc.stderr.readlines()
+            errLines = self.proc.stderr.readlines()
             self.proc.stderr.close()
-            for line in lines:
+            for line in errLines:
                 self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
 
         if self.proc.stdout:
-            lines = self.proc.stdout.readlines()
+            outLines = self.proc.stdout.readlines()
             self.proc.stdout.close()
-            for line in lines:
+            for line in outLines:
                 self.logger.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
+
+        if self.delegate:
+            self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
 class RemotePrimitives:
     def __init__(self, Command=None, CpCommand=None):
@@ -129,7 +135,7 @@ class RemoteExec:
         if not self.silent:
             self.logger.debug(args)
 
-    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True):
+    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, completionDelegate=None):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
         called.  It just runs it roughly as though it were a system() call
@@ -145,8 +151,9 @@ class RemoteExec:
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
+        #if completionDelegate: print "Waiting for %d on %s: %s" % (proc.pid, node, command)
         if not synchronous and proc.pid > 0 and not self.silent:
-            aproc = AsyncWaitProc(proc, node, command)
+            aproc = AsyncWaitProc(proc, node, command, completionDelegate=completionDelegate)
             aproc.start()
             return 0
 
@@ -165,19 +172,22 @@ class RemoteExec:
         rc = proc.wait()
 
         if not silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
-
         if stdout == 1:
             return result
 
         if proc.stderr:
             errors = proc.stderr.readlines()
             proc.stderr.close()
-            if not silent:
-                for err in errors:
-                    if stdout == 3:
-                        result.append("error: "+err)
-                    else:
-                        self.debug("cmd: stderr: %s" % err)
+
+        if completionDelegate:
+            completionDelegate.async_complete(proc.pid, proc.returncode, result, errors)
+
+        if not silent:
+            for err in errors:
+                if stdout == 3:
+                    result.append("error: "+err)
+                else:
+                    self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if not silent and result:
