@@ -40,6 +40,7 @@ GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
 gboolean bringing_nodes_online = FALSE;
 gboolean print_pending = FALSE;
+char *temp_shadow = NULL;
 
 #define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
@@ -1184,6 +1185,7 @@ setup_input(const char *input, const char *output)
         char *pid = crm_itoa(getpid());
 
         local_output = get_shadow_file(pid);
+        temp_shadow = strdup(local_output);
         output = local_output;
         free(pid);
     }
@@ -1613,5 +1615,10 @@ main(int argc, char **argv)
     cib_delete(global_cib);
     free(use_date);
     fflush(stderr);
+
+    if (temp_shadow) {
+        unlink(temp_shadow);
+        free(temp_shadow);
+    }
     return crm_exit(rc);
 }
