@@ -294,7 +294,7 @@ class crm_lha(ClusterManager):
                 if not partition:
                     self.log("no partition details for %s" % node)
                 elif len(partition) > 2:
-                    partition = partition[:-1]
+                    partition = partition[:-1].sort()
                     found = 0
                     for a_partition in ccm_partitions:
                         if partition == a_partition:
@@ -310,6 +310,7 @@ class crm_lha(ClusterManager):
             else:
                 self.debug("Node %s is down... skipping" % node)
 
+        self.debug("Found partitions: %s" % repr(ccm_partitions) )
         return ccm_partitions
 
     def HasQuorum(self, node_list):
