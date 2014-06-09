@@ -189,7 +189,7 @@ send_sync_request(const char *host)
     crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
     crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
-    send_cluster_message(crm_get_peer(0, host), crm_msg_cib, sync_me, FALSE);
+    send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);
 }
 
