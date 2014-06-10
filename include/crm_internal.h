@@ -282,6 +282,7 @@ void strip_text_nodes(xmlNode * xml);
 #  define F_ATTRD_USER		"attr_user"
 #  define F_ATTRD_WRITER	"attr_writer"
 #  define F_ATTRD_VERSION	"attr_version"
+#  define F_ATTRD_FORCE_WRITE   "force_write"
 
 #  if SUPPORT_COROSYNC
 #    if CS_USES_LIBQB
