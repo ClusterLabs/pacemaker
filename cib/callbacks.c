@@ -89,7 +89,7 @@ static gboolean cib_legacy_mode(void)
 
     if(init) {
         init = FALSE;
-        legacy = daemon_option_enabled("legacy", "cib");
+        legacy = daemon_option_enabled("cib", "legacy");
         if(legacy) {
             crm_notice("Enabled legacy mode");
         }
