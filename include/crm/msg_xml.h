@@ -207,6 +207,8 @@
 #  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
+#  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
+
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"

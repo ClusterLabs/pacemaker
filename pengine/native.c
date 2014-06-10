@@ -3191,4 +3191,13 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
         crm_xml_add(xml, name, value);
         free(name);
     }
+
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_REMOTE_NODE);
+    if (value) {
+        char *name = NULL;
+
+        name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
+        crm_xml_add(xml, name, value);
+        free(name);
+    }
 }

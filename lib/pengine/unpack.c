@@ -46,6 +46,22 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(node_t * this_node);
 
+static gboolean
+is_dangling_container_remote_node(node_t *node)
+{
+    /* we are looking for a remote-node that was supposed to be mapped to a
+     * container resource, but all traces of that container have disappeared 
+     * from both the config and the status section. */
+    if (is_remote_node(node) &&
+        node->details->remote_rsc &&
+        node->details->remote_rsc->container == NULL &&
+        is_set(node->details->remote_rsc->flags, pe_rsc_orphan_container_filler)) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static void
 pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
@@ -59,6 +75,10 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                 node->details->uname, rsc->id, reason);
             set_bit(rsc->flags, pe_rsc_failed);
         }
+    } else if (is_dangling_container_remote_node(node)) {
+        crm_info("Fencing remote node %s has already occurred, container no longer exists. cleaning up dangling connection resource:  %s",
+                  node->details->uname, reason);
+        set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
     } else if (node->details->unclean == FALSE) {
         if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
@@ -322,7 +342,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
 
-            if (safe_str_eq(name, "remote-node")) {
+            if (safe_str_eq(name, XML_RSC_ATTR_REMOTE_NODE)) {
                 remote_name = value;
             } else if (safe_str_eq(name, "remote-addr")) {
                 remote_server = value;

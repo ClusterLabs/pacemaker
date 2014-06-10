@@ -50,6 +50,7 @@ enum crm_ipc_flags
     /* These options are just options for crm_ipcs_sendv() */
     crm_ipc_server_event    = 0x00010000, /* Send an Event instead of a Response */
     crm_ipc_server_free     = 0x00020000, /* Free the iovec after sending */
+    crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/
 
     crm_ipc_server_info     = 0x00100000, /* Log failures as LOG_INFO */
     crm_ipc_server_error    = 0x00200000, /* Log failures as LOG_ERR */
@@ -72,6 +73,7 @@ bool crm_ipc_connected(crm_ipc_t * client);
 int crm_ipc_ready(crm_ipc_t * client);
 long crm_ipc_read(crm_ipc_t * client);
 const char *crm_ipc_buffer(crm_ipc_t * client);
+uint32_t crm_ipc_buffer_flags(crm_ipc_t * client);
 const char *crm_ipc_name(crm_ipc_t * client);
 int crm_ipc_default_buffer_size(void);
 

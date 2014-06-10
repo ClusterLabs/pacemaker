@@ -39,6 +39,7 @@ typedef struct remote_proxy_s {
 
     crm_ipc_t *ipc;
     mainloop_io_t *source;
+    uint32_t last_request_id;
 
 } remote_proxy_t;
 
@@ -375,6 +376,7 @@ remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer user
     xmlNode *xml = NULL;
     remote_proxy_t *proxy = userdata;
     lrm_state_t *lrm_state = lrm_state_find(proxy->node_name);
+    uint32_t flags;
 
     if (lrm_state == NULL) {
         return 0;
@@ -386,8 +388,16 @@ remote_proxy_dispatch_internal(const char *buffer, ssize_t length, gpointer user
         return 1;
     }
 
-    crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
-    remote_proxy_relay_event(lrm_state->conn, proxy->session_id, xml);
+    flags = crm_ipc_buffer_flags(proxy->ipc);
+    if (flags & crm_ipc_proxied_relay_response) {
+        crm_trace("Passing response back to %.8s on %s: %.200s - request id: %d", proxy->session_id, proxy->node_name, buffer, proxy->last_request_id);
+        remote_proxy_relay_response(lrm_state->conn, proxy->session_id, xml, proxy->last_request_id);
+        proxy->last_request_id = 0;
+
+    } else {
+        crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
+        remote_proxy_relay_event(lrm_state->conn, proxy->session_id, xml);
+    }
     free_xml(xml);
     return 1;
 }
@@ -521,6 +531,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             g_hash_table_remove(proxy_table, session);
             return;
         }
+        proxy->last_request_id = 0;
         crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
 
@@ -562,6 +573,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             } else {
                 crm_trace("Relayed %s request %d from %s to %s for %s",
                           op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+                proxy->last_request_id = msg_id;
             }
 
         } else {

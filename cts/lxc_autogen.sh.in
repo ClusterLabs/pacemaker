@@ -211,22 +211,6 @@ END
       </primitive>
 END
 
-		rm -f lxc-ms$c.cib
-		cat << END >> lxc-ms.cib
-      <master id="lxc-ms-master">
-        <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
-          <instance_attributes id="lxc-ms-instance_attributes"/>
-          <operations>
-            <op id="lxc-ms-monitor-interval-10s" interval="10s" name="monitor"/>
-          </operations>
-        </primitive>
-        <meta_attributes id="lxc-ms-meta_attributes">
-          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="$containers"/>
-        </meta_attributes>
-      </master>
-END
-
 		rm -f lxc$c-filesystem/launch-helper
 		cat << END >> lxc$c-filesystem/launch-helper
 #!/bin/bash
@@ -243,6 +227,23 @@ END
 $prefix.$subnet.$suffix     lxc$c
 END
 	done
+
+	rm -f lxc-ms.cib
+	cat << END >> lxc-ms.cib
+      <master id="lxc-ms-master">
+        <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
+          <instance_attributes id="lxc-ms-instance_attributes"/>
+          <operations>
+            <op id="lxc-ms-monitor-interval-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="lxc-ms-meta_attributes">
+          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="$containers"/>
+        </meta_attributes>
+      </master>
+END
+
 }
 
 apply_cib_master()
@@ -255,10 +256,9 @@ apply_cib_master()
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -Mc -x tmp_constraint
-		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
-		cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
-		rm -f tmp_constraint
 	done
+	# Make sure the version changes even if the content doesn't
+	cibadmin -B
 	unset CIB_file
 
 	cibadmin --replace --xml-file cur.cib
@@ -274,13 +274,25 @@ apply_cib_entries()
 	for tmp in $(ls container*.cib); do
 		cibadmin -o resources -Mc -x $tmp
 
+		remote_node=$(cat ${tmp} | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')
 		if [ $anywhere -eq 0 ]; then
 			tmp=$(echo $tmp | sed -e 's/\.cib//g')
 			crm_resource -M -r $tmp -H $node
 		fi
+		echo "<rsc_location id=\"lxc-ping-location-${remote_node}\" node=\"${remote_node}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
+		# it's fine if applying this constraint fails. it's just to help with cts
+		# when the connectivity resources are in use. those resources fail the remote-nodes.
+		cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
+
+		for rsc in $(crm_resource -l | grep rsc_ ); do
+			echo "<rsc_location id=\"lxc-${rsc}-location-${remote_node}\" node=\"${remote_node}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
+			cibadmin -o constraints -Mc -x tmp_constraint > /dev/null 2>&1
+		done
+
+		rm -f tmp_constraint
 	done
 
-	# Make sure the version changes even if the contents doesn't
+	# Make sure the version changes even if the content doesn't
 	cibadmin -B
 
 	unset CIB_file
@@ -299,8 +311,13 @@ restore_cib()
 		tmp=$(echo $tmp | sed -e 's/\.xml//g')
 		echo "<rsc_location id=\"lxc-ms-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-ms-master\" score=\"INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
-		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"ping-1\" score=\"-INFINITY\"/>" > tmp_constraint
+		echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
 		cibadmin -o constraints -D -x tmp_constraint
+
+		for rsc in $(crm_resource -l | grep rsc_ ); do
+			echo "<rsc_location id=\"lxc-${rsc}-location-${tmp}\" node=\"${tmp}\" rsc=\"${rsc}\" score=\"-INFINITY\"/>" > tmp_constraint
+			cibadmin -o constraints -D -x tmp_constraint
+		done
 		rm -f tmp_constraint
 	done
 	cibadmin -o resources -D -x lxc-ms.cib
@@ -310,6 +327,8 @@ restore_cib()
 		crm_resource -U -r $tmp -H $node
 		crm_resource -D -r $tmp -t primitive
 	done
+	# Make sure the version changes even if the content doesn't
+	cibadmin -B
 	unset CIB_file
 
 	cibadmin --replace --xml-file cur.cib

@@ -298,26 +298,6 @@ simple_remote_node_status(const char *node_name, xmlNode * parent, const char *s
     return state;
 }
 
-static void
-remote_init_cib_status(const char *node_name)
-{
-    int call_id = 0;
-    int call_opt = cib_quorum_override;
-    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-
-    simple_remote_node_status(node_name, update,__FUNCTION__);
-
-    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
-        call_opt |= cib_scope_local;
-    }
-
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id != pcmk_ok) {
-        crm_debug("Failed to init status section for remote-node %s", node_name);
-    }
-    free_xml(update);
-}
-
 void
 remote_lrm_op_callback(lrmd_event_data_t * op)
 {
@@ -400,12 +380,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
         } else {
             lrm_state_reset_tables(lrm_state);
-            /* make sure we have a clean status section to start with */
-            if (safe_str_eq(cmd->action, "start")) {
-                remote_init_cib_status(lrm_state->node_name);
-                erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
-                erase_status_tag(lrm_state->node_name, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-            }
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             ra_data->active = TRUE;

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="start" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_name="start" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_name="stop" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="VM2_monitor_10000" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="fence" CRM_meta_timeout="30000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="fence" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="30000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>

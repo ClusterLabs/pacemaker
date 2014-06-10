@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
+        <attributes CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///"/>
       </rsc_op>
     </action_set>
     <inputs>
