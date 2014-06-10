@@ -641,6 +641,8 @@ parse_peer_options_v1(int call_type, xmlNode * request,
     return FALSE;
 }
 
+static int bridging_mode = 0;
+
 static gboolean
 parse_peer_options_v2(int call_type, xmlNode * request,
                    gboolean * local_notify, gboolean * needs_reply, gboolean * process,
@@ -656,6 +658,9 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
 
     if(safe_str_eq(op, CIB_OP_REPLACE)) {
+        if(bridging_mode == 1 && safe_str_neq(originator, cib_our_uname)) {
+            bridging_mode++;
+        }
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
             delegated = reply_to;
@@ -697,6 +702,10 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     } else if (crm_is_true(update)) {
         crm_trace("Ingoring legacy %s global update from %s", op, originator);
+        if(bridging_mode == 0) {
+            send_sync_request(NULL);
+            bridging_mode++;
+        }
         return FALSE;
 
     } else if (is_reply && cib_op_modifies(call_type)) {
@@ -1226,8 +1235,21 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         output = result_cib;
 
     } else {
-        CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
-        free_xml(result_cib);
+        if(is_not_set(call_options, cib_zero_copy)) {
+            free_xml(result_cib);
+        }
+
+        switch(bridging_mode) {
+            case 0:
+                /* Operation failed, but there is no indication older peers are around */
+                break;
+            case 1:
+                crm_trace("Operation failed waiting for our first sync");
+                break;
+            default:
+                crm_trace("Re-syncing from older peers in state %d", bridging_mode);
+                send_sync_request(NULL);
+        }
     }
 
     if ((call_options & cib_inhibit_notify) == 0) {

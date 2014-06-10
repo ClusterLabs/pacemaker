@@ -177,7 +177,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 }
 
 int sync_in_progress = 0;
-static void
+void
 send_sync_request(const char *host)
 {
     xmlNode *sync_me = create_xml_node(NULL, "sync-me");

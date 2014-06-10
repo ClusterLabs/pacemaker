@@ -70,4 +70,7 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode * existing_cib, xmlNode ** result_cib,
                                xmlNode ** answer);
 
+void send_sync_request(const char *host);
+
+
 #endif
