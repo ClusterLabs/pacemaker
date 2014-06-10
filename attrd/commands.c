@@ -468,7 +468,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter, bool force_write)
     } else {
         if (force_write) {
             changed = TRUE;
-            crm_debug("Unchanged %s[%s] from %s is %s.(Forced)", attr, host, peer->uname, value);
+            crm_debug("Setting %s[%s]: %s -> %s from %s.(Forced)", attr, host, v->current, value, peer->uname);
         } else {
             crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
         }
