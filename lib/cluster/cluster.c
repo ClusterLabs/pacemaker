@@ -382,10 +382,10 @@ crm_peer_uname(const char *uuid)
         if (uname_is_uuid() == FALSE && is_corosync_cluster()) {
             uint32_t id = crm_int_helper(uuid, NULL);
 
-            node = crm_get_peer(id, NULL);
+            node = crm_find_peer(id, NULL);
 
         } else {
-            node = crm_get_peer(0, uuid);
+            node = crm_find_peer(0, uuid);
         }
 
         if (node) {
