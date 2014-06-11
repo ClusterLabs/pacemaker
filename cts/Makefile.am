@@ -33,10 +33,14 @@ ctslib_PYTHON	=	__init__.py		\
 			CTS.py			\
 			CTSaudits.py		\
 			CTStests.py		\
-			CTSpatt.py		\
 			CTSscenarios.py		\
 			CIB.py			\
-			cib_xml.py
+			cib_xml.py		\
+			environment.py		\
+			logging.py		\
+			patterns.py		\
+			remote.py		\
+			watcher.py
 
 cts_DATA	=	README cts.supp
 
