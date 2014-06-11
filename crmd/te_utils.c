@@ -518,7 +518,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition aborted by %s '%s' on %s: %s (cib=%d.%d.%d, source=%s:%d, %d)",
-                       kind, op, uname, abort_text,
+                       kind, op, uname ? uname : ID(reason), abort_text,
                        add[0], add[1], add[2], fn, line, transition_graph->complete);
 
         } else {
