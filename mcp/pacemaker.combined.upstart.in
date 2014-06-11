@@ -47,6 +47,10 @@ post-stop script
     [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
     rm -f $LOCK_FILE
     rm -f @localstatedir@/run/$prog.pid
+
+    # if you use watchdog of corosync, uncomment the line below.
+    #pidof corosync || false
+
     pidof crmd || stop corosync
 
     # if you want to reboot a machine by watchdog of corosync when
