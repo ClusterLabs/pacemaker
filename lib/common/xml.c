@@ -4485,6 +4485,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
     name = crm_element_name(left);
     CRM_CHECK(name != NULL, return NULL);
+    CRM_CHECK(safe_str_eq(crm_element_name(left), crm_element_name(right)), return NULL);
 
     /* check for XML_DIFF_MARKER in a child */
     value = crm_element_value(right, XML_DIFF_MARKER);
@@ -4690,6 +4691,8 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
                   crm_str(object_name), object_id ? " id=" : "", object_id ? object_id : "");
 #endif
     }
+
+    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(update)), return 0);
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
