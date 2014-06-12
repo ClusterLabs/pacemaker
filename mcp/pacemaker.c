@@ -848,7 +848,7 @@ main(int argc, char **argv)
     set_daemon_option("mcp", "true");
     set_daemon_option("use_logd", "off");
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
 
     /* Restore the original facility so that mcp_read_config() does the right thing */
@@ -896,6 +896,8 @@ main(int argc, char **argv)
     if (argerr) {
         crm_help('?', EX_USAGE);
     }
+
+    set_crm_log_level(LOG_INFO);
 
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
