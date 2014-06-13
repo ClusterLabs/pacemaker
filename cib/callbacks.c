@@ -40,11 +40,6 @@
 #include <notify.h>
 #include "common.h"
 
-extern GMainLoop *mainloop;
-extern gboolean cib_shutdown_flag;
-extern gboolean stand_alone;
-extern const char *cib_root;
-
 typedef struct cib_local_notify_s {
     xmlNode *notify_src;
     char *client_id;
@@ -52,15 +47,11 @@ typedef struct cib_local_notify_s {
     gboolean sync_reply;
 } cib_local_notify_t;
 
+int next_client_id = 0;
+gboolean legacy_mode = FALSE;
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
-
-extern crm_cluster_t crm_cluster;
-
-extern int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
-
-extern void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean can_write(int flags);
@@ -68,13 +59,6 @@ void send_cib_replace(const xmlNode * sync_request, const char *host);
 void cib_process_request(xmlNode * request, gboolean privileged, gboolean force_synchronous,
                          gboolean from_peer, crm_client_t * cib_client);
 
-extern GHashTable *local_notify_queue;
-
-int next_client_id = 0;
-extern const char *cib_our_uname;
-extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
-extern unsigned long cib_bad_connects, cib_num_timeouts;
-extern int cib_status;
 
 int cib_process_command(xmlNode * request, xmlNode ** reply,
                         xmlNode ** cib_diff, gboolean privileged);
@@ -82,7 +66,7 @@ int cib_process_command(xmlNode * request, xmlNode ** reply,
 gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
                              gboolean privileged);
 
-static gboolean cib_legacy_mode(void)
+static gboolean cib_read_legacy_mode(void)
 {
     static gboolean init = TRUE;
     static gboolean legacy = FALSE;
@@ -94,8 +78,18 @@ static gboolean cib_legacy_mode(void)
             crm_notice("Enabled legacy mode");
         }
     }
+
     return legacy;
 }
+
+static gboolean cib_legacy_mode(void)
+{
+    if(cib_read_legacy_mode()) {
+        return TRUE;
+    }
+    return legacy_mode;
+}
+
 
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
@@ -641,8 +635,6 @@ parse_peer_options_v1(int call_type, xmlNode * request,
     return FALSE;
 }
 
-static int bridging_mode = 0;
-
 static gboolean
 parse_peer_options_v2(int call_type, xmlNode * request,
                    gboolean * local_notify, gboolean * needs_reply, gboolean * process,
@@ -658,9 +650,6 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     gboolean is_reply = safe_str_eq(reply_to, cib_our_uname);
 
     if(safe_str_eq(op, CIB_OP_REPLACE)) {
-        if(bridging_mode == 1 && safe_str_neq(originator, cib_our_uname)) {
-            bridging_mode++;
-        }
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
             delegated = reply_to;
@@ -701,11 +690,9 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         }
 
     } else if (crm_is_true(update)) {
-        crm_trace("Ingoring legacy %s global update from %s", op, originator);
-        if(bridging_mode == 0) {
-            send_sync_request(NULL);
-            bridging_mode++;
-        }
+        crm_info("Detected legacy %s global update from %s", op, originator);
+        send_sync_request(NULL);
+        legacy_mode = TRUE;
         return FALSE;
 
     } else if (is_reply && cib_op_modifies(call_type)) {
@@ -1237,18 +1224,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     } else {
         if(is_not_set(call_options, cib_zero_copy)) {
             free_xml(result_cib);
-        }
-
-        switch(bridging_mode) {
-            case 0:
-                /* Operation failed, but there is no indication older peers are around */
-                break;
-            case 1:
-                crm_trace("Operation failed waiting for our first sync");
-                break;
-            default:
-                crm_trace("Re-syncing from older peers in state %d", bridging_mode);
-                send_sync_request(NULL);
         }
     }
 

@@ -42,6 +42,7 @@
 #include <callbacks.h>
 #include <pwd.h>
 #include <grp.h>
+#include "common.h"
 
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
@@ -56,8 +57,6 @@
 #endif
 
 extern int init_remote_listener(int port, gboolean encrypted);
-extern gboolean stand_alone;
-
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
@@ -422,34 +421,19 @@ cib_cs_destroy(gpointer user_data)
 static void
 cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-#if 0
-    /* crm_active_peers(crm_proc_cib) appears to give the wrong answer
-     * sometimes, this might help figure out why
-     */
-    if (type == crm_status_nstate) {
-        crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
-        if (safe_str_eq(CRMD_JOINSTATE_MEMBER, node->state)) {
-            return;
-        }
-
-    } else if (type == crm_status_processes) {
+    if (type == crm_status_processes && legacy_mode && is_not_set(node->processes, crm_proc_cpg)) {
         uint32_t old = 0;
 
         if (data) {
             old = *(const uint32_t *)data;
         }
 
-        if ((node->processes ^ old) & crm_proc_cib) {
-            crm_info("status: cib process on %s is now %sactive",
-                     node->uname, is_set(node->processes, crm_proc_cib) ? "" : "in");
-        } else {
-            return;
+        if ((node->processes ^ old) & crm_proc_cpg) {
+            crm_info("Attempting to disable legacy mode after %s left the cluster", node->uname);
+            legacy_mode = FALSE;
         }
-
-    } else {
-        return;
     }
-#endif
+
     if (cib_shutdown_flag && crm_active_peers() < 2 && crm_hash_table_size(client_connections) == 0) {
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
