@@ -432,7 +432,7 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
             pe_rsc_trace(rsc, "Applying %s (%s)", constraint->id, other->id);
             work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
-                                     multiplier * (float)constraint->score / INFINITY, flags);
+                                     multiplier * (float)constraint->score / INFINITY, flags|pe_weights_rollback);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
 

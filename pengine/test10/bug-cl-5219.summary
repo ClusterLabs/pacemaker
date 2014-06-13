@@ -1,0 +1,40 @@
+
+Current cluster status:
+Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
+
+ child1-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
+ child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
+ parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
+ Master/Slave Set: child1 [stateful-child1]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+ Master/Slave Set: child2 [stateful-child2]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+ Master/Slave Set: parent [stateful-parent]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+
+Transition Summary:
+ * Stop    child1-service	(ha2.test.anchor.net.au)
+
+Executing cluster transition:
+ * Resource action: child1-service  stop on ha2.test.anchor.net.au
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
+
+ child1-service	(ocf::pacemaker:Dummy):	Stopped 
+ child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
+ parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
+ Master/Slave Set: child1 [stateful-child1]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+ Master/Slave Set: child2 [stateful-child2]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+ Master/Slave Set: parent [stateful-parent]
+     Masters: [ ha2.test.anchor.net.au ]
+     Slaves: [ ha1.test.anchor.net.au ]
+
