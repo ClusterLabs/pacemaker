@@ -160,7 +160,7 @@ cman_pre_stop()
 
     while [ 1 = 1 ]; do
 	# 0x0000000000000002 means managed
-	active=`crm_resource -c | grep Resource: | grep 0x...............[2367] | awk '{print $9}' | grep $cname | wc -l`
+	active=`crm_resource -c | grep Resource: | grep 0x...............[2367] | awk '{print $9}' | grep "^${cname}$" | wc -l`
 	if [ $active = 0 ]; then
 	    break;
 	fi
