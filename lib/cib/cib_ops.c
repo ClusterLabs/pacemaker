@@ -255,7 +255,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         }
 
         if (reason != NULL) {
-            crm_warn("Replacement %d.%d.%d from %s not applied to %d.%d.%d:"
+            crm_info("Replacement %d.%d.%d from %s not applied to %d.%d.%d:"
                      " current %s is greater than the replacement",
                      replace_admin_epoch, replace_epoch,
                      replace_updates, peer, admin_epoch, epoch, updates, reason);

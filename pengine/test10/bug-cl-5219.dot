@@ -1,0 +1,5 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"child1-service_stop_0 ha2.test.anchor.net.au" -> "all_stopped" [ style = bold]
+"child1-service_stop_0 ha2.test.anchor.net.au" [ style=bold color="green" fontcolor="black"]
+}

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="19" operation="start" operation_key="container1_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
+        <attributes CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="container1_monitor_0" on_node="18node3" on_node_uuid="3">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="container1_monitor_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -34,7 +34,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="container1_monitor_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container1" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc1" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc1.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc1"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -43,7 +43,7 @@
     <action_set>
       <rsc_op id="20" operation="start" operation_key="container2_start_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
+        <attributes CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -56,7 +56,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="container2_monitor_0" on_node="18node3" on_node_uuid="3">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -65,7 +65,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="container2_monitor_0" on_node="18node2" on_node_uuid="2">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -74,7 +74,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="container2_monitor_0" on_node="18node1" on_node_uuid="1">
         <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_remote_node="lxc2" CRM_meta_timeout="20000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///" remote-node="lxc2"/>
       </rsc_op>
     </action_set>
     <inputs/>

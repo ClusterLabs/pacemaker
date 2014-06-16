@@ -1,0 +1,101 @@
+
+Current cluster status:
+Online: [ lama2 lama3 ]
+Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
+
+ restofencelama2	(stonith:fence_ipmilan):	Started lama3 
+ restofencelama3	(stonith:fence_ipmilan):	Started lama2 
+ VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
+ FSlun1	(ocf::heartbeat:Filesystem):	Started lamaVM1 
+ FSlun2	(ocf::heartbeat:Filesystem):	Started lamaVM1 
+ VM2	(ocf::heartbeat:VirtualDomain):	FAILED lama3 
+ VM3	(ocf::heartbeat:VirtualDomain):	Started lama3 
+ FSlun3	(ocf::heartbeat:Filesystem):	FAILED lamaVM2 
+ FSlun4	(ocf::heartbeat:Filesystem):	Started lamaVM3 
+ FAKE5-IP	(ocf::heartbeat:IPaddr2):	Stopped 
+ FAKE6-IP	(ocf::heartbeat:IPaddr2):	Stopped 
+ FAKE5	(ocf::heartbeat:Dummy):	Started lamaVM3 
+ Resource Group: lamaVM1-G1
+     FAKE1	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE1-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM1-G2
+     FAKE2	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE2-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM1-G3
+     FAKE3	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE3-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM2-G4
+     FAKE4	(ocf::heartbeat:Dummy):	Started lamaVM2 
+     FAKE4-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM2 
+ Clone Set: FAKE6-clone [FAKE6]
+     Started: [ lamaVM1 lamaVM2 lamaVM3 ]
+
+Transition Summary:
+ * Recover VM2	(Started lama3)
+ * Recover FSlun3	(Started lamaVM2 -> lama2)
+ * Restart FAKE4	(Started lamaVM2)
+ * Restart FAKE4-IP	(Started lamaVM2)
+ * Restart FAKE6:2	(Started lamaVM2)
+ * Restart lamaVM2	(Started lama3)
+
+Executing cluster transition:
+ * Pseudo action:   lamaVM2-G4_stop_0
+ * Pseudo action:   FAKE6-clone_stop_0
+ * Resource action: lamaVM2         stop on lama3
+ * Resource action: VM2             stop on lama3
+ * Pseudo action:   FAKE4-IP_stop_0
+ * Pseudo action:   FAKE6_stop_0
+ * Pseudo action:   FAKE6-clone_stopped_0
+ * Pseudo action:   FAKE6-clone_start_0
+ * Resource action: VM2             start on lama3
+ * Resource action: VM2             monitor=10000 on lama3
+ * Pseudo action:   FAKE4_stop_0
+ * Resource action: lamaVM2         start on lama3
+ * Resource action: lamaVM2         monitor=30000 on lama3
+ * Resource action: FSlun3          monitor=10000 on lamaVM2
+ * Pseudo action:   lamaVM2-G4_stopped_0
+ * Resource action: FAKE6           start on lamaVM2
+ * Resource action: FAKE6           monitor=30000 on lamaVM2
+ * Pseudo action:   FAKE6-clone_running_0
+ * Pseudo action:   FSlun3_stop_0
+ * Pseudo action:   all_stopped
+ * Resource action: FSlun3          start on lama2
+ * Pseudo action:   lamaVM2-G4_start_0
+ * Resource action: FAKE4           start on lamaVM2
+ * Resource action: FAKE4           monitor=30000 on lamaVM2
+ * Resource action: FAKE4-IP        start on lamaVM2
+ * Resource action: FAKE4-IP        monitor=30000 on lamaVM2
+ * Resource action: FSlun3          monitor=10000 on lama2
+ * Pseudo action:   lamaVM2-G4_running_0
+
+Revised cluster status:
+Online: [ lama2 lama3 ]
+Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
+
+ restofencelama2	(stonith:fence_ipmilan):	Started lama3 
+ restofencelama3	(stonith:fence_ipmilan):	Started lama2 
+ VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
+ FSlun1	(ocf::heartbeat:Filesystem):	Started lamaVM1 
+ FSlun2	(ocf::heartbeat:Filesystem):	Started lamaVM1 
+ VM2	(ocf::heartbeat:VirtualDomain):	FAILED lama3 
+ VM3	(ocf::heartbeat:VirtualDomain):	Started lama3 
+ FSlun3	(ocf::heartbeat:Filesystem):	FAILED [ lama2 lamaVM2 ]
+ FSlun4	(ocf::heartbeat:Filesystem):	Started lamaVM3 
+ FAKE5-IP	(ocf::heartbeat:IPaddr2):	Stopped 
+ FAKE6-IP	(ocf::heartbeat:IPaddr2):	Stopped 
+ FAKE5	(ocf::heartbeat:Dummy):	Started lamaVM3 
+ Resource Group: lamaVM1-G1
+     FAKE1	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE1-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM1-G2
+     FAKE2	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE2-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM1-G3
+     FAKE3	(ocf::heartbeat:Dummy):	Started lamaVM1 
+     FAKE3-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM1 
+ Resource Group: lamaVM2-G4
+     FAKE4	(ocf::heartbeat:Dummy):	Started lamaVM2 
+     FAKE4-IP	(ocf::heartbeat:IPaddr2):	Started lamaVM2 
+ Clone Set: FAKE6-clone [FAKE6]
+     Started: [ lamaVM1 lamaVM2 lamaVM3 ]
+

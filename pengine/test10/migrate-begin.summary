@@ -10,8 +10,8 @@ Transition Summary:
  * Migrate test-vm	(Started hex-14 -> hex-13)
 
 Executing cluster transition:
- * Resource action: test-vm         migrate_to on hex-14
  * Pseudo action:   load_stopped_hex-13
+ * Resource action: test-vm         migrate_to on hex-14
  * Resource action: test-vm         migrate_from on hex-13
  * Resource action: test-vm         stop on hex-14
  * Pseudo action:   load_stopped_hex-14

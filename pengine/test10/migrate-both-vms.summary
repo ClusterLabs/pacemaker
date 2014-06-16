@@ -37,14 +37,14 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   c-watch-ib0_stop_0
- * Resource action: vm-compute-test migrate_to on cvmh03
  * Pseudo action:   load_stopped_cvmh01
  * Pseudo action:   load_stopped_cvmh02
  * Resource action: p-watch-ib0     stop on cvmh03
- * Resource action: vm-compute-test migrate_from on cvmh01
- * Resource action: vm-swbuildsl6   migrate_to on cvmh04
+ * Resource action: vm-compute-test migrate_to on cvmh03
  * Resource action: p-watch-ib0     stop on cvmh04
  * Pseudo action:   c-watch-ib0_stopped_0
+ * Resource action: vm-compute-test migrate_from on cvmh01
+ * Resource action: vm-swbuildsl6   migrate_to on cvmh04
  * Resource action: vm-swbuildsl6   migrate_from on cvmh02
  * Resource action: vm-swbuildsl6   stop on cvmh04
  * Pseudo action:   load_stopped_cvmh04

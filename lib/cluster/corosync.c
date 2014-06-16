@@ -556,3 +556,29 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
     cmap_finalize(cmap_handle);
     return any;
 }
+
+char *
+corosync_cluster_name(void)
+{
+    cmap_handle_t handle;
+    char *cluster_name = NULL;
+    int rc = CS_OK;
+
+    rc = cmap_initialize(&handle);
+    if (rc != CS_OK) {
+        crm_info("Failed to initialize the cmap API: %s (%d)", ais_error2text(rc), rc);
+        return NULL;
+    }
+
+    rc = cmap_get_string(handle, "totem.cluster_name", &cluster_name);
+    if (rc != CS_OK) {
+        crm_info("Cannot get totem.cluster_name: %s (%d)", ais_error2text(rc), rc);
+
+    } else {
+        crm_debug("cmap totem.cluster_name = '%s'", cluster_name);
+    }
+
+    cmap_finalize(handle);
+
+    return cluster_name;
+}

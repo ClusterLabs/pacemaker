@@ -894,7 +894,9 @@ static int
 child_kill_helper(mainloop_child_t *child)
 {
     if (kill(-child->pid, SIGKILL) < 0) {
-        crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+        if (errno != ESRCH) {
+            crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+        }
         return -errno;
     }
     return 0;
@@ -938,6 +940,7 @@ child_waitpid(mainloop_child_t *child, int flags)
 
     rc = waitpid(child->pid, &status, flags);
     if(rc == 0) {
+        crm_perror(LOG_DEBUG, "wait(%d) = %d", child->pid, rc);
         return FALSE;
 
     } else if(rc != child->pid) {
@@ -999,6 +1002,7 @@ child_death_dispatch(int signal)
 static gboolean
 child_signal_init(gpointer p)
 {
+    crm_trace("Installed SIGCHLD handler");
     /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
 
@@ -1007,37 +1011,55 @@ child_signal_init(gpointer p)
     return FALSE;
 }
 
-gboolean
+int
 mainloop_child_kill(pid_t pid)
 {
     GListPtr iter;
     mainloop_child_t *child = NULL;
+    mainloop_child_t *match = NULL;
+    /* It is impossible to block SIGKILL, this allows us to
+     * call waitpid without WNOHANG flag.*/
+    int waitflags = 0, rc = 0;
 
-    for (iter = child_list; iter != NULL; iter = iter->next) {
+    for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
         child = iter->data;
         if (pid == child->pid) {
-            break;
+            match = child;
         }
     }
 
-    if (child == NULL) {
+    if (match == NULL) {
         return FALSE;
     }
 
-    if (child_kill_helper(child) != 0) {
-        /* failed to terminate child process */
-        return FALSE;
+    rc = child_kill_helper(match);
+    if(rc == -ESRCH) {
+        /* Its gone, but hasn't shown up in waitpid() yet
+         *
+         * Wait until we get SIGCHLD and let child_death_dispatch()
+         * clean it up as normal (so we get the correct return
+         * code/status)
+         *
+         * The blocking alternative would be to call:
+         *    child_waitpid(match, 0);
+         */
+        crm_trace("Waiting for child %d to be reaped by child_death_dispatch()", match->pid);
+        return TRUE;
+
+    } else if(rc != 0) {
+        /* If KILL for some other reason set the WNOHANG flag since we
+         * can't be certain what happened.
+         */
+        waitflags = WNOHANG;
     }
 
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG here */
-    if (child_waitpid(child, 0) == FALSE) {
+    if (child_waitpid(match, waitflags) == FALSE) {
         /* not much we can do if this occurs */
         return FALSE;
     }
 
-    child_list = g_list_remove(child_list, child);
-    child_free(child);
+    child_list = g_list_remove(child_list, match);
+    child_free(match);
     return TRUE;
 }
 

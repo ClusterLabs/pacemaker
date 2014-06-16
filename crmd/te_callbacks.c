@@ -381,12 +381,15 @@ te_update_diff(const char *event, xmlNode * msg)
 
         } else if(strstr(xpath, "/cib/configuration")) {
             abort_transition(INFINITY, tg_restart, "Non-status change", change);
+            break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
+            break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
             abort_transition(INFINITY, tg_restart, "Transient attribute change", change);
+            break; /* Wont be packaged with any resource operations we may be waiting for */
 
         } else if(strstr(xpath, "/"XML_LRM_TAG_RSC_OP"[") && safe_str_eq(op, "delete")) {
             crm_action_t *cancel = NULL;

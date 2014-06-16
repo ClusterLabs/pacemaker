@@ -78,7 +78,6 @@ xmlNode *status_search = NULL;
 extern int cib_status;
 
 int set_connected_peers(xmlNode * xml_obj);
-void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 int write_cib_contents(gpointer p);
 extern void cib_cleanup(void);
 
@@ -824,17 +823,4 @@ write_cib_contents(gpointer p)
         _exit(exit_rc);
     }
     return exit_rc;
-}
-
-void
-GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
-{
-    int *active = user_data;
-
-    if (safe_str_eq(value, ONLINESTATUS)) {
-        (*active)++;
-
-    } else if (safe_str_eq(value, JOINSTATUS)) {
-        (*active)++;
-    }
 }

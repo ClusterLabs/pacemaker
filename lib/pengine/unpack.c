@@ -46,6 +46,22 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(node_t * this_node);
 
+static gboolean
+is_dangling_container_remote_node(node_t *node)
+{
+    /* we are looking for a remote-node that was supposed to be mapped to a
+     * container resource, but all traces of that container have disappeared 
+     * from both the config and the status section. */
+    if (is_remote_node(node) &&
+        node->details->remote_rsc &&
+        node->details->remote_rsc->container == NULL &&
+        is_set(node->details->remote_rsc->flags, pe_rsc_orphan_container_filler)) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static void
 pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
@@ -59,6 +75,10 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                 node->details->uname, rsc->id, reason);
             set_bit(rsc->flags, pe_rsc_failed);
         }
+    } else if (is_dangling_container_remote_node(node)) {
+        crm_info("Fencing remote node %s has already occurred, container no longer exists. cleaning up dangling connection resource:  %s",
+                  node->details->uname, reason);
+        set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
     } else if (node->details->unclean == FALSE) {
         if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
@@ -322,7 +342,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, GHashTable **rsc_name_
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
 
-            if (safe_str_eq(name, "remote-node")) {
+            if (safe_str_eq(name, XML_RSC_ATTR_REMOTE_NODE)) {
                 remote_name = value;
             } else if (safe_str_eq(name, "remote-addr")) {
                 remote_server = value;
@@ -443,7 +463,6 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
     static const char *blind_faith = NULL;
     static gboolean unseen_are_unclean = TRUE;
-    static gboolean init_startup_fence_params = FALSE;
 
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
         /* ignore fencing remote-nodes that don't have a conneciton resource associated
@@ -452,14 +471,11 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
         return;
     }
 
-    if (init_startup_fence_params == FALSE) {
-        blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
-        init_startup_fence_params = TRUE;
+    blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
 
-        if (crm_is_true(blind_faith) == FALSE) {
-            unseen_are_unclean = FALSE;
-            crm_warn("Blind faith: not fencing unseen nodes");
-        }
+    if (crm_is_true(blind_faith) == FALSE) {
+        unseen_are_unclean = FALSE;
+        crm_warn("Blind faith: not fencing unseen nodes");
     }
 
     if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
@@ -3005,7 +3021,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op,
 gboolean
 add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_set_t * data_set)
 {
-    const char *cluster = NULL;
+    const char *cluster_name = NULL;
 
     g_hash_table_insert(node->details->attrs,
                         strdup("#uname"), strdup(node->details->uname));
@@ -3022,14 +3038,26 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
                             strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
-    cluster = g_hash_table_lookup(data_set->config_hash, "cluster");
-    if (cluster) {
-        g_hash_table_insert(node->details->attrs, strdup("#cluster"), strdup(cluster));
+    cluster_name = g_hash_table_lookup(data_set->config_hash, "cluster-name");
+    if (cluster_name) {
+        g_hash_table_insert(node->details->attrs, strdup("#cluster-name"), strdup(cluster_name));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                node->details->attrs, NULL, overwrite, data_set->now);
 
+    if (g_hash_table_lookup(node->details->attrs, "#site-name") == NULL) {
+        const char *site_name = g_hash_table_lookup(node->details->attrs, "site-name");
+
+        if (site_name) {
+            /* Prefix '#' to the key */
+            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(site_name));
+
+        } else if (cluster_name) {
+            /* Default to cluster-name if unset */
+            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(cluster_name));
+        }
+    }
     return TRUE;
 }
 

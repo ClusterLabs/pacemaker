@@ -149,6 +149,7 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
 
     dbus_error_init(&error);
 
+    CRM_ASSERT(done);
     CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
     method = dbus_message_get_member (msg);
 
@@ -162,7 +163,19 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
         return FALSE;
 
     }
-    CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
+
+    if (dbus_pending_call_get_completed(pending)) {
+        crm_info("DBus %s call completed too soon");
+#if 1
+        /* This sounds like a good idea, but allegedly it breaks things */
+        done(pending, user_data);
+#else
+        CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
+#endif
+
+    } else {
+        CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
+    }
     return TRUE;
 }
 

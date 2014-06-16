@@ -776,6 +776,14 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         if (chosen == NULL) {
             set_role_slave(child_rsc, FALSE);
             continue;
+
+        } else if(child_rsc->role < RSC_ROLE_MASTER
+              && is_set(data_set->flags, pe_flag_have_quorum) == FALSE
+              && data_set->no_quorum_policy == no_quorum_freeze) {
+            crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
+                       child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
+            set_role_slave(child_rsc, FALSE);
+            continue;
         }
 
         chosen->count++;

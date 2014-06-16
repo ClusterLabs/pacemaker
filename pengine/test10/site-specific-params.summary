@@ -1,6 +1,6 @@
 
 Current cluster status:
-Online: [ node1 node2 ]
+Online: [ node1 node2 node3 ]
 
  rsc_stonith	(stonith:null):	Started node1 
  rsc1	(ocf::pacemaker:Dummy):	Stopped 
@@ -9,6 +9,7 @@ Transition Summary:
  * Start   rsc1	(node2)
 
 Executing cluster transition:
+ * Resource action: rsc1            monitor on node3
  * Resource action: rsc1            monitor on node2
  * Resource action: rsc1            monitor on node1
  * Pseudo action:   probe_complete
@@ -16,7 +17,7 @@ Executing cluster transition:
  * Resource action: rsc1            monitor=10000 on node2
 
 Revised cluster status:
-Online: [ node1 node2 ]
+Online: [ node1 node2 node3 ]
 
  rsc_stonith	(stonith:null):	Started node1 
  rsc1	(ocf::pacemaker:Dummy):	Started node2 

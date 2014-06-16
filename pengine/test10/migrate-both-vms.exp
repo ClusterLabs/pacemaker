@@ -331,7 +331,11 @@
         <attributes CRM_meta_migrate_source="cvmh03" CRM_meta_migrate_target="cvmh01" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  migration_network_suffix="-ib" migration_transport="ssh" nodename="compute-test"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="31" operation="load_stopped_cvmh01" operation_key="load_stopped_cvmh01"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
@@ -401,6 +405,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <pseudo_event id="29" operation="load_stopped_cvmh02" operation_key="load_stopped_cvmh02"/>
+      </trigger>
       <trigger>
         <rsc_op id="99" operation="migrate_from" operation_key="vm-compute-test_migrate_from_0" on_node="cvmh01" on_node_uuid="cvmh01"/>
       </trigger>

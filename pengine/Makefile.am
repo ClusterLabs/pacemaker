@@ -35,6 +35,18 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/pengine/libpe_status.la		\
 		libpengine.la $(CURSESLIBS) $(CLUSTERLIBS)
 
+beekhof:
+	echo $(shell ls -1 test10/*.xml)
+
+#TESTS = test10/*.xml
+TESTS = test10/bug-rh-1097457.xml
+TEST_EXTENSIONS = .xml
+XML_LOG_COMPILER = ./regression.sh
+AM_XML_LOG_FLAGS = -V --run 
+#LOG_COMPILER = 
+#AM_LOG_FLAGS = -V
+
+
 ## libraries
 lib_LTLIBRARIES	= libpengine.la
 

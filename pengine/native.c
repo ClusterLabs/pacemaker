@@ -432,7 +432,7 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
 
             pe_rsc_trace(rsc, "Applying %s (%s)", constraint->id, other->id);
             work = rsc_merge_weights(other, rhs, work, constraint->node_attribute,
-                                     multiplier * (float)constraint->score / INFINITY, flags);
+                                     multiplier * (float)constraint->score / INFINITY, flags|pe_weights_rollback);
             dump_node_scores(LOG_TRACE, NULL, rhs, work);
         }
 
@@ -527,6 +527,13 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesnt come up again */
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
+
+    } else if(rsc->next_role > rsc->role
+              && is_set(data_set->flags, pe_flag_have_quorum) == FALSE
+              && data_set->no_quorum_policy == no_quorum_freeze) {
+        crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
+                   rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+        rsc->next_role = rsc->role;
     }
 
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__,
@@ -1451,22 +1458,49 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
                                 rsc, start_key(rsc), NULL, pe_order_load, data_set);
 
+            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
+                                rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                                pe_order_load, data_set);
+
             free(load_stopped_task);
         }
     }
 
     if (rsc->container) {
-        crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
-        custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
-                            rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        resource_t *remote_rsc = NULL;
 
-        custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
-                            pe_order_implies_first, data_set);
+        /* find out if the container is associated with remote node connection resource */
+        if (rsc->container->is_remote_node) {
+            remote_rsc = rsc->container;
+        } else if (rsc->is_remote_node == FALSE) {
+            remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
+        }
 
-        rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
-                           NULL, data_set);
+        /* if the container is a remote-node, force the resource within the container
+         * instead of colocating the resource with the container. */
+        if (remote_rsc) {
+            GHashTableIter iter;
+            node_t *node = NULL;
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+                if (node->details->remote_rsc != remote_rsc) {
+                    node->weight = -INFINITY;
+                }
+            }
+        } else {
+
+            crm_trace("Generating order and colocation rules for rsc %s with container %s", rsc->id, rsc->container->id);
+            custom_action_order(rsc->container, generate_op_key(rsc->container->id, RSC_START, 0), NULL,
+                                rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+                                pe_order_implies_then | pe_order_runnable_left, data_set);
+
+            custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+                                rsc->container, generate_op_key(rsc->container->id, RSC_STOP, 0), NULL,
+                                pe_order_implies_first, data_set);
+
+            rsc_colocation_new("resource-with-containter", NULL, INFINITY, rsc, rsc->container, NULL,
+                               NULL, data_set);
+        }
     }
 
     if (rsc->is_remote_node || is_stonith) {
@@ -1607,6 +1641,9 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
     rh_value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
 
     if (!safe_str_eq(lh_value, rh_value)) {
+        if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
+            rsc_lh->priority = -INFINITY;
+        }
         return;
     }
 
@@ -1697,6 +1734,9 @@ native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     CRM_ASSERT(rsc_lh);
     CRM_ASSERT(rsc_rh);
     filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint);
+    pe_rsc_trace(rsc_lh, "%sColocating %s with %s (%s, weight=%d, filter=%d)",
+                 constraint->score >= 0 ? "" : "Anti-",
+                 rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);
 
     switch (filter_results) {
         case influence_rsc_priority:
@@ -1955,10 +1995,12 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
             reason = "recover";
         }
 
-        if (reason && is_set(first->flags, pe_action_optional)
-            && is_set(first->flags, pe_action_runnable)) {
-            pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
-            pe_clear_action_bit(first, pe_action_optional);
+        if (reason && is_set(first->flags, pe_action_optional)) {
+            if (is_set(first->flags, pe_action_runnable)
+                || is_not_set(then->flags, pe_action_optional)) {
+                pe_rsc_trace(first->rsc, "Handling %s: %s -> %s", reason, first->uuid, then->uuid);
+                pe_clear_action_bit(first, pe_action_optional);
+            }
         }
 
         if (reason && is_not_set(first->flags, pe_action_optional)
@@ -2175,7 +2217,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     if(start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
         possible_matches = find_actions(rsc->actions, key, NULL);
     } else {
-        possible_matches = find_actions(rsc->actions, key, next);
+        possible_matches = find_actions(rsc->actions, key, current);
     }
     free(key);
     if (possible_matches) {
@@ -2224,7 +2266,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s)", rsc->id, role2text(rsc->role), next->details->uname);
+            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current->details->uname,
+                       stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
@@ -2262,7 +2305,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                        current->details->uname, allowed ? "" : " - blocked");
 
             if (stop != NULL && is_not_set(stop->flags, pe_action_optional)
-                && rsc->next_role > RSC_ROLE_STOPPED) {
+                && rsc->next_role > RSC_ROLE_STOPPED && moving == FALSE) {
                 if (is_set(rsc->flags, pe_rsc_failed)) {
                     log_change("Recover %s\t(%s %s)",
                                rsc->id, role2text(rsc->role), next->details->uname);
@@ -2871,10 +2914,14 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
         update_action_flags(action, pe_action_implied_by_stonith);
 
         {
+            enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
-            order_actions(stonith_op, action, pe_order_optional);
-            order_actions(stonith_op, parent_stop, pe_order_optional);
+            if(stonith_op->node->details->remote_rsc) {
+                flags |= pe_order_preserve;
+            }
+            order_actions(stonith_op, action, flags);
+            order_actions(stonith_op, parent_stop, flags);
         }
 
         if (is_set(rsc->flags, pe_rsc_notify)) {
@@ -2967,7 +3014,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_sto
             update_action_flags(action, pe_action_pseudo);
             update_action_flags(action, pe_action_runnable);
             if (is_stonith == FALSE) {
-                order_actions(stonith_op, action, pe_order_optional);
+                order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }
     }
@@ -3141,6 +3188,15 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
         char *name = NULL;
 
         name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
+        crm_xml_add(xml, name, value);
+        free(name);
+    }
+
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_REMOTE_NODE);
+    if (value) {
+        char *name = NULL;
+
+        name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
     }

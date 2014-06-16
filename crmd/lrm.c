@@ -1882,6 +1882,32 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
     }
 }
 
+static void
+remote_node_init_status(const char *node_name, int call_opt)
+{
+    int call_id = 0;
+    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+
+    simple_remote_node_status(node_name, update,__FUNCTION__);
+
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    if (call_id != pcmk_ok) {
+        crm_debug("Failed to init status section for remote-node %s", node_name);
+    }
+    free_xml(update);
+}
+
+static void
+remote_node_clear_status(const char *node_name, int call_opt)
+{
+    if (node_name == NULL) {
+        return;
+    }
+    remote_node_init_status(node_name, call_opt);
+    erase_status_tag(node_name, XML_CIB_TAG_LRM, call_opt);
+    erase_status_tag(node_name, XML_TAG_TRANSIENT_NODEATTRS, call_opt);
+}
+
 static int
 do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
 {
@@ -1954,6 +1980,21 @@ do_update_resource(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_da
 
         CRM_CHECK(rsc->type != NULL, crm_err("Resource %s has no value for type", op->rsc_id));
         CRM_CHECK(rsc->class != NULL, crm_err("Resource %s has no value for class", op->rsc_id));
+
+        /* check to see if we need to initialize remote-node related status sections */
+        if (safe_str_eq(op->op_type, "start") && op->rc == 0 && op->op_status == PCMK_LRM_OP_DONE) {
+            const char *remote_node = g_hash_table_lookup(op->params, CRM_META"_remote_node");
+
+            if (remote_node) {
+                /* A container for a remote-node has started, initalize remote-node's status */
+                crm_info("Initalizing lrm status for container remote-node %s. Container successfully started.", remote_node);
+                remote_node_clear_status(remote_node, call_opt);
+            } else if (container == FALSE && safe_str_eq(rsc->type, "remote") && safe_str_eq(rsc->provider, "pacemaker")) {
+                /* baremetal remote node connection resource has started, initalize remote-node's status */
+                crm_info("Initializing lrm status for baremetal remote-node %s", rsc->id);
+                remote_node_clear_status(rsc->id, call_opt);
+            }
+        }
 
     } else {
         crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);

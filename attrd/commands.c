@@ -161,7 +161,7 @@ create_attribute(xmlNode *xml)
 
     if(dampen > 0) {
         a->timeout_ms = dampen;
-        a->timer = mainloop_timer_add(strdup(a->id), a->timeout_ms, FALSE, attribute_timer_cb, a);
+        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
     }
 
     g_hash_table_replace(attributes, a->id, a);
@@ -464,6 +464,15 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 
     a->changed |= changed;
 
+    if(changed) {
+        if(a->timer) {
+            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
+            mainloop_timer_start(a->timer);
+        } else {
+            write_or_elect_attribute(a);
+        }
+    }
+
     /* this only involves cluster nodes. */
     if(v->nodeid == 0 && (v->is_remote == FALSE)) {
         if(crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0) {
@@ -474,15 +483,6 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
                 write_attributes(FALSE, TRUE);
                 return;
             }
-        }
-    }
-
-    if(changed) {
-        if(a->timer) {
-            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
-            mainloop_timer_start(a->timer);
-        } else {
-            write_or_elect_attribute(a);
         }
     }
 }

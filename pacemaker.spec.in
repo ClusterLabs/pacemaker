@@ -74,7 +74,7 @@ Requires:      %{name}-cli = %{version}-%{release}
 %endif
 
 %if 0%{?rhel} > 0
-ExclusiveArch: i686 x86_64
+ExclusiveArch: i386 i686 x86_64
 %endif
 
 # Required for core functionality

@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="start" operation_key="vm_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808">
         <primitive id="vm" class="ocf" provider="heartbeat" type="VirtualDomain"/>
-        <attributes CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/18builder.xml"  hypervisor="qemu:///system"/>
+        <attributes CRM_meta_remote_node="18builder" CRM_meta_timeout="20000" config="/home/dvossel/virtual_machines/18builder.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs/>
