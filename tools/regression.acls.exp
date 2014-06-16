@@ -456,9 +456,9 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
@@ -505,9 +505,9 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
@@ -554,9 +554,9 @@ Stopped
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -601,9 +601,9 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
@@ -1261,9 +1261,9 @@ Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Permission denied (13) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -1319,9 +1319,9 @@ __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -1377,9 +1377,9 @@ Stopped
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
@@ -1433,9 +1433,9 @@ Deleted dummy option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-(    unpack.c:711   )   error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
-(    unpack.c:712   )   error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
-(    unpack.c:713   )   error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: unpack_resources: 	Resource start-up disabled since no STONITH resources have been defined
+error: unpack_resources: 	Either configure some or disable STONITH with the stonith-enabled option
+error: unpack_resources: 	NOTE: Clusters with shared data need STONITH to ensure data integrity
 __xml_acl_post_process: 	Creation of nvpair=dummy-meta_attributes-target-role is allowed
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="13" num_updates="0" admin_epoch="0">

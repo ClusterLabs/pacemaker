@@ -580,6 +580,7 @@ for t in $tests; do
 	-e 's/validate-with="[^"]*" //'\
         -e 's/.*__xml_acl_check/__xml_acl_check/g'\
 	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
+	-e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
 	-e 's/ last-rc-change=\"[0-9]*\"//' $test_home/regression.$t.out
 
     if [ $do_save = 1 ]; then
