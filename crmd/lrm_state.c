@@ -204,17 +204,29 @@ lrm_state_reset_tables(lrm_state_t * lrm_state)
 }
 
 static void
+remote_proxy_end_session(const char *session)
+{
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+
+    if (proxy == NULL) {
+        return;
+    }
+    crm_trace("ending session ID %s", proxy->session_id);
+
+    if (proxy->source) {
+        mainloop_del_ipc_client(proxy->source);
+    }
+}
+
+static void
 remote_proxy_free(gpointer data)
 {
     remote_proxy_t *proxy = data;
-    crm_debug("Signing out of the IPC Service");
 
-    if (proxy->source != NULL) {
-        mainloop_del_ipc_client(proxy->source);
-    }
-
+    crm_trace("freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
     free(proxy->session_id);
+    free(proxy);
 }
 
 gboolean
@@ -443,6 +455,7 @@ remote_proxy_new(const char *node_name, const char *session_id, const char *chan
         }
     }
 
+    crm_trace("created proxy session ID %s", proxy->session_id);
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;
@@ -513,7 +526,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         }
         crm_info("new remote proxy client established to %s, session id %s", channel, session);
     } else if (safe_str_eq(op, "destroy")) {
-        g_hash_table_remove(proxy_table, session);
+        remote_proxy_end_session(session);
 
     } else if (safe_str_eq(op, "request")) {
         int flags = 0;
@@ -528,7 +541,7 @@ remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             remote_proxy_notify_destroy(lrmd, session);
             return;
         } else if ((proxy->is_local == FALSE) && (crm_ipc_connected(proxy->ipc) == FALSE)) {
-            g_hash_table_remove(proxy_table, session);
+            remote_proxy_end_session(session);
             return;
         }
         proxy->last_request_id = 0;
