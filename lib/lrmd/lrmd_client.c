@@ -1064,7 +1064,7 @@ lrmd_gnutls_global_init(void)
     static int gnutls_init = 0;
 
     if (!gnutls_init) {
-        gnutls_global_init();
+        crm_gnutls_global_init();
     }
     gnutls_init = 1;
 }

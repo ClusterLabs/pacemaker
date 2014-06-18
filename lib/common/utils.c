@@ -2596,3 +2596,13 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     *result = compressed;
     return TRUE;
 }
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+void
+crm_gnutls_global_init(void)
+{
+    signal(SIGPIPE, SIG_IGN);
+    gnutls_global_init();
+}
+#endif
+
