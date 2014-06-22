@@ -418,7 +418,7 @@ class crm_mcp(crm_cs_v0):
         if self.Env["have_systemd"]:
             self.update({
                 # When systemd is in use, we can look for this instead
-                "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
+                "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting normally",
             })
 
 class crm_cman(crm_cs_v0):
