@@ -51,7 +51,6 @@ static struct crm_option long_options[] = {
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"cib",	 0, 0, 'c', "\t\tCompare/patch the inputs as a CIB (includes versions details)"},
-    {"filter",	 0, 0, 'f', "\t\tSuppress irrelevant differences between the two inputs"},
     {"stdin",	 0, 0, 's', NULL, 1},
     {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-", 1, 0, '-', "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:", pcmk_option_paragraph},
