@@ -147,7 +147,7 @@ controld_start() {
     	    modprobe configfs
     	    if [ ! -e $OCF_RESKEY_configdir ]; then
                ocf_log err "$OCF_RESKEY_configdir not available"
-       	       return $OCF_NOT_INSTALLED
+       	       return $OCF_ERR_INSTALLED
 	    fi
 	fi
 
@@ -160,7 +160,7 @@ controld_start() {
            modprobe dlm
     	   if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
               ocf_log err "$OCF_RESKEY_configdir/dlm not available"
-       	      return $OCF_NOT_INSTALLED
+       	      return $OCF_ERR_INSTALLED
 	   fi
     	fi
 
