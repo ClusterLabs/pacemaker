@@ -296,12 +296,12 @@ main(int argc, char **argv)
     }
 
     option = daemon_option("logfacility");
-    if(safe_str_neq(option, "none")) {
+    if(option && safe_str_neq(option, "none")) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
     option = daemon_option("logfile");
-    if(safe_str_neq(option, "none")) {
+    if(option && safe_str_neq(option, "none")) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
         if (daemon_option_enabled(crm_system_name, "debug")) {
