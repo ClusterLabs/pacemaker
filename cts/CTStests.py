@@ -2748,11 +2748,21 @@ class RemoteBaremetal(CTSTest):
         self.add_primitive_rsc(node)
         # this crm_resource command actually occurs on the remote node
         # which verifies that the ipc proxy works
-        rc = self.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
+        (rc, lines) = self.rsh(node, "crm_resource -W -r remote1-rsc", None)
         if rc != 0:
-            self.fail_string = "Failed to place primitive on remote-node"
-            self.failed = 1
-            return
+	    self.fail_string = "Failed to get location of resource remote1-rsc"
+	    self.failed = 1 
+	    return
+
+        for line in lines:
+	    if re.search("remote1", line):
+	        break
+	    else:
+	        rc = self.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
+		if rc != 0:
+                    self.fail_string = "Failed to place primitive on remote-node"
+                    self.failed = 1
+                    return
 
         self.set_timer("remoteMetalRsc")
         watch.lookforall()
