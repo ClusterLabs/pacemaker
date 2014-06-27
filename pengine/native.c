@@ -2845,10 +2845,12 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (action->needs == rsc_req_stonith) {
+        if(action->needs == rsc_req_nothing) {
+        } else if (action->needs == rsc_req_stonith) {
             order_actions(stonith_done, action, pe_order_optional);
 
-        } else if (target != NULL && safe_str_eq(action->task, RSC_START)
+        } else if (target != NULL
+                   && safe_str_eq(action->task, RSC_START)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
             /* if known == NULL, then we dont know if
              *   the resource is active on the node
