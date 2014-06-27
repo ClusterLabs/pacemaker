@@ -235,7 +235,7 @@ class JournalObj(SearchObj):
             self.delegate = None
 
         # Use --lines to prevent journalctl from overflowing the Popen input buffer
-        command = "journalctl -q --after-cursor='%s' --lines=500 --show-cursor" % (self.offset)
+        command = "journalctl -q --after-cursor='%s' --lines=200 --show-cursor" % (self.offset)
         if self.offset == "EOF":
             command = "journalctl -q -n 0 --show-cursor"
 
