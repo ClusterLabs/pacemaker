@@ -58,6 +58,7 @@ typedef struct lrmd_cmd_s {
     char *origin;
     char *rsc_id;
     char *action;
+    char *real_action;
     char *output;
     char *userdata_str;
 
@@ -445,7 +446,11 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_RSC_EXEC);
     crm_xml_add(notify, F_LRMD_RSC_ID, cmd->rsc_id);
-    crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->action);
+    if(cmd->real_action) {
+        crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->real_action);
+    } else {
+        crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->action);
+    }
     crm_xml_add(notify, F_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
     crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->output);
 
@@ -689,6 +694,8 @@ action_complete(svc_action_t * action)
     lrmd_rsc_t *rsc;
     lrmd_cmd_t *cmd = action->cb_data;
 
+    bool goagain = false;
+
     if (!cmd) {
         crm_err("LRMD action (%s) completed does not match any known operations.", action->id);
         return;
@@ -709,6 +716,30 @@ action_complete(svc_action_t * action)
     } else if (action->stdout_data) {
         cmd->output = strdup(action->stdout_data);
     }
+
+    if (rsc && safe_str_eq(rsc->class, "systemd")) {
+        if(safe_str_eq(cmd->action, "start")) {
+            /* systemd I curse thee!
+             *
+             * systemd returns from start actions after the start _begins_
+             * not after it completes.
+             *
+             * So we have to jump through a few hoops so that we don't
+             * report 'complete' to the rest of pacemaker until, you know,
+             * its actually done.
+             */
+            goagain = true;
+            cmd->real_action = cmd->action;
+            cmd->action = strdup("monitor");
+
+        } else if(cmd->real_action) {
+            /* Ok, so this is the follow up monitor action to check if start actually completed */
+            if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
+                goagain = true;
+            }
+        }
+    }
+
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, "nagios")) {
         if (safe_str_eq(cmd->action, "monitor") &&
@@ -717,41 +748,46 @@ action_complete(svc_action_t * action)
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
         } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_OCF_OK) {
-            int time_sum = 0;
-            int timeout_left = 0;
-            int delay = cmd->timeout_orig / 10;
-
-#  ifdef HAVE_SYS_TIMEB_H
-            struct timeb now = { 0, };
-
-            ftime(&now);
-            time_sum = time_diff_ms(&now, &cmd->t_first_run);
-            timeout_left = cmd->timeout_orig - time_sum;
-            if (delay < timeout_left) {
-                cmd->start_delay = delay;
-                cmd->timeout = timeout_left;
-
-                crm_notice
-                    ("%s %s failed (rc=%d): re-scheduling (time_sum=%dms, start_delay=%dms, timeout=%dms)",
-                     cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, cmd->start_delay,
-                     cmd->timeout);
-
-                cmd->lrmd_op_status = 0;
-                cmd->last_pid = 0;
-                memset(&cmd->t_run, 0, sizeof(cmd->t_run));
-                memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
-                free(cmd->output);
-                cmd->output = NULL;
-
-                rsc->active = NULL;
-                schedule_lrmd_cmd(rsc, cmd);
-                return;
-            }
-#  endif
+            goagain = true;
         }
     }
 #endif
 
+    if(goagain) {
+        int time_sum = 0;
+        int timeout_left = 0;
+        int delay = cmd->timeout_orig / 10;
+
+#  ifdef HAVE_SYS_TIMEB_H
+        struct timeb now = { 0, };
+
+        ftime(&now);
+        time_sum = time_diff_ms(&now, &cmd->t_first_run);
+        timeout_left = cmd->timeout_orig - time_sum;
+        if (delay < timeout_left) {
+            cmd->start_delay = delay;
+            cmd->timeout = timeout_left;
+
+            if(cmd->exec_rc != PCMK_OCF_OK) {
+                crm_notice
+                    ("%s %s failed (rc=%d): re-scheduling (time_sum=%dms, start_delay=%dms, timeout=%dms)",
+                     cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, cmd->start_delay,
+                     cmd->timeout);
+            }
+
+            cmd->lrmd_op_status = 0;
+            cmd->last_pid = 0;
+            memset(&cmd->t_run, 0, sizeof(cmd->t_run));
+            memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
+            free(cmd->output);
+            cmd->output = NULL;
+
+            rsc->active = NULL;
+            schedule_lrmd_cmd(rsc, cmd);
+            return;
+        }
+#  endif
+    }
     cmd_finalize(cmd, rsc);
 }
 

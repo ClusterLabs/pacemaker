@@ -425,6 +425,8 @@ systemd_unit_exec(svc_action_t * op, gboolean synchronous)
 
         if (g_strcmp0(state, "active") == 0) {
             op->rc = PCMK_OCF_OK;
+        } else if (g_strcmp0(state, "activating") == 0) {
+            op->rc = PCMK_OCF_PENDING;
         } else {
             op->rc = PCMK_OCF_NOT_RUNNING;
         }
