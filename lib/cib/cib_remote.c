@@ -230,7 +230,7 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         /* initialize GnuTls lib */
 #ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote_gnutls_credentials_init == FALSE) {
-            gnutls_global_init();
+            crm_gnutls_global_init();
             gnutls_anon_allocate_client_credentials(&anon_cred_c);
             remote_gnutls_credentials_init = TRUE;
         }

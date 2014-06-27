@@ -336,7 +336,7 @@ lrmd_init_remote_tls_server(int port)
     };
 
     crm_notice("Starting a tls listener on port %d.", port);
-    gnutls_global_init();
+    crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
     gnutls_dh_params_init(&dh_params);

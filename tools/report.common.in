@@ -421,11 +421,12 @@ findln_by_time() {
     local tm=$2
     local first=1
 
-    local fileSize=`ls --block-size=M $logf  | awk '{ print $5 }' | sed s/M//`
-    if [ $fileSize -gt 1024 ]; then
-        # Some logs can be massive (over 1,500,000,000 lines have been seen in the wild) 
-        # Even just 'wc -l' on these files can take 10+ minutes 
-        warning "$logf is ${fileSize}M in size and could take hours to process. Skipping."
+    # Some logs can be massive (over 1,500,000,000 lines have been seen in the wild) 
+    # Even just 'wc -l' on these files can take 10+ minutes 
+
+    local fileSize=`ls -lh | awk '{ print $5 }' | grep -ie G`
+    if [ x$fileSize != x ]; then
+        warning "$logf is ${fileSize} in size and could take many hours to process. Skipping."
         return
     fi
 

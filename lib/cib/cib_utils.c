@@ -373,7 +373,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
 
-        if(xml_tracking_changes(scratch) == FALSE) {
+        if(scratch && xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
             xml_track_changes(scratch, user, current_cib, cib_acl_enabled(current_cib, user));
             xml_calculate_changes(current_cib, scratch);
