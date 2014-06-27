@@ -294,7 +294,10 @@ class crm_lha(ClusterManager):
                 if not partition:
                     self.log("no partition details for %s" % node)
                 elif len(partition) > 2:
-                    partition = partition[:-1].sort()
+                    nodes = partition[:-1]
+                    nodes.sort()
+                    partition = string.join(nodes, ' ')
+
                     found = 0
                     for a_partition in ccm_partitions:
                         if partition == a_partition:
