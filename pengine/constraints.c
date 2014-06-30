@@ -201,22 +201,22 @@ pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, tag_t ** ta
 
     *tag = NULL;
     rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
-                                       NULL, (gpointer) tag);
+                                       NULL, (gpointer*) tag);
 
     if (rc == FALSE) {
         rc = g_hash_table_lookup_extended(data_set->tags, id,
-                                          NULL, (gpointer) tag);
+                                          NULL, (gpointer*) tag);
 
         if (rc == FALSE) {
             crm_config_warn("No template/tag named '%s'", id);
             return FALSE;
 
-        } else if (tag == NULL) {
+        } else if (*tag == NULL) {
             crm_config_warn("No resource is tagged with '%s'", id);
             return FALSE;
         }
 
-    } else if (tag == NULL) {
+    } else if (*tag == NULL) {
         crm_config_warn("No resource is derived from template '%s'", id);
         return FALSE;
     }
