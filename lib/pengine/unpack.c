@@ -3147,16 +3147,17 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             }
 
             this_node = pe_find_node(data_set->nodes, uname);
-            if (is_remote_node(this_node)) {
+            if(this_node == NULL) {
+                CRM_LOG_ASSERT(this_node != NULL);
+                continue;
+
+            } else if (is_remote_node(this_node)) {
                 determine_remote_online_status(this_node);
             } else {
                 determine_online_status(node_state, this_node, data_set);
             }
 
-            if(this_node == NULL) {
-                CRM_LOG_ASSERT(this_node != NULL);
-
-            } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith

@@ -954,13 +954,13 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
 
     crm_trace("filtering copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
-    __xml_acl_unpack(acl_source, target, user);
-    set_doc_flag(target, xpf_acl_enabled);
-    __xml_acl_apply(target);
-
     if(target == NULL) {
         return TRUE;
     }
+
+    __xml_acl_unpack(acl_source, target, user);
+    set_doc_flag(target, xpf_acl_enabled);
+    __xml_acl_apply(target);
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
