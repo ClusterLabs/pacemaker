@@ -762,6 +762,13 @@ init_children_processes(void)
             }
         }
     }
+
+    /* From this point on, any daemons being started will be due to
+     * respawning rather than node start.
+     *
+     * This may be useful for the daemons to know
+     */
+    setenv("PCMK_respawned", "true", 1);
 }
 
 static void
