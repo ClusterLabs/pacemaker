@@ -2266,7 +2266,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname"N/A",
+            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname:"N/A",
                        stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
             STOP_SANITY_ASSERT(__LINE__);
 
