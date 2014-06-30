@@ -306,6 +306,7 @@ static void __xml_schema_add(
 
     xml_schema_max++;
     known_schemas = realloc(known_schemas, xml_schema_max*sizeof(struct schema_s));
+    CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
     known_schemas[last].type = type;
     known_schemas[last].after_transform = after_transform;
