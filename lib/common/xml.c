@@ -5426,9 +5426,14 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
 {
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
-    int type = known_schemas[method].type;
+    int type = 0;
     char *file = NULL;
 
+    if(method < 0) {
+        return FALSE;
+    }
+
+    type = known_schemas[method].type;
     if(type == 0) {
         return TRUE;
     }
