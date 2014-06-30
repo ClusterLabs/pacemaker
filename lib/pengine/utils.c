@@ -1959,7 +1959,7 @@ is_container_remote_node(node_t *node)
 gboolean
 is_remote_node(node_t *node)
 {
-    if (node->details->type == node_remote) {
+    if (node && node->details->type == node_remote) {
         return TRUE;
     }
     return FALSE;
