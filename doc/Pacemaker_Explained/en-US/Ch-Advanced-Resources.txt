@@ -644,6 +644,88 @@ clone is (after role filtering) limited to nodes on which the
 +with-rsc+ multi-state resource is (or will be) in the specified role.
 Allocation is then performed as-per-normal.
 
+==== Using Multi-state Resources in Colocation/Ordering Sets ====
+
+.Additional colocation set options relevant to multi-state resources
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|role
+|An additional attribute of colocation constraint sets that specifies the
+ role that *all members of the set* must be in.  Allowed values: _Started_, +Master+,
+ +Slave+.
+ indexterm:[role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,role]
+
+|=========================================================
+
+In the following example +B+'s master must be located on the same node as +A+'s master.
+Additionally resources +C+ and +D+ must be located on the same node as +B+'s master.
+
+.Colocate C and C with A and B's master instances
+======
+[source,XML]
+-------
+<constraints>
+    <rsc_colocation id="coloc-1" score="INFINITY" >
+      <resource_set id="collocated-set-example" sequential="true" role="Master">
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
+      </resource_set>
+    </rsc_colocation>
+    <rsc_colocation id="coloc-1" score="INFINITY" >
+      <resource_set id="collocated-set-example" sequential="true">
+        <resource_ref id="C"/>
+        <resource_ref id="D"/>
+      </resource_set>
+    </rsc_colocation>
+</constraints>
+-------
+======
+
+.Additional ordered set options relevant to multi-state resources
+[width="95%",cols="3m,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|action
+|An additional attribute of ordering constraint set that specifies the
+ action that applies to *all members of the set*.  Allowed
+ values: +start+, +stop+, +promote+, +demote+. Defaults to the value
+ (specified or implied) of +first-action+.
+ indexterm:[action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,action]
+
+|=========================================================
+
+In the following example +B+ cannot be promoted until +A+'s has been promoted.
+Additionally resources +C+ and +D+ must wait until +A+ and +B+ have been promoted before they can start.
+
+.Start C and C after first promoting A and B
+======
+[source,XML]
+-------
+<constraints>
+    <rsc_colocation id="coloc-1" score="INFINITY" >
+      <resource_set id="collocated-set-1" sequential="true" action="promote">
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
+      </resource_set>
+      <resource_set id="collocated-set-2" sequential="true" action="start">
+        <resource_ref id="C"/>
+        <resource_ref id="D"/>
+      </resource_set>
+    </rsc_colocation>
+</constraints>
+-------
+======
+
+
 === Multi-state Stickiness ===
 
 indexterm:[resource-stickiness,Multi-State]
