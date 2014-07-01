@@ -77,9 +77,10 @@ Requires:      %{name}-cli = %{version}-%{release}
 ExclusiveArch: i386 i686 x86_64
 %endif
 
+
 # Required for core functionality
 BuildRequires: automake autoconf libtool pkgconfig python libtool-ltdl-devel
-BuildRequires: glib2-devel libxml2-devel libxslt-devel libuuid-devel
+BuildRequires: pkgconfig(glib-2.0) libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: pkgconfig python-devel gcc-c++ bzip2-devel pam-devel
 
 # Required for agent_config.h which specifies the correct scratch directory
@@ -91,7 +92,7 @@ Requires:      libqb > 0.11.0
 
 # Enables optional functionality
 BuildRequires: ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man gnutls-devel dbus-devel
+BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{defined _unitdir}
 BuildRequires: systemd-devel
