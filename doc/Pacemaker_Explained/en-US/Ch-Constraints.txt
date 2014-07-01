@@ -378,11 +378,11 @@ ordered resources, such as:
 </constraints>
 -------
 ======
-        
-== Ordered Set ==
 
 .Visual representation of the four resources' start order for the above constraints
 image::images/resource-set.png["Ordered set",width="16cm",height="2.5cm",align="center"]
+        
+=== Ordered Set ===
 
 To simplify this situation, there is an alternate format for ordering
 constraints:
@@ -404,21 +404,11 @@ constraints:
 -------
 ======
 
-[NOTE]
-Resource sets have the same ordering semantics as groups.
-
-.A group resource with the equivalent ordering rules
-======
-[source,XML]
--------
-<group id="dummy">
-    <primitive id="A" .../>
-    <primitive id="B" .../>
-    <primitive id="C" .../>
-    <primitive id="D" .../>
-</group>
--------
-======
+[WARNING]
+=========
+Always pay attention to how your tools expose this functionality.
+In some tools +create set A B+ is *NOT* equivalent to +create A then B+.
+=========
 
 While the set-based format is not less verbose, it is significantly
 easier to get right and maintain.  It can also be expanded to allow
@@ -446,11 +436,8 @@ however +rscC+ and +rscD+ can only start once _both_ +rscA+ _and_
 -------
 ======
         
-== Two Sets of Unordered Resources ==
-
 .Visual representation of the start order for two ordered sets of unordered resources
 image::images/two-sets.png["Two ordered sets",width="13cm",height="7.5cm",align="center"]
-
 
 Of course either set -- or both sets -- of resources can also be
 internally ordered (by setting +sequential="true"+) and there is no
@@ -479,13 +466,11 @@ limit to the number of sets that can be specified.
 -------
 ======
 
-== Three Resources Sets ==
-
 .Visual representation of the start order for the three sets defined above
 image::images/three-sets.png["Three ordered sets",width="16cm",height="7.5cm",align="center"]
 
 
-== Resource Set OR Logic ==
+=== Resource Set OR Logic ===
 
 The unordered set logic discussed so far has all been "AND" logic.
 To illustrate this take the 3 resource set figure in the previous section.
@@ -527,7 +512,7 @@ modifies the set to be an unordered set that uses "AND" logic by default, by add
 ======
 
 
-[[s-resource-sets-collocation]]
+[[s-resource-sets-colocation]]
 == Collocating Sets of Resources ==
 
 Another common situation is for an administrator to create a set of
@@ -573,8 +558,11 @@ stopped.
 -------
 ======
 
-[NOTE]
-Resource sets have the same colocation semantics as groups.
+[WARNING]
+=========
+Always pay attention to how your tools expose this functionality.
+In some tools +create set A B+ is *NOT* equivalent to +create A with B+.
+=========
 
 .A group resource with the equivalent colocation rules
 [source,XML]
@@ -644,7 +632,5 @@ must be in using the set's role attribute.
 -------
 ======
         
-== Another Three Resources Sets ==
-
 .Visual representation of a colocation chain where the members of the middle set have no inter-dependencies
 image::images/three-sets-complex.png["Colocation chain",width="16cm",height="9cm",align="center"]
