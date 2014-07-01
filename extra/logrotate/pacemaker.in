@@ -1,0 +1,10 @@
+@localstatedir@/log/pacemaker.log {
+    compress
+    dateext
+    weekly
+    rotate 10
+    maxsize 10M
+    notifempty
+    missingok
+    copytruncate
+}
