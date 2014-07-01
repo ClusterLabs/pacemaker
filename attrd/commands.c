@@ -65,7 +65,7 @@ void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
-void attrd_peer_remove(const char *host, const char *source);
+void attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -343,7 +343,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if(safe_str_eq(op, "peer-remove")) {
         const char *host = crm_element_value(xml, F_ATTRD_HOST);
-        attrd_peer_remove(host, peer->uname);
+        attrd_peer_remove(0, host, TRUE, peer->uname);
 
     } else if(safe_str_eq(op, "sync-response")
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {
@@ -383,7 +383,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 }
 
 void
-attrd_peer_remove(const char *host, const char *source)
+attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source)
 {
     attribute_t *a = NULL;
     GHashTableIter aIter;
@@ -402,6 +402,10 @@ attrd_peer_remove(const char *host, const char *source)
 
     /* if this matches a remote peer, it will be removed from the cache */
     crm_remote_peer_cache_remove(host);
+
+    if (uncache) {
+        reap_crm_member(nodeid, host);
+    }
 }
 
 void
@@ -535,7 +539,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     } else if(kind == crm_status_nstate
               && safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
 
-        attrd_peer_remove(peer->uname, __FUNCTION__);
+        attrd_peer_remove(peer->id, peer->uname, FALSE, __FUNCTION__);
         if(peer_writer && safe_str_eq(peer->uname, peer_writer)) {
             free(peer_writer);
             peer_writer = NULL;
