@@ -3,7 +3,7 @@
 == OS Installation ==
 
 Detailed instructions for installing Fedora are available at
-http://docs.fedoraproject.org/en-US/Fedora/17/html/Installation_Guide/ in a number of
+http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/ in a number of
 languages. The abbreviated version is as follows...
 
 Point your browser to http://fedoraproject.org/en/get-fedora-all,
@@ -11,46 +11,36 @@ locate the +Install Media+ section and download the install DVD that
 matches your hardware.
 
 Burn the disk image to a DVD
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Burning_ISO_images_to_disc/index.html]
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Burning_ISO_images_to_disc/index.html]
 and boot from it, or use the image to boot a virtual machine.
 
 After clicking through the welcome screen, select your language,
 keyboard layout
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-keyboard-x86.html]
-and storage type
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/Storage_Devices-x86.html]
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/language-selection-x86.html]
 
-Assign your machine a host name.
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-Netconfig-x86.html]
-I happen to control the clusterlabs.org domain name, so I will use
-that here.
+At this point you get a chance to tweak the default installation options.
+
+In the +Network Configuration+ section you'll want to:
+
+- Assign your machine a host name
+  I happen to control the clusterlabs.org domain name, so I will use
+  that here.
+- Assign a fixed IP address
 
 [IMPORTANT]
 ===========
 Do not accept the default network settings.
 Cluster machines should never obtain an IP address via DHCP.
 
-When you are presented with the +Configure Network+ advanced option, select that option
-before continuing with the installation process to specify a fixed IPv4 address for
-+System eth0+. Be sure to also enter the +Routes+ section and add an entry for your
-default gateway.
-
-image::images/Network.png["Custom network settings",align="center",scaledwidth="65%"]
-
 If you miss this step, this can easily be configured after installation. You will have
 to navigate to +system settings+ and select +network+.  From there you can select
 what device to configure.
 ===========
 
-You will then be prompted to indicate the machine's physical location
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-timezone-x86.html]
-and to supply a root password.
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/sn-account_configuration-x86.html]
-
-Now select where you want Fedora installed.
-footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-diskpartsetup-x86.html]
-As I don’t care about any existing data, I will accept the default and
-allow Fedora to use the complete drive.
+In the +Software Selection+ section (try saying that 10 times
+quickly), choose +Minimal Install+ so that we see everything that gets
+installed. Don't enable updates yet, we'll do that (and install any
+extra software we need) later.
 
 [IMPORTANT]
 ===========
@@ -64,20 +54,19 @@ However, by default it also allocates all free space to the +/+
 
 So if you plan on following the DRBD or GFS2 portions of this guide,
 you should reserve at least 1Gb of space on each machine from which to
-create a shared volume.  To do so select the +Review and modify
-partitioning layout+ checkbox before clicking +Next+.  You will then
-be given an opportunity to reduce the size of the +root+ partition.
+create a shared volume.  To do so, enter the +Installation
+Destination+ section where you are be given an opportunity to reduce
+the size of the +root+ partition (after chosing which hard drive you
+wish to install to).
 
 ===========
 
-Next choose which software should be
-installed. footnote:[http://docs.fedoraproject.org/en-US/Fedora/16/html/Installation_Guide/s1-pkgselection-x86.html]
-Change the selection to Minimal so that we see everything that gets
-installed. Don't enable updates yet, we'll do that (and install any
-extra software we need) later. After you click next, Fedora will begin
-installing.
+It is highly recommended to enable NTP on your cluster nodes. Doing so
+ensures all nodes agree on the current time and makes reading log files
+significantly easier. You can do this in the +Date & Time+ section. 
+footnote:[http://docs.fedoraproject.org/en-US/Fedora/20/html/Installation_Guide/s1-timezone-x86.html]
 
-Go grab something to drink, this may take a while.
+
 
 Once the node reboots, you'll see a (possibly mangled) login prompt on
 the console.  Login using +root+ and the password you created earlier.
@@ -94,14 +83,6 @@ From here on in we're going to be working exclusively from the terminal.
 == Post Installation Tasks ==
 
 === Networking ===
-
-Bring up the network and ensure it starts at boot
-
-[source,C]
------
-# service network start
-# chkconfig network on
------
 
 Check the machine has the static IP address you configured earlier
 
@@ -120,7 +101,19 @@ Check the machine has the static IP address you configured earlier
        valid_lft forever preferred_lft forever
 -----
 
-Now check the default route setting:
+NOTE
+=====
+Handy tip - If you ever need to change the node's IP address from the command line follow these instructions:
+
+1. manually edit /etc/sysconfig/network-scripts/ifcfg-${device}
+2. nmcli dev disconnect ${device}
+3. nmcli con reload ${device}
+4. nmcli con up ${device}
+
+This makes NetworkManager aware that a change was made on the config file.
+=====
+
+Next, check the routes are ok:
 
 [source,C]
 -----
@@ -237,43 +230,10 @@ clusterlabs.org
 
 The output from the second command is fine, but we really don't need the
 domain name included in the basic host details. To address this, we need
-to update /etc/sysconfig/network. This is what it should look like before
-we start.
-
+to use the +hostnamectl+ tool to strip off the domain name.
 [source,C]
 ----
-# cat /etc/sysconfig/network
-NETWORKING=yes
-HOSTNAME=pcmk-1.clusterlabs.org
-GATEWAY=192.168.122.1
-----
-
-All we need to do now is strip off the domain name portion, which is
-stored elsewhere anyway.
-
-[source,C]
-----
- # sed -i.sed 's/\.[a-z].*//g' /etc/sysconfig/network
-----
-
-Now confirm the change was successful. The revised file contents should
-look something like this.
-
-[source,C]
-----
-# cat /etc/sysconfig/network
-NETWORKING=yes
-HOSTNAME=pcmk-1
-GATEWAY=192.168.122.1
-----
-
-However we're not finished. The machine wont normally see the shortened
-host name until about it reboots, but we can force it to update.
-
-[source,C]
-----
-# source /etc/sysconfig/network
-# hostname $HOSTNAME
+# hostnamectl set-hostname $(uname -n | sed s/\\..*//)'
 ----
 (((Nodes, Domain name (Remove from host name))))
 
@@ -287,11 +247,8 @@ pcmk-1
 clusterlabs.org
 ----
 
-=== NTP ===
-
-It is highly recommended to enable NTP on your cluster nodes. Doing so
-ensures all nodes agree on the current time and makes reading log files
-significantly easier. footnote:[http://docs.fedoraproject.org/en-US/Fedora/17/html-single/System_Administrators_Guide/index.html#ch-Configuring_the_Date_and_Time]
+If it concerns you that the shell prompt has not been updated, simply
+log out and back in again.
 
 == Before You Continue ==
 
@@ -418,427 +375,8 @@ need, so simply fire up a shell on all your nodes and run:
 
 [source,C]
 ----
-[ALL] # yum install -y pacemaker corosync
+[ALL] # yum install -y pacemaker pcs
 ----
-.....
-fedora/metalink                                  |  38 kB     00:00
-fedora                                           | 4.2 kB     00:00
-fedora/primary_db                                |  14 MB     00:21
-updates/metalink                                 | 2.7 kB     00:00
-updates                                          | 2.6 kB     00:00
-updates/primary_db                               | 1.2 kB     00:00
-updates-testing/metalink                         |  28 kB     00:00
-updates-testing                                  | 4.5 kB     00:00
-updates-testing/primary_db                       | 4.5 MB     00:12
-Setting up Install Process
-Resolving Dependencies
---> Running transaction check
----> Package corosync.x86_64 0:1.99.9-1.fc17 will be installed
---> Processing Dependency: corosynclib = 1.99.9-1.fc17 for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libxslt for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libvotequorum.so.5(COROSYNC_VOTEQUORUM_1.0)(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libquorum.so.5(COROSYNC_QUORUM_1.0)(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcpg.so.4(COROSYNC_CPG_1.0)(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcmap.so.4(COROSYNC_CMAP_1.0)(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcfg.so.6(COROSYNC_CFG_0.82)(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libvotequorum.so.5()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libtotem_pg.so.5()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libquorum.so.5()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libqb.so.0()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libnetsnmp.so.30()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcpg.so.4()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcorosync_common.so.4()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcmap.so.4()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
---> Processing Dependency: libcfg.so.6()(64bit) for package: corosync-1.99.9-1.fc17.x86_64
----> Package pacemaker.x86_64 0:1.1.7-2.fc17 will be installed
---> Processing Dependency: pacemaker-libs = 1.1.7-2.fc17 for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: pacemaker-cluster-libs = 1.1.7-2.fc17 for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: pacemaker-cli = 1.1.7-2.fc17 for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: resource-agents for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: perl(Getopt::Long) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libgnutls.so.26(GNUTLS_1_4)(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: cluster-glue for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: /usr/bin/perl for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libpe_status.so.3()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libltdl.so.7()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libgnutls.so.26()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.7-2.fc17.x86_64
---> Running transaction check
----> Package cluster-glue.x86_64 0:1.0.6-9.fc17.1 will be installed
---> Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.6-9.fc17.1.x86_64
---> Processing Dependency: libOpenIPMIutils.so.0()(64bit) for package: cluster-glue-1.0.6-9.fc17.1.x86_64
---> Processing Dependency: libOpenIPMIposix.so.0()(64bit) for package: cluster-glue-1.0.6-9.fc17.1.x86_64
---> Processing Dependency: libOpenIPMI.so.0()(64bit) for package: cluster-glue-1.0.6-9.fc17.1.x86_64
----> Package cluster-glue-libs.x86_64 0:1.0.6-9.fc17.1 will be installed
----> Package corosynclib.x86_64 0:1.99.9-1.fc17 will be installed
---> Processing Dependency: librdmacm.so.1(RDMACM_1.0)(64bit) for package: corosynclib-1.99.9-1.fc17.x86_64
---> Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: corosynclib-1.99.9-1.fc17.x86_64
---> Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: corosynclib-1.99.9-1.fc17.x86_64
---> Processing Dependency: librdmacm.so.1()(64bit) for package: corosynclib-1.99.9-1.fc17.x86_64
---> Processing Dependency: libibverbs.so.1()(64bit) for package: corosynclib-1.99.9-1.fc17.x86_64
----> Package gnutls.x86_64 0:2.12.17-1.fc17 will be installed
---> Processing Dependency: libtasn1.so.3(LIBTASN1_0_3)(64bit) for package: gnutls-2.12.17-1.fc17.x86_64
---> Processing Dependency: libtasn1.so.3()(64bit) for package: gnutls-2.12.17-1.fc17.x86_64
---> Processing Dependency: libp11-kit.so.0()(64bit) for package: gnutls-2.12.17-1.fc17.x86_64
----> Package libqb.x86_64 0:0.11.1-1.fc17 will be installed
----> Package libtool-ltdl.x86_64 0:2.4.2-3.fc17 will be installed
----> Package libxslt.x86_64 0:1.1.26-9.fc17 will be installed
----> Package net-snmp-libs.x86_64 1:5.7.1-4.fc17 will be installed
----> Package pacemaker-cli.x86_64 0:1.1.7-2.fc17 will be installed
----> Package pacemaker-cluster-libs.x86_64 0:1.1.7-2.fc17 will be installed
----> Package pacemaker-libs.x86_64 0:1.1.7-2.fc17 will be installed
----> Package perl.x86_64 4:5.14.2-211.fc17 will be installed
---> Processing Dependency: perl-libs = 4:5.14.2-211.fc17 for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(threads::shared) >= 1.21 for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Socket) >= 1.3 for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Scalar::Util) >= 1.10 for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(File::Spec) >= 0.8 for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl-macros for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl-libs for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(threads::shared) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(threads) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Socket) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Scalar::Util) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Pod::Simple) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Module::Pluggable) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(List::Util) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(File::Spec::Unix) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(File::Spec::Functions) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(File::Spec) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Cwd) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: perl(Carp) for package: 4:perl-5.14.2-211.fc17.x86_64
---> Processing Dependency: libperl.so()(64bit) for package: 4:perl-5.14.2-211.fc17.x86_64
----> Package resource-agents.x86_64 0:3.9.2-2.fc17.1 will be installed
---> Processing Dependency: /usr/sbin/rpc.nfsd for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /usr/sbin/rpc.mountd for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /usr/sbin/ethtool for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/rpc.statd for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/quotaon for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/quotacheck for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/mount.nfs4 for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/mount.nfs for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/mount.cifs for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: /sbin/fsck.xfs for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.9.2-2.fc17.1.x86_64
---> Running transaction check
----> Package OpenIPMI-libs.x86_64 0:2.0.18-13.fc17 will be installed
----> Package cifs-utils.x86_64 0:5.3-2.fc17 will be installed
---> Processing Dependency: libtalloc.so.2(TALLOC_2.0.2)(64bit) for package: cifs-utils-5.3-2.fc17.x86_64
---> Processing Dependency: keyutils for package: cifs-utils-5.3-2.fc17.x86_64
---> Processing Dependency: libwbclient.so.0()(64bit) for package: cifs-utils-5.3-2.fc17.x86_64
---> Processing Dependency: libtalloc.so.2()(64bit) for package: cifs-utils-5.3-2.fc17.x86_64
----> Package ethtool.x86_64 2:3.2-2.fc17 will be installed
----> Package libibverbs.x86_64 0:1.1.6-2.fc17 will be installed
----> Package libnet.x86_64 0:1.1.5-3.fc17 will be installed
----> Package librdmacm.x86_64 0:1.0.15-1.fc17 will be installed
----> Package libtasn1.x86_64 0:2.12-1.fc17 will be installed
----> Package nfs-utils.x86_64 1:1.2.5-12.fc17 will be installed
---> Processing Dependency: rpcbind for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libtirpc for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libnfsidmap for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libgssglue.so.1(libgssapi_CITI_2)(64bit) for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libgssglue for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libevent for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libtirpc.so.1()(64bit) for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libnfsidmap.so.0()(64bit) for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libgssglue.so.1()(64bit) for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
---> Processing Dependency: libevent-2.0.so.5()(64bit) for package: 1:nfs-utils-1.2.5-12.fc17.x86_64
----> Package p11-kit.x86_64 0:0.12-1.fc17 will be installed
----> Package perl-Carp.noarch 0:1.22-2.fc17 will be installed
----> Package perl-Module-Pluggable.noarch 1:3.90-211.fc17 will be installed
----> Package perl-PathTools.x86_64 0:3.33-211.fc17 will be installed
----> Package perl-Pod-Simple.noarch 1:3.16-211.fc17 will be installed
---> Processing Dependency: perl(Pod::Escapes) >= 1.04 for package: 1:perl-Pod-Simple-3.16-211.fc17.noarch
----> Package perl-Scalar-List-Utils.x86_64 0:1.25-1.fc17 will be installed
----> Package perl-Socket.x86_64 0:2.001-1.fc17 will be installed
----> Package perl-TimeDate.noarch 1:1.20-6.fc17 will be installed
----> Package perl-libs.x86_64 4:5.14.2-211.fc17 will be installed
----> Package perl-macros.x86_64 4:5.14.2-211.fc17 will be installed
----> Package perl-threads.x86_64 0:1.86-2.fc17 will be installed
----> Package perl-threads-shared.x86_64 0:1.40-2.fc17 will be installed
----> Package quota.x86_64 1:4.00-3.fc17 will be installed
---> Processing Dependency: quota-nls = 1:4.00-3.fc17 for package: 1:quota-4.00-3.fc17.x86_64
---> Processing Dependency: tcp_wrappers for package: 1:quota-4.00-3.fc17.x86_64
----> Package xfsprogs.x86_64 0:3.1.8-1.fc17 will be installed
---> Running transaction check
----> Package keyutils.x86_64 0:1.5.5-2.fc17 will be installed
----> Package libevent.x86_64 0:2.0.14-2.fc17 will be installed
----> Package libgssglue.x86_64 0:0.3-1.fc17 will be installed
----> Package libnfsidmap.x86_64 0:0.25-1.fc17 will be installed
----> Package libtalloc.x86_64 0:2.0.7-4.fc17 will be installed
----> Package libtirpc.x86_64 0:0.2.2-2.1.fc17 will be installed
----> Package libwbclient.x86_64 1:3.6.3-81.fc17.1 will be installed
----> Package perl-Pod-Escapes.noarch 1:1.04-211.fc17 will be installed
----> Package quota-nls.noarch 1:4.00-3.fc17 will be installed
----> Package rpcbind.x86_64 0:0.2.0-16.fc17 will be installed
----> Package tcp_wrappers.x86_64 0:7.6-69.fc17 will be installed
---> Finished Dependency Resolution
-
-Dependencies Resolved
-
-=====================================================================================
- Package                        Arch      Version             Repository            Size
-=====================================================================================
-Installing:
- corosync                       x86_64    1.99.9-1.fc17       updates-testing   159 k
- pacemaker                      x86_64    1.1.7-2.fc17        updates-testing   362 k
-Installing for dependencies:
- OpenIPMI-libs                  x86_64    2.0.18-13.fc17      fedora            466 k
- cifs-utils                     x86_64    5.3-2.fc17          updates-testing    66 k
- cluster-glue                   x86_64    1.0.6-9.fc17.1      fedora            229 k
- cluster-glue-libs              x86_64    1.0.6-9.fc17.1      fedora            121 k
- corosynclib                    x86_64    1.99.9-1.fc17       updates-testing    96 k
- ethtool                        x86_64    2:3.2-2.fc17        fedora             94 k
- gnutls                         x86_64    2.12.17-1.fc17      fedora            385 k
- keyutils                       x86_64    1.5.5-2.fc17        fedora             49 k
- libevent                       x86_64    2.0.14-2.fc17       fedora            160 k
- libgssglue                     x86_64    0.3-1.fc17          fedora             24 k
- libibverbs                     x86_64    1.1.6-2.fc17        fedora             44 k
- libnet                         x86_64    1.1.5-3.fc17        fedora             54 k
- libnfsidmap                    x86_64    0.25-1.fc17         fedora             34 k
- libqb                          x86_64    0.11.1-1.fc17       updates-testing    68 k
- librdmacm                      x86_64    1.0.15-1.fc17       fedora             27 k
- libtalloc                      x86_64    2.0.7-4.fc17        fedora             22 k
- libtasn1                       x86_64    2.12-1.fc17         updates-testing   319 k
- libtirpc                       x86_64    0.2.2-2.1.fc17      fedora             78 k
- libtool-ltdl                   x86_64    2.4.2-3.fc17        fedora             45 k
- libwbclient                    x86_64    1:3.6.3-81.fc17.1   updates-testing    68 k
- libxslt                        x86_64    1.1.26-9.fc17       fedora            416 k
- net-snmp-libs                  x86_64    1:5.7.1-4.fc17      fedora            713 k
- nfs-utils                      x86_64    1:1.2.5-12.fc17     fedora            311 k
- p11-kit                        x86_64    0.12-1.fc17         updates-testing    36 k
- pacemaker-cli                  x86_64    1.1.7-2.fc17        updates-testing   368 k
- pacemaker-cluster-libs         x86_64    1.1.7-2.fc17        updates-testing    77 k
- pacemaker-libs                 x86_64    1.1.7-2.fc17        updates-testing   322 k
- perl                           x86_64    4:5.14.2-211.fc17   fedora             10 M
- perl-Carp                      noarch    1.22-2.fc17         fedora             17 k
- perl-Module-Pluggable          noarch    1:3.90-211.fc17     fedora             47 k
- perl-PathTools                 x86_64    3.33-211.fc17       fedora            105 k
- perl-Pod-Escapes               noarch    1:1.04-211.fc17     fedora             40 k
- perl-Pod-Simple                noarch    1:3.16-211.fc17     fedora            223 k
- perl-Scalar-List-Utils         x86_64    1.25-1.fc17         updates-testing    33 k
- perl-Socket                    x86_64    2.001-1.fc17        updates-testing    44 k
- perl-TimeDate                  noarch    1:1.20-6.fc17       fedora             43 k
- perl-libs                      x86_64    4:5.14.2-211.fc17   fedora            628 k
- perl-macros                    x86_64    4:5.14.2-211.fc17   fedora             32 k
- perl-threads                   x86_64    1.86-2.fc17         fedora             47 k
- perl-threads-shared            x86_64    1.40-2.fc17         fedora             36 k
- quota                          x86_64    1:4.00-3.fc17       fedora            160 k
- quota-nls                      noarch    1:4.00-3.fc17       fedora             74 k
- resource-agents                x86_64    3.9.2-2.fc17.1      fedora            466 k
- rpcbind                        x86_64    0.2.0-16.fc17       fedora             52 k
- tcp_wrappers                   x86_64    7.6-69.fc17         fedora             72 k
- xfsprogs                       x86_64    3.1.8-1.fc17        updates-testing   715 k
-
-Transaction Summary
-=====================================================================================
-Install  2 Packages (+46 Dependent packages)
-
-Total download size: 18 M
-Installed size: 59 M
-Downloading Packages:
-(1/48): OpenIPMI-libs-2.0.18-13.fc17.x86_64.rpm                       | 466 kB     00:00
-warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID 1aca3465: NOKEY
-Public key for OpenIPMI-libs-2.0.18-13.fc17.x86_64.rpm is not installed
-(2/48): cifs-utils-5.3-2.fc17.x86_64.rpm                              |  66 kB     00:01
-Public key for cifs-utils-5.3-2.fc17.x86_64.rpm is not installed
-(3/48): cluster-glue-1.0.6-9.fc17.1.x86_64.rpm                        | 229 kB     00:00
-(4/48): cluster-glue-libs-1.0.6-9.fc17.1.x86_64.rpm                   | 121 kB     00:00
-(5/48): corosync-1.99.9-1.fc17.x86_64.rpm                             | 159 kB     00:01
-(6/48): corosynclib-1.99.9-1.fc17.x86_64.rpm                          |  96 kB     00:00
-(7/48): ethtool-3.2-2.fc17.x86_64.rpm                                 |  94 kB     00:00
-(8/48): gnutls-2.12.17-1.fc17.x86_64.rpm                              | 385 kB     00:00
-(9/48): keyutils-1.5.5-2.fc17.x86_64.rpm                              |  49 kB     00:00
-(10/48): libevent-2.0.14-2.fc17.x86_64.rpm                            | 160 kB     00:00
-(11/48): libgssglue-0.3-1.fc17.x86_64.rpm                             |  24 kB     00:00
-(12/48): libibverbs-1.1.6-2.fc17.x86_64.rpm                           |  44 kB     00:00
-(13/48): libnet-1.1.5-3.fc17.x86_64.rpm                               |  54 kB     00:00
-(14/48): libnfsidmap-0.25-1.fc17.x86_64.rpm                           |  34 kB     00:00
-(15/48): libqb-0.11.1-1.fc17.x86_64.rpm                               |  68 kB     00:01
-(16/48): librdmacm-1.0.15-1.fc17.x86_64.rpm                           |  27 kB     00:00
-(17/48): libtalloc-2.0.7-4.fc17.x86_64.rpm                            |  22 kB     00:00
-(18/48): libtasn1-2.12-1.fc17.x86_64.rpm                              | 319 kB     00:02
-(19/48): libtirpc-0.2.2-2.1.fc17.x86_64.rpm                           |  78 kB     00:00
-(20/48): libtool-ltdl-2.4.2-3.fc17.x86_64.rpm                         |  45 kB     00:00
-(21/48): libwbclient-3.6.3-81.fc17.1.x86_64.rpm                       |  68 kB     00:00
-(22/48): libxslt-1.1.26-9.fc17.x86_64.rpm                             | 416 kB     00:00
-(23/48): net-snmp-libs-5.7.1-4.fc17.x86_64.rpm                        | 713 kB     00:01
-(24/48): nfs-utils-1.2.5-12.fc17.x86_64.rpm                           | 311 kB     00:00
-(25/48): p11-kit-0.12-1.fc17.x86_64.rpm                               |  36 kB     00:01
-(26/48): pacemaker-1.1.7-2.fc17.x86_64.rpm                            | 362 kB     00:02
-(27/48): pacemaker-cli-1.1.7-2.fc17.x86_64.rpm                        | 368 kB     00:02
-(28/48): pacemaker-cluster-libs-1.1.7-2.fc17.x86_64.rpm               |  77 kB     00:00
-(29/48): pacemaker-libs-1.1.7-2.fc17.x86_64.rpm                       | 322 kB     00:01
-(30/48): perl-5.14.2-211.fc17.x86_64.rpm                              |  10 MB     00:15
-(31/48): perl-Carp-1.22-2.fc17.noarch.rpm                             |  17 kB     00:00
-(32/48): perl-Module-Pluggable-3.90-211.fc17.noarch.rpm               |  47 kB     00:00
-(33/48): perl-PathTools-3.33-211.fc17.x86_64.rpm                      | 105 kB     00:00
-(34/48): perl-Pod-Escapes-1.04-211.fc17.noarch.rpm                    |  40 kB     00:00
-(35/48): perl-Pod-Simple-3.16-211.fc17.noarch.rpm                     | 223 kB     00:00
-(36/48): perl-Scalar-List-Utils-1.25-1.fc17.x86_64.rpm                |  33 kB     00:01
-(37/48): perl-Socket-2.001-1.fc17.x86_64.rpm                          |  44 kB     00:00
-(38/48): perl-TimeDate-1.20-6.fc17.noarch.rpm                         |  43 kB     00:00
-(39/48): perl-libs-5.14.2-211.fc17.x86_64.rpm                         | 628 kB     00:00
-(40/48): perl-macros-5.14.2-211.fc17.x86_64.rpm                       |  32 kB     00:00
-(41/48): perl-threads-1.86-2.fc17.x86_64.rpm                          |  47 kB     00:00
-(42/48): perl-threads-shared-1.40-2.fc17.x86_64.rpm                   |  36 kB     00:00
-(43/48): quota-4.00-3.fc17.x86_64.rpm                                 | 160 kB     00:00
-(44/48): quota-nls-4.00-3.fc17.noarch.rpm                             |  74 kB     00:00
-(45/48): resource-agents-3.9.2-2.fc17.1.x86_64.rpm                    | 466 kB     00:00
-(46/48): rpcbind-0.2.0-16.fc17.x86_64.rpm                             |  52 kB     00:00
-(47/48): tcp_wrappers-7.6-69.fc17.x86_64.rpm                          |  72 kB     00:00
-(48/48): xfsprogs-3.1.8-1.fc17.x86_64.rpm                             | 715 kB     00:03
-----------------------------------------------------------------------------------------
-Total                                                        333 kB/s |  18 MB     00:55
-Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64
-Importing GPG key 0x1ACA3465:
- Userid     : "Fedora (17) <fedora@fedoraproject.org>"
- Fingerprint: cac4 3fb7 74a4 a673 d81c 5de7 50e9 4c99 1aca 3465
- Package    : fedora-release-17-0.8.noarch (@anaconda-0)
- From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-x86_64
-Running Transaction Check
-Running Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing : libqb-0.11.1-1.fc17.x86_64                                         1/48
-  Installing : libtool-ltdl-2.4.2-3.fc17.x86_64                                   2/48
-  Installing : cluster-glue-libs-1.0.6-9.fc17.1.x86_64                            3/48
-  Installing : libxslt-1.1.26-9.fc17.x86_64                                       4/48
-  Installing : 1:perl-Pod-Escapes-1.04-211.fc17.noarch                            5/48
-  Installing : perl-threads-1.86-2.fc17.x86_64                                    6/48
-  Installing : 4:perl-macros-5.14.2-211.fc17.x86_64                               7/48
-  Installing : 1:perl-Pod-Simple-3.16-211.fc17.noarch                             8/48
-  Installing : perl-Socket-2.001-1.fc17.x86_64                                    9/48
-  Installing : perl-Carp-1.22-2.fc17.noarch                                      10/48
-  Installing : 4:perl-libs-5.14.2-211.fc17.x86_64                                11/48
-  Installing : perl-threads-shared-1.40-2.fc17.x86_64                            12/48
-  Installing : perl-Scalar-List-Utils-1.25-1.fc17.x86_64                         13/48
-  Installing : 1:perl-Module-Pluggable-3.90-211.fc17.noarch                      14/48
-  Installing : perl-PathTools-3.33-211.fc17.x86_64                               15/48
-  Installing : 4:perl-5.14.2-211.fc17.x86_64                                     16/48
-  Installing : libibverbs-1.1.6-2.fc17.x86_64                                    17/48
-  Installing : keyutils-1.5.5-2.fc17.x86_64                                      18/48
-  Installing : libgssglue-0.3-1.fc17.x86_64                                      19/48
-  Installing : libtirpc-0.2.2-2.1.fc17.x86_64                                    20/48
-  Installing : 1:net-snmp-libs-5.7.1-4.fc17.x86_64                               21/48
-  Installing : rpcbind-0.2.0-16.fc17.x86_64                                      22/48
-  Installing : librdmacm-1.0.15-1.fc17.x86_64                                    23/48
-  Installing : corosynclib-1.99.9-1.fc17.x86_64                                  24/48
-  Installing : corosync-1.99.9-1.fc17.x86_64                                     25/48
-error reading information on service corosync: No such file or directory
-  Installing : 1:perl-TimeDate-1.20-6.fc17.noarch                                26/48
-  Installing : 1:quota-nls-4.00-3.fc17.noarch                                    27/48
-  Installing : tcp_wrappers-7.6-69.fc17.x86_64                                   28/48
-  Installing : 1:quota-4.00-3.fc17.x86_64                                        29/48
-  Installing : libnfsidmap-0.25-1.fc17.x86_64                                    30/48
-  Installing : 1:libwbclient-3.6.3-81.fc17.1.x86_64                              31/48
-  Installing : libnet-1.1.5-3.fc17.x86_64                                        32/48
-  Installing : 2:ethtool-3.2-2.fc17.x86_64                                       33/48
-  Installing : libevent-2.0.14-2.fc17.x86_64                                     34/48
-  Installing : 1:nfs-utils-1.2.5-12.fc17.x86_64                                  35/48
-  Installing : libtalloc-2.0.7-4.fc17.x86_64                                     36/48
-  Installing : cifs-utils-5.3-2.fc17.x86_64                                      37/48
-  Installing : libtasn1-2.12-1.fc17.x86_64                                       38/48
-  Installing : OpenIPMI-libs-2.0.18-13.fc17.x86_64                               39/48
-  Installing : cluster-glue-1.0.6-9.fc17.1.x86_64                                40/48
-  Installing : p11-kit-0.12-1.fc17.x86_64                                        41/48
-  Installing : gnutls-2.12.17-1.fc17.x86_64                                      42/48
-  Installing : pacemaker-libs-1.1.7-2.fc17.x86_64                                43/48
-  Installing : pacemaker-cluster-libs-1.1.7-2.fc17.x86_64                        44/48
-  Installing : pacemaker-cli-1.1.7-2.fc17.x86_64                                 45/48
-  Installing : xfsprogs-3.1.8-1.fc17.x86_64                                      46/48
-  Installing : resource-agents-3.9.2-2.fc17.1.x86_64                             47/48
-  Installing : pacemaker-1.1.7-2.fc17.x86_64                                     48/48
-  Verifying  : xfsprogs-3.1.8-1.fc17.x86_64                                       1/48
-  Verifying  : 1:net-snmp-libs-5.7.1-4.fc17.x86_64                                2/48
-  Verifying  : corosync-1.99.9-1.fc17.x86_64                                      3/48
-  Verifying  : cluster-glue-1.0.6-9.fc17.1.x86_64                                 4/48
-  Verifying  : perl-PathTools-3.33-211.fc17.x86_64                                5/48
-  Verifying  : p11-kit-0.12-1.fc17.x86_64                                         6/48
-  Verifying  : 1:perl-Pod-Simple-3.16-211.fc17.noarch                             7/48
-  Verifying  : OpenIPMI-libs-2.0.18-13.fc17.x86_64                                8/48
-  Verifying  : libtasn1-2.12-1.fc17.x86_64                                        9/48
-  Verifying  : perl-threads-1.86-2.fc17.x86_64                                   10/48
-  Verifying  : 1:perl-Pod-Escapes-1.04-211.fc17.noarch                           11/48
-  Verifying  : pacemaker-1.1.7-2.fc17.x86_64                                     12/48
-  Verifying  : 4:perl-5.14.2-211.fc17.x86_64                                     13/48
-  Verifying  : gnutls-2.12.17-1.fc17.x86_64                                      14/48
-  Verifying  : perl-threads-shared-1.40-2.fc17.x86_64                            15/48
-  Verifying  : 4:perl-macros-5.14.2-211.fc17.x86_64                              16/48
-  Verifying  : 1:perl-Module-Pluggable-3.90-211.fc17.noarch                      17/48
-  Verifying  : 1:nfs-utils-1.2.5-12.fc17.x86_64                                  18/48
-  Verifying  : cluster-glue-libs-1.0.6-9.fc17.1.x86_64                           19/48
-  Verifying  : pacemaker-libs-1.1.7-2.fc17.x86_64                                20/48
-  Verifying  : libtalloc-2.0.7-4.fc17.x86_64                                     21/48
-  Verifying  : libevent-2.0.14-2.fc17.x86_64                                     22/48
-  Verifying  : perl-Socket-2.001-1.fc17.x86_64                                   23/48
-  Verifying  : libgssglue-0.3-1.fc17.x86_64                                      24/48
-  Verifying  : perl-Carp-1.22-2.fc17.noarch                                      25/48
-  Verifying  : libtirpc-0.2.2-2.1.fc17.x86_64                                    26/48
-  Verifying  : 2:ethtool-3.2-2.fc17.x86_64                                       27/48
-  Verifying  : 4:perl-libs-5.14.2-211.fc17.x86_64                                28/48
-  Verifying  : libxslt-1.1.26-9.fc17.x86_64                                      29/48
-  Verifying  : rpcbind-0.2.0-16.fc17.x86_64                                      30/48
-  Verifying  : librdmacm-1.0.15-1.fc17.x86_64                                    31/48
-  Verifying  : resource-agents-3.9.2-2.fc17.1.x86_64                             32/48
-  Verifying  : 1:quota-4.00-3.fc17.x86_64                                        33/48
-  Verifying  : 1:perl-TimeDate-1.20-6.fc17.noarch                                34/48
-  Verifying  : perl-Scalar-List-Utils-1.25-1.fc17.x86_64                         35/48
-  Verifying  : libtool-ltdl-2.4.2-3.fc17.x86_64                                  36/48
-  Verifying  : pacemaker-cluster-libs-1.1.7-2.fc17.x86_64                        37/48
-  Verifying  : cifs-utils-5.3-2.fc17.x86_64                                      38/48
-  Verifying  : libnet-1.1.5-3.fc17.x86_64                                        39/48
-  Verifying  : corosynclib-1.99.9-1.fc17.x86_64                                  40/48
-  Verifying  : libqb-0.11.1-1.fc17.x86_64                                        41/48
-  Verifying  : 1:libwbclient-3.6.3-81.fc17.1.x86_64                              42/48
-  Verifying  : libnfsidmap-0.25-1.fc17.x86_64                                    43/48
-  Verifying  : tcp_wrappers-7.6-69.fc17.x86_64                                   44/48
-  Verifying  : keyutils-1.5.5-2.fc17.x86_64                                      45/48
-  Verifying  : libibverbs-1.1.6-2.fc17.x86_64                                    46/48
-  Verifying  : 1:quota-nls-4.00-3.fc17.noarch                                    47/48
-  Verifying  : pacemaker-cli-1.1.7-2.fc17.x86_64                                 48/48
-
-Installed:
-  corosync.x86_64 0:1.99.9-1.fc17           pacemaker.x86_64 0:1.1.7-2.fc17
-
-Dependency Installed:
-  OpenIPMI-libs.x86_64 0:2.0.18-13.fc17     cifs-utils.x86_64 0:5.3-2.fc17
-  cluster-glue.x86_64 0:1.0.6-9.fc17.1      cluster-glue-libs.x86_64 0:1.0.6-9.fc17.1
-  corosynclib.x86_64 0:1.99.9-1.fc17        ethtool.x86_64 2:3.2-2.fc17
-  gnutls.x86_64 0:2.12.17-1.fc17            keyutils.x86_64 0:1.5.5-2.fc17
-  libevent.x86_64 0:2.0.14-2.fc17           libgssglue.x86_64 0:0.3-1.fc17
-  libibverbs.x86_64 0:1.1.6-2.fc17          libnet.x86_64 0:1.1.5-3.fc17
-  libnfsidmap.x86_64 0:0.25-1.fc17          libqb.x86_64 0:0.11.1-1.fc17
-  librdmacm.x86_64 0:1.0.15-1.fc17          libtalloc.x86_64 0:2.0.7-4.fc17
-  libtasn1.x86_64 0:2.12-1.fc17             libtirpc.x86_64 0:0.2.2-2.1.fc17
-  libtool-ltdl.x86_64 0:2.4.2-3.fc17        libwbclient.x86_64 1:3.6.3-81.fc17.1
-  libxslt.x86_64 0:1.1.26-9.fc17            net-snmp-libs.x86_64 1:5.7.1-4.fc17
-  nfs-utils.x86_64 1:1.2.5-12.fc17          p11-kit.x86_64 0:0.12-1.fc17
-  pacemaker-cli.x86_64 0:1.1.7-2.fc17       pacemaker-cluster-libs.x86_64 0:1.1.7-2.fc17
-  pacemaker-libs.x86_64 0:1.1.7-2.fc17      perl.x86_64 4:5.14.2-211.fc17
-  perl-Carp.noarch 0:1.22-2.fc17            perl-Module-Pluggable.noarch 1:3.90-211.fc17
-  perl-PathTools.x86_64 0:3.33-211.fc17     perl-Pod-Escapes.noarch 1:1.04-211.fc17
-  perl-Pod-Simple.noarch 1:3.16-211.fc17    perl-Scalar-List-Utils.x86_64 0:1.25-1.fc17
-  perl-Socket.x86_64 0:2.001-1.fc17         perl-TimeDate.noarch 1:1.20-6.fc17
-  perl-libs.x86_64 4:5.14.2-211.fc17        perl-macros.x86_64 4:5.14.2-211.fc17
-  perl-threads.x86_64 0:1.86-2.fc17         perl-threads-shared.x86_64 0:1.40-2.fc17
-  quota.x86_64 1:4.00-3.fc17                quota-nls.noarch 1:4.00-3.fc17
-  resource-agents.x86_64 0:3.9.2-2.fc17.1   rpcbind.x86_64 0:0.2.0-16.fc17
-  tcp_wrappers.x86_64 0:7.6-69.fc17         xfsprogs.x86_64 0:3.1.8-1.fc17
-
-Complete!
-[root@pcmk-1 ~]#
-.....
 
 Now install the cluster software on the second node.
 
@@ -1077,10 +615,9 @@ Pacemaker used to obtain membership and quorum from a custom Corosync plugin.
 This plugin also had the capability to start Pacemaker automatically when Corosync was started.
 
 Neither behavior is possible with Corosync 2.0 and beyond as support for plugins was removed.
-
 Instead, Pacemaker must be started as a separate service.
-Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 
+Also, since Pacemaker made use of the plugin for message routing, a node using the plugin (Corosync prior to 2.0) cannot talk to one that isn't (Corosync 2.0+).
 Rolling upgrades between these versions are therefor not possible and an alternate strategy footnote:[http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/ap-upgrade.html] must be used.
 ===========
 
