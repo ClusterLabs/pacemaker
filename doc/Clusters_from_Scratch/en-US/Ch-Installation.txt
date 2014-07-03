@@ -101,16 +101,19 @@ Check the machine has the static IP address you configured earlier
        valid_lft forever preferred_lft forever
 -----
 
-NOTE
+[NOTE]
 =====
-Handy tip - If you ever need to change the node's IP address from the command line follow these instructions:
+If you ever need to change the node's IP address from the command line follow these instructions:
 
-1. manually edit /etc/sysconfig/network-scripts/ifcfg-${device}
-2. nmcli dev disconnect ${device}
-3. nmcli con reload ${device}
-4. nmcli con up ${device}
+....
+# manually edit /etc/sysconfig/network-scripts/ifcfg-${device}
+# nmcli dev disconnect ${device}
+# nmcli con reload ${device}
+# nmcli con up ${device}
+....
 
-This makes NetworkManager aware that a change was made on the config file.
+This makes +NetworkManager+ aware that a change was made on the config file.
+
 =====
 
 Next, check the routes are ok:
@@ -138,7 +141,7 @@ testing if we can read the gateway we configured.
 PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
 64 bytes from 192.168.122.1: icmp_req=1 ttl=64 time=0.249 ms
 
---- 192.168.122.1 ping statistics ---
+ --- 192.168.122.1 ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 0.249/0.249/0.249/0.000 ms
 -----
@@ -151,7 +154,7 @@ Now try something external, choose a location you know will be available.
 PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
 64 bytes from tf-in-f106.1e100.net (173.194.72.106): icmp_req=1 ttl=41 time=167 ms
 
---- www.l.google.com ping statistics ---
+ --- www.l.google.com ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 167.618/167.618/167.618/0.000 ms
 -----
