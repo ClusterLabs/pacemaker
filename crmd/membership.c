@@ -259,13 +259,25 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
 
         if (known == FALSE) {
             int delete_call_id = 0;
+            xmlNode *node_state_xml = NULL;
 
             crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
                        node_uuid, node_uname, new_node_uuid);
+
             delete_call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_NODES, node_xml,
                                                         cib_scope_local | cib_quorum_override);
             fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
                                       remove_conflicting_node_callback);
+
+            node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
+            crm_xml_add(node_state_xml, XML_ATTR_ID, node_uuid);
+            crm_xml_add(node_state_xml, XML_ATTR_UNAME, node_uname);
+
+            delete_call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state_xml,
+                                                        cib_scope_local | cib_quorum_override);
+            fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
+                                      remove_conflicting_node_callback);
+            free_xml(node_state_xml);
         }
     }
 

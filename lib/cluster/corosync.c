@@ -582,3 +582,51 @@ corosync_cluster_name(void)
 
     return cluster_name;
 }
+
+int
+corosync_cmap_has_config(const char *prefix)
+{
+    int rc = CS_OK;
+    int retries = 0;
+    int found = 0;
+    cmap_handle_t cmap_handle;
+    cmap_iter_handle_t iter_handle;
+    char key_name[CMAP_KEYNAME_MAXLEN + 1];
+
+    do {
+        rc = cmap_initialize(&cmap_handle);
+        if (rc != CS_OK) {
+            retries++;
+            crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
+                      retries);
+            sleep(retries);
+        }
+
+    } while (retries < 5 && rc != CS_OK);
+
+    if (rc != CS_OK) {
+        crm_warn("Could not connect to Cluster Configuration Database API: %s (rc=%d)",
+                 cs_strerror(rc), rc);
+        return -1;
+    }
+
+    rc = cmap_iter_init(cmap_handle, prefix, &iter_handle);
+    if (rc != CS_OK) {
+        crm_warn("Failed to initialize iteration for corosync cmap '%s': %s (rc=%d)",
+                 prefix, cs_strerror(rc), rc);
+        found = -1;
+        goto bail;
+    }
+
+    while ((rc = cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL)) == CS_OK) {
+        crm_trace("'%s' is configured in corosync cmap: %s", prefix, key_name);
+        found++;
+        break;
+    }
+    cmap_iter_finalize(cmap_handle, iter_handle);
+
+bail:
+    cmap_finalize(cmap_handle);
+
+    return found;
+}
