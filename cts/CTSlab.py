@@ -620,10 +620,11 @@ if __name__ == '__main__':
             Environment.log(str(test.name));
         sys.exit(0)
 
-    if len(Chosen) == 0:
+    elif len(Chosen) == 0:
         Tests = TestList(cm, Audits)
 
     else:
+        Tests = []
         for TestCase in Chosen:
            match = None
 
