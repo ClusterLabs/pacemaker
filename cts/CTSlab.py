@@ -68,6 +68,7 @@ if __name__ == '__main__':
 
     Environment = CtsLab(sys.argv[1:])
     NumIter = Environment["iterations"]
+    Tests = []
 
     # Set the signal handler
     signal.signal(15, sig_handler)
