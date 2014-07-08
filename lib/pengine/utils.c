@@ -709,7 +709,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
         }
         /* End compatability code */
