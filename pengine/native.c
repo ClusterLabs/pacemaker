@@ -79,48 +79,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 };
 /* *INDENT-ON* */
 
-struct capacity_data {
-    node_t *node;
-    resource_t *rsc;
-    gboolean is_enough;
-};
-
 static action_t * get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid, node_t * current);
-
-static void
-check_capacity(gpointer key, gpointer value, gpointer user_data)
-{
-    int required = 0;
-    int remaining = 0;
-    struct capacity_data *data = user_data;
-
-    required = crm_parse_int(value, "0");
-    remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
-
-    if (required > remaining) {
-        CRM_ASSERT(data->rsc);
-        CRM_ASSERT(data->node);
-
-        pe_rsc_debug(data->rsc,
-                     "Node %s has no enough %s for resource %s: required=%d remaining=%d",
-                     data->node->details->uname, (char *)key, data->rsc->id, required, remaining);
-        data->is_enough = FALSE;
-    }
-}
-
-static gboolean
-have_enough_capacity(node_t * node, resource_t * rsc)
-{
-    struct capacity_data data;
-
-    data.node = node;
-    data.rsc = rsc;
-    data.is_enough = TRUE;
-
-    g_hash_table_foreach(rsc->utilization, check_capacity, &data);
-
-    return data.is_enough;
-}
 
 static gboolean
 native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
@@ -131,8 +90,6 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
        with the fewest resources
        3. remove color.chosen_node from all other colors
      */
-    int alloc_details = scores_log_level + 1;
-
     GListPtr nodes = NULL;
     node_t *chosen = NULL;
 
@@ -141,21 +98,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     int length = 0;
     gboolean result = FALSE;
 
-    if (safe_str_neq(data_set->placement_strategy, "default")) {
-        GListPtr gIter = NULL;
-
-        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-
-            if (have_enough_capacity(node, rsc) == FALSE) {
-                pe_rsc_debug(rsc,
-                             "Resource %s cannot be allocated to node %s: none of enough capacity",
-                             rsc->id, node->details->uname);
-                resource_location(rsc, node, -INFINITY, "__limit_utilization_", data_set);
-            }
-        }
-        dump_node_scores(alloc_details, rsc, "Post-utilization", rsc->allowed_nodes);
-    }
+    process_utilization(rsc, &prefer, data_set);
 
     length = g_hash_table_size(rsc->allowed_nodes);
 
@@ -1536,22 +1479,16 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
 }
 
-enum filter_colocation_res {
-    influence_nothing = 0,
-    influence_rsc_location,
-    influence_rsc_priority,
-};
-
-static enum filter_colocation_res
+enum filter_colocation_res
 filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
-                             rsc_colocation_t * constraint)
+                             rsc_colocation_t * constraint, gboolean preview)
 {
     if (constraint->score == 0) {
         return influence_nothing;
     }
 
     /* rh side must be allocated before we can process constraint */
-    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (preview == FALSE && is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return influence_nothing;
     }
 
@@ -1564,7 +1501,7 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
         return influence_rsc_priority;
     }
 
-    if (is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+    if (preview == FALSE && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
         /* error check */
         struct node_shared_s *details_lh;
         struct node_shared_s *details_rh;
@@ -1733,7 +1670,7 @@ native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
 
     CRM_ASSERT(rsc_lh);
     CRM_ASSERT(rsc_rh);
-    filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint);
+    filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint, FALSE);
     pe_rsc_trace(rsc_lh, "%sColocating %s with %s (%s, weight=%d, filter=%d)",
                  constraint->score >= 0 ? "" : "Anti-",
                  rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);

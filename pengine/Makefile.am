@@ -64,7 +64,7 @@ noinst_HEADERS	= allocate.h utils.h pengine.h
 libpengine_la_LDFLAGS	= -version-info 6:0:2
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 libpengine_la_SOURCES	= pengine.c allocate.c utils.c constraints.c
-libpengine_la_SOURCES  += native.c group.c clone.c master.c graph.c
+libpengine_la_SOURCES  += native.c group.c clone.c master.c graph.c utilization.c
 
 libpengine_la_LIBADD    = $(top_builddir)/lib/pengine/libpe_status.la \
 	$(top_builddir)/lib/cib/libcib.la
