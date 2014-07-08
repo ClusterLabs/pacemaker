@@ -1825,8 +1825,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 for (gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
                     node_t *node = (node_t *) gIter->data;
 
-                    crm_warn("Node %s will be fenced for deadman", node->details->uname);
-                    node->details->unclean = TRUE;
+                    pe_fence_node(data_set, node, "deadman ticket lost");
                 }
                 break;
 

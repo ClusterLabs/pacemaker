@@ -501,9 +501,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
-                && action->node->details->unclean == FALSE && save_action && a_task == stop_rsc) {
-                do_crm_log(warn_level, "Marking node %s unclean", action->node->details->uname);
-                action->node->details->unclean = TRUE;
+                && save_action && a_task == stop_rsc) {
+                pe_fence_node(data_set, action->node, "Node is unclean");
             }
 
         } else if (action->node->details->pending) {
