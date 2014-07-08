@@ -116,69 +116,6 @@ can_run_resources(const node_t * node)
     return TRUE;
 }
 
-struct compare_data {
-    const node_t *node1;
-    const node_t *node2;
-    int result;
-};
-
-static void
-do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
-{
-    int node1_capacity = 0;
-    int node2_capacity = 0;
-    struct compare_data *data = user_data;
-
-    node1_capacity = crm_parse_int(value, "0");
-    node2_capacity =
-        crm_parse_int(g_hash_table_lookup(data->node2->details->utilization, key), "0");
-
-    if (node1_capacity > node2_capacity) {
-        data->result--;
-    } else if (node1_capacity < node2_capacity) {
-        data->result++;
-    }
-}
-
-static void
-do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
-{
-    int node1_capacity = 0;
-    int node2_capacity = 0;
-    struct compare_data *data = user_data;
-
-    if (g_hash_table_lookup_extended(data->node1->details->utilization, key, NULL, NULL)) {
-        return;
-    }
-
-    node1_capacity = 0;
-    node2_capacity = crm_parse_int(value, "0");
-
-    if (node1_capacity > node2_capacity) {
-        data->result--;
-    } else if (node1_capacity < node2_capacity) {
-        data->result++;
-    }
-}
-
-/* rc < 0 if 'node1' has more capacity remaining
- * rc > 0 if 'node1' has less capacity remaining
- */
-static int
-compare_capacity(const node_t * node1, const node_t * node2)
-{
-    struct compare_data data;
-
-    data.node1 = node1;
-    data.node2 = node2;
-    data.result = 0;
-
-    g_hash_table_foreach(node1->details->utilization, do_compare_capacity1, &data);
-    g_hash_table_foreach(node2->details->utilization, do_compare_capacity2, &data);
-
-    return data.result;
-}
-
 /* return -1 if 'a' is more preferred
  * return  1 if 'b' is more preferred
  */
@@ -268,47 +205,6 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     return strcmp(node1->details->uname, node2->details->uname);
 }
 
-struct calculate_data {
-    node_t *node;
-    gboolean allocate;
-};
-
-static void
-do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *capacity = NULL;
-    char *remain_capacity = NULL;
-    struct calculate_data *data = user_data;
-
-    capacity = g_hash_table_lookup(data->node->details->utilization, key);
-    if (capacity) {
-        if (data->allocate) {
-            remain_capacity = crm_itoa(crm_parse_int(capacity, "0") - crm_parse_int(value, "0"));
-        } else {
-            remain_capacity = crm_itoa(crm_parse_int(capacity, "0") + crm_parse_int(value, "0"));
-        }
-        g_hash_table_replace(data->node->details->utilization, strdup(key), remain_capacity);
-    }
-}
-
-/* Specify 'allocate' to TRUE when allocating
- * Otherwise to FALSE when deallocating
- */
-static void
-calculate_utilization(node_t * node, resource_t * rsc, gboolean allocate)
-{
-    struct calculate_data data;
-
-    data.node = node;
-    data.allocate = allocate;
-
-    g_hash_table_foreach(rsc->utilization, do_calculate_utilization, &data);
-
-    if (allocate) {
-        dump_rsc_utilization(show_utilization ? 0 : utilization_log_level, __FUNCTION__, rsc, node);
-    }
-}
-
 void
 native_deallocate(resource_t * rsc)
 {
@@ -322,7 +218,7 @@ native_deallocate(resource_t * rsc)
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
         old->details->num_resources--;
         /* old->count--; */
-        calculate_utilization(old, rsc, FALSE);
+        calculate_utilization(old->details->utilization, rsc->utilization, TRUE);
         free(old);
     }
 }
@@ -389,7 +285,9 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
     chosen->details->num_resources++;
     chosen->count++;
-    calculate_utilization(chosen, rsc, TRUE);
+    calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
+    dump_rsc_utilization(show_utilization ? 0 : utilization_log_level, __FUNCTION__, rsc, chosen);
+
     return TRUE;
 }
 

@@ -55,6 +55,23 @@ extern gboolean can_run_any(GHashTable * nodes);
 extern resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc,
                                          enum rsc_role_e filter, gboolean current);
 
+
+enum filter_colocation_res {
+    influence_nothing = 0,
+    influence_rsc_location,
+    influence_rsc_priority,
+};
+
+extern enum filter_colocation_res
+filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
+                             rsc_colocation_t * constraint, gboolean preview);
+
+extern int compare_capacity(const node_t * node1, const node_t * node2);
+extern void calculate_utilization(GHashTable * current_utilization,
+                                  GHashTable * utilization, gboolean plus);
+
+extern void process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set);
+
 #  define STONITH_UP "stonith_up"
 #  define STONITH_DONE "stonith_complete"
 #  define ALL_STOPPED "all_stopped"
