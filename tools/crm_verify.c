@@ -240,8 +240,8 @@ main(int argc, char **argv)
 
     set_working_set_defaults(&data_set);
     if (cib_object == NULL) {
-    } else if (USE_LIVE_CIB) {
-        /* we will always have a status section and can do a full simulation */
+    } else if (status != NULL || USE_LIVE_CIB) {
+        /* live queries will always have a status section and can do a full simulation */
         do_calculations(&data_set, cib_object, NULL);
         cleanup_alloc_calculations(&data_set);
 
