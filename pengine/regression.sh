@@ -540,6 +540,12 @@ do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start pr
 do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
 
 echo ""
+do_test colocated-utilization-primitive-1 "Colocated Utilization - Primitive"
+do_test colocated-utilization-primitive-2 "Colocated Utilization - Choose the most capable node"
+do_test colocated-utilization-group "Colocated Utilization - Group"
+do_test colocated-utilization-clone "Colocated Utilization - Clone"
+
+echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 do_test node-maintenance-1 "cl#5128 - Node maintenance"
 do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
