@@ -87,7 +87,9 @@ upstart_job_by_name(const gchar * arg_name, gchar ** out_unit)
     DBusMessage *reply = NULL;
     const char *method = "GetJobByName";
 
-    upstart_init();
+    if(upstart_init() == FALSE) {
+        return FALSE;
+    }
     msg = dbus_message_new_method_call(BUS_NAME, // target for the method call
                                        BUS_PATH, // object to call on
                                        UPSTART_06_API, // interface to call on
