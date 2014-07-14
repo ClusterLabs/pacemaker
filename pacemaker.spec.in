@@ -442,8 +442,10 @@ exit 0
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
 
+%if "%{?cs_version}" != "UNKNOWN"
 %if 0%{?cs_version} < 2
 %{_libexecdir}/lcrso/pacemaker.lcrso
+%endif
 %endif
 
 %if %{with upstart_job}
