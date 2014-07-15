@@ -63,6 +63,7 @@ void crm_log_deinit(void);
 
 gboolean crm_log_cli_init(const char *entity);
 
+void crm_log_preinit(const char *entity, int argc, char **argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 

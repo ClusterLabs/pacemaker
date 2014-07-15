@@ -63,7 +63,7 @@ main(int argc, char **argv)
     int argerr = 0;
 
     crmd_mainloop = g_main_new(FALSE);
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating resource and node failures as well as co-ordinating the cluster's response");
 
@@ -94,6 +94,7 @@ main(int argc, char **argv)
         return 0;
     }
 
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("CRM Git Version: %s\n", BUILD_VERSION);
 
     if (optind > argc) {

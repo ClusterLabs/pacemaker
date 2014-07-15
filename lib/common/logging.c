@@ -640,34 +640,14 @@ crm_priority2int(const char *name)
     return crm_log_priority;
 }
 
-gboolean
-crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_stderr,
-             int argc, char **argv, gboolean quiet)
+
+static void
+crm_identity(const char *entity, int argc, char **argv) 
 {
-    int lpc = 0;
-    int32_t qb_facility = 0;
-    const char *logfile = daemon_option("logfile");
-    const char *facility = daemon_option("logfacility");
-    const char *f_copy = facility;
+    if(crm_system_name != NULL) {
+        /* Nothing to do */
 
-    crm_is_daemon = daemon;
-
-    if (crm_trace_nonlog == 0) {
-        crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
-    }
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-    /* Redirect messages from glib functions to our handler */
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
-    glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
-#endif
-
-    /* and for good measure... - this enum is a bit field (!) */
-    g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
-
-    /* Who do we log as */
-    if (entity) {
+    } else if (entity) {
         free(crm_system_name);
         crm_system_name = strdup(entity);
 
@@ -688,6 +668,70 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     setenv("PCMK_service", crm_system_name, 1);
+}
+
+
+void
+crm_log_preinit(const char *entity, int argc, char **argv) 
+{
+    /* Configure libqb logging with nothing turned on */
+
+    int lpc = 0;
+    int32_t qb_facility = 0;
+
+    static bool have_logging = FALSE;
+
+    if(have_logging == FALSE) {
+        have_logging = TRUE;
+
+        crm_xml_init(); /* Sets buffer allocation strategy */
+
+        if (crm_trace_nonlog == 0) {
+            crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
+        }
+
+        umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+        /* Redirect messages from glib functions to our handler */
+#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
+        glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
+#endif
+
+        /* and for good measure... - this enum is a bit field (!) */
+        g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
+
+        /* Who do we log as */
+        crm_identity(entity, argc, argv);
+
+        qb_facility = qb_log_facility2int("local0");
+        qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+
+        /* Nuke any syslog activity until its asked for */
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+        /* Set format strings */
+        qb_log_tags_stringify_fn_set(crm_quark_to_string);
+        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+            set_format_string(lpc, crm_system_name);
+        }
+    }
+}
+
+gboolean
+crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_stderr,
+             int argc, char **argv, gboolean quiet)
+{
+    const char *syslog_priority = NULL;
+    const char *logfile = daemon_option("logfile");
+    const char *facility = daemon_option("logfacility");
+    const char *f_copy = facility;
+
+    crm_is_daemon = daemon;
+    crm_log_preinit(entity, argc, argv);
+
+    if(level > crm_log_level) {
+        crm_log_level = level;
+    }
 
     /* Should we log to syslog */
     if (facility == NULL) {
@@ -701,32 +745,29 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     if (safe_str_eq(facility, "none")) {
         quiet = TRUE;
-        qb_facility = qb_log_facility2int("daemon");
+
 
     } else {
-        qb_facility = qb_log_facility2int(facility);
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(facility));
     }
 
     if (daemon_option_enabled(crm_system_name, "debug")) {
         /* Override the default setting */
-        level = LOG_DEBUG;
+        crm_log_level = LOG_DEBUG;
     }
 
     /* What lower threshold do we have for sending to syslog */
-    crm_log_priority = crm_priority2int(daemon_option("logpriority"));
-
-    crm_log_level = level;
-    qb_log_init(crm_system_name, qb_facility, crm_log_level);
-
-    if (quiet) {
-        /* Nuke any syslog activity */
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+    syslog_priority = daemon_option("logpriority");
+    if(syslog_priority) {
+        int priority = crm_priority2int(syslog_priority);
+	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", priority);
+    } else {
+	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_NOTICE);
     }
 
-    /* Set format strings */
-    qb_log_tags_stringify_fn_set(crm_quark_to_string);
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        set_format_string(lpc, crm_system_name);
+    if (!quiet) {
+        /* Nuke any syslog activity */
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
     }
 
     /* Should we log to stderr */ 
@@ -814,7 +855,6 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
     }
 
-    crm_xml_init(); /* Sets buffer allocation strategy */
     return TRUE;
 }
 

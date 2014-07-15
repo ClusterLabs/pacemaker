@@ -279,7 +279,7 @@ main(int argc, char **argv)
     qb_ipcs_service_t *ipcs = NULL;
 
     mloop = g_main_new(FALSE);
-    crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating and atomically storing node attribute updates into the CIB");
 
@@ -311,6 +311,7 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 

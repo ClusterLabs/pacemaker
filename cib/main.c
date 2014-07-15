@@ -135,7 +135,7 @@ main(int argc, char **argv)
     int argerr = 0;
     struct passwd *pwentry = NULL;
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for storing and replicating the cluster configuration");
 
@@ -213,6 +213,7 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     if (cib_root == NULL) {
         char *path = g_strdup_printf("%s/cib.xml", CRM_CONFIG_DIR);
         char *legacy = g_strdup_printf("%s/cib.xml", CRM_LEGACY_CONFIG_DIR);
