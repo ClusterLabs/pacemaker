@@ -705,6 +705,7 @@ crm_log_preinit(const char *entity, int argc, char **argv)
 
         qb_facility = qb_log_facility2int("local0");
         qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+        crm_log_level = LOG_CRIT;
 
         /* Nuke any syslog activity until its asked for */
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
