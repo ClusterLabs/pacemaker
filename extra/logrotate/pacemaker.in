@@ -2,8 +2,8 @@
     compress
     dateext
     weekly
-    rotate 10
-    maxsize 10M
+    rotate 99
+    maxage 365
     notifempty
     missingok
     copytruncate
