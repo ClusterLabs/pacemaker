@@ -761,6 +761,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     syslog_priority = daemon_option("logpriority");
     if(syslog_priority) {
         int priority = crm_priority2int(syslog_priority);
+        crm_log_priority = priority;
 	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", priority);
     } else {
 	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_NOTICE);
