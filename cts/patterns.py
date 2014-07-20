@@ -378,7 +378,6 @@ class crm_mcp(crm_cs_v0):
     def __init__(self, name):
         crm_cs_v0.__init__(self, name)
 
-        self.name = "crm-plugin-v0"
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; service pacemaker_remote stop; service corosync stop",
