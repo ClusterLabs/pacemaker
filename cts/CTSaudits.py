@@ -146,6 +146,8 @@ class LogAudit(ClusterAudit):
     def is_applicable(self):
         if self.CM.Env["DoBSC"]:
             return 0
+        if self.CM.Env["LogAuditDisabled"]:
+            return 0
         return 1
 
 

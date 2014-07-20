@@ -305,9 +305,15 @@ class Environment:
                 self["CIBResource"] = 1
                 self["ClobberCIB"] = 1
 
-            elif args[i] == "-L" or args[i] == "--logfile" or args[i] == "--outputfile":
+            elif args[i] == "--outputfile":
                 skipthis=1
                 LogFactory().add_file(args[i+1])
+
+            elif args[i] == "-L" or args[i] == "--logfile":
+                skipthis=1
+                self["LogWatcher"] = "remote"
+                self["LogAuditDisabled"] = 1
+                self["LogFileName"] = args[i+1]
 
             elif args[i] == "--ip" or args[i] == "--test-ip-base":
                 skipthis=1
