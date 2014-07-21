@@ -1857,6 +1857,8 @@ lrmd/Makefile                                                   \
 extra/Makefile							\
 	extra/resources/Makefile				\
 	extra/rgmanager/Makefile				\
+	extra/logrotate/Makefile				\
+	extra/logrotate/pacemaker				\
 tools/Makefile							\
 	tools/crm_report					\
         tools/report.common                                     \

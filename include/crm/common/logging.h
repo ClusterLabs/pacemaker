@@ -63,6 +63,7 @@ void crm_log_deinit(void);
 
 gboolean crm_log_cli_init(const char *entity);
 
+void crm_log_preinit(const char *entity, int argc, char **argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
@@ -160,7 +161,9 @@ unsigned int get_crm_log_level(void);
 
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
-	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
+        if(level <= crm_log_level) {                                    \
+            fprintf(stderr, "%s: " fmt ": %s (%d)\n", __FUNCTION__, ##args, err, errno); \
+        }                                                               \
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
     } while(0)
 

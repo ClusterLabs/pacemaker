@@ -1002,6 +1002,7 @@ modify_configuration(pe_working_set_t * data_set,
     }
 
     for (gIter = node_down; gIter != NULL; gIter = gIter->next) {
+        char xpath[STATUS_PATH_MAX];
         char *node = (char *)gIter->data;
 
         quiet_log(" + Taking node %s offline\n", node);
@@ -1012,6 +1013,16 @@ modify_configuration(pe_working_set_t * data_set,
                                       cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
+
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node, XML_CIB_TAG_LRM);
+        global_cib->cmds->delete(global_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
+
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node,
+                 XML_TAG_TRANSIENT_NODEATTRS);
+        global_cib->cmds->delete(global_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
+
     }
 
     for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {

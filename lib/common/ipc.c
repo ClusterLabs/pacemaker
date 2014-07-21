@@ -733,9 +733,9 @@ struct crm_ipc_s {
     struct pollfd pfd;
 
     /* the max size we can send/receive over ipc */
-    int max_buf_size;
+    unsigned int max_buf_size;
     /* Size of the allocated 'buffer' */
-    int buf_size;
+    unsigned int buf_size;
     int msg_size;
     int need_reply;
     char *buffer;

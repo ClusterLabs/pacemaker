@@ -501,9 +501,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
-                && action->node->details->unclean == FALSE && save_action && a_task == stop_rsc) {
-                do_crm_log(warn_level, "Marking node %s unclean", action->node->details->uname);
-                action->node->details->unclean = TRUE;
+                && save_action && a_task == stop_rsc) {
+                pe_fence_node(data_set, action->node, "Node is unclean");
             }
 
         } else if (action->node->details->pending) {
@@ -710,7 +709,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
                && safe_str_eq(value, "fencing")) {
         action->needs = rsc_req_stonith;
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
         }
         /* End compatability code */
@@ -1959,7 +1958,7 @@ is_container_remote_node(node_t *node)
 gboolean
 is_remote_node(node_t *node)
 {
-    if (node->details->type == node_remote) {
+    if (node && node->details->type == node_remote) {
         return TRUE;
     }
     return FALSE;

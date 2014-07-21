@@ -762,6 +762,13 @@ init_children_processes(void)
             }
         }
     }
+
+    /* From this point on, any daemons being started will be due to
+     * respawning rather than node start.
+     *
+     * This may be useful for the daemons to know
+     */
+    setenv("PCMK_respawned", "true", 1);
 }
 
 static void
@@ -842,17 +849,8 @@ main(int argc, char **argv)
     const char *facility = daemon_option("logfacility");
     static crm_cluster_t cluster;
 
-    setenv("LC_ALL", "C", 1);
-    setenv("HA_LOGD", "no", 1);
-
-    set_daemon_option("mcp", "true");
-    set_daemon_option("use_logd", "off");
-
-    crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
-
-    /* Restore the original facility so that mcp_read_config() does the right thing */
-    set_daemon_option("logfacility", facility);
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
@@ -897,7 +895,17 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    set_crm_log_level(LOG_INFO);
+
+    setenv("LC_ALL", "C", 1);
+    setenv("HA_LOGD", "no", 1);
+
+    set_daemon_option("mcp", "true");
+    set_daemon_option("use_logd", "off");
+
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    /* Restore the original facility so that mcp_read_config() does the right thing */
+    set_daemon_option("logfacility", facility);
 
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);

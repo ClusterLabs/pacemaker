@@ -1825,8 +1825,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 for (gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
                     node_t *node = (node_t *) gIter->data;
 
-                    crm_warn("Node %s will be fenced for deadman", node->details->uname);
-                    node->details->unclean = TRUE;
+                    pe_fence_node(data_set, node, "deadman ticket lost");
                 }
                 break;
 
@@ -2266,7 +2265,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current->details->uname,
+            log_change("Stop    %s\t(%s %s%s)", rsc->id, role2text(rsc->role), current?current->details->uname:"N/A",
                        stop && is_not_set(stop->flags, pe_action_runnable) ? " - blocked" : "");
             STOP_SANITY_ASSERT(__LINE__);
 
@@ -2845,10 +2844,12 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, gboolean is_st
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (action->needs == rsc_req_stonith) {
+        if(action->needs == rsc_req_nothing) {
+        } else if (action->needs == rsc_req_stonith) {
             order_actions(stonith_done, action, pe_order_optional);
 
-        } else if (target != NULL && safe_str_eq(action->task, RSC_START)
+        } else if (target != NULL
+                   && safe_str_eq(action->task, RSC_START)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
             /* if known == NULL, then we dont know if
              *   the resource is active on the node

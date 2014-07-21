@@ -260,12 +260,13 @@ main(int argc, char **argv)
     int index = 0;
     const char *option = NULL;
 
+
 #ifdef ENABLE_PCMK_REMOTE
-    crm_log_init("pacemaker_remoted", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit("lrmd", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for controlling services confirming to different standards");
 #else
-    crm_log_init("lrmd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit("pacemaker_remoted", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Pacemaker Remote daemon for extending pacemaker functionality to remote nodes.");
 #endif
@@ -294,6 +295,8 @@ main(int argc, char **argv)
                 break;
         }
     }
+
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     option = daemon_option("logfacility");
     if(option && safe_str_neq(option, "none")) {

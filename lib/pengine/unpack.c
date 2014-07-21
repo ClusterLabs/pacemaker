@@ -62,7 +62,7 @@ is_dangling_container_remote_node(node_t *node)
     return FALSE;
 }
 
-static void
+void
 pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 {
     CRM_CHECK(node, return);
@@ -79,6 +79,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
         crm_info("Fencing remote node %s has already occurred, container no longer exists. cleaning up dangling connection resource:  %s",
                   node->details->uname, reason);
         set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+
     } else if (node->details->unclean == FALSE) {
         if(pe_can_fence(data_set, node)) {
             crm_warn("Node %s will be fenced %s", node->details->uname, reason);
@@ -86,6 +87,8 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
             crm_warn("Node %s is unclean %s", node->details->uname, reason);
         }
         node->details->unclean = TRUE;
+    } else {
+        crm_trace("Huh? %s %s", node->details->uname, reason);
     }
 }
 
@@ -1174,8 +1177,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 
     } else {
         /* mark it unclean */
-        this_node->details->unclean = TRUE;
-        crm_warn("Node %s is partially & un-expectedly down", this_node->details->uname);
+        pe_fence_node(data_set, this_node, "unexpectedly down");
         crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
                  crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
     }
@@ -3147,16 +3149,17 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             }
 
             this_node = pe_find_node(data_set->nodes, uname);
-            if (is_remote_node(this_node)) {
+            if(this_node == NULL) {
+                CRM_LOG_ASSERT(this_node != NULL);
+                continue;
+
+            } else if (is_remote_node(this_node)) {
                 determine_remote_online_status(this_node);
             } else {
                 determine_online_status(node_state, this_node, data_set);
             }
 
-            if(this_node == NULL) {
-                CRM_LOG_ASSERT(this_node != NULL);
-
-            } else if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith

@@ -165,7 +165,10 @@ mock-rawhide:
 
 mock-install-%:
 	echo "Installing packages"
-	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents
+	mock --root=$* $(MOCK_OPTIONS) --install $(RPM_ROOT)/mock/*.rpm vi sudo valgrind lcov gdb fence-agents psmisc
+
+mock-install: mock-install-$(MOCK_CFG)
+	echo "Done"
 
 mock-sh: mock-sh-$(MOCK_CFG)
 	echo "Done"

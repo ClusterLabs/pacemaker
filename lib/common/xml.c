@@ -306,6 +306,7 @@ static void __xml_schema_add(
 
     xml_schema_max++;
     known_schemas = realloc(known_schemas, xml_schema_max*sizeof(struct schema_s));
+    CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
     known_schemas[last].type = type;
     known_schemas[last].after_transform = after_transform;
@@ -954,13 +955,13 @@ xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, xmlNo
 
     crm_trace("filtering copy of %p for '%s'", xml, user);
     target = copy_xml(xml);
-    __xml_acl_unpack(acl_source, target, user);
-    set_doc_flag(target, xpf_acl_enabled);
-    __xml_acl_apply(target);
-
     if(target == NULL) {
         return TRUE;
     }
+
+    __xml_acl_unpack(acl_source, target, user);
+    set_doc_flag(target, xpf_acl_enabled);
+    __xml_acl_apply(target);
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
@@ -2945,8 +2946,7 @@ string2xml(const char *input)
                  last_error->domain, last_error->level, last_error->code, last_error->message);
 
         if (last_error->code == XML_ERR_DOCUMENT_EMPTY) {
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, "Cannot parse an empty string", TRUE,
-                      TRUE);
+            CRM_LOG_ASSERT("Cannot parse an empty string");
 
         } else if (last_error->code != XML_ERR_DOCUMENT_END) {
             crm_err("Couldn't%s parse %d chars: %s", xml ? " fully" : "", (int)strlen(input),
@@ -2964,7 +2964,7 @@ string2xml(const char *input)
                 lpc += 80;
             }
 
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, "String parsing error", TRUE, TRUE);
+            CRM_LOG_ASSERT("String parsing error");
         }
     }
 
@@ -5426,9 +5426,14 @@ validate_with(xmlNode * xml, int method, gboolean to_logs)
 {
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
-    int type = known_schemas[method].type;
+    int type = 0;
     char *file = NULL;
 
+    if(method < 0) {
+        return FALSE;
+    }
+
+    type = known_schemas[method].type;
     if(type == 0) {
         return TRUE;
     }

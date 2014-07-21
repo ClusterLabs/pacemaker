@@ -301,9 +301,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
@@ -360,9 +357,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>
       <trigger>
@@ -418,9 +412,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
       <trigger>
         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
       </trigger>

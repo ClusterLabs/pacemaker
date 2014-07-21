@@ -989,6 +989,7 @@ prefer_resource(const char *rsc_id, const char *host, cib_t * cib_conn)
     }
 
     if(cib_conn == NULL) {
+        free(later_s);
         return -ENOTCONN;
     }
 

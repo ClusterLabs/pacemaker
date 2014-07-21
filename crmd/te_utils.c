@@ -199,7 +199,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
         /* In case fenced is already trying to shoot it */
         confirm = open("/var/run/cluster/fenced_override", O_NONBLOCK|O_WRONLY);
-        if (confirm) {
+        if (confirm > 0) {
             int ignore = 0;
             int len = strlen(target_copy);
 

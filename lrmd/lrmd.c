@@ -693,6 +693,7 @@ action_complete(svc_action_t * action)
 {
     lrmd_rsc_t *rsc;
     lrmd_cmd_t *cmd = action->cb_data;
+    const char *rclass = NULL;
 
     bool goagain = false;
 
@@ -711,14 +712,14 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
-    if (action->stderr_data) {
-        cmd->output = strdup(action->stderr_data);
-    } else if (action->stdout_data) {
-        cmd->output = strdup(action->stdout_data);
+    if(rsc && safe_str_eq(rsc->class, "service")) {
+        rclass = resources_find_service_class(rsc->class);
+    } else if(rsc) {
+        rclass = rsc->class;
     }
 
-    if (rsc && safe_str_eq(rsc->class, "systemd")) {
-        if(safe_str_eq(cmd->action, "start")) {
+    if (safe_str_eq(rclass, "systemd")) {
+        if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "start")) {
             /* systemd I curse thee!
              *
              * systemd returns from start actions after the start _begins_
@@ -764,15 +765,18 @@ action_complete(svc_action_t * action)
         ftime(&now);
         time_sum = time_diff_ms(&now, &cmd->t_first_run);
         timeout_left = cmd->timeout_orig - time_sum;
+
+        if(delay >= timeout_left && timeout_left > 20) {
+            delay = timeout_left/2;
+        }
+
         if (delay < timeout_left) {
             cmd->start_delay = delay;
             cmd->timeout = timeout_left;
 
             if(cmd->exec_rc != PCMK_OCF_OK) {
-                crm_notice
-                    ("%s %s failed (rc=%d): re-scheduling (time_sum=%dms, start_delay=%dms, timeout=%dms)",
-                     cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, cmd->start_delay,
-                     cmd->timeout);
+                crm_info("%s %s failed (rc=%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                         cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left, delay);
             }
 
             cmd->lrmd_op_status = 0;
@@ -785,9 +789,22 @@ action_complete(svc_action_t * action)
             rsc->active = NULL;
             schedule_lrmd_cmd(rsc, cmd);
             return;
+
+        } else {
+            crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
+                       cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left);
+            cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
+            cmd->exec_rc = PCMK_OCF_TIMEOUT;
         }
 #  endif
     }
+
+    if (action->stderr_data) {
+        cmd->output = strdup(action->stderr_data);
+    } else if (action->stdout_data) {
+        cmd->output = strdup(action->stdout_data);
+    }
+
     cmd_finalize(cmd, rsc);
 }
 

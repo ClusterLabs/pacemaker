@@ -10,7 +10,7 @@
 * Tool for making offline configuration changes. See <<s-config-sandboxes>>
 * +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places. See <<s-reusing-config-elements>>
 * The CIB now accepts XPath-based create/modify/delete operations. See the pass:[<command>cibadmin</command>] help text.
-* Multi-dimensional colocation and ordering constraints. See <<s-resource-sets-ordering>> and <<s-resource-sets-collocation>>
+* Multi-dimensional colocation and ordering constraints. See <<s-resource-sets-ordering>> and <<s-resource-sets-colocation>>
 * The ability to connect to the CIB from non-cluster machines. See <<s-remote-connection>>
 * Allow recurring actions to be triggered at known times. See <<s-recurring-start>>
 

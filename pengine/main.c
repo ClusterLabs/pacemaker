@@ -125,7 +125,7 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]",
                     long_options, "Daemon for calculating the cluster's response to events");
 
@@ -162,6 +162,7 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
         crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");
         fprintf(stderr, "ERROR: Bad permissions on " PE_STATE_DIR ". See logs for details\n");

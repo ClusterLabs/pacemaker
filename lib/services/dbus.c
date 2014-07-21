@@ -24,7 +24,9 @@ DBusConnection *pcmk_dbus_connect(void)
 
     dbus_error_init(&err);
     connection = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
-    pcmk_dbus_error_check(&err, "Could not connect to System DBus", __FUNCTION__, __LINE__);
+    if(pcmk_dbus_error_check(&err, "Could not connect to System DBus", __FUNCTION__, __LINE__)) {
+        return NULL;
+    }
 
     if(connection) {
         pcmk_dbus_connection_setup_with_select(connection);

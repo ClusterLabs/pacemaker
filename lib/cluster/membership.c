@@ -185,7 +185,8 @@ reap_crm_member(uint32_t id, const char *name)
     search.uname = name ? strdup(name) : NULL;
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
-        crm_notice("Purged %d peers with id=%u and/or uname=%s from the membership cache", matches, id, name);
+        crm_notice("Purged %d peers with id=%u and/or uname=%s from the membership cache",
+                   matches, search.id, search.uname);
 
     } else {
         crm_info("No peers with id=%u and/or uname=%s exist", id, name);
@@ -412,6 +413,47 @@ crm_find_peer(unsigned int id, const char *uname)
     return node;
 }
 
+#if SUPPORT_COROSYNC
+static guint
+crm_remove_conflicting_peer(crm_node_t *node)
+{
+    int matches = 0;
+    GHashTableIter iter;
+    crm_node_t *existing_node = NULL;
+
+    if (node->id == 0 || node->uname == NULL) {
+        return 0;
+    }
+
+#  if !SUPPORT_PLUGIN
+    if (corosync_cmap_has_config("nodelist") != 0) {
+        return 0;
+    }
+#  endif
+
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &existing_node)) {
+        if (existing_node->id > 0
+            && existing_node->id != node->id
+            && existing_node->uname != NULL
+            && strcasecmp(existing_node->uname, node->uname) == 0) {
+
+            if (crm_is_peer_active(existing_node)) {
+                continue;
+            }
+
+            crm_warn("Removing cached offline node %u/%s which has conflicting uname with %u",
+                     existing_node->id, existing_node->uname, node->id);
+
+            g_hash_table_iter_remove(&iter);
+            matches++;
+        }
+    }
+
+    return matches;
+}
+#endif
+
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
@@ -490,6 +532,13 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     free(uname_lookup);
+
+#if SUPPORT_COROSYNC
+    if (is_openais_cluster()) {
+        crm_remove_conflicting_peer(node);
+    }
+#endif
+
     return node;
 }
 

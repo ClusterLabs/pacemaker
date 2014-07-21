@@ -338,12 +338,21 @@ class Tests:
 			os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
 		### Make fake systemd daemon and unit file ###
-		dummy_daemon = "#!/bin/bash\nwhile true\ndo\nsleep 5\ndone"
-		dummy_service_file = ("[Unit]\n"
-			"Description=Dummy Resource\n"
-			"[Service]\n"
-			"Type=simple\n"
-			"ExecStart=/usr/sbin/lrmd_dummy_daemon\n")
+		dummy_daemon = """#!/bin/python
+import time, systemd.daemon
+time.sleep(3)
+systemd.daemon.notify("READY=1")
+while True: time.sleep(5)
+"""
+		dummy_service_file = """
+[Unit]
+Description=Dummy resource that takes a while to start
+
+[Service]
+Type=notify
+ExecStart=/usr/sbin/lrmd_dummy_daemon
+"""
+
 		dummy_upstart_job = ("""
 description     "Dummy service for regression tests"
 exec dd if=/dev/random of=/dev/null
@@ -399,7 +408,7 @@ if __name__ == "__main__":
 		os.system("cat <<-END >>/etc/init/lrmd_dummy_daemon.conf\n%s\nEND" % (dummy_upstart_job))
 		os.system("cat <<-END >>/usr/sbin/lrmd_dummy_daemon\n%s\nEND" % (dummy_daemon))
 		os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
-		os.system("chmod u+x /usr/sbin/lrmd_dummy_daemon")
+		os.system("chmod a+x /usr/sbin/lrmd_dummy_daemon")
 
 		os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
 		os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
@@ -434,8 +443,8 @@ if __name__ == "__main__":
 		if self.need_authkey:
 		    os.system("rm -f /etc/pacemaker/authkey")
 
-		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /etc/init.d/LSBDummy")
+		os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
 		os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
 		os.system("rm -f /usr/sbin/fence_dummy_monitor")
 		os.system("rm -f /usr/sbin/fence_dummy_sleep")
