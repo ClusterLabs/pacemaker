@@ -449,16 +449,16 @@ class StonithdTest(CTSTest):
         is_dc = self.CM.is_node_dc(node)
 
         watchpats = []
-        watchpats.append("log_operation: Operation .* for host '%s' with device .* returned: 0" % node)
-        watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
+        watchpats.append("Operation .* for host '%s' with device .* returned: 0" % node)
+        watchpats.append("tengine_stonith_notify:.*Peer %s was terminated .*: OK" % node)
 
         if self.Env["at-boot"] == 0:
             self.debug("Expecting %s to stay down" % node)
             self.CM.ShouldBeStatus[node] = "down"
         else:
             self.debug("Expecting %s to come up again %d" % (node, self.Env["at-boot"]))
-            watchpats.append("%s .*do_state_transition: .* S_STARTING -> S_PENDING" % node)
-            watchpats.append("%s .*do_state_transition: .* S_PENDING -> S_NOT_DC" % node)
+            watchpats.append("%s.* S_STARTING -> S_PENDING" % node)
+            watchpats.append("%s.* S_PENDING -> S_NOT_DC" % node)
 
         watch = self.create_watch(watchpats, 30 + self.Env["DeadTime"] + self.Env["StableTime"] + self.Env["StartTime"])
         watch.setwatch()
@@ -2722,7 +2722,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event: Operation %s_start_0.*node=%s, .*confirmed.*true" % (self.remote_rsc, self.remote_node))
+        pats.append("process_lrm_event:.*Operation %s_start_0.*node=%s, .*confirmed.*true" % (self.remote_rsc, self.remote_node))
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
