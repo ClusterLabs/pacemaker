@@ -89,7 +89,8 @@ A partially set up scenario is torn down if it fails during setup.
             self.ClusterManager.install_helper("cts.supp")
 
         self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
-                                  self.ClusterManager["BadNews"], "BadNews", 0,
+                                  self.ClusterManager.templates.get_patterns(
+                                      self.ClusterManager.Env["Name"], "BadNews"), "BadNews", 0,
                                   kind=self.ClusterManager.Env["LogWatcher"],
                                   hosts=self.ClusterManager.Env["nodes"])
         self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit

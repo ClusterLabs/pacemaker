@@ -313,14 +313,14 @@ class ClusterManager(UserDict):
         if key == "Name":
             return self.name
 
-        print "Getting %s from %s" % (key, repr(self))
+        print "FIXME: Getting %s from %s" % (key, repr(self))
         if self.data.has_key(key):
             return self.data[key]
 
         return self.templates.get_patterns(self.Env["Name"], key)
 
     def __setitem__(self, key, value):
-        print "Setting %s=%s on %s" % (key, value, repr(self))
+        print "FIXME: Setting %s=%s on %s" % (key, value, repr(self))
         self.data[key] = value
 
     def key_for_node(self, node):
