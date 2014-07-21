@@ -67,8 +67,8 @@ class AsyncWaitProc(Thread):
         if self.proc.stdout:
             outLines = self.proc.stdout.readlines()
             self.proc.stdout.close()
-            for line in outLines:
-                self.logger.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
+#            for line in outLines:
+#                self.logger.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
 
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
