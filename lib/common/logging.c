@@ -223,16 +223,19 @@ set_format_string(int method, const char *daemon)
 gboolean
 crm_add_logfile(const char *filename)
 {
+    bool is_default = false;
+    static int default_fd = -1;
+    static gboolean have_logfile = FALSE;
+    const char *default_logfile = "/var/log/pacemaker.log";
+
     struct stat parent;
     int fd = 0, rc = 0;
     FILE *logfile = NULL;
     char *parent_dir = NULL;
     char *filename_cp;
 
-    static gboolean have_logfile = FALSE;
-
     if (filename == NULL && have_logfile == FALSE) {
-        filename = "/var/log/pacemaker.log";
+        filename = default_logfile;
     }
 
     if (filename == NULL) {
@@ -240,6 +243,12 @@ crm_add_logfile(const char *filename)
     } else if(safe_str_eq(filename, "none")) {
         return FALSE;           /* Nothing to do */
     } else if(safe_str_eq(filename, "/dev/null")) {
+        return FALSE;           /* Nothing to do */
+    } else if(safe_str_eq(filename, default_logfile)) {
+        is_default = TRUE;
+    }
+
+    if(is_default && default_fd >= 0) {
         return FALSE;           /* Nothing to do */
     }
 
@@ -315,6 +324,14 @@ crm_add_logfile(const char *filename)
     if (fd < 0) {
         crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
         return FALSE;
+    }
+
+    if(is_default) {
+        default_fd = fd;
+
+    } else if(default_fd >= 0) {
+        crm_notice("Switching to %s", filename);
+        qb_log_ctl(default_fd, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
 
     crm_notice("Additional logging available in %s", filename);
