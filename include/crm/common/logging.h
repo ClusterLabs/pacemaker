@@ -161,7 +161,9 @@ unsigned int get_crm_log_level(void);
 
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
-	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
+        if(level <= crm_log_level) {                                    \
+            fprintf(stderr, "%s: " fmt ": %s (%d)\n", __FUNCTION__, ##args, err, errno); \
+        }                                                               \
 	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
     } while(0)
 
