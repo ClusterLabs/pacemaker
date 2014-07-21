@@ -262,6 +262,7 @@
 #  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
 #  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
 #  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
+#  define XML_LRM_ATTR_EXIT_REASON		"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
 #  define XML_RSC_OP_LAST_RUN           "last-run"
