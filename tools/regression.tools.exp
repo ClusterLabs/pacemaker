@@ -568,11 +568,6 @@ scope=nodes  name=standby value=true
 =#=#=#= Begin test: Delete standby value =#=#=#=
 Deleted nodes attribute: id=nodes-node1-standby name=standby
 
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
 =#=#=#= Current cib after: Delete standby value =#=#=#=
 <cib epoch="13" num_updates="0" admin_epoch="1">
   <configuration>
@@ -804,11 +799,6 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: List the configured resources - OK (0) =#=#=#=
 * Passed: crm_resource   - List the configured resources
 =#=#=#= Begin test: Set a resource's fail-count =#=#=#=
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
-Could not establish attrd connection: Connection refused (111)
 =#=#=#= Current cib after: Set a resource's fail-count =#=#=#=
 <cib epoch="17" num_updates="1" admin_epoch="1">
   <configuration>
