@@ -190,7 +190,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         self.rsh(self.host,
-                "python %s -t %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
+                "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
                 stdout=None, silent=True, synchronous=dosync, completionDelegate=self)
 
         if delegate:
@@ -343,7 +343,8 @@ class LogWatcher(RemoteExec):
             self.line_cache.extend(outLines)
         #print "Got %d lines from %d" % (len(outLines), pid)
 
-    def __get_lines(self):
+    def __get_lines(self, timeout):
+        count=0
         if not len(self.file_list):
             raise ValueError("No sources to read from")
 
@@ -355,6 +356,11 @@ class LogWatcher(RemoteExec):
         while self.pending > 0:
             #print "waiting for %d more" % self.pending
             time.sleep(1)
+            count = count + 1
+            if count > 10 and count > timeout:
+                # Probably the output buffer got too full
+                print "Aborting after %ds waiting for %d logging commands" % (count, self.pending)
+                return
 
         #print "Got %d lines" % len(self.line_cache)
 
@@ -411,13 +417,13 @@ class LogWatcher(RemoteExec):
             elif timeout > 0 and end > time.time():
                 if self.debug_level > 1: self.debug("lines during timeout")
                 time.sleep(1)
-                self.__get_lines()
+                self.__get_lines(timeout)
 
             elif needlines:
                 # Grab any relevant messages that might have arrived since
                 # the last time the buffer was populated
                 if self.debug_level > 1: self.debug("lines without timeout")
-                self.__get_lines()
+                self.__get_lines(timeout)
 
                 # Don't come back here again
                 needlines = False
