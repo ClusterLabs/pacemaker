@@ -114,6 +114,7 @@ logfile.close()
 class SearchObj:
     def __init__(self, filename, host=None, name=None):
 
+        self.limit = None
         self.logger = LogFactory()
         self.host = host
         self.name = name
@@ -188,6 +189,11 @@ class FileObj(SearchObj):
             delegate = self
             self.delegate = None
 
+        if self.limit != None and self.offset > self.limit:
+            if self.delegate:
+                self.delegate.async_complete(-1, -1, [], [])
+            return []
+
         global log_watcher_bin
         self.rsh(self.host,
                 "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
@@ -200,6 +206,25 @@ class FileObj(SearchObj):
             time.sleep(1)
 
         return self.cache
+
+    def setend(self):
+        if self.limit: 
+            return
+
+        global log_watcher_bin
+        (rc, lines) = self.rsh(self.host,
+                 "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                 None, silent=True)
+
+        for line in lines:
+            match = re.search("^CTSwatcher:Last read: (\d+)", line)
+            if match:
+                last_offset = self.offset
+                self.limit = int(match.group(1))
+                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+                self.debug("Set limit to: %d" % self.limit)
+
+        return
 
 class JournalObj(SearchObj):
 
@@ -235,7 +260,11 @@ class JournalObj(SearchObj):
             self.delegate = None
 
         # Use --lines to prevent journalctl from overflowing the Popen input buffer
-        command = "journalctl -q --after-cursor='%s' --lines=200 --show-cursor" % (self.offset)
+        if self.limit:
+            command = "journalctl -q --after-cursor='%s' --until '%s' --lines=200 --show-cursor" % (self.offset, self.limit)
+        else:
+            command = "journalctl -q --after-cursor='%s' --lines=200 --show-cursor" % (self.offset)
+
         if self.offset == "EOF":
             command = "journalctl -q -n 0 --show-cursor"
 
@@ -247,6 +276,19 @@ class JournalObj(SearchObj):
             time.sleep(1)
 
         return self.cache
+
+    def setend(self):
+        if self.limit: 
+            return
+
+        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", stdout=None, silent=True)
+
+        for line in lines:
+            self.limit = line.strip()
+            self.debug("Set limit to: %s" % self.limit)
+
+
+        return
 
 class LogWatcher(RemoteExec):
 
@@ -268,6 +310,15 @@ class LogWatcher(RemoteExec):
         '''
         self.logger = LogFactory()
 
+        self.name        = name
+        self.regexes     = regexes
+        self.debug_level = debug_level
+        self.whichmatch  = -1
+        self.unmatched   = None
+
+        self.file_list = []
+        self.line_cache = []
+
         #  Validate our arguments.  Better sooner than later ;-)
         for regex in regexes:
             assert re.compile(regex)
@@ -283,15 +334,6 @@ class LogWatcher(RemoteExec):
         else:
             raise
             self.filename    = self.Env["LogFileName"]
-
-        self.name        = name
-        self.regexes     = regexes
-        self.debug_level = debug_level
-        self.whichmatch  = -1
-        self.unmatched   = None
-
-        self.file_list = []
-        self.line_cache = []
 
         if hosts:
             self.hosts = hosts
@@ -357,7 +399,7 @@ class LogWatcher(RemoteExec):
             #print "waiting for %d more" % self.pending
             time.sleep(1)
             count = count + 1
-            if count > 10 and count > timeout:
+            if count > 20 and count > timeout and self.pending:
                 # Probably the output buffer got too full
                 print "Aborting after %ds waiting for %d logging commands" % (count, self.pending)
                 return
@@ -389,8 +431,11 @@ class LogWatcher(RemoteExec):
             self.debug("Nothing to look for")
             return None
 
-        while True:
+        if timeout == 0:
+            for f in self.file_list:
+                f.setend()
 
+        while True:
             if len(self.line_cache):
                 lines += 1
                 line = self.line_cache[0]
@@ -414,23 +459,20 @@ class LogWatcher(RemoteExec):
                             if self.debug_level > 1: self.debug("With: "+ regex)
                             return line
 
-            elif timeout > 0 and end > time.time():
-                if self.debug_level > 1: self.debug("lines during timeout")
-                time.sleep(1)
-                self.__get_lines(timeout)
+            elif timeout > 0 and end < time.time():
+                if self.debug_level > 1: self.debug("hit timeout: %d" % timeout)
 
-            elif needlines:
-                # Grab any relevant messages that might have arrived since
-                # the last time the buffer was populated
-                if self.debug_level > 1: self.debug("lines without timeout")
-                self.__get_lines(timeout)
-
-                # Don't come back here again
-                needlines = False
+                timeout = 0
+                for f in self.file_list:
+                    f.setend()
 
             else:
-                self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
-                return None
+                self.__get_lines(timeout)
+                if len(self.line_cache) == 0 and end < time.time():
+                    self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
+                    return None
+                else:
+                    time.sleep(1)
 
         self.debug("How did we get here")
         return None
