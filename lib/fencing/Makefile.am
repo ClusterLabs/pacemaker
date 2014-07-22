@@ -25,7 +25,7 @@ AM_CPPFLAGS         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
 lib_LTLIBRARIES = libstonithd.la
 
 libstonithd_la_SOURCES = st_client.c
-libstonithd_la_LDFLAGS = -version-info 3:0:1
+libstonithd_la_LDFLAGS = -version-info 3:1:1
 libstonithd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la
 
 AM_CFLAGS = $(AM_CPPFLAGS)

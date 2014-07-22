@@ -177,6 +177,6 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
     } while(0)
 #  include <crm/cib/util.h>
 
-#  define CIB_LIBRARY "libcib.so.3"
+#  define CIB_LIBRARY "libcib.so.4"
 
 #endif

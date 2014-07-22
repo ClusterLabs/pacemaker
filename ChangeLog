@@ -1,4 +1,189 @@
 
+* Tue Jul 22 2014 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.12-1
+- Update source tarball to revision: 93a037d
+- Changesets: 795
+- Diff:       195 files changed, 13772 insertions(+), 6176 deletions(-)
+
+- Features added since Pacemaker-1.1.11
+  + Changes to the ACL schema to support nodes and unix groups
+  + cib: Check ACLs prior to making the update instead of parsing the diff afterwards
+  + cib: Default ACL support to on
+  + cib: Enable the more efficient xml patchset format
+  + cib: Implement zero-copy status update
+  + cib: Send all r/w operations via the cluster connection and have all nodes process them
+  + crmd: Set "cluster-name" property to corosync's "cluster_name" by default for corosync-2
+  + crm_mon: Display brief output if "-b/--brief" is supplied or 'b' is toggled
+  + crm_report: Allow ssh alternatives to be used
+  + crm_ticket: Support multiple modifications for a ticket in an atomic operation
+  + extra: Add logrotate configuration file for /var/log/pacemaker.log
+  + Fencing: Add the ability to call stonith_api_time() from stonith_admin
+  + logging: daemons always get a log file, unless explicitly set to configured 'none'
+  + logging: allows the user to specify a log level that is output to syslog
+  + PE: Automatically re-unfence a node if the fencing device definition changes
+  + pengine: cl#5174 - Allow resource sets and templates for location constraints
+  + pengine: Support cib object tags
+  + pengine: Support cluster-specific instance attributes based on rules
+  + pengine: Support id-ref in nvpair with optional "name"
+  + pengine: Support per-resource maintenance mode
+  + pengine: Support site-specific instance attributes based on rules
+  + tools: Allow crm_shadow to create older configuration versions
+  + tools: Display pending state in crm_mon/crm_resource/crm_simulate if --pending/-j is supplied (cl#5178)
+  + xml: Add the ability to have lightweight schema revisions
+  + xml: Enable resource sets in location constraints for 1.2 schema
+  + xml: Support resources that require unfencing
+
+- Changes since Pacemaker-1.1.11
+  + acl: Authenticate pacemaker-remote requests with the node name as the client
+  + acl: Read access must be explicitly granted
+  + attrd: Ensure attribute dampening is always observed
+  + attrd: Remove offline nodes from node cache for "peer-remove" requests
+  + Bug cl#5055 - Improved migration support.
+  + Bug cl#5184 - Ensure pending probes that ultimately fail are correctly updated
+  + Bug cl#5196 - pengine: Check values after expanding templates
+  + Bug cl#5212 - Do not promote instances when quorum is lots and no-quorum-policy=freeze
+  + Bug cl#5213 - Ensure role colocation with -INFINITY is enforced
+  + Bug cl#5213 - Limit the scope of the previous commit to the masters role
+  + Bug cl#5219 - pengine: Allow unrelated resources with a common colocation target to remain promoted
+  + Bug cl#5222 - cib: Repair rolling update capability
+  + Bug cl#5222 - Enable legacy mode whenever a broadcast update is detected
+  + Bug rhbz#1036631 - Stop members of cloned groups when dependancies are stopped
+  + Bug rhbz#1054307 - cname pattern match should be more restrictive in init script
+  + Bug rhbz#1057697 - Use native DBus library for systemd/upstart support to avoid problematic use of threads
+  + Bug rhbz#1097457 - Limit the scope of the previous fix and include a helpful comment
+  + Bug rhbz#1097457 - Prevent invalid transition when resource are ordered to start after the container they're started in
+  + cib: allow setting permanent remote-node attributes
+  + cib: Auto-detect which patchset format to use
+  + cib: Determine the best value of validate-with if one is not supplied
+  + cib: Do not disable cib disk writes if on-disk cib is corrupt
+  + cib: Ensure 'cibadmin -R/--replace' commands get replies
+  + cib: Erasing the cib is an admin action, bump the admin_epoch instead
+  + cib: Fix remote cib based on TLS
+  + cib: Ingore patch failures if we already have their contents
+  + cib: Validate that everyone still sees the same configuration once all updates have completed
+  + cibadmin: Allow priviliged clients to perform tasks as unpriviliged users
+  + cibadmin: Remove dangerous commands that exposed unnecessary implementation internal details
+  + cluster: Fix segfault on removing a node
+  + cluster: Prevent search of unames from attempting to create node entries for unknown nodes
+  + cluster: Remove unknown offline nodes with conflicting unames from node cache
+  + controld: Do not consider the dlm up until the address list is present
+  + controld: handling startup fencing within the controld agent, not the dlm
+  + controld: Return OCF_ERR_INSTALLED instead of OCF_NOT_INSTALLED
+  + crmd: Ack pending operations that were cancelled due to rsc deletion
+  + crmd: Actions can only be executed if their pre-requisits completed successfully
+  + crmd: avoid double free caused by nested hash table removal
+  + crmd: Avoid spamming the cib by triggering a transition only once per non-status change
+  + crmd: Correctly react to successful unfencing operations
+  + crmd: Correctly recognise operation cancellations we initiated
+  + crmd: Do not erase the status section for unfenced nodes
+  + crmd: Do not overwrite existing node state when fencing completes
+  + crmd: Do not start timers for already completed operations
+  + crmd: Ensure crm_config options are re-read on updates
+  + crmd: Fenced nodes that return prior to an election do not need to have their status section reset
+  + crmd: make lrm_state hash table not case sensitive
+  + crmd: make node_state erase correctly
+  + crmd: Only write fence_averride if open() returns a positive file descriptor
+  + crmd: Prevent manual fencing confirmations from attempting to create node entries for unknown nodes
+  + crmd: Prevent SIGPIPE when notifying CMAN about fencing operations
+  + crmd: Remove state of unknown nodes with conflicting unames from CIB
+  + crmd: Remove unknown nodes with conflicting unames from CIB
+  + crmd: Report unsuccessful unfencing operations
+  + crm_diff: Allow the generation of xml patchsets without digests
+  + crm_mon: Allow the file created by --as-html to be world readable
+  + crm_mon: Ensure resource attributes have been unpacked before displaying connectivity data
+  + crm_node: Only remove the named resource from the cib
+  + crm_report: Gracefully handle rediculously large logfiles
+  + crm_report: Only gather dlm data if dlm_controld is running
+  + crm_resource: Gracefully handle -EACCESS when querying the cib
+  + crm_verify: Perform a full set of calculations whenever the status section is present
+  + fencing: Advertise support for reboot/on/off in the metadata for legacy agents
+  + fencing: Automatically switch from 'list' to 'status' to 'static-list' if those actions are not advertised in the metadata
+  + fencing: Cache metadata lookups to avoid repeated blocking during device registration
+  + fencing: Correctly record which peer performed the fencing operation
+  + fencing: default to 'off' when agent does not advertise 'reboot' in metadata
+  + fencing: Do not unregister/register all stonith devices on every resource agent change
+  + fencing: Execute all required fencing devices regardless of what topology level they are at
+  + fencing: Fence using all required devices
+  + fencing: Pass the correct options when looking up the history by node name
+  + fencing: Update stonith device list only if stonith is enabled
+  + get_cluster_type: failing concurrent tool invocations on heartbeat
+  + ignore SIGPIPE when gnutls is in use
+  + iso8601: Different logic is needed when logging and calculating durations
+  + iso8601: Fix memory leak in duration calculation
+  + Logging: Bootstrap daemon logging before processing arguments but configure it afterwards
+  + lrmd: Cancel recurring operations before stop action is executed
+  + lrmd: Expose logging variables expected by OCF agents
+  + lrmd: Handle systemd reporting 'done' before a resource is actually stopped/started
+  + lrmd: Merge duplicate recurring monitor operations
+  + lrmd: Prevent OCF agents from logging to random files due to "value" of setenv() being NULL
+  + lrmd: Provide stderr output from agents if available, otherwise fall back to stdout
+  + mainloop: Better handle the killing of processes in the act of exiting
+  + mainloop: Canceling in-flight operations should not fail if child process has already exited.
+  + mainloop: Fixes use after free in process monitor code
+  + mcp: Tell systemd not to respawn us if we exit with rc=100
+  + membership: Avoid duplicate peer entries in the peer cache
+  + pengine: Allow container nodes to migrate with connection resource
+  + pengine: avoid assert by searching for stop action on correct node during LogActions
+  + pengine: Block restart of resources if any dependent resource in a group is unmanaged
+  + pengine: cl#5186 - Avoid running rsc on two nodes when node is fenced during migration
+  + pengine: cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node
+  + pengine: cl#5200 - Before migrating utilization-using resources to a node, take off the load that will no longer run there if it's not introducing transition loop
+  + pengine: Correctly handle origin offsets in the future
+  + pengine: Correctly observe requires=nothing
+  + pengine: Default sequential to TRUE for resource sets for consistency with colocation sets
+  + pengine: Delay unfencing until after we know the state of all resources that require unfencing
+  + pengine: Do not initiate fencing for unclean nodes when fencing is disabled
+  + pengine: Ensure instance numbers are preserved for cloned templates
+  + pengine: Ensure unfencing only happens once, even if the transition is interrupted
+  + pengine: Fencing devices default to only requiring quorum in order to start
+  + pengine: fixes invalid transition caused by clones with more than 10 instances
+  + pengine: Force record pending for migrate_to actions
+  + pengine: handles edge case where container order constraints are not honored during migration
+  + pengine: Ignore failure-timeout only if the failed operation has on-fail="block"
+  + pengine: Mark unrunnable stop actions as "blocked" and show the correct current locations
+  + pengine: Memory leaks
+  + pengine: properly handle fencing of container remote-nodes when the container is orphaned
+  + pengine: properly place resource within a container when container is a remote-node.
+  + pengine: Unfencing is based on device probes, there is no need to unfence when normal resources are found active
+  + pengine: Use "#cluster-name" in rules for setting cluster-specific instance attributes
+  + pengine: Use "#site-name" in rules for setting site-specific instance attributes
+  + remote: Allow baremetal remote-node connection resources to migrate
+  + remote: clear remote-node status correctly
+  + remote: Enable migration support for baremetal connection resources by default
+  + remote: Handle request/response ipc proxy correctly
+  + services: Correctly reset the nice value for lrmd's children
+  + services: Do not allow duplicate recurring op entries
+  + services: Do not block synced service executions
+  + services: Fixes segfault associated with cancelling in-flight recurring operations.
+  + services: Remove cancelled recurring ops from internal lists as early as possible
+  + services: Remove file descriptors from mainloop as soon as we have drained them
+  + services: Reset the scheduling policy and priority for lrmd's children without replying on SCHED_RESET_ON_FORK
+  + services_action_cancel: Interpret return code from mainloop_child_kill() correctly
+  + stonith_admin: Ensure pointers passed to sscanf() are properly initialized
+  + stonith_api_time_helper now returns when the most recent fencing operation completed
+  + systemd: Prevent use-of-NULL when determining if an agent exists
+  + systemd: Try to handle dbus actions that complete prior to configuring a callback
+  + Tools: Non-daemons shouldn't abort just because xml parsing failed
+  + Upstart: Allow comilation with glib versions older than 2.28
+  + Upstart: Do not attempt upstart jobs if we cannot connect to dbus
+  + When data was old, it fixed so that the newest cib might not be acquired.
+  + xml: Check all available schemas when doing upgrades
+  + xml: Correctly determine the lowest allowed schema version
+  + xml: Correctly enforce ACLs after a replace operation
+  + xml: Correctly infer attribute changes after a replace operation
+  + xml: Create the correct diff when only part of a document is changed
+  + xml: Detect attribute ordering changes
+  + xml: Detect content that is added and removed in the same update
+  + xml: Do not prune meaningful leaves from v1 patchsets
+  + xml: Empty patchsets are considered to have applied cleanly
+  + xml: Ensure patches always have version details set
+  + xml: Find the minimal set of changes when part of a document is replaced
+  + xml: If validate-with is missing, we find the most recent schema that accepts it and go from there
+  + xml: Introduce a 'move' primitive for v2 patch sets
+  + xml: Preserve the attribute order in the patch for subsequent digest validation
+  + xml: Resolve memory leak when logging xml blobs
+  + xml: Update xml validation to allow '<node type=remote />'
+
+
 * Thu Feb 13 2014 David Vossel <dvossel@redhat.com> Pacemaker-1.1.11-1
 - Update source tarball to revision: 33f9d09
 - Changesets: 462
@@ -797,15 +982,6 @@
   + Service placement influenced by the physical resources
   + A new tool for simulating failures and the cluster’s reaction to them
   + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
-
-* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4
-- Rebuild for heartbeat 3.0.2-2
-
-* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-3
-- Rebuild for cluster-glue 1.0.3
-
-* Tue Jan 19 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-2
-- Rebuild for corosync 1.2.0
 
 * Mon Jan 18 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-1
 - Update source tarball to revision: 2eed906f43e9 (stable-1.0) tip
@@ -1742,7 +1918,7 @@
   + Medium: pengine: Bug 1820 - Allow the first resource in a group to be migrated
   + Medium: pengine: Bug 1820 - Check the colocation dependancies of resources to be migrated
 
-* Mon Jan 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.0-2
+* Mon Jan 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.0-1
 - This is the first release of the Pacemaker Cluster Resource Manager formerly part of Heartbeat.
 - For those looking for the GUI, mgmtd, CIM or TSA components, they are now found in
   the new pacemaker-pygui project.  Build dependancies prevent them from being
@@ -1827,6 +2003,3 @@
   + snmp subagent: use the syslog setting
   + snmp: v2 support (thanks to Keisuke MORI)
   + snmp_subagent - made it not complain about some things if shutting down
-
-* Mon Dec 10 2007 Andrew Beekhof <abeekhof@suse.de> - 0.6.0-1
-- Initial opensuse package check-in

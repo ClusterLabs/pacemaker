@@ -25,7 +25,7 @@ AM_CPPFLAGS         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
 lib_LTLIBRARIES = liblrmd.la
 
 liblrmd_la_SOURCES = lrmd_client.c
-liblrmd_la_LDFLAGS = -version-info 2:1:1
+liblrmd_la_LDFLAGS = -version-info 2:2:1
 liblrmd_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/fencing/libstonithd.la
