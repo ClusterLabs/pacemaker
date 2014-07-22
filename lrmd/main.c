@@ -261,7 +261,7 @@ main(int argc, char **argv)
     const char *option = NULL;
 
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifndef ENABLE_PCMK_REMOTE
     crm_log_preinit("lrmd", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for controlling services confirming to different standards");
