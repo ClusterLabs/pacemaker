@@ -29,7 +29,7 @@ env:
 
 # sudo add-apt-repository ppa:hotot-team
 before_install:
- - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ saucy universe"
+ - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ saucy main"
  - sudo apt-get update -qq
 
 install:
