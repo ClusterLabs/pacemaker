@@ -374,7 +374,8 @@ te_graph_trigger(gpointer user_data)
         graph_rc = run_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
-        print_graph(LOG_DEBUG_3, transition_graph);
+        /* significant overhead... */
+        /* print_graph(LOG_DEBUG_3, transition_graph); */
 
         if (graph_rc == transition_active) {
             crm_trace("Transition not yet complete");
