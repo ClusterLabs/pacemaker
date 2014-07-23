@@ -422,6 +422,12 @@ pcmk_shutdown_worker(gpointer user_data)
     return TRUE;
 }
 
+static void
+pcmk_ignore(int nsig)
+{
+    crm_info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
+}
+
 void
 pcmk_shutdown(int nsig)
 {
@@ -1034,6 +1040,7 @@ main(int argc, char **argv)
 
         mainloop_add_signal(SIGTERM, pcmk_shutdown);
         mainloop_add_signal(SIGINT, pcmk_shutdown);
+        mainloop_add_signal(SIGHUP, pcmk_ignore);
 
         find_and_track_existing_processes();
         init_children_processes();
