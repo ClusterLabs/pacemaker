@@ -158,7 +158,7 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
         } else {
             const char *state = "";
 
-            if (the_rsc->variant == pe_native && the_rsc->role == RSC_ROLE_MASTER) {
+            if (the_rsc->variant < pe_clone && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
                 state = "Master";
             }
             fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
@@ -1994,7 +1994,9 @@ main(int argc, char **argv)
 
             for(iter = rsc->children; iter; iter = iter->next) {
                 resource_t *child = (resource_t *)iter->data;
-                if(child->role == RSC_ROLE_MASTER) {
+                enum rsc_role_e child_role = child->fns->state(child, TRUE);
+
+                if(child_role == RSC_ROLE_MASTER) {
                     rsc = child;
                     count++;
                 }
@@ -2025,7 +2027,7 @@ main(int argc, char **argv)
         if(current == NULL) {
             /* Nothing to check */
 
-        } else if(scope_master && rsc->role != RSC_ROLE_MASTER) {
+        } else if(scope_master && rsc->fns->state(rsc, TRUE) != RSC_ROLE_MASTER) {
             crm_trace("%s is already active on %s but not in correct state", rsc_id, dest->details->uname);
 
         } else if (safe_str_eq(current->details->uname, dest->details->uname)) {
@@ -2100,7 +2102,9 @@ main(int argc, char **argv)
 
             for(iter = rsc->children; iter; iter = iter->next) {
                 resource_t *child = (resource_t *)iter->data;
-                if(child->role == RSC_ROLE_MASTER) {
+                enum rsc_role_e child_role = child->fns->state(child, TRUE);
+
+                if(child_role == RSC_ROLE_MASTER) {
                     count++;
                     current = child->running_on->data;
                 }
