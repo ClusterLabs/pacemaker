@@ -857,6 +857,7 @@ main(int argc, char **argv)
 
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
+    mainloop_add_signal(SIGHUP, pcmk_ignore);
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
@@ -1040,7 +1041,6 @@ main(int argc, char **argv)
 
         mainloop_add_signal(SIGTERM, pcmk_shutdown);
         mainloop_add_signal(SIGINT, pcmk_shutdown);
-        mainloop_add_signal(SIGHUP, pcmk_ignore);
 
         find_and_track_existing_processes();
         init_children_processes();
