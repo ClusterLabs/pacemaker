@@ -35,6 +35,8 @@
 #  include <sys/timeb.h>
 #endif
 
+#define EXIT_REASON_MAX_LEN 128
+
 GHashTable *rsc_list = NULL;
 
 typedef struct lrmd_cmd_s {
@@ -59,6 +61,7 @@ typedef struct lrmd_cmd_s {
     char *rsc_id;
     char *action;
     char *real_action;
+    char *exit_reason;
     char *output;
     char *userdata_str;
 
@@ -198,6 +201,7 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     free(cmd->userdata_str);
     free(cmd->rsc_id);
     free(cmd->output);
+    free(cmd->exit_reason);
     free(cmd->client_id);
     free(cmd);
 }
@@ -453,6 +457,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     }
     crm_xml_add(notify, F_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
     crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->output);
+    crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->exit_reason);
 
     if (cmd->params) {
         char *key = NULL;
@@ -504,6 +509,20 @@ send_generic_notify(int rc, xmlNode * request)
 }
 
 static void
+cmd_reset(lrmd_cmd_t * cmd)
+{
+    cmd->lrmd_op_status = 0;
+    cmd->last_pid = 0;
+    memset(&cmd->t_run, 0, sizeof(cmd->t_run));
+    memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
+    free(cmd->exit_reason);
+    cmd->exit_reason = NULL;
+    free(cmd->output);
+    cmd->output = NULL;
+
+}
+
+static void
 cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 {
     crm_trace("Resource operation rsc:%s action:%s completed (%p %p)", cmd->rsc_id, cmd->action,
@@ -533,12 +552,7 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
         free_lrmd_cmd(cmd);
     } else {
         /* Clear all the values pertaining just to the last iteration of a recurring op. */
-        cmd->lrmd_op_status = 0;
-        cmd->last_pid = 0;
-        memset(&cmd->t_run, 0, sizeof(cmd->t_run));
-        memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
-        free(cmd->output);
-        cmd->output = NULL;
+        cmd_reset(cmd);
     }
 }
 
@@ -671,6 +685,42 @@ notify_of_new_client(crm_client_t *new_client)
     free_xml(notify);
 }
 
+static char *
+parse_exit_reason(const char *output)
+{
+    const char *cur = NULL;
+    const char *last = NULL;
+    char *reason = NULL;
+    static int cookie_len = 0;
+
+    if (output == NULL) {
+        return NULL;
+    }
+
+    if (!cookie_len) {
+        cookie_len = strlen(CRM_EXIT_REASON_COOKIE);
+    }
+
+    cur = strstr(output, CRM_EXIT_REASON_COOKIE);
+    for (; cur != NULL; cur = strstr(cur, CRM_EXIT_REASON_COOKIE)) {
+        /* skip over the cookie delimiter string */
+        cur += cookie_len;
+        last = cur;
+    }
+    if (last == NULL) {
+        return NULL;
+    }
+
+    /* make our own copy */
+    reason = calloc(1, (EXIT_REASON_MAX_LEN+1));
+    CRM_ASSERT(reason);
+
+    /* limit reason string size */
+    strncpy(reason, last, EXIT_REASON_MAX_LEN);
+
+    return reason;
+}
+
 void
 client_disconnect_cleanup(const char *client_id)
 {
@@ -779,14 +829,7 @@ action_complete(svc_action_t * action)
                          cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left, delay);
             }
 
-            cmd->lrmd_op_status = 0;
-            cmd->last_pid = 0;
-            memset(&cmd->t_run, 0, sizeof(cmd->t_run));
-            memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
-            free(cmd->output);
-            cmd->output = NULL;
-
-            rsc->active = NULL;
+            cmd_reset(cmd);
             schedule_lrmd_cmd(rsc, cmd);
             return;
 
@@ -801,6 +844,8 @@ action_complete(svc_action_t * action)
 
     if (action->stderr_data) {
         cmd->output = strdup(action->stderr_data);
+        cmd->exit_reason = parse_exit_reason(action->stderr_data);
+
     } else if (action->stdout_data) {
         cmd->output = strdup(action->stdout_data);
     }

@@ -2141,6 +2141,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     char *op_id = NULL;
     char *op_id_additional = NULL;
     char *local_user_data = NULL;
+    const char *exit_reason = NULL;
 
     xmlNode *xml_op = NULL;
     const char *task = NULL;
@@ -2201,6 +2202,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
             /* Ensure 'last' gets updated too in case recording-pending="true" */
             op_id_additional = generate_op_key(op->rsc_id, "last", 0);
         }
+        exit_reason = op->exit_reason;
 
     } else if (op->interval > 0) {
         op_id = strdup(key);
@@ -2234,6 +2236,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char *ca
     crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
+    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason);
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);

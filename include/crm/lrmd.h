@@ -72,6 +72,7 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_RSC_ACTION       "lrmd_rsc_action"
 #define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
 #define F_LRMD_RSC_OUTPUT       "lrmd_rsc_output"
+#define F_LRMD_RSC_EXIT_REASON  "lrmd_rsc_exit_reason"
 #define F_LRMD_RSC_START_DELAY  "lrmd_rsc_start_delay"
 #define F_LRMD_RSC_INTERVAL     "lrmd_rsc_interval"
 #define F_LRMD_RSC_METADATA     "lrmd_rsc_metadata_res"
@@ -200,6 +201,8 @@ typedef struct lrmd_event_data_s {
     enum ocf_exitcode rc;
     /*! The lrmd status returned for exec_complete events */
     int op_status;
+    /*! exit failure reason string from resource agent operation */
+    const char *exit_reason;
     /*! stdout from resource agent operation */
     const char *output;
     /*! Timestamp of when op ran */
