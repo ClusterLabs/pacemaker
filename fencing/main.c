@@ -1162,7 +1162,7 @@ main(int argc, char **argv)
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
 
-    crm_log_preinit(NULL, argc, argv);
+    crm_log_preinit("stonith-ng", argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
