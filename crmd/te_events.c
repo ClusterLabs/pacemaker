@@ -37,7 +37,9 @@ int match_graph_event(int action_id, xmlNode * event, const char *event_node,
 gboolean
 fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 {
-    const char *target = NULL;
+    const char *target_uuid = NULL;
+    const char *router = NULL;
+    const char *router_uuid = NULL;
     xmlNode *last_action = NULL;
 
     GListPtr gIter = NULL;
@@ -69,8 +71,16 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
                 }
             }
 
-            target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-            if (safe_str_eq(target, down_node)) {
+            target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+            router = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+            if (router) {
+                crm_node_t *node = crm_get_peer(0, router);
+                if (node) {
+                    router_uuid = node->uuid;
+                }
+            }
+
+            if (safe_str_eq(target_uuid, down_node) || safe_str_eq(router_uuid, down_node)) {
                 action->failed = TRUE;
                 synapse->failed = TRUE;
                 last_action = action->xml;
