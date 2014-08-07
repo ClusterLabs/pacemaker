@@ -341,12 +341,12 @@ also generates a Graphviz dot-file representing the same information.
 
 image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="16cm",height="6cm",align="center"]      
 
-In the above example, it appears that a new node, +node2+, has come
+In the above example, it appears that a new node, +pcmk-2+, has come
 online and that the cluster is checking to make sure +rsc1+, +rsc2+
 and +rsc3+ are not already running there (Indicated by the
 +*_monitor_0+ entries).  Once it did that, and assuming the resources
 were not active there, it would have liked to stop +rsc1+ and +rsc2+
-on +node1+ and move them to +node2+.  However, there appears to be
+on +pcmk-1+ and move them to +pcmk-2+.  However, there appears to be
 some problem and the cluster cannot or is not permitted to perform the
 stop actions which implies it also cannot perform the start actions.
 For some reason the cluster does not want to start +rsc3+ anywhere.
