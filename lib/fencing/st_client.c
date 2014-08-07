@@ -663,9 +663,11 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
 
     if (action->timer_sigterm > 0) {
         g_source_remove(action->timer_sigterm);
+        action->timer_sigterm = 0;
     }
     if (action->timer_sigkill > 0) {
         g_source_remove(action->timer_sigkill);
+        action->timer_sigkill = 0;
     }
 
     if (action->last_timeout_signo) {
