@@ -1,4 +1,4 @@
-Created new pacemaker-2.0 configuration
+Created new pacemaker-2.1 configuration
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow
