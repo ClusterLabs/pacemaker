@@ -692,6 +692,7 @@ parse_exit_reason(const char *output)
     const char *last = NULL;
     char *reason = NULL;
     static int cookie_len = 0;
+    char *eol = NULL;
 
     if (output == NULL) {
         return NULL;
@@ -717,6 +718,12 @@ parse_exit_reason(const char *output)
 
     /* limit reason string size */
     strncpy(reason, last, EXIT_REASON_MAX_LEN);
+
+    /* truncate everything after a new line */
+    eol = strchr(reason, '\n');
+    if (eol != NULL) {
+        *eol = '\0';
+    }
 
     return reason;
 }
