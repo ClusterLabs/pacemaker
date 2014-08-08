@@ -62,6 +62,14 @@
 	    <attribute name="require-all"><data type="boolean"/></attribute>
 	  </optional>
 	  <optional>
+	    <attribute name="ordering">
+	      <choice>
+		<value>group</value>
+		<value>listed</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
 	    <attribute name="action">
 	      <ref name="attribute-actions"/>
 	    </attribute>

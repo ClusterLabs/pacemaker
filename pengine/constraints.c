@@ -2005,6 +2005,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
     const char *sequential = crm_element_value(set, "sequential");
+    const char *ordering = crm_element_value(set, "ordering");
     int local_score = score;
 
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
@@ -2013,10 +2014,14 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
         local_score = char2score(score_s);
     }
 
+    if(ordering == NULL) {
+        ordering = "group";
+    }
+
     if (sequential != NULL && crm_is_true(sequential) == FALSE) {
         return TRUE;
 
-    } else if (local_score >= 0) {
+    } else if (local_score >= 0 && safe_str_eq(ordering, "group")) {
         for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
             if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
@@ -2027,6 +2032,20 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 }
 
                 with = resource;
+            }
+        }
+    } else if (local_score >= 0) {
+        resource_t *last = NULL;
+        for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
+            if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+                EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+                if (last != NULL) {
+                    pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
+                    rsc_colocation_new(set_id, NULL, local_score, last, resource, role, role,
+                                       data_set);
+                }
+
+                last = resource;
             }
         }
 
