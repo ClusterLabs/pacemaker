@@ -50,6 +50,13 @@ extern "C" {
 #    define SERVICE_SCRIPT "/sbin/service"
 #  endif
 
+
+/* This is the string passed in the OCF_EXIT_REASON_PREFIX
+ * environment variable. The stderr output that occurs
+ * after this prefix is encountered is considered the exit
+ * reason for a completed operationt */
+#define PCMK_OCF_REASON_PREFIX "ocf-exit-reason:"
+
 /* *INDENT-OFF* */
 enum lsb_exitcode {
     PCMK_LSB_OK                  = 0,

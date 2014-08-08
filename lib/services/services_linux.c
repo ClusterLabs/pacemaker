@@ -199,6 +199,7 @@ add_OCF_env_vars(svc_action_t * op)
     set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", "0", NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
+    set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
         set_ocf_env("OCF_RESOURCE_INSTANCE", op->rsc, NULL);

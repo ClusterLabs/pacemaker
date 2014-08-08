@@ -698,11 +698,11 @@ parse_exit_reason(const char *output)
     }
 
     if (!cookie_len) {
-        cookie_len = strlen(CRM_EXIT_REASON_COOKIE);
+        cookie_len = strlen(PCMK_OCF_REASON_PREFIX);
     }
 
-    cur = strstr(output, CRM_EXIT_REASON_COOKIE);
-    for (; cur != NULL; cur = strstr(cur, CRM_EXIT_REASON_COOKIE)) {
+    cur = strstr(output, PCMK_OCF_REASON_PREFIX);
+    for (; cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
         /* skip over the cookie delimiter string */
         cur += cookie_len;
         last = cur;
