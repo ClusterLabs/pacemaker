@@ -1,0 +1,213 @@
+<cib admin_epoch="0" crm_feature_set="3.0.9" epoch="29" num_updates="0" validate-with="pacemaker-2.1" have-quorum="false">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1"/>
+      <node id="node2" uname="node2"/>
+    </nodes>
+    <resources>
+      <group id="rgroup">
+        <primitive class="ocf" id="dummy1-1" provider="heartbeat" type="Dummy">
+          <instance_attributes id="dummy1-1-instance_attributes"/>
+        </primitive>
+        <primitive class="ocf" id="dummy1-2" provider="heartbeat" type="Dummy">
+          <instance_attributes id="dummy1-2-instance_attributes"/>
+        </primitive>
+        <primitive class="ocf" id="dummy1-3" provider="heartbeat" type="Dummy">
+          <instance_attributes id="dummy1-3-instance_attributes"/>
+          <meta_attributes id="dummy1-3-meta_attributes">
+            <nvpair id="dummy1-3-meta_attributes-target-role" name="target-role" value="Stopped"/>
+          </meta_attributes>
+        </primitive>
+        <primitive class="ocf" id="dummy1-4" provider="heartbeat" type="Dummy">
+          <instance_attributes id="dummy1-4-instance_attributes"/>
+        </primitive>
+        <primitive class="ocf" id="dummy1-5" provider="heartbeat" type="Dummy">
+          <instance_attributes id="dummy1-5-instance_attributes"/>
+        </primitive>
+      </group>
+      <primitive class="ocf" id="dummy2-1" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy2-1-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy2-2" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy2-2-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy2-3" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy2-3-instance_attributes"/>
+        <meta_attributes id="dummy2-3-meta_attributes">
+          <nvpair id="dummy2-3-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="dummy3-1" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy3-1-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy3-2" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy3-2-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy3-3" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy3-3-instance_attributes"/>
+        <meta_attributes id="dummy3-3-meta_attributes">
+          <nvpair id="dummy3-3-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="ocf" id="dummy3-4" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy3-4-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy3-5" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy3-5-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy2-4" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy2-4-instance_attributes"/>
+      </primitive>
+      <primitive class="ocf" id="dummy2-5" provider="heartbeat" type="Dummy">
+        <instance_attributes id="dummy2-5-instance_attributes"/>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order id="pcs_rsc_order_dummy2-1_dummy2-2_dummy2-3_dummy2-4_dummy2-5">
+        <resource_set id="pcs_rsc_set_dummy2-1_dummy2-2_dummy2-3_dummy2-4_dummy2-5">
+          <resource_ref id="dummy2-1"/>
+          <resource_ref id="dummy2-2"/>
+          <resource_ref id="dummy2-3"/>
+          <resource_ref id="dummy2-4"/>
+          <resource_ref id="dummy2-5"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_colocation id="pcs_rsc_colocation_dummy2-1_dummy2-2_dummy2-3_dummy2-4_dummy2-5" score="INFINITY">
+        <resource_set id="pcs_rsc_set_dummy2-1_dummy2-2_dummy2-3_dummy2-4_dummy2-5-1">
+          <resource_ref id="dummy2-1"/>
+          <resource_ref id="dummy2-2"/>
+          <resource_ref id="dummy2-3"/>
+          <resource_ref id="dummy2-4"/>
+          <resource_ref id="dummy2-5"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_order id="pcs_rsc_order_dummy3-1_dummy3-2_dummy3-3_dummy3-4_dummy3-5">
+        <resource_set id="pcs_rsc_set_dummy3-1_dummy3-2_dummy3-3_dummy3-4_dummy3-5" ordering="listed">
+          <resource_ref id="dummy3-5"/>
+          <resource_ref id="dummy3-4"/>
+          <resource_ref id="dummy3-3"/>
+          <resource_ref id="dummy3-2"/>
+          <resource_ref id="dummy3-1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_colocation id="pcs_rsc_colocation_dummy3-1_dummy3-2_dummy3-3_dummy3-4_dummy3-5" score="INFINITY">
+        <resource_set id="pcs_rsc_set_dummy3-1_dummy3-2_dummy3-3_dummy3-4_dummy3-5-1" ordering="listed">
+          <resource_ref id="dummy3-1"/>
+          <resource_ref id="dummy3-2"/>
+          <resource_ref id="dummy3-3"/>
+          <resource_ref id="dummy3-4"/>
+          <resource_ref id="dummy3-5"/>
+        </resource_set>
+      </rsc_colocation>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="dummy1-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-1_last_0" operation_key="dummy1-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-2_last_0" operation_key="dummy1-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-3_last_0" operation_key="dummy1-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-4_last_0" operation_key="dummy1-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-5_last_0" operation_key="dummy1-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-1_last_0" operation_key="dummy2-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-2_last_0" operation_key="dummy2-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-3_last_0" operation_key="dummy2-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-1_last_0" operation_key="dummy3-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-2_last_0" operation_key="dummy3-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-3_last_0" operation_key="dummy3-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-4_last_0" operation_key="dummy3-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-5_last_0" operation_key="dummy3-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-4_last_0" operation_key="dummy2-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-5_last_0" operation_key="dummy2-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy1-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-1_last_0" operation_key="dummy1-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-2_last_0" operation_key="dummy1-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-3_last_0" operation_key="dummy1-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-4_last_0" operation_key="dummy1-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy1-5_last_0" operation_key="dummy1-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-1_last_0" operation_key="dummy2-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-2_last_0" operation_key="dummy2-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-3_last_0" operation_key="dummy2-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-1" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-1_last_0" operation_key="dummy3-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-2" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-2_last_0" operation_key="dummy3-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-3" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-3_last_0" operation_key="dummy3-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-4_last_0" operation_key="dummy3-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy3-5_last_0" operation_key="dummy3-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-4" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-4_last_0" operation_key="dummy2-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2-5" class="ocf" provider="heartbeat" type="Dummy">
+            <lrm_rsc_op id="dummy2-5_last_0" operation_key="dummy2-5_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1406693137" last-rc-change="1406693137" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

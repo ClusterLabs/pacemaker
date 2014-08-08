@@ -148,6 +148,7 @@ do_test order-optional-keyword "Order (optional keyword)"
 do_test order-mandatory "Order (mandatory keyword)"
 do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
 do_test ordered-set-basic-startup "Constraint set with default order settings."
+do_test ordered-set-natural "Allow natural set ordering"
 do_test order-wrong-kind "Order (error)"
 
 echo ""
