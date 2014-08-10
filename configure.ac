@@ -1119,12 +1119,6 @@ AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
-CRM_EXIT_REASON_COOKIE=`try_extract_header_define agent_config.h OCF_EXIT_REASON_COOKIE ocf-exit-reason`
-AC_MSG_CHECKING(String delimiter used to signify OCF script exit reason string)
-AC_MSG_RESULT($CRM_EXIT_REASON_COOKIE)
-AC_DEFINE_UNQUOTED(CRM_EXIT_REASON_COOKIE,"$CRM_EXIT_REASON_COOKIE", The string delimiter used to parse an OCF scripts exit string from stderr output.)
-AC_SUBST(CRM_EXIT_REASON_COOKIE)
-
 dnl Needed for the location of hostcache in CTS.py
 HA_VARLIBHBDIR=`try_extract_header_define $GLUE_HEADER HA_VARLIBHBDIR ${localstatedir}/lib/heartbeat`
 AC_SUBST(HA_VARLIBHBDIR)
