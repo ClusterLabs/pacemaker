@@ -232,6 +232,24 @@ stonith_device_execute(stonith_device_t * device)
         return TRUE;
     }
 
+    if(safe_str_eq(device->agent, STONITH_WATCHDOG_AGENT)) {
+        if(safe_str_eq(cmd->action, "reboot")) {
+            do_crm_log_always(LOG_EMERG, "Initiating watchdog %s operation", cmd->action);
+            _exit(pcmk_err_machine_reset);
+            return TRUE;
+
+        } else if(safe_str_eq(cmd->action, "off")) {
+            do_crm_log_always(LOG_EMERG, "Initiating watchdog %s operation", cmd->action);
+            _exit(pcmk_err_machine_off);
+            return TRUE;
+
+        } else {
+            crm_info("Faking success for %s watchdog operation", cmd->action);
+            cmd->done_cb(0, 0, NULL, cmd);
+            return TRUE;
+        }
+    }
+
 #if SUPPORT_CIBSECRETS
     if (replace_secret_params(device->id, device->params) < 0) {
         /* replacing secrets failed! */
@@ -520,7 +538,10 @@ get_agent_metadata(const char *agent)
     }
 
     buffer = g_hash_table_lookup(metadata_cache, agent);
-    if(buffer == NULL) {
+    if(safe_str_eq(agent, STONITH_WATCHDOG_AGENT)) {
+        return NULL;
+
+    } else if(buffer == NULL) {
         stonith_t *st = stonith_api_new();
         int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
 

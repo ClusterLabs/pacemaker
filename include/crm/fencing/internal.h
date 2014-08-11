@@ -122,4 +122,6 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define stonith_channel            "st_command"
 #  define stonith_channel_callback   "st_callback"
 
+#  define STONITH_WATCHDOG_AGENT  "#watchdog"
+
 #endif
