@@ -53,6 +53,8 @@
 #  define pcmk_err_cib_backup           209
 #  define pcmk_err_cib_save             210
 #  define pcmk_err_schema_unchanged     211
+#  define pcmk_err_machine_reset        254
+#  define pcmk_err_machine_off          255
 
 const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);

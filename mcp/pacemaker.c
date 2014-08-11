@@ -168,21 +168,41 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
     pcmk_child_t *child = mainloop_child_userdata(p);
     const char *name = mainloop_child_name(p);
 
-    if (signo) {
-        crm_notice("Child process %s terminated with signal %d (pid=%d, core=%d)",
-                   name, signo, pid, core);
+    if (signo && signo == SIGKILL) {
+        crm_warn("The %s process (%d) terminated with signal %d (core=%d)", name, pid, signo, core);
+
+    } else if (signo) {
+        crm_err("The %s process (%d) terminated with signal %d (core=%d)", name, pid, signo, core);
 
     } else {
-        do_crm_log(exitcode == 0 ? LOG_INFO : LOG_ERR,
-                   "Child process %s (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
-    }
+        switch(exitcode) {
+            case pcmk_ok:
+                crm_info("The %s process (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
+                break;
 
-    if (exitcode == 100) {
-        crm_warn("Pacemaker child process %s no longer wishes to be respawned. "
-                 "Shutting ourselves down.", name);
-        child->respawn = FALSE;
-        fatal_error = TRUE;
-        pcmk_shutdown(15);
+            case DAEMON_RESPAWN_STOP:
+                crm_warn("The %s process (%d) can no longer be respawned, shutting the cluster down.", name, pid);
+                child->respawn = FALSE;
+                fatal_error = TRUE;
+                pcmk_shutdown(15);
+                break;
+
+            case pcmk_err_machine_off:
+                do_crm_log_always(LOG_EMERG, "The %s process (%d) instructed the machine to power off", name, pid);
+                child->respawn = FALSE;
+                do_off();
+                break;
+
+            case pcmk_err_machine_reset:
+                do_crm_log_always(LOG_EMERG, "The %s process (%d) instructed the machine to reset", name, pid);
+                child->respawn = FALSE;
+                do_reset();
+                break;
+
+            default:
+                crm_err("The %s process (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
+                break;
+        }
     }
 
     pcmk_process_exit(child);
