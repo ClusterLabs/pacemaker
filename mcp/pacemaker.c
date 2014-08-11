@@ -857,6 +857,13 @@ mcp_quorum_destroy(gpointer user_data)
     crm_info("connection closed");
 }
 
+static gboolean
+mcp_tickle(gpointer user_data)
+{
+    watchdog_tickle();
+    return TRUE;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1023,6 +1030,23 @@ main(int argc, char **argv)
     /* Used to store the cluster configuration */
     crm_build_path(CRM_CONFIG_DIR, 0755);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
+
+    /* Must happen prior to joining corosync */
+    if(daemon_option("watchdog")) {
+        int rc;
+        int interval = 60; /* Make this configurable */
+
+        sysrq_init();
+        mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
+
+        rc = watchdog_init(interval, 2);
+        if(rc == pcmk_ok) {
+            g_timeout_add_seconds(interval/3, mcp_tickle, NULL);
+
+        } else {
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
+    }
 
     /* Resource agent paths are constructed by the lrmd */
 

@@ -50,7 +50,7 @@ void pcmk_shutdown(int nsig);
 void mcp_make_realtime(int priority, int stackgrowK, int heapgrowK);
 void sysrq_init(void);
 
-int watchdog_init(const char *device, int interval, int mode);
+int watchdog_init(int interval, int mode);
 int watchdog_tickle(void);
 void watchdog_close(void);
 

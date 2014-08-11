@@ -36,7 +36,6 @@
 static int watchdogfd = -1;
 static int watchdogdebug = 0;
 static int watchdogms = 0;
-static char *watchdogdev = NULL;
 
 /* Begin kernel duplication */
 /* This duplicates some code from linux/ioprio.h since these are not
@@ -248,7 +247,7 @@ watchdog_tickle(void)
     if (watchdogfd >= 0) {
         if (write(watchdogfd, "", 1) != 1) {
             int rc = errno;
-            crm_perror(LOG_ERR, "Could not write to %s", watchdogdev);
+            crm_perror(LOG_ERR, "Could not write to %s", daemon_option("watchdog"));
             return -rc;
         }
     }
@@ -256,20 +255,13 @@ watchdog_tickle(void)
 }
 
 int
-watchdog_init(const char *device, int interval, int mode)
+watchdog_init(int interval, int mode)
 {
     int rc = 0;
+    const char *device = daemon_option("watchdog");
 
     watchdogdebug = mode;
     if (watchdogfd < 0 && device != NULL) {
-/*
-        if (skip_rt) {
-            crm_info("Not elevating to realtime (-R specified)");
-        } else {
-            cl_make_realtime(0, 256, 256);
-        }
-*/
-        watchdogdev = strdup(device);
         watchdogfd = open(device, O_WRONLY);
         if (watchdogfd >= 0) {
             crm_notice("Using watchdog device: %s", device);
@@ -284,6 +276,7 @@ watchdog_init(const char *device, int interval, int mode)
             crm_perror(LOG_ERR, "Cannot open watchdog device %s", device);
         }
     }
+
     return rc;
 }
 
@@ -292,7 +285,7 @@ watchdog_close(void)
 {
     if (watchdogfd >= 0) {
         if (write(watchdogfd, "V", 1) != 1) {
-            crm_perror(LOG_ERR, "Cannot write magic character to %s", watchdogdev);
+            crm_perror(LOG_ERR, "Cannot write magic character to %s", daemon_option("watchdog"));
         }
         if (close(watchdogfd) < 0) {
             crm_perror(LOG_ERR, "Watchdog close(%d) failed", watchdogfd);
