@@ -46,3 +46,17 @@ void enable_mgmtd(gboolean enable);
 void enable_crmd_as_root(gboolean enable);
 
 void pcmk_shutdown(int nsig);
+
+void mcp_make_realtime(int priority, int stackgrowK, int heapgrowK);
+void sysrq_init(void);
+
+int watchdog_init(const char *device, int interval, int mode);
+int watchdog_tickle(void);
+void watchdog_close(void);
+
+void do_crashdump(void);
+void do_reset(void);
+void do_off(void);
+
+
+
