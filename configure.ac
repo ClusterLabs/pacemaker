@@ -1686,7 +1686,6 @@ else
 
 	# We had to eliminate -Wnested-externs because of libtool changes
         EXTRA_FLAGS="-fgnu89-inline
-		-fstack-protector-all
 		-Wall
 		-Waggregate-return
 		-Wbad-function-cast
@@ -1702,16 +1701,21 @@ else
 		-Wnested-externs
 		-Wno-long-long
 		-Wno-strict-aliasing
-		-Wunused-but-set-variable
 		-Wpointer-arith
 		-Wstrict-prototypes
-    		-Wunsigned-char
 		-Wwrite-strings"
 
 # Additional warnings it might be nice to enable one day
 #		-Wshadow
 #		-Wunreachable-code
-
+	case "$host_os" in
+	    *solaris*) ;;
+	    *) EXTRA_FLAGS="$EXTRA_FLAGS
+			-fstack-protector-all
+			-Wunused-but-set-variable
+			-Wunsigned-char"
+		;;
+	esac
 	for j in $EXTRA_FLAGS
 	do
 	  if
