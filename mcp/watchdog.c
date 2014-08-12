@@ -30,12 +30,11 @@
 #  include <sys/mman.h>
 #endif
 
-
 #define HOG_CHAR	0xff
 
-static int watchdogfd = -1;
-static int watchdogdebug = 0;
-static int watchdogms = 0;
+static int wd_fd = -1;
+static int wd_debug = 0;
+static int wd_interval_s = 0;
 
 /* Begin kernel duplication */
 /* This duplicates some code from linux/ioprio.h since these are not
@@ -216,18 +215,18 @@ mcp_make_realtime(int priority, int stackgrowK, int heapgrowK)
 static int
 watchdog_init_interval(int timeout)
 {
-    watchdogms = timeout;
+    wd_interval_s = timeout;
 
-    if (watchdogfd < 0) {
+    if (wd_fd < 0) {
         return 0;
     }
 
-    if (watchdogms < 1) {
+    if (wd_interval_s < 1) {
         crm_info("NOT setting watchdog timeout on explicit user request!");
         return 0;
     }
 
-    if (ioctl(watchdogfd, WDIOC_SETTIMEOUT, &watchdogms) < 0) {
+    if (ioctl(wd_fd, WDIOC_SETTIMEOUT, &wd_interval_s) < 0) {
         int rc = errno;
 
         crm_perror(LOG_ERR, "Failed to set watchdog timer to %u seconds", timeout);
@@ -244,8 +243,8 @@ watchdog_init_interval(int timeout)
 int
 watchdog_tickle(void)
 {
-    if (watchdogfd >= 0) {
-        if (write(watchdogfd, "", 1) != 1) {
+    if (wd_fd >= 0) {
+        if (write(wd_fd, "", 1) != 1) {
             int rc = errno;
             crm_perror(LOG_ERR, "Could not write to %s", daemon_option("watchdog"));
             return -rc;
@@ -260,10 +259,10 @@ watchdog_init(int interval, int mode)
     int rc = 0;
     const char *device = daemon_option("watchdog");
 
-    watchdogdebug = mode;
-    if (watchdogfd < 0 && device != NULL) {
-        watchdogfd = open(device, O_WRONLY);
-        if (watchdogfd >= 0) {
+    wd_debug = mode;
+    if (wd_fd < 0 && device != NULL) {
+        wd_fd = open(device, O_WRONLY);
+        if (wd_fd >= 0) {
             crm_notice("Using watchdog device: %s", device);
 
             rc = watchdog_init_interval(interval);
@@ -283,14 +282,14 @@ watchdog_init(int interval, int mode)
 void
 watchdog_close(void)
 {
-    if (watchdogfd >= 0) {
-        if (write(watchdogfd, "V", 1) != 1) {
+    if (wd_fd >= 0) {
+        if (write(wd_fd, "V", 1) != 1) {
             crm_perror(LOG_ERR, "Cannot write magic character to %s", daemon_option("watchdog"));
         }
-        if (close(watchdogfd) < 0) {
-            crm_perror(LOG_ERR, "Watchdog close(%d) failed", watchdogfd);
+        if (close(wd_fd) < 0) {
+            crm_perror(LOG_ERR, "Watchdog close(%d) failed", wd_fd);
         }
-        watchdogfd = -1;
+        wd_fd = -1;
     }
 }
 
@@ -351,16 +350,16 @@ do_exit(char kind)
     if (kind == 'c') {
         crm_notice("Initiating kdump");
 
-    } else if (watchdogdebug == 1) {
+    } else if (wd_debug == 1) {
         crm_warn("Request to suicide changed to kdump due to DEBUG MODE!");
         kind = 'c';
 
-    } else if (watchdogdebug == 2) {
+    } else if (wd_debug == 2) {
         crm_notice("Skipping request to suicide due to DEBUG MODE!");
         watchdog_close();
         exit(rc);
 
-    } else if (watchdogdebug == 3) {
+    } else if (wd_debug == 3) {
         /* Give the system some time to flush logs to disk before rebooting. */
         crm_warn("Delaying request to suicide by 10s due to DEBUG MODE!");
         watchdog_close();
@@ -395,7 +394,7 @@ do_exit(char kind)
 
     do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
 
-    sleep(watchdogms * 2);
+    sleep(wd_interval_s * 2);
     _exit(rc);
 }
 
