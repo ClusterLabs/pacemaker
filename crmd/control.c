@@ -873,7 +873,8 @@ pe_cluster_option crmd_opts[] = {
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
-
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, "0s", &check_timer,
+	  "How long to wait before we can assume nodes are safely down", NULL },
 
 #if SUPPORT_PLUGIN
 	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
@@ -942,6 +943,15 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         throttle_load_target = strtof(value, NULL) / 100;
     }
 
+
+    value = crmd_pref(config_hash, "stonith-watchdog-timeout");
+    if(crm_get_msec(value) > 0 && daemon_option("watchdog") == NULL) {
+        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");
+        crmd_exit(DAEMON_RESPAWN_STOP);
+
+    } else if(crm_get_msec(value) <= 0 && daemon_option("watchdog")) {
+        crm_warn("Watchdog enabled but no stonith-watchdog-timeout configured");
+    }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_get_msec(value);
