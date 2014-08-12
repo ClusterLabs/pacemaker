@@ -395,7 +395,7 @@ do_exit(char kind)
     do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
 
     sleep(wd_interval_s * 2);
-    _exit(rc);
+    pcmk_shutdown(15);
 }
 
 void
