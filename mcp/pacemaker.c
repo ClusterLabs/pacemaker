@@ -430,6 +430,9 @@ pcmk_shutdown_worker(gpointer user_data)
         }
     }
 
+    crm_notice("Closing watchdog device");
+    watchdog_close();
+
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
     g_main_loop_quit(mainloop);
@@ -1006,6 +1009,7 @@ main(int argc, char **argv)
         }
 #endif
     }
+    rc = pcmk_ok;
 
     if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
@@ -1031,23 +1035,6 @@ main(int argc, char **argv)
     crm_build_path(CRM_CONFIG_DIR, 0755);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
-    /* Must happen prior to joining corosync */
-    if(daemon_option("watchdog")) {
-        int rc;
-        int interval = 6; /* Make this configurable */
-
-        sysrq_init();
-        mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
-
-        rc = watchdog_init(interval, 2);
-        if(rc == pcmk_ok) {
-            g_timeout_add_seconds(interval/3, mcp_tickle, NULL);
-
-        } else {
-            crm_exit(DAEMON_RESPAWN_STOP);
-        }
-    }
-
     /* Resource agent paths are constructed by the lrmd */
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
@@ -1062,17 +1049,32 @@ main(int argc, char **argv)
         crm_exit(ENOPROTOOPT);
     }
 
+    /* Must happen prior to joining corosync */
+    if(daemon_option("watchdog")) {
+        int interval = 6; /* Make this configurable */
+
+        sysrq_init();
+        mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
+
+        rc = watchdog_init(interval, 2);
+        if(rc == pcmk_ok) {
+            g_timeout_add_seconds(interval/3, mcp_tickle, NULL);
+
+        } else {
+            crm_exit(DAEMON_RESPAWN_STOP);
+        }
+    }
+
     cluster.destroy = mcp_cpg_destroy;
     cluster.cpg.cpg_deliver_fn = mcp_cpg_deliver;
     cluster.cpg.cpg_confchg_fn = mcp_cpg_membership;
 
     if(cluster_connect_cpg(&cluster) == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
-        crm_exit(ENOPROTOOPT);
+        rc = -ENOPROTOOPT;
     }
 
-    rc = pcmk_ok;
-    if (is_corosync_cluster()) {
+    if (rc == pcmk_ok && is_corosync_cluster()) {
         /* Keep the membership list up-to-date for crm_node to query */
         if(cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy) == FALSE) {
             rc = -ENOTCONN;
@@ -1093,6 +1095,8 @@ main(int argc, char **argv)
 
         g_main_run(mainloop);
     }
+
+    watchdog_close();
 
     if (ipcs) {
         crm_trace("Closing IPC server");
