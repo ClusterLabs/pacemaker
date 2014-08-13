@@ -52,6 +52,7 @@ gboolean crm_read_options(gpointer user_data);
 gboolean fsa_has_quorum = FALSE;
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
+bool no_quorum_suicide_escalation = FALSE;
 
 static gboolean
 election_timeout_popped(gpointer data)
@@ -875,6 +876,7 @@ pe_cluster_option crmd_opts[] = {
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
 	{ "stonith-watchdog-timeout", NULL, "time", NULL, "0s", &check_timer,
 	  "How long to wait before we can assume nodes are safely down", NULL },
+	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 
 #if SUPPORT_PLUGIN
 	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
@@ -943,7 +945,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         throttle_load_target = strtof(value, NULL) / 100;
     }
 
-
     value = crmd_pref(config_hash, "stonith-watchdog-timeout");
     if(crm_get_msec(value) > 0 && daemon_option("watchdog") == NULL) {
         do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");
@@ -951,6 +952,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     } else if(crm_get_msec(value) <= 0 && daemon_option("watchdog")) {
         crm_warn("Watchdog enabled but no stonith-watchdog-timeout configured");
+    }
+
+    value = crmd_pref(config_hash, "no-quorum-policy");
+    if (safe_str_eq(value, "suicide") && daemon_option("watchdog")) {
+        no_quorum_suicide_escalation = TRUE;
     }
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);

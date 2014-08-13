@@ -163,6 +163,24 @@ check_number(const char *value)
 }
 
 gboolean
+check_quorum(const char *value)
+{
+    if (safe_str_eq(value, "stop")) {
+        return TRUE;
+
+    } else if (safe_str_eq(value, "freeze")) {
+        return TRUE;
+
+    } else if (safe_str_eq(value, "ignore")) {
+        return TRUE;
+
+    } else if (safe_str_eq(value, "suicide")) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
 check_utilization(const char *value)
 {
     char *end = NULL;

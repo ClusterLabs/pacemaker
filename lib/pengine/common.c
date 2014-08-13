@@ -29,24 +29,6 @@ gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 
 static gboolean
-check_quorum(const char *value)
-{
-    if (safe_str_eq(value, "stop")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "freeze")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "ignore")) {
-        return TRUE;
-
-    } else if (safe_str_eq(value, "suicide")) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static gboolean
 check_health(const char *value)
 {
     if (safe_str_eq(value, "none")) {
