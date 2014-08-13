@@ -33,7 +33,7 @@
 #define HOG_CHAR	0xff
 
 static int wd_fd = -1;
-static int wd_debug = 0;
+static int wd_debug = 2;
 static int wd_interval_s = 0;
 
 /* Begin kernel duplication */
@@ -176,7 +176,9 @@ mcp_make_realtime(int priority, int stackgrowK, int heapgrowK)
         int pmin = sched_get_priority_min(SCHED_RR);
         int pmax = sched_get_priority_max(SCHED_RR);
 
-        if (priority < pmin) {
+        if (priority == 0) {
+            priority = pmax;
+        } else if (priority < pmin) {
             priority = pmin;
         } else if (priority > pmax) {
             priority = pmax;
@@ -351,17 +353,17 @@ do_exit(char kind)
         crm_notice("Initiating kdump");
 
     } else if (wd_debug == 1) {
-        crm_warn("Request to suicide changed to kdump due to DEBUG MODE!");
+        crm_warn("Initiating kdump instead of panicing the node (DEBUG MODE)");
         kind = 'c';
 
     } else if (wd_debug == 2) {
-        crm_notice("Skipping request to suicide due to DEBUG MODE!");
+        crm_warn("Shutting down the cluster instead of panicing the node (DEBUG MODE)");
         watchdog_close();
-        exit(rc);
+        pcmk_shutdown(15);
 
     } else if (wd_debug == 3) {
         /* Give the system some time to flush logs to disk before rebooting. */
-        crm_warn("Delaying request to suicide by 10s due to DEBUG MODE!");
+        crm_warn("Delaying node panic by 10s (DEBUG MODE)");
         watchdog_close();
         sync();
         sleep(10);
@@ -390,9 +392,11 @@ do_exit(char kind)
     sync();
 
     sysrq_trigger(kind);
-    rc = reboot(RB_AUTOBOOT);
 
-    do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
+    if(kind != 'c') {
+        rc = reboot(RB_AUTOBOOT);
+        do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
+    }
 
     sleep(wd_interval_s * 2);
     pcmk_shutdown(15);
