@@ -1034,7 +1034,7 @@ main(int argc, char **argv)
     /* Must happen prior to joining corosync */
     if(daemon_option("watchdog")) {
         int rc;
-        int interval = 60; /* Make this configurable */
+        int interval = 6; /* Make this configurable */
 
         sysrq_init();
         mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
