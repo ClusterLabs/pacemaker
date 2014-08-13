@@ -51,6 +51,7 @@
 
 char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;
+long stonith_watchdog_timeout_ms = 0;
 
 GMainLoop *mainloop = NULL;
 
@@ -942,6 +943,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
     xmlNode *stonith_enabled_xml = NULL;
+    xmlNode *stonith_watchdog_xml = NULL;
     const char *stonith_enabled_s = NULL;
     static gboolean stonith_enabled_saved = TRUE;
 
@@ -998,6 +1000,17 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']", local_cib, LOG_TRACE);
     if (stonith_enabled_xml) {
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+
+    if(daemon_option("watchdog")) {
+        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
+    }
+
+    if (stonith_watchdog_xml) {
+        const char *value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+        stonith_watchdog_timeout_ms = crm_get_msec(value);
+    } else {
+        stonith_watchdog_timeout_ms = 0;
     }
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {

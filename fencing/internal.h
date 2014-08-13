@@ -196,3 +196,4 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
+extern long stonith_watchdog_timeout_ms;

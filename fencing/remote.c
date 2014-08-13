@@ -335,6 +335,20 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
 }
 
 static gboolean
+remote_op_watchdog_done(gpointer userdata)
+{
+    remote_fencing_op_t *op = userdata;
+
+    op->op_timer_one = 0;
+
+    crm_notice("Remote %s operation on %s for %s.%8s assumed complete",
+               op->action, op->target, op->client_name, op->id);
+    op->state = st_done;
+    remote_op_done(op, NULL, pcmk_ok, FALSE);
+    return FALSE;
+}
+
+static gboolean
 remote_op_timeout_one(gpointer userdata)
 {
     remote_fencing_op_t *op = userdata;
@@ -363,6 +377,7 @@ remote_op_timeout(gpointer userdata)
     crm_debug("Action %s (%s) for %s (%s) timed out",
               op->action, op->id, op->target, op->client_name);
     op->state = st_failed;
+
     remote_op_done(op, NULL, -ETIME, FALSE);
 
     return FALSE;
@@ -1049,7 +1064,14 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
-        op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
+
+        if(device && stonith_watchdog_timeout_ms && safe_str_eq(device, "watchdog")) {
+            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
+
+        } else {
+            op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
+        }
+
 
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
