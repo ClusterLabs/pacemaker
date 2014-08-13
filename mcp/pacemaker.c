@@ -690,7 +690,7 @@ check_active_before_startup_processes(gpointer user_data)
     return keep_tracking;
 }
 
-static void
+static bool
 find_and_track_existing_processes(void)
 {
     DIR *dp;
@@ -702,7 +702,7 @@ find_and_track_existing_processes(void)
     if (!dp) {
         /* no proc directory to search through */
         crm_notice("Can not read /proc directory to track existing components");
-        return;
+        return FALSE;
     }
 
     while ((entry = readdir(dp)) != NULL) {
@@ -769,6 +769,8 @@ find_and_track_existing_processes(void)
                               NULL);
     }
     closedir(dp);
+
+    return start_tracker;
 }
 
 static void
@@ -875,6 +877,7 @@ main(int argc, char **argv)
     int argerr = 0;
 
     int option_index = 0;
+    bool respawned = FALSE;
     gboolean shutdown = FALSE;
 
     uid_t pcmk_uid = 0;
@@ -1049,9 +1052,17 @@ main(int argc, char **argv)
         crm_exit(ENOPROTOOPT);
     }
 
+    respawned = find_and_track_existing_processes();
+
     /* Must happen prior to joining corosync */
     if(daemon_option("watchdog")) {
         int interval = 6; /* Make this configurable */
+
+        if(respawned) {
+            /* We can't get at their exit code, so we have to let the watchdog expire */
+            crm_notice("Detected existing child daemons, delaying initialization for %ds", 2*interval);
+            sleep(2*interval);
+        }
 
         sysrq_init();
         mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
@@ -1088,7 +1099,6 @@ main(int argc, char **argv)
         mainloop_add_signal(SIGTERM, pcmk_shutdown);
         mainloop_add_signal(SIGINT, pcmk_shutdown);
 
-        find_and_track_existing_processes();
         init_children_processes();
 
         crm_info("Starting mainloop");
