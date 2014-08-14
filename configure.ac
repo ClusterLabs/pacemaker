@@ -448,6 +448,7 @@ case "$host_os" in
 		INIT_EXT=".sh"
 		;;
 *solaris*)
+		AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
 		;;
 *linux*)
 		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
@@ -806,6 +807,9 @@ dnl ========================================================================
 
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[[#include <time.h>]])
 AC_CHECK_MEMBERS([lrm_op_t.rsc_deleted],,,[[#include <lrm/lrm_api.h>]])
+AC_CHECK_MEMBER([struct dirent.d_type],
+    AC_DEFINE(HAVE_STRUCT_DIRENT_D_TYPE,1,[Define this if struct dirent has d_type]),,
+    [#include <dirent.h>])
 
 dnl ========================================================================
 dnl Functions
@@ -1703,7 +1707,9 @@ else
 		-Wno-strict-aliasing
 		-Wpointer-arith
 		-Wstrict-prototypes
-		-Wwrite-strings"
+		-Wwrite-strings
+		-Wunused-but-set-variable
+		-Wunsigned-char"
 
 # Additional warnings it might be nice to enable one day
 #		-Wshadow
@@ -1711,9 +1717,7 @@ else
 	case "$host_os" in
 	    *solaris*) ;;
 	    *) EXTRA_FLAGS="$EXTRA_FLAGS
-			-fstack-protector-all
-			-Wunused-but-set-variable
-			-Wunsigned-char"
+			-fstack-protector-all"
 		;;
 	esac
 	for j in $EXTRA_FLAGS
