@@ -1061,8 +1061,14 @@ main(int argc, char **argv)
         if(respawned) {
             /* We can't get at their exit code, so we have to let the watchdog expire */
             crm_notice("Detected existing child daemons, delaying initialization for %ds", 2*interval);
+
+            /* Finalize logging so that the above gets written out */
             qb_log_fini();
+
             sleep(2*interval);
+
+            /* Now re-enable logging in case we continue */
+            crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
         }
 
         sysrq_init();
