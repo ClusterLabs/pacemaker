@@ -36,39 +36,6 @@ static int wd_fd = -1;
 static int wd_debug = 2;
 static int wd_interval_s = 0;
 
-/* Begin kernel duplication */
-/* This duplicates some code from linux/ioprio.h since these are not
- * included even in linux-kernel-headers. Sucks.
- *
- * See also ioprio_set(2) and
- * https://www.kernel.org/doc/Documentation/block/ioprio.txt
- */
-
-extern int sys_ioprio_set(int, int, int);
-int ioprio_set(int which, int who, int ioprio);
-inline int ioprio_set(int which, int who, int ioprio)
-{
-    return syscall(__NR_ioprio_set, which, who, ioprio);
-}
-
-enum {
-    IOPRIO_CLASS_NONE,
-    IOPRIO_CLASS_RT,
-    IOPRIO_CLASS_BE,
-    IOPRIO_CLASS_IDLE,
-};
-
-enum {
-    IOPRIO_WHO_PROCESS = 1,
-    IOPRIO_WHO_PGRP,
-    IOPRIO_WHO_USER,
-};
-
-#define IOPRIO_CLASS_SHIFT      (13)
-#define IOPRIO_PRIO_VALUE(class, data)  (((class) << IOPRIO_CLASS_SHIFT) | data)
-
-/* End kernel duplication */
-
 static unsigned char
 mcp_stack_hogger(unsigned char * inbuf, int kbytes)
 {
@@ -199,12 +166,6 @@ mcp_make_realtime(int priority, int stackgrowK, int heapgrowK)
             } else {
                 crm_info("Scheduler priority is now %d", priority);
             }
-        }
-
-        /* Do we need to update the I/O priority since we'll be writing to the watchdog? */
-        if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(),
-                       IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT, 1)) != 0) {
-            crm_perror(LOG_ERR, "Could not update I/O priority");
         }
     }
 #else
