@@ -282,17 +282,36 @@ watchdog_init(int interval, int mode)
 }
 
 void
-watchdog_close(void)
+watchdog_close(bool disarm)
 {
-    if (wd_fd >= 0) {
-        if (write(wd_fd, "V", 1) != 1) {
-            crm_perror(LOG_ERR, "Cannot write magic character to %s", daemon_option("watchdog"));
-        }
-        if (close(wd_fd) < 0) {
-            crm_perror(LOG_ERR, "Watchdog close(%d) failed", wd_fd);
-        }
-        wd_fd = -1;
+    if (wd_fd < 0) {
+        return;
     }
+
+    if (disarm) {
+        int r;
+        int flags = WDIOS_DISABLECARD;;
+
+        /* Explicitly disarm it */
+        r = ioctl(wd_fd, WDIOC_SETOPTIONS, &flags);
+        if (r < 0) {
+            crm_perror(LOG_WARNING, "Failed to disable hardware watchdog %s", daemon_option("watchdog"));
+        }
+
+        /* To be sure, use magic close logic, too */
+        for (;;) {
+            if (write(wd_fd, "V", 1) > 0) {
+                break;
+            }
+            crm_perror(LOG_ERR, "Cannot disable watchdog device %s", daemon_option("watchdog"));
+        }
+    }
+
+    if (close(wd_fd) < 0) {
+        crm_perror(LOG_ERR, "Watchdog close(%d) failed", wd_fd);
+    }
+
+    wd_fd = -1;
 }
 
 #define SYSRQ "/proc/sys/kernel/sysrq"
@@ -358,13 +377,13 @@ do_exit(char kind)
 
     } else if (wd_debug == 2) {
         crm_warn("Shutting down the cluster instead of panicing the node (DEBUG MODE)");
-        watchdog_close();
+        watchdog_close(true);
         pcmk_shutdown(15);
 
     } else if (wd_debug == 3) {
         /* Give the system some time to flush logs to disk before rebooting. */
         crm_warn("Delaying node panic by 10s (DEBUG MODE)");
-        watchdog_close();
+        watchdog_close(true);
         sync();
         sleep(10);
 
@@ -378,7 +397,7 @@ do_exit(char kind)
             break;
         case 'c':
             reason = "crashdump";
-            watchdog_close();
+            watchdog_close(true);
             break;
         case 'o':
             reason = "off";
@@ -391,11 +410,14 @@ do_exit(char kind)
     do_crm_log_always(LOG_EMERG, "Rebooting system: %s", reason);
     sync();
 
-    sysrq_trigger(kind);
-
     if(kind != 'c') {
+        watchdog_close(false);
+        sysrq_trigger(kind);
         rc = reboot(RB_AUTOBOOT);
         do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
+
+    } else {
+        sysrq_trigger(kind);
     }
 
     sleep(wd_interval_s * 2);

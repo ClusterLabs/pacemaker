@@ -431,7 +431,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     crm_notice("Closing watchdog device");
-    watchdog_close();
+    watchdog_close(true);
 
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
@@ -1061,6 +1061,7 @@ main(int argc, char **argv)
         if(respawned) {
             /* We can't get at their exit code, so we have to let the watchdog expire */
             crm_notice("Detected existing child daemons, delaying initialization for %ds", 2*interval);
+            qb_log_fini();
             sleep(2*interval);
         }
 
@@ -1106,7 +1107,7 @@ main(int argc, char **argv)
         g_main_run(mainloop);
     }
 
-    watchdog_close();
+    watchdog_close(true);
 
     if (ipcs) {
         crm_trace("Closing IPC server");

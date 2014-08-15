@@ -52,7 +52,7 @@ void sysrq_init(void);
 
 int watchdog_init(int interval, int mode);
 int watchdog_tickle(void);
-void watchdog_close(void);
+void watchdog_close(bool disarm);
 
 void do_crashdump(void);
 void do_reset(void);
