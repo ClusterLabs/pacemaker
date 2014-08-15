@@ -33,8 +33,7 @@
 #define HOG_CHAR	0xff
 
 static int wd_fd = -1;
-static int wd_debug = 2;
-static int wd_interval_s = 0;
+static int wd_debug = wd_debug_none;
 
 static unsigned char
 mcp_stack_hogger(unsigned char * inbuf, int kbytes)
@@ -176,30 +175,26 @@ mcp_make_realtime(int priority, int stackgrowK, int heapgrowK)
 }
 
 static int
-watchdog_init_interval(int timeout)
+watchdog_set_interval(int timeout)
 {
-    wd_interval_s = timeout;
-
     if (wd_fd < 0) {
         return 0;
-    }
 
-    if (wd_interval_s < 1) {
+    } else if (timeout < 1) {
         crm_info("NOT setting watchdog timeout on explicit user request!");
         return 0;
-    }
 
-    if (ioctl(wd_fd, WDIOC_SETTIMEOUT, &wd_interval_s) < 0) {
+    } else if (ioctl(wd_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
         int rc = errno;
 
         crm_perror(LOG_ERR, "Failed to set watchdog timer to %u seconds", timeout);
         crm_crit("Please validate your watchdog configuration!");
-        crm_crit("Choose a different watchdog driver or specify -T to skip this if you are completely sure.");
         return -rc;
 
     } else {
         crm_notice("Set watchdog timeout to %u seconds", timeout);
     }
+
     return 0;
 }
 
@@ -228,7 +223,7 @@ watchdog_init(int interval, int mode)
         if (wd_fd >= 0) {
             crm_notice("Using watchdog device: %s", device);
 
-            rc = watchdog_init_interval(interval);
+            rc = watchdog_set_interval(interval);
             if(rc == 0) {
                 rc = watchdog_tickle();
             }
@@ -326,30 +321,31 @@ sysrq_trigger(char t)
 static void
 do_exit(char kind) 
 {
-    int rc = pcmk_ok;
     const char *reason = NULL;
 
     if (kind == 'c') {
         crm_notice("Initiating kdump");
 
-    } else if (wd_debug == 1) {
-        crm_warn("Initiating kdump instead of panicing the node (DEBUG MODE)");
+    } else if (wd_debug & wd_debug_kdump) {
+        crm_warn("Initiating kdump instead of panicing the node (PCMK_watchdog_debug)");
         kind = 'c';
+    }
 
-    } else if (wd_debug == 2) {
-        crm_warn("Shutting down the cluster instead of panicing the node (DEBUG MODE)");
+    if (wd_debug & wd_debug_shutdown) {
+        crm_warn("Shutting down the cluster instead of panicing the node (PCMK_watchdog_debug)");
         watchdog_close(true);
         pcmk_shutdown(15);
+        return;
+    }
 
-    } else if (wd_debug == 3) {
+    if (wd_debug & wd_debug_delay) {
         /* Give the system some time to flush logs to disk before rebooting. */
-        crm_warn("Delaying node panic by 10s (DEBUG MODE)");
+        crm_warn("Delaying node panic by 10s (PCMK_watchdog_debug)");
+
         watchdog_close(true);
         sync();
-        sleep(10);
 
-    } else {
-        rc = DAEMON_RESPAWN_STOP;
+        sleep(10);
     }
 
     switch(kind) {
@@ -358,7 +354,6 @@ do_exit(char kind)
             break;
         case 'c':
             reason = "crashdump";
-            watchdog_close(true);
             break;
         case 'o':
             reason = "off";
@@ -371,17 +366,19 @@ do_exit(char kind)
     do_crm_log_always(LOG_EMERG, "Rebooting system: %s", reason);
     sync();
 
-    if(kind != 'c') {
+    if(kind == 'c') {
+        watchdog_close(true);
+        sysrq_trigger(kind);
+
+    } else {
+        int rc = pcmk_ok;
+
         watchdog_close(false);
         sysrq_trigger(kind);
         rc = reboot(RB_AUTOBOOT);
         do_crm_log_always(LOG_EMERG, "Reboot failed: %s (%d)", pcmk_strerror(rc), rc);
-
-    } else {
-        sysrq_trigger(kind);
     }
 
-    sleep(wd_interval_s * 2);
     pcmk_shutdown(15);
 }
 

@@ -1068,7 +1068,7 @@ main(int argc, char **argv)
         sysrq_init();
         mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
 
-        rc = watchdog_init(interval, 2);
+        rc = watchdog_init(interval, wd_debug_delay|wd_debug_shutdown);
         if(rc == pcmk_ok) {
             g_timeout_add_seconds(interval/3, mcp_tickle, NULL);
 
