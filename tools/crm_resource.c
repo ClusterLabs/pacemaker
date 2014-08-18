@@ -395,6 +395,9 @@ dump_resource_attr(const char *rsc, const char *attr, pe_working_set_t * data_se
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
         rc = 0;
+
+    } else {
+        CMD_ERR("Attribute '%s' not found for '%s'\n", attr, the_rsc->id);
     }
 
     g_hash_table_destroy(params);
