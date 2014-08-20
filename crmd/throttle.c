@@ -69,7 +69,6 @@ int throttle_num_cores(void)
     if(cores) {
         return cores;
     }
-
     stream = fopen(cpufile, "r");
     if(stream == NULL) {
         int rc = errno;
@@ -426,12 +425,16 @@ throttle_handle_load(float load, const char *desc, int cores)
 static enum throttle_state_e
 throttle_mode(void)
 {
+    int cores;
     float load;
     unsigned int blocked = 0;
-    int cores = throttle_num_cores();
-
     enum throttle_state_e mode = throttle_none;
 
+#ifndef ON_SOLARIS
+    return throttle_none;
+#endif
+
+    cores = throttle_num_cores();
     if(throttle_cib_load(&load)) {
         float cib_max_cpu = 0.95;
         const char *desc = "CIB load";
