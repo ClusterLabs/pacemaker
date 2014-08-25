@@ -249,7 +249,7 @@ crm_add_logfile(const char *filename)
     }
 
     if(is_default && default_fd >= 0) {
-        return FALSE;           /* Nothing to do */
+        return TRUE;           /* Nothing to do */
     }
 
     /* Check the parent directory */
