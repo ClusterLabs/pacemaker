@@ -604,7 +604,7 @@ class Environment:
                     self.usage(args[i])
 
     def usage(arg, status=1):
-        print "Illegal argument " + arg
+        print "Illegal argument %s" % (arg)
         print "usage: " + sys.argv[0] +" [options] number-of-iterations"
         print "\nCommon options: "
         print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"
