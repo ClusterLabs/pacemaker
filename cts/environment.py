@@ -307,7 +307,8 @@ class Environment:
 
             elif args[i] == "--outputfile":
                 skipthis=1
-                LogFactory().add_file(args[i+1])
+                self["OutputFile"] = args[i+1]
+                LogFactory().add_file(self["OutputFile"])
 
             elif args[i] == "-L" or args[i] == "--logfile":
                 skipthis=1
