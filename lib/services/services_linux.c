@@ -199,6 +199,7 @@ add_OCF_env_vars(svc_action_t * op)
     set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", "0", NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
+    set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
         set_ocf_env("OCF_RESOURCE_INSTANCE", op->rsc, NULL);
@@ -434,6 +435,14 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 return FALSE;
             }
         case 0:                /* Child */
+
+        /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
+         * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
+         * We do not want this to be inherited by the child process. By resetting this the signal
+         * to the default behavior, we avoid some potential odd problems that occur during OCF
+         * scripts when SIGPIPE is ignored by the environment. */
+        signal(SIGPIPE, SIG_DFL);
+
 #if defined(HAVE_SCHED_SETSCHEDULER)
             if (sched_getscheduler(0) != SCHED_OTHER) {
                 struct sched_param sp;

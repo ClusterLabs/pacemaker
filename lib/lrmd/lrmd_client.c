@@ -202,6 +202,7 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy->op_type = event->op_type ? strdup(event->op_type) : NULL;
     copy->user_data = event->user_data ? strdup(event->user_data) : NULL;
     copy->output = event->output ? strdup(event->output) : NULL;
+    copy->exit_reason = event->exit_reason ? strdup(event->exit_reason) : NULL;
     copy->remote_nodename = event->remote_nodename ? strdup(event->remote_nodename) : NULL;
 
     if (event->params) {
@@ -228,6 +229,7 @@ lrmd_free_event(lrmd_event_data_t * event)
     free((char *)event->op_type);
     free((char *)event->user_data);
     free((char *)event->output);
+    free((char *)event->exit_reason);
     free((char *)event->remote_nodename);
     if (event->params) {
         g_hash_table_destroy(event->params);
@@ -278,6 +280,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
         event.output = crm_element_value(msg, F_LRMD_RSC_OUTPUT);
+        event.exit_reason = crm_element_value(msg, F_LRMD_RSC_EXIT_REASON);
         event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);

@@ -1491,6 +1491,7 @@ print_status(pe_working_set_t * data_set)
             const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
             const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
             const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+            const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
             const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
             rc = crm_parse_int(rc_s, "0");
@@ -1503,12 +1504,26 @@ print_status(pe_working_set_t * data_set)
                     run_at_s[24] = 0; /* Overwrite the newline */
                 }
 
-                print_as("    %s on %s '%s' (%d): call=%s, status=%s, last-rc-change='%s', queued=%sms, exec=%sms\n",
-                         op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status),
-                         run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_QUEUE), crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                print_as("    %s on %s '%s' (%d): call=%s, status=%s, exit-reason='%s', last-rc-change='%s', queued=%sms, exec=%sms\n",
+                         op_key ? op_key : id,
+                         node,
+                         services_ocf_exitcode_str(rc),
+                         rc,
+                         call,
+                         services_lrm_status_str(status),
+                         exit_reason ? exit_reason : "none",
+                         run_at_s,
+                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
             } else {
-                print_as("    %s on %s '%s' (%d): call=%s, status=%s\n",
-                         op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status));
+                print_as("    %s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'\n",
+                         op_key ? op_key : id,
+                         node,
+                         services_ocf_exitcode_str(rc),
+                         rc,
+                         call,
+                         services_lrm_status_str(status),
+                         exit_reason ? exit_reason : "unknown");
             }
         }
         print_as("\n");
@@ -1695,18 +1710,22 @@ print_xml_status(pe_working_set_t * data_set)
              xml_op = __xml_next(xml_op)) {
             int status = 0;
             int rc = 0;
-	    int interval = 0;
+            int interval = 0;
             const char *id = ID(xml_op);
             const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-	    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK); // needed?
+            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK); // needed?
             const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
             const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
             const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
             const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-	    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+            const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            char *exit_reason_cleaned = NULL;
 
             rc = crm_parse_int(rc_s, "0");
-	    interval = crm_parse_int(interval_s, "0");
+            interval = crm_parse_int(interval_s, "0");
+
+            exit_reason_cleaned = exit_reason ? crm_xml_escape(exit_reason) : NULL;
 
             if (last) {
                 time_t run_at = crm_parse_int(last, "0");
@@ -1715,13 +1734,32 @@ print_xml_status(pe_working_set_t * data_set)
                     run_at_s[24] = 0; /* Overwrite the newline */
                 }
 
-                fprintf(stream, "        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\" />\n",
-                        op_key ? "op_key" : "id" ,op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status),
-                        run_at_s, crm_element_value(xml_op, XML_RSC_OP_T_QUEUE), crm_element_value(xml_op, XML_RSC_OP_T_EXEC), interval, task);
+                fprintf(stream, "        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\" />\n",
+                        op_key ? "op_key" : "id",
+                        op_key ? op_key : id,
+                        node,
+                        services_ocf_exitcode_str(rc),
+                        exit_reason_cleaned ? exit_reason_cleaned : "none",
+                        rc,
+                        call,
+                        services_lrm_status_str(status),
+                        run_at_s,
+                        crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                        crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                        interval,
+                        task);
             } else {
-                print_as("        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" />\n",
-                         op_key ? "op_key" : "id", op_key ? op_key : id, node, services_ocf_exitcode_str(rc), rc, call, services_lrm_status_str(status));
+                print_as("        <failure %s=\"%s\" node=\"%s\" exitstatus=\"%s\" exitreason=\"%s\" exitcode=\"%d\" call=\"%s\" status=\"%s\" />\n",
+                         op_key ? "op_key" : "id",
+                         op_key ? op_key : id,
+                         node,
+                         services_ocf_exitcode_str(rc),
+                         exit_reason_cleaned ? exit_reason_cleaned : "none",
+                         rc,
+                         call,
+                         services_lrm_status_str(status));
             }
+            free(exit_reason_cleaned);
         }
         fprintf(stream, "    </failures>\n");
     }

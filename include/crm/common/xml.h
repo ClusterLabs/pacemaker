@@ -273,4 +273,5 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
 char *xml_get_path(xmlNode *xml);
 
+char * crm_xml_escape(const char *text);
 #endif

@@ -307,7 +307,8 @@ class Environment:
 
             elif args[i] == "--outputfile":
                 skipthis=1
-                LogFactory().add_file(args[i+1])
+                self["OutputFile"] = args[i+1]
+                LogFactory().add_file(self["OutputFile"])
 
             elif args[i] == "-L" or args[i] == "--logfile":
                 skipthis=1
@@ -603,7 +604,7 @@ class Environment:
                     self.usage(args[i])
 
     def usage(arg, status=1):
-        print "Illegal argument " + arg
+        print "Illegal argument %s" % (arg)
         print "usage: " + sys.argv[0] +" [options] number-of-iterations"
         print "\nCommon options: "
         print "\t [--nodes 'node list']        list of cluster nodes separated by whitespace"

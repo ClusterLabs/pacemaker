@@ -3303,7 +3303,7 @@ crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
     return text;
 }
 
-static char *
+char *
 crm_xml_escape(const char *text)
 {
     int index;

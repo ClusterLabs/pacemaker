@@ -52,6 +52,7 @@ static struct crm_option long_options[] = {
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"cib",	 0, 0, 'c', "\t\tCompare/patch the inputs as a CIB (includes versions details)"},
     {"stdin",	 0, 0, 's', NULL, 1},
+    {"no-version", 0, 0, 'u', "\tGenerate the difference without versions details"},
     {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-", 1, 0, '-', "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:", pcmk_option_paragraph},
     {"-spacer-", 1, 0, '-', " cibadmin --query > cib-old.xml", pcmk_option_example},
@@ -75,6 +76,7 @@ main(int argc, char **argv)
     gboolean raw_2 = FALSE;
     gboolean use_stdin = FALSE;
     gboolean as_cib = FALSE;
+    gboolean no_version = FALSE;
     int argerr = 0;
     int flag;
     xmlNode *object_1 = NULL;
@@ -123,6 +125,9 @@ main(int argc, char **argv)
                 break;
             case 'c':
                 as_cib = TRUE;
+                break;
+            case 'u':
+                no_version = TRUE;
                 break;
             case 'V':
                 crm_bump_log_level(argc, argv);
@@ -214,6 +219,52 @@ main(int argc, char **argv)
             if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
                 crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
                 crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+            }
+
+        } else if (output && no_version) {
+            int format = 1;
+
+            crm_element_value_int(output, "format", &format);
+            if (format == 2) {
+                xmlNode *version_xml = find_xml_node(output, "version", FALSE);
+
+                if (version_xml) {
+                    free_xml(version_xml);
+                }
+
+            } else {
+                int i = 0;
+
+                const char *tags[] = {
+                    XML_TAG_DIFF_REMOVED,
+                    XML_TAG_DIFF_ADDED,
+                };
+
+                const char *vfields[] = {
+                    XML_ATTR_GENERATION_ADMIN,
+                    XML_ATTR_GENERATION,
+                    XML_ATTR_NUMUPDATES,
+                };
+
+                for (i = 0; i < DIMOF(tags); i++) {
+                    xmlNode *tmp = NULL;
+
+                    tmp = find_xml_node(output, tags[i], FALSE);
+                    if (tmp) {
+                        int lpc = 0;
+
+                        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+                            xml_remove_prop(tmp, vfields[lpc]);
+                        }
+
+                        tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+                        if (tmp) {
+                            for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+                                xml_remove_prop(tmp, vfields[lpc]);
+                            }
+                        }
+                    }
+                }
             }
         }
         xml_log_changes(LOG_INFO, __FUNCTION__, object_2);
