@@ -34,6 +34,7 @@
 
 static int wd_fd = -1;
 static int wd_debug = wd_debug_none;
+/* https://www.kernel.org/doc/Documentation/watchdog/watchdog-api.txt */
 
 static unsigned char
 mcp_stack_hogger(unsigned char * inbuf, int kbytes)

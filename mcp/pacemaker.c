@@ -162,6 +162,25 @@ pcmk_process_exit(pcmk_child_t * child)
     }
 }
 
+void
+sysrq_init(void)
+{
+    /* TODO: Copy to here or utils.c from watchdog.c  */
+}
+
+
+void
+do_reset(void)
+{
+    /* TODO: Implement redirect to sbd */
+}
+
+void
+do_off(void)
+{
+    /* TODO: Implement redirect to sbd */
+}
+
 static void
 pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
@@ -429,9 +448,6 @@ pcmk_shutdown_worker(gpointer user_data)
             child->pid = 0;
         }
     }
-
-    crm_notice("Closing watchdog device");
-    watchdog_close(true);
 
     /* send_cluster_id(); */
     crm_notice("Shutdown complete");
@@ -862,13 +878,6 @@ mcp_quorum_destroy(gpointer user_data)
     crm_info("connection closed");
 }
 
-static gboolean
-mcp_tickle(gpointer user_data)
-{
-    watchdog_tickle();
-    return TRUE;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -877,7 +886,6 @@ main(int argc, char **argv)
     int argerr = 0;
 
     int option_index = 0;
-    bool respawned = FALSE;
     gboolean shutdown = FALSE;
 
     uid_t pcmk_uid = 0;
@@ -984,6 +992,7 @@ main(int argc, char **argv)
 
     crm_notice("Starting Pacemaker %s (Build: %s): %s", VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_new(FALSE);
+    sysrq_init();
 
     rc = getrlimit(RLIMIT_CORE, &cores);
     if (rc < 0) {
@@ -1052,36 +1061,7 @@ main(int argc, char **argv)
         crm_exit(ENOPROTOOPT);
     }
 
-    respawned = find_and_track_existing_processes();
-
-    /* Must happen prior to joining corosync */
-    if(daemon_option("watchdog")) {
-        int interval = 6; /* Make this configurable */
-
-        if(respawned) {
-            /* We can't get at their exit code, so we have to let the watchdog expire */
-            crm_notice("Detected existing child daemons, delaying initialization for %ds", 2*interval);
-
-            /* Finalize logging so that the above gets written out */
-            qb_log_fini();
-
-            sleep(2*interval);
-
-            /* Now re-enable logging in case we continue */
-            crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-        }
-
-        sysrq_init();
-        mcp_make_realtime(0, 256, 256); /* Allow this to be optional? */
-
-        rc = watchdog_init(interval, wd_debug_delay|wd_debug_shutdown);
-        if(rc == pcmk_ok) {
-            g_timeout_add_seconds(interval/3, mcp_tickle, NULL);
-
-        } else {
-            crm_exit(DAEMON_RESPAWN_STOP);
-        }
-    }
+    find_and_track_existing_processes();
 
     cluster.destroy = mcp_cpg_destroy;
     cluster.cpg.cpg_deliver_fn = mcp_cpg_deliver;
@@ -1112,8 +1092,6 @@ main(int argc, char **argv)
 
         g_main_run(mainloop);
     }
-
-    watchdog_close(true);
 
     if (ipcs) {
         crm_trace("Closing IPC server");

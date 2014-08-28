@@ -31,7 +31,7 @@ endif
 
 noinst_HEADERS		= pacemaker.h
 
-pacemakerd_SOURCES	= pacemaker.c corosync.c watchdog.c
+pacemakerd_SOURCES	= pacemaker.c corosync.c 
 pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la
 pacemakerd_LDFLAGS	= $(CLUSTERLIBS)
 

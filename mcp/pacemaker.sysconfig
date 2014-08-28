@@ -54,17 +54,6 @@
 # eg. PCMK_blackbox=crmd,pengine
 # PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
 
-# Tell Pacemaker to take control of the watchdog device.
-# Enables node suicide which can be used when all other fencing fails.
-#
-# Configure stonith-watchdog-timeout to allow the surviving members to
-#  initiate resource recovery automatically
-#
-# WARNING: Software watchdogs are not as reliable as hardware
-#  ones. Use at your own risk.
-#
-# PCMK_watchdog=/dev/watchdog
-
 #==#==# Advanced use only
 
 # Enable this for compatibility with older corosync (prior to 2.0)
