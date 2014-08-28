@@ -234,14 +234,20 @@ class JournalObj(SearchObj):
 
     def async_complete(self, pid, returncode, outLines, errLines):
         #print "%d returned on %s" % (pid, self.host)
+        foundCursor = False
         for line in outLines:
             match = re.search("^-- cursor: ([^.]+)", line)
             if match:
+                foundCursor = True
                 last_offset = self.offset
                 self.offset = match.group(1).strip()
                 self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
             else:
                 self.cache.append(line)
+
+        if self.limit and not foundCursor:
+            self.debug("Got %d lines but no cursor: %s" % (len(outLines), self.offset))
+            self.cache = []
 
         self.in_progress = False
         if self.delegate:
@@ -370,6 +376,8 @@ class LogWatcher(RemoteExec):
         else:
             self.file_list.append(FileObj(self.filename))
 
+        # print "%s now has %d files" % (self.name, len(self.file_list))
+
     def __del__(self):
         if self.debug_level > 1: self.debug("Destroy")
 
@@ -433,6 +441,8 @@ class LogWatcher(RemoteExec):
 
         if timeout == 0:
             for f in self.file_list:
+                # Set a new limit
+                f.limit = None
                 f.setend()
 
         while True:
@@ -471,7 +481,11 @@ class LogWatcher(RemoteExec):
                 if len(self.line_cache) == 0 and end < time.time():
                     self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
                     return None
+                elif len(self.line_cache) == 0:
+                    self.debug("Single search timed out: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
+                    return None
                 else:
+                    self.debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self.line_cache)))
                     time.sleep(1)
 
         self.debug("How did we get here")
