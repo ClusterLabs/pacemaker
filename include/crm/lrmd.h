@@ -22,6 +22,7 @@
  * \brief Local Resource Manager 
  * \ingroup lrm
  */
+#include <stdbool.h>
 #include <crm/services.h>
 
 #ifndef LRMD__H

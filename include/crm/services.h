@@ -32,6 +32,7 @@ extern "C" {
 #  include <glib.h>
 #  include <stdio.h>
 #  include <string.h>
+#  include <stdbool.h>
 
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
