@@ -183,7 +183,7 @@ main(int argc, char **argv)
     crm_log_cli_init("ptest");
     crm_set_options(NULL, "[-?Vv] -[Xxp] {other options}", long_options,
                     "Calculate the cluster's response to the supplied cluster state\n"
-                    "\nSuperceeded by crm_simulate and likely to be removed in a future release\n\n");
+                    "\nSuperseded by crm_simulate and likely to be removed in a future release\n\n");
 
     while (1) {
         int option_index = 0;

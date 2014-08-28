@@ -379,7 +379,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
 
     } else if (election_id != e->count && crm_str_eq(our_node->uuid, election_owner, TRUE)) {
         log_level = LOG_TRACE;
-        reason = "Superceeded";
+        reason = "Superseded";
         done = TRUE;
 
     } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
