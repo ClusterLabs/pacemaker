@@ -437,6 +437,12 @@ pcmk_ignore(int nsig)
     crm_info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
 }
 
+static void
+pcmk_sigquit(int nsig)
+{
+    pcmk_panic(__FUNCTION__);
+}
+
 void
 pcmk_shutdown(int nsig)
 {
@@ -869,6 +875,7 @@ main(int argc, char **argv)
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options, "Start/Stop Pacemaker\n");
     mainloop_add_signal(SIGHUP, pcmk_ignore);
+    mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);

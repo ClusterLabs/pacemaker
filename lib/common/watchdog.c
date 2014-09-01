@@ -184,13 +184,18 @@ pcmk_panic_local(void)
     } else if (uid != 0) {
         /*
          * No permissions and no pacemakerd parent to escalate to
-         * The best we can do is die
+         * Track down the new pacakerd process and send a signal instead
          */
+        union sigval signal_value;
 
-        /* TODO: Track down the new pacakerd process and send a signal instead 
-         * ppid = pcmk_locate_proc_entry("pacemakerd");
-         */
-        do_crm_log_always(LOG_EMERG, "No parent to escalate to. Exiting.");
+        memset(&signal_value, 0, sizeof(signal_value));
+        ppid = pcmk_locate_proc_entry("pacemakerd");
+        do_crm_log_always(LOG_EMERG, "Signaling pacemakerd(%d) to panic", ppid);
+
+        if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
+            crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
+        }
+        /* The best we can do now is die */
         crm_exit(pcmk_err_panic);
         return;
     }
@@ -205,7 +210,7 @@ pcmk_panic_local(void)
     do_crm_log_always(LOG_EMERG, "Reboot failed, escalating to %d: %s (%d)", ppid, pcmk_strerror(rc), rc);
 
     if(ppid > 1) {
-        /* Pacemaker daemon */
+        /* child daemon */
         crm_exit(pcmk_err_panic);
     } else {
         /* pacemakerd or orphan child */
