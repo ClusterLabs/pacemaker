@@ -205,6 +205,7 @@ class crm_cs_v0(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
+            r"The .* process .* terminated with signal",
             r"Child process .* terminated with signal",
             r"LogActions:.*Recover",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
@@ -390,7 +391,7 @@ class crm_mcp(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
 
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*Child process %s terminated with signal 9",
+            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
@@ -424,7 +425,7 @@ class crm_cman(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
 
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*Child process %s terminated with signal 9",
+            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
         })
 
