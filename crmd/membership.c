@@ -415,7 +415,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     ever_had_quorum |= quorum;
 
     if(ever_had_quorum && quorum == FALSE && no_quorum_suicide_escalation) {
-        crm_exit(pcmk_err_machine_reset);
+        pcmk_panic(__FUNCTION__);
     }
 
     if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {

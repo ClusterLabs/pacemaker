@@ -1398,7 +1398,7 @@ crm_pid_active(long pid)
 #endif
 }
 
-static int
+int
 crm_read_pidfile(const char *filename)
 {
     int fd;
@@ -1426,7 +1426,7 @@ crm_read_pidfile(const char *filename)
     return pid;
 }
 
-static int
+int
 crm_pidfile_inuse(const char *filename, long mypid)
 {
     long pid = 0;

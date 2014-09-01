@@ -145,40 +145,14 @@ pcmk_process_exit(pcmk_child_t * child)
         mainloop_set_trigger(shutdown_trigger);
         update_node_processes(local_nodeid, NULL, get_process_list());
 
+    } else if (child->respawn && crm_is_true(getenv("PCMK_fail_fast"))) {
+        crm_err("Rebooting system because of %s", child->name);
+        pcmk_panic(__FUNCTION__);
+
     } else if (child->respawn) {
-        gboolean fail_fast = crm_is_true(getenv("PCMK_fail_fast"));
-
         crm_notice("Respawning failed child process: %s", child->name);
-
-#ifdef RB_HALT_SYSTEM
-        if (fail_fast) {
-            crm_err("Rebooting system", child->name);
-            sync();
-            reboot(RB_HALT_SYSTEM);
-            crm_exit(DAEMON_RESPAWN_STOP);
-        }
-#endif
         start_child(child);
     }
-}
-
-void
-sysrq_init(void)
-{
-    /* TODO: Copy to here or utils.c from watchdog.c  */
-}
-
-
-void
-do_reset(void)
-{
-    /* TODO: Implement redirect to sbd */
-}
-
-void
-do_off(void)
-{
-    /* TODO: Implement redirect to sbd */
 }
 
 static void
@@ -203,19 +177,15 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 crm_warn("The %s process (%d) can no longer be respawned, shutting the cluster down.", name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
-                pcmk_shutdown(15);
+                pcmk_shutdown(SIGTERM);
                 break;
 
-            case pcmk_err_machine_off:
-                do_crm_log_always(LOG_EMERG, "The %s process (%d) instructed the machine to power off", name, pid);
-                child->respawn = FALSE;
-                do_off();
-                break;
-
-            case pcmk_err_machine_reset:
+            case pcmk_err_panic:
                 do_crm_log_always(LOG_EMERG, "The %s process (%d) instructed the machine to reset", name, pid);
                 child->respawn = FALSE;
-                do_reset();
+                fatal_error = TRUE;
+                pcmk_panic(__FUNCTION__);
+                pcmk_shutdown(SIGTERM);
                 break;
 
             default:

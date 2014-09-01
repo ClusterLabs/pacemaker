@@ -33,14 +33,6 @@
 #define crm_flag_members	0x00000001
 #define MAX_RESPAWN		100
 
-enum wd_debug_flags
-{
-    wd_debug_none     = 0x00,
-    wd_debug_delay    = 0x01,
-    wd_debug_kdump    = 0x02,
-    wd_debug_shutdown = 0x04,
-};
-
 extern uint32_t local_nodeid;
 
 gboolean mcp_read_config(void);

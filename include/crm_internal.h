@@ -264,6 +264,11 @@ const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
 void strip_text_nodes(xmlNode * xml);
+void pcmk_panic(const char *origin);
+void sysrq_init(void);
+pid_t pcmk_locate_sbd(void);
+int crm_pidfile_inuse(const char *filename, long mypid);
+int crm_read_pidfile(const char *filename);
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }

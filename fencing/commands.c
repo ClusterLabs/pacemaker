@@ -234,13 +234,11 @@ stonith_device_execute(stonith_device_t * device)
 
     if(safe_str_eq(device->agent, STONITH_WATCHDOG_AGENT)) {
         if(safe_str_eq(cmd->action, "reboot")) {
-            do_crm_log_always(LOG_EMERG, "Initiating watchdog %s operation", cmd->action);
-            _exit(pcmk_err_machine_reset);
+            pcmk_panic(__FUNCTION__);
             return TRUE;
 
         } else if(safe_str_eq(cmd->action, "off")) {
-            do_crm_log_always(LOG_EMERG, "Initiating watchdog %s operation", cmd->action);
-            _exit(pcmk_err_machine_off);
+            pcmk_panic(__FUNCTION__);
             return TRUE;
 
         } else {
