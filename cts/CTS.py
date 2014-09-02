@@ -399,10 +399,10 @@ class ClusterManager(UserDict):
         if self.HasQuorum(None):
             return None
 
-        if not self.has_key("Pat:Fencing_start"):
+        if not self.templates["Pat:Fencing_start"]:
             return None
 
-        if not self.has_key("Pat:Fencing_ok"):
+        if not self.templates["Pat:Fencing_ok"]:
             return None
 
         stonith = None
