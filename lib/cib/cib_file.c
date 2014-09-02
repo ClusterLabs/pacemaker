@@ -31,6 +31,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 
+#define cib_flag_dirty 0x00001
+
 typedef struct cib_file_opaque_s {
     int flags;
     char *filename;
@@ -80,6 +82,7 @@ cib_file_new(const char *cib_location)
     if (cib_location == NULL) {
         cib_location = getenv("CIB_file");
     }
+    private->flags = 0;
     private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
@@ -147,6 +150,7 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
+    private->flags = 0;
     if (private->filename == FALSE) {
         rc = -EINVAL;
     } else {
@@ -174,7 +178,15 @@ cib_file_signoff(cib_t * cib)
 
     crm_debug("Signing out of the CIB Service");
 
-    if (strstr(private->filename, ".bz2") != NULL) {
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    if(is_not_set(private->flags, cib_flag_dirty)) {
+        /* No changes to write out */
+        free_xml(in_mem_cib);
+        return pcmk_ok;
+
+    } else if (strstr(private->filename, ".bz2") != NULL) {
         rc = write_xml_file(in_mem_cib, private->filename, TRUE);
 
     } else {
@@ -189,9 +201,6 @@ cib_file_signoff(cib_t * cib)
         crm_err("Could not write CIB to %s: %s (%d)", private->filename, pcmk_strerror(rc), rc);
     }
     free_xml(in_mem_cib);
-
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
 
     return rc;
 }
@@ -264,6 +273,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     cib_op_t *fn = NULL;
     int lpc = 0;
     static int max_msg_types = DIMOF(cib_file_ops);
+    cib_file_opaque_t *private = cib->variant_opaque;
 
     crm_info("%s on %s", op, section);
     call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
@@ -316,6 +326,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
+        private->flags |= cib_flag_dirty;
     }
 
     free_xml(cib_diff);
