@@ -260,9 +260,13 @@ class crm_cs_v0(BasePatterns):
         
         self.components["corosync-ignore"] = [
             r"error: pcmk_cpg_dispatch:.*Connection to the CPG API failed: Library error",
+            r"The .* process .* exited",
             r"pacemakerd.*error: pcmk_child_exit:.*Child process .* exited",
             r"cib.*error: cib_cs_destroy:.*Corosync connection lost",
             r"stonith-ng.*error: stonith_peer_cs_destroy:.*Corosync connection terminated",
+            r"The cib process .* exited: Invalid argument",
+            r"The attrd process .* exited: Transport endpoint is not connected",
+            r"The crmd process .* exited: Link has been severed",
             r"error: pcmk_child_exit:.*Child process cib .* exited: Invalid argument",
             r"error: pcmk_child_exit:.*Child process attrd .* exited: Transport endpoint is not connected",
             r"error: pcmk_child_exit:.*Child process crmd .* exited: Link has been severed",
@@ -304,8 +308,8 @@ class crm_cs_v0(BasePatterns):
                     "Connection to cib_.* failed",
                     "Connection to cib_.* closed",
                     "Connection to the CIB terminated...",
-                    "Child process crmd .* exited: Generic Pacemaker error",
-                    "Child process attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
+                    "(Child process|The) crmd .* exited: Generic Pacemaker error",
+                    "(Child process|The) attrd .* exited: (Connection reset by peer|Transport endpoint is not connected)",
                     "Lost connection to CIB service",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*I_ERROR.*crmd_cib_connection_destroy",
@@ -319,7 +323,7 @@ class crm_cs_v0(BasePatterns):
                     "Connection to lrmd failed",
                     "Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
-                    "Child process crmd .* exited: Generic Pacemaker error",
+                    "(Child process|The) crmd .* exited: Generic Pacemaker error",
                     "crmd.*Input I_TERMINATE from do_recover",
                     "crmd.*Could not recover from internal error",
                     ]
@@ -340,7 +344,7 @@ class crm_cs_v0(BasePatterns):
         self.components["pengine"] = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
-                    "Child process crmd .* exited: Generic Pacemaker error",
+                    "(The|Child process) crmd .* exited: Generic Pacemaker error",
                     "Connection to pengine failed",
                     "Connection to pengine.* closed",
                     "Connection to the Policy Engine failed",
@@ -391,6 +395,7 @@ class crm_mcp(crm_cs_v0):
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s\[.*state is now lost",
             "Pat:They_dead"    : "crmd.*Node %s\[.*state is now lost",
 
+            "Pat:ChildExit"    : "The .* process exited",
             "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
             "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
