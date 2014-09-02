@@ -20,7 +20,7 @@ end script
 pre-start script
     # setup the software watchdog which corosync uses.
     # rewrite according to environment.
-    modprobe softdog soft_margin=60
+    [ -c /dev/watchdog ] || modprobe softdog soft_margin=60
     pidof corosync || start corosync
 
     # if you use corosync-notifyd, uncomment the line below.
