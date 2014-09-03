@@ -451,6 +451,12 @@ mcp_read_config(void)
         free(syslog_facility);
     }
 
+    const_value = daemon_option("logfacility");
+    if (const_value) {
+        /* cluster-glue module needs HA_LOGFACILITY */
+        setenv("HA_LOGFACILITY", const_value, 1);
+    }
+
 #if HAVE_CONFDB
     confdb_finalize(config);
 #elif HAVE_CMAP
