@@ -518,6 +518,12 @@ crm_get_peer(unsigned int id, const char *uname)
         if (crm_status_callback) {
             crm_status_callback(crm_status_uname, node, NULL);
         }
+
+#if SUPPORT_COROSYNC
+        if (is_openais_cluster()) {
+            crm_remove_conflicting_peer(node);
+        }
+#endif
     }
 
     if(node->uuid == NULL) {
@@ -532,12 +538,6 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     free(uname_lookup);
-
-#if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        crm_remove_conflicting_peer(node);
-    }
-#endif
 
     return node;
 }
