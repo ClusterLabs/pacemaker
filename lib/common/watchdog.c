@@ -255,8 +255,6 @@ pcmk_panic(const char *origin)
         return;
     }
 
-    sync();
-
     if(sbd_pid > 1) {
         do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic the system: %s", sbd_pid, origin);
         pcmk_panic_sbd();
