@@ -2214,6 +2214,7 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
+#if 0
         xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
                                       CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
@@ -2223,6 +2224,17 @@ main(int argc, char **argv)
         }
 
         free_xml(cmd);
+#else
+        GListPtr rIter = NULL;
+
+        crmd_replies_needed = 0;
+        for (rIter = data_set.resources; rIter; rIter = rIter->next) {
+            resource_t *rsc = rIter->data;
+            delete_lrm_rsc(cib_conn, crmd_channel, host_uname, rsc, &data_set);
+        }
+
+        start_mainloop();
+#endif
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
