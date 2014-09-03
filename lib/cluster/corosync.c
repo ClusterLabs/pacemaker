@@ -588,10 +588,14 @@ corosync_cmap_has_config(const char *prefix)
 {
     int rc = CS_OK;
     int retries = 0;
-    int found = 0;
+    static int found = -1;
     cmap_handle_t cmap_handle;
     cmap_iter_handle_t iter_handle;
     char key_name[CMAP_KEYNAME_MAXLEN + 1];
+
+    if(found != -1) {
+        return found;
+    }
 
     do {
         rc = cmap_initialize(&cmap_handle);
@@ -614,10 +618,10 @@ corosync_cmap_has_config(const char *prefix)
     if (rc != CS_OK) {
         crm_warn("Failed to initialize iteration for corosync cmap '%s': %s (rc=%d)",
                  prefix, cs_strerror(rc), rc);
-        found = -1;
         goto bail;
     }
 
+    found = 0;
     while ((rc = cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL)) == CS_OK) {
         crm_trace("'%s' is configured in corosync cmap: %s", prefix, key_name);
         found++;
