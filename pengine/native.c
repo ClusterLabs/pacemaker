@@ -1227,10 +1227,17 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
             const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
             const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-            pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
-                        rsc->id, class, type, num_active_nodes, recovery2text(rsc->recovery_type));
-            crm_warn("See %s for more information.",
-                     "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+            if(rsc->partial_migration_target && rsc->partial_migration_source) {
+                crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too", rsc->id,
+                           rsc->partial_migration_target->details->uname,
+                           rsc->partial_migration_source->details->uname);
+
+            } else {
+                pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
+                            rsc->id, class, type, num_active_nodes, recovery2text(rsc->recovery_type));
+                crm_warn("See %s for more information.",
+                         "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+            }
 
             if (rsc->recovery_type == recovery_stop_start) {
                 need_stop = TRUE;
