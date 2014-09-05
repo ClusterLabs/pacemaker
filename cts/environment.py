@@ -56,7 +56,7 @@ class Environment:
         self["SyslogFacility"] = "daemon"
         self["LogFileName"] = "/var/log/messages"
         self["Schema"] = "pacemaker-2.0"
-        self["Stack"] = "openais"
+        self["Stack"] = "corosync"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["loop-minutes"] = 60
