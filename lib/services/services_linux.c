@@ -376,11 +376,207 @@ services_handle_exec_error(svc_action_t * op, int error)
     }
 }
 
+static void
+action_launch_child(svc_action_t *op)
+{
+    int lpc;
+
+    /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
+     * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
+     * We do not want this to be inherited by the child process. By resetting this the signal
+     * to the default behavior, we avoid some potential odd problems that occur during OCF
+     * scripts when SIGPIPE is ignored by the environment. */
+    signal(SIGPIPE, SIG_DFL);
+
+#if defined(HAVE_SCHED_SETSCHEDULER)
+    if (sched_getscheduler(0) != SCHED_OTHER) {
+        struct sched_param sp;
+
+        memset(&sp, 0, sizeof(sp));
+        sp.sched_priority = 0;
+
+        if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
+            crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
+        }
+    }
+#endif
+    if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
+        crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
+    }
+
+    /* Man: The call setpgrp() is equivalent to setpgid(0,0)
+     * _and_ compiles on BSD variants too
+     * need to investigate if it works the same too.
+     */
+    setpgid(0, 0);
+
+    /* close all descriptors except stdin/out/err and channels to logd */
+    for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
+        close(lpc);
+    }
+
+#if SUPPORT_CIBSECRETS
+    if (replace_secret_params(op->rsc, op->params) < 0) {
+        /* replacing secrets failed! */
+        if (safe_str_eq(op->action,"stop")) {
+            /* don't fail on stop! */
+            crm_info("proceeding with the stop operation for %s", op->rsc);
+
+        } else {
+            crm_err("failed to get secrets for %s, "
+                    "considering resource not configured", op->rsc);
+            _exit(PCMK_OCF_NOT_CONFIGURED);
+        }
+    }
+#endif
+    /* Setup environment correctly */
+    add_OCF_env_vars(op);
+
+    /* execute the RA */
+    execvp(op->opaque->exec, op->opaque->args);
+
+    /* Most cases should have been already handled by stat() */
+    services_handle_exec_error(op, errno);
+
+    _exit(op->rc);
+}
+
+static void
+action_synced_wait(svc_action_t * op, sigset_t mask)
+{
+
+#ifndef HAVE_SYS_SIGNALFD_H
+    CRM_ASSERT(FALSE);
+#else
+    int status = 0;
+    int timeout = op->timeout;
+    int sfd = -1;
+    time_t start = -1;
+    struct pollfd fds[3];
+    int wait_rc = 0;
+
+    sfd = signalfd(-1, &mask, SFD_NONBLOCK);
+    if (sfd < 0) {
+        crm_perror(LOG_ERR, "signalfd() failed");
+    }
+
+    fds[0].fd = op->opaque->stdout_fd;
+    fds[0].events = POLLIN;
+    fds[0].revents = 0;
+
+    fds[1].fd = op->opaque->stderr_fd;
+    fds[1].events = POLLIN;
+    fds[1].revents = 0;
+
+    fds[2].fd = sfd;
+    fds[2].events = POLLIN;
+    fds[2].revents = 0;
+
+    crm_trace("Waiting for %d", op->pid);
+    start = time(NULL);
+    do {
+        int poll_rc = poll(fds, 3, timeout);
+
+        if (poll_rc > 0) {
+            if (fds[0].revents & POLLIN) {
+                svc_read_output(op->opaque->stdout_fd, op, FALSE);
+            }
+
+            if (fds[1].revents & POLLIN) {
+                svc_read_output(op->opaque->stderr_fd, op, TRUE);
+            }
+
+            if (fds[2].revents & POLLIN) {
+                struct signalfd_siginfo fdsi;
+                ssize_t s;
+
+                s = read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
+                if (s != sizeof(struct signalfd_siginfo)) {
+                    crm_perror(LOG_ERR, "Read from signal fd %d failed", sfd);
+
+                } else if (fdsi.ssi_signo == SIGCHLD) {
+                    wait_rc = waitpid(op->pid, &status, WNOHANG);
+
+                    if (wait_rc < 0){
+                        crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
+
+                    } else if (wait_rc > 0) {
+                        break;
+                    }
+                }
+            }
+
+        } else if (poll_rc == 0) {
+            timeout = 0;
+            break;
+
+        } else if (poll_rc < 0) {
+            if (errno != EINTR) {
+                crm_perror(LOG_ERR, "poll() failed");
+                break;
+            }
+        }
+
+        timeout = op->timeout - (time(NULL) - start) * 1000;
+
+    } while ((op->timeout < 0 || timeout > 0));
+
+    crm_trace("Child done: %d", op->pid);
+    if (wait_rc <= 0) {
+        int killrc = kill(op->pid, SIGKILL);
+
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        if (op->timeout > 0 && timeout <= 0) {
+            op->status = PCMK_LRM_OP_TIMEOUT;
+            crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+
+        } else {
+            op->status = PCMK_LRM_OP_ERROR;
+        }
+
+        if (killrc && errno != ESRCH) {
+            crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
+        }
+        /*
+         * From sigprocmask(2):
+         * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
+         *
+         * This makes it safe to skip WNOHANG here
+         */
+        waitpid(op->pid, &status, 0);
+
+    } else if (WIFEXITED(status)) {
+        op->status = PCMK_LRM_OP_DONE;
+        op->rc = WEXITSTATUS(status);
+        crm_info("Managed %s process %d exited with rc=%d", op->id, op->pid, op->rc);
+
+    } else if (WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+
+        op->status = PCMK_LRM_OP_ERROR;
+        crm_err("Managed %s process %d exited with signal=%d", op->id, op->pid, signo);
+    }
+#ifdef WCOREDUMP
+    if (WCOREDUMP(status)) {
+        crm_err("Managed %s process %d dumped core", op->id, op->pid);
+    }
+#endif
+
+    svc_read_output(op->opaque->stdout_fd, op, FALSE);
+    svc_read_output(op->opaque->stderr_fd, op, TRUE);
+
+    close(op->opaque->stdout_fd);
+    close(op->opaque->stderr_fd);
+    close(sfd);
+
+#endif
+
+}
+
 /* Returns FALSE if 'op' should be free'd by the caller */
 gboolean
 services_os_action_execute(svc_action_t * op, gboolean synchronous)
 {
-    int lpc;
     int stdout_fd[2];
     int stderr_fd[2];
     sigset_t mask;
@@ -435,35 +631,6 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 return FALSE;
             }
         case 0:                /* Child */
-
-        /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
-         * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
-         * We do not want this to be inherited by the child process. By resetting this the signal
-         * to the default behavior, we avoid some potential odd problems that occur during OCF
-         * scripts when SIGPIPE is ignored by the environment. */
-        signal(SIGPIPE, SIG_DFL);
-
-#if defined(HAVE_SCHED_SETSCHEDULER)
-            if (sched_getscheduler(0) != SCHED_OTHER) {
-                struct sched_param sp;
-
-                memset(&sp, 0, sizeof(sp));
-                sp.sched_priority = 0;
-
-                if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-                    crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
-                }
-            }
-#endif
-            if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-                crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
-            }
-
-            /* Man: The call setpgrp() is equivalent to setpgid(0,0)
-             * _and_ compiles on BSD variants too
-             * need to investigate if it works the same too.
-             */
-            setpgid(0, 0);
             close(stdout_fd[0]);
             close(stderr_fd[0]);
             if (STDOUT_FILENO != stdout_fd[1]) {
@@ -479,34 +646,7 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
                 close(stderr_fd[1]);
             }
 
-            /* close all descriptors except stdin/out/err and channels to logd */
-            for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
-                close(lpc);
-            }
-
-#if SUPPORT_CIBSECRETS
-            if (replace_secret_params(op->rsc, op->params) < 0) {
-                /* replacing secrets failed! */
-                if (safe_str_eq(op->action,"stop")) {
-                    /* don't fail on stop! */
-                    crm_info("proceeding with the stop operation for %s", op->rsc);
-
-                } else {
-                    crm_err("failed to get secrets for %s, "
-                            "considering resource not configured", op->rsc);
-                    _exit(PCMK_OCF_NOT_CONFIGURED);
-                }
-            }
-#endif
-            /* Setup environment correctly */
-            add_OCF_env_vars(op);
-
-            /* execute the RA */
-            execvp(op->opaque->exec, op->opaque->args);
-
-            /* Most cases should have been already handled by stat() */
-            services_handle_exec_error(op, errno);
-            _exit(op->rc);
+            action_launch_child(op);
     }
 
     /* Only the parent reaches here */
@@ -520,138 +660,16 @@ services_os_action_execute(svc_action_t * op, gboolean synchronous)
     set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
     if (synchronous) {
-#ifndef HAVE_SYS_SIGNALFD_H
-        CRM_ASSERT(FALSE);
-#else
-        int status = 0;
-        int timeout = op->timeout;
-        int sfd = -1;
-        time_t start = -1;
-        struct pollfd fds[3];
-        int wait_rc = 0;
-
-        sfd = signalfd(-1, &mask, SFD_NONBLOCK);
-        if (sfd < 0) {
-            crm_perror(LOG_ERR, "signalfd() failed");
-        }
-
-        fds[0].fd = op->opaque->stdout_fd;
-        fds[0].events = POLLIN;
-        fds[0].revents = 0;
-
-        fds[1].fd = op->opaque->stderr_fd;
-        fds[1].events = POLLIN;
-        fds[1].revents = 0;
-
-        fds[2].fd = sfd;
-        fds[2].events = POLLIN;
-        fds[2].revents = 0;
-
-        crm_trace("Waiting for %d", op->pid);
-        start = time(NULL);
-        do {
-            int poll_rc = poll(fds, 3, timeout);
-
-            if (poll_rc > 0) {
-                if (fds[0].revents & POLLIN) {
-                    svc_read_output(op->opaque->stdout_fd, op, FALSE);
-                }
-
-                if (fds[1].revents & POLLIN) {
-                    svc_read_output(op->opaque->stderr_fd, op, TRUE);
-                }
-
-                if (fds[2].revents & POLLIN) {
-                    struct signalfd_siginfo fdsi;
-                    ssize_t s;
-
-                    s = read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
-                    if (s != sizeof(struct signalfd_siginfo)) {
-                        crm_perror(LOG_ERR, "Read from signal fd %d failed", sfd);
-
-                    } else if (fdsi.ssi_signo == SIGCHLD) {
-                        wait_rc = waitpid(op->pid, &status, WNOHANG);
-
-                        if (wait_rc < 0){
-                            crm_perror(LOG_ERR, "waitpid() for %d failed", op->pid);
-
-                        } else if (wait_rc > 0) {
-                            break;
-                        }
-                    }
-                }
-
-            } else if (poll_rc == 0) {
-                timeout = 0;
-                break;
-
-            } else if (poll_rc < 0) {
-                if (errno != EINTR) {
-                    crm_perror(LOG_ERR, "poll() failed");
-                    break;
-                }
-            }
-
-            timeout = op->timeout - (time(NULL) - start) * 1000;
-
-        } while ((op->timeout < 0 || timeout > 0));
-
-        crm_trace("Child done: %d", op->pid);
-        if (wait_rc <= 0) {
-            int killrc = kill(op->pid, SIGKILL);
-
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            if (op->timeout > 0 && timeout <= 0) {
-                op->status = PCMK_LRM_OP_TIMEOUT;
-                crm_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
-
-            } else {
-                op->status = PCMK_LRM_OP_ERROR;
-            }
-
-            if (killrc && errno != ESRCH) {
-                crm_err("kill(%d, KILL) failed: %d", op->pid, errno);
-            }
-            /*
-             * From sigprocmask(2):
-             * It is not possible to block SIGKILL or SIGSTOP.  Attempts to do so are silently ignored.
-             *
-             * This makes it safe to skip WNOHANG here
-             */
-            waitpid(op->pid, &status, 0);
-
-        } else if (WIFEXITED(status)) {
-            op->status = PCMK_LRM_OP_DONE;
-            op->rc = WEXITSTATUS(status);
-            crm_info("Managed %s process %d exited with rc=%d", op->id, op->pid, op->rc);
-
-        } else if (WIFSIGNALED(status)) {
-            int signo = WTERMSIG(status);
-
-            op->status = PCMK_LRM_OP_ERROR;
-            crm_err("Managed %s process %d exited with signal=%d", op->id, op->pid, signo);
-        }
-#ifdef WCOREDUMP
-        if (WCOREDUMP(status)) {
-            crm_err("Managed %s process %d dumped core", op->id, op->pid);
-        }
-#endif
-
-        svc_read_output(op->opaque->stdout_fd, op, FALSE);
-        svc_read_output(op->opaque->stderr_fd, op, TRUE);
-
-        close(op->opaque->stdout_fd);
-        close(op->opaque->stderr_fd);
-        close(sfd);
+        action_synced_wait(op, mask);
 
         if (sigismember(&old_mask, SIGCHLD) == 0) {
             if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
                 crm_perror(LOG_ERR, "sigprocmask() to unblocked failed");
             }
         }
-#endif
 
     } else {
+
         crm_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
         mainloop_child_add(op->pid, op->timeout, op->id, op, operation_finished);
 
