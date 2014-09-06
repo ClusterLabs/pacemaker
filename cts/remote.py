@@ -73,6 +73,40 @@ class AsyncWaitProc(Thread):
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
+class AsyncRemoteCmd(Thread):
+    def __init__(self, node, command, completionDelegate=None):
+        self.proc = None
+        self.node = node
+        self.command = command
+        self.logger = LogFactory()
+        self.delegate = completionDelegate;
+        Thread.__init__(self)
+
+    def run(self):
+        outLines = None
+        errLines = None
+
+        self.proc = Popen(self.command, stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
+
+        self.logger.debug("cmd: async: target=%s, pid=%d: %s" % (self.node, self.proc.pid, self.command))
+        self.proc.wait()
+        self.logger.debug("cmd: pid %d returned %d to %s" % (self.proc.pid, self.proc.returncode, repr(self.delegate)))
+
+        if self.proc.stderr:
+            errLines = self.proc.stderr.readlines()
+            self.proc.stderr.close()
+            for line in errLines:
+                self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
+
+        if self.proc.stdout:
+            outLines = self.proc.stdout.readlines()
+            self.proc.stdout.close()
+#            for line in outLines:
+#                self.logger.log("cmd: stdout[%d]: %s" % (self.proc.pid, line))
+
+        if self.delegate:
+            self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
+
 class RemotePrimitives:
     def __init__(self, Command=None, CpCommand=None):
         if CpCommand:
@@ -134,6 +168,13 @@ class RemoteExec:
     def debug(self, args):
         if not self.silent:
             self.logger.debug(args)
+
+    def call_async(self, node, command, completionDelegate=None):
+        #if completionDelegate: print "Waiting for %d on %s: %s" % (proc.pid, node, command)
+        aproc = AsyncRemoteCmd(node, self._cmd([node, command]), completionDelegate=completionDelegate)
+        aproc.start()
+        return aproc
+
 
     def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, completionDelegate=None):
         '''Run the given command on the given remote system

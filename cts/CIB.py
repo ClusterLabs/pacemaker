@@ -98,6 +98,7 @@ class CIB11(ConfigBase):
         
             if ":" in ip:
                 r["cidr_netmask"] = "64"
+                r["nic"] = "eth0"
             else:
                 r["cidr_netmask"] = "32"
 

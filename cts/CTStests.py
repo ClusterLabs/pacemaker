@@ -206,6 +206,7 @@ class CTSTest:
         else:
             self.logger.log("Too many errors!")
 
+        watch.end()
         return errcount
 
     def is_applicable(self):
@@ -2122,7 +2123,7 @@ class NearQuorumPointTest(CTSTest):
             if self.CM.StataCM(node) == 0:
                 downnodes.append(node)
 
-        self.CM.fencing_cleanup,("NearQuorumPoint", stonith)
+        self.CM.fencing_cleanup("NearQuorumPoint", stonith)
         if upnodes == [] and downnodes == []:
             self.CM.cluster_stable()
 
@@ -2417,6 +2418,7 @@ class SimulStartLite(CTSTest):
 
         self.set_timer()
         while len(node_list) > 0:
+            # Repeat until all nodes come up
             watchpats = [ ]
 
             uppat = self.templates["Pat:Slave_started"]
@@ -2439,12 +2441,16 @@ class SimulStartLite(CTSTest):
                 self.CM.StartaCMnoBlock(node)
 
             watch.lookforall()
+
             node_list = self.CM.fencing_cleanup(self.name, stonith)
 
             # Remove node_list messages from watch.unmatched
             for node in node_list:
+                self.logger.debug("Dealing with stonith operations for %s" % repr(node_list))
                 if watch.unmatched:
                     watch.unmatched.remove(uppat % node)
+                    watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
+                    watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
 
             if watch.unmatched:
                 for regex in watch.unmatched:

@@ -262,6 +262,8 @@ A partially set up scenario is torn down if it fails during setup.
                 self.TearDown()
                 raise ValueError("Looks like we hit a BadNews jackpot!")
 
+        if self.BadNews:
+            self.BadNews.end()
         return failed
 
 
