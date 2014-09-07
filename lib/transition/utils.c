@@ -273,14 +273,14 @@ update_abort_priority(crm_graph_t * graph, int priority,
         crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
         graph->abort_priority = priority;
         if (graph->abort_reason != NULL) {
-            crm_debug("'%s' abort superceeded by %s", graph->abort_reason, abort_reason);
+            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
         }
         graph->abort_reason = abort_reason;
         change = TRUE;
     }
 
     if (graph->completion_action < action) {
-        crm_debug("Abort action %s superceeded by %s: %s",
+        crm_debug("Abort action %s superseded by %s: %s",
                   abort2text(graph->completion_action), abort2text(action), abort_reason);
         graph->completion_action = action;
         change = TRUE;

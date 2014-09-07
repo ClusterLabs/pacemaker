@@ -49,7 +49,7 @@ done
 
 if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
     echo "This program should normally only be invoked from inside an OCF resource agent"
-    echo "To set the prmotion/master score from the command line, please specify a resource ID with -r" 
+    echo "To set the promotion/master score from the command line, please specify a resource ID with -r" 
     exit 1
 fi
 

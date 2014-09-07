@@ -249,7 +249,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
 
     } else if (call_id != fsa_pe_query) {
-        crm_trace("Skipping superceeded CIB query: %d (current=%d)", call_id, fsa_pe_query);
+        crm_trace("Skipping superseded CIB query: %d (current=%d)", call_id, fsa_pe_query);
         return;
 
     } else if (AM_I_DC == FALSE || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
