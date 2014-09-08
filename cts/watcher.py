@@ -176,7 +176,8 @@ class FileObj(SearchObj):
             if match:
                 last_offset = self.offset
                 self.offset = match.group(1)
-                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(outLines), self.offset))
+                self.debug("Got %d lines, new offset: %s  %s" % (len(outLines), self.offset, repr(self.delegate)))
 
             elif re.search("^CTSwatcher:.*truncated", line):
                 self.log(line)
@@ -199,7 +200,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         return self.rsh.call_async(self.host,
-                "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
+                                   "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s -t %s" % (log_watcher_bin, self.name, self.filename, self.offset, self.name),
                 completionDelegate=self)
 
     def setend(self):
@@ -208,7 +209,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         (rc, lines) = self.rsh(self.host,
-                 "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                               "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s -t %s" % (log_watcher_bin, self.name, self.filename, "EOF", self.name),
                  None, silent=True)
 
         for line in lines:
@@ -386,7 +387,7 @@ class LogWatcher(RemoteExec):
 
     def async_complete(self, pid, returncode, outLines, errLines):
         # TODO: Probably need a lock for updating self.line_cache
-        self.logger.debug("%s: Got %d lines from %d" % (self.name, len(outLines), pid))
+        self.logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self.line_cache)))
         if len(outLines):
             self.cache_lock.acquire()
             self.line_cache.extend(outLines)
@@ -484,9 +485,6 @@ class LogWatcher(RemoteExec):
                 if len(self.line_cache) == 0 and end < time.time():
                     self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
                     return None
-                elif len(self.line_cache) == 0:
-                    self.debug("Single search timed out: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
-                    return None
                 else:
                     self.debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self.line_cache)))
                     time.sleep(1)
@@ -520,6 +518,7 @@ class LogWatcher(RemoteExec):
                 self.unmatched = self.regexes
                 self.matched = returnresult
                 self.regexes = save_regexes
+                self.end()
                 return None
 
             returnresult.append(oneresult)
