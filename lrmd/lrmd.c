@@ -874,6 +874,12 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
         recurring = 0;
         /* do nothing */
+
+    } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
+        /* Not registered == inactive */
+        cmd->lrmd_op_status = PCMK_LRM_OP_DONE;
+        cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
+
     } else if (rc) {
         /* Attempt to map return codes to op status if possible */
         switch (rc) {
@@ -884,6 +890,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
                 cmd->lrmd_op_status = PCMK_LRM_OP_TIMEOUT;
                 break;
             default:
+                /* TODO: This looks wrong.  Status should be _DONE and exec_rc set to an error */
                 cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
         }
     } else {

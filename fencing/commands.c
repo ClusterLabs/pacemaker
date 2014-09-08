@@ -1094,7 +1094,10 @@ stonith_device_action(xmlNode * msg, char **output)
         device = g_hash_table_lookup(device_list, id);
     }
 
-    if (device) {
+    if (device && device->api_registered == FALSE) {
+        rc = -ENODEV;
+
+    } else if (device) {
         cmd = create_async_command(msg);
         if (cmd == NULL) {
             free_device(device);
