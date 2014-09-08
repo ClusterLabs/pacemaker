@@ -2448,9 +2448,18 @@ class SimulStartLite(CTSTest):
             for node in node_list:
                 self.logger.debug("Dealing with stonith operations for %s" % repr(node_list))
                 if watch.unmatched:
-                    watch.unmatched.remove(uppat % node)
-                    watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
-                    watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
+                    try:
+                        watch.unmatched.remove(uppat % node)
+                    except:
+                        self.debug("Already matched: %s" % (uppat % node))
+                    try:                        
+                        watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
+                    except:
+                        self.debug("Already matched: %s" % (self.templates["Pat:InfraUp"] % node))
+                    try:
+                        watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
+                    except:
+                        self.debug("Already matched: %s" % (self.templates["Pat:PacemakerUp"] % node))
 
             if watch.unmatched:
                 for regex in watch.unmatched:
