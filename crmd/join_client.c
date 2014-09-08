@@ -144,7 +144,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     CRM_LOG_ASSERT(join_id != NULL);
 
     if (query_call_id != call_id) {
-        crm_trace("Query %d superceeded", call_id);
+        crm_trace("Query %d superseded", call_id);
         goto done;
     }
 

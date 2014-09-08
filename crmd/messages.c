@@ -838,7 +838,7 @@ handle_response(xmlNode * stored_msg)
         crm_log_xml_err(stored_msg, "Bad message");
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
-        /* Check if the PE answer been superceeded by a subsequent request? */
+        /* Check if the PE answer been superseded by a subsequent request? */
         const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
 
         if (msg_ref == NULL) {
