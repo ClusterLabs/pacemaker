@@ -442,6 +442,9 @@ class ClusterManager(UserDict):
             self.debug("Quorum: %d Len: %d" % (q, len(self.Env["nodes"])))
             return peer_list
 
+        for n in self.Env["nodes"]:
+            peer_state[n] = "unknown"
+
         # Now see if any states need to be updated
         self.debug("looking for: " + repr(stonith.regexes))
         shot = stonith.look(0)
@@ -457,7 +460,8 @@ class ClusterManager(UserDict):
                     peer_state[peer] = "complete"
                     self.__instance_errorstoignore.append(self.templates["Pat:Fencing_ok"] % peer)
 
-                elif re.search(self.templates["Pat:Fencing_start"] % n, shot):
+                elif peer_state[n] != "complete" and re.search(self.templates["Pat:Fencing_start"] % n, shot):
+                    # TODO: Correctly detect multiple fencing operations for the same host
                     peer = n
                     peer_state[peer] = "in-progress"
                     self.__instance_errorstoignore.append(self.templates["Pat:Fencing_start"] % peer)
