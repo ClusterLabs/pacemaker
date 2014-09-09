@@ -276,6 +276,7 @@ int crm_read_pidfile(const char *filename);
 #  define attrd_channel		T_ATTRD
 #  define F_ATTRD_KEY		"attr_key"
 #  define F_ATTRD_ATTRIBUTE	"attr_name"
+#  define F_ATTRD_REGEX 	"attr_regex"
 #  define F_ATTRD_TASK		"task"
 #  define F_ATTRD_VALUE		"attr_value"
 #  define F_ATTRD_SET		"attr_set"

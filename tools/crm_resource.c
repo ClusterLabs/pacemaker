@@ -2214,11 +2214,15 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
-#if 0
+#if HAVE_ATOMIC_ATTRD
         xmlNode *cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
                                       CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
-        crm_debug("Re-checking the state of all resources on %s", host_uname);
+        crm_debug("Re-checking the state of all resources on %s", host_uname?host_uname:"all nodes");
+
+        rc = attrd_update_delegate(
+            NULL, 'u', host_uname, "fail-count-*", NULL, XML_CIB_TAG_STATUS, NULL, NULL, NULL, FALSE);
+
         if (crm_ipc_send(crmd_channel, cmd, 0, 0, NULL) > 0) {
             start_mainloop();
         }

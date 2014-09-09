@@ -17,6 +17,8 @@
  */
 #include <crm_internal.h>
 
+#include <sys/types.h>
+#include <regex.h>
 #include <glib.h>
 
 #include <crm/msg_xml.h>
@@ -63,7 +65,7 @@ typedef struct attribute_value_s {
 
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
-void attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter);
+void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const char *source);
 
@@ -191,15 +193,40 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
         char *host = crm_element_value_copy(xml, F_ATTRD_HOST);
         const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
         const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+        const char *regex = crm_element_value(xml, F_ATTRD_REGEX);
 
-        a = g_hash_table_lookup(attributes, attr);
+        if(attr == NULL && regex) {
+            GHashTableIter aIter;
+            regex_t *r_patt = calloc(1, sizeof(regex_t));
 
-        if(host == NULL) {
+            crm_debug("Setting %s to %s", regex, value);
+            if (regcomp(r_patt, regex, REG_EXTENDED)) {
+                crm_err("Bad regex '%s' for update", regex);
+                regfree(r_patt);
+                free(r_patt);
+                return;
+            }
+
+            g_hash_table_iter_init(&aIter, attributes);
+            while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+                int status = regexec(r_patt, attr, 0, NULL, 0);
+
+                if(status == 0) {
+                    crm_trace("Matched %s with %s", attr, regex);
+                    crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
+                    send_attrd_message(NULL, xml);
+                }
+            }
+            return;
+
+        } else if(host == NULL) {
             crm_trace("Inferring host");
             host = strdup(attrd_cluster->uname);
             crm_xml_add(xml, F_ATTRD_HOST, host);
             crm_xml_add_int(xml, F_ATTRD_HOST_ID, attrd_cluster->nodeid);
         }
+
+        a = g_hash_table_lookup(attributes, attr);
 
         if (value) {
             int offset = 1;
@@ -254,6 +281,7 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
     }
 
     if(broadcast) {
+        /* Ends up at attrd_peer_message() */
         send_attrd_message(NULL, xml);
     }
 }
@@ -265,6 +293,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     const char *v = crm_element_value(xml, F_ATTRD_VERSION);
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
+    const char *host = crm_element_value(xml, F_ATTRD_HOST);
 
     if(election_op) {
         enum election_result rc = 0;
@@ -293,7 +322,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
 
             crm_trace("Compatibility update of %s from %s", name, peer->uname);
-            attrd_peer_update(peer, xml, FALSE);
+            attrd_peer_update(peer, xml, host, FALSE);
 
         } else if(safe_str_eq(op, "flush")) {
             const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
@@ -336,13 +365,12 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     }
 
     if(safe_str_eq(op, "update")) {
-        attrd_peer_update(peer, xml, FALSE);
+        attrd_peer_update(peer, xml, host, FALSE);
 
     } else if(safe_str_eq(op, "sync")) {
         attrd_peer_sync(peer, xml);
 
     } else if(safe_str_eq(op, "peer-remove")) {
-        const char *host = crm_element_value(xml, F_ATTRD_HOST);
         attrd_peer_remove(0, host, TRUE, peer->uname);
 
     } else if(safe_str_eq(op, "sync-response")
@@ -351,7 +379,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
         crm_notice("Processing %s from %s", op, peer->uname);
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
-            attrd_peer_update(peer, child, TRUE);
+            host = crm_element_value(child, F_ATTRD_HOST);
+            attrd_peer_update(peer, child, host, TRUE);
         }
     }
 }
@@ -409,12 +438,11 @@ attrd_peer_remove(uint32_t nodeid, const char *host, gboolean uncache, const cha
 }
 
 void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
+attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
     bool changed = FALSE;
     attribute_value_t *v = NULL;
 
-    const char *host = crm_element_value(xml, F_ATTRD_HOST);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
 
@@ -422,6 +450,19 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, bool filter)
 
     if(a == NULL) {
         a = create_attribute(xml);
+    }
+
+    if(host == NULL) {
+        GHashTableIter vIter;
+        g_hash_table_iter_init(&vIter, a->values);
+
+        crm_debug("Setting %s for all hosts to %s", attr, value);
+
+        xml_remove_prop(xml, F_ATTRD_HOST_ID);
+        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
+            attrd_peer_update(peer, xml, host, filter);
+        }
+        return;
     }
 
     v = g_hash_table_lookup(a->values, host);
