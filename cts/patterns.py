@@ -364,9 +364,12 @@ class crm_cs_v0(BasePatterns):
         self.components["stonith-ignore"] = [
             "LogActions: Recover Fencing",
             "Updating failcount for Fencing",
+            "error: crm_ipc_read: Connection to stonith-ng failed",
+            "error: mainloop_gio_callback: Connection to stonith-ng.*closed (I/O condition=17)",
+            "crit: tengine_stonith_connection_destroy: Fencing daemon connection failed",
             "error: te_connect_stonith:.*Sign-in failed: triggered a retry",
             "STONITH connection failed, finalizing .* pending operations.",
-            "process_lrm_event:.*Operation Fencing.* Error"
+            "process_lrm_event:.*Operation Fencing.* Error",
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 

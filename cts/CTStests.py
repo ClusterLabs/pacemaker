@@ -1419,6 +1419,15 @@ class ComponentFail(CTSTest):
                 self.okerrpatterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
                 self.okerrpatterns.append(self.templates["Pat:ChildExit"])
 
+        if chosen.name == "stonith":
+            # Ignore actions for STONITH resources
+            (rc, lines) = self.rsh(node, "crm_resource -c", None)
+            for line in lines:
+                if re.search("^Resource", line):
+                    r = AuditResource(self.CM, line)
+                    if r.rclass == "stonith":
+                        self.okerrpatterns.append(self.templates["LogActions: Recover.*%s"] % r.id)
+
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
         tmpPats.extend(self.patterns)
