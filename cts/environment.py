@@ -71,6 +71,7 @@ class Environment:
         self["loop-tests"] = 1
         self["scenario"] = "random"
         self["stats"] = 0
+        self["docker"] = 0
 
         self.RandomGen = random.Random()
         self.logger = LogFactory()
@@ -143,7 +144,9 @@ class Environment:
                 # GoodThing(tm).
                 try:
                     n = node.strip()
-                    gethostbyname_ex(n)
+                    if self.data["docker"] == 0:
+                        gethostbyname_ex(n)
+
                     self.Nodes.append(n) 
                 except:
                     self.logger.log(node+" not found in DNS... aborting")
@@ -191,7 +194,10 @@ class Environment:
             return "crm-lha"
 
         elif self.data["Stack"] == "corosync 2.x":
-            return "crm-mcp"
+            if self["docker"]:
+                return "crm-mcp-docker"
+            else:
+                return "crm-mcp"
 
         elif self.data["Stack"] == "corosync (cman)":
             return "crm-cman"
@@ -342,6 +348,10 @@ class Environment:
             elif args[i] == "--qarsh":
                 RemoteFactory().enable_qarsh()
 
+            elif args[i] == "--docker":
+                self["docker"] = 1
+                RemoteFactory().enable_docker()
+
             elif args[i] == "--stonith" or args[i] == "--fencing":
                 skipthis=1
                 if args[i+1] == "1" or args[i+1] == "yes":
@@ -352,6 +362,9 @@ class Environment:
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"
                     self["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
+                elif args[i+1] == "docker":
+                    self["DoStonith"]=1
+                    self["stonith-type"] = "fence_docker_cts"
                 elif args[i+1] == "scsi":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_scsi"
@@ -644,6 +657,7 @@ class Environment:
         print "\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources"
         print "\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]"
         print "\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH"
+        print "\t [--docker]                   Indicates nodes are docker nodes."
         print "\t [--seed random_seed]"
         print "\t [--set option=value]"
         print "\t "

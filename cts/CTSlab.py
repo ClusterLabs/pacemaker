@@ -107,9 +107,9 @@ if __name__ == '__main__':
 
     if Environment["ListTests"] == 1:
         Tests = TestList(cm, Audits)
-        Environment.log("Total %d tests"%len(Tests))
+        LogFactory().log("Total %d tests"%len(Tests))
         for test in Tests :
-            Environment.log(str(test.name));
+            LogFactory().log(str(test.name));
         sys.exit(0)
 
     elif len(Environment["tests"]) == 0:

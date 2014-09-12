@@ -409,6 +409,20 @@ class crm_mcp(crm_cs_v0):
 #                "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
 #            })
 
+class crm_mcp_docker(crm_mcp):
+    '''
+    The crm version 4 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of native corosync (no plugins)
+    '''
+    def __init__(self, name):
+        crm_mcp.__init__(self, name)
+
+        self.commands.update({
+            "StartCmd"       : "pcmk_start",
+            "StopCmd"        : "pcmk_stop",
+        })
+
 class crm_cman(crm_cs_v0):
     '''
     The crm version 3 cluster manager class.
@@ -454,6 +468,8 @@ class PatternSelector:
             crm_cman(name)
         elif name == "crm-mcp":
             crm_mcp(name)
+        elif name == "crm-mcp-docker":
+            crm_mcp_docker(name)
 
     def get_variant(self, variant):
         if patternvariants.has_key(variant):
