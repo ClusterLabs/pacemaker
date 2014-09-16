@@ -251,6 +251,8 @@ connection_takeover_timeout_cb(gpointer data)
     crm_debug("takeover event timed out for node %s", cmd->rsc_id);
     cmd->takeover_timeout_id = 0;
 
+    lrm_state = lrm_state_find(cmd->rsc_id);
+
     handle_remote_ra_stop(lrm_state, cmd);
     free_cmd(cmd);
 
