@@ -2160,7 +2160,7 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
     for (gIter = unexpected_containers; gIter != NULL; gIter = gIter->next) {
         remote = (resource_t *) gIter->data;
         if (remote->role != RSC_ROLE_STARTED) {
-            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.");
+            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.", remote->container->id);
             set_bit(remote->container->flags, pe_rsc_failed);
         }
     }
