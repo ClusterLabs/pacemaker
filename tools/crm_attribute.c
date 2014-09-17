@@ -235,6 +235,7 @@ main(int argc, char **argv)
         /* we're updating cluster options - dont populate dest_node */
         type = XML_CIB_TAG_CRMCONFIG;
 
+    } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
     } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
         if (dest_uname == NULL) {
             dest_uname = get_node_name(0);
