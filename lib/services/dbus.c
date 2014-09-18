@@ -113,7 +113,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
     method = dbus_message_get_member (msg);
 
     // send message and get a handle for a reply
-    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
+    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1/* aka. DBUS_TIMEOUT_USE_DEFAULT */)) {
         if(error) {
             dbus_error_init(error);
             error->message = "Call to dbus_connection_send_with_reply() failed";
@@ -157,7 +157,7 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
     method = dbus_message_get_member (msg);
 
     // send message and get a handle for a reply
-    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
+    if (!dbus_connection_send_with_reply (connection, msg, &pending, -1/* aka. DBUS_TIMEOUT_USE_DEFAULT */)) { // -1 is default timeout
         crm_err("Send with reply failed for %s", method);
         return FALSE;
 
