@@ -152,6 +152,7 @@ enum nagios_exitcode {
         int status;
         int sequence;
         int expected_rc;
+        int synchronous;
 
         char *stderr_data;
         char *stdout_data;

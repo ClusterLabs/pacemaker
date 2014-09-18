@@ -473,6 +473,7 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
 gboolean
 services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *))
 {
+    op->synchronous = false;
     if (action_callback) {
         op->opaque->callback = action_callback;
     }
@@ -491,7 +492,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
     }
     if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
-        return systemd_unit_exec(op, FALSE);
+        return systemd_unit_exec(op);
 #endif
     }
     return services_os_action_execute(op, FALSE);
@@ -502,6 +503,7 @@ services_action_sync(svc_action_t * op)
 {
     gboolean rc = TRUE;
 
+    op->synchronous = true;
     if (op == NULL) {
         crm_trace("No operation to execute");
         return FALSE;
@@ -512,7 +514,7 @@ services_action_sync(svc_action_t * op)
 #endif
     } else if (op->standard && strcasecmp(op->standard, "systemd") == 0) {
 #if SUPPORT_SYSTEMD
-        rc = systemd_unit_exec(op, TRUE);
+        rc = systemd_unit_exec(op);
 #endif
     } else {
         rc = services_os_action_execute(op, TRUE);

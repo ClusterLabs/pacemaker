@@ -6,6 +6,12 @@
 
 #define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
+struct db_query
+{
+        char *target;
+        char *object;
+        char *name;
+};
 
 static bool pcmk_dbus_error_check(DBusError *err, const char *prefix, const char *function, int line) 
 {
@@ -109,6 +115,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
     // send message and get a handle for a reply
     if (!dbus_connection_send_with_reply (connection, msg, &pending, -1)) { // -1 is default timeout
         if(error) {
+            dbus_error_init(error);
             error->message = "Call to dbus_connection_send_with_reply() failed";
             error->name = "org.clusterlabs.pacemaker.SendFailed";
         }
@@ -126,13 +133,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    if(pcmk_dbus_find_error(method, pending, reply, error)) {
-        crm_trace("Was error: '%s' '%s'", error->name, error->message);
-        if(reply) {
-            dbus_message_unref(reply);
-            reply = NULL;
-        }
-    }
+    pcmk_dbus_find_error(method, pending, reply, error);
 
     if(pending) {
         /* free the pending message handle */
@@ -213,51 +214,23 @@ bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected
     return TRUE;
 }
 
-char *
-pcmk_dbus_get_property(
-    DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name)
+static char *
+pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
 {
-    DBusMessage *msg;
-    DBusMessageIter args;
-    DBusMessageIter dict;
-    DBusMessage *reply = NULL;
-    /* DBusBasicValue value; */
-    const char *method = "GetAll";
-    char *output = NULL;
     DBusError error;
+    char *output = NULL;
+    DBusMessageIter dict;
+    DBusMessageIter args;
 
-        /* desc = systemd_unit_property(path, BUS_NAME ".Unit", "Description"); */
-
-    dbus_error_init(&error);
-    crm_info("Calling: %s on %s", method, target);
-    msg = dbus_message_new_method_call(target, // target for the method call
-                                       obj, // object to call on
-                                       BUS_PROPERTY_IFACE, // interface to call on
-                                       method); // method name
-
-    if (NULL == msg) {
-        crm_err("Call to %s failed: No message", method);
-        return NULL;
+    if(pcmk_dbus_find_error("GetAll", (void*)&error, reply, &error)) {
+        crm_err("Cannot get properties from %s for %s", data->target, data->object);
+        goto cleanup;
     }
 
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface, DBUS_TYPE_INVALID));
-
-    reply = pcmk_dbus_send_recv(msg, connection, &error);
-    dbus_message_unref(msg);
-
-    if(error.name) {
-        crm_err("Call to %s for %s failed: No reply", method, iface);
-        return NULL;
-
-    } else if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Cannot get properties for %s from %s", obj, iface);
-        return NULL;
-    }
-
+    dbus_message_iter_init(reply, &args);
     if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
-        crm_err("Call to %s failed: Message has invalid arguments", method);
-        dbus_message_unref(reply);
-        return NULL;
+        crm_err("Invalid reply from %s for %s", data->target, data->object);
+        goto cleanup;
     }
 
     dbus_message_iter_recurse(&args, &dict);
@@ -280,7 +253,7 @@ pcmk_dbus_get_property(
                     dbus_message_iter_get_basic(&sv, &value);
 
                     crm_trace("Got: %s", value.str);
-                    if(strcmp(value.str, name) != 0) {
+                    if(strcmp(value.str, data->name) != 0) {
                         dbus_message_iter_next (&sv); /* Skip the value */
                     }
                     break;
@@ -303,7 +276,77 @@ pcmk_dbus_get_property(
     }
 
 
-    crm_trace("Property %s[%s] is '%s'", obj, name, output);
+    crm_trace("Property %s[%s] is '%s'", data->object, data->name, output);
+
+  cleanup:
+    free(data->target);
+    free(data->object);
+    free(data->name);
+    free(data);
+
+    return output;
+}
+
+static void
+pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
+{
+    DBusMessage *reply = NULL;
+
+    if(pending) {
+        reply = dbus_pending_call_steal_reply(pending);
+    }
+
+    pcmk_dbus_lookup_result(reply, user_data);
+
+    if(reply) {
+        dbus_message_unref(reply);
+    }
+}
+
+char *
+pcmk_dbus_get_property(
+    DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name)
+{
+    DBusMessage *msg;
+    DBusMessage *reply;
+    const char *method = "GetAll";
+    char *output = NULL;
+
+    struct db_query *query_data = NULL;
+
+    /* char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState"); */
+
+    crm_debug("Calling: %s on %s", method, target);
+    msg = dbus_message_new_method_call(target, // target for the method call
+                                       obj, // object to call on
+                                       BUS_PROPERTY_IFACE, // interface to call on
+                                       method); // method name
+
+    if (NULL == msg) {
+        crm_err("Call to %s failed: No message", method);
+        return NULL;
+    }
+
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface, DBUS_TYPE_INVALID));
+
+    query_data = malloc(sizeof(struct db_query));
+    query_data->target = strdup(target);
+    query_data->object = strdup(obj);
+    query_data->name = strdup(name);
+
+    if(/* callback */FALSE) {
+        pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data);
+
+    } else {
+        reply = pcmk_dbus_send_recv(msg, connection, NULL);
+        output = pcmk_dbus_lookup_result(reply, query_data);
+    }
+
+    dbus_message_unref(msg);
+
+    if(reply) {
+        dbus_message_unref(reply);
+    }
     return output;
 }
 
