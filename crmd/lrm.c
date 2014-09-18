@@ -1162,7 +1162,7 @@ get_lrm_resource(lrm_state_t * lrm_state, xmlNode * resource, xmlNode * op_msg, 
         if (!rsc) {
             fsa_data_t *msg_data = NULL;
 
-            crm_err("Could not add resource %s to LRM", id);
+            crm_err("Could not add resource %s to LRM %s", id, lrm_state->node_name);
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
