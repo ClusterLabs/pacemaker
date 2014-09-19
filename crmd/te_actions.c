@@ -546,17 +546,26 @@ te_update_job_count(crm_action_t * action, int offset)
         return;
     }
 
-    if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    /* if we have a router node, this means the action is performing
+     * on a remote node. For now, we count all action occuring on a
+     * remote node against the job list on the cluster node hosting
+     * the connection resources */
+    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+
+    if ((target == NULL) &&
+        (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED))) {
+
         const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
 
         te_update_job_count_on(t1, offset, TRUE);
         te_update_job_count_on(t2, offset, TRUE);
-
-    } else {
-
-        te_update_job_count_on(target, offset, FALSE);
+        return;
+    } else if (target == NULL) {
+        target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     }
+
+    te_update_job_count_on(target, offset, FALSE);
 }
 
 static gboolean
@@ -597,6 +606,8 @@ te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const ch
         }
     }
 
+    crm_trace("Peer %s has not hit their limit yet. current jobs = %d limit= %d limit", target, r->jobs, limit);
+
     return TRUE;
 }
 
@@ -611,7 +622,15 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
         return TRUE;
     }
 
-    if (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    /* if we have a router node, this means the action is performing
+     * on a remote node. For now, we count all action occuring on a
+     * remote node against the job list on the cluster node hosting
+     * the connection resources */
+    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+
+    if ((target == NULL) &&
+        (safe_str_eq(task, CRMD_ACTION_MIGRATE) || safe_str_eq(task, CRMD_ACTION_MIGRATED))) {
+
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         if(te_should_perform_action_on(graph, action, target) == FALSE) {
             return FALSE;
@@ -619,7 +638,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
 
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
 
-    } else {
+    } else if (target == NULL) {
         target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     }
 

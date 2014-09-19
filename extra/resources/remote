@@ -62,11 +62,11 @@ meta_data() {
     </parameter>
   </parameters>
   <actions>
-    <action name="start"   timeout="15" />
-    <action name="stop"    timeout="15" />
-    <action name="monitor"    timeout="15" />
-    <action name="migrate_to"   timeout="15" />
-    <action name="migrate_from" timeout="15" />
+    <action name="start"   timeout="40" />
+    <action name="stop"    timeout="40" />
+    <action name="monitor"    timeout="30" />
+    <action name="migrate_to"   timeout="60" />
+    <action name="migrate_from" timeout="60" />
     <action name="meta-data"  timeout="5" />
   </actions>
 </resource-agent>
