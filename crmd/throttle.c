@@ -430,7 +430,7 @@ throttle_mode(void)
     unsigned int blocked = 0;
     enum throttle_state_e mode = throttle_none;
 
-#ifndef ON_SOLARIS
+#ifdef ON_SOLARIS
     return throttle_none;
 #endif
 
@@ -508,44 +508,41 @@ static void
 throttle_send_command(enum throttle_state_e mode)
 {
     xmlNode *xml = NULL;
+    static enum throttle_state_e last = -1;
 
-    xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-    crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
-    crm_xml_add_int(xml, F_CRM_THROTTLE_MAX, throttle_job_max);
+    if(mode != last) {
+        crm_info("New throttle mode: %.4x (was %.4x)", mode, last);
+        last = mode;
 
-    send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
-    free_xml(xml);
+        xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
+        crm_xml_add_int(xml, F_CRM_THROTTLE_MAX, throttle_job_max);
 
-    crm_info("Updated throttle state to %.4x", mode);
+        send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
+        free_xml(xml);
+    }
 }
 
 static gboolean
 throttle_timer_cb(gpointer data)
 {
     static bool send_updates = FALSE;
-    static enum throttle_state_e last = -1;
-
     enum throttle_state_e now = throttle_none;
-
-    if(send_updates == FALSE) {
-        /* Optimize for the true case */
-        if(compare_version(fsa_our_dc_version, "3.0.8") < 0) {
-            crm_trace("DC version %s doesn't support throttling", fsa_our_dc_version);
-
-        } else {
-            send_updates = TRUE;
-        }
-    }
 
     if(send_updates) {
         now = throttle_mode();
+        throttle_send_command(now);
+
+    } else if(compare_version(fsa_our_dc_version, "3.0.8") < 0) {
+        /* Optimize for the true case */
+        crm_trace("DC version %s doesn't support throttling", fsa_our_dc_version);
+
+    } else {
+        send_updates = TRUE;
+        now = throttle_mode();
+        throttle_send_command(now);
     }
 
-    if(send_updates && now != last) {
-        crm_debug("New throttle mode: %.4x (was %.4x)", now, last);
-        throttle_send_command(now);
-        last = now;
-    }
     return TRUE;
 }
 
@@ -595,9 +592,11 @@ throttle_update_job_max(const char *preference)
 void
 throttle_init(void)
 {
-    throttle_records = g_hash_table_new_full(
-        crm_str_hash, g_str_equal, NULL, throttle_record_free);
-    throttle_timer = mainloop_timer_add("throttle", 30* 1000, TRUE, throttle_timer_cb, NULL);
+    if(throttle_records == NULL) {
+        throttle_records = g_hash_table_new_full(
+            crm_str_hash, g_str_equal, NULL, throttle_record_free);
+        throttle_timer = mainloop_timer_add("throttle", 30 * 1000, TRUE, throttle_timer_cb, NULL);
+    }
 
     throttle_update_job_max(NULL);
     mainloop_timer_start(throttle_timer);
