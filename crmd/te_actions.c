@@ -597,6 +597,8 @@ te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const ch
         }
     }
 
+    crm_trace("Peer %s has not hit their limit yet. current jobs = %d limit= %d limit", target, r->jobs, limit);
+
     return TRUE;
 }
 
