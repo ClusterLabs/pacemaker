@@ -806,7 +806,7 @@ crm_ipc_connect(crm_ipc_t * client)
 
 #ifdef HAVE_IPCS_GET_BUFFER_SIZE
     client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
-    if (client->max_buf_size < client->buf_size) {
+    if (client->max_buf_size > client->buf_size) {
         free(client->buffer);
         client->buffer = calloc(1, client->max_buf_size);
         client->buf_size = client->max_buf_size;
