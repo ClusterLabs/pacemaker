@@ -1756,6 +1756,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
     if (rsc->role > RSC_ROLE_STOPPED
         && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
 
+        char *reason = NULL;
         gboolean should_fence = FALSE;
 
         /* if this is a remote_node living in a container, fence the container
@@ -1775,15 +1776,18 @@ process_rsc_state(resource_t * rsc, node_t * node,
                  * another node without requiring the baremetal remote nodes to be fenced
                  * as well. */
                 node->details->unseen = TRUE;
+                reason = g_strdup_printf("because %s is active there. Fencing will be revoked if remote-node connection can be re-established on another cluster-node.", rsc->id);
             }
             should_fence = TRUE;
         }
 
         if (should_fence) {
-            char *reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+            if (reason == NULL) {
+               reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+            }
             pe_fence_node(data_set, node, reason);
-            g_free(reason);
         }
+        g_free(reason);
     }
 
     if (node->details->unclean) {
