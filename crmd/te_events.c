@@ -161,10 +161,6 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc, int targe
         do_update = TRUE;
         value = failed_stop_offset;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
-        do_update = TRUE;
-        value = failed_stop_offset;
-
     } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
         do_update = TRUE;
 
