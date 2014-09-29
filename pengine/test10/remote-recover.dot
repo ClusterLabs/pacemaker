@@ -1,0 +1,17 @@
+ digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"fake_monitor_10000 rhel7-alt4" [ style=bold color="green" fontcolor="black"]
+"fake_start_0 rhel7-alt4" -> "fake_monitor_10000 rhel7-alt4" [ style = bold]
+"fake_start_0 rhel7-alt4" [ style=bold color="green" fontcolor="black"]
+"fake_stop_0 rhel7-alt4" -> "all_stopped" [ style = bold]
+"fake_stop_0 rhel7-alt4" -> "fake_start_0 rhel7-alt4" [ style = bold]
+"fake_stop_0 rhel7-alt4" [ style=bold color="green" fontcolor="black"]
+"rhel7-alt4_monitor_60000 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
+"rhel7-alt4_start_0 rhel7-alt1" -> "fake_monitor_10000 rhel7-alt4" [ style = bold]
+"rhel7-alt4_start_0 rhel7-alt1" -> "fake_start_0 rhel7-alt4" [ style = bold]
+"rhel7-alt4_start_0 rhel7-alt1" -> "rhel7-alt4_monitor_60000 rhel7-alt1" [ style = bold]
+"rhel7-alt4_start_0 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
+"shooter_monitor_60000 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
+"shooter_start_0 rhel7-alt1" -> "shooter_monitor_60000 rhel7-alt1" [ style = bold]
+"shooter_start_0 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
+}

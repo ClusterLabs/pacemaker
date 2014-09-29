@@ -240,6 +240,13 @@ class Tests:
                 self.action_timeout = " -t 5000 "
 		if self.tls:
 			self.rsc_classes.remove("stonith")
+		if "systemd" in self.rsc_classes:
+			# the lrmd_dummy_daemon requires this, we are importing it
+			# here just to guarantee it is installed before allowing this
+			# script to run. Otherwise, running without this import being
+			# available will make all the systemd tests look like they fail,
+			# which is really scary looking. I'd rather see the import fail.
+			import systemd.daemon
 
 		print "Testing "+repr(self.rsc_classes)
 
