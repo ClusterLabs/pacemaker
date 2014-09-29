@@ -283,11 +283,13 @@ make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 mkdir -p ${RPM_BUILD_ROOT}%{_var}/lib/pacemaker/cores
 install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
+install -m 644 tools/crm_mon.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/crm_mon
 
 %if %{with upstart_job}
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
 install -m 644 mcp/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
 install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
+install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mon.conf
 %endif
 
 # Scripts that should be executable
@@ -395,6 +397,7 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
+%config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
@@ -451,6 +454,7 @@ exit 0
 %if %{with upstart_job}
 %config(noreplace) %{_sysconfdir}/init/pacemaker.conf
 %config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
+%config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
 %files cli

@@ -1871,6 +1871,7 @@ tools/Makefile							\
 	tools/crm_report					\
         tools/report.common                                     \
 	tools/cibsecret						\
+	tools/crm_mon.upstart					\
 xml/Makefile							\
 lib/gnu/Makefile						\
 		)

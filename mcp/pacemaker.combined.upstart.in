@@ -30,6 +30,9 @@ pre-start script
     # give it time to fail.
     sleep 2
     pidof corosync || { exit 1; }
+
+    # if you use crm_mon, uncomment the line below.
+    #start crm_mon
 end script
 
 post-start script
@@ -58,6 +61,9 @@ post-stop script
     # pacemakerd disappeared unexpectedly, uncomment the line below
     # and invalidate above "respawn" stanza.
     #pidof crmd && killall -q -9 corosync
+
+    # if you use crm_mon, uncomment the line below.
+    #stop crm_mon
 
     # if you use corosync-notifyd, uncomment the line below.
     #stop corosync-notifyd || true
