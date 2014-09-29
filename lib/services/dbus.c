@@ -397,6 +397,14 @@ pcmk_dbus_watch_add(DBusWatch *watch, void *data){
 }
 
 static void
+pcmk_dbus_watch_toggle(DBusWatch *watch, void *data)
+{
+    mainloop_io_t *client = dbus_watch_get_data(watch);
+    crm_notice("DBus client %p is now %s", client, dbus_watch_get_enabled(watch)?"enabled":"disabled");
+}
+
+
+static void
 pcmk_dbus_watch_remove(DBusWatch *watch, void *data){
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
@@ -447,7 +455,7 @@ pcmk_dbus_timeout_toggle(DBusTimeout *timeout, void *data){
 void pcmk_dbus_connection_setup_with_select(DBusConnection *c){
 	dbus_connection_set_timeout_functions(
             c, pcmk_dbus_timeout_add, pcmk_dbus_timeout_remove, pcmk_dbus_timeout_toggle, NULL, NULL);
-	dbus_connection_set_watch_functions(c, pcmk_dbus_watch_add, pcmk_dbus_watch_remove, NULL, NULL, NULL);
+	dbus_connection_set_watch_functions(c, pcmk_dbus_watch_add, pcmk_dbus_watch_remove, pcmk_dbus_watch_toggle, NULL, NULL);
 	dbus_connection_set_dispatch_status_function(c, pcmk_dbus_connection_dispatch, NULL, NULL);
 
 	pcmk_dbus_connection_dispatch(c, dbus_connection_get_dispatch_status(c), NULL);
