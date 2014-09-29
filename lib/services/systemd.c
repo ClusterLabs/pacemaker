@@ -316,7 +316,7 @@ systemd_unit_metadata(const char *name)
 
     if (path) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
-        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description");
+        desc = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, path, BUS_NAME ".Unit", "Description", NULL, NULL);
     } else {
         desc = g_strdup_printf("Systemd unit file for %s", name);
     }
@@ -424,11 +424,11 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 
 #define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
 
-static gboolean
-systemd_unit_check(svc_action_t * op, const char *unit)
+static void
+systemd_unit_check(const char *name, const char *state, void *userdata)
 {
-    char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState");
-
+    svc_action_t * op = userdata;
+    
     CRM_ASSERT(state != NULL);
 
     if (g_strcmp0(state, "active") == 0) {
@@ -439,13 +439,9 @@ systemd_unit_check(svc_action_t * op, const char *unit)
         op->rc = PCMK_OCF_NOT_RUNNING;
     }
 
-    free(state);
-
     if (op->synchronous == FALSE) {
         operation_finalize(op);
-        return TRUE;
     }
-    return op->rc == PCMK_OCF_OK;
 }
 
 gboolean
@@ -461,17 +457,20 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         crm_debug("Could not obtain unit named '%s'", op->agent);
         op->rc = PCMK_OCF_NOT_INSTALLED;
         op->status = PCMK_LRM_OP_NOT_INSTALLED;
-#if 0
-        if (error && strstr(error->message, "systemd1.NoSuchUnit")) {
-            op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
-        }
-#endif
         goto cleanup;
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
-        return systemd_unit_check(op, unit);
+        char *state = NULL;
+
+        if (op->synchronous == FALSE) {
+            pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState", systemd_unit_check, op);
+            return TRUE;
+        }
+
+        state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState", NULL, NULL);
+        systemd_unit_check("ActiveState", state, op);
+        return op->rc == PCMK_OCF_OK;
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;
@@ -579,7 +578,7 @@ systemd_unit_exec(svc_action_t * op)
     }
 
     systemd_unit_by_name(op->agent, op);
-    if (op->synchronous) {
+    if (op->synchronous == FALSE) {
         return TRUE;
     }
 

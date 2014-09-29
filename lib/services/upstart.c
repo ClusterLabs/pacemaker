@@ -315,7 +315,7 @@ upstart_job_running(const gchar * name)
 
         if (path) {
             char *state = pcmk_dbus_get_property(
-                upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state");
+                upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state", NULL, NULL);
 
             crm_info("State of %s: %s", name, state);
             if (state) {

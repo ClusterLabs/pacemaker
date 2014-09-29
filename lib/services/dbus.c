@@ -6,11 +6,13 @@
 
 #define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
-struct db_query
+struct db_getall_data
 {
+        char *name;
         char *target;
         char *object;
-        char *name;
+        void *userdata;
+        void (*callback)(const char *name, const char *value, void *userdata);
 };
 
 static bool pcmk_dbus_error_check(DBusError *err, const char *prefix, const char *function, int line) 
@@ -215,7 +217,7 @@ bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected
 }
 
 static char *
-pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
+pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
 {
     DBusError error;
     char *output = NULL;
@@ -237,6 +239,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
     while (dbus_message_iter_get_arg_type (&dict) != DBUS_TYPE_INVALID) {
         DBusMessageIter sv;
         DBusMessageIter v;
+        DBusBasicValue name;
         DBusBasicValue value;
 
         if(!pcmk_dbus_type_check(reply, &dict, DBUS_TYPE_DICT_ENTRY, __FUNCTION__, __LINE__)) {
@@ -250,10 +253,10 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
 
             switch(dtype) {
                 case DBUS_TYPE_STRING:
-                    dbus_message_iter_get_basic(&sv, &value);
+                    dbus_message_iter_get_basic(&sv, &name);
 
-                    crm_trace("Got: %s", value.str);
-                    if(strcmp(value.str, data->name) != 0) {
+                    crm_trace("Got: %s", name.str);
+                    if(data->name && strcmp(name.str, data->name) != 0) {
                         dbus_message_iter_next (&sv); /* Skip the value */
                     }
                     break;
@@ -262,8 +265,17 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
                     if(pcmk_dbus_type_check(reply, &v, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
                         dbus_message_iter_get_basic(&v, &value);
 
-                        crm_trace("Result: %s", value.str);
-                        output = strdup(value.str);
+                        crm_trace("Property %s[%s] is '%s'", data->object, name.str, value.str);
+                        if(data->callback) {
+                            data->callback(name.str, value.str, data->userdata);
+
+                        } else {
+                            output = strdup(value.str);
+                        }
+
+                        if(data->name) {
+                            goto cleanup;
+                        }
                     }
                     break;
                 default:
@@ -274,9 +286,6 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_query *data)
 
         dbus_message_iter_next (&dict);
     }
-
-
-    crm_trace("Property %s[%s] is '%s'", data->object, data->name, output);
 
   cleanup:
     free(data->target);
@@ -305,14 +314,15 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
 
 char *
 pcmk_dbus_get_property(
-    DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name)
+    DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name,
+    void (*callback)(const char *name, const char *value, void *userdata), void *userdata)
 {
     DBusMessage *msg;
-    DBusMessage *reply;
+    DBusMessage *reply = NULL;
     const char *method = "GetAll";
     char *output = NULL;
 
-    struct db_query *query_data = NULL;
+    struct db_getall_data *query_data = NULL;
 
     /* char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState"); */
 
@@ -329,12 +339,18 @@ pcmk_dbus_get_property(
 
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface, DBUS_TYPE_INVALID));
 
-    query_data = malloc(sizeof(struct db_query));
+    query_data = malloc(sizeof(struct db_getall_data));
     query_data->target = strdup(target);
     query_data->object = strdup(obj);
-    query_data->name = strdup(name);
+    query_data->callback = callback;
+    query_data->userdata = userdata;
+    query_data->name = NULL;
 
-    if(/* callback */FALSE) {
+    if(name) {
+        query_data->name = strdup(name);
+    }
+
+    if(query_data->callback) {
         pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data);
 
     } else {
