@@ -72,6 +72,7 @@ if [ $verify -eq 1 ]; then
 	virsh -c lxc:/// list --all > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo "Could not connect 'virsh -c lxc:///' check that libvirt lxc driver is installed"
+		# yum install -y libvirt-daemon-driver-lxc libvirt-daemon-lxc libvirt-login-shell
 		exit 1
 	fi
 
