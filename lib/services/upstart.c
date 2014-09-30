@@ -466,19 +466,15 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
                 upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state",
                 op->synchronous?NULL:upstart_job_check, op);
 
+            free(job);
+            free(path);
+
             if(op->synchronous) {
                 upstart_job_check("state", state, op);
                 free(state);
                 return op->rc == PCMK_OCF_OK;
             }
-
             return TRUE;
-        }
-
-        if (upstart_job_running(op->agent)) {
-            op->rc = PCMK_OCF_OK;
-        } else {
-            op->rc = PCMK_OCF_NOT_RUNNING;
         }
         goto cleanup;
 
@@ -513,7 +509,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
 
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
 
-    if (synchronous == FALSE) {
+    if (op->synchronous == FALSE) {
         free(job);
         return pcmk_dbus_send(msg, upstart_proxy, upstart_async_dispatch, op);
     }
@@ -555,7 +551,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
         dbus_message_unref(reply);
     }
 
-    if (synchronous == FALSE) {
+    if (op->synchronous == FALSE) {
         operation_finalize(op);
         return TRUE;
     }
