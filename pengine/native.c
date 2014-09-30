@@ -2097,10 +2097,14 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
             other_node->weight = merge_weights(other_node->weight, node->weight);
 
         } else {
-            node_t *new_node = node_copy(node);
+            other_node = node_copy(node);
 
-            g_hash_table_insert(rsc->allowed_nodes, (gpointer) new_node->details->id, new_node);
+            g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
         }
+        /* update the location only score. The location only score is isolated so we
+         * can efficiently process conditions where probes only need to execute on
+         * nodes with a positive location constraint score */
+        other_node->location_weight = other_node->weight;
     }
 
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -2705,6 +2709,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     action_t *probe = NULL;
     node_t *running = NULL;
     resource_t *top = uber_parent(rsc);
+    char *relaxed_probes = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_RELAXED_PROBES);
 
     static const char *rc_master = NULL;
     static const char *rc_inactive = NULL;
@@ -2778,6 +2783,16 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         /* we already know the status of the resource on this node */
         pe_rsc_trace(rsc, "Skipping active: %s on %s", rsc->id, node->details->uname);
         return FALSE;
+    }
+
+    if (crm_is_true(relaxed_probes)) {
+        node_t *weighted_node = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        /* with relaxed probes, resources are only probed on nodes with a location
+         * score greater or equal to 0. Otherwise probes are skipped */
+        if ((weighted_node == NULL) || (weighted_node->location_weight < 0)) {
+            pe_rsc_trace(rsc, "Skipping %s probe on %s due to relaxed probes.", rsc->id, node->details->uname);
+            return FALSE;
+        }
     }
 
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
