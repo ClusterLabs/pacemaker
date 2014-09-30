@@ -255,7 +255,6 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
                 case DBUS_TYPE_STRING:
                     dbus_message_iter_get_basic(&sv, &name);
 
-                    crm_trace("Got: %s", name.str);
                     if(data->name && strcmp(name.str, data->name) != 0) {
                         dbus_message_iter_next (&sv); /* Skip the value */
                     }
@@ -318,7 +317,6 @@ pcmk_dbus_get_property(
     void (*callback)(const char *name, const char *value, void *userdata), void *userdata)
 {
     DBusMessage *msg;
-    DBusMessage *reply = NULL;
     const char *method = "GetAll";
     char *output = NULL;
 
@@ -354,15 +352,16 @@ pcmk_dbus_get_property(
         pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data);
 
     } else {
-        reply = pcmk_dbus_send_recv(msg, connection, NULL);
+        DBusMessage *reply = pcmk_dbus_send_recv(msg, connection, NULL);
+
         output = pcmk_dbus_lookup_result(reply, query_data);
+        if(reply) {
+            dbus_message_unref(reply);
+        }
     }
 
     dbus_message_unref(msg);
 
-    if(reply) {
-        dbus_message_unref(reply);
-    }
     return output;
 }
 

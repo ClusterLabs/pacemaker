@@ -461,16 +461,14 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
-        char *state = NULL;
-
-        if (op->synchronous == FALSE) {
-            pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState", systemd_unit_check, op);
-            return TRUE;
+        char *state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState",
+                                             op->synchronous?NULL:systemd_unit_check, op);
+        if (op->synchronous) {
+            systemd_unit_check("ActiveState", state, op);
+            free(state);
+            return op->rc == PCMK_OCF_OK;
         }
-
-        state = pcmk_dbus_get_property(systemd_proxy, BUS_NAME, unit, BUS_NAME ".Unit", "ActiveState", NULL, NULL);
-        systemd_unit_check("ActiveState", state, op);
-        return op->rc == PCMK_OCF_OK;
+        return TRUE;
 
     } else if (g_strcmp0(method, "start") == 0) {
         FILE *file_strm = NULL;

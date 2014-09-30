@@ -304,31 +304,24 @@ get_first_instance(const gchar * job)
     return instance;
 }
 
-gboolean
-upstart_job_running(const gchar * name)
+static void
+upstart_job_check(const char *name, const char *state, void *userdata)
 {
-    bool running = FALSE;
-    char *job = NULL;
+    svc_action_t * op = userdata;
 
-    if(upstart_job_by_name(name, &job)) {
-        char *path = get_first_instance(job);
+    CRM_ASSERT(state != NULL);
 
-        if (path) {
-            char *state = pcmk_dbus_get_property(
-                upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state", NULL, NULL);
-
-            crm_info("State of %s: %s", name, state);
-            if (state) {
-                running = !g_strcmp0(state, "running");
-            }
-            free(state);
-        }
-        free(path);
+    if (g_strcmp0(state, "running") == 0) {
+        op->rc = PCMK_OCF_OK;
+    /* } else if (g_strcmp0(state, "activating") == 0) { */
+    /*     op->rc = PCMK_OCF_PENDING; */
+    } else {
+        op->rc = PCMK_OCF_NOT_RUNNING;
     }
 
-    free(job);
-    crm_info("%s is%s running", name, running ? "" : " not");
-    return running;
+    if (op->synchronous == FALSE) {
+        operation_finalize(op);
+    }
 }
 
 static char *
@@ -465,6 +458,23 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     }
 
     if (safe_str_eq(op->action, "monitor") || safe_str_eq(action, "status")) {
+
+        char *path = get_first_instance(job);
+
+        if(path) {
+            char *state = pcmk_dbus_get_property(
+                upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state",
+                op->synchronous?NULL:upstart_job_check, op);
+
+            if(op->synchronous) {
+                upstart_job_check("state", state, op);
+                free(state);
+                return op->rc == PCMK_OCF_OK;
+            }
+
+            return TRUE;
+        }
+
         if (upstart_job_running(op->agent)) {
             op->rc = PCMK_OCF_OK;
         } else {
