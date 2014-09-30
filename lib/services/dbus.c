@@ -208,8 +208,8 @@ bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected
 
         dbus_message_iter_init(msg, &args);
         do_crm_log_alias(LOG_ERR, __FILE__, function, line,
-                         "Unexepcted DBus type, expected %c instead of %c in '%s'",
-                         expected, dtype, dbus_message_iter_get_signature(&args));
+                         "Unexepcted DBus type, expected %c in '%s' instead of %c",
+                         expected, dbus_message_iter_get_signature(&args), dtype);
         return FALSE;
     }
 

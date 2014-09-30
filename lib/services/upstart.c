@@ -275,6 +275,10 @@ get_first_instance(const gchar * job)
         crm_err("Call to %s failed: %s", method, error.name);
         goto done;
 
+    } else if(reply == NULL) {
+        crm_err("Call to %s failed: no reply", method);
+        goto done;
+
     } else if (!dbus_message_iter_init(reply, &args)) {
         crm_err("Call to %s failed: Message has no arguments", method);
         goto done;
@@ -309,9 +313,7 @@ upstart_job_check(const char *name, const char *state, void *userdata)
 {
     svc_action_t * op = userdata;
 
-    CRM_ASSERT(state != NULL);
-
-    if (g_strcmp0(state, "running") == 0) {
+    if (state && g_strcmp0(state, "running") == 0) {
         op->rc = PCMK_OCF_OK;
     /* } else if (g_strcmp0(state, "activating") == 0) { */
     /*     op->rc = PCMK_OCF_PENDING; */
@@ -461,6 +463,7 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
 
         char *path = get_first_instance(job);
 
+        op->rc = PCMK_OCF_NOT_RUNNING;
         if(path) {
             char *state = pcmk_dbus_get_property(
                 upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state",
