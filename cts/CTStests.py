@@ -83,6 +83,7 @@ class CTSTest:
         self.passed = 1
         self.is_loop = 0
         self.is_unsafe = 0
+        self.is_docker_unsafe = 0
         self.is_experimental = 0
         self.is_container = 0
         self.is_valgrind = 0
@@ -223,6 +224,8 @@ class CTSTest:
         elif self.is_valgrind and not self.Env["valgrind-tests"]:
             return 0
         elif self.is_experimental and not self.Env["experimental-tests"]:
+            return 0
+        elif self.is_docker_unsafe and self.Env["docker"]:
             return 0
         elif self.is_container and not self.Env["container-tests"]:
             return 0
@@ -1359,6 +1362,8 @@ class ComponentFail(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "ComponentFail"
+        # TODO make this work correctly in docker.
+        self.is_docker_unsafe = 1
         self.startall = SimulStartLite(cm)
         self.complist = cm.Components()
         self.patterns = []
@@ -2521,6 +2526,7 @@ class RemoteLXC(CTSTest):
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
         self.is_container = 1
+        self.is_docker_unsafe = 1
         self.failed = 0
         self.fail_string = ""
 
@@ -2633,6 +2639,7 @@ class RemoteBaremetal(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "RemoteBaremetal"
+        self.is_docker_unsafe = 1
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)

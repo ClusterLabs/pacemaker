@@ -1162,7 +1162,7 @@ get_lrm_resource(lrm_state_t * lrm_state, xmlNode * resource, xmlNode * op_msg, 
         if (!rsc) {
             fsa_data_t *msg_data = NULL;
 
-            crm_err("Could not add resource %s to LRM", id);
+            crm_err("Could not add resource %s to LRM %s", id, lrm_state->node_name);
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }
@@ -1175,13 +1175,17 @@ delete_resource(lrm_state_t * lrm_state,
                 const char *id,
                 lrmd_rsc_info_t * rsc,
                 GHashTableIter * gIter,
-                const char *sys, const char *host, const char *user, ha_msg_input_t * request)
+                const char *sys,
+                const char *host,
+                const char *user,
+                ha_msg_input_t * request,
+                gboolean unregister)
 {
     int rc = pcmk_ok;
 
     crm_info("Removing resource %s for %s (%s) on %s", id, sys, user ? user : "internal", host);
 
-    if (rsc) {
+    if (rsc && unregister) {
         rc = lrm_state_unregister_rsc(lrm_state, id, 0);
     }
 
@@ -1224,6 +1228,7 @@ do_lrm_invoke(long long action,
     const char *user_name = NULL;
     const char *target_node = NULL;
     gboolean is_remote_node = FALSE;
+    gboolean crm_rsc_delete = FALSE;
 
     if (input->xml != NULL) {
         /* Remote node operations are routed here to their remote connections */
@@ -1259,6 +1264,8 @@ do_lrm_invoke(long long action,
     crm_trace("LRM command from: %s", from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
+        /* remember this delete op came from crm_resource */
+        crm_rsc_delete = TRUE;
         operation = CRMD_ACTION_DELETE;
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
@@ -1370,13 +1377,17 @@ do_lrm_invoke(long long action,
     } else if (safe_str_eq(operation, CRM_OP_REPROBE) || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
         GHashTableIter gIter;
         rsc_history_t *entry = NULL;
+        gboolean unregister = is_remote_lrmd_ra(NULL, NULL, entry->id) ? FALSE : TRUE;
 
         crm_notice("Forcing the status of all resources to be redetected");
 
         g_hash_table_iter_init(&gIter, lrm_state->resource_history);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+            /* only unregister the resource during a reprobe if it is not a remote connection
+             * resource. otherwise unregistering the connection will terminate remote-node
+             * membership */
             delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
-                            user_name, NULL);
+                            user_name, NULL, unregister);
         }
 
         /* Now delete the copy in the CIB */
@@ -1499,6 +1510,7 @@ do_lrm_invoke(long long action,
             free(op_key);
 
         } else if (rsc != NULL && safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+            gboolean unregister = TRUE;
 
 #if ENABLE_ACL
             int cib_rc = delete_rsc_status(lrm_state, rsc->id, cib_dryrun | cib_sync_call, user_name);
@@ -1523,7 +1535,11 @@ do_lrm_invoke(long long action,
                 return;
             }
 #endif
-            delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host, user_name, input);
+            if (crm_rsc_delete == TRUE && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
+                unregister = FALSE;
+            }
+
+            delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host, user_name, input, unregister);
 
         } else if (rsc != NULL) {
             do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, input->msg);

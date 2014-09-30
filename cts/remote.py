@@ -261,6 +261,12 @@ class RemoteFactory:
     def new(self, silent=False):
         return RemoteExec(RemoteFactory.rsh, silent)
 
+    def enable_docker(self):
+        print "Using DOCKER backend for connections to cluster nodes"
+
+        RemoteFactory.rsh.Command = "/usr/libexec/phd/docker/phd_docker_remote_cmd "
+        RemoteFactory.rsh.CpCommand = "/usr/libexec/phd/docker/phd_docker_cp"
+
     def enable_qarsh(self):
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         print "Using QARSH for connections to cluster nodes"

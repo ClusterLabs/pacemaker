@@ -1756,6 +1756,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
     if (rsc->role > RSC_ROLE_STOPPED
         && node->details->online == FALSE && is_set(rsc->flags, pe_rsc_managed)) {
 
+        char *reason = NULL;
         gboolean should_fence = FALSE;
 
         /* if this is a remote_node living in a container, fence the container
@@ -1768,14 +1769,25 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             should_fence = TRUE;
         } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (is_baremetal_remote_node(node) && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+                /* setting unceen = true means that fencing of the remote node will
+                 * only occur if the connection resource is not going to start somewhere.
+                 * This allows connection resources on a failed cluster-node to move to
+                 * another node without requiring the baremetal remote nodes to be fenced
+                 * as well. */
+                node->details->unseen = TRUE;
+                reason = g_strdup_printf("because %s is active there. Fencing will be revoked if remote-node connection can be re-established on another cluster-node.", rsc->id);
+            }
             should_fence = TRUE;
         }
 
         if (should_fence) {
-            char *reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+            if (reason == NULL) {
+               reason = g_strdup_printf("because %s is thought to be active there", rsc->id);
+            }
             pe_fence_node(data_set, node, reason);
-            g_free(reason);
         }
+        g_free(reason);
     }
 
     if (node->details->unclean) {
@@ -1838,6 +1850,17 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 stop_action(rsc, node, FALSE);
             }
             break;
+    }
+
+    /* ensure a remote-node connection failure forces an unclean remote-node
+     * to be fenced. By setting unseen = FALSE, the remote-node failure will
+     * result in a fencing operation regardless if we're going to attempt to 
+     * reconnect to the remote-node in this transition or not. */
+    if (is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
+        node_t *tmpnode = pe_find_node(data_set->nodes, rsc->id);
+        if (tmpnode->details->unclean) {
+            tmpnode->details->unseen = FALSE;
+        }
     }
 
     if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
@@ -2160,7 +2183,7 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
     for (gIter = unexpected_containers; gIter != NULL; gIter = gIter->next) {
         remote = (resource_t *) gIter->data;
         if (remote->role != RSC_ROLE_STARTED) {
-            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.");
+            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.", remote->container->id);
             set_bit(remote->container->flags, pe_rsc_failed);
         }
     }

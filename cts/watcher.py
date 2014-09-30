@@ -165,7 +165,11 @@ class FileObj(SearchObj):
             global log_watcher_bin
 
             self.debug("Installing %s on %s" % (log_watcher_bin, host))
-            self.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin), silent=True)
+
+            os.system("cat << END >> %s\n%s\nEND" %(log_watcher_bin, log_watcher))
+            os.system("chmod 755 %s" %(log_watcher_bin))
+
+            self.rsh.cp(log_watcher_bin, "root@%s:%s" % (host, log_watcher_bin))
             has_log_watcher[host] = 1
 
         self.harvest()
@@ -408,7 +412,7 @@ class LogWatcher(RemoteExec):
         for t in pending:
             t.join(60.0)
             if t.isAlive():
-                self.logger.log("%s: Aborting after 20s waiting for %d logging commands" % (self.name, repr(t)))
+                self.logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
                 return
 
         #print "Got %d lines" % len(self.line_cache)

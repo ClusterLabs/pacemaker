@@ -251,6 +251,8 @@ connection_takeover_timeout_cb(gpointer data)
     crm_debug("takeover event timed out for node %s", cmd->rsc_id);
     cmd->takeover_timeout_id = 0;
 
+    lrm_state = lrm_state_find(cmd->rsc_id);
+
     handle_remote_ra_stop(lrm_state, cmd);
     free_cmd(cmd);
 
@@ -379,6 +381,11 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
+
+            if (safe_str_eq(cmd->action, "start")) {
+                /* clear PROBED value if it happens to be set after start completes. */
+                update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
+            }
             lrm_state_reset_tables(lrm_state);
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;

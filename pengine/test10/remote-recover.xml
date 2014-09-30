@@ -1,0 +1,114 @@
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.1" epoch="13" num_updates="8" admin_epoch="0" cib-last-written="Tue Sep 23 16:28:22 2014" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-6da3f72"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="phd"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1411504087"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel7-alt1">
+        <instance_attributes id="nodes-1">
+        </instance_attributes>
+      </node>
+      <node id="2" uname="rhel7-alt2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="rhel7-alt3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="shooter" type="fence_xvm">
+        <instance_attributes id="shooter-instance_attributes"/>
+        <operations>
+          <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="rhel7-alt4" provider="pacemaker" type="remote">
+        <instance_attributes id="rhel7-alt4-instance_attributes"/>
+        <operations>
+          <op id="rhel7-alt4-start-timeout-15" interval="0s" name="start" timeout="15"/>
+          <op id="rhel7-alt4-stop-timeout-15" interval="0s" name="stop" timeout="15"/>
+          <op id="rhel7-alt4-monitor-timeout-15" interval="60s" name="monitor" timeout="15"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="fake" provider="heartbeat" type="Dummy">
+        <instance_attributes id="fake-instance_attributes"/>
+        <operations>
+          <op id="fake-start-timeout-20" interval="0s" name="start" timeout="20"/>
+          <op id="fake-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
+          <op id="fake-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="location-fake-rhel7-alt4-INFINITY" node="rhel7-alt4" rsc="fake" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="2" uname="rhel7-alt2" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="11:8:0:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;11:8:0:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1411503701" last-rc-change="1411503701" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt2"/>
+          </lrm_resource>
+          <lrm_resource id="rhel7-alt4" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rhel7-alt4_last_0" operation_key="rhel7-alt4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.9" transition-key="8:5:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:7;8:5:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt2"/>
+          </lrm_resource>
+          <lrm_resource id="fake" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="8:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:7;8:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1411504086" last-rc-change="1411504086" exec-time="34" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt2" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="rhel7-alt1" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="shooter" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="11:23:0:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;11:23:0:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1411504102" last-rc-change="1411504102" exec-time="1" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt1"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:15:0:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;16:15:0:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="12" rc-code="0" op-status="0" interval="60000" last-rc-change="1411504079" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-alt1"/>
+          </lrm_resource>
+          <lrm_resource id="rhel7-alt4" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rhel7-alt4_last_0" operation_key="rhel7-alt4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="9:15:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:7;9:15:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt1"/>
+          </lrm_resource>
+          <lrm_resource id="fake" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="8:18:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:7;8:18:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1411504087" last-rc-change="1411504087" exec-time="29" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt1" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="rhel7-alt3" in_ccm="false" crmd="offline" crm-debug-origin="send_stonith_update" join="down" expected="down"/>
+    <node_state id="rhel7-alt4" remote_node="true" uname="rhel7-alt4" crm-debug-origin="post_cache_update">
+      <lrm id="rhel7-alt4">
+        <lrm_resources>
+          <lrm_resource id="fake" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fake_last_failure_0" operation_key="fake_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;12:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1411504087" last-rc-change="1411504087" exec-time="29" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="fake_last_0" operation_key="fake_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="12:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;12:21:7:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1411504087" last-rc-change="1411504087" exec-time="29" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-alt3" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="fake_monitor_10000" operation_key="fake_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:22:0:68028369-58a1-453d-bcdd-c1d1ade99959" transition-magic="0:0;16:22:0:68028369-58a1-453d-bcdd-c1d1ade99959" call-id="35" rc-code="0" op-status="0" interval="10000" last-rc-change="1411504087" exec-time="29" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="rhel7-alt3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rhel7-alt4">
+        <instance_attributes id="status-rhel7-alt4">
+          <nvpair id="status-rhel7-alt4-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-rhel7-alt4-last-failure-fake" name="last-failure-fake" value="1411503989"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

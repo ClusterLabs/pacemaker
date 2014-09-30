@@ -1,0 +1,49 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="6" operation="stop" operation_key="fake_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="8" operation="stonith" operation_key="stonith-rhel7-alt4-reboot" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <crm_event id="8" operation="stonith" operation_key="stonith-rhel7-alt4-reboot" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4">
+        <attributes CRM_meta_last_failure_fake="1411503989" CRM_meta_on_node="rhel7-alt4" CRM_meta_on_node_uuid="rhel7-alt4" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="7" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="8" operation="stonith" operation_key="stonith-rhel7-alt4-reboot" on_node="rhel7-alt4" on_node_uuid="rhel7-alt4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="6" operation="stop" operation_key="fake_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="7" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

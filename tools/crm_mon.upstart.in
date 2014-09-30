@@ -1,0 +1,39 @@
+# crm_mon - Daemon for pacemaker monitor
+#
+#
+
+kill timeout 3600
+respawn
+respawn limit 10 3600
+
+expect fork
+
+env prog=crm_mon
+env rpm_sysconf=@sysconfdir@/sysconfig/crm_mon
+env rpm_lockfile=@localstatedir@/lock/subsys/crm_mon
+env deb_sysconf=@sysconfdir@/default/crm_mon
+env deb_lockfile=@localstatedir@/lock/crm_mon
+
+
+script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    exec $prog $OPTIONS
+end script
+
+post-start script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
+    touch $LOCK_FILE
+end script
+
+post-stop script
+    [ -f "$rpm_sysconf" ] && . $rpm_sysconf
+    [ -f "$deb_sysconf" ] && . $deb_sysconf
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/sysconfig ] && LOCK_FILE="$rpm_lockfile"
+    [ -z "$LOCK_FILE" -a -d @sysconfdir@/default ] && LOCK_FILE="$deb_lockfile"
+    rm -f $LOCK_FILE
+end script
+

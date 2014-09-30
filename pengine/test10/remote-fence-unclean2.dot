@@ -1,0 +1,10 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"fake_stop_0 rhel7-alt4" -> "all_stopped" [ style = bold]
+"fake_stop_0 rhel7-alt4" [ style=bold color="green" fontcolor="orange"]
+"stonith 'reboot' rhel7-alt4" -> "fake_stop_0 rhel7-alt4" [ style = bold]
+"stonith 'reboot' rhel7-alt4" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' rhel7-alt4" [ style=bold color="green" fontcolor="black"]
+"stonith_complete" -> "all_stopped" [ style = bold]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"]
+}
