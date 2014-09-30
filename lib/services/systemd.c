@@ -206,8 +206,9 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
         if(unit) {
             munit = strdup(unit);
         }
-
-        dbus_message_unref(reply);
+        if(reply) {
+            dbus_message_unref(reply);
+        }
         return munit;
     }
 
@@ -247,6 +248,10 @@ systemd_unit_listall(void)
 
     if(error.name) {
         crm_err("Call to %s failed: %s", method, error.name);
+        return NULL;
+
+    } else if (reply == NULL) {
+        crm_err("Call to %s failed: Message has no reply", method);
         return NULL;
 
     } else if (!dbus_message_iter_init(reply, &args)) {
