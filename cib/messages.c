@@ -292,6 +292,11 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, F_TYPE, "cib");
             crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
+            crm_xml_add(up, F_CIB_DELEGATED, host);
+            crm_xml_add(up, F_CIB_CLIENTID, crm_element_value(req, F_CIB_CLIENTID));
+            crm_xml_add(up, F_CIB_CALLOPTS, crm_element_value(req, F_CIB_CALLOPTS));
+            crm_xml_add(up, F_CIB_CALLID, crm_element_value(req, F_CIB_CALLID));
+
             send_cluster_message(NULL, crm_msg_cib, up, FALSE);
             free_xml(up);
 
