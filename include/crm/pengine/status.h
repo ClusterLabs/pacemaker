@@ -154,7 +154,11 @@ struct node_shared_s {
 };
 
 struct node_s {
+    /* This is the combined weight of both location and colocation constraints
+     * placed upon this node for a specific resource. */
     int weight;
+    /* This is the weight assigned to this node by the location constraints alone. */
+    int location_weight;
     gboolean fixed;
     int count;
     struct node_shared_s *details;
