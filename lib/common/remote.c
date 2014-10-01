@@ -737,11 +737,12 @@ check_connect_finished(gpointer userdata)
 static int
 internal_tcp_connect_async(int sock,
                            const struct sockaddr *addr, socklen_t addrlen, int timeout /* ms */ ,
-                           void *userdata, void (*callback) (void *userdata, int sock))
+                           int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
 {
     int rc = 0;
     int flag = 0;
     int interval = 500;
+    int timer;
     struct tcp_async_cb_data *cb_data = NULL;
 
     if ((flag = fcntl(sock, F_GETFL)) >= 0) {
@@ -782,7 +783,10 @@ internal_tcp_connect_async(int sock,
      * Something about the way mainloop is currently polling prevents this from working at the
      * moment though. */
     crm_trace("fd %d: scheduling to check if connect finished in %dms second", sock, interval);
-    g_timeout_add(interval, check_connect_finished, cb_data);
+    timer = g_timeout_add(interval, check_connect_finished, cb_data);
+    if (timer_id) {
+        *timer_id = timer;
+    }
 
     return 0;
 }
@@ -809,10 +813,11 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
  * \internal
  * \brief tcp connection to server at specified port
  * \retval negative, failed to connect.
+ * \retval positive, sock fd
  */
 int
-crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
-                             void *userdata, void (*callback) (void *userdata, int sock))
+crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
+                             int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
 {
     char buffer[256];
     struct addrinfo *res = NULL;
@@ -877,8 +882,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout,   /*ms */
 
         if (callback) {
             if (internal_tcp_connect_async
-                (sock, rp->ai_addr, rp->ai_addrlen, timeout, userdata, callback) == 0) {
-                sock = 0;
+                (sock, rp->ai_addr, rp->ai_addrlen, timeout, timer_id, userdata, callback) == 0) {
                 goto async_cleanup; /* Success for now, we'll hear back later in the callback */
             }
 
@@ -903,5 +907,5 @@ async_cleanup:
 int
 crm_remote_tcp_connect(const char *host, int port)
 {
-    return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL);
+    return crm_remote_tcp_connect_async(host, port, -1, NULL, NULL, NULL);
 }
