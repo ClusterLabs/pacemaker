@@ -755,7 +755,7 @@ apply_system_health(pe_working_set_t * data_set)
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 resource_t *rsc = (resource_t *) gIter2->data;
 
-                rsc2node_new(health_strategy, rsc, system_health, node, data_set);
+                rsc2node_new(health_strategy, rsc, system_health, NULL, node, data_set);
             }
         }
 

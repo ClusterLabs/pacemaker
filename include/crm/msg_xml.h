@@ -298,6 +298,8 @@
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 #  define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
+#  define XML_LOCATION_ATTR_DISCOVERY	"resource-discovery"
+
 #  define XML_COLOC_ATTR_SOURCE		"rsc"
 #  define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
 #  define XML_COLOC_ATTR_TARGET		"with-rsc"
