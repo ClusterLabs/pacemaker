@@ -77,7 +77,7 @@ The name of the attributes to set.  This is the name to be used in the constrain
 The number by which to multiply the number of connected ping nodes by
 </longdesc>
 <shortdesc lang="en">Value multiplier</shortdesc>
-<content type="integer" default=""/>
+<content type="integer" default="1"/>
 </parameter>
 
 <parameter name="host_list" unique="0" required="1">
