@@ -770,7 +770,8 @@ do_test remote-recover         "Recover connection resource after cluster-node f
 do_test remote-stale-node-entry "Make sure we properly handle leftover remote-node entries in the node section"
 
 echo ""
-do_test resource-discovery "Exercises resource-discovery location constraint option."
+do_test resource-discovery      "Exercises resource-discovery location constraint option."
+do_test rsc-discovery-per-node  "Disable resource discovery per node"
 
 echo ""
 test_results
