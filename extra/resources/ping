@@ -234,7 +234,7 @@ fping_check() {
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
-    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_host_list"
+    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
     $cmd>$f_out 2>$f_err; rc=$?
     active=`grep alive $f_out|wc -l`
 
