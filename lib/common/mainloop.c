@@ -799,7 +799,7 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
 {
     mainloop_io_t *client = NULL;
 
-    if (fd > 0) {
+    if (fd >= 0) {
         client = calloc(1, sizeof(mainloop_io_t));
         client->name = strdup(name);
         client->userdata = userdata;
