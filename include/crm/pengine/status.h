@@ -136,6 +136,8 @@ struct node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
+    gboolean rsc_discovery_enabled;
+
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
     GListPtr allocated_rsc;     /* resource_t* */

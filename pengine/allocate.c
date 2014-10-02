@@ -861,6 +861,10 @@ probe_resources(pe_working_set_t * data_set)
             /* TODO enable container node probes once ordered probing is implemented. */
             continue;
 
+        } else if (node->details->rsc_discovery_enabled == FALSE) {
+            /* resource discovery is disabled for this node */
+            continue;
+
         } else if (probe_complete == NULL) {
             probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
             if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
