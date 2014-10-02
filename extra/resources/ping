@@ -93,7 +93,7 @@ The list of ping nodes to count.
 Number of ping attempts, per host, before declaring it dead
 </longdesc>
 <shortdesc lang="en">no. of ping attempts</shortdesc>
-<content type="integer" default="2"/>
+<content type="integer" default="3"/>
 </parameter>
 
 <parameter name="timeout" unique="0">
