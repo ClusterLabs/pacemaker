@@ -121,6 +121,15 @@ Default never fails.
 <content type="integer" default=""/>
 </parameter>
 
+<parameter name="use_fping" unique="0">
+<longdesc lang="en">
+Use fping rather than ping, if found. If set to 0, fping
+will not be used even if present.
+</longdesc>
+<shortdesc lang="en">Use fping if available</shortdesc>
+<content type="boolean" default="1"/>
+</parameter>
+
 <parameter name="debug" unique="0">
 <longdesc lang="en">
 Enables to use default attrd_updater verbose logging on every call.
@@ -274,7 +283,7 @@ ping_check() {
 
 ping_update() {
     
-    if have_binary fping; then
+    if ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping; then
 	fping_check
 	active=$?
     else
@@ -306,6 +315,7 @@ ping_update() {
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
 : ${OCF_RESKEY_failure_score:="0"}
+: ${OCF_RESKEY_use_fping:="1"}
 
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
