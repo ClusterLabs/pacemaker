@@ -77,7 +77,7 @@ The name of the attributes to set.  This is the name to be used in the constrain
 The number by which to multiply the number of connected ping nodes by
 </longdesc>
 <shortdesc lang="en">Value multiplier</shortdesc>
-<content type="integer" default=""/>
+<content type="integer" default="1"/>
 </parameter>
 
 <parameter name="host_list" unique="0" required="1">
@@ -93,7 +93,7 @@ The list of ping nodes to count.
 Number of ping attempts, per host, before declaring it dead
 </longdesc>
 <shortdesc lang="en">no. of ping attempts</shortdesc>
-<content type="integer" default="2"/>
+<content type="integer" default="3"/>
 </parameter>
 
 <parameter name="timeout" unique="0">
@@ -119,6 +119,15 @@ Default never fails.
 </longdesc>
 <shortdesc lang="en">failure_score</shortdesc>
 <content type="integer" default=""/>
+</parameter>
+
+<parameter name="use_fping" unique="0">
+<longdesc lang="en">
+Use fping rather than ping, if found. If set to 0, fping
+will not be used even if present.
+</longdesc>
+<shortdesc lang="en">Use fping if available</shortdesc>
+<content type="boolean" default="1"/>
 </parameter>
 
 <parameter name="debug" unique="0">
@@ -154,7 +163,7 @@ ping_conditional_log() {
 
 ping_usage() {
 	cat <<END
-usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -225,7 +234,7 @@ fping_check() {
     n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
-    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_host_list"
+    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
     $cmd>$f_out 2>$f_err; rc=$?
     active=`grep alive $f_out|wc -l`
 
@@ -274,7 +283,7 @@ ping_check() {
 
 ping_update() {
     
-    if have_binary fping; then
+    if ocf_is_true "$OCF_RESKEY_use_fping" && have_binary fping; then
 	fping_check
 	active=$?
     else
@@ -306,6 +315,7 @@ ping_update() {
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
 : ${OCF_RESKEY_failure_score:="0"}
+: ${OCF_RESKEY_use_fping:="1"}
 
 : ${OCF_RESKEY_CRM_meta_timeout:="20000"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
