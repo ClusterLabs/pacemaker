@@ -665,7 +665,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         crm_trace("Invoking global callback for call %d", call_id);
         cib->op_callback(msg, call_id, rc, output);
     }
-    crm_trace("OP callback activated.");
+    crm_trace("OP callback activated for %d", call_id);
 }
 
 void

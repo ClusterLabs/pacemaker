@@ -382,6 +382,9 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
     /* send callback to originating child */
     crm_client_t *client_obj = NULL;
     int local_rc = pcmk_ok;
+    int call_id = 0;
+
+    crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
 
     if (client_id != NULL) {
         client_obj = crm_client_get_by_id(client_id);
@@ -389,7 +392,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
 
     if (client_obj == NULL) {
         local_rc = -ECONNRESET;
-        crm_trace("No client to sent the response to. F_CIB_CLIENTID not set.");
+        crm_trace("No client to sent response %d to, F_CIB_CLIENTID not set.", call_id);
 
     } else {
         int rid = 0;
@@ -405,13 +408,13 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                           rid, client_obj->name,
                           from_peer ? "(originator of delegated request)" : "");
             } else {
-                crm_trace("Sending response to %s %s",
-                          client_obj->name, from_peer ? "(originator of delegated request)" : "");
+                crm_trace("Sending response [call %d] to %s %s",
+                          call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
             }
 
         } else {
-            crm_trace("Sending an event to %s %s",
-                      client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending event %d to %s %s",
+                      call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
         switch (client_obj->kind) {
