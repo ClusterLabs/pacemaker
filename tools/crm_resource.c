@@ -94,6 +94,10 @@ resource_ipc_connection_destroy(gpointer user_data)
 static void
 start_mainloop(void)
 {
+    if (crmd_replies_needed == 0) {
+        return;
+    }
+
     mainloop = g_main_new(FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
@@ -789,6 +793,7 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
                resource_t * rsc, pe_working_set_t * data_set)
 {
     int rc = pcmk_ok;
+    node_t *node = NULL;
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -807,7 +812,7 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
         GListPtr lpc = NULL;
 
         for (lpc = data_set->nodes; lpc != NULL; lpc = lpc->next) {
-            node_t *node = (node_t *) lpc->data;
+            node = (node_t *) lpc->data;
 
             if (node->details->online) {
                 delete_lrm_rsc(cib_conn, crmd_channel, node->details->uname, rsc, data_set);
@@ -817,15 +822,20 @@ delete_lrm_rsc(cib_t *cib_conn, crm_ipc_t * crmd_channel, const char *host_uname
         return pcmk_ok;
     }
 
-    printf("Cleaning up %s on %s\n", rsc->id, host_uname);
-    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+    node = pe_find_node(data_set->nodes, host_uname);
+
+    if (node && node->details->rsc_discovery_enabled) {
+        printf("Cleaning up %s on %s\n", rsc->id, host_uname);
+        rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+    } else {
+        printf("Resource discovery disabled on %s. Unable to delete lrm state.\n", host_uname);
+    }
 
     if (rc == pcmk_ok) {
         char *attr_name = NULL;
         const char *id = rsc->id;
-        node_t *node = pe_find_node(data_set->nodes, host_uname);
 
-        if(node && node->details->remote_rsc == NULL) {
+        if(node && node->details->remote_rsc == NULL && node->details->rsc_discovery_enabled) {
             crmd_replies_needed++;
         }
         if (rsc->clone_name) {

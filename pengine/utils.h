@@ -23,7 +23,8 @@ extern rsc_colocation_t *invert_constraint(rsc_colocation_t * constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t * constraint);
 
-extern rsc_to_node_t *rsc2node_new(const char *id, resource_t * rsc, int weight, node_t * node,
+extern rsc_to_node_t *rsc2node_new(const char *id, resource_t * rsc, int weight,
+                                   const char *discovery_mode, node_t * node,
                                    pe_working_set_t * data_set);
 
 extern void pe_free_rsc_to_node(GListPtr constraints);
