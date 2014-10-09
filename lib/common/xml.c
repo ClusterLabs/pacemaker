@@ -1950,9 +1950,11 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
             return -EINVAL;
     }
 
-    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
-        crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-        crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+    if (tmp) {
+        for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
+            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+        }
     }
 
     switch(format) {
@@ -1973,9 +1975,11 @@ bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
             return -EINVAL;
     }
 
-    for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
-        crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-        crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+    if (tmp) {
+        for(lpc = 0; lpc < DIMOF(vfields); lpc++) {
+            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
+            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+        }
     }
 
     return pcmk_ok;
