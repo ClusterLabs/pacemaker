@@ -56,6 +56,7 @@ class BasePatterns:
             "Pat:Fencing_ok"    : "stonith.*remote_op_done:.*Operation .* of %s by .*: OK",
 
             "Pat:RscOpOK"       : "process_lrm_event:.*Operation %s_%s.*ok.*confirmed",
+            "Pat:RscRemoteOpOK" : "process_lrm_event:.*Operation %s_%s.*ok.*node=%s, .*confirmed.*true",
         }
 
     def get_component(self, key):
