@@ -1889,7 +1889,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if ((then_rsc_role == RSC_ROLE_STOPPED) && safe_str_eq(then->task, RSC_STOP)) {
             /* ignore... if 'then' is supposed to be stopped after 'first', but
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
-        } else if ((then_rsc_role == RSC_ROLE_STARTED) && safe_str_eq(then->task, RSC_START)) {
+        } else if ((then_rsc_role >= RSC_ROLE_STARTED) && safe_str_eq(then->task, RSC_START)) {
             /* ignore... if 'then' is supposed to be started after 'first', but
              * then is already started, there is nothing to be done when non-symmetrical.  */
         } else if (!(first->flags & pe_action_runnable)) {
