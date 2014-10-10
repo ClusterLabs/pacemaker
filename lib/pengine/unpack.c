@@ -1135,6 +1135,11 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
             this_node->details->standby = TRUE;
         }
 
+        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+            crm_info("Node %s is in maintenance-mode", this_node->details->uname);
+            this_node->details->maintenance = TRUE;
+        }
+
         resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
         if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
             if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
