@@ -2753,7 +2753,7 @@ class RemoteBaremetal(CTSTest):
         pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.setwatch()
-        pats.append("process_lrm_event:.*Operation %s_start_0.*node=%s, .*confirmed.*true" % (self.remote_rsc, self.remote_node))
+        pats.append(self.templates["Pat:RscRemoteOpOK"] % (self.remote_rsc, "start", self.remote_node))
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
