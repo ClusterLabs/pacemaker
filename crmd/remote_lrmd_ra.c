@@ -573,7 +573,7 @@ handle_remote_ra_exec(gpointer user_data)
                  * cleared which will require all the resources running in the remote-node
                  * to be explicitly re-detected via probe actions.  If the takeover does occur
                  * successfully, then we can leave the status section intact. */
-                cmd->monitor_timeout_id = g_timeout_add((cmd->timeout/2), connection_takeover_timeout_cb, cmd);
+                cmd->takeover_timeout_id = g_timeout_add((cmd->timeout/2), connection_takeover_timeout_cb, cmd);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             }
