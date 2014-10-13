@@ -29,6 +29,7 @@ publican_docs   =
 generated_docs	=
 generated_mans	=
 
+ASCIIDOC_CLI_TYPE := pcs
 DOCBOOK_FORMATS := html-desktop
 DOCBOOK_LANGS   := en-US
 DOTs = $(wildcard */en-US/images/*.dot)
@@ -154,17 +155,15 @@ pdf:
 	make DOCBOOK_FORMATS="pdf" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
 
 # Make sure www-(pcs|crmsh) happen in serial
-www:
-	make www-pcs
-	make www-crmsh
-	make $(generated_docs) $(ascii)
+www: clean-local $(generated_docs) $(ascii)
+	make www-cli
 	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 
 www-crmsh:
 	make ASCIIDOC_CLI_TYPE=crmsh clean-local www-cli
 
 www-pcs:
-	make ASCIIDOC_CLI_TYPE=pcs clean-local www-cli
+	make ASCIIDOC_CLI_TYPE=pcs www-cli
 
 www-cli:
 	for book in $(docbook); do 										\
