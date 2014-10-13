@@ -453,8 +453,8 @@ class StonithdTest(CTSTest):
         is_dc = self.CM.is_node_dc(node)
 
         watchpats = []
-        watchpats.append("Operation .* for host '%s' with device .* returned: 0" % node)
-        watchpats.append("tengine_stonith_notify:.*Peer %s was terminated .*: OK" % node)
+        watchpats.append(self.templates["Pat:FenceOpOK"] % node)
+        watchpats.append(self.templates["Pat:NodeFenced"] % node)
 
         if self.Env["at-boot"] == 0:
             self.debug("Expecting %s to stay down" % node)
