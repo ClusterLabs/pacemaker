@@ -227,6 +227,7 @@ recurring_action_timer(gpointer data)
     op->stdout_data = NULL;
     free(op->stderr_data);
     op->stderr_data = NULL;
+    op->opaque->repeat_timer = 0;
 
     services_action_async(op, NULL);
     return FALSE;

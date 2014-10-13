@@ -313,6 +313,7 @@ services_action_free(svc_action_t * op)
 
     if (op->opaque->repeat_timer) {
         g_source_remove(op->opaque->repeat_timer);
+        op->opaque->repeat_timer = 0;
     }
     if (op->opaque->stderr_gsource) {
         mainloop_del_fd(op->opaque->stderr_gsource);
@@ -425,6 +426,7 @@ services_action_kick(const char *name, const char *action, int interval /* ms */
     } else {
         if (op->opaque->repeat_timer) {
             g_source_remove(op->opaque->repeat_timer);
+            op->opaque->repeat_timer = 0;
         }
         recurring_action_timer(op);
         return TRUE;
@@ -459,6 +461,7 @@ handle_duplicate_recurring(svc_action_t * op, void (*action_callback) (svc_actio
         if (dup->pid != 0) {
             if (op->opaque->repeat_timer) {
                 g_source_remove(op->opaque->repeat_timer);
+                op->opaque->repeat_timer = 0;
             }
             recurring_action_timer(dup);
         }
