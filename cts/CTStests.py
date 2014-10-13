@@ -2634,11 +2634,11 @@ AllTestClasses.append(RemoteLXC)
 
 
 ###################################################################
-class RemoteBaremetal(CTSTest):
+class RemoteDriver(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name = "RemoteBaremetal"
+        self.name = "RemoteDriver"
         self.is_docker_unsafe = 1
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
@@ -2907,6 +2907,39 @@ class RemoteBaremetal(CTSTest):
                  """Failed to send remote""",
                 ]
 
-AllTestClasses.append(RemoteBaremetal)
+# Remote driver is called by other tests.
+
+###################################################################
+class RemoteBasic(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name = "RemoteBasic"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.driver = RemoteDriver(cm)
+
+    def __call__(self, node):
+        '''Perform the 'RemoteBaremetal' test. '''
+        self.incr("calls")
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.driver.setup_env()
+        self.driver.step1_start_metal(node)
+        self.driver.step2_add_rsc(node)
+        self.driver.step3_test_attributes(node)
+        self.driver.cleanup_metal(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+        if self.driver.failed == 1:
+            return self.failure(self.driver.fail_string)
+
+        return self.success()
+
+AllTestClasses.append(RemoteBasic)
 
 # vim:ts=4:sw=4:et:
