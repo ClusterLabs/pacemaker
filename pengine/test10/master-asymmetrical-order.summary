@@ -1,0 +1,34 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Master/Slave Set: ms1 [rsc1]
+     Masters: [ node1 ]
+     Slaves: [ node2 ]
+ Master/Slave Set: ms2 [rsc2]
+     Masters: [ node2 ]
+     Slaves: [ node1 ]
+
+Transition Summary:
+ * Demote  rsc1:0	(Master -> Stopped node1)
+ * Stop    rsc1:1	(node2)
+
+Executing cluster transition:
+ * Pseudo action:   ms1_demote_0
+ * Resource action: rsc1:0          demote on node1
+ * Pseudo action:   ms1_demoted_0
+ * Pseudo action:   ms1_stop_0
+ * Resource action: rsc1:0          stop on node1
+ * Resource action: rsc1:1          stop on node2
+ * Pseudo action:   ms1_stopped_0
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Master/Slave Set: ms1 [rsc1]
+     Stopped: [ node1 node2 ]
+ Master/Slave Set: ms2 [rsc2]
+     Masters: [ node2 ]
+     Slaves: [ node1 ]
+

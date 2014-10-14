@@ -396,6 +396,7 @@ do_test master-stop "Stop instances due to location constraint with role=Started
 do_test master-partially-demoted-group "Allow partially demoted group to finish demoting"
 do_test bug-cl-5213 "Ensure role colocation with -INFINITY is enforced"
 do_test bug-cl-5219 "Allow unrelated resources with a common colocation target to remain promoted"
+do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
