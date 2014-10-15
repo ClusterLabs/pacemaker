@@ -3034,7 +3034,16 @@ class RemoteStonithd(CTSTest):
         return True
 
     def errorstoignore(self):
-        return self.driver.errorstoignore()
+        ignore_pats = [
+            """Unexpected disconnect on remote-node""",
+            """error: process_lrm_event: Operation remote_.*_monitor""",
+            """LogActions: Recover remote_""",
+            """Calculated Transition .* /var/lib/pacemaker/pengine/pe-error""",
+            """error: native_create_actions: Resource .*ocf::.* is active on 2 nodes attempting recovery""",
+        ]
+
+        ignore_pats.extend(self.driver.errorstoignore())
+        return ignore_pats
 
 AllTestClasses.append(RemoteStonithd)
 
