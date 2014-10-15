@@ -1002,7 +1002,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
 
-    if(daemon_option("watchdog")) {
+    if(daemon_option_enabled(crm_system_name, "watchdog")) {
         stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
     }
 
@@ -1354,7 +1354,7 @@ main(int argc, char **argv)
 
     topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
-    if(daemon_option("watchdog")) {
+    if(daemon_option_enabled(crm_system_name, "watchdog")) {
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 

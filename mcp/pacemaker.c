@@ -1038,6 +1038,10 @@ main(int argc, char **argv)
         crm_exit(ENOPROTOOPT);
     }
 
+    if(pcmk_locate_sbd() > 0) {
+        setenv("PCMK_watchdog", "true", 1);
+    }
+
     find_and_track_existing_processes();
 
     cluster.destroy = mcp_cpg_destroy;
