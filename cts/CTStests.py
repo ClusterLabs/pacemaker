@@ -2647,9 +2647,8 @@ class RemoteDriver(CTSTest):
         self.failed = 0
         self.fail_string = ""
         self.remote_node_added = 0
-        self.remote_node = "remote1"
         self.remote_rsc_added = 0
-        self.remote_rsc = "remote1-rsc"
+        self.remote_rsc = "remote-rsc"
         self.cib_cmd = """cibadmin -C -o %s -X '%s' """
 
     def del_rsc(self, node, rsc):
@@ -2681,9 +2680,12 @@ class RemoteDriver(CTSTest):
         rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="Dummy">
     <operations>
-      <op id="remote1-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+      <op id="remote-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
     </operations>
-</primitive>""" % (self.remote_rsc)
+    <meta_attributes id="remote-meta_attributes">
+          <nvpair id="remote-meta-container" name="container" value="%s"/>
+    </meta_attributes id="remote-meta_attributes">
+</primitive>""" % (self.remote_rsc, self.remote_node)
         self.add_rsc(node, rsc_xml)
         if self.failed == 0:
             self.remote_rsc_added = 1
@@ -2691,21 +2693,38 @@ class RemoteDriver(CTSTest):
     def add_connection_rsc(self, node):
         rsc_xml = """
 <primitive class="ocf" id="%s" provider="pacemaker" type="remote">
-    <instance_attributes id="remote1-instance_attributes"/>
-        <instance_attributes id="remote1-instance_attributes">
-          <nvpair id="remote1-instance_attributes-server" name="server" value="%s"/>
+    <instance_attributes id="remote-instance_attributes"/>
+        <instance_attributes id="remote-instance_attributes">
+          <nvpair id="remote-instance_attributes-server" name="server" value="%s"/>
         </instance_attributes>
     <operations>
-      <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
-          <op id="remote1-name-start-interval-0-timeout-60" interval="0" name="start" timeout="60"/>
+      <op id="remote-monitor-interval-60s" interval="60s" name="monitor"/>
+      <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="120"/>
     </operations>
-    <meta_attributes id="remote1-meta_attributes"/>
 </primitive>""" % (self.remote_node, node)
         self.add_rsc(node, rsc_xml)
         if self.failed == 0:
             self.remote_node_added = 1
 
-    def step1_start_metal(self, node):
+    def stop_pcmk_remote(self, node):
+        # disable pcmk remote
+        for i in range(10):
+            rc = self.rsh(node, "service pacemaker_remote stop")
+            if rc != 0:
+                time.sleep(6)
+            else:
+                break
+
+    def start_pcmk_remote(self, node):
+        for i in range(10):
+            rc = self.rsh(node, "service pacemaker_remote start")
+            if rc != 0:
+                time.sleep(6)
+            else:
+                self.pcmk_started = 1
+                break
+
+    def start_metal(self, node):
         pcmk_started = 0
 
         # make sure the resource doesn't already exist for some reason
@@ -2717,13 +2736,7 @@ class RemoteDriver(CTSTest):
             self.fail_string = "Failed to shutdown cluster node %s" % (node)
             return
 
-        for i in range(10):
-            rc = self.rsh(node, "service pacemaker_remote start")
-            if rc != 0:
-                time.sleep(6)
-            else:
-                self.pcmk_started = 1
-                break
+        self.start_pcmk_remote(node)
 
         if self.pcmk_started == 0:
             self.failed = 1
@@ -2735,6 +2748,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.setwatch()
         pats.append(self.templates["Pat:RscOpOK"] % (self.remote_node, "start"))
+        pats.append(self.templates["Pat:DC_IDLE"])
 
         self.add_connection_rsc(node)
 
@@ -2745,7 +2759,60 @@ class RemoteDriver(CTSTest):
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
-    def step2_add_rsc(self, node):
+    def fail_connection(self, node):
+        if self.failed == 1:
+            return
+
+        watchpats = [ ]
+        watchpats.append(self.templates["Pat:FenceOpOK"] % self.remote_node)
+        watchpats.append(self.templates["Pat:NodeFenced"] % self.remote_node)
+
+        watch = self.create_watch(watchpats, 120)
+        watch.setwatch()
+
+        # force stop the pcmk remote daemon. this will result in fencing
+        self.debug("Force stopped active remote node")
+        self.stop_pcmk_remote(node)
+
+        self.debug("Waiting for remote node to be fenced.")
+        self.set_timer("remoteMetalFence")
+        watch.lookforall()
+        self.log_timer("remoteMetalFence")
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.logger.log(self.fail_string)
+            self.failed = 1
+            return
+
+        self.debug("Waiting for the remote node to come back up")
+        self.CM.ns.WaitForNodeToComeUp(node, 120);
+
+        pats = [ ]
+        watch = self.create_watch(pats, 120)
+        watch.setwatch()
+        pats.append(self.templates["Pat:RscOpOK"] % (self.remote_node, "start"))
+        if self.remote_rsc_added == 1:
+            pats.append(self.templates["Pat:RscOpOK"] % (self.remote_rsc, "monitor"))
+
+        # start the remote node again watch it integrate back into cluster.
+        self.start_pcmk_remote(node)
+        if self.pcmk_started == 0:
+            self.failed = 1
+            self.fail_string = "Failed to start pacemaker_remote on node %s" % (node)
+            self.logger.log(self.fail_string)
+            return
+
+        self.debug("Waiting for remote node to rejoin cluster after being fenced.")
+        self.set_timer("remoteMetalRestart")
+        watch.lookforall()
+        self.log_timer("remoteMetalRestart")
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.failed = 1
+            self.logger.log(self.fail_string)
+            return
+
+    def add_dummy_rsc(self, node):
         if self.failed == 1:
             return
 
@@ -2754,31 +2821,10 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.setwatch()
         pats.append(self.templates["Pat:RscRemoteOpOK"] % (self.remote_rsc, "start", self.remote_node))
+        pats.append(self.templates["Pat:DC_IDLE"])
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
-        # this crm_resource command actually occurs on the remote node
-        # which verifies that the ipc proxy works
-        time.sleep(1)
-
-        (rc, lines) = self.rsh(node, "crm_resource -W -r remote1-rsc --quiet", None)
-        if rc != 0:
-            self.fail_string = "Failed to get location of resource remote1-rsc"
-            self.failed = 1
-            return
-
-        find = 0
-        for line in lines:
-            if self.remote_node in line.split():
-                find = 1
-                break
-
-        if find == 0:
-            rc = self.rsh(node, "crm_resource -M -r remote1-rsc -N %s" % (self.remote_node))
-            if rc != 0:
-                self.fail_string = "Failed to place primitive on remote-node"
-                self.failed = 1
-                return
 
         self.set_timer("remoteMetalRsc")
         watch.lookforall()
@@ -2787,7 +2833,7 @@ class RemoteDriver(CTSTest):
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
-    def step3_test_attributes(self, node):
+    def test_attributes(self, node):
         if self.failed == 1:
             return
 
@@ -2827,7 +2873,7 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
         if self.remote_rsc_added == 1:
-            self.rsh(node, "crm_resource -U -r remote1-rsc -N %s" % (self.remote_node))
+            self.rsh(node, "crm_resource -U -r %s -N %s" % (self.remote_rsc, self.remote_node))
             self.del_rsc(node, self.remote_rsc)
         if self.remote_node_added == 1:
             self.del_rsc(node, self.remote_node)
@@ -2838,15 +2884,11 @@ class RemoteDriver(CTSTest):
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
-        # disable pcmk remote
-        for i in range(10):
-            rc = self.rsh(node, "service pacemaker_remote stop")
-            if rc != 0:
-                time.sleep(6)
-            else:
-                break
+        self.stop_pcmk_remote(node)
 
-    def setup_env(self):
+    def setup_env(self, node):
+
+        self.remote_node = "remote_%s" % (node)
         sync_key = 0
 
         # we are assuming if all nodes have a key, that it is
@@ -2887,10 +2929,10 @@ class RemoteDriver(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        self.setup_env()
-        self.step1_start_metal(node)
-        self.step2_add_rsc(node)
-        self.step3_test_attributes(node)
+        self.setup_env(node)
+        self.start_metal(node)
+        self.add_dummy_rsc(node)
+        self.test_attributes(node)
         self.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
@@ -2902,7 +2944,7 @@ class RemoteDriver(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """is running on remote1 which isn't allowed""",
+        return [ """is running on remote.*which isn't allowed""",
                  """Connection terminated""",
                  """Failed to send remote""",
                 ]
@@ -2918,6 +2960,7 @@ class RemoteBasic(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.driver = RemoteDriver(cm)
+        self.is_docker_unsafe = 1
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
@@ -2927,10 +2970,10 @@ class RemoteBasic(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        self.driver.setup_env()
-        self.driver.step1_start_metal(node)
-        self.driver.step2_add_rsc(node)
-        self.driver.step3_test_attributes(node)
+        self.driver.setup_env(node)
+        self.driver.start_metal(node)
+        self.driver.add_dummy_rsc(node)
+        self.driver.test_attributes(node)
         self.driver.cleanup_metal(node)
 
         self.debug("Waiting for the cluster to recover")
@@ -2940,6 +2983,59 @@ class RemoteBasic(CTSTest):
 
         return self.success()
 
+    def is_applicable(self):
+        return self.driver.is_applicable()
+
+    def errorstoignore(self):
+        return self.driver.errorstoignore()
+
 AllTestClasses.append(RemoteBasic)
+
+###################################################################
+class RemoteStonithd(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name = "RemoteStonithd"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.driver = RemoteDriver(cm)
+        self.is_docker_unsafe = 1
+
+    def __call__(self, node):
+        '''Perform the 'RemoteStonithd' test. '''
+        self.incr("calls")
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.driver.setup_env(node)
+        self.driver.start_metal(node)
+        self.driver.add_dummy_rsc(node)
+
+        self.driver.fail_connection(node)
+        self.driver.cleanup_metal(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+        if self.driver.failed == 1:
+            return self.failure(self.driver.fail_string)
+
+        return self.success()
+
+    def is_applicable(self):
+        if not self.driver.is_applicable():
+            return False
+
+        if self.Env.has_key("DoFencing"):
+            return self.Env["DoFencing"]
+
+        return True
+
+    def errorstoignore(self):
+        return self.driver.errorstoignore()
+
+AllTestClasses.append(RemoteStonithd)
 
 # vim:ts=4:sw=4:et:
