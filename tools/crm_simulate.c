@@ -964,7 +964,7 @@ set_ticket_state_attr(const char *ticket_id, const char *attr_name,
 
 static void
 modify_configuration(pe_working_set_t * data_set,
-                     const char *quorum, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
+                     const char *quorum, const char *watchdog, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
                      GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke,
                      GListPtr ticket_standby, GListPtr ticket_activate)
 {
@@ -985,6 +985,16 @@ modify_configuration(pe_working_set_t * data_set,
         crm_xml_add(top, XML_ATTR_HAVE_QUORUM, quorum);
 
         rc = global_cib->cmds->modify(global_cib, NULL, top, cib_sync_call | cib_scope_local);
+        CRM_ASSERT(rc == pcmk_ok);
+    }
+
+    if (watchdog) {
+        quiet_log(" + Setting watchdog: %s\n", watchdog);
+
+        rc = update_attr_delegate(global_cib, cib_sync_call | cib_scope_local,
+                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                             XML_ATTR_HAVE_WATCHDOG, watchdog, FALSE, NULL, NULL);
+
         CRM_ASSERT(rc == pcmk_ok);
     }
 
@@ -1245,6 +1255,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
     {"set-datetime", 1, 0, 't', "Set date/time"},
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
+    {"watchdog",     1, 0, 'w', "\tAssume a watchdog device is active"},
     {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
     {"ticket-revoke",    1, 0, 'r', "Revoke a ticket"},
     {"ticket-standby",   1, 0, 'b', "Make a ticket standby"},
@@ -1359,6 +1370,7 @@ main(int argc, char **argv)
 
     const char *xml_file = "-";
     const char *quorum = NULL;
+    const char *watchdog = NULL;
     const char *test_dir = NULL;
     const char *dot_file = NULL;
     const char *graph_file = NULL;
@@ -1444,6 +1456,10 @@ main(int argc, char **argv)
                 process = TRUE;
                 simulate = TRUE;
                 op_fail = g_list_append(op_fail, optarg);
+                break;
+            case 'w':
+                modified++;
+                watchdog = optarg;
                 break;
             case 'q':
                 modified++;
@@ -1555,7 +1571,7 @@ main(int argc, char **argv)
 
     if (modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(&data_set, quorum, node_up, node_down, node_fail, op_inject,
+        modify_configuration(&data_set, quorum, watchdog, node_up, node_down, node_fail, op_inject,
                              ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);

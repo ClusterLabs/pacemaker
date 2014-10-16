@@ -208,6 +208,9 @@ do_dc_takeover(long long action,
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                         XML_ATTR_HAVE_WATCHDOG, daemon_option("watchdog"), FALSE, NULL, NULL);
+
+    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                          "dc-version", VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,

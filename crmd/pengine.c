@@ -237,6 +237,48 @@ do_pe_invoke(long long action,
     fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
 }
 
+static void
+force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
+{
+    int max = 0;
+    int lpc = 0;
+    int xpath_max = 1024;
+    char *xpath_string = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    xpath_string = calloc(1, xpath_max);
+    lpc = snprintf(xpath_string, xpath_max, "%.128s//%s//nvpair[@name='%.128s']",
+                       get_object_path(XML_CIB_TAG_CRMCONFIG), XML_CIB_TAG_PROPSET, attr_name);
+    CRM_LOG_ASSERT(lpc > 0);
+
+    xpathObj = xpath_search(xml, xpath_string);
+    max = numXpathResults(xpathObj);
+    free(xpath_string);
+
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = getXpathResult(xpathObj, lpc);
+        crm_trace("Forcing %s/%s = %s", ID(match), attr_name, attr_value);
+        crm_xml_add(match, XML_NVPAIR_ATTR_VALUE, attr_value);
+    }
+
+    if(max == 0) {
+        char *attr_id = crm_concat(CIB_OPTIONS_FIRST, attr_name, '-');
+
+        crm_trace("Creating %s/%s = %s", attr_id, attr_name, attr_value);
+        xml = create_xml_node(xml, XML_CIB_TAG_CRMCONFIG);
+        xml = create_xml_node(xml, XML_CIB_TAG_PROPSET);
+        crm_xml_add(xml, XML_ATTR_ID, CIB_OPTIONS_FIRST);
+
+        xml = create_xml_node(xml, XML_CIB_TAG_NVPAIR);
+
+        crm_xml_add(xml, XML_ATTR_ID, attr_id);
+        crm_xml_add(xml, XML_NVPAIR_ATTR_NAME, attr_name);
+        crm_xml_add(xml, XML_NVPAIR_ATTR_VALUE, attr_value);
+
+        free(attr_id);
+    }
+}
+
 void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -279,6 +321,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, daemon_option("watchdog"));
 
     if (ever_had_quorum && crm_have_quorum == FALSE) {
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
