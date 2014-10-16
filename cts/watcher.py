@@ -31,7 +31,8 @@ from cts.remote import *
 from cts.logging import *
 
 has_log_watcher = {}
-log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_watcher.py"
+log_watcher_file = "cts_log_watcher.py"
+log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/" + log_watcher_file
 log_watcher = """
 import sys, os, fcntl
 
@@ -164,13 +165,15 @@ class FileObj(SearchObj):
             global log_watcher
             global log_watcher_bin
 
-            self.debug("Installing %s on %s" % (log_watcher_bin, host))
+            self.debug("Installing %s on %s" % (log_watcher_file, host))
 
-            os.system("cat << END >> %s\n%s\nEND" %(log_watcher_bin, log_watcher))
-            os.system("chmod 755 %s" %(log_watcher_bin))
+            os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
+            os.system("chmod 755 %s" %(log_watcher_file))
 
-            self.rsh.cp(log_watcher_bin, "root@%s:%s" % (host, log_watcher_bin))
+            self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
             has_log_watcher[host] = 1
+
+            os.system("rm -f %s" %(log_watcher_file))
 
         self.harvest()
 
