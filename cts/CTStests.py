@@ -2678,14 +2678,12 @@ class RemoteDriver(CTSTest):
 
     def add_primitive_rsc(self, node):
         rsc_xml = """
-<primitive class="ocf" id="%s" provider="pacemaker" type="Dummy">
+<primitive class="ocf" id="%s" provider="heartbeat" type="Dummy">
     <operations>
       <op id="remote-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
     </operations>
-    <meta_attributes id="remote-meta_attributes">
-          <nvpair id="remote-meta-container" name="container" value="%s"/>
-    </meta_attributes id="remote-meta_attributes">
-</primitive>""" % (self.remote_rsc, self.remote_node)
+    <meta_attributes id="remote-meta_attributes"/>
+</primitive>""" % (self.remote_rsc)
         self.add_rsc(node, rsc_xml)
         if self.failed == 0:
             self.remote_rsc_added = 1
@@ -2787,6 +2785,30 @@ class RemoteDriver(CTSTest):
             self.failed = 1
             return
 
+    def fail_rsc(self, node):
+        if self.failed == 1:
+            return
+
+        watchpats = [ ]
+        watchpats.append(self.templates["Pat:RscRemoteOpOK"] % (self.remote_rsc, "stop", self.remote_node))
+        watchpats.append(self.templates["Pat:RscRemoteOpOK"] % (self.remote_rsc, "start", self.remote_node))
+        watchpats.append(self.templates["Pat:DC_IDLE"])
+
+        watch = self.create_watch(watchpats, 120)
+        watch.setwatch()
+
+        self.debug("causing dummy rsc to fail.")
+
+        rc = self.rsh(node, "rm -f /var/run/resource-agents/Dummy*")
+
+        self.set_timer("remoteRscFail")
+        watch.lookforall()
+        self.log_timer("remoteRscFail")
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns during rsc fail: %s" % (repr(watch.unmatched))
+            self.logger.log(self.fail_string)
+            self.failed = 1
+
     def fail_connection(self, node):
         if self.failed == 1:
             return
@@ -2853,6 +2875,13 @@ class RemoteDriver(CTSTest):
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
+
+        # force that rsc to prefer the remote node. 
+        (rc, line) = self.CM.rsh(node, "crm_resource -M -r %s -N %s -f" % (self.remote_rsc, self.remote_node), None)
+        if rc != 0:
+            self.fail_string = "Failed to place remote resource on remote node."
+            self.failed = 1
+            return
 
         self.set_timer("remoteMetalRsc")
         watch.lookforall()
@@ -3115,5 +3144,54 @@ class RemoteMigrate(CTSTest):
         return self.driver.errorstoignore()
 
 AllTestClasses.append(RemoteMigrate)
+
+
+###################################################################
+class RemoteRscFailure(CTSTest):
+###################################################################
+    def __init__(self, cm):
+
+        # fail a rsc on a remote node, verify recovery.
+        CTSTest.__init__(self,cm)
+        self.name = "RemoteRscFailure"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.driver = RemoteDriver(cm)
+        self.is_docker_unsafe = 1
+
+    def __call__(self, node):
+        '''Perform the 'RemoteRscFailure' test. '''
+        self.incr("calls")
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.driver.setup_env(node)
+        self.driver.start_metal(node)
+        self.driver.add_dummy_rsc(node)
+
+        # This is an important step. We are migrating the connection
+        # before failing the resource. This verifies that the migration
+        # has properly maintained control over the remote-node.
+        self.driver.migrate_connection(node)
+
+        self.driver.fail_rsc(node)
+        self.driver.cleanup_metal(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+        if self.driver.failed == 1:
+            return self.failure(self.driver.fail_string)
+
+        return self.success()
+
+    def is_applicable(self):
+        return self.driver.is_applicable()
+
+    def errorstoignore(self):
+        return self.driver.errorstoignore()
+
+AllTestClasses.append(RemoteRscFailure)
 
 # vim:ts=4:sw=4:et:
