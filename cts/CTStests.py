@@ -2759,6 +2759,34 @@ class RemoteDriver(CTSTest):
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = 1
 
+    def migrate_connection(self, node):
+        if self.failed == 1:
+            return
+
+        pats = [ ]
+        pats.append(self.templates["Pat:RscOpOK"] % (self.remote_node, "migrate_to"))
+        pats.append(self.templates["Pat:RscOpOK"] % (self.remote_node, "migrate_from"))
+        pats.append(self.templates["Pat:DC_IDLE"])
+        watch = self.create_watch(pats, 120)
+        watch.setwatch()
+
+        (rc, lines) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), None)
+        if rc != 0:
+            self.fail_string = "failed to move remote node connection resource"
+            self.logger.log(self.fail_string)
+            self.failed = 1
+            return
+
+        self.set_timer("remoteMetalMigrate")
+        watch.lookforall()
+        self.log_timer("remoteMetalMigrate")
+
+        if watch.unmatched:
+            self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
+            self.logger.log(self.fail_string)
+            self.failed = 1
+            return
+
     def fail_connection(self, node):
         if self.failed == 1:
             return
@@ -2876,6 +2904,7 @@ class RemoteDriver(CTSTest):
             self.rsh(node, "crm_resource -U -r %s -N %s" % (self.remote_rsc, self.remote_node))
             self.del_rsc(node, self.remote_rsc)
         if self.remote_node_added == 1:
+            self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
         watch.lookforall()
         self.log_timer("remoteMetalCleanup")
@@ -3046,5 +3075,45 @@ class RemoteStonithd(CTSTest):
         return ignore_pats
 
 AllTestClasses.append(RemoteStonithd)
+
+###################################################################
+class RemoteMigrate(CTSTest):
+###################################################################
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name = "RemoteMigrate"
+        self.start = StartTest(cm)
+        self.startall = SimulStartLite(cm)
+        self.driver = RemoteDriver(cm)
+        self.is_docker_unsafe = 1
+
+    def __call__(self, node):
+        '''Perform the 'RemoteMigrate' test. '''
+        self.incr("calls")
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed, start all nodes failed.")
+
+        self.driver.setup_env(node)
+        self.driver.start_metal(node)
+        self.driver.add_dummy_rsc(node)
+        self.driver.migrate_connection(node)
+        self.driver.cleanup_metal(node)
+
+        self.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+        if self.driver.failed == 1:
+            return self.failure(self.driver.fail_string)
+
+        return self.success()
+
+    def is_applicable(self):
+        return self.driver.is_applicable()
+
+    def errorstoignore(self):
+        return self.driver.errorstoignore()
+
+AllTestClasses.append(RemoteMigrate)
 
 # vim:ts=4:sw=4:et:
