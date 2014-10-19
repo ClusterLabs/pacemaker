@@ -1358,7 +1358,8 @@ main(int argc, char **argv)
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 
-        stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
+        params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
+
         xml = create_device_registration_xml("watchdog", "internal", STONITH_WATCHDOG_AGENT, params, NULL);
         stonith_device_register(xml, NULL, FALSE);
 
