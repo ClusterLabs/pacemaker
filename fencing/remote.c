@@ -1094,6 +1094,14 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         /* if the operation never left the query state,
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
+        if(stonith_watchdog_timeout_ms && (device == NULL || safe_str_eq(device, "watchdog"))) {
+            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
+                     stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+
+            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
+            return;
+        }
+
         if (op->state == st_query) {
            crm_info("None of the %d peers have devices capable of terminating %s for %s (%d)",
                    op->replies, op->target, op->client_name, op->state);
