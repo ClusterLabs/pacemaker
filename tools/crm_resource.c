@@ -1980,6 +1980,7 @@ main(int argc, char **argv)
         node_t *current = NULL;
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        gboolean cur_is_dest = FALSE;
 
         rc = -EINVAL;
 
@@ -2042,11 +2043,16 @@ main(int argc, char **argv)
 
         } else if(scope_master && rsc->fns->state(rsc, TRUE) != RSC_ROLE_MASTER) {
             crm_trace("%s is already active on %s but not in correct state", rsc_id, dest->details->uname);
-
         } else if (safe_str_eq(current->details->uname, dest->details->uname)) {
-            CMD_ERR("Error performing operation: %s is already %s on %s\n",
-                    rsc_id, scope_master?"promoted":"active", dest->details->uname);
-            goto bail;
+            cur_is_dest = TRUE;
+            if (do_force) {
+                crm_info("%s is already %s on %s, reinforcing placement with location constraint.\n",
+                         rsc_id, scope_master?"promoted":"active", dest->details->uname);
+            } else {
+                CMD_ERR("Error performing operation: %s is already %s on %s\n",
+                        rsc_id, scope_master?"promoted":"active", dest->details->uname);
+                goto bail;
+            }
         }
 
         /* Clear any previous constraints for 'dest' */
@@ -2058,7 +2064,10 @@ main(int argc, char **argv)
         crm_trace("%s%s now prefers node %s%s",
                   rsc->id, scope_master?" (master)":"", dest->details->uname, do_force?"(forced)":"");
 
-        if(do_force) {
+        /* only ban the previous location if current location != destination location.
+         * it is possible to use -M to enforce a location without regard of where the
+         * resource is currently located */
+        if(do_force && (cur_is_dest == FALSE)) {
             /* Ban the original location if possible */
             if(current) {
                 ban_resource(rsc_id, current->details->uname, NULL, cib_conn);
