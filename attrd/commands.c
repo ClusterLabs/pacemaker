@@ -202,21 +202,27 @@ attrd_client_message(crm_client_t *client, xmlNode *xml)
             crm_debug("Setting %s to %s", regex, value);
             if (regcomp(r_patt, regex, REG_EXTENDED)) {
                 crm_err("Bad regex '%s' for update", regex);
-                regfree(r_patt);
-                free(r_patt);
-                return;
-            }
 
-            g_hash_table_iter_init(&aIter, attributes);
-            while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
-                int status = regexec(r_patt, attr, 0, NULL, 0);
+            } else {
 
-                if(status == 0) {
-                    crm_trace("Matched %s with %s", attr, regex);
-                    crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
-                    send_attrd_message(NULL, xml);
+                g_hash_table_iter_init(&aIter, attributes);
+                while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+                    int status = regexec(r_patt, attr, 0, NULL, 0);
+
+                    if(status == 0) {
+                        crm_trace("Matched %s with %s", attr, regex);
+                        crm_xml_add(xml, F_ATTRD_ATTRIBUTE, attr);
+                        send_attrd_message(NULL, xml);
+                    }
                 }
             }
+
+            free(key);
+            free(set);
+            free(host);
+
+            regfree(r_patt);
+            free(r_patt);
             return;
 
         } else if(host == NULL) {

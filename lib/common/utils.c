@@ -2008,6 +2008,7 @@ attrd_update_delegate(crm_ipc_t * ipc, char command, const char *host, const cha
         case 'u':
             crm_xml_add(update, F_ATTRD_TASK, "update");
             crm_xml_add(update, F_ATTRD_REGEX, name);
+            break;
         case 'D':
         case 'U':
         case 'v':

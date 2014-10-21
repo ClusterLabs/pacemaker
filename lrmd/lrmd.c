@@ -837,7 +837,9 @@ action_complete(svc_action_t * action)
             }
 
             cmd_reset(cmd);
-            rsc->active = NULL;
+            if(rsc) {
+                rsc->active = NULL;
+            }
             schedule_lrmd_cmd(rsc, cmd);
             return;
 

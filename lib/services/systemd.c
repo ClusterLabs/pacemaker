@@ -303,10 +303,14 @@ systemd_unit_listall(void)
 gboolean
 systemd_unit_exists(const char *name)
 {
+    char *unit = NULL;
+
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
-    if(systemd_unit_by_name(name, NULL)) {
+    unit = systemd_unit_by_name(name, NULL);
+    if(unit) {
+        free(unit);
         return TRUE;
     }
     return FALSE;
@@ -542,9 +546,15 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
         reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
         systemd_exec_result(reply, op);
+
         if(reply) {
             dbus_message_unref(reply);
         }
+        if(msg) {
+            dbus_message_unref(msg);
+        }
+
+        return FALSE;
     }
 
     if(msg) {
@@ -563,6 +573,8 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 gboolean
 systemd_unit_exec(svc_action_t * op)
 {
+    char *unit = NULL;
+
     CRM_ASSERT(op);
     CRM_ASSERT(systemd_init());
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -580,7 +592,9 @@ systemd_unit_exec(svc_action_t * op)
         return TRUE;
     }
 
-    systemd_unit_by_name(op->agent, op);
+    unit = systemd_unit_by_name(op->agent, op);
+    free(unit);
+
     if (op->synchronous == FALSE) {
         return TRUE;
     }

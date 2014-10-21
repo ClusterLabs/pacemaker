@@ -1866,7 +1866,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
      * reconnect to the remote-node in this transition or not. */
     if (is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
         node_t *tmpnode = pe_find_node(data_set->nodes, rsc->id);
-        if (tmpnode->details->unclean) {
+        if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
     }

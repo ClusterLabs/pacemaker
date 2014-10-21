@@ -355,6 +355,11 @@ pcmk_dbus_get_property(
         DBusMessage *reply = pcmk_dbus_send_recv(msg, connection, NULL);
 
         output = pcmk_dbus_lookup_result(reply, query_data);
+        free(query_data->target);
+        free(query_data->object);
+        free(query_data->name);
+        free(query_data);
+
         if(reply) {
             dbus_message_unref(reply);
         }
