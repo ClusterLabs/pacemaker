@@ -3190,7 +3190,12 @@ class RemoteRscFailure(CTSTest):
         return self.driver.is_applicable()
 
     def errorstoignore(self):
-        return self.driver.errorstoignore()
+        ignore_pats = [
+            """LogActions: Recover remote-rsc""",
+        ]
+
+        ignore_pats.extend(self.driver.errorstoignore())
+        return ignore_pats
 
 AllTestClasses.append(RemoteRscFailure)
 
