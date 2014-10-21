@@ -1058,6 +1058,13 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
             crm_info("Requesting that %s perform op %s %s for %s (%ds)",
                      peer->host, op->action, op->target, op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
+
+            /* TODO: We should probably look into peer->device_list to verify watchdog is going to be in use */
+            if(stonith_watchdog_timeout_ms
+               && safe_str_eq(peer->host, op->target)
+               && safe_str_neq(op->action, "on")) {
+                op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
+            }
         }
 
         op->state = st_exec;
