@@ -89,22 +89,22 @@ cluster cannot start resources or fence other nodes. See
 +no-quorum-policy+ below.
 
 | dc-version |
-indexterm:[dc-version,Cluster Peroperty]
-indexterm:[Cluster,Peroperty,dc-version]
+indexterm:[dc-version,Cluster Property]
+indexterm:[Cluster,Property,dc-version]
 Version of Pacemaker on the cluster's DC.
 
 Often includes the hash which identifies the exact Git changeset it
 was built from.  Used for diagnostic purposes.
 
 | cluster-infrastructure |
-indexterm:[cluster-infrastructure,Cluster Peroperty]
-indexterm:[Cluster,Peroperty,cluster-infrastructure]
+indexterm:[cluster-infrastructure,Cluster Property]
+indexterm:[Cluster,Property,cluster-infrastructure]
 The messaging stack on which Pacemaker is currently running.
 Used for informational and diagnostic purposes.
 
 | expected-quorum-votes |
-indexterm:[expected-quorum-votes,Cluster Peroperty]
-indexterm:[Cluster,Peroperty,expected-quorum-votes]
+indexterm:[expected-quorum-votes,Cluster Property]
+indexterm:[Cluster,Property,expected-quorum-votes]
 The number of nodes expected to be in the cluster
 
 Used to calculate quorum in Corosync 1.x (not CMAN) based clusters.
