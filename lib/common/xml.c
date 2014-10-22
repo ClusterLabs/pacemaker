@@ -386,6 +386,7 @@ static int __xml_build_schema_list(void)
                     xslt = get_schema_path(NULL, transform);
                     if(stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
+                        free(xslt);
                         __xml_schema_add(2, version, NULL, NULL, NULL, -1);
                         break;
                     } else {
