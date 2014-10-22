@@ -211,10 +211,10 @@ pcmk_panic_local(void)
 
     if(ppid > 1) {
         /* child daemon */
-        crm_exit(pcmk_err_panic);
+        exit(pcmk_err_panic);
     } else {
         /* pacemakerd or orphan child */
-        crm_exit(DAEMON_RESPAWN_STOP);
+        exit(DAEMON_RESPAWN_STOP);
     }
 }
 
@@ -222,6 +222,7 @@ static void
 pcmk_panic_sbd(void) 
 {
     union sigval signal_value;
+    pid_t ppid = getppid();
 
     do_crm_log_always(LOG_EMERG, "Signaling sbd(%d) to panic", sbd_pid);
 
@@ -232,7 +233,13 @@ pcmk_panic_sbd(void)
         pcmk_panic_local();
     }
 
-    crm_exit(DAEMON_RESPAWN_STOP);
+    if(ppid > 1) {
+        /* child daemon */
+        exit(pcmk_err_panic);
+    } else {
+        /* pacemakerd or orphan child */
+        exit(DAEMON_RESPAWN_STOP);
+    }
 }
 
 void
@@ -275,17 +282,27 @@ pcmk_locate_sbd(void)
     }
 
     /* Look for the pid file */
+    pidfile = g_strdup_printf("%s/sbd.pid", HA_STATE_DIR);
 
     /* Read the pid file */
     if(pidfile) {
         int rc = crm_pidfile_inuse(pidfile, 1);
         if(rc < pcmk_ok && rc != -ENOENT) {
             sbd_pid = crm_read_pidfile(pidfile);
+            crm_trace("SBD detected at pid=%d (file)");
         }
     }
 
-    /* Fall back to /proc for systems that support it */
-    sbd_pid = pcmk_locate_proc_entry("sbd");
+    if(sbd_pid < 0) {
+        /* Fall back to /proc for systems that support it */
+        sbd_pid = pcmk_locate_proc_entry("sbd");
+        crm_trace("SBD detected at pid=%d (proc)");
+    }
 
+    if(sbd_pid < 0) {
+        sbd_pid = 0;
+    }
+
+    free(pidfile);
     return sbd_pid;
 }
