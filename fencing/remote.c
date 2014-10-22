@@ -1053,16 +1053,10 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(peer, op->base_timeout);
-            crm_info("Requesting that %s perform op %s %s for %s (%ds)",
-                     peer->host, op->action, op->target, op->client_name, timeout_one);
+            crm_info("Requesting that %s perform op %s %s for %s (%ds, %ds)",
+                     peer->host, op->action, op->target, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
 
-            /* TODO: We should probably look into peer->device_list to verify watchdog is going to be in use */
-            if(stonith_watchdog_timeout_ms
-               && safe_str_eq(peer->host, op->target)
-               && safe_str_neq(op->action, "on")) {
-                op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
-            }
         }
 
         op->state = st_exec;
@@ -1070,7 +1064,17 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
             g_source_remove(op->op_timer_one);
         }
 
-        if(device && stonith_watchdog_timeout_ms && safe_str_eq(device, "watchdog")) {
+        if(stonith_watchdog_timeout_ms > 0 && device && safe_str_eq(device, "watchdog")) {
+            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
+            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
+
+            /* TODO: We should probably look into peer->device_list to verify watchdog is going to be in use */
+        } else if(stonith_watchdog_timeout_ms > 0
+                  && safe_str_eq(peer->host, op->target)
+                  && safe_str_neq(op->action, "on")) {
+            crm_notice("Waiting %ds for %s to self-terminate for %s.%.8s (%p)",
+                       stonith_watchdog_timeout_ms/1000, op->target, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
 
         } else {
