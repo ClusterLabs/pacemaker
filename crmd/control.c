@@ -945,6 +945,12 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         throttle_load_target = strtof(value, NULL) / 100;
     }
 
+    value = getenv("SBD_WATCHDOG_TIMEOUT");
+
+    if(value == NULL) {
+        value = crmd_pref(config_hash, "stonith-watchdog-timeout");
+    }
+
     value = crmd_pref(config_hash, "stonith-watchdog-timeout");
     if(crm_get_msec(value) > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
         do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");

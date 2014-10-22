@@ -1003,14 +1003,21 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if(daemon_option_enabled(crm_system_name, "watchdog")) {
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
-    }
+        const char *value = getenv("SBD_WATCHDOG_TIMEOUT");
 
-    if (stonith_watchdog_xml) {
-        const char *value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
-        stonith_watchdog_timeout_ms = crm_get_msec(value);
-    } else {
-        stonith_watchdog_timeout_ms = 0;
+        if(value == NULL) {
+            stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
+            if (stonith_watchdog_xml) {
+                value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+            }
+        }
+
+        if(value) {
+            stonith_watchdog_timeout_ms = crm_get_msec(value);
+
+        } else {
+            stonith_watchdog_timeout_ms = 0;
+        }
     }
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
