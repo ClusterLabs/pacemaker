@@ -26,8 +26,8 @@ xslt_SCRIPTS		= upgrade06.xsl upgrade-*.xsl
 RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
-RNG_max			= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
-RNG_last		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr | head -n 2 | tail -n 1)
+RNG_max			?= $(firstword $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr))
+RNG_last		?= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -unr | head -n 2 | tail -n 1)
 RNG_versions		= $(shell ls -1 *.rng | sed -e 's/.*-//' -e 's/.rng//' | sort -un)
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
