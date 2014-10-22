@@ -658,6 +658,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
+    const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
 
     if (rsc_lh == NULL) {
         /* only a warn as BSC adds the constraint then the resource */
@@ -676,7 +677,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
         if (!match) {
             return FALSE;
         }
-        location = rsc2node_new(id, rsc_lh, score_i, match, data_set);
+        location = rsc2node_new(id, rsc_lh, score_i, discovery, match, data_set);
 
     } else {
         xmlNode *rule_xml = NULL;
@@ -720,6 +721,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
             }
         }
     }
+
     return TRUE;
 }
 
@@ -958,7 +960,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
         do_and = FALSE;
     }
 
-    location_rule = rsc2node_new(rule_id, rsc, 0, NULL, data_set);
+    location_rule = rsc2node_new(rule_id, rsc, 0, NULL, NULL, data_set);
 
     if (location_rule == NULL) {
         return NULL;

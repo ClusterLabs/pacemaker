@@ -177,6 +177,8 @@ class CIB11(ConfigBase):
                 for node in self.CM.Env["nodes"]:
                     ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
                     self.CM.log(" - Using %s fencing for node: %s" % (ftype, node))
+                    # for baremetal remote node tests
+                    stt_nodes.append("remote_%s" % node)
                     if ftype == "levels-and":
                         stl.level(1, node, "FencingPass,Fencing")
                         stt_nodes.append(node)

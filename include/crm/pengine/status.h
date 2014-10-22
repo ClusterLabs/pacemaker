@@ -136,6 +136,8 @@ struct node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
+    gboolean rsc_discovery_enabled;
+
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
     GListPtr allocated_rsc;     /* resource_t* */
@@ -156,6 +158,7 @@ struct node_shared_s {
 struct node_s {
     int weight;
     gboolean fixed;
+    int rsc_discover_mode;
     int count;
     struct node_shared_s *details;
 };
@@ -252,6 +255,7 @@ struct resource_s {
     int migration_threshold;
 
     gboolean is_remote_node;
+    gboolean exclusive_discover;
 
     unsigned long long flags;
 

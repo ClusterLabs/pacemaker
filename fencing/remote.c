@@ -277,11 +277,9 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     }
 
     if (!op->delegate && data) {
-        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data, LOG_WARNING);
+        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data, LOG_TRACE);
         if(ndata) {
             op->delegate = crm_element_value_copy(ndata, F_STONITH_DELEGATE);
-        } else {
-            op->delegate = crm_element_value_copy(data, F_ORIG);
         }
     }
 

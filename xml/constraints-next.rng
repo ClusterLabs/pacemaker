@@ -49,6 +49,11 @@
       <optional>
 	<ref name="element-lifetime"/>
       </optional>
+      <optional>
+	<attribute name="resource-discovery">
+	  <ref name="attribute-discovery"/>
+	</attribute>
+      </optional>
     </element>
   </define>
 
@@ -204,6 +209,14 @@
 	</attribute>
       </optional>
     </element>
+  </define>
+
+  <define name="attribute-discovery">
+    <choice>
+      <value>always</value>
+      <value>never</value>
+      <value>exclusive</value>
+    </choice>
   </define>
 
   <define name="attribute-actions">

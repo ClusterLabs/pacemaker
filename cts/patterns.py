@@ -56,6 +56,9 @@ class BasePatterns:
             "Pat:Fencing_ok"    : "stonith.*remote_op_done:.*Operation .* of %s by .*: OK",
 
             "Pat:RscOpOK"       : "process_lrm_event:.*Operation %s_%s.*ok.*confirmed",
+            "Pat:RscRemoteOpOK" : "process_lrm_event:.*Operation %s_%s.*ok.*node=%s, .*confirmed.*true",
+            "Pat:NodeFenced"    : "tengine_stonith_notify:.*Peer %s was terminated .*: OK",
+            "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
         }
 
     def get_component(self, key):

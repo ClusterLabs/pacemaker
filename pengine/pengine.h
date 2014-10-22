@@ -75,11 +75,18 @@ struct rsc_ticket_s {
     int role_lh;
 };
 
+enum rsc_discover_e {
+    discover_always = 0,
+    discover_never,
+    discover_exclusive,
+};
+
 struct rsc_to_node_s {
     const char *id;
     resource_t *rsc_lh;
 
     enum rsc_role_e role_filter;
+    enum rsc_discover_e discover_mode;
     GListPtr node_list_rh;      /* node_t* */
 };
 

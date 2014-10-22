@@ -300,6 +300,7 @@ create_node(const char *id, const char *uname, const char *type, const char *sco
     new_node->details->uname = uname;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
+    new_node->details->rsc_discovery_enabled = TRUE;
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
 
@@ -996,6 +997,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
             xmlNode *attrs = NULL;
+            const char *resource_discovery_enabled = NULL;
 
             id = crm_element_value(state, XML_ATTR_ID);
             uname = crm_element_value(state, XML_ATTR_UNAME);
@@ -1033,6 +1035,12 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
                 crm_info("Node %s is in maintenance-mode", this_node->details->uname);
                 this_node->details->maintenance = TRUE;
+            }
+
+            resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+            if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
+                crm_warn("ignoring %s attribute on node %s, disabling resource discovery is not allowed on cluster nodes",
+                    XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
             }
 
             crm_trace("determining node state");
@@ -1110,6 +1118,7 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
 
     /* process attributes */
     for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+        const char *resource_discovery_enabled = NULL;
         xmlNode *attrs = NULL;
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
             continue;
@@ -1132,6 +1141,26 @@ unpack_remote_status(xmlNode * status, pe_working_set_t * data_set)
         if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
             crm_info("Node %s is in standby-mode", this_node->details->uname);
             this_node->details->standby = TRUE;
+        }
+
+        if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+            crm_info("Node %s is in maintenance-mode", this_node->details->uname);
+            this_node->details->maintenance = TRUE;
+        }
+
+        resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+        if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
+            if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+                crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
+                    XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
+            } else {
+                /* if we're here, this is either a baremetal node and fencing is enabled,
+                 * or this is a container node which we don't care if fencing is enabled 
+                 * or not on. container nodes are 'fenced' by recovering the container resource
+                 * regardless of whether fencing is enabled. */
+                crm_info("Node %s has resource discovery disabled", this_node->details->uname);
+                this_node->details->rsc_discovery_enabled = FALSE;
+            }
         }
     }
 

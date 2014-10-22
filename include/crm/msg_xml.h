@@ -299,6 +299,8 @@
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 #  define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
+#  define XML_LOCATION_ATTR_DISCOVERY	"resource-discovery"
+
 #  define XML_COLOC_ATTR_SOURCE		"rsc"
 #  define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
 #  define XML_COLOC_ATTR_TARGET		"with-rsc"
@@ -322,6 +324,7 @@
 #  define XML_NVPAIR_ATTR_VALUE        	"value"
 
 #  define XML_NODE_ATTR_STATE		"state"
+#  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
 #  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"

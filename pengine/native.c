@@ -2097,9 +2097,14 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
             other_node->weight = merge_weights(other_node->weight, node->weight);
 
         } else {
-            node_t *new_node = node_copy(node);
+            other_node = node_copy(node);
 
-            g_hash_table_insert(rsc->allowed_nodes, (gpointer) new_node->details->id, new_node);
+            g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
+        }
+
+        if (other_node->rsc_discover_mode < constraint->discover_mode) {
+            /* exclusive > never > always... always is default */
+            other_node->rsc_discover_mode = constraint->discover_mode;
         }
     }
 
@@ -2704,6 +2709,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     char *key = NULL;
     action_t *probe = NULL;
     node_t *running = NULL;
+    node_t *allowed = NULL;
     resource_t *top = uber_parent(rsc);
 
     static const char *rc_master = NULL;
@@ -2779,6 +2785,23 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         pe_rsc_trace(rsc, "Skipping active: %s on %s", rsc->id, node->details->uname);
         return FALSE;
     }
+
+    allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    if (rsc->exclusive_discover || top->exclusive_discover) {
+        if (allowed == NULL) {
+            /* exclusive discover is enabled and this node is not in the allowed list. */    
+            return FALSE;
+        } else if (allowed->rsc_discover_mode != discover_exclusive) {
+            /* exclusive discover is enabled and this node is not marked
+             * as a node this resource should be discovered on */ 
+            return FALSE;
+        }
+    }
+    if (allowed && allowed->rsc_discover_mode == discover_never) {
+        /* this resource is marked as not needing to be discovered on this node */
+        return FALSE;
+    }
+
 
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);

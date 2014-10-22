@@ -60,7 +60,8 @@ pe_free_rsc_to_node(GListPtr constraints)
 
 rsc_to_node_t *
 rsc2node_new(const char *id, resource_t * rsc,
-             int node_weight, node_t * foo_node, pe_working_set_t * data_set)
+             int node_weight, const char *discover_mode,
+             node_t * foo_node, pe_working_set_t * data_set)
 {
     rsc_to_node_t *new_con = NULL;
 
@@ -78,6 +79,18 @@ rsc2node_new(const char *id, resource_t * rsc,
         new_con->rsc_lh = rsc;
         new_con->node_list_rh = NULL;
         new_con->role_filter = RSC_ROLE_UNKNOWN;
+
+
+        if (discover_mode == NULL || safe_str_eq(discover_mode, "always")) {
+            new_con->discover_mode = discover_always;
+        } else if (safe_str_eq(discover_mode, "never")) {
+            new_con->discover_mode = discover_never;
+        } else if (safe_str_eq(discover_mode, "exclusive")) {
+            new_con->discover_mode = discover_exclusive;
+            rsc->exclusive_discover = TRUE;
+        } else {
+            pe_err("Invalid %s value %s in location constraint", XML_LOCATION_ATTR_DISCOVERY, discover_mode);
+        }
 
         if (foo_node != NULL) {
             node_t *copy = node_copy(foo_node);
