@@ -578,6 +578,7 @@ for t in $tests; do
 	-e 's/ last-run=\"[0-9]*\"//'	\
 	-e 's/crm_feature_set="[^"]*" //'\
 	-e 's/validate-with="[^"]*" //'\
+	-e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
         -e 's/.*__xml_acl_check/__xml_acl_check/g'\
 	-e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
 	-e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
