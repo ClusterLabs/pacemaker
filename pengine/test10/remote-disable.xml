@@ -52,7 +52,13 @@
         </operations>
       </primitive>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="FAKE2-location" rsc="FAKE2">
+        <rule id="FAKE2-on-remote" score="-INFINITY">
+          <expression id="FAKE2-on-remote-exp" attribute="#kind" operation="ne" value="remote"/>
+        </rule>
+      </rsc_location>
+    </constraints>
   </configuration>
   <status>
     <node_state id="5" uname="18builder" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">

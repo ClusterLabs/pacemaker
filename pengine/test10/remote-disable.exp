@@ -14,32 +14,6 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="20" operation="monitor" operation_key="FAKE2_monitor_60000" on_node="18builder" on_node_uuid="5">
-        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="19" operation="start" operation_key="FAKE2_start_0" on_node="18builder" on_node_uuid="5"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="2">
-    <action_set>
-      <rsc_op id="19" operation="start" operation_key="FAKE2_start_0" on_node="18builder" on_node_uuid="5">
-        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3">
-    <action_set>
       <rsc_op id="18" operation="stop" operation_key="FAKE2_stop_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder">
         <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_timeout="20000" />
@@ -47,7 +21,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="4">
+  <synapse id="2">
     <action_set>
       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
         <attributes />
