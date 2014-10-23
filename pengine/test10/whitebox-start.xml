@@ -78,7 +78,18 @@
         </operations>
       </primitive>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="A-location" rsc="A">
+        <rule id="A-on-remote" score="INFINITY">
+          <expression id="A-on-remote-exp" attribute="#kind" operation="eq" value="container"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="B-location" rsc="B">
+        <rule id="B-on-cluster" score="INFINITY">
+          <expression id="B-on-cluster-exp" attribute="#kind" operation="eq" value="cluster"/>
+        </rule>
+      </rsc_location>
+    </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-options">
         <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="100"/>

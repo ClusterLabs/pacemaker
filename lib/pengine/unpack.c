@@ -315,6 +315,13 @@ create_node(const char *id, const char *uname, const char *type, const char *sco
     new_node->details->attrs = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                                      g_hash_destroy_str,
                                                      g_hash_destroy_str);
+
+    if (is_remote_node(new_node)) {
+        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("remote"));
+    } else {
+        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("cluster"));
+    }
+
     new_node->details->utilization =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
                               g_hash_destroy_str);
@@ -664,7 +671,10 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
      * as cluster nodes. */
     if (new_rsc->container == NULL) {
         handle_startup_fencing(data_set, remote_node);
-        return;
+    } else {
+        /* At this point we know if the remote node is a container or baremetal
+         * remote node, update the #kind attribute if a container is involved */
+        g_hash_table_replace(remote_node->details->attrs, strdup("#kind"), strdup("container"));
     }
 }
 
@@ -3087,8 +3097,7 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
 
     g_hash_table_insert(node->details->attrs,
                         strdup("#uname"), strdup(node->details->uname));
-    g_hash_table_insert(node->details->attrs,
-                        strdup("#kind"), strdup(node->details->remote_rsc?"container":"cluster"));
+
     g_hash_table_insert(node->details->attrs, strdup("#" XML_ATTR_ID), strdup(node->details->id));
     if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
         data_set->dc_node = node;
