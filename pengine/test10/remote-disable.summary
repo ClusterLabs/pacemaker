@@ -12,14 +12,12 @@ RemoteOnline: [ remote1 ]
 
 Transition Summary:
  * Stop    remote1	(18builder)
- * Move    FAKE2	(Started remote1 -> 18builder)
+ * Stop    FAKE2	(remote1)
 
 Executing cluster transition:
  * Resource action: FAKE2           stop on remote1
  * Resource action: remote1         stop on 18builder
- * Resource action: FAKE2           start on 18builder
  * Pseudo action:   all_stopped
- * Resource action: FAKE2           monitor=60000 on 18builder
 
 Revised cluster status:
 Online: [ 18builder 18node1 18node2 ]
@@ -28,7 +26,7 @@ RemoteOFFLINE: [ remote1 ]
  shooter	(stonith:fence_xvm):	Started 18node1 
  remote1	(ocf::pacemaker:remote):	Stopped 
  FAKE1	(ocf::heartbeat:Dummy):	Started 18node2 
- FAKE2	(ocf::heartbeat:Dummy):	Started 18builder 
+ FAKE2	(ocf::heartbeat:Dummy):	Stopped 
  FAKE3	(ocf::heartbeat:Dummy):	Started 18builder 
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1 
 
