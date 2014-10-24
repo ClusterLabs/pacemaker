@@ -91,7 +91,7 @@ cluster_status(pe_working_set_t * data_set)
    if (is_not_set(data_set->flags, pe_flag_quick_location)
        && is_not_set(data_set->flags, pe_flag_have_quorum)
        && data_set->no_quorum_policy != no_quorum_ignore) {
-        crm_warn("We do not have quorum - fencing and resource management disabled");
+        crm_notice("We do not have quorum - fencing and resource management disabled");
     }
 
     unpack_nodes(cib_nodes, data_set);
