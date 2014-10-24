@@ -595,6 +595,15 @@ enabled and +block+ otherwise. All other operations default to +restart+.
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]
 
+|record-pending
+
+|If +true+, the intention to perform the operation is recorded so that
+ GUIs and CLI tools can indicate that an operation is in progress.
+ This is best set as an 'operation default' (see next section).
+ Allowed values: +true+, +false+.
+ indexterm:[enabled,Action Property]
+ indexterm:[Action,Property,enabled]
+
 |=========================================================
 
 [[s-operation-defaults]]
