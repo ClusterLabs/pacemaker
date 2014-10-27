@@ -338,6 +338,11 @@ pcmk_dbus_get_property(
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface, DBUS_TYPE_INVALID));
 
     query_data = malloc(sizeof(struct db_getall_data));
+    if(query_data == NULL) {
+        crm_err("Call to %s failed: malloc failed", method);
+        return NULL;
+    }
+
     query_data->target = strdup(target);
     query_data->object = strdup(obj);
     query_data->callback = callback;
