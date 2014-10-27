@@ -1003,7 +1003,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if(daemon_option_enabled(crm_system_name, "watchdog")) {
-        const char *value = getenv("SBD_WATCHDOG_TIMEOUT");
+        const char *value = NULL;
+        long timeout_ms = 0;
 
         if(value == NULL) {
             stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']", local_cib, LOG_TRACE);
@@ -1013,10 +1014,12 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         if(value) {
-            stonith_watchdog_timeout_ms = crm_get_msec(value);
+            timeout_ms = crm_get_msec(value);
+        }
 
-        } else {
-            stonith_watchdog_timeout_ms = 0;
+        if(timeout_ms != stonith_watchdog_timeout_ms) {
+            crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
+            stonith_watchdog_timeout_ms = timeout_ms;
         }
     }
 

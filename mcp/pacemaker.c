@@ -1040,6 +1040,8 @@ main(int argc, char **argv)
 
     if(pcmk_locate_sbd() > 0) {
         setenv("PCMK_watchdog", "true", 1);
+    } else {
+        setenv("PCMK_watchdog", "false", 1);
     }
 
     find_and_track_existing_processes();

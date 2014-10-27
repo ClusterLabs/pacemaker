@@ -874,7 +874,7 @@ pe_cluster_option crmd_opts[] = {
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer, "*** Advanced Use Only ***\nEnabling this option will slow down cluster recovery under all conditions", "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\nUseful if your configuration is sensitive to the order in which ping updates arrive." },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, "0s", &check_timer,
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_timer,
 	  "How long to wait before we can assume nodes are safely down", NULL },
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 
@@ -911,6 +911,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
+    long st_timeout = 0;
+    long sbd_timeout = 0;
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -946,17 +948,36 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = getenv("SBD_WATCHDOG_TIMEOUT");
+    sbd_timeout = crm_get_msec(value);
 
-    if(value == NULL) {
-        value = crmd_pref(config_hash, "stonith-watchdog-timeout");
-    }
+    value = crmd_pref(config_hash, "stonith-watchdog-timeout");
+    st_timeout = crm_get_msec(value);
 
-    if(crm_get_msec(value) > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
+    if(st_timeout > 0 && !daemon_option_enabled(crm_system_name, "watchdog")) {
         do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, no watchdog device configured");
         crmd_exit(DAEMON_RESPAWN_STOP);
 
-    } else if(crm_get_msec(value) <= 0 && daemon_option_enabled(crm_system_name, "watchdog")) {
-        crm_warn("Watchdog enabled but no stonith-watchdog-timeout configured");
+    } else if(!daemon_option_enabled(crm_system_name, "watchdog")) {
+        crm_trace("Watchdog disabled");
+
+    } else if(value == NULL && sbd_timeout > 0) {
+        char *timeout = NULL;
+
+        st_timeout = 2 * sbd_timeout / 1000;
+        timeout = g_strdup_printf("%lds", st_timeout);
+        crm_notice("Setting stonith-watchdog-timeout=%s", timeout);
+
+        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                             "stonith-watchdog-timeout", timeout, FALSE, NULL, NULL);
+        free(timeout);
+
+    } else if(st_timeout <= 0) {
+        crm_notice("Watchdog enabled but stonith-watchdog-timeout is disabled");
+
+    } else if(st_timeout < sbd_timeout) {
+        do_crm_log_always(LOG_EMERG, "Shutting down pacemaker, stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
+                          st_timeout, sbd_timeout);
+        crmd_exit(DAEMON_RESPAWN_STOP);
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");

@@ -286,6 +286,9 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
 
         if (options == NULL) {
             return def_value;
+
+        } else if(def_value == NULL) {
+            return def_value;
         }
 
         g_hash_table_insert(options, strdup(name), strdup(def_value));
@@ -319,7 +322,6 @@ get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len,
         }
     }
     CRM_CHECK(found, crm_err("No option named: %s", name));
-    CRM_ASSERT(value != NULL);
     return value;
 }
 
