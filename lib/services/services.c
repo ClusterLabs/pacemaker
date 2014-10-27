@@ -506,12 +506,13 @@ services_action_sync(svc_action_t * op)
 {
     gboolean rc = TRUE;
 
-    op->synchronous = true;
     if (op == NULL) {
         crm_trace("No operation to execute");
         return FALSE;
+    }
 
-    } else if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
+    op->synchronous = true;
+    if (op->standard && strcasecmp(op->standard, "upstart") == 0) {
 #if SUPPORT_UPSTART
         rc = upstart_job_exec(op, TRUE);
 #endif
