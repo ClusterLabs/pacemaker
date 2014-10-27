@@ -1377,7 +1377,6 @@ do_lrm_invoke(long long action,
     } else if (safe_str_eq(operation, CRM_OP_REPROBE) || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
         GHashTableIter gIter;
         rsc_history_t *entry = NULL;
-        gboolean unregister = is_remote_lrmd_ra(NULL, NULL, entry->id) ? FALSE : TRUE;
 
         crm_notice("Forcing the status of all resources to be redetected");
 
@@ -1386,6 +1385,8 @@ do_lrm_invoke(long long action,
             /* only unregister the resource during a reprobe if it is not a remote connection
              * resource. otherwise unregistering the connection will terminate remote-node
              * membership */
+            gboolean unregister = is_remote_lrmd_ra(NULL, NULL, entry->id) ? FALSE : TRUE;
+
             delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
                             user_name, NULL, unregister);
         }
