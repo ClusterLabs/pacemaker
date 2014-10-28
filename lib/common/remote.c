@@ -308,13 +308,16 @@ crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
     int rc = -ESOCKTNOSUPPORT;
 
     for(; lpc < iovs; lpc++) {
-        if (remote->tcp_socket) {
-            rc = crm_send_plaintext(remote->tcp_socket, iov[lpc].iov_base, iov[lpc].iov_len);
-#ifdef HAVE_GNUTLS_GNUTLS_H
 
-        } else if (remote->tls_session) {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (remote->tls_session) {
             rc = crm_send_tls(remote->tls_session, iov[lpc].iov_base, iov[lpc].iov_len);
+        } else if (remote->tcp_socket) {
+#else
+        if (remote->tcp_socket) {
 #endif
+            rc = crm_send_plaintext(remote->tcp_socket, iov[lpc].iov_base, iov[lpc].iov_len);
+
         } else {
             crm_err("Unsupported connection type");
         }
@@ -448,14 +451,16 @@ crm_remote_ready(crm_remote_t * remote, int timeout /* ms */ )
     int rc = 0;
     time_t start;
 
-    if (remote->tcp_socket) {
-        sock = remote->tcp_socket;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    } else if (remote->tls_session) {
+    if (remote->tls_session) {
         void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
 
         sock = GPOINTER_TO_INT(sock_ptr);
+    } else if (remote->tcp_socket) {
+#else
+    if (remote->tcp_socket) {
 #endif
+        sock = remote->tcp_socket;
     } else {
         crm_err("Unsupported connection type");
     }
@@ -519,17 +524,8 @@ crm_remote_recv_once(crm_remote_t * remote)
         CRM_ASSERT(remote->buffer != NULL);
     }
 
-    if (remote->tcp_socket) {
-        errno = 0;
-        rc = read(remote->tcp_socket,
-                  remote->buffer + remote->buffer_offset,
-                  remote->buffer_size - remote->buffer_offset);
-        if(rc < 0) {
-            rc = -errno;
-        }
-
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    } else if (remote->tls_session) {
+    if (remote->tls_session) {
         rc = gnutls_record_recv(*(remote->tls_session),
                                 remote->buffer + remote->buffer_offset,
                                 remote->buffer_size - remote->buffer_offset);
@@ -541,7 +537,18 @@ crm_remote_recv_once(crm_remote_t * remote)
             crm_debug("TLS receive failed: %s (%d)", gnutls_strerror(rc), rc);
             rc = -pcmk_err_generic;
         }
+    } else if (remote->tcp_socket) {
+#else
+    if (remote->tcp_socket) {
 #endif
+        errno = 0;
+        rc = read(remote->tcp_socket,
+                  remote->buffer + remote->buffer_offset,
+                  remote->buffer_size - remote->buffer_offset);
+        if(rc < 0) {
+            rc = -errno;
+        }
+
     } else {
         crm_err("Unsupported connection type");
         return -ESOCKTNOSUPPORT;
