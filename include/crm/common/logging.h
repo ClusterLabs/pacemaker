@@ -157,7 +157,7 @@ unsigned int get_crm_log_level(void);
         }                                                               \
     } while(0)
 
-#  define do_crm_log_always(level, fmt, args...) qb_log(level, "%s: " fmt, __FUNCTION__ , ##args)
+#  define do_crm_log_always(level, fmt, args...) qb_log(level, fmt , ##args)
 
 #  define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\

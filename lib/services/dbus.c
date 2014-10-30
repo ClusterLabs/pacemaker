@@ -169,7 +169,7 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
 
     }
 
-    if (dbus_pending_call_get_completed(pending)) {
+    if (done && dbus_pending_call_get_completed(pending)) {
         crm_info("DBus %s call completed too soon");
 #if 1
         /* This sounds like a good idea, but allegedly it breaks things */
@@ -178,8 +178,11 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
         CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
 #endif
 
-    } else {
+    } else if(done) {
         CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
+
+    } else {
+        crm_info("DBus %s call completed too soon");
     }
     return TRUE;
 }

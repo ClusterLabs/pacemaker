@@ -110,20 +110,43 @@ systemd_service_name(const char *name)
     return g_strdup_printf("%s.service", name);
 }
 
-static bool
-systemd_daemon_reload(void)
+static void
+systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
 {
-    /* TODO: Make this asynchronous */
-    const char *method = "Reload";
+    DBusError error;
     DBusMessage *reply = NULL;
-    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
+    int *reload_count = user_data;
 
-    CRM_ASSERT(msg != NULL);
-    reply = pcmk_dbus_send_recv(msg, systemd_proxy, NULL);
-    dbus_message_unref(msg);
+    dbus_error_init(&error);
+    if(pending) {
+        reply = dbus_pending_call_steal_reply(pending);
+    }
+
+    if(pcmk_dbus_find_error("Reload", pending, reply, &error)) {
+        crm_err("Could not issue systemd reload %d: %s", *reload_count, error.message);
+
+    } else {
+        crm_trace("Reload %d complete", *reload_count);
+    }
+
+    if(pending) {
+        dbus_pending_call_unref(pending);
+    }
     if(reply) {
         dbus_message_unref(reply);
     }
+}
+
+static bool
+systemd_daemon_reload(void)
+{
+    static int reload_count = 0;
+    const char *method = "Reload";
+    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
+
+    CRM_ASSERT(msg != NULL);
+    pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, &reload_count);
+    dbus_message_unref(msg);
     return TRUE;
 }
 
