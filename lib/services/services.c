@@ -303,18 +303,23 @@ services_action_create_generic(const char *exec, const char *args[])
 }
 
 void
-services_action_free(svc_action_t * op)
+services_action_cleanup(svc_action_t * op)
 {
-    unsigned int i;
-
-    if (op == NULL) {
-        return;
+    if(op->opaque->timerid != 0) {
+        crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
+        g_source_remove(op->opaque->timerid);
+        op->opaque->timerid = 0;
     }
 
-    if (op->opaque->repeat_timer) {
-        g_source_remove(op->opaque->repeat_timer);
-        op->opaque->repeat_timer = 0;
+    if(op->opaque->pending) {
+        if(dbus_pending_call_get_completed(op->opaque->pending)) {
+            crm_warn("Pending dbus call %s for %s did not complete", op->action, op->rsc);
+        }
+        dbus_pending_call_cancel(op->opaque->pending);
+        dbus_pending_call_unref(op->opaque->pending);
+        op->opaque->pending = NULL;
     }
+
     if (op->opaque->stderr_gsource) {
         mainloop_del_fd(op->opaque->stderr_gsource);
         op->opaque->stderr_gsource = NULL;
@@ -323,6 +328,23 @@ services_action_free(svc_action_t * op)
     if (op->opaque->stdout_gsource) {
         mainloop_del_fd(op->opaque->stdout_gsource);
         op->opaque->stdout_gsource = NULL;
+    }
+}
+
+void
+services_action_free(svc_action_t * op)
+{
+    unsigned int i;
+
+    if (op == NULL) {
+        return;
+    }
+
+    services_action_cleanup(op);
+
+    if (op->opaque->repeat_timer) {
+        g_source_remove(op->opaque->repeat_timer);
+        op->opaque->repeat_timer = 0;
     }
 
     free(op->id);

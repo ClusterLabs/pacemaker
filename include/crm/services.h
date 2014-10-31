@@ -262,8 +262,9 @@ enum nagios_exitcode {
  */
     svc_action_t *services_action_create_generic(const char *exec, const char *args[]);
 
-    void
-     services_action_free(svc_action_t * op);
+    void services_action_cleanup(svc_action_t * op);
+
+    void services_action_free(svc_action_t * op);
 
     gboolean services_action_sync(svc_action_t * op);
 

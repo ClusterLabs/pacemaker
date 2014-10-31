@@ -145,7 +145,7 @@ DBusMessage *pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection, D
     return reply;
 }
 
-bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
+DBusPendingCall* pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
                     void(*done)(DBusPendingCall *pending, void *user_data), void *user_data)
 {
     DBusError error;
@@ -161,30 +161,31 @@ bool pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
     // send message and get a handle for a reply
     if (!dbus_connection_send_with_reply (connection, msg, &pending, -1/* aka. DBUS_TIMEOUT_USE_DEFAULT */)) { // -1 is default timeout
         crm_err("Send with reply failed for %s", method);
-        return FALSE;
+        return NULL;
 
     } else if (pending == NULL) {
         crm_err("No pending call found for %s", method);
-        return FALSE;
+        return NULL;
 
     }
 
-    if (done && dbus_pending_call_get_completed(pending)) {
-        crm_info("DBus %s call completed too soon");
-#if 1
+    crm_trace("DBus %s call sent", method);
+    if (dbus_pending_call_get_completed(pending)) {
+        crm_info("DBus %s call completed too soon", method);
+        if(done) {
+#if 0
         /* This sounds like a good idea, but allegedly it breaks things */
         done(pending, user_data);
+        pending = NULL;
 #else
         CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
 #endif
+        }
 
     } else if(done) {
         CRM_ASSERT(dbus_pending_call_set_notify(pending, done, user_data, NULL));
-
-    } else {
-        crm_info("DBus %s call completed too soon");
     }
-    return TRUE;
+    return pending;
 }
 
 bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected, const char *function, int line)
@@ -287,6 +288,11 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
         }
 
         dbus_message_iter_next (&dict);
+    }
+
+    if(data->name && data->callback) {
+        crm_trace("No value for property %s[%s]", data->object, data->name);
+        data->callback(data->name, NULL, data->userdata);
     }
 
   cleanup:

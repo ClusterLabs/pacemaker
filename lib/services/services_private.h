@@ -19,6 +19,10 @@
 #ifndef __MH_SERVICES_PRIVATE_H__
 #  define __MH_SERVICES_PRIVATE_H__
 
+#if SUPPORT_DBUS
+#  include <dbus/dbus.h>
+#endif
+
 struct svc_action_private_s {
     char *exec;
     char *args[255];
@@ -31,6 +35,10 @@ struct svc_action_private_s {
 
     int stdout_fd;
     mainloop_io_t *stdout_gsource;
+#if SUPPORT_DBUS
+    DBusPendingCall* pending;
+    unsigned timerid;
+#endif
 };
 
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);

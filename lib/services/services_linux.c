@@ -264,6 +264,8 @@ operation_finalize(svc_action_t * op)
         services_action_free(op);
         return TRUE;
     }
+
+    services_action_cleanup(op);
     return FALSE;
 }
 

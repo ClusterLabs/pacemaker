@@ -513,8 +513,15 @@ upstart_job_exec(svc_action_t * op, gboolean synchronous)
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
 
     if (op->synchronous == FALSE) {
+        DBusPendingCall* pending = pcmk_dbus_send(msg, upstart_proxy, upstart_async_dispatch, op);
         free(job);
-        return pcmk_dbus_send(msg, upstart_proxy, upstart_async_dispatch, op);
+
+        if(pending) {
+            dbus_pending_call_ref(pending);
+            op->opaque->pending = pending;
+            return TRUE;
+        }
+        return FALSE;
     }
 
     dbus_error_init(&error);

@@ -112,8 +112,13 @@ get_cib_copy(cib_t * cib)
 {
     xmlNode *xml_cib;
     int options = cib_scope_local | cib_sync_call;
-    int rc = cib->cmds->query(cib, NULL, &xml_cib, options);
+    int rc = pcmk_ok;
 
+    if (cib->state == cib_disconnected) {
+        return NULL;
+    }
+
+    rc = cib->cmds->query(cib, NULL, &xml_cib, options);
     if (rc == -EACCES) {
         return NULL;
 

@@ -115,7 +115,7 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
 {
     DBusError error;
     DBusMessage *reply = NULL;
-    int *reload_count = user_data;
+    unsigned int reload_count = GPOINTER_TO_UINT(user_data);
 
     dbus_error_init(&error);
     if(pending) {
@@ -123,10 +123,10 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
     }
 
     if(pcmk_dbus_find_error("Reload", pending, reply, &error)) {
-        crm_err("Could not issue systemd reload %d: %s", *reload_count, error.message);
+        crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
 
     } else {
-        crm_trace("Reload %d complete", *reload_count);
+        crm_trace("Reload %d complete", reload_count);
     }
 
     if(pending) {
@@ -140,13 +140,18 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
 static bool
 systemd_daemon_reload(void)
 {
-    static int reload_count = 0;
+    static unsigned int reload_count = 0;
     const char *method = "Reload";
-    DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
 
-    CRM_ASSERT(msg != NULL);
-    pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, &reload_count);
-    dbus_message_unref(msg);
+
+    reload_count++;
+    if(reload_count % 10 == 0) {
+        DBusMessage *msg = systemd_new_method(BUS_NAME".Manager", method);
+
+        CRM_ASSERT(msg != NULL);
+        pcmk_dbus_send(msg, systemd_proxy, systemd_daemon_reload_complete, GUINT_TO_POINTER(reload_count));
+        dbus_message_unref(msg);
+    }
     return TRUE;
 }
 
@@ -178,11 +183,17 @@ static void
 systemd_loadunit_cb(DBusPendingCall *pending, void *user_data)
 {
     DBusMessage *reply = NULL;
+    svc_action_t * op = user_data;
 
     if(pending) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
+    if(op) {
+        crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
+    } else {
+        crm_trace("Got result: %p for %p", reply, pending);
+    }
     systemd_loadunit_result(reply, user_data);
 
     if(reply) {
@@ -444,6 +455,12 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
+    if(op) {
+        crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
+    } else {
+        crm_trace("Got result: %p for %p", reply, pending);
+    }
+    op->opaque->pending = NULL;
     systemd_exec_result(reply, op);
 
     if(pending) {
@@ -460,10 +477,13 @@ static void
 systemd_unit_check(const char *name, const char *state, void *userdata)
 {
     svc_action_t * op = userdata;
-    
-    CRM_ASSERT(state != NULL);
 
-    if (g_strcmp0(state, "active") == 0) {
+    crm_trace("Resource %s has %s='%s'", op->rsc, name, state);
+
+    if(state == NULL) {
+        op->rc = PCMK_OCF_NOT_RUNNING;
+
+    } else if (g_strcmp0(state, "active") == 0) {
         op->rc = PCMK_OCF_OK;
     } else if (g_strcmp0(state, "activating") == 0) {
         op->rc = PCMK_OCF_PENDING;
@@ -472,6 +492,7 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
     }
 
     if (op->synchronous == FALSE) {
+        op->opaque->pending = NULL;
         operation_finalize(op);
     }
 }
@@ -562,7 +583,14 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     }
 
     if (op->synchronous == FALSE) {
-        return pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
+        DBusPendingCall* pending = pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
+
+        if(pending) {
+            dbus_pending_call_ref(pending);
+            op->opaque->pending = pending;
+            return TRUE;
+        }
+        return FALSE;
 
     } else {
         DBusError error;
@@ -593,6 +621,18 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     return op->rc == PCMK_OCF_OK;
 }
 
+static gboolean
+systemd_timeout_callback(gpointer p)
+{
+    svc_action_t * op = p;
+
+    op->opaque->timerid = 0;
+    crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
+    operation_finalize(op);
+
+    return FALSE;
+}
+
 gboolean
 systemd_unit_exec(svc_action_t * op)
 {
@@ -619,6 +659,7 @@ systemd_unit_exec(svc_action_t * op)
     free(unit);
 
     if (op->synchronous == FALSE) {
+        op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
         return TRUE;
     }
 
