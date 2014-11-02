@@ -27,12 +27,12 @@ build_dir="@abs_top_builddir@"
 test_dir=sys.path[0]
 
 new_path=os.environ['PATH']
-
 if os.path.exists("%s/regression.py.in" % test_dir):
     print "Running tests from the source tree: %s (%s)" % (build_dir, test_dir)
     new_path = "%s/lrmd:%s" % (build_dir, new_path)    # For lrmd, lrmd_test and pacemaker_remoted
     new_path = "%s/tools:%s" % (build_dir, new_path)   # For crm_resource
     new_path = "%s/fencing:%s" % (build_dir, new_path) # For stonithd
+
 else:
     print "Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % test_dir
     new_path = "@CRM_DAEMON_DIR@:%s" % (new_path) # For stonithd, lrmd, lrmd_test and pacemaker_remoted
@@ -434,13 +434,15 @@ if __name__ == "__main__":
 			for ra in [ "Dummy", "Stateful", "ping" ]:
 				os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
 				os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (ra))
-			else:
-				# Assume it's installed
-				print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
-				os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
-				os.system("chmod a+x /etc/init.d/LSBDummy")
-				os.system("ls -al /etc/init.d/LSBDummy")
+                else:
+                    # Assume it's installed
+                    print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
+                    os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+
+                    os.system("chmod a+x /etc/init.d/LSBDummy")
+                    os.system("ls -al /etc/init.d/LSBDummy")
+
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
 		if os.path.exists("/bin/systemctl"):
