@@ -312,6 +312,7 @@ services_action_cleanup(svc_action_t * op)
     }
 
     if(op->opaque->pending) {
+        crm_trace("Cleaning up pending dbus call %p %s for %s", op->opaque->pending, op->action, op->rsc);
         if(dbus_pending_call_get_completed(op->opaque->pending)) {
             crm_warn("Pending dbus call %s for %s did not complete", op->action, op->rsc);
         }

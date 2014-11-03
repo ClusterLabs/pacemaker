@@ -166,7 +166,6 @@ DBusPendingCall* pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
     } else if (pending == NULL) {
         crm_err("No pending call found for %s", method);
         return NULL;
-
     }
 
     crm_trace("DBus %s call sent", method);
@@ -387,17 +386,52 @@ static void pcmk_dbus_connection_dispatch(DBusConnection *connection, DBusDispat
     }
 }
 
+/* Copied from dbus-watch.c */
+
+static const char*
+dbus_watch_flags_to_string (int flags)
+{
+  const char *watch_type;
+
+  if ((flags & DBUS_WATCH_READABLE) &&
+      (flags & DBUS_WATCH_WRITABLE))
+    watch_type = "readwrite";
+  else if (flags & DBUS_WATCH_READABLE)
+    watch_type = "read";
+  else if (flags & DBUS_WATCH_WRITABLE)
+    watch_type = "write";
+  else
+    watch_type = "not read or write";
+  return watch_type;
+}
+
 static int
 pcmk_dbus_watch_dispatch(gpointer userdata)
 {
+    bool oom = FALSE;
     DBusWatch *watch = userdata;
     int flags = dbus_watch_get_flags(watch);
+    bool enabled = dbus_watch_get_enabled (watch);
+    mainloop_io_t *client = dbus_watch_get_data(watch);
 
-    crm_trace("Dispatching %p with flags %d", watch, flags);
-    if(flags & DBUS_WATCH_READABLE) {
-        dbus_watch_handle(watch, DBUS_WATCH_READABLE);
-    } else {
-        dbus_watch_handle(watch, DBUS_WATCH_ERROR);
+    crm_trace("Dispatching client %p: %s", client, dbus_watch_flags_to_string(flags));
+    if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
+        oom = !dbus_watch_handle(watch, flags);
+
+    } else if (enabled && is_set(flags, DBUS_WATCH_READABLE)) {
+        oom = !dbus_watch_handle(watch, flags);
+
+    } else if(enabled) {
+        oom = !dbus_watch_handle(watch, DBUS_WATCH_ERROR);
+    }
+
+    if(flags != dbus_watch_get_flags(watch)) {
+        flags = dbus_watch_get_flags(watch);
+        crm_trace("Dispatched client %p: %s (%d)", client, dbus_watch_flags_to_string(flags), flags);
+    }
+
+    if(oom) {
+        crm_err("DBus encountered OOM while attempting to dispatch %p (%s)", client, dbus_watch_flags_to_string(flags));
     }
     return 0;
 }
@@ -405,7 +439,8 @@ pcmk_dbus_watch_dispatch(gpointer userdata)
 static void
 pcmk_dbus_watch_destroy(gpointer userdata)
 {
-    crm_trace("Destroyed %p", userdata);
+    mainloop_io_t *client = dbus_watch_get_data(userdata);
+    crm_trace("Destroyed %p", client);
 }
 
 
@@ -421,7 +456,7 @@ pcmk_dbus_watch_add(DBusWatch *watch, void *data){
     mainloop_io_t *client = mainloop_add_fd(
         "dbus", G_PRIORITY_DEFAULT, fd, watch, &pcmk_dbus_cb);
 
-    crm_trace("Added %p with fd=%d", watch, fd);
+    crm_trace("Added watch %p with fd=%d to client %p", watch, fd, client);
     dbus_watch_set_data(watch, client, NULL);
     return TRUE;
 }
@@ -438,14 +473,14 @@ static void
 pcmk_dbus_watch_remove(DBusWatch *watch, void *data){
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
-    crm_trace("Removed %p", watch);
+    crm_trace("Removed client %p (%p)", client, data);
     mainloop_del_fd(client);
 }
 
 static gboolean
 pcmk_dbus_timeout_dispatch(gpointer data)
 {
-    crm_trace("Timeout for %p");
+    crm_info("Timeout %p expired", data);
     dbus_timeout_handle(data);
     return FALSE;
 }
@@ -453,6 +488,8 @@ pcmk_dbus_timeout_dispatch(gpointer data)
 static dbus_bool_t
 pcmk_dbus_timeout_add(DBusTimeout *timeout, void *data){
     guint id = g_timeout_add(dbus_timeout_get_interval(timeout), pcmk_dbus_timeout_dispatch, timeout);
+
+    crm_trace("Adding timeout %p (%ld)", timeout, dbus_timeout_get_interval(timeout));
 
     if(id) {
         dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);
@@ -465,6 +502,8 @@ pcmk_dbus_timeout_remove(DBusTimeout *timeout, void *data){
     void *vid = dbus_timeout_get_data(timeout);
     guint id = GPOINTER_TO_UINT(vid);
 
+    crm_trace("Removing timeout %p (%p)", timeout, data);
+
     if(id) {
         g_source_remove(id);
         dbus_timeout_set_data(timeout, 0, NULL);
@@ -473,7 +512,11 @@ pcmk_dbus_timeout_remove(DBusTimeout *timeout, void *data){
 
 static void
 pcmk_dbus_timeout_toggle(DBusTimeout *timeout, void *data){
-    if(dbus_timeout_get_enabled(timeout)) {
+    bool enabled = dbus_timeout_get_enabled(timeout);
+
+    crm_trace("Toggling timeout for %p to %s", timeout, enabled?"off":"on");
+
+    if(enabled) {
         pcmk_dbus_timeout_add(timeout, data);
     } else {
         pcmk_dbus_timeout_remove(timeout, data);
