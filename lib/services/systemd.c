@@ -196,6 +196,9 @@ systemd_loadunit_cb(DBusPendingCall *pending, void *user_data)
     }
     systemd_loadunit_result(reply, user_data);
 
+    if(pending) {
+        dbus_pending_call_unref(pending);
+    }
     if(reply) {
         dbus_message_unref(reply);
     }
@@ -247,6 +250,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
     }
 
     pcmk_dbus_send(msg, systemd_proxy, systemd_loadunit_cb, op);
+    dbus_message_unref(msg);
     return NULL;
 }
 
@@ -585,6 +589,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
     if (op->synchronous == FALSE) {
         DBusPendingCall* pending = pcmk_dbus_send(msg, systemd_proxy, systemd_async_dispatch, op);
 
+        dbus_message_unref(msg);
         if(pending) {
             dbus_pending_call_ref(pending);
             op->opaque->pending = pending;
@@ -596,20 +601,13 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         DBusError error;
 
         reply = pcmk_dbus_send_recv(msg, systemd_proxy, &error);
+        dbus_message_unref(msg);
         systemd_exec_result(reply, op);
 
         if(reply) {
             dbus_message_unref(reply);
         }
-        if(msg) {
-            dbus_message_unref(msg);
-        }
-
         return FALSE;
-    }
-
-    if(msg) {
-        dbus_message_unref(msg);
     }
 
   cleanup:
