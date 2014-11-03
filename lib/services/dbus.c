@@ -314,6 +314,9 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
 
     pcmk_dbus_lookup_result(reply, user_data);
 
+    if(pending) {
+        dbus_pending_call_unref(pending);
+    }
     if(reply) {
         dbus_message_unref(reply);
     }
