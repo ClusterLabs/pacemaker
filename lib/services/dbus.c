@@ -386,6 +386,10 @@ static void pcmk_dbus_connection_dispatch(DBusConnection *connection, DBusDispat
     crm_trace("status %d for %p", new_status, data);
     if (new_status == DBUS_DISPATCH_DATA_REMAINS){
         dbus_connection_dispatch(connection);
+
+        while (dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
+            dbus_connection_dispatch(connection);
+        }
     }
 }
 
