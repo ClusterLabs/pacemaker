@@ -440,8 +440,8 @@ if __name__ == "__main__":
                     print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
                     os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
-                    os.system("chmod a+x /etc/init.d/LSBDummy")
-                    os.system("ls -al /etc/init.d/LSBDummy")
+                os.system("chmod a+x /etc/init.d/LSBDummy")
+                os.system("ls -al /etc/init.d/LSBDummy")
 
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
