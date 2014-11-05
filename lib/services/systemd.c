@@ -461,10 +461,10 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 
     if(op) {
         crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
+        op->opaque->pending = NULL;
     } else {
         crm_trace("Got result: %p for %p", reply, pending);
     }
-    op->opaque->pending = NULL;
     systemd_exec_result(reply, op);
 
     if(pending) {
