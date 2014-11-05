@@ -1,5 +1,6 @@
 #!/bin/bash
 
+resource=""
 options=""
 target=`crm_node -n`
 
@@ -11,15 +12,7 @@ if [ $? != 0 ] ; then echo "crm_failcount - A convenience wrapper for crm_attrib
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
-while true ; do
-    case "$1" in
-	-N|--node) target="$2"; shift; shift;;
-	-U|--uname) target="$2"; shift; shift;;
-	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
-	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
-	-r|--resource-id) options="$options -n fail-count-$2"; shift; shift;;
-	--version) crm_attribute --version; exit 0;;
-	--help)
+function show_help() {
 	    echo "crm_failcount - A convenience wrapper for crm_attribute";
 	    echo "";
 	    echo "Set, update or remove the failcount for the specified resource on the named node";
@@ -43,10 +36,27 @@ while true ; do
 	    echo " -l, --lifetime=value	Until when should the setting take affect."
 	    echo "	       		Valid values: reboot, forever"
 	    echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
+}
+
+while true ; do
+    case "$1" in
+	-N|--node) target="$2"; shift; shift;;
+	-U|--uname) target="$2"; shift; shift;;
+	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
+	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
+	-r|--resource-id) options="$options -n fail-count-$2"; resource="$2"; shift; shift;;
+	--version) crm_attribute --version; exit 0;;
+	--help)
+	    show_help
 	    exit 0;;
 	--) shift ; break ;;
 	*) echo "Unknown option: $1. See --help for details." exit 1;;
     esac
 done
+
+if [ "x$resource" = x ]; then
+    echo "You must supply a resource name to check. See 'crm_failcount --help' for details"
+    exit 1
+fi
 
 crm_attribute -N $target $options -t status -d 0
