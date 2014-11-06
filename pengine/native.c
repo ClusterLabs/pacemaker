@@ -2103,6 +2103,9 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
         }
 
         if (other_node->rsc_discover_mode < constraint->discover_mode) {
+            if (constraint->discover_mode == discover_exclusive) {
+                rsc->exclusive_discover = TRUE;
+            }
             /* exclusive > never > always... always is default */
             other_node->rsc_discover_mode = constraint->discover_mode;
         }
