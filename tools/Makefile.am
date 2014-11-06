@@ -77,7 +77,7 @@ crm_node_SOURCES	= crm_node.c
 crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
-crm_simulate_SOURCES	= crm_simulate.c
+crm_simulate_SOURCES	= crm_simulate.c fake_transition.c
 crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
 
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
@@ -105,12 +105,14 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
 
-crm_resource_SOURCES	= crm_resource.c
-crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
-			$(top_builddir)/lib/lrmd/liblrmd.la \
-			$(top_builddir)/lib/services/libcrmservice.la \
-			$(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/pengine/libpengine.la \
+crm_resource_SOURCES	= crm_resource.c fake_transition.c
+crm_resource_CFLAGS	= -I$(top_srcdir)/pengine
+crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  		\
+			$(top_builddir)/lib/lrmd/liblrmd.la 			\
+			$(top_builddir)/lib/services/libcrmservice.la 		\
+			$(top_builddir)/lib/pengine/libpe_status.la 		\
+			$(top_builddir)/pengine/libpengine.la 			\
+			$(top_builddir)/lib/transition/libtransitioner.la	\
 			$(COMMONLIBS)
 
 iso8601_SOURCES		= test.iso8601.c
