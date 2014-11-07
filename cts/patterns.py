@@ -180,6 +180,9 @@ class crm_cs_v0(BasePatterns):
             r"error: log_operation:.*Operation 'reboot' .* with device 'FencingFail' returned:",
             r"Child process .* terminated with signal 9",
             r"getinfo response error: 1$",
+            "sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
+            "sbd.* pcmk:    error: crm_ipc_read: Connection to cib_ro failed",
+            "sbd.* pcmk:    error: mainloop_gio_callback: Connection to cib_ro.* closed .I/O condition=17",
         ]
 
         self.BadNews = [
