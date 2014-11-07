@@ -948,6 +948,28 @@ probe_resources(pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void
+rsc_discover_filter(resource_t *rsc, node_t *node)
+{
+    GListPtr gIter = rsc->children;
+    resource_t *top = uber_parent(rsc);
+    node_t *match;
+
+    if (rsc->exclusive_discover == FALSE && top->exclusive_discover == FALSE) {
+        return;
+    }
+
+    for (; gIter != NULL; gIter = gIter->next) {
+        resource_t *child_rsc = (resource_t *) gIter->data;
+        rsc_discover_filter(child_rsc, node);
+    }
+
+    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    if (match && match->rsc_discover_mode != discover_exclusive) {
+        match->weight = -INFINITY;
+    }
+}
+
 /*
  * Count how many valid nodes we have (so we know the maximum number of
  *  colors we can resolve).
@@ -986,6 +1008,7 @@ stage2(pe_working_set_t * data_set)
             resource_t *rsc = (resource_t *) gIter2->data;
 
             common_apply_stickiness(rsc, node, data_set);
+            rsc_discover_filter(rsc, node);
         }
     }
 
