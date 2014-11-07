@@ -74,6 +74,7 @@ node_copy(node_t * this_node)
 
     crm_trace("Copying %p (%s) to %p", this_node, this_node->details->uname, new_node);
 
+    new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
     new_node->fixed = this_node->fixed;
     new_node->details = this_node->details;
