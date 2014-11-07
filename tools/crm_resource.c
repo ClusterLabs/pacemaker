@@ -1458,14 +1458,35 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 static int
 max_delay_in(pe_working_set_t * data_set, GList *resources) 
 {
-    return 30;
+    int max_delay = 0;
+    GList *item = NULL;
+
+    for (item = resources; item != NULL; item = item->next) {
+        resource_t *rsc = pe_find_resource(data_set->resources, (const char *)item->data);
+
+        if(rsc) {
+            char *key = g_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
+            action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
+            const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
+            int delay = crm_int_helper(value, NULL);
+
+            if(delay > max_delay) {
+                crm_trace("Calculated new delay of %s ms due to %s", value, rsc->id);
+                max_delay = delay;
+            }
+
+            pe_free_action(stop);
+        }
+    }
+
+
+    return 5 + (max_delay / 1000);
 }
 
 static int
 resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib)
 {
     int rc = pcmk_ok;
-
     GList *list_delta = NULL;
     GList *target_active = NULL;
     GList *current_active = NULL;
@@ -1504,7 +1525,7 @@ report success
     current_active = get_active_resources(host, &data_set);
 
     dump_list(current_active, "Origin");
-    
+
     rc = set_resource_attr(rsc->id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
     if(rc != pcmk_ok) {
         fprintf(stdout, "Could not set target-role for %s: %s (%d)\n", rsc->id, pcmk_strerror(rc), rc);
@@ -1524,20 +1545,26 @@ report success
     display_list(list_delta, " * ");
 
     while(g_list_length(list_delta) > 0) {
+        int lpc = 0;
         int before = g_list_length(list_delta);
-        int max_delay = max_delay_in(&data_set, list_delta);
+        int step_timeout_s = max_delay_in(&data_set, list_delta);
 
-        sleep(max_delay);
-        rc = update_dataset(cib, &data_set, FALSE);
-        if(rc != pcmk_ok) {
-            fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-            return rc;
+        /* Sleep N times until max_delay instead of all at once */
+        for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
+            sleep(1);
+            rc = update_dataset(cib, &data_set, FALSE);
+            if(rc != pcmk_ok) {
+                fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
+                return rc;
+            }
+
+            current_active = get_active_resources(host, &data_set);
+            list_delta = subtract_lists(current_active, target_active);
+            dump_list(current_active, "Current");
+            dump_list(list_delta, "Delta");
         }
-        current_active = get_active_resources(host, &data_set);
-        list_delta = subtract_lists(current_active, target_active);
-        dump_list(current_active, "Current");
-        dump_list(list_delta, "Delta");
 
+        crm_trace("%d (was %d) resources remaining", before, g_list_length(list_delta));
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             fprintf(stdout, "Could not complete shutdown of %s, %d resources remaining\n", rsc->id, g_list_length(list_delta));
@@ -1545,7 +1572,7 @@ report success
             return -ETIME;
         }
 
-    } while(g_list_length(list_delta) > 0);
+    }
 
     rc = delete_resource_attr(rsc->id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     target_active = restart_target_active;
@@ -1555,20 +1582,24 @@ report success
     display_list(list_delta, " * ");
 
     while(g_list_length(list_delta) > 0) {
+        int lpc = 0;
         int before = g_list_length(list_delta);
-        int max_delay = max_delay_in(&data_set, list_delta);
+        int step_timeout_s = max_delay_in(&data_set, list_delta);
 
-        sleep(max_delay);
-        rc = update_dataset(cib, &data_set, FALSE);
-        if(rc != pcmk_ok) {
-            fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-            return rc;
+        /* Sleep N times until max_delay instead of all at once */
+        for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
+            sleep(1);
+            rc = update_dataset(cib, &data_set, FALSE);
+            if(rc != pcmk_ok) {
+                fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
+                return rc;
+            }
+
+            current_active = get_active_resources(host, &data_set);
+            list_delta = subtract_lists(target_active, current_active);
+            dump_list(current_active, "Current");
+            dump_list(list_delta, "Delta");
         }
-
-        current_active = get_active_resources(host, &data_set);
-        list_delta = subtract_lists(target_active, current_active);
-        dump_list(current_active, "Current");
-        dump_list(list_delta, "Delta");
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
