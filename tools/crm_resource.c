@@ -1486,7 +1486,15 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
 static int
 resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib)
 {
-    int rc = pcmk_ok;
+    int rc = 0;
+    int lpc = 0;
+    int before = 0;
+    int step_timeout_s = 0;
+    int sleep_interval = 2;
+    int timeout = timeout_ms / 1000;
+
+    char *rsc_id = NULL;
+
     GList *list_delta = NULL;
     GList *target_active = NULL;
     GList *current_active = NULL;
@@ -1498,19 +1506,24 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
         return -ENXIO;
     }
 
+
+    rsc_id = strdup(rsc->id);
     /*
-grab full cib
-use constraints to determine ordered list of affected resources
-determine resource state of list
-disable or ban
-unless --no-deps, listen for cib updates and watch for resources to get stopped
-without --wait, calculate the stop timeout for each step and wait for that
-if we hit --wait or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
-if everything stopped, re-enable or un-ban
-unless --no-deps, listen for cib updates and watch for resources to get started
-without --wait, calculate the start timeout for each step and wait for that
-if we hit --wait or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
-report success
+      grab full cib
+      determine resource state of list
+      disable or ban
+      poll and and watch for resources to get stopped
+      without --wait, calculate the stop timeout for each step and wait for that
+      if we hit --wait or the service timeout, re-enable or un-ban, report failure and indicate which resources we couldn't take down
+      if everything stopped, re-enable or un-ban
+      poll and and watch for resources to get stopped
+      without --wait, calculate the start timeout for each step and wait for that
+      if we hit --wait or the service timeout, report (different) failure and indicate which resources we couldn't bring back up
+      report success
+
+      Optimizations:
+      - use constraints to determine ordered list of affected resources
+      - Allow a --no-deps option (aka. --force-restart)
     */
 
 
@@ -1526,17 +1539,18 @@ report success
 
     dump_list(current_active, "Origin");
 
-    rc = set_resource_attr(rsc->id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
+    rc = set_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
     if(rc != pcmk_ok) {
-        fprintf(stdout, "Could not set target-role for %s: %s (%d)\n", rsc->id, pcmk_strerror(rc), rc);
+        fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
         return crm_exit(rc);
     }
 
     rc = update_dataset(cib, &data_set, TRUE);
     if(rc != pcmk_ok) {
-        fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-        return rc;
+        fprintf(stderr, "Could not determine which resources would be stopped\n");
+        goto failure;
     }
+
     target_active = get_active_resources(host, &data_set);
     dump_list(target_active, "Target");
 
@@ -1544,18 +1558,24 @@ report success
     fprintf(stdout, "Waiting for %d resources to stop:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
+    step_timeout_s = timeout / sleep_interval;
     while(g_list_length(list_delta) > 0) {
-        int lpc = 0;
-        int before = g_list_length(list_delta);
-        int step_timeout_s = max_delay_in(&data_set, list_delta);
+        before = g_list_length(list_delta);
+        if(timeout_ms == 0) {
+            step_timeout_s = max_delay_in(&data_set, list_delta) / sleep_interval;
+        }
 
-        /* Sleep N times until max_delay instead of all at once */
+        /* We probably don't need the entire step timeout */
         for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
-            sleep(1);
+            sleep(sleep_interval);
+            if(timeout) {
+                timeout -= sleep_interval;
+                crm_trace("%ds remaining", timeout);
+            }
             rc = update_dataset(cib, &data_set, FALSE);
             if(rc != pcmk_ok) {
-                fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-                return rc;
+                fprintf(stderr, "Could not determine which resources were stopped\n");
+                goto failure;
             }
 
             current_active = get_active_resources(host, &data_set);
@@ -1567,32 +1587,43 @@ report success
         crm_trace("%d (was %d) resources remaining", before, g_list_length(list_delta));
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
-            fprintf(stdout, "Could not complete shutdown of %s, %d resources remaining\n", rsc->id, g_list_length(list_delta));
+            fprintf(stderr, "Could not complete shutdown of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
             display_list(list_delta, " * ");
-            return -ETIME;
+            rc = -ETIME;
+            goto failure;
         }
 
     }
 
-    rc = delete_resource_attr(rsc->id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
-    target_active = restart_target_active;
+    rc = delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    if(rc != pcmk_ok) {
+        fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        return crm_exit(rc);
+    }
 
+    target_active = restart_target_active;
     list_delta = subtract_lists(target_active, current_active);
     fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
     display_list(list_delta, " * ");
 
+    step_timeout_s = timeout / sleep_interval;
     while(g_list_length(list_delta) > 0) {
-        int lpc = 0;
-        int before = g_list_length(list_delta);
-        int step_timeout_s = max_delay_in(&data_set, list_delta);
+        if(timeout_ms == 0) {
+            step_timeout_s = max_delay_in(&data_set, list_delta) / sleep_interval;
+        }
 
-        /* Sleep N times until max_delay instead of all at once */
+        /* We probably don't need the entire step timeout */
         for(lpc = 0; lpc < step_timeout_s && g_list_length(list_delta) > 0; lpc++) {
-            sleep(1);
+            sleep(sleep_interval);
+            if(timeout) {
+                timeout -= sleep_interval;
+                crm_trace("%ds remaining", timeout);
+            }
+
             rc = update_dataset(cib, &data_set, FALSE);
             if(rc != pcmk_ok) {
-                fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-                return rc;
+                fprintf(stderr, "Could not determine which resources were started\n");
+                goto failure;
             }
 
             current_active = get_active_resources(host, &data_set);
@@ -1603,14 +1634,19 @@ report success
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
-            fprintf(stdout, "Could not complete restart of %s, %d resources remaining\n", rsc->id, g_list_length(list_delta));
+            fprintf(stdout, "Could not complete restart of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
             display_list(list_delta, " * ");
-            return -ETIME;
+            rc = -ETIME;
+            goto failure;
         }
 
     } while(g_list_length(list_delta) > 0);
 
     return pcmk_ok;
+
+  failure:
+    delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    return rc;
 }
 
 /* *INDENT-OFF* */
@@ -1697,6 +1733,7 @@ static struct crm_option long_options[] = {
     {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},
+    {"timeout",         1, 0, 'T',  "\t(Advanced) How long to wait for --restart to take effect", 1},
     {"force",		0, 0, 'f', "\n" /* Is this actually true anymore?
 					   "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
 					   "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
@@ -1757,6 +1794,7 @@ main(int argc, char **argv)
 
     int rc = pcmk_ok;
     int option_index = 0;
+    int timeout_ms = 0;
     int argerr = 0;
     int flag;
 
@@ -1932,6 +1970,9 @@ main(int argc, char **argv)
             case 't':
                 rsc_type = optarg;
                 break;
+            case 'T':
+                timeout_ms = crm_get_msec(optarg);
+                break;
             case 'C':
             case 'R':
             case 'P':
@@ -2086,7 +2127,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 
-        rc = resource_restart(rsc, host_uname, 0, cib_conn);
+        rc = resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) {
         svc_action_t *op = NULL;
