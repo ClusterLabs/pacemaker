@@ -39,9 +39,9 @@
 cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
-gboolean bringing_nodes_online = FALSE;
 gboolean print_pending = FALSE;
 char *temp_shadow = NULL;
+extern gboolean bringing_nodes_online;
 
 #define quiet_log(fmt, args...) do {		\
 	if(quiet == FALSE) {			\
@@ -838,17 +838,10 @@ main(int argc, char **argv)
 
     if (simulate) {
         rc = run_simulation(&data_set, global_cib, op_fail, quiet);
-
-        if (quiet == FALSE) {
-            xmlNode *cib_object = NULL;
-            int rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
-
-            CRM_ASSERT(rc == pcmk_ok);
-            quiet_log("\nRevised cluster status:\n");
-            cleanup_alloc_calculations(&data_set);
-            data_set.input = cib_object;
+        if(quiet == FALSE) {
             data_set.now = get_date();
 
+            quiet_log("\nRevised cluster status:\n");
             cluster_status(&data_set);
             print_cluster_status(&data_set, 0);
         }

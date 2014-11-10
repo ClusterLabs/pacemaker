@@ -40,6 +40,7 @@ static bool fake_quiet = FALSE;
 static cib_t *fake_cib = NULL;
 static GListPtr fake_resource_list = NULL;
 static GListPtr fake_op_fail_list = NULL;
+gboolean bringing_nodes_online = FALSE;
 
 #define STATUS_PATH_MAX 512
 
@@ -192,9 +193,9 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 
     xpath = calloc(1, max);
 
-    /* if (bringing_nodes_online) { */
+    if (bringing_nodes_online) {
         create_node_entry(cib_conn, node);
-    /* } */
+    }
 
     snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
@@ -827,6 +828,15 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GListPtr op_fail_list, b
     destroy_graph(transition);
     if (graph_rc != transition_complete) {
         fprintf(stdout, "An invalid transition was produced\n");
+    }
+
+    if (quiet == FALSE) {
+        xmlNode *cib_object = NULL;
+        int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
+
+        CRM_ASSERT(rc == pcmk_ok);
+        cleanup_alloc_calculations(data_set);
+        data_set->input = cib_object;
     }
 
     if (graph_rc != transition_complete) {
