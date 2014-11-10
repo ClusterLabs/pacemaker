@@ -1326,7 +1326,7 @@ static bool resource_is_running_on(resource_t *rsc, const char *host)
         }
     }
 
-    if(host != NULL && hosts != NULL) {
+    if(host != NULL) {
         crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
         found = FALSE;
 
@@ -1493,6 +1493,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     int sleep_interval = 2;
     int timeout = timeout_ms / 1000;
 
+    bool is_clone = FALSE;
     char *rsc_id = NULL;
 
     GList *list_delta = NULL;
@@ -1508,6 +1509,10 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
 
 
     rsc_id = strdup(rsc->id);
+    if(rsc->variant > pe_group) {
+        is_clone = TRUE;
+    }
+
     /*
       grab full cib
       determine resource state of list
@@ -1539,7 +1544,13 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
 
     dump_list(current_active, "Origin");
 
-    rc = set_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
+    if(is_clone && host) {
+        BE_QUIET = TRUE;
+        rc = ban_resource(rsc_id, host, NULL, cib);
+
+    } else {
+        rc = set_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, RSC_STOPPED, FALSE, cib, &data_set);
+    }
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
         return crm_exit(rc);
@@ -1595,7 +1606,13 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
 
     }
 
-    rc = delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    if(is_clone && host) {
+        rc = clear_resource(rsc_id, host, NULL, cib);
+
+    } else {
+        rc = delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    }
+
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
         return crm_exit(rc);
@@ -1645,7 +1662,12 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     return pcmk_ok;
 
   failure:
-    delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    if(is_clone && host) {
+        clear_resource(rsc_id, host, NULL, cib);
+
+    } else {
+        delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
+    }
     return rc;
 }
 
