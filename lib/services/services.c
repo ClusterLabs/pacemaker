@@ -305,6 +305,7 @@ services_action_create_generic(const char *exec, const char *args[])
 void
 services_action_cleanup(svc_action_t * op)
 {
+#if SUPPORT_DBUS
     if(op->opaque->timerid != 0) {
         crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
@@ -330,6 +331,7 @@ services_action_cleanup(svc_action_t * op)
         mainloop_del_fd(op->opaque->stdout_gsource);
         op->opaque->stdout_gsource = NULL;
     }
+#endif
 }
 
 void
