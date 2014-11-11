@@ -768,6 +768,9 @@ attrd_local_callback(xmlNode * msg)
         crm_notice("Sending full refresh (origin=%s)", from);
         g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
         return;
+    } else if(safe_str_eq(op, "peer-remove")) {
+        /* The legacy code didn't understand this command - swallow silently */
+        return;
     }
 
     if (host != NULL && safe_str_neq(host, attrd_uname)) {
