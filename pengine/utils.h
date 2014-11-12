@@ -39,9 +39,6 @@ extern gboolean rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * t
                                const char *state_lh, const char *loss_policy,
                                pe_working_set_t * data_set);
 
-extern rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * location_rule,
-                                             pe_working_set_t * data_set);
-
 extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set);
 
 extern gboolean can_run_resources(const node_t * node);
