@@ -36,28 +36,33 @@ nothing able to run anywhere and selectively enable allowed nodes.
 === Options ===
 
 .Options for Simple Location Constraints
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="2m,1,5<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |id
+|
 |A unique name for the constraint
 indexterm:[id,Location Constraints]
 indexterm:[Constraints,Location,id]
 
 |rsc
+|
 |A resource name
 indexterm:[rsc,Location Constraints]
 indexterm:[Constraints,Location,rsc]
 
 |node
+|
 |A node's name
 indexterm:[node,Location Constraints]
 indexterm:[Constraints,Location,node]
 
 |score
+|
 |Positive values indicate the resource should run on this
  node. Negative values indicate the resource should not run on this
  node.
@@ -66,6 +71,30 @@ indexterm:[Constraints,Location,node]
  "must"/"must not".
 indexterm:[score,Location Constraints]
 indexterm:[Constraints,Location,score]
+
+|resource-discovery
+|+always+
+|Indicates whether or not Pacemaker should perform resource discovery
+on this node for the specified resource. Limiting resource discovery to
+a subset of nodes the resource is physically capable of running on
+can significantly boost performance when a large set of nodes are preset.
+When pacemaker_remote is in use to expand the node count into the 100s of
+nodes range, this option should be considered.
+
+* 'always' - Always perform resource discovery for the specified resource on this node.
+
+* 'never' - Never perform resource discovery for the specified resource on this node.
+  This option should generally be used with a -INFINITY score. Although that is not strictly
+  required.
+
+* 'exclusive' - Only perform resource discovery for the specified resource on this node. Multiple
+  location constraints using 'exclusive' discovery for the same resource across different nodes
+  creates a subset of nodes resource-discovery is exclusive to. If a resource is marked
+  for 'exclusive' discovery on one or more nodes, that resource is only allowed to be placed
+  within that subset of nodes.
+
+indexterm:[Resource Discovery,Location Constraints]
+indexterm:[Constraints,Location,Resource Discovery]
 
 |=========================================================
 
