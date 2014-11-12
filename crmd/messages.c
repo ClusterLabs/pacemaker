@@ -819,27 +819,7 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
             free_xml(msg);
 
         } else {
-
             reap_crm_member(id, name);
-            if(attrd_ipc) {
-                int rc = 0;
-                xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-
-                crm_xml_add(update, F_TYPE, T_ATTRD);
-                crm_xml_add(update, F_ORIG, crm_system_name);
-
-                crm_xml_add(update, F_ATTRD_TASK, "peer-remove");
-                crm_xml_add(update, F_ATTRD_HOST, name);
-                crm_xml_add_int(update, F_ATTRD_HOST_ID, id);
-
-                rc = crm_ipc_send(attrd_ipc, update, crm_ipc_client_response, 0, NULL);
-                if (rc > 0) {
-                    rc = pcmk_ok;
-                }
-
-                crm_debug("Peer cache cleanup for %s (%d): %s (%d)", name, id, pcmk_strerror(rc), rc);
-                free_xml(update);
-            }
         }
 
     } else {

@@ -378,9 +378,16 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if(safe_str_eq(op, "peer-remove")) {
         int host_id = 0;
+        char *endptr = NULL;
 
-        crm_element_value_int(xml, F_ATTRD_HOST_ID, &host_id);
+        host_id = strtol(host, &endptr, 10);
+        if (errno != 0 || endptr == host || *endptr != '\0') {
+            host_id = 0;
+        } else {
+            host = NULL;
+        }
         attrd_peer_remove(host_id, host, TRUE, peer->uname);
+
 
     } else if(safe_str_eq(op, "sync-response")
               && safe_str_neq(peer->uname, attrd_cluster->uname)) {

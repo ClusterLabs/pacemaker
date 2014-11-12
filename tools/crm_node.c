@@ -34,6 +34,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <crm/attrd.h>
 
 int command = 0;
 int ccm_fd = 0;
@@ -156,6 +157,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         }
     }
 
+
     errno = 0;
     n = strtol(node, &endptr, 10);
     if (errno != 0 || endptr == node || *endptr != '\0') {
@@ -168,19 +170,38 @@ int tools_remove_node_cache(const char *node, const char *target)
 
     crm_trace("Removing %s aka. %s from the membership cache", name, node);
 
-    cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                         NULL, NULL, target, "crm_node", admin_uuid);
+    if(safe_str_eq(target, T_ATTRD)) {
+        cmd = create_xml_node(NULL, __FUNCTION__);
 
-    if (n) {
-        char buffer[64];
+        crm_xml_add(cmd, F_TYPE, T_ATTRD);
+        crm_xml_add(cmd, F_ORIG, crm_system_name);
 
-        if(snprintf(buffer, 63, "%u", n) > 0) {
-            crm_xml_add(cmd, XML_ATTR_ID, buffer);
+        crm_xml_add(cmd, F_ATTRD_TASK, "peer-remove");
+        crm_xml_add(cmd, F_ATTRD_HOST, name);
+
+        if (n) {
+            char buffer[64];
+            if(snprintf(buffer, 63, "%u", n) > 0) {
+                crm_xml_add(cmd, F_ATTRD_HOST_ID, buffer);
+            }
         }
+
+    } else {
+        cmd = create_request(CRM_OP_RM_NODE_CACHE,
+                             NULL, NULL, target, crm_system_name, admin_uuid);
+        if (n) {
+            char buffer[64];
+            if(snprintf(buffer, 63, "%u", n) > 0) {
+                crm_xml_add(cmd, XML_ATTR_ID, buffer);
+            }
+        }
+        crm_xml_add(cmd, XML_ATTR_UNAME, name);
     }
-    crm_xml_add(cmd, XML_ATTR_UNAME, name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
+    crm_debug("%s peer cache cleanup for %s (%u): %s (%d)", target, name, n, pcmk_strerror(rc), rc);
+    free_xml(cmd);
+
     if (rc > 0) {
         rc = cib_remove_node(n, name);
     }
@@ -189,7 +210,6 @@ int tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
     }
-    free_xml(cmd);
     free(admin_uuid);
     free(name);
     return rc > 0 ? 0 : rc;
@@ -665,6 +685,10 @@ try_corosync(int command, enum cluster_type_e stack)
                 crm_err("Failed to connect to "CRM_SYSTEM_MCP" to remove node '%s'", target_uname);
                 crm_exit(pcmk_err_generic);
             }
+            if (tools_remove_node_cache(target_uname, T_ATTRD)) {
+                crm_err("Failed to connect to "T_ATTRD" to remove node '%s'", target_uname);
+                crm_exit(pcmk_err_generic);
+            }
             crm_exit(pcmk_ok);
             break;
 
@@ -834,8 +858,8 @@ main(int argc, char **argv)
                 force_flag = TRUE;
                 break;
             case 'R':
-                dangerous_cmd = TRUE;
                 command = flag;
+                dangerous_cmd = TRUE;
                 target_uname = optarg;
                 break;
             case 'N':
