@@ -389,9 +389,15 @@ crm_find_peer(unsigned int id, const char *uname)
         }
 
     } else if(uname && by_id->uname) {
-        crm_dump_peer_hash(LOG_INFO, __FUNCTION__);
-        crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u %s", by_id->uname, by_name->uname, id, uname);
-        crm_abort(__FILE__, __FUNCTION__, __LINE__, "member weirdness", TRUE, TRUE);
+        if(safe_str_eq(uname, by_id->uname)) {
+            crm_notice("Node '%s' has changed its ID from %u to %u", by_id->uname, by_name->id, by_id->id);
+            g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
+
+        } else {
+            crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u %s", by_id->uname, by_name->uname, id, uname);
+            crm_dump_peer_hash(LOG_INFO, __FUNCTION__);
+            crm_abort(__FILE__, __FUNCTION__, __LINE__, "member weirdness", TRUE, TRUE);
+        }
 
     } else if(id && by_name->id) {
         crm_warn("Node %u and %u share the same name: '%s'", by_id->id, by_name->id, uname);
