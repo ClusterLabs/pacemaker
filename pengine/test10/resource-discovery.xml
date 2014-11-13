@@ -97,7 +97,13 @@
       <rsc_location id="location-FAKE1-remote1" node="remote1" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
       <rsc_location id="location-FAKE1-18node1" node="18node1" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
       <rsc_location id="location-FAKE1-18node2" node="18node2" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
-      <rsc_location id="location-FAKE1-18node3" node="18node3" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
+
+      <rsc_location id="location-FAKE1-18node3" resource-discovery="never" rsc="FAKE1" >
+        <rule score="-INFINITY" id="vlan003-on-cluster-nodes-rule">
+            <expression attribute="#uname" operation="eq" value="18node3" id="vlan003-on-cluster-nodes-rule-expression"/>
+        </rule>
+      </rsc_location>
+
       <rsc_location id="location-FAKE2-18node1" node="18node1" resource-discovery="exclusive" rsc="FAKE2" score="10"/>
       <rsc_location id="location-FAKE2-18node2" node="18node2" resource-discovery="exclusive" rsc="FAKE2" score="100"/>
       <rsc_location id="location-FAKE3-18node3--INFINITY" node="18node3" resource-discovery="exclusive" rsc="FAKE3" score="INFINITY"/>
