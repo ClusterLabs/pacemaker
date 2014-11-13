@@ -1182,6 +1182,7 @@ main(int argc, char **argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
+    gboolean to_stderr = FALSE;
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
 
@@ -1199,6 +1200,7 @@ main(int argc, char **argv)
         switch (flag) {
             case 'V':
                 crm_bump_log_level(argc, argv);
+                to_stderr = TRUE;
                 break;
             case 's':
                 stand_alone = TRUE;
@@ -1323,7 +1325,7 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init("stonith-ng", LOG_INFO, TRUE, to_stderr, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
