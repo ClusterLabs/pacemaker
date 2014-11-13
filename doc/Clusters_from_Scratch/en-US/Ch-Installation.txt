@@ -210,10 +210,22 @@ outside world.
 ----
 # setenforce 0
 # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+# systemctl disable firewalld.service
+# systemctl stop firewalld.service
+----
+
+or (on older Fedora)
+
+[source,C]
+----
+# setenforce 0
+# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
 # systemctl disable iptables.service
 # rm '/etc/systemd/system/basic.target.wants/iptables.service'
 # systemctl stop iptables.service
 ----
+
+
 
 === Short Node Names ===
 
@@ -538,7 +550,7 @@ Password:
 pcmk-1: Authorized
 pcmk-2: Authorized
 
-# pcs cluster setup --name mycluster pcmk-1 pcmk-2
+# pcs cluster setup mycluster pcmk-1 pcmk-2
 pcmk-1: Succeeded
 pcmk-2: Succeeded
 ----

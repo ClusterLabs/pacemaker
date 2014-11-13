@@ -217,6 +217,13 @@ Next, check for any ERRORs during startup - there shouldn't be any.
 # grep -i error /var/log/messages
 ----
 
+or (on Fedora 20)
+
+[source,C]
+----
+# journalctl | grep -i error
+----
+
 Repeat these checks on the other node. The results should be the same.
 
 endif::[]

@@ -222,7 +222,7 @@ ifdef::pcs[]
  WebFS	(ocf::heartbeat:Filesystem) Stopped 
  Clone Set: dlm-clone [dlm]
      Stopped: [ dlm:0 dlm:1 ]
-# pcs cluster cib-push dlm_cfg
+# pcs cluster push cib dlm_cfg
 CIB updated
 # pcs status
 
@@ -695,7 +695,7 @@ shell and watching the cluster's response
 ifdef::pcs[]
 [source,C]
 -----
-# pcs cluster cib-push active_cfg
+# pcs cluster push cib active_cfg
 # pcs resource enable WebFS
 -----
 
