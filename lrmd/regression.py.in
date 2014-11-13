@@ -435,14 +435,13 @@ if __name__ == "__main__":
 				os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (build_dir, ra, ra))
 				os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (ra))
 
-                else:
-                    # Assume it's installed
-                    print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
-                    os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
+		else:
+			# Assume it's installed
+			print "Using @datadir@/@PACKAGE@/tests/cts/LSBDummy"
+			os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
-                    os.system("chmod a+x /etc/init.d/LSBDummy")
-                    os.system("ls -al /etc/init.d/LSBDummy")
-
+		os.system("chmod a+x /etc/init.d/LSBDummy")
+		os.system("ls -al /etc/init.d/LSBDummy")
 		os.system("mkdir -p @CRM_CORE_DIR@/root")
 
 		if os.path.exists("/bin/systemctl"):
