@@ -439,6 +439,11 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
         crm_info("No more peers");
         terminate_cib(__FUNCTION__, FALSE);
     }
+
+    if(type == crm_status_nstate && node->id && safe_str_eq(node->state, CRM_NODE_LOST)) {
+        /* Avoid conflicts, keep the membership list to active members */
+        reap_crm_member(node->id, NULL);
+    }
 }
 
 #if SUPPORT_HEARTBEAT
