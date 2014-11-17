@@ -379,7 +379,7 @@ msgstr "当有半数以上的节点在线时，这个集群就认为自己拥有
 #. Tag: literallayout
 #, no-c-format
 msgid "total_nodes &lt; 2 * active_nodes"
-msgstr "总节点数 < 2 * 活跃节点数"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
