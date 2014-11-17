@@ -93,7 +93,7 @@ cib_remove_node(uint32_t id, const char *name)
     crm_trace("Removing %s from the CIB", name);
 
     /* TODO: Use 'id' instead */
-    if(name == NULL) {
+    if(name == NULL && id == 0) {
         return -ENOTUNIQ;
     }
 
@@ -102,17 +102,24 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_xml_add(node, XML_ATTR_UNAME, name);
     crm_xml_add(node_state, XML_ATTR_UNAME, name);
+    if(id) {
+        char buffer[64];
+        if(snprintf(buffer, 63, "%u", id) > 0) {
+            crm_xml_add(node, XML_ATTR_ID, buffer);
+            crm_xml_add(node_state, XML_ATTR_ID, buffer);
+        }
+    }
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s from " XML_CIB_TAG_NODES ": %s", name, pcmk_strerror(rc));
+        printf("Could not remove %s/%u from " XML_CIB_TAG_NODES ": %s", name, id, pcmk_strerror(rc));
     }
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s from " XML_CIB_TAG_STATUS ": %s", name, pcmk_strerror(rc));
+        printf("Could not remove %s/%u from " XML_CIB_TAG_STATUS ": %s", name, id, pcmk_strerror(rc));
     }
 
     cib->cmds->signoff(cib);
@@ -168,7 +175,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         name = get_node_name(n);
     }
 
-    crm_trace("Removing %s aka. %s from the membership cache", name, node);
+    crm_trace("Removing %s aka. %s (%u) from the membership cache", name, node, n);
 
     if(safe_str_eq(target, T_ATTRD)) {
         cmd = create_xml_node(NULL, __FUNCTION__);
@@ -199,8 +206,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     }
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
-    crm_debug("%s peer cache cleanup for %s (%u): %s (%d)", target, name, n, pcmk_strerror(rc), rc);
-    free_xml(cmd);
+    crm_debug("%s peer cache cleanup for %s (%u): %d", target, name, n, rc);
 
     if (rc > 0) {
         rc = cib_remove_node(n, name);
@@ -211,6 +217,7 @@ int tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_destroy(conn);
     }
     free(admin_uuid);
+    free_xml(cmd);
     free(name);
     return rc > 0 ? 0 : rc;
 }
