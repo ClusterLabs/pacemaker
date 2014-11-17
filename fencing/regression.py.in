@@ -82,24 +82,34 @@ class Test:
 		test.wait()
 
 		if self.verbose:
+			self.stonith_options = self.stonith_options + " -V"
 			print "Starting stonithd with %s" % self.stonith_options
 
+		if os.path.exists("/tmp/stonith-regression.log"):
+			os.remove('/tmp/stonith-regression.log')
+
 		self.stonith_process = subprocess.Popen(
-			shlex.split("@CRM_DAEMON_DIR@/stonithd %s -V" % self.stonith_options),
-			stdout=subprocess.PIPE,
-			stderr=subprocess.PIPE)
+			shlex.split("@CRM_DAEMON_DIR@/stonithd %s -l /tmp/stonith-regression.log" % self.stonith_options))
 
 		time.sleep(1)
 
 	def clean_environment(self):
 		if self.stonith_process:
 			self.stonith_process.terminate()
+			self.stonith_process.wait()
 
-		self.stonith_output = self.stonith_process.communicate()[1]
+		self.stonith_output = ""
 		self.stonith_process = None
 
+		f = open('/tmp/stonith-regression.log', 'r')
+		for line in f.readlines():
+			self.stonith_output = self.stonith_output + line
+
 		if self.verbose:
+			print "Daemon Output Start"
 			print self.stonith_output
+			print "Daemon Output End"
+		os.remove('/tmp/stonith-regression.log')
 
 	def add_stonith_log_pattern(self, pattern):
 		self.stonith_patterns.append(pattern)
@@ -953,7 +963,7 @@ if __name__ == "__main__":
 			self.stop_corosync()
 
 			if self.verbose and os.path.exists('/var/log/corosync.log'):
-				print "Daemon output"
+				print "Corosync output"
 				f = open('/var/log/corosync.log', 'r')
 				for line in f.readlines():
 					print line.strip()

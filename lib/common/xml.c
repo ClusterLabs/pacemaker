@@ -1281,7 +1281,10 @@ __xml_build_changes(xmlNode * xml, xmlNode *patchset)
         for (pIter = crm_first_attr(xml); pIter != NULL; pIter = pIter->next) {
             const char *value = crm_element_value(xml, (const char *)pIter->name);
 
-            crm_xml_add(result, (const char *)pIter->name, value);
+            p = pIter->_private;
+            if (is_not_set(p->flags, xpf_deleted)) {
+                crm_xml_add(result, (const char *)pIter->name, value);
+            }
         }
     }
 

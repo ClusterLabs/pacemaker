@@ -52,6 +52,8 @@ enum pe_order_kind {
 enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
                            const char *action_first, const char *action_then, gboolean invert);
 enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
+static rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * rule_xml,
+                                             const char *discovery, pe_working_set_t * data_set);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -687,7 +689,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
             if (crm_str_eq((const char *)rule_xml->name, XML_TAG_RULE, TRUE)) {
                 empty = FALSE;
                 crm_trace("Unpacking %s/%s", id, ID(rule_xml));
-                generate_location_rule(rsc_lh, rule_xml, data_set);
+                generate_location_rule(rsc_lh, rule_xml, discovery, data_set);
             }
         }
 
@@ -917,8 +919,8 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
     return score_f;
 }
 
-rsc_to_node_t *
-generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * data_set)
+static rsc_to_node_t *
+generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discovery, pe_working_set_t * data_set)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -960,7 +962,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, pe_working_set_t * 
         do_and = FALSE;
     }
 
-    location_rule = rsc2node_new(rule_id, rsc, 0, NULL, NULL, data_set);
+    location_rule = rsc2node_new(rule_id, rsc, 0, discovery, NULL, data_set);
 
     if (location_rule == NULL) {
         return NULL;

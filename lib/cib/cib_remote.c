@@ -226,6 +226,8 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         return -ENOTCONN;
     }
 
+    connection->tcp_socket = sock;
+
     if (private->encrypted) {
         /* initialize GnuTls lib */
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -250,8 +252,6 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
 #else
         return -EPROTONOSUPPORT;
 #endif
-    } else {
-        connection->tcp_socket = sock;
     }
 
     /* login to server */

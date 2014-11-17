@@ -1114,6 +1114,7 @@ stonith_cleanup(void)
 static struct crm_option long_options[] = {
     {"stand-alone",         0, 0, 's'},
     {"stand-alone-w-cpg",   0, 0, 'c'},
+    {"logfile",             1, 0, 'l'},
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
@@ -1214,6 +1215,9 @@ main(int argc, char **argv)
         switch (flag) {
             case 'V':
                 crm_bump_log_level(argc, argv);
+                break;
+            case 'l':
+                crm_add_logfile(optarg);
                 break;
             case 's':
                 stand_alone = TRUE;

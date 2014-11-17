@@ -125,7 +125,7 @@ it fails, the resource agent used by Pacemaker assumes the server-status
 URL is available. Look for the following in '/etc/httpd/conf/httpd.conf'
 and make sure it is not disabled or commented out:
 
-[source,Apache Configuration]
+[source,C]
 -----
 <Location /server-status>
    SetHandler server-status
