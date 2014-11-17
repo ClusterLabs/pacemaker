@@ -2109,6 +2109,14 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         free_async_command(cmd);
         free_xml(reply);
 
+    } else if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
+        int id = 0;
+        const char *name = NULL;
+
+        crm_element_value_int(request, XML_ATTR_ID, &id);
+        name = crm_element_value(request, XML_ATTR_UNAME);
+        reap_crm_member(id, name);
+
     } else {
         crm_err("Unknown %s from %s", op, client ? client->name : remote_peer);
         crm_log_xml_warn(request, "UnknownOp");

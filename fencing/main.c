@@ -97,6 +97,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     int call_options = 0;
     xmlNode *request = NULL;
     crm_client_t *c = crm_client_get(qbc);
+    const char *op = NULL;
 
     if (c == NULL) {
         crm_info("Invalid client: %p", qbc);
@@ -106,6 +107,20 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     request = crm_ipcs_recv(c, data, size, &id, &flags);
     if (request == NULL) {
         crm_ipcs_send_ack(c, id, flags, "nack", __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+
+    op = crm_element_value(request, F_CRM_TASK);
+    if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
+        crm_xml_add(request, F_TYPE, T_STONITH_NG);
+        crm_xml_add(request, F_STONITH_OPERATION, op);
+        crm_xml_add(request, F_STONITH_CLIENTID, c->id);
+        crm_xml_add(request, F_STONITH_CLIENTNAME, crm_client_name(c));
+        crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
+
+        send_cluster_message(NULL, crm_msg_stonith_ng, request, FALSE);
+        free_xml(request);
         return 0;
     }
 

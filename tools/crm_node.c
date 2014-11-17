@@ -669,6 +669,12 @@ try_corosync(int command, enum cluster_type_e stack)
 
     mainloop_io_t *ipc = NULL;
     GMainLoop *amainloop = NULL;
+    const char *daemons[] = {
+            CRM_SYSTEM_CRMD,
+            "stonith-ng",
+            T_ATTRD,
+            CRM_SYSTEM_MCP,
+        };
 
     struct ipc_client_callbacks node_callbacks = {
         .dispatch = node_mcp_dispatch,
@@ -677,17 +683,11 @@ try_corosync(int command, enum cluster_type_e stack)
 
     switch (command) {
         case 'R':
-            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
-                crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
-                crm_exit(pcmk_err_generic);
-            }
-            if (tools_remove_node_cache(target_uname, CRM_SYSTEM_MCP)) {
-                crm_err("Failed to connect to "CRM_SYSTEM_MCP" to remove node '%s'", target_uname);
-                crm_exit(pcmk_err_generic);
-            }
-            if (tools_remove_node_cache(target_uname, T_ATTRD)) {
-                crm_err("Failed to connect to "T_ATTRD" to remove node '%s'", target_uname);
-                crm_exit(pcmk_err_generic);
+            for(rc = 0; rc < DIMOF(daemons); rc++) {
+                if (tools_remove_node_cache(target_uname, daemons[rc])) {
+                    crm_err("Failed to connect to %s to remove node '%s'", daemons[rc], target_uname);
+                    crm_exit(pcmk_err_generic);
+                }
             }
             crm_exit(pcmk_ok);
             break;
