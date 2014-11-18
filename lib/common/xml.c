@@ -5718,7 +5718,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
                 }
 
             } else {
-                crm_notice("Upgrading %s-style configuration to %s with %s",
+                crm_debug("Upgrading %s-style configuration to %s with %s",
                            known_schemas[lpc].name, known_schemas[next].name,
                            known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
 
@@ -5749,7 +5749,7 @@ update_validation(xmlNode ** xml_blob, int *best, int max, gboolean transform, g
     }
 
     if (*best > match) {
-        crm_notice("%s the configuration from %s to %s",
+        crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded",
                    value ? value : "<none>", known_schemas[*best].name);
         crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
