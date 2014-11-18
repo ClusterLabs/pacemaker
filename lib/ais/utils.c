@@ -409,7 +409,7 @@ append_member(char *data, crm_node_t * node)
     if (node->version) {
         size += (9 + strlen(node->version));
     }
-    data = realloc(data, size);
+    data = realloc_safe(data, size);
 
     offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->id);
     if (node->uname) {

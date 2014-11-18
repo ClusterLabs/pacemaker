@@ -956,7 +956,7 @@ crm_log_args(int argc, char **argv)
         }
 
         len = 2 + strlen(argv[lpc]);    /* +1 space, +1 EOS */
-        arg_string = realloc(arg_string, len + existing_len);
+        arg_string = realloc_safe(arg_string, len + existing_len);
         existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
     }
 

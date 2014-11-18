@@ -170,7 +170,7 @@ standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 
     if (tmp) {
         offset = strlen(tmp);
-        tmp = realloc(tmp, len + offset + 1);
+        tmp = realloc_safe(tmp, len + offset + 1);
     } else {
         tmp = malloc(len);
     }

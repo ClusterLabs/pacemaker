@@ -325,7 +325,7 @@ clang:
 	test -e $(CLANG_analyzer)
 	scan-build $(CLANG_checkers:%=-enable-checker %) make
 
-# V3	= scandir unsetenv alphasort
+# V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
 # http://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
 GNU_MODS	= crypto/md5

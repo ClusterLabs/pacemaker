@@ -308,7 +308,7 @@ append_arg(gpointer key, gpointer value, gpointer user_data)
         last = strlen(*args);
     }
 
-    *args = realloc(*args, last + len);
+    *args = realloc_safe(*args, last + len);
     crm_trace("Appending: %s=%s", (char *)key, (char *)value);
     sprintf((*args) + last, "%s=%s\n", (char *)key, (char *)value);
 }
@@ -627,7 +627,7 @@ read_output(int fd)
                               * 'more' is always less than our buffer size
                               */
             crm_trace("Got %d more bytes: %.200s...", more, buffer);
-            output = realloc(output, len + more + 1);
+            output = realloc_safe(output, len + more + 1);
             snprintf(output + len, more + 1, "%s", buffer);
             len += more;
         }

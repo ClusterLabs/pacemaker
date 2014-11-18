@@ -206,7 +206,7 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc((buffer), (max) + 1);                         \
+            tmp = realloc_safe((buffer), (max) + 1);                         \
             CRM_ASSERT(tmp);                                            \
             (buffer) = tmp;                                             \
         } else {                                                        \
@@ -223,7 +223,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc((*buffer), (*max) + 1);
+            (*buffer) = realloc_safe((*buffer), (*max) + 1);
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;
@@ -305,7 +305,7 @@ static void __xml_schema_add(
     int last = xml_schema_max;
 
     xml_schema_max++;
-    known_schemas = realloc(known_schemas, xml_schema_max*sizeof(struct schema_s));
+    known_schemas = realloc_safe(known_schemas, xml_schema_max*sizeof(struct schema_s));
     CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
     known_schemas[last].type = type;
@@ -2905,7 +2905,7 @@ crm_xml_err(void *ctx, const char *msg, ...)
         buf = NULL;
 
     } else {
-        buffer = realloc(buffer, 1 + buffer_len + len);
+        buffer = realloc_safe(buffer, 1 + buffer_len + len);
         memcpy(buffer + buffer_len, buf, len);
         buffer_len += len;
         buffer[buffer_len] = 0;
@@ -2997,7 +2997,7 @@ stdin2xml(void)
             break;
         }
 
-        xml_buffer = realloc(xml_buffer, next);
+        xml_buffer = realloc_safe(xml_buffer, next);
         read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
         data_length += read_chars;
     } while (read_chars > 0);
@@ -3043,7 +3043,7 @@ decompress_file(const char *filename)
 
     rc = BZ_OK;
     while (rc == BZ_OK) {
-        buffer = realloc(buffer, XML_BUFFER_SIZE + length + 1);
+        buffer = realloc_safe(buffer, XML_BUFFER_SIZE + length + 1);
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
 
         crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
@@ -3301,7 +3301,7 @@ crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
     int offset = strlen(replace) - 1;   /* We have space for 1 char already */
 
     *length += offset;
-    text = realloc(text, *length);
+    text = realloc_safe(text, *length);
 
     for (lpc = (*length) - 1; lpc > (start + offset); lpc--) {
         text[lpc] = text[lpc - offset];
@@ -5369,7 +5369,7 @@ crm_xml_init(void)
     if(init) {
         init = FALSE;
         /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * realloc()s and it can take upwards of 18 seconds (yes, seconds)
+         * realloc_safe()s and it can take upwards of 18 seconds (yes, seconds)
          * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
          * less than 1 second.
          */
@@ -5987,7 +5987,7 @@ get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
     len += strlen(xpath);
 
     xpath_full = strdup(xpath_prefix);
-    xpath_full = realloc(xpath_full, len + 1);
+    xpath_full = realloc_safe(xpath_full, len + 1);
     strncat(xpath_full, xpath, len);
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);

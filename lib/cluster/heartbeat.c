@@ -106,7 +106,7 @@ convert_ha_field(xmlNode * parent, void *msg_v, int lpc)
 
             crm_trace("Trying to decompress %d bytes", (int)orig_len);
   retry:
-            uncompressed = realloc(uncompressed, size);
+            uncompressed = realloc_safe(uncompressed, size);
             memset(uncompressed, 0, size);
             used = size - 1;    /* always leave room for a trailing '\0'
                                  * BZ2_bzBuffToBuffDecompress wont say anything if

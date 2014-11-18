@@ -520,7 +520,7 @@ crm_remote_recv_once(crm_remote_t * remote)
            remote->buffer_size = 2 * read_len;
         crm_trace("Expanding buffer to %u bytes", remote->buffer_size);
 
-        remote->buffer = realloc(remote->buffer, remote->buffer_size + 1);
+        remote->buffer = realloc_safe(remote->buffer, remote->buffer_size + 1);
         CRM_ASSERT(remote->buffer != NULL);
     }
 

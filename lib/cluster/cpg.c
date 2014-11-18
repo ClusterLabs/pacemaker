@@ -584,7 +584,7 @@ send_cluster_text(int class, const char *data,
     msg->header.size = sizeof(AIS_Message) + msg->size;
 
     if (msg->size < CRM_BZ2_THRESHOLD) {
-        msg = realloc(msg, msg->header.size);
+        msg = realloc_safe(msg, msg->header.size);
         memcpy(msg->data, data, msg->size);
 
     } else {
@@ -595,14 +595,14 @@ send_cluster_text(int class, const char *data,
         if (crm_compress_string(uncompressed, msg->size, 0, &compressed, &new_size)) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
-            msg = realloc(msg, msg->header.size);
+            msg = realloc_safe(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
 
             msg->is_compressed = TRUE;
             msg->compressed_size = new_size;
 
         } else {
-            msg = realloc(msg, msg->header.size);
+            msg = realloc_safe(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
 

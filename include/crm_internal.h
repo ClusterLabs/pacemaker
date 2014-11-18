@@ -341,4 +341,16 @@ void cib_ipc_servers_destroy(qb_ipcs_service_t *ipcs_ro,
         qb_ipcs_service_t *ipcs_rw,
         qb_ipcs_service_t *ipcs_shm);
 
+static inline void *realloc_safe(void *ptr, size_t size)
+{
+    void *ret = realloc(ptr, size);
+
+    if(ret == NULL) {
+        abort();
+    }
+
+    return ret;
+}
+
+
 #endif                          /* CRM_INTERNAL__H */

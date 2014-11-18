@@ -1712,7 +1712,7 @@ crm_create_long_opts(struct crm_option *long_options)
      * This dummy entry allows us to differentiate between the two in crm_get_option()
      * and exit with the correct error code
      */
-    long_opts = realloc(long_opts, (index + 1) * sizeof(struct option));
+    long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
     long_opts[index].name = "__dummmy__";
     long_opts[index].has_arg = 0;
     long_opts[index].flag = 0;
@@ -1724,7 +1724,7 @@ crm_create_long_opts(struct crm_option *long_options)
             continue;
         }
 
-        long_opts = realloc(long_opts, (index + 1) * sizeof(struct option));
+        long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
         /*fprintf(stderr, "Creating %d %s = %c\n", index,
          * long_options[lpc].name, long_options[lpc].val);      */
         long_opts[index].name = long_options[lpc].name;
@@ -1735,7 +1735,7 @@ crm_create_long_opts(struct crm_option *long_options)
     }
 
     /* Now create the list terminator */
-    long_opts = realloc(long_opts, (index + 1) * sizeof(struct option));
+    long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
     long_opts[index].name = NULL;
     long_opts[index].has_arg = 0;
     long_opts[index].flag = 0;
@@ -1759,7 +1759,7 @@ crm_set_options(const char *short_options, const char *app_usage, struct crm_opt
 
         for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
             if (long_options[lpc].val && long_options[lpc].val != '-' && long_options[lpc].val < UCHAR_MAX) {
-                local_short_options = realloc(local_short_options, opt_string_len + 4);
+                local_short_options = realloc_safe(local_short_options, opt_string_len + 4);
                 local_short_options[opt_string_len++] = long_options[lpc].val;
                 /* getopt(3) says: Two colons mean an option takes an optional arg; */
                 if (long_options[lpc].has_arg == optional_argument) {
@@ -2517,7 +2517,7 @@ add_list_element(char *list, const char *value)
     }
     len = last + 2;             /* +1 space, +1 EOS */
     len += strlen(value);
-    list = realloc(list, len);
+    list = realloc_safe(list, len);
     sprintf(list + last, " %s", value);
     return list;
 }

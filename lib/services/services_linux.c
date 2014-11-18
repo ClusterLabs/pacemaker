@@ -94,7 +94,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             crm_trace("Got %d characters starting with %.20s", rc, buf);
             buf[rc] = 0;
-            data = realloc(data, len + rc + 1);
+            data = realloc_safe(data, len + rc + 1);
             len += sprintf(data + len, "%s", buf);
 
         } else if (errno != EINTR) {

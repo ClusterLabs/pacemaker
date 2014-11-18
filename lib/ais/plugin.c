@@ -1214,7 +1214,7 @@ pcmk_generate_membership_data(void)
 
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
     size = strlen(data.string);
-    data.string = realloc(data.string, size + 9);       /* 9 = </nodes> + nul */
+    data.string = realloc_safe(data.string, size + 9);       /* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
     return data.string;
 }

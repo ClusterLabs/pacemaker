@@ -630,7 +630,7 @@ append_restart_list(lrmd_rsc_info_t * rsc, lrmd_event_data_t * op, xmlNode * upd
             crm_xml_add(restart, param, value);
         }
         len += strlen(param) + 2;
-        list = realloc(list, len + 1);
+        list = realloc_safe(list, len + 1);
         sprintf(list + start, " %s ", param);
     }
 
