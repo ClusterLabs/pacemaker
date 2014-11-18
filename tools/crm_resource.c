@@ -1399,16 +1399,20 @@ static void display_list(GList *items, const char *tag)
 static int
 update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 {
+    char *pid = NULL;
+    char *shadow_file = NULL;
+    cib_t *shadow_cib = NULL;
     xmlNode *cib_xml_copy = NULL;
     int rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
 
     if(rc != pcmk_ok) {
         fprintf(stdout, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
-        return crm_exit(rc);
+        goto cleanup;
 
     } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
         fprintf(stderr, "Could not upgrade the current CIB\n");
-        return -ENOKEY;
+        rc = -ENOKEY;
+        goto cleanup;
     }
 
     set_working_set_defaults(data_set);
@@ -1416,15 +1420,14 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     data_set->now = crm_time_new(NULL);
 
     if(simulate) {
-        char *pid = crm_itoa(getpid());
-        cib_t *shadow_cib = cib_shadow_new(pid);
-        char *shadow_file = get_shadow_file(pid);
+        pid = crm_itoa(getpid());
+        shadow_cib = cib_shadow_new(pid);
+        shadow_file = get_shadow_file(pid);
 
         if (shadow_cib == NULL) {
             fprintf(stderr, "Could not create shadow cib: '%s'\n", pid);
-            free(pid);
-
-            crm_exit(-ENXIO);
+            rc = -ENXIO;
+            goto cleanup;
         }
 
         free(pid);
@@ -1432,31 +1435,31 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 
         if (rc < 0) {
             fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
-            free_xml(cib_xml_copy);
-            unlink(shadow_file);
-            free(shadow_file);
-            return rc;
+            goto cleanup;
         }
 
         rc = shadow_cib->cmds->signon(shadow_cib, crm_system_name, cib_command);
         if(rc != pcmk_ok) {
             fprintf(stderr, "Could not connect to shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
-            free_xml(cib_xml_copy);
-            unlink(shadow_file);
-            free(shadow_file);
-            return rc;
+            goto cleanup;
         }
 
         do_calculations(data_set, cib_xml_copy, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
-        cib_delete(shadow_cib);
-        unlink(shadow_file);
-        free(shadow_file);
-
     } else {
         cluster_status(data_set);
+    }
+
+  cleanup:
+    cib_delete(shadow_cib);
+    free_xml(cib_xml_copy);
+    free(pid);
+
+    if(shadow_file) {
+        unlink(shadow_file);
+        free(shadow_file);
     }
 
     return rc;
