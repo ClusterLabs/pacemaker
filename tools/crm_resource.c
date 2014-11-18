@@ -1517,7 +1517,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
         return -ENXIO;
     }
 
-
+    attr_set_type = XML_TAG_META_SETS;
     rsc_id = strdup(rsc->id);
     if(rsc->variant > pe_group) {
         is_clone = TRUE;
@@ -1546,6 +1546,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     rc = update_dataset(cib, &data_set, FALSE);
     if(rc != pcmk_ok) {
         fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
+        free(rsc_id);
         return rc;
     }
 
@@ -1563,6 +1564,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     }
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        free(rsc_id);
         return crm_exit(rc);
     }
 
@@ -1625,6 +1627,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
 
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        free(rsc_id);
         return crm_exit(rc);
     }
 
@@ -1669,6 +1672,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
 
     } while(g_list_length(list_delta) > 0);
 
+    free(rsc_id);
     return pcmk_ok;
 
   failure:
@@ -1678,6 +1682,7 @@ resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib
     } else {
         delete_resource_attr(rsc_id, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, cib, &data_set);
     }
+    free(rsc_id);
     return rc;
 }
 
