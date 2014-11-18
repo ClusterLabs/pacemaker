@@ -1422,14 +1422,19 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 
         if (shadow_cib == NULL) {
             fprintf(stderr, "Could not create shadow cib: '%s'\n", pid);
+            free(pid);
+
             crm_exit(-ENXIO);
         }
 
+        free(pid);
         rc = write_xml_file(cib_xml_copy, shadow_file, FALSE);
 
         if (rc < 0) {
             fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
             free_xml(cib_xml_copy);
+            unlink(shadow_file);
+            free(shadow_file);
             return rc;
         }
 
@@ -1437,6 +1442,8 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         if(rc != pcmk_ok) {
             fprintf(stderr, "Could not connect to shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
             free_xml(cib_xml_copy);
+            unlink(shadow_file);
+            free(shadow_file);
             return rc;
         }
 
@@ -1445,7 +1452,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         rc = update_dataset(shadow_cib, data_set, FALSE);
 
         cib_delete(shadow_cib);
-        /* unlink(shadow_file); */
+        unlink(shadow_file);
         free(shadow_file);
 
     } else {
