@@ -1466,29 +1466,56 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 }
 
 static int
+max_delay_for_resource(pe_working_set_t * data_set, resource_t *rsc) 
+{
+    int delay = 0;
+    int max_delay = 0;
+
+    if(rsc && rsc->children) {
+        GList *iter = NULL;
+
+        for(iter = rsc->children; iter; iter = iter->next) {
+            resource_t *child = (resource_t *)iter->data;
+
+            delay = max_delay_for_resource(data_set, child);
+            if(delay > max_delay) {
+                double seconds = delay / 1000;
+                crm_trace("Calculated new delay of %.1fs due to %s", seconds, child->id);
+                max_delay = delay;
+            }
+        }
+
+    } else if(rsc) {
+        char *key = g_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
+        action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
+        const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
+
+        max_delay = crm_int_helper(value, NULL);
+        pe_free_action(stop);
+    }
+
+
+    return max_delay;
+}
+
+static int
 max_delay_in(pe_working_set_t * data_set, GList *resources) 
 {
     int max_delay = 0;
     GList *item = NULL;
 
     for (item = resources; item != NULL; item = item->next) {
+        int delay = 0;
         resource_t *rsc = pe_find_resource(data_set->resources, (const char *)item->data);
 
-        if(rsc) {
-            char *key = g_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
-            action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
-            const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
-            int delay = crm_int_helper(value, NULL);
+        delay = max_delay_for_resource(data_set, rsc);
 
-            if(delay > max_delay) {
-                crm_trace("Calculated new delay of %s ms due to %s", value, rsc->id);
-                max_delay = delay;
-            }
-
-            pe_free_action(stop);
+        if(delay > max_delay) {
+            double seconds = delay / 1000;
+            crm_trace("Calculated new delay of %.1fs due to %s", seconds, rsc->id);
+            max_delay = delay;
         }
     }
-
 
     return 5 + (max_delay / 1000);
 }
