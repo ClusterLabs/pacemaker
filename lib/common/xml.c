@@ -2759,6 +2759,7 @@ create_xml_node(xmlNode * parent, const char *name)
     xmlNode *node = NULL;
 
     if (name == NULL || name[0] == 0) {
+        CRM_CHECK(name != NULL || name[0] == 0, return NULL);
         return NULL;
     }
 
