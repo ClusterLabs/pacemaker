@@ -790,10 +790,18 @@ action_complete(svc_action_t * action)
             cmd->real_action = cmd->action;
             cmd->action = strdup("monitor");
 
+        } else if(cmd->exec_rc == PCMK_OCF_OK && safe_str_eq(cmd->action, "stop")) {
+            goagain = true;
+            cmd->real_action = cmd->action;
+            cmd->action = strdup("monitor");
+
         } else if(cmd->real_action) {
             /* Ok, so this is the follow up monitor action to check if start actually completed */
             if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
                 goagain = true;
+
+            } else if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
+                cmd->exec_rc = PCMK_OCF_OK;
             }
         }
     }
