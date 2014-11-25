@@ -800,8 +800,20 @@ action_complete(svc_action_t * action)
             if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_PENDING) {
                 goagain = true;
 
-            } else if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
-                cmd->exec_rc = PCMK_OCF_OK;
+            } else {
+                int time_sum = 0;
+                int timeout_left = 0;
+                struct timeb now = { 0, };
+
+                ftime(&now);
+                time_sum = time_diff_ms(&now, &cmd->t_first_run);
+                timeout_left = cmd->timeout_orig - time_sum;
+                crm_debug("%s %s is now complete (elapsed=%dms, remaining=%dms): %s (%d)",
+                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc);
+
+                if(cmd->lrmd_op_status == PCMK_LRM_OP_DONE && cmd->exec_rc == PCMK_OCF_NOT_RUNNING && safe_str_eq(cmd->real_action, "stop")) {
+                    cmd->exec_rc = PCMK_OCF_OK;
+                }
             }
         }
     }
@@ -835,13 +847,22 @@ action_complete(svc_action_t * action)
             delay = timeout_left/2;
         }
 
+        delay = QB_MIN(2000, delay);
         if (delay < timeout_left) {
             cmd->start_delay = delay;
             cmd->timeout = timeout_left;
 
-            if(cmd->exec_rc != PCMK_OCF_OK) {
-                crm_info("%s %s failed (rc=%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                         cmd->rsc_id, cmd->action, cmd->exec_rc, time_sum, timeout_left, delay);
+            if(cmd->exec_rc == PCMK_OCF_OK) {
+                crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+
+            } else if(cmd->exec_rc == PCMK_OCF_PENDING) {
+                crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                         cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+
+            } else {
+                crm_notice("%s %s failed '%s' (%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                           cmd->rsc_id, cmd->action, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc, time_sum, timeout_left, delay);
             }
 
             cmd_reset(cmd);
