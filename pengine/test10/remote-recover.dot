@@ -9,6 +9,7 @@
 "rhel7-alt4_monitor_60000 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
 "rhel7-alt4_start_0 rhel7-alt1" -> "fake_monitor_10000 rhel7-alt4" [ style = bold]
 "rhel7-alt4_start_0 rhel7-alt1" -> "fake_start_0 rhel7-alt4" [ style = bold]
+"rhel7-alt4_start_0 rhel7-alt1" -> "fake_stop_0 rhel7-alt4" [ style = bold]
 "rhel7-alt4_start_0 rhel7-alt1" -> "rhel7-alt4_monitor_60000 rhel7-alt1" [ style = bold]
 "rhel7-alt4_start_0 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
 "shooter_monitor_60000 rhel7-alt1" [ style=bold color="green" fontcolor="black"]
