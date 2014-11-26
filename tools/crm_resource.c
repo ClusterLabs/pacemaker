@@ -1430,7 +1430,6 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto cleanup;
         }
 
-        free(pid);
         rc = write_xml_file(cib_xml_copy, shadow_file, FALSE);
 
         if (rc < 0) {
