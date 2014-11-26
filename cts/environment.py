@@ -283,9 +283,9 @@ class Environment:
                 break;
         self["cts-master"] = master
 
-        if self.has_key("have_systemd"):
-            self["have_systemd"] = not rsh(discover, "systemctl list-units")
-
+        if not self.has_key("have_systemd"):
+            self["have_systemd"] = not self.rsh(self.target, "systemctl list-units")
+        
         self.detect_syslog()
         self.detect_at_boot()
         self.detect_ip_offset()

@@ -298,7 +298,28 @@ class CIB11(ConfigBase):
         # Group Resource
         g = Group(self.Factory, "group-1")
         g.add_child(self.NewIP())
-        g.add_child(self.NewIP())
+
+        if self.CM.Env["have_systemd"]:
+            dummy_service_file = """
+[Unit]
+Description=Dummy resource that takes a while to start
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/python -c 'import time; import systemd.daemon;time.sleep(10); systemd.daemon.notify("READY=1"); time.sleep(3600)'
+ExecStop=sleep 10
+ExecStop=/bin/kill -KILL $MAINPID
+"""
+
+            os.system("cat <<-END >/tmp/DummySD.service\n%s\nEND" % (dummy_service_file))
+
+            self.CM.install_helper("DummySD.service", destdir="/usr/lib/systemd/system/", sourcedir="/tmp")
+            sysd = Resource(self.Factory, "petulant", "DummySD",  "service")
+            sysd.add_op("monitor", "P10S")
+            g.add_child(sysd)
+        else:
+            g.add_child(self.NewIP())
+
         g.add_child(self.NewIP())
 
         # Group with the master
