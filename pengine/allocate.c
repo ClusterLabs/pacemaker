@@ -1716,9 +1716,11 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                 node_t *cluster_node = remote_rsc->running_on ? remote_rsc->running_on->data : NULL;
 
                 /* if the current cluster node a baremetal connection resource
-                 * is residing on is unclean, we can't process any operations on that
-                 * remote node until after it starts somewhere else. */
-                if (cluster_node && cluster_node->details->unclean == TRUE) {
+                 * is residing on is unclean or went offline we can't process any
+                 * operations on that remote node until after it starts somewhere else. */
+                if (cluster_node == NULL ||
+                    cluster_node->details->unclean == TRUE ||
+                    cluster_node->details->online == FALSE) {
                     after_start = TRUE;
                 }
             }
