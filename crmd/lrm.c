@@ -1163,7 +1163,12 @@ get_lrm_resource(lrm_state_t * lrm_state, xmlNode * resource, xmlNode * op_msg, 
             fsa_data_t *msg_data = NULL;
 
             crm_err("Could not add resource %s to LRM %s", id, lrm_state->node_name);
-            register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+            /* only register this as a internal error if this involves the local
+             * lrmd. Otherwise we're likely dealing with an unresponsive remote-node
+             * which is not a FSA failure. */
+            if (lrm_state_is_local(lrm_state) == TRUE) {
+                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+            }
         }
     }
 
@@ -1430,6 +1435,21 @@ do_lrm_invoke(long long action,
         rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
 
         if (rsc == NULL && create_rsc) {
+            lrmd_event_data_t *op = NULL;
+
+            /* if the operation couldn't complete because we can't register
+             * the resource, return a generic error */
+            op = construct_op(lrm_state, input->xml, ID(xml_rsc), operation);
+            CRM_ASSERT(op != NULL);
+
+            op->op_status = PCMK_LRM_OP_DONE;
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->t_run = time(NULL);
+            op->t_rcchange = op->t_run;
+
+            send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+            lrmd_free_event(op);
+
             crm_err("Invalid resource definition");
             crm_log_xml_warn(input->msg, "bad input");
 
