@@ -138,6 +138,8 @@ struct node_shared_s {
     gboolean is_dc;
     gboolean rsc_discovery_enabled;
 
+    gboolean remote_requires_reset;
+
     int num_resources;
     GListPtr running_rsc;       /* resource_t* */
     GListPtr allocated_rsc;     /* resource_t* */
