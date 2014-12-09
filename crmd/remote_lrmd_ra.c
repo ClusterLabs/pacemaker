@@ -231,7 +231,7 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (safe_str_neq(cmd->action, "start")) {
+    if (safe_str_neq(cmd->action, "start") && safe_str_neq(cmd->action, "migrate_from")) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -264,7 +264,7 @@ connection_takeover_timeout_cb(gpointer data)
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
 
-    crm_debug("takeover event timed out for node %s", cmd->rsc_id);
+    crm_info("takeover event timed out for node %s", cmd->rsc_id);
     cmd->takeover_timeout_id = 0;
 
     lrm_state = lrm_state_find(cmd->rsc_id);
