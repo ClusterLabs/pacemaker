@@ -364,6 +364,7 @@ crm_is_heartbeat_peer_active(const crm_node_t * node)
 crm_node_t *
 crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state, uint64_t seq)
 {
+    enum crm_proc_flag this_proc = text2proc(crm_system_name);
     crm_node_t *peer = NULL;
     const char *uuid = NULL;
 
@@ -377,11 +378,22 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
                            uuid, oc->m_array[offset].node_uname, NULL, state);
 
     if (safe_str_eq(CRM_NODE_MEMBER, state)) {
-        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
-
-        /* Nor does it send status notifications for processes that were already active */
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_crmd, ONLINESTATUS);
+        /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster.
+         * Nor does it send status notifications for processes that were already active.
+         * Do not optimistically assume the peer client process to be online as well.
+         * We ask for cluster wide updated client status for crm_system_name
+         * directly in the ccm status callback, which will then tell us.
+         * For ourselves, we know. */
+        enum crm_proc_flag flags = crm_proc_heartbeat;
+        const char *const_uname = heartbeat_cluster->llc_ops->get_mynodeid(heartbeat_cluster);
+        if (safe_str_eq(const_uname, peer->uname)) {
+            flags |= this_proc;
+        }
+        crm_update_peer_proc(__FUNCTION__, peer, flags, ONLINESTATUS);
+    } else {
+        /* crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, OFFLINESTATUS); */
+        /* heartbeat may well be still alive. peer client process apparently vanished, though ... */
+        crm_update_peer_proc(__FUNCTION__, peer, this_proc, OFFLINESTATUS);
     }
     return peer;
 }

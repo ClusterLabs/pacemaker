@@ -107,7 +107,8 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_cpg | crm_proc_crmd)) {
+    if (proc == (crm_proc_cpg | crm_proc_crmd)
+    ||  proc == (crm_proc_heartbeat | crm_proc_crmd)) {
         return "peer";
     }
 

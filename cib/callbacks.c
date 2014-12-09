@@ -1358,6 +1358,14 @@ cib_client_status_callback(const char *node, const char *client, const char *sta
     crm_node_t *peer = NULL;
 
     if (safe_str_eq(client, CRM_SYSTEM_CIB)) {
+        peer = crm_get_peer(0, node);
+        if (safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
+            crm_warn("This peer is not a ccm member (yet). "
+                "Status ignored: Client %s/%s announced status [%s]",
+                node, client, status);
+            return;
+        }
+
         crm_info("Status update: Client %s/%s now has status [%s]", node, client, status);
 
         if (safe_str_eq(status, JOINSTATUS)) {
@@ -1367,7 +1375,6 @@ cib_client_status_callback(const char *node, const char *client, const char *sta
             status = OFFLINESTATUS;
         }
 
-        peer = crm_get_peer(0, node);
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cib, status);
     }
     return;
@@ -1449,6 +1456,7 @@ cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
             crm_update_ccm_node(membership, lpc + membership->m_memb_idx, CRM_NODE_MEMBER,
                                 current_instance);
         }
+        heartbeat_cluster->llc_ops->client_status(heartbeat_cluster, NULL, crm_system_name, 0);
     }
 
     if (ccm_api_callback_done == NULL) {
