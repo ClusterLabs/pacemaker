@@ -295,8 +295,12 @@ te_connect_stonith(gpointer user_data)
         }
 
         if (user_data != NULL) {
-            crm_err("Sign-in failed: triggered a retry");
-            mainloop_set_trigger(stonith_reconnect);
+            if (is_set(fsa_input_register, R_ST_REQUIRED)) {
+                crm_err("Sign-in failed: triggered a retry");
+                mainloop_set_trigger(stonith_reconnect);
+            } else {
+                crm_debug("Sign-in failed, but no longer required");
+            }
             return TRUE;
         }
 
