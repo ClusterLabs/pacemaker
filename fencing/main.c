@@ -1369,6 +1369,27 @@ main(int argc, char **argv)
         stonith_our_uname = cluster.uname;
         stonith_our_uuid = cluster.uuid;
 
+#if SUPPORT_HEARTBEAT
+        if (is_heartbeat_cluster()) {
+            /* crm_cluster_connect() registered us for crm_system_name, which
+             * usually is the only F_TYPE used by the respective sub system.
+             * Stonith needs to register two additional F_TYPE callbacks,
+             * because it can :-/ */
+            if (HA_OK !=
+                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_NOTIFY,
+                                                            cluster.hb_dispatch, cluster.hb_conn)) {
+                crm_crit("Cannot set msg callback %s: %s", T_STONITH_NOTIFY, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
+                crm_exit(DAEMON_RESPAWN_STOP);
+            }
+            if (HA_OK !=
+                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_TIMEOUT_VALUE,
+                                                            cluster.hb_dispatch, cluster.hb_conn)) {
+                crm_crit("Cannot set msg callback %s: %s", T_STONITH_TIMEOUT_VALUE, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
+                crm_exit(DAEMON_RESPAWN_STOP);
+            }
+        }
+#endif
+
         if (no_cib_connect == FALSE) {
             setup_cib();
         }
