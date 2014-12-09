@@ -425,6 +425,14 @@ crmd_client_status_callback(const char *node, const char *client, const char *st
                node, client, status, AM_I_DC ? "true" : "false");
 
     peer = crm_get_peer(0, node);
+    /* rest of the code, especially crm_update_peer_proc,
+     * does not know about JOINSTATUS, but expects ONLINESTATUS.
+     * See also cib/callbacks.c */
+    if (safe_str_eq(status, JOINSTATUS)) {
+        status = ONLINESTATUS;
+    }  else if (safe_str_eq(status, LEAVESTATUS)) {
+        status = OFFLINESTATUS;
+    }
 
     if (safe_str_eq(status, ONLINESTATUS)) {
         /* remove the cached value in case it changed */
