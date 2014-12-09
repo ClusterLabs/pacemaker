@@ -246,7 +246,7 @@ do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
 
             /*--*-- All Member Nodes --*--*/
         for (lpc = 0; lpc < oc->m_n_member; lpc++) {
-            crm_update_ccm_node(oc, lpc + oc->m_memb_idx, CRM_NODE_ACTIVE, instance);
+            crm_update_ccm_node(oc, lpc + oc->m_memb_idx, CRM_NODE_MEMBER, instance);
         }
     }
 

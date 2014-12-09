@@ -1446,7 +1446,7 @@ cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
         }
 
         for (lpc = 0; lpc < membership->m_n_member; lpc++) {
-            crm_update_ccm_node(membership, lpc + membership->m_memb_idx, CRM_NODE_ACTIVE,
+            crm_update_ccm_node(membership, lpc + membership->m_memb_idx, CRM_NODE_MEMBER,
                                 current_instance);
         }
     }

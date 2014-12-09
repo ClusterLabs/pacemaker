@@ -376,7 +376,7 @@ crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state
                            oc->m_array[offset].node_born_on, seq, -1, 0,
                            uuid, oc->m_array[offset].node_uname, NULL, state);
 
-    if (safe_str_eq(CRM_NODE_ACTIVE, state)) {
+    if (safe_str_eq(CRM_NODE_MEMBER, state)) {
         /* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
         crm_update_peer_proc(__FUNCTION__, peer, crm_proc_heartbeat, ONLINESTATUS);
 

@@ -155,7 +155,7 @@ do_update_node_cib(crm_node_t * node, int flags, xmlNode * parent, const char *s
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
     if (flags & node_update_cluster) {
-        if (safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
+        if (safe_str_eq(node->state, CRM_NODE_MEMBER)) {
             value = XML_BOOLEAN_YES;
         } else if (node->state) {
             value = XML_BOOLEAN_NO;
