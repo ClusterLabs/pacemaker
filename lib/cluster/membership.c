@@ -635,7 +635,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
         }
 
     } else if (safe_str_eq(status, ONLINESTATUS)) {
-        if ((node->processes & flag) == 0) {
+        if ((node->processes & flag) != flag) {
             set_bit(node->processes, flag);
             changed = TRUE;
         }
