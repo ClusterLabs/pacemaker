@@ -152,6 +152,24 @@ do_ha_control(long long action,
     }
 }
 
+static bool
+need_spawn_pengine_from_crmd(void)
+{
+	static int result = -1;
+
+	if (result != -1)
+		return result;
+	if (!is_heartbeat_cluster()) {
+		result = 0;
+		return result;
+	}
+
+	/* NULL, or "strange" value: rather spawn from here. */
+	result = TRUE;
+	crm_str_to_boolean(daemon_option("crmd_spawns_pengine"), &result);
+	return result;
+}
+
 /*	 A_SHUTDOWN	*/
 void
 do_shutdown(long long action,
@@ -161,7 +179,7 @@ do_shutdown(long long action,
     /* just in case */
     set_bit(fsa_input_register, R_SHUTDOWN);
 
-    if (is_heartbeat_cluster()) {
+    if (need_spawn_pengine_from_crmd()) {
         if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
             crm_info("Terminating the %s", pe_subsystem->name);
             if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
@@ -634,7 +652,7 @@ do_startup(long long action,
         was_error = TRUE;
     }
 
-    if (was_error == FALSE && is_heartbeat_cluster()) {
+    if (was_error == FALSE && need_spawn_pengine_from_crmd()) {
         if (start_subsystem(pe_subsystem) == FALSE) {
             was_error = TRUE;
         }
