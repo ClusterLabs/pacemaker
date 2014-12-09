@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="14" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="stonith_complete" operation_key="stonith_complete"/>
@@ -17,7 +17,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="5" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1">
+      <rsc_op id="14" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_timeout="20000" />
       </rsc_op>
@@ -176,13 +176,13 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
+      <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <rsc_op id="14" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="18" operation="stop" operation_key="FAKE2_stop_0"/>
