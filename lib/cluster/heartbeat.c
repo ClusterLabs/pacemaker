@@ -482,11 +482,31 @@ ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data)
     CRM_CHECK(channel != NULL, return FALSE);
 
     if (channel != NULL && IPC_ISRCONN(channel)) {
+        struct ha_msg *msg;
         if (cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
             crm_trace("no message ready yet");
         }
-        /* invoke the callbacks but dont block */
-        cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
+        /* invoke the callbacks but dont block.
+         * cluster_conn->llc_ops->rcvmsg(cluster_conn, 0); */
+        msg = cluster_conn->llc_ops->readmsg(cluster_conn, 0);
+        if (msg) {
+            /* Message core refuses to pass on messages with F_TYPE not set.
+             * Messages with no specific F_TOID are notifications delivered to all.
+             */
+            const char *msg_type = ha_msg_value(msg, F_TYPE) ?: "[type not set]";
+            const char *msg_to_id = ha_msg_value(msg, F_TOID);
+            if (safe_str_eq(msg_to_id, crm_system_name)) {
+                crm_err("Ignored incoming message. Please set_msg_callback on %s", msg_type);
+            } else if (msg_to_id) {
+                /* Message core will not deliver messages addressed to someone else to us.
+                 * Are we not registered as crm_system_name? */
+                crm_notice("Ignored incoming message %s=%s %s=%s, please set_msg_callback",
+                        F_TOID, msg_to_id, F_TYPE, msg_type);
+            } else {
+                crm_debug("Ignored incoming message %s=%s", F_TYPE, msg_type);
+            }
+            ha_msg_del(msg);
+        }
     }
 
     if (channel == NULL || channel->ch_status != IPC_CONNECT) {
