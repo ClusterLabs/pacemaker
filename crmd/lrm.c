@@ -1216,6 +1216,28 @@ delete_resource(lrm_state_t * lrm_state,
     delete_rsc_entry(lrm_state, request, id, gIter, rc, user);
 }
 
+static int
+get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
+{
+    int call_id = 0;
+    rsc_history_t *entry = NULL;
+
+    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+
+    /* Make sure the call id is greater than the last successful operation,
+     * otherwise the failure will not result in a possible recovery of the resource
+     * as it could appear the failure occurred before the successful start */
+    if (entry) {
+        call_id = entry->last_callid + 1;
+    }
+
+    if (call_id < 0) {
+        call_id = 1;
+    }
+    return call_id;
+}
+
+
 /*	 A_LRM_INVOKE	*/
 void
 do_lrm_invoke(long long action,
@@ -1277,7 +1299,6 @@ do_lrm_invoke(long long action,
         operation = CRM_OP_LRM_REFRESH;
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
-        rsc_history_t *entry = NULL;
         lrmd_event_data_t *op = NULL;
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
@@ -1298,16 +1319,7 @@ do_lrm_invoke(long long action,
 
         free((char *)op->user_data);
         op->user_data = NULL;
-        entry = g_hash_table_lookup(lrm_state->resource_history, op->rsc_id);
-        /* Make sure the call id is greater than the last successful operation,
-         * otherwise the failure will not result in a possible recovery of the resource
-         * as it could appear the failure occurred before the successful start */
-        if (entry) {
-            op->call_id = entry->last_callid + 1;
-            if (op->call_id < 0) {
-                op->call_id = 1;
-            }
-        }
+        op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
         op->interval = 0;
         op->op_status = PCMK_LRM_OP_DONE;
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -1857,9 +1869,19 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
                              op->op_type,
                              op->user_data, op->interval, op->timeout, op->start_delay, params);
 
-    if (call_id <= 0) {
+    if (call_id <= 0 && lrm_state_is_local(lrm_state)) {
         crm_err("Operation %s on %s failed: %d", operation, rsc->id, call_id);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+
+    } else if (call_id <= 0) {
+
+        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d", operation, rsc->id, lrm_state->node_name, call_id);
+        op->call_id = get_fake_call_id(lrm_state, rsc->id);
+        op->op_status = PCMK_LRM_OP_DONE;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->t_run = time(NULL);
+        op->t_rcchange = op->t_run;
+        process_lrm_event(lrm_state, op);
 
     } else {
         /* record all operations so we can wait
