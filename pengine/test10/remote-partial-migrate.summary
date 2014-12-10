@@ -1,0 +1,189 @@
+
+Current cluster status:
+Online: [ pcmk1 pcmk2 pcmk3 ]
+RemoteOnline: [ pcmk_remote1 pcmk_remote2 pcmk_remote3 pcmk_remote4 ]
+RemoteOFFLINE: [ pcmk_remote5 ]
+
+ shooter	(stonith:fence_docker_cts):	Started pcmk2 
+ pcmk_remote1	(ocf::pacemaker:remote):	Started pcmk1 
+ pcmk_remote2	(ocf::pacemaker:remote):	Started pcmk3 
+ pcmk_remote3	(ocf::pacemaker:remote):	Started [ pcmk2 pcmk1 ]
+ pcmk_remote4	(ocf::pacemaker:remote):	Started pcmk3 
+ pcmk_remote5	(ocf::pacemaker:remote):	Stopped 
+ FAKE1	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE2	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE3	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE4	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE5	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE6	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE7	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE8	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE9	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE10	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE11	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE12	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE13	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE14	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE15	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE16	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE17	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE18	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE19	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE20	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE21	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE22	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE23	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE24	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE25	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE26	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE27	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE28	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE29	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE30	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE31	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE32	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE33	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE34	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE35	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE36	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE37	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE38	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE39	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE40	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE41	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE42	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE43	(ocf::heartbeat:Dummy):	Stopped 
+ FAKE44	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE45	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE46	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE47	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE48	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE49	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE50	(ocf::heartbeat:Dummy):	Stopped 
+
+Transition Summary:
+ * Migrate pcmk_remote3	(Started pcmk1 -> pcmk2)
+ * Start   FAKE4	(pcmk_remote3)
+ * Move    FAKE9	(Started pcmk_remote3 -> pcmk1)
+ * Start   FAKE10	(pcmk1)
+ * Start   FAKE13	(pcmk2)
+ * Start   FAKE15	(pcmk3)
+ * Move    FAKE16	(Started pcmk1 -> pcmk_remote3)
+ * Start   FAKE22	(pcmk1)
+ * Move    FAKE23	(Started pcmk1 -> pcmk_remote1)
+ * Start   FAKE26	(pcmk1)
+ * Start   FAKE29	(pcmk2)
+ * Move    FAKE30	(Started pcmk1 -> pcmk_remote2)
+ * Start   FAKE36	(pcmk1)
+ * Move    FAKE37	(Started pcmk1 -> pcmk2)
+ * Start   FAKE43	(pcmk1)
+ * Move    FAKE44	(Started pcmk1 -> pcmk2)
+ * Start   FAKE50	(pcmk1)
+
+Executing cluster transition:
+ * Resource action: pcmk_remote3    migrate_from on pcmk2
+ * Resource action: pcmk_remote3    stop on pcmk1
+ * Resource action: FAKE10          start on pcmk1
+ * Resource action: FAKE13          start on pcmk2
+ * Resource action: FAKE15          start on pcmk3
+ * Resource action: FAKE16          stop on pcmk1
+ * Resource action: FAKE22          start on pcmk1
+ * Resource action: FAKE23          stop on pcmk1
+ * Resource action: FAKE26          start on pcmk1
+ * Resource action: FAKE29          start on pcmk2
+ * Resource action: FAKE30          stop on pcmk1
+ * Resource action: FAKE36          start on pcmk1
+ * Resource action: FAKE37          stop on pcmk1
+ * Resource action: FAKE43          start on pcmk1
+ * Resource action: FAKE44          stop on pcmk1
+ * Resource action: FAKE50          start on pcmk1
+ * Pseudo action:   pcmk_remote3_start_0
+ * Resource action: FAKE4           start on pcmk_remote3
+ * Resource action: FAKE9           stop on pcmk_remote3
+ * Resource action: FAKE10          monitor=10000 on pcmk1
+ * Resource action: FAKE13          monitor=10000 on pcmk2
+ * Resource action: FAKE15          monitor=10000 on pcmk3
+ * Resource action: FAKE16          start on pcmk_remote3
+ * Resource action: FAKE22          monitor=10000 on pcmk1
+ * Resource action: FAKE23          start on pcmk_remote1
+ * Resource action: FAKE26          monitor=10000 on pcmk1
+ * Resource action: FAKE29          monitor=10000 on pcmk2
+ * Resource action: FAKE30          start on pcmk_remote2
+ * Resource action: FAKE36          monitor=10000 on pcmk1
+ * Resource action: FAKE37          start on pcmk2
+ * Resource action: FAKE43          monitor=10000 on pcmk1
+ * Resource action: FAKE44          start on pcmk2
+ * Resource action: FAKE50          monitor=10000 on pcmk1
+ * Pseudo action:   all_stopped
+ * Resource action: pcmk_remote3    monitor=60000 on pcmk2
+ * Resource action: FAKE4           monitor=10000 on pcmk_remote3
+ * Resource action: FAKE9           start on pcmk1
+ * Resource action: FAKE16          monitor=10000 on pcmk_remote3
+ * Resource action: FAKE23          monitor=10000 on pcmk_remote1
+ * Resource action: FAKE30          monitor=10000 on pcmk_remote2
+ * Resource action: FAKE37          monitor=10000 on pcmk2
+ * Resource action: FAKE44          monitor=10000 on pcmk2
+ * Resource action: FAKE9           monitor=10000 on pcmk1
+
+Revised cluster status:
+Online: [ pcmk1 pcmk2 pcmk3 ]
+RemoteOnline: [ pcmk_remote1 pcmk_remote2 pcmk_remote3 pcmk_remote4 ]
+RemoteOFFLINE: [ pcmk_remote5 ]
+
+ shooter	(stonith:fence_docker_cts):	Started pcmk2 
+ pcmk_remote1	(ocf::pacemaker:remote):	Started pcmk1 
+ pcmk_remote2	(ocf::pacemaker:remote):	Started pcmk3 
+ pcmk_remote3	(ocf::pacemaker:remote):	Started pcmk2 
+ pcmk_remote4	(ocf::pacemaker:remote):	Started pcmk3 
+ pcmk_remote5	(ocf::pacemaker:remote):	Stopped 
+ FAKE1	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE2	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE3	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE4	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE5	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE6	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE7	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE8	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE9	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE10	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE11	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE12	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE13	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE14	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE15	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE16	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE17	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE18	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE19	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE20	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE21	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE22	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE23	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE24	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE25	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE26	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE27	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE28	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE29	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE30	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE31	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE32	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE33	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE34	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE35	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE36	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE37	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE38	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE39	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE40	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE41	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE42	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE43	(ocf::heartbeat:Dummy):	Started pcmk1 
+ FAKE44	(ocf::heartbeat:Dummy):	Started pcmk2 
+ FAKE45	(ocf::heartbeat:Dummy):	Started pcmk3 
+ FAKE46	(ocf::heartbeat:Dummy):	Started pcmk_remote1 
+ FAKE47	(ocf::heartbeat:Dummy):	Started pcmk_remote2 
+ FAKE48	(ocf::heartbeat:Dummy):	Started pcmk_remote3 
+ FAKE49	(ocf::heartbeat:Dummy):	Started pcmk_remote4 
+ FAKE50	(ocf::heartbeat:Dummy):	Started pcmk1 
+
