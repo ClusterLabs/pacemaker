@@ -1722,6 +1722,13 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
                     cluster_node->details->unclean == TRUE ||
                     cluster_node->details->online == FALSE) {
                     after_start = TRUE;
+                } else if (g_list_length(remote_rsc->running_on) > 1 &&
+                           remote_rsc->partial_migration_source &&
+                            remote_rsc->partial_migration_target) {
+                    /* if we're caught in the middle of migrating a connection resource,
+                     * then we have to wait until after the resource migrates before performing
+                     * any actions. */
+                    after_start = TRUE;
                 }
             }
 
