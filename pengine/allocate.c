@@ -1191,7 +1191,10 @@ allocate_resources(pe_working_set_t * data_set)
                 continue;
             }
             pe_rsc_trace(rsc, "Allocating: %s", rsc->id);
-            rsc->cmds->allocate(rsc, NULL, data_set);
+            /* for remote node connection resources, always prefer the partial migration
+             * target during resource allocation if the rsc is in the middle of a
+             * migration */ 
+            rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
 
