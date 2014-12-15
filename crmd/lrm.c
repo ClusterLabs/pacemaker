@@ -1799,6 +1799,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     lrmd_key_value_t *params = NULL;
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
+    gboolean stop_recurring = FALSE;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(operation != NULL, return);
@@ -1813,10 +1814,25 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     op = construct_op(lrm_state, msg, rsc->id, operation);
     CRM_CHECK(op != NULL, return);
 
-    /* stop any previous monitor operations before changing the resource state */
-    if (op->interval == 0
+    if (is_remote_lrmd_ra(NULL, NULL, rsc->id)
+        && op->interval == 0
+        && strcmp(operation, CRMD_ACTION_MIGRATE) == 0) {
+
+        /* pcmk remote connections are a special use case.
+         * We never ever want to stop monitoring a connection resource until
+         * the entire migration has completed. If the connection is ever unexpected
+         * severed, even during a migration, this is an event we must detect.*/
+        stop_recurring = FALSE;
+
+    } else if (op->interval == 0
         && strcmp(operation, CRMD_ACTION_STATUS) != 0
         && strcmp(operation, CRMD_ACTION_NOTIFY) != 0) {
+
+        /* stop any previous monitor operations before changing the resource state */
+        stop_recurring = TRUE;
+    }
+
+    if (stop_recurring == TRUE) {
         guint removed = 0;
         struct stop_recurring_action_s data;
 
