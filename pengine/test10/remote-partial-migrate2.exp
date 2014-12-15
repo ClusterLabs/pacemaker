@@ -99,7 +99,7 @@
     <action_set>
       <rsc_op id="81" operation="migrate_to" operation_key="pcmk_remote5_migrate_to_0" on_node="pcmk1" on_node_uuid="1">
         <primitive id="pcmk_remote5" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_migrate_source="pcmk1" CRM_meta_migrate_target="pcmk2" CRM_meta_record_pending="true" CRM_meta_timeout="20000"  server="172.17.201.5"/>
+        <attributes CRM_meta_migrate_source="pcmk1" CRM_meta_migrate_target="pcmk2" CRM_meta_timeout="20000"  server="172.17.201.5"/>
       </rsc_op>
     </action_set>
     <inputs>
