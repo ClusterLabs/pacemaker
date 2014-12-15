@@ -281,7 +281,7 @@ monitor_timeout_cb(gpointer data)
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
 
-    crm_debug("Poke async response timed out for node %s", cmd->rsc_id);
+    crm_info("Poke async response timed out for node %s", cmd->rsc_id);
     cmd->monitor_timeout_id = 0;
     cmd->op_status = PCMK_LRM_OP_TIMEOUT;
     cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
